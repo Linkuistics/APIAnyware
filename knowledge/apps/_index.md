@@ -13,4 +13,4 @@ Sample apps progress from simple to complex. Each exercises specific macOS/bindi
 | 7 | pdfkit-viewer | PDFView, PDFDocument, framework-specific notifications (blocked on Quartz collection fix) |
 | 8 | modaliser | Keyboard capture (CGEvent tap), window management, overlays (WKWebView), NSStatusBar/NSMenu, config system (capstone exerciser) |
 
-Retired (filesystem dirs and code stay until separately removed): `counter/`, `file-lister/`, `menu-bar-tool/`, `text-editor/`.
+Retired: `counter/`, `menu-bar-tool/`, and `text-editor/` removed (2026-04-27); `file-lister/` retained — still cited as the canonical demo app by `generation/crates/bundle-racket-oo/tests/bundle_file_lister.rs` (integration test fixture), the top-level `README.md` bundle-layout example, `generation/targets/racket-oo/docs/developer-guide.md`'s VM-testing walkthrough, and `knowledge/targets/racket-oo.md`'s NSTableView/NSStackView learnings. Removing it requires rewiring those references first.
