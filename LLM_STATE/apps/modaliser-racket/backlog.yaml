@@ -1,0 +1,37 @@
+tasks:
+- id: impl-window-move-logging-gap
+  title: impl-window-move-logging-gap
+  category: bug
+  status: not_started
+  dependencies: []
+  description: |
+    Surfaced by Task 24.
+
+    `services/window-manager.rkt` `center-window` and `restore-window` call
+    `ax-set-position!`/`ax-set-size!` without emitting `[window] move`. The
+    logging contract at `APIAnyware-MacOS/knowledge/apps/modaliser/logging-contract.md` says the event
+    fires on any Modaliser-initiated position/size change; only
+    `move-window` honors that. The Task 24 windows scenario
+    (`APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/windows/01-focus-move-restore.rkt`) asserts the
+    contract-compliant behavior and will fail on live-VM against the
+    current impl until this is closed.
+
+    **What's needed:**
+    - Add `(log-event 'window 'move 'x … 'y … 'w … 'h …)` after the AX
+      writes in `center-window` (single call site) and `restore-window`
+      (two call sites: the delayed fullscreen-exit continuation and the
+      immediate non-fullscreen branch). Use `exact->inexact` on all four
+      values for consistency with the existing `move-window` emission.
+    - `toggle-fullscreen` stays silent intentionally — AX fullscreen
+      doesn't yield rectangular geometry.
+
+    **Why this is its own task:** the fix touches host-side impl code and
+    therefore requires VM-based verification (`./tests/run-all.sh` is
+    VM-only per `memory/feedback_impl_tests_vm_only.md`). A dedicated session
+    should: (1) make the impl change, (2) bootstrap a VM with Racket +
+    coreutils + TCC Accessibility grant for the racket binary, (3) run
+    the impl suite, (4) commit. Roughly 10–15 min of VM time.
+
+    **Gating:** independent of other tasks. Closing this makes the Task 24
+    windows scenario pass on live-VM; scenarios remain contract-correct
+    in the meantime.

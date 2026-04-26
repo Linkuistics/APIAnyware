@@ -58,7 +58,7 @@
 ;;     class with the requested name without re-allocating.
 ;;
 ;; Reference consumer:
-;;   - Modaliser-Racket's ui/panel-manager.rkt subclasses NSPanel to
+;;   - apps/modaliser/ui/panel-manager.rkt subclasses NSPanel to
 ;;     override canBecomeKeyWindow / canBecomeMainWindow so a borderless
 ;;     NSPanel can accept keyboard input via an embedded WKWebView.
 

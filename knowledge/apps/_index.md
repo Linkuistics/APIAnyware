@@ -1,14 +1,16 @@
 # App Catalogue
 
-Sample apps progress from simple to complex. Each exercises specific macOS/binding capabilities.
+Sample apps progress from simple to complex. Each exercises specific macOS/binding capabilities. Authoritative portfolio per `docs/specs/2026-04-16-sample-app-portfolio-design.md`.
 
 | # | App | Key Capabilities |
 |---|-----|-----------------|
-| 1 | hello-window | Window lifecycle, property setters, NSTextField label |
-| 2 | counter | Target-action buttons, mutable state, NSButton |
-| 3 | ui-controls-gallery | All standard AppKit controls, visual regression baseline |
-| 4 | file-lister | NSTableView data source delegate, NSFileManager, NSOpenPanel |
-| 5 | text-editor | Block callbacks, error-out, undo/redo, notifications, find |
-| 6 | mini-browser | Cross-framework WebKit, WKNavigationDelegate, URL handling |
-| 7 | menu-bar-tool | NSStatusBar, NSMenu, no-window app, timers, clipboard |
-| 8 | modaliser | Keyboard capture, window management, overlays, config system (capstone) |
+| 1 | hello-window | Window lifecycle, property setters, NSTextField label (smoke test) |
+| 2 | ui-controls-gallery | 15+ AppKit controls, enum constants, layout patterns (widget regression suite) |
+| 3 | note-editor | NSTextView, NSSplitView, WKWebView preview, NSUndoManager, NSSavePanel completion blocks, NSNotificationCenter |
+| 4 | mini-browser | WKWebView, WKNavigationDelegate (async multi-step), NSURL/NSURLRequest, NSProgressIndicator |
+| 5 | drawing-canvas | Dynamic ObjC subclass with `drawRect:` + mouse events, CoreGraphics drawing, NSColorPanel |
+| 6 | scenekit-viewer | SceneKit 3D rendering, SCNAction animation, scene graph construction |
+| 7 | pdfkit-viewer | PDFView, PDFDocument, framework-specific notifications (blocked on Quartz collection fix) |
+| 8 | modaliser | Keyboard capture (CGEvent tap), window management, overlays (WKWebView), NSStatusBar/NSMenu, config system (capstone exerciser) |
+
+Retired (filesystem dirs and code stay until separately removed): `counter/`, `file-lister/`, `menu-bar-tool/`, `text-editor/`.

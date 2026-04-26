@@ -28,9 +28,24 @@ _Derived from the working POC at `../Modaliser`. To be filled in by cataloguing
 all features and behaviours from the POC, abstracting away Swift/Scheme-specific
 implementation details._
 
+The operational contract that any implementation must satisfy is split across
+neighbouring files:
+
+- `logging-contract.md` — structured event format every impl must emit.
+- `observable-state.md` — per-state observables the spec runner can read.
+- `scenarios/` — executable cross-impl scenario suites in `#lang app-spec`,
+  organised by area (`launch/`, `lifecycle/`, `modal/`, `choosers/`,
+  `windows/`, plus shared `helpers/`). Run via the AppSpec runner
+  (`{{DEV_ROOT}}/AppSpec/run.sh`) against a chosen `--impl` config.
+- `artifacts/` — captured runner outputs (gitignored).
+
 ## Platform Compliance Requirements
 _To be defined during spec derivation._
 
 ## Reference Implementation
 The POC at `../Modaliser` is a working Swift app with LispKit (Scheme) scripting.
 It is the authoritative source for behaviour, features, and UX expectations.
+
+The Racket-OO target's reference implementation lives at
+`../../../generation/targets/racket-oo/apps/modaliser/`; its `--impl` config
+for the AppSpec runner is `modaliser-impl.rkt` in that directory.
