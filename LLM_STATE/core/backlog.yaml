@@ -1,4 +1,57 @@
 tasks:
+- id: emit-protocol-inherited-methods-on-class-bindings
+  title: Emit protocol-inherited methods on class bindings
+  category: emission
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** medium
+
+    **Surfaced by:** SceneKit Viewer sample app (racket-oo target, 2026-04-17).
+    `SCNNode.runAction:` (via SCNActionable protocol) and `SCNView.setAutoEnablesDefaultLighting:`
+    (via SCNSceneRenderer protocol) are absent from the generated class bindings.
+    This is a distinct axis from superclass-inherited methods — the existing
+    "Emit inherited methods from NSView/NSControl superclasses" entry does not cover
+    protocol conformance. Workaround: module-local typed `objc_msgSend` aliases
+    (app-menu.rkt pattern).
+
+    When an ObjC class conforms to a protocol, methods declared in
+    that protocol are not emitted on the class binding — only methods declared directly
+    on the class or via `@interface` categories appear. Fix: after collecting a class's
+    direct methods, also walk its conforming protocols (depth-first, deduplicating by
+    selector name) and emit their methods if not already emitted as direct methods.
+    The IR already captures protocol conformance via `protocol_names` on `ObjCInterface`;
+    the emitter needs to use it. Snapshot test updates required.
+
+    **Scope:** `emit_class.rs` in `emit-racket-oo`. Snapshot golden file updates needed
+    for classes with protocol conformance.
+- id: build-claude-code-subagent-driver-for-llm-annotation-pipeline
+  title: Build Claude Code subagent driver for LLM annotation pipeline
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** medium
+
+    **Surfaced by:** post-M9 review memory and `llm-annotations-use-a-dedicated-input-directory` memory entry (2026-04-27).
+
+    **Summary:** The LLM annotation pipeline has its collection end (`llm-extract` CLI producing `.methods.json`) and its merge end (`annotate --llm-dir` consuming `.llm.json`), but the Claude Code subagent step that converts `.methods.json` → `.llm.json` has not been built. Without it, the pipeline is broken in the middle and the annotation infrastructure produces no usable output.
+
+    **Background:** The annotation system works as follows:
+    1. `llm-extract` CLI scans collected IR and emits `.methods.json` summaries of methods with block params, error out-params, or delegate/observer patterns — these are candidates for LLM annotation.
+    2. A Claude Code subagent reads `.methods.json`, reasons about each method, and writes `.llm.json` with the annotation payload.
+    3. `annotate --llm-dir <dir>` reads `.llm.json` files and merges them into the annotated IR, with LLM annotations taking precedence over heuristic annotations.
+
+    The constraint (see project memory `LLM annotation must run within Claude Code`) is that LLM calls must run inside Claude Code — not via an external API consumer — for cost control. The subagent approach (one subagent per framework, each handling one `.methods.json`) is the settled design.
+
+    **Scope:**
+    1. Define the `.llm.json` schema (or confirm it is already defined in `llm.rs`) and write a validator.
+    2. Build the Claude Code subagent prompt that consumes a `.methods.json` file and produces a well-formed `.llm.json`. The prompt must handle: block-typed parameters (decide nullability / callback semantics), error-pointer out-params (should they be `throws`-style?), and delegate/observer methods.
+    3. Wire a driver that fans out one subagent call per framework `.methods.json`, collects results, and writes the `.llm.json` files into the `--llm-dir`.
+    4. Run end-to-end on a small framework (e.g. Foundation) and verify the merged annotated output changes relative to heuristic-only annotation.
+    5. Document the runtime cost (tokens per framework, wall time) so the team can scope future full-pipeline runs.
+
+    **Acceptance criteria:** Running the full pipeline (llm-extract → subagent driver → annotate --llm-dir) on Foundation produces a non-empty set of LLM-sourced annotations visible in `annotated/Foundation.json`.
 - id: investigate-and-filter-bare-c-name-macro-usrs-leak-class-a
   title: Investigate and filter bare `c:@<name>` macro USRs (leak class A)
   category: collection
@@ -97,29 +150,3 @@ tasks:
     `ffi-obj-ref` (or equivalent struct-data references). Audit blast radius across
     CoreFoundation and adjacent frameworks before merging — there may be a broader
     family of `kCF*CallBacks`-style struct globals.
-- id: emit-protocol-inherited-methods-on-class-bindings
-  title: Emit protocol-inherited methods on class bindings
-  category: emission
-  status: not_started
-  dependencies: []
-  description: |
-    **Priority:** medium
-
-    **Surfaced by:** SceneKit Viewer sample app (racket-oo target, 2026-04-17).
-    `SCNNode.runAction:` (via SCNActionable protocol) and `SCNView.setAutoEnablesDefaultLighting:`
-    (via SCNSceneRenderer protocol) are absent from the generated class bindings.
-    This is a distinct axis from superclass-inherited methods — the existing
-    "Emit inherited methods from NSView/NSControl superclasses" entry does not cover
-    protocol conformance. Workaround: module-local typed `objc_msgSend` aliases
-    (app-menu.rkt pattern).
-
-    When an ObjC class conforms to a protocol, methods declared in
-    that protocol are not emitted on the class binding — only methods declared directly
-    on the class or via `@interface` categories appear. Fix: after collecting a class's
-    direct methods, also walk its conforming protocols (depth-first, deduplicating by
-    selector name) and emit their methods if not already emitted as direct methods.
-    The IR already captures protocol conformance via `protocol_names` on `ObjCInterface`;
-    the emitter needs to use it. Snapshot test updates required.
-
-    **Scope:** `emit_class.rs` in `emit-racket-oo`. Snapshot golden file updates needed
-    for classes with protocol conformance.
