@@ -379,6 +379,12 @@ entries:
   body: |
     `hello-window` is the designated app for bundler integration tests and the developer guide entry point. Do not replace it with another sample app for these roles. Other sample apps (mini-browser, note-editor, modaliser, etc.) serve as portfolio demos only.
 - id: protocol-inherited-methods-missing-from-class-ir
-  title: Protocol-inherited methods missing from class IR
+  title: Protocol-inherited methods propagated at resolve layer
   body: |
-    Methods that a class inherits via protocol conformance (not direct declaration) are missing from the IR — the collector does not traverse the protocol inheritance graph to attach methods to conforming classes. Core backlog task: "Protocol-inherited methods missing from class IR". Affects any language target that relies on the IR for method dispatch rather than runtime introspection.
+    Protocol-inherited methods are propagated to class IR at the resolve layer
+    (`analysis/crates/resolve/`) via `transitively_conforms_to` (reflexive-transitive
+    closure over `conforms_to`/`protocol_inherits`) and an `effective_method` Datalog
+    rule. `build_protocol_method_index` in `checkpoint.rs` provides full parameter/
+    return-type metadata fallback keyed by `(protocol_name, selector, is_class_method)`.
+    Fix lives at the resolve layer — not per-emitter — so every current and future
+    language emitter inherits protocol-method propagation automatically.
