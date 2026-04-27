@@ -18,10 +18,13 @@
 (define (calayer? v) (objc-instance-of? v "CALayer"))
 (define (cgrect? v) (objc-instance-of? v "CGRect"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
+(define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsattributedstring? v) (objc-instance-of? v "NSAttributedString"))
 (define (nsbitmapimagerep? v) (objc-instance-of? v "NSBitmapImageRep"))
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
+(define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsedgeinsets? v) (objc-instance-of? v "NSEdgeInsets"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
 (define (nslayoutguide? v) (objc-instance-of? v "NSLayoutGuide"))
@@ -36,6 +39,7 @@
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (nstextinputcontext? v) (objc-instance-of? v "NSTextInputContext"))
 (define (nstouchbar? v) (objc-instance-of? v "NSTouchBar"))
+(define (nsurl? v) (objc-instance-of? v "NSURL"))
 (define (nsundomanager? v) (objc-instance-of? v "NSUndoManager"))
 (define (nsuseractivity? v) (objc-instance-of? v "NSUserActivity"))
 (define (nsview? v) (objc-instance-of? v "NSView"))
@@ -227,20 +231,163 @@
   [nssplitview-writing-tools-coordinator (c-> objc-object? (or/c nswritingtoolscoordinator? objc-nil?))]
   [nssplitview-set-writing-tools-coordinator! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-accepts-first-mouse (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-accessibility-activation-point (c-> objc-object? any/c)]
+  [nssplitview-accessibility-allowed-values (c-> objc-object? any/c)]
+  [nssplitview-accessibility-application-focused-ui-element (c-> objc-object? any/c)]
+  [nssplitview-accessibility-attributed-string-for-range (c-> objc-object? any/c (or/c nsattributedstring? objc-nil?))]
+  [nssplitview-accessibility-attributed-user-input-labels (c-> objc-object? any/c)]
+  [nssplitview-accessibility-cancel-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-cell-for-column-row (c-> objc-object? exact-integer? exact-integer? any/c)]
+  [nssplitview-accessibility-children (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-children-in-navigation-order (c-> objc-object? any/c)]
+  [nssplitview-accessibility-clear-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-close-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-column-count (c-> objc-object? exact-integer?)]
+  [nssplitview-accessibility-column-header-ui-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-column-index-range (c-> objc-object? any/c)]
+  [nssplitview-accessibility-column-titles (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-columns (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-contents (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-critical-value (c-> objc-object? any/c)]
+  [nssplitview-accessibility-custom-actions (c-> objc-object? any/c)]
+  [nssplitview-accessibility-custom-rotors (c-> objc-object? any/c)]
+  [nssplitview-accessibility-decrement-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-default-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-disclosed-by-row (c-> objc-object? any/c)]
+  [nssplitview-accessibility-disclosed-rows (c-> objc-object? any/c)]
+  [nssplitview-accessibility-disclosure-level (c-> objc-object? exact-integer?)]
+  [nssplitview-accessibility-document (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-extras-menu-bar (c-> objc-object? any/c)]
+  [nssplitview-accessibility-filename (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-focused-window (c-> objc-object? any/c)]
+  [nssplitview-accessibility-frame (c-> objc-object? any/c)]
+  [nssplitview-accessibility-frame-for-range (c-> objc-object? any/c any/c)]
+  [nssplitview-accessibility-full-screen-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-grow-area (c-> objc-object? any/c)]
+  [nssplitview-accessibility-handles (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-header (c-> objc-object? any/c)]
+  [nssplitview-accessibility-help (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-horizontal-scroll-bar (c-> objc-object? any/c)]
+  [nssplitview-accessibility-horizontal-unit-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-horizontal-units (c-> objc-object? exact-nonnegative-integer?)]
+  [nssplitview-accessibility-identifier (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-increment-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-index (c-> objc-object? exact-integer?)]
+  [nssplitview-accessibility-insertion-point-line-number (c-> objc-object? exact-integer?)]
+  [nssplitview-accessibility-label (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-label-ui-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-label-value (c-> objc-object? real?)]
+  [nssplitview-accessibility-layout-point-for-screen-point (c-> objc-object? any/c any/c)]
+  [nssplitview-accessibility-layout-size-for-screen-size (c-> objc-object? any/c any/c)]
+  [nssplitview-accessibility-line-for-index (c-> objc-object? exact-integer? exact-integer?)]
+  [nssplitview-accessibility-linked-ui-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-main-window (c-> objc-object? any/c)]
+  [nssplitview-accessibility-marker-group-ui-element (c-> objc-object? any/c)]
+  [nssplitview-accessibility-marker-type-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-marker-ui-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-marker-values (c-> objc-object? any/c)]
+  [nssplitview-accessibility-max-value (c-> objc-object? any/c)]
+  [nssplitview-accessibility-menu-bar (c-> objc-object? any/c)]
+  [nssplitview-accessibility-min-value (c-> objc-object? any/c)]
+  [nssplitview-accessibility-minimize-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-next-contents (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-number-of-characters (c-> objc-object? exact-integer?)]
+  [nssplitview-accessibility-orientation (c-> objc-object? exact-nonnegative-integer?)]
+  [nssplitview-accessibility-overflow-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-parent (c-> objc-object? any/c)]
+  [nssplitview-accessibility-perform-cancel (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-confirm (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-decrement (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-delete (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-increment (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-pick (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-press (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-raise (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-show-alternate-ui (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-show-default-ui (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-perform-show-menu (c-> objc-object? boolean?)]
+  [nssplitview-accessibility-placeholder-value (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-previous-contents (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-proxy (c-> objc-object? any/c)]
+  [nssplitview-accessibility-rtf-for-range (c-> objc-object? any/c (or/c nsdata? objc-nil?))]
+  [nssplitview-accessibility-range-for-index (c-> objc-object? exact-integer? any/c)]
+  [nssplitview-accessibility-range-for-line (c-> objc-object? exact-integer? any/c)]
+  [nssplitview-accessibility-range-for-position (c-> objc-object? any/c any/c)]
+  [nssplitview-accessibility-role (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-role-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-row-count (c-> objc-object? exact-integer?)]
+  [nssplitview-accessibility-row-header-ui-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-row-index-range (c-> objc-object? any/c)]
+  [nssplitview-accessibility-rows (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-ruler-marker-type (c-> objc-object? exact-nonnegative-integer?)]
+  [nssplitview-accessibility-screen-point-for-layout-point (c-> objc-object? any/c any/c)]
+  [nssplitview-accessibility-screen-size-for-layout-size (c-> objc-object? any/c any/c)]
+  [nssplitview-accessibility-search-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-search-menu (c-> objc-object? any/c)]
+  [nssplitview-accessibility-selected-cells (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-selected-children (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-selected-columns (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-selected-rows (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-selected-text (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-selected-text-range (c-> objc-object? any/c)]
+  [nssplitview-accessibility-selected-text-ranges (c-> objc-object? any/c)]
+  [nssplitview-accessibility-serves-as-title-for-ui-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-shared-character-range (c-> objc-object? any/c)]
+  [nssplitview-accessibility-shared-focus-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-shared-text-ui-elements (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-shown-menu (c-> objc-object? any/c)]
+  [nssplitview-accessibility-sort-direction (c-> objc-object? exact-nonnegative-integer?)]
+  [nssplitview-accessibility-splitters (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-string-for-range (c-> objc-object? any/c (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-style-range-for-index (c-> objc-object? exact-integer? any/c)]
+  [nssplitview-accessibility-subrole (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-tabs (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-title (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-title-ui-element (c-> objc-object? any/c)]
+  [nssplitview-accessibility-toolbar-button (c-> objc-object? any/c)]
+  [nssplitview-accessibility-top-level-ui-element (c-> objc-object? any/c)]
+  [nssplitview-accessibility-url (c-> objc-object? (or/c nsurl? objc-nil?))]
+  [nssplitview-accessibility-unit-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-units (c-> objc-object? exact-nonnegative-integer?)]
+  [nssplitview-accessibility-user-input-labels (c-> objc-object? any/c)]
+  [nssplitview-accessibility-value (c-> objc-object? any/c)]
+  [nssplitview-accessibility-value-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-vertical-scroll-bar (c-> objc-object? any/c)]
+  [nssplitview-accessibility-vertical-unit-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-accessibility-vertical-units (c-> objc-object? exact-nonnegative-integer?)]
+  [nssplitview-accessibility-visible-cells (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-visible-character-range (c-> objc-object? any/c)]
+  [nssplitview-accessibility-visible-children (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-visible-columns (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-visible-rows (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-warning-value (c-> objc-object? any/c)]
+  [nssplitview-accessibility-window (c-> objc-object? any/c)]
+  [nssplitview-accessibility-windows (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-zoom-button (c-> objc-object? any/c)]
   [nssplitview-add-subview! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-add-subview-positioned-relative-to! (c-> objc-object? (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c string? objc-object? #f) void?)]
   [nssplitview-add-tool-tip-rect-owner-user-data! (c-> objc-object? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) exact-integer?)]
   [nssplitview-adjust-scroll (c-> objc-object? any/c any/c)]
   [nssplitview-adjust-subviews (c-> objc-object? void?)]
   [nssplitview-ancestor-shared-with-view (c-> objc-object? (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
+  [nssplitview-animation-for-key (c-> objc-object? (or/c string? objc-object? #f) any/c)]
+  [nssplitview-animations (c-> objc-object? any/c)]
+  [nssplitview-animator (c-> objc-object? any/c)]
+  [nssplitview-appearance (c-> objc-object? (or/c nsappearance? objc-nil?))]
   [nssplitview-autoscroll (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-backing-aligned-rect-options (c-> objc-object? any/c exact-nonnegative-integer? any/c)]
   [nssplitview-become-first-responder (c-> objc-object? boolean?)]
   [nssplitview-begin-gesture-with-event! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-bitmap-image-rep-for-caching-display-in-rect (c-> objc-object? any/c (or/c nsbitmapimagerep? objc-nil?))]
   [nssplitview-cache-display-in-rect-to-bitmap-image-rep (c-> objc-object? any/c (or/c string? objc-object? #f) void?)]
+  [nssplitview-cancel-operation (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-capitalize-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-center-scan-rect! (c-> objc-object? any/c any/c)]
+  [nssplitview-center-selection-in-visible-area! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-change-case-of-letter (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-change-mode-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-complete (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-conclude-drag-operation (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-context-menu-key-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-convert-point-from-view (c-> objc-object? any/c (or/c string? objc-object? #f) any/c)]
   [nssplitview-convert-point-to-view (c-> objc-object? any/c (or/c string? objc-object? #f) any/c)]
@@ -261,6 +408,16 @@
   [nssplitview-convert-size-to-backing (c-> objc-object? any/c any/c)]
   [nssplitview-convert-size-to-layer (c-> objc-object? any/c any/c)]
   [nssplitview-cursor-update (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-backward (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-backward-by-decomposing-previous-character (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-forward (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-to-beginning-of-line (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-to-beginning-of-paragraph (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-to-end-of-line (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-to-end-of-paragraph (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-to-mark (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-word-backward (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-delete-word-forward (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-did-add-subview (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-did-close-menu-with-event (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nssplitview-display! (c-> objc-object? void?)]
@@ -271,8 +428,15 @@
   [nssplitview-display-rect! (c-> objc-object? any/c void?)]
   [nssplitview-display-rect-ignoring-opacity! (c-> objc-object? any/c void?)]
   [nssplitview-display-rect-ignoring-opacity-in-context! (c-> objc-object? any/c (or/c string? objc-object? #f) void?)]
+  [nssplitview-do-command-by-selector (c-> objc-object? string? void?)]
+  [nssplitview-dragging-ended (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-dragging-entered (c-> objc-object? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nssplitview-dragging-exited (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-dragging-updated (c-> objc-object? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nssplitview-draw-divider-in-rect (c-> objc-object? any/c void?)]
   [nssplitview-draw-rect (c-> objc-object? any/c void?)]
+  [nssplitview-effective-appearance (c-> objc-object? (or/c nsappearance? objc-nil?))]
+  [nssplitview-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-end-gesture-with-event! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-flags-changed (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-flush-buffered-key-events (c-> objc-object? void?)]
@@ -281,7 +445,37 @@
   [nssplitview-help-requested (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-hit-test (c-> objc-object? any/c (or/c nsview? objc-nil?))]
   [nssplitview-holding-priority-for-subview-at-index (c-> objc-object? exact-integer? real?)]
+  [nssplitview-identifier (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nssplitview-indent (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-backtab! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-container-break! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-double-quote-ignoring-substitution! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-line-break! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-newline! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-newline-ignoring-field-editor! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-paragraph-separator! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-single-quote-ignoring-substitution! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-tab! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-tab-ignoring-field-editor! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-text! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-interpret-key-events (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-is-accessibility-alternate-ui-visible (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-disclosed (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-edited (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-element (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-enabled (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-expanded (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-focused (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-frontmost (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-hidden (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-main (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-minimized (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-modal (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-ordered-by-row (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-protected-content (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-required (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-selected (c-> objc-object? boolean?)]
+  [nssplitview-is-accessibility-selector-allowed (c-> objc-object? string? boolean?)]
   [nssplitview-is-descendant-of (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-is-flipped (c-> objc-object? boolean?)]
   [nssplitview-is-hidden (c-> objc-object? boolean?)]
@@ -295,8 +489,15 @@
   [nssplitview-key-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-layout (c-> objc-object? void?)]
   [nssplitview-layout-subtree-if-needed (c-> objc-object? void?)]
+  [nssplitview-lowercase-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-magnify-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-make-backing-layer (c-> objc-object? (or/c calayer? objc-nil?))]
+  [nssplitview-make-base-writing-direction-left-to-right (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-make-base-writing-direction-natural (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-make-base-writing-direction-right-to-left (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-make-text-writing-direction-left-to-right (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-make-text-writing-direction-natural (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-make-text-writing-direction-right-to-left (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-max-possible-position-of-divider-at-index (c-> objc-object? exact-integer? real?)]
   [nssplitview-menu-for-event (c-> objc-object? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nssplitview-min-possible-position-of-divider-at-index (c-> objc-object? exact-integer? real?)]
@@ -308,15 +509,60 @@
   [nssplitview-mouse-exited (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-mouse-moved (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-mouse-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-backward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-backward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-down! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-down-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-forward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-forward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-left! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-left-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-paragraph-backward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-paragraph-forward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-right! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-right-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-beginning-of-document! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-beginning-of-document-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-beginning-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-beginning-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-beginning-of-paragraph! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-beginning-of-paragraph-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-end-of-document! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-end-of-document-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-end-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-end-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-end-of-paragraph! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-end-of-paragraph-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-left-end-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-left-end-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-right-end-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-to-right-end-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-up! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-up-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-backward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-backward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-forward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-forward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-left! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-left-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-right! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-move-word-right-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-needs-to-draw-rect (c-> objc-object? any/c boolean?)]
   [nssplitview-no-responder-for (c-> objc-object? string? void?)]
   [nssplitview-other-mouse-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-other-mouse-dragged (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-other-mouse-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-page-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-page-down-and-modify-selection (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-page-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-page-up-and-modify-selection (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-perform-drag-operation! (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-perform-key-equivalent! (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-prepare-content-in-rect (c-> objc-object? any/c void?)]
+  [nssplitview-prepare-for-drag-operation (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-prepare-for-reuse (c-> objc-object? void?)]
   [nssplitview-pressure-change-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-quick-look-preview-items (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-quick-look-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-rect-for-smart-magnification-at-point-in-rect (c-> objc-object? any/c any/c any/c)]
   [nssplitview-remove-all-tool-tips! (c-> objc-object? void?)]
@@ -327,28 +573,170 @@
   [nssplitview-resign-first-responder (c-> objc-object? boolean?)]
   [nssplitview-resize-subviews-with-old-size (c-> objc-object? any/c void?)]
   [nssplitview-resize-with-old-superview-size (c-> objc-object? any/c void?)]
+  [nssplitview-restore-user-activity-state (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-right-mouse-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-right-mouse-dragged (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-right-mouse-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-rotate-by-angle (c-> objc-object? real? void?)]
   [nssplitview-rotate-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-scale-unit-square-to-size (c-> objc-object? any/c void?)]
+  [nssplitview-scroll-line-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-scroll-line-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-scroll-page-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-scroll-page-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-scroll-point (c-> objc-object? any/c void?)]
   [nssplitview-scroll-rect-to-visible (c-> objc-object? any/c boolean?)]
+  [nssplitview-scroll-to-beginning-of-document (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-scroll-to-end-of-document (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-scroll-wheel (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-select-all (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-select-line (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-select-paragraph (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-select-to-mark (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-select-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-activation-point! (c-> objc-object? any/c void?)]
+  [nssplitview-set-accessibility-allowed-values! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-alternate-ui-visible! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-application-focused-ui-element! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-attributed-user-input-labels! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-cancel-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-children! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-children-in-navigation-order! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-clear-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-close-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-column-count! (c-> objc-object? exact-integer? void?)]
+  [nssplitview-set-accessibility-column-header-ui-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-column-index-range! (c-> objc-object? any/c void?)]
+  [nssplitview-set-accessibility-column-titles! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-columns! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-contents! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-critical-value! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-custom-actions! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-custom-rotors! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-decrement-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-default-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-disclosed! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-disclosed-by-row! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-disclosed-rows! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-disclosure-level! (c-> objc-object? exact-integer? void?)]
+  [nssplitview-set-accessibility-document! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-edited! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-element! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-enabled! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-expanded! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-extras-menu-bar! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-filename! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-focused! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-focused-window! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-frame! (c-> objc-object? any/c void?)]
+  [nssplitview-set-accessibility-frontmost! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-full-screen-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-grow-area! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-handles! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-header! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-help! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-hidden! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-horizontal-scroll-bar! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-horizontal-unit-description! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-horizontal-units! (c-> objc-object? exact-nonnegative-integer? void?)]
+  [nssplitview-set-accessibility-identifier! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-increment-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-index! (c-> objc-object? exact-integer? void?)]
+  [nssplitview-set-accessibility-insertion-point-line-number! (c-> objc-object? exact-integer? void?)]
+  [nssplitview-set-accessibility-label! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-label-ui-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-label-value! (c-> objc-object? real? void?)]
+  [nssplitview-set-accessibility-linked-ui-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-main! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-main-window! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-marker-group-ui-element! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-marker-type-description! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-marker-ui-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-marker-values! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-max-value! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-menu-bar! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-min-value! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-minimize-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-minimized! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-modal! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-next-contents! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-number-of-characters! (c-> objc-object? exact-integer? void?)]
+  [nssplitview-set-accessibility-ordered-by-row! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-orientation! (c-> objc-object? exact-nonnegative-integer? void?)]
+  [nssplitview-set-accessibility-overflow-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-parent! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-placeholder-value! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-previous-contents! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-protected-content! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-proxy! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-required! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-role! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-role-description! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-row-count! (c-> objc-object? exact-integer? void?)]
+  [nssplitview-set-accessibility-row-header-ui-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-row-index-range! (c-> objc-object? any/c void?)]
+  [nssplitview-set-accessibility-rows! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-ruler-marker-type! (c-> objc-object? exact-nonnegative-integer? void?)]
+  [nssplitview-set-accessibility-search-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-search-menu! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-selected! (c-> objc-object? boolean? void?)]
+  [nssplitview-set-accessibility-selected-cells! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-selected-children! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-selected-columns! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-selected-rows! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-selected-text! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-selected-text-range! (c-> objc-object? any/c void?)]
+  [nssplitview-set-accessibility-selected-text-ranges! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-serves-as-title-for-ui-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-shared-character-range! (c-> objc-object? any/c void?)]
+  [nssplitview-set-accessibility-shared-focus-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-shared-text-ui-elements! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-shown-menu! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-sort-direction! (c-> objc-object? exact-nonnegative-integer? void?)]
+  [nssplitview-set-accessibility-splitters! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-subrole! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-tabs! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-title! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-title-ui-element! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-toolbar-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-top-level-ui-element! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-url! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-unit-description! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-units! (c-> objc-object? exact-nonnegative-integer? void?)]
+  [nssplitview-set-accessibility-user-input-labels! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-value! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-value-description! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-vertical-scroll-bar! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-vertical-unit-description! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-vertical-units! (c-> objc-object? exact-nonnegative-integer? void?)]
+  [nssplitview-set-accessibility-visible-cells! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-visible-character-range! (c-> objc-object? any/c void?)]
+  [nssplitview-set-accessibility-visible-children! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-visible-columns! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-visible-rows! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-warning-value! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-window! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-windows! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-accessibility-zoom-button! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-animations! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-appearance! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-set-bounds-origin! (c-> objc-object? any/c void?)]
   [nssplitview-set-bounds-size! (c-> objc-object? any/c void?)]
   [nssplitview-set-frame-origin! (c-> objc-object? any/c void?)]
   [nssplitview-set-frame-size! (c-> objc-object? any/c void?)]
   [nssplitview-set-holding-priority-for-subview-at-index! (c-> objc-object? real? exact-integer? void?)]
+  [nssplitview-set-identifier! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-mark! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-set-needs-display-in-rect! (c-> objc-object? any/c void?)]
   [nssplitview-set-position-of-divider-at-index! (c-> objc-object? real? exact-integer? void?)]
   [nssplitview-should-be-treated-as-ink-event (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-should-delay-window-ordering-for-event (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-show-context-help (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-show-context-menu-for-selection (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-smart-magnify-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-sort-subviews-using-function-context (c-> objc-object? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nssplitview-supplemental-target-for-action-sender (c-> objc-object? string? (or/c string? objc-object? #f) any/c)]
+  [nssplitview-swap-with-mark (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-swipe-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-tablet-point (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-tablet-proximity (c-> objc-object? (or/c string? objc-object? #f) void?)]
@@ -358,8 +746,12 @@
   [nssplitview-touches-moved-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-translate-origin-to-point (c-> objc-object? any/c void?)]
   [nssplitview-translate-rects-needing-display-in-rect-by (c-> objc-object? any/c any/c void?)]
+  [nssplitview-transpose (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-transpose-words (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-try-to-perform-with (c-> objc-object? string? (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-update-dragging-items-for-drag (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-update-layer (c-> objc-object? void?)]
+  [nssplitview-uppercase-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nssplitview-valid-requestor-for-send-type-return-type (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nssplitview-view-did-change-backing-properties (c-> objc-object? void?)]
   [nssplitview-view-did-change-effective-appearance (c-> objc-object? void?)]
@@ -374,9 +766,12 @@
   [nssplitview-view-will-start-live-resize (c-> objc-object? void?)]
   [nssplitview-view-with-tag (c-> objc-object? exact-integer? any/c)]
   [nssplitview-wants-forwarded-scroll-events-for-axis (c-> objc-object? exact-nonnegative-integer? boolean?)]
+  [nssplitview-wants-periodic-dragging-updates (c-> objc-object? boolean?)]
   [nssplitview-wants-scroll-events-for-swipe-tracking-on-axis (c-> objc-object? exact-nonnegative-integer? boolean?)]
   [nssplitview-will-open-menu-with-event (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nssplitview-will-remove-subview (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-yank (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nssplitview-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
   [nssplitview-is-compatible-with-responsive-scrolling (c-> boolean?)]
   )
 
@@ -384,85 +779,111 @@
 (import-class NSSplitView)
 
 ;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _NSRect)
+(define _msg-0  ; (_fun _pointer _pointer -> _NSPoint)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _NSPoint)))
+(define _msg-1  ; (_fun _pointer _pointer -> _NSRange)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _NSRange)))
+(define _msg-2  ; (_fun _pointer _pointer -> _NSRect)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _NSRect)))
-(define _msg-1  ; (_fun _pointer _pointer -> _bool)
+(define _msg-3  ; (_fun _pointer _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
-(define _msg-2  ; (_fun _pointer _pointer -> _double)
+(define _msg-4  ; (_fun _pointer _pointer -> _double)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _double)))
-(define _msg-3  ; (_fun _pointer _pointer -> _int64)
+(define _msg-5  ; (_fun _pointer _pointer -> _float)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _float)))
+(define _msg-6  ; (_fun _pointer _pointer -> _int64)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _int64)))
-(define _msg-4  ; (_fun _pointer _pointer -> _uint64)
+(define _msg-7  ; (_fun _pointer _pointer -> _uint64)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _uint64)))
-(define _msg-5  ; (_fun _pointer _pointer _NSEdgeInsets -> _void)
+(define _msg-8  ; (_fun _pointer _pointer _NSEdgeInsets -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSEdgeInsets -> _void)))
-(define _msg-6  ; (_fun _pointer _pointer _NSPoint -> _NSPoint)
+(define _msg-9  ; (_fun _pointer _pointer _NSPoint -> _NSPoint)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSPoint -> _NSPoint)))
-(define _msg-7  ; (_fun _pointer _pointer _NSPoint -> _id)
+(define _msg-10  ; (_fun _pointer _pointer _NSPoint -> _NSRange)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSPoint -> _NSRange)))
+(define _msg-11  ; (_fun _pointer _pointer _NSPoint -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSPoint -> _id)))
-(define _msg-8  ; (_fun _pointer _pointer _NSPoint -> _void)
+(define _msg-12  ; (_fun _pointer _pointer _NSPoint -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSPoint -> _void)))
-(define _msg-9  ; (_fun _pointer _pointer _NSPoint _NSRect -> _NSRect)
+(define _msg-13  ; (_fun _pointer _pointer _NSPoint _NSRect -> _NSRect)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSPoint _NSRect -> _NSRect)))
-(define _msg-10  ; (_fun _pointer _pointer _NSPoint _NSRect -> _bool)
+(define _msg-14  ; (_fun _pointer _pointer _NSPoint _NSRect -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSPoint _NSRect -> _bool)))
-(define _msg-11  ; (_fun _pointer _pointer _NSPoint _id -> _NSPoint)
+(define _msg-15  ; (_fun _pointer _pointer _NSPoint _id -> _NSPoint)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSPoint _id -> _NSPoint)))
-(define _msg-12  ; (_fun _pointer _pointer _NSRect -> _NSRect)
+(define _msg-16  ; (_fun _pointer _pointer _NSRange -> _NSRect)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRange -> _NSRect)))
+(define _msg-17  ; (_fun _pointer _pointer _NSRange -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRange -> _id)))
+(define _msg-18  ; (_fun _pointer _pointer _NSRange -> _void)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRange -> _void)))
+(define _msg-19  ; (_fun _pointer _pointer _NSRect -> _NSRect)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect -> _NSRect)))
-(define _msg-13  ; (_fun _pointer _pointer _NSRect -> _bool)
+(define _msg-20  ; (_fun _pointer _pointer _NSRect -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect -> _bool)))
-(define _msg-14  ; (_fun _pointer _pointer _NSRect -> _id)
+(define _msg-21  ; (_fun _pointer _pointer _NSRect -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect -> _id)))
-(define _msg-15  ; (_fun _pointer _pointer _NSRect -> _void)
+(define _msg-22  ; (_fun _pointer _pointer _NSRect -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect -> _void)))
-(define _msg-16  ; (_fun _pointer _pointer _NSRect _NSSize -> _void)
+(define _msg-23  ; (_fun _pointer _pointer _NSRect _NSSize -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect _NSSize -> _void)))
-(define _msg-17  ; (_fun _pointer _pointer _NSRect _id -> _NSRect)
+(define _msg-24  ; (_fun _pointer _pointer _NSRect _id -> _NSRect)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect _id -> _NSRect)))
-(define _msg-18  ; (_fun _pointer _pointer _NSRect _id -> _void)
+(define _msg-25  ; (_fun _pointer _pointer _NSRect _id -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect _id -> _void)))
-(define _msg-19  ; (_fun _pointer _pointer _NSRect _id _pointer -> _int64)
+(define _msg-26  ; (_fun _pointer _pointer _NSRect _id _pointer -> _int64)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect _id _pointer -> _int64)))
-(define _msg-20  ; (_fun _pointer _pointer _NSRect _uint64 -> _NSRect)
+(define _msg-27  ; (_fun _pointer _pointer _NSRect _uint64 -> _NSRect)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect _uint64 -> _NSRect)))
-(define _msg-21  ; (_fun _pointer _pointer _NSSize -> _NSSize)
+(define _msg-28  ; (_fun _pointer _pointer _NSSize -> _NSSize)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSSize -> _NSSize)))
-(define _msg-22  ; (_fun _pointer _pointer _NSSize -> _void)
+(define _msg-29  ; (_fun _pointer _pointer _NSSize -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSSize -> _void)))
-(define _msg-23  ; (_fun _pointer _pointer _NSSize _id -> _NSSize)
+(define _msg-30  ; (_fun _pointer _pointer _NSSize _id -> _NSSize)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSSize _id -> _NSSize)))
-(define _msg-24  ; (_fun _pointer _pointer _bool -> _void)
+(define _msg-31  ; (_fun _pointer _pointer _bool -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool -> _void)))
-(define _msg-25  ; (_fun _pointer _pointer _double -> _void)
+(define _msg-32  ; (_fun _pointer _pointer _double -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double -> _void)))
-(define _msg-26  ; (_fun _pointer _pointer _double _int64 -> _void)
+(define _msg-33  ; (_fun _pointer _pointer _double _int64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double _int64 -> _void)))
-(define _msg-27  ; (_fun _pointer _pointer _float _int64 -> _void)
+(define _msg-34  ; (_fun _pointer _pointer _float -> _void)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _float -> _void)))
+(define _msg-35  ; (_fun _pointer _pointer _float _int64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _float _int64 -> _void)))
-(define _msg-28  ; (_fun _pointer _pointer _id -> _bool)
+(define _msg-36  ; (_fun _pointer _pointer _id -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _bool)))
-(define _msg-29  ; (_fun _pointer _pointer _id _int64 _id -> _void)
+(define _msg-37  ; (_fun _pointer _pointer _id -> _uint64)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _uint64)))
+(define _msg-38  ; (_fun _pointer _pointer _id _int64 _id -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _int64 _id -> _void)))
-(define _msg-30  ; (_fun _pointer _pointer _int64 -> _bool)
+(define _msg-39  ; (_fun _pointer _pointer _int64 -> _NSRange)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _NSRange)))
+(define _msg-40  ; (_fun _pointer _pointer _int64 -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _bool)))
-(define _msg-31  ; (_fun _pointer _pointer _int64 -> _double)
+(define _msg-41  ; (_fun _pointer _pointer _int64 -> _double)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _double)))
-(define _msg-32  ; (_fun _pointer _pointer _int64 -> _float)
+(define _msg-42  ; (_fun _pointer _pointer _int64 -> _float)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _float)))
-(define _msg-33  ; (_fun _pointer _pointer _int64 -> _id)
+(define _msg-43  ; (_fun _pointer _pointer _int64 -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _id)))
-(define _msg-34  ; (_fun _pointer _pointer _int64 -> _void)
+(define _msg-44  ; (_fun _pointer _pointer _int64 -> _int64)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _int64)))
+(define _msg-45  ; (_fun _pointer _pointer _int64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _void)))
-(define _msg-35  ; (_fun _pointer _pointer _pointer -> _void)
+(define _msg-46  ; (_fun _pointer _pointer _int64 _int64 -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 _int64 -> _id)))
+(define _msg-47  ; (_fun _pointer _pointer _pointer -> _bool)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _bool)))
+(define _msg-48  ; (_fun _pointer _pointer _pointer -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _void)))
-(define _msg-36  ; (_fun _pointer _pointer _pointer _id -> _bool)
+(define _msg-49  ; (_fun _pointer _pointer _pointer _id -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _id -> _bool)))
-(define _msg-37  ; (_fun _pointer _pointer _pointer _id -> _id)
+(define _msg-50  ; (_fun _pointer _pointer _pointer _id -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _id -> _id)))
-(define _msg-38  ; (_fun _pointer _pointer _pointer _pointer -> _void)
+(define _msg-51  ; (_fun _pointer _pointer _pointer _pointer -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer -> _void)))
-(define _msg-39  ; (_fun _pointer _pointer _uint64 -> _void)
+(define _msg-52  ; (_fun _pointer _pointer _uint64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _void)))
 
 ;; --- Constructors ---
@@ -474,7 +895,7 @@
 
 (define (make-nssplitview-init-with-frame frame-rect)
   (wrap-objc-object
-   (_msg-14 (tell NSSplitView alloc)
+   (_msg-21 (tell NSSplitView alloc)
        (sel_registerName "initWithFrame:")
        frame-rect)
    #:retained #t))
@@ -486,38 +907,38 @@
 (define (nssplitview-accepts-touch-events self)
   (tell #:type _bool (coerce-arg self) acceptsTouchEvents))
 (define (nssplitview-set-accepts-touch-events! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setAcceptsTouchEvents:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setAcceptsTouchEvents:") value))
 (define (nssplitview-additional-safe-area-insets self)
   (tell #:type _NSEdgeInsets (coerce-arg self) additionalSafeAreaInsets))
 (define (nssplitview-set-additional-safe-area-insets! self value)
-  (_msg-5 (coerce-arg self) (sel_registerName "setAdditionalSafeAreaInsets:") value))
+  (_msg-8 (coerce-arg self) (sel_registerName "setAdditionalSafeAreaInsets:") value))
 (define (nssplitview-alignment-rect-insets self)
   (tell #:type _NSEdgeInsets (coerce-arg self) alignmentRectInsets))
 (define (nssplitview-allowed-touch-types self)
   (tell #:type _uint64 (coerce-arg self) allowedTouchTypes))
 (define (nssplitview-set-allowed-touch-types! self value)
-  (_msg-39 (coerce-arg self) (sel_registerName "setAllowedTouchTypes:") value))
+  (_msg-52 (coerce-arg self) (sel_registerName "setAllowedTouchTypes:") value))
 (define (nssplitview-allows-vibrancy self)
   (tell #:type _bool (coerce-arg self) allowsVibrancy))
 (define (nssplitview-alpha-value self)
   (tell #:type _double (coerce-arg self) alphaValue))
 (define (nssplitview-set-alpha-value! self value)
-  (_msg-25 (coerce-arg self) (sel_registerName "setAlphaValue:") value))
+  (_msg-32 (coerce-arg self) (sel_registerName "setAlphaValue:") value))
 (define (nssplitview-arranged-subviews self)
   (wrap-objc-object
    (tell (coerce-arg self) arrangedSubviews)))
 (define (nssplitview-arranges-all-subviews self)
   (tell #:type _bool (coerce-arg self) arrangesAllSubviews))
 (define (nssplitview-set-arranges-all-subviews! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setArrangesAllSubviews:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setArrangesAllSubviews:") value))
 (define (nssplitview-autoresizes-subviews self)
   (tell #:type _bool (coerce-arg self) autoresizesSubviews))
 (define (nssplitview-set-autoresizes-subviews! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setAutoresizesSubviews:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setAutoresizesSubviews:") value))
 (define (nssplitview-autoresizing-mask self)
   (tell #:type _uint64 (coerce-arg self) autoresizingMask))
 (define (nssplitview-set-autoresizing-mask! self value)
-  (_msg-39 (coerce-arg self) (sel_registerName "setAutoresizingMask:") value))
+  (_msg-52 (coerce-arg self) (sel_registerName "setAutoresizingMask:") value))
 (define (nssplitview-autosave-name self)
   (wrap-objc-object
    (tell (coerce-arg self) autosaveName)))
@@ -536,11 +957,11 @@
 (define (nssplitview-bounds self)
   (tell #:type _NSRect (coerce-arg self) bounds))
 (define (nssplitview-set-bounds! self value)
-  (_msg-15 (coerce-arg self) (sel_registerName "setBounds:") value))
+  (_msg-22 (coerce-arg self) (sel_registerName "setBounds:") value))
 (define (nssplitview-bounds-rotation self)
   (tell #:type _double (coerce-arg self) boundsRotation))
 (define (nssplitview-set-bounds-rotation! self value)
-  (_msg-25 (coerce-arg self) (sel_registerName "setBoundsRotation:") value))
+  (_msg-32 (coerce-arg self) (sel_registerName "setBoundsRotation:") value))
 (define (nssplitview-can-become-key-view self)
   (tell #:type _bool (coerce-arg self) canBecomeKeyView))
 (define (nssplitview-can-draw self)
@@ -548,11 +969,11 @@
 (define (nssplitview-can-draw-concurrently self)
   (tell #:type _bool (coerce-arg self) canDrawConcurrently))
 (define (nssplitview-set-can-draw-concurrently! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setCanDrawConcurrently:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setCanDrawConcurrently:") value))
 (define (nssplitview-can-draw-subviews-into-layer self)
   (tell #:type _bool (coerce-arg self) canDrawSubviewsIntoLayer))
 (define (nssplitview-set-can-draw-subviews-into-layer! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setCanDrawSubviewsIntoLayer:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setCanDrawSubviewsIntoLayer:") value))
 (define (nssplitview-candidate-list-touch-bar-item self)
   (wrap-objc-object
    (tell (coerce-arg self) candidateListTouchBarItem)))
@@ -565,7 +986,7 @@
 (define (nssplitview-clips-to-bounds self)
   (tell #:type _bool (coerce-arg self) clipsToBounds))
 (define (nssplitview-set-clips-to-bounds! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setClipsToBounds:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setClipsToBounds:") value))
 (define (nssplitview-compatible-with-responsive-scrolling)
   (tell #:type _bool NSSplitView compatibleWithResponsiveScrolling))
 (define (nssplitview-compositing-filter self)
@@ -597,7 +1018,7 @@
 (define (nssplitview-divider-style self)
   (tell #:type _int64 (coerce-arg self) dividerStyle))
 (define (nssplitview-set-divider-style! self value)
-  (_msg-34 (coerce-arg self) (sel_registerName "setDividerStyle:") value))
+  (_msg-45 (coerce-arg self) (sel_registerName "setDividerStyle:") value))
 (define (nssplitview-divider-thickness self)
   (tell #:type _double (coerce-arg self) dividerThickness))
 (define (nssplitview-drawing-find-indicator self)
@@ -622,22 +1043,22 @@
 (define (nssplitview-focus-ring-type self)
   (tell #:type _uint64 (coerce-arg self) focusRingType))
 (define (nssplitview-set-focus-ring-type! self value)
-  (_msg-39 (coerce-arg self) (sel_registerName "setFocusRingType:") value))
+  (_msg-52 (coerce-arg self) (sel_registerName "setFocusRingType:") value))
 (define (nssplitview-focus-view)
   (wrap-objc-object
    (tell NSSplitView focusView)))
 (define (nssplitview-frame self)
   (tell #:type _NSRect (coerce-arg self) frame))
 (define (nssplitview-set-frame! self value)
-  (_msg-15 (coerce-arg self) (sel_registerName "setFrame:") value))
+  (_msg-22 (coerce-arg self) (sel_registerName "setFrame:") value))
 (define (nssplitview-frame-center-rotation self)
   (tell #:type _double (coerce-arg self) frameCenterRotation))
 (define (nssplitview-set-frame-center-rotation! self value)
-  (_msg-25 (coerce-arg self) (sel_registerName "setFrameCenterRotation:") value))
+  (_msg-32 (coerce-arg self) (sel_registerName "setFrameCenterRotation:") value))
 (define (nssplitview-frame-rotation self)
   (tell #:type _double (coerce-arg self) frameRotation))
 (define (nssplitview-set-frame-rotation! self value)
-  (_msg-25 (coerce-arg self) (sel_registerName "setFrameRotation:") value))
+  (_msg-32 (coerce-arg self) (sel_registerName "setFrameRotation:") value))
 (define (nssplitview-gesture-recognizers self)
   (wrap-objc-object
    (tell (coerce-arg self) gestureRecognizers)))
@@ -653,13 +1074,13 @@
 (define (nssplitview-hidden self)
   (tell #:type _bool (coerce-arg self) hidden))
 (define (nssplitview-set-hidden! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setHidden:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setHidden:") value))
 (define (nssplitview-hidden-or-has-hidden-ancestor self)
   (tell #:type _bool (coerce-arg self) hiddenOrHasHiddenAncestor))
 (define (nssplitview-horizontal-content-size-constraint-active self)
   (tell #:type _bool (coerce-arg self) horizontalContentSizeConstraintActive))
 (define (nssplitview-set-horizontal-content-size-constraint-active! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setHorizontalContentSizeConstraintActive:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setHorizontalContentSizeConstraintActive:") value))
 (define (nssplitview-in-full-screen-mode self)
   (tell #:type _bool (coerce-arg self) inFullScreenMode))
 (define (nssplitview-in-live-resize self)
@@ -682,15 +1103,15 @@
 (define (nssplitview-layer-contents-placement self)
   (tell #:type _int64 (coerce-arg self) layerContentsPlacement))
 (define (nssplitview-set-layer-contents-placement! self value)
-  (_msg-34 (coerce-arg self) (sel_registerName "setLayerContentsPlacement:") value))
+  (_msg-45 (coerce-arg self) (sel_registerName "setLayerContentsPlacement:") value))
 (define (nssplitview-layer-contents-redraw-policy self)
   (tell #:type _int64 (coerce-arg self) layerContentsRedrawPolicy))
 (define (nssplitview-set-layer-contents-redraw-policy! self value)
-  (_msg-34 (coerce-arg self) (sel_registerName "setLayerContentsRedrawPolicy:") value))
+  (_msg-45 (coerce-arg self) (sel_registerName "setLayerContentsRedrawPolicy:") value))
 (define (nssplitview-layer-uses-core-image-filters self)
   (tell #:type _bool (coerce-arg self) layerUsesCoreImageFilters))
 (define (nssplitview-set-layer-uses-core-image-filters! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setLayerUsesCoreImageFilters:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setLayerUsesCoreImageFilters:") value))
 (define (nssplitview-layout-guides self)
   (wrap-objc-object
    (tell (coerce-arg self) layoutGuides)))
@@ -713,17 +1134,17 @@
 (define (nssplitview-needs-display self)
   (tell #:type _bool (coerce-arg self) needsDisplay))
 (define (nssplitview-set-needs-display! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setNeedsDisplay:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setNeedsDisplay:") value))
 (define (nssplitview-needs-layout self)
   (tell #:type _bool (coerce-arg self) needsLayout))
 (define (nssplitview-set-needs-layout! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setNeedsLayout:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setNeedsLayout:") value))
 (define (nssplitview-needs-panel-to-become-key self)
   (tell #:type _bool (coerce-arg self) needsPanelToBecomeKey))
 (define (nssplitview-needs-update-constraints self)
   (tell #:type _bool (coerce-arg self) needsUpdateConstraints))
 (define (nssplitview-set-needs-update-constraints! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setNeedsUpdateConstraints:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setNeedsUpdateConstraints:") value))
 (define (nssplitview-next-key-view self)
   (wrap-objc-object
    (tell (coerce-arg self) nextKeyView)))
@@ -751,19 +1172,19 @@
 (define (nssplitview-posts-bounds-changed-notifications self)
   (tell #:type _bool (coerce-arg self) postsBoundsChangedNotifications))
 (define (nssplitview-set-posts-bounds-changed-notifications! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setPostsBoundsChangedNotifications:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setPostsBoundsChangedNotifications:") value))
 (define (nssplitview-posts-frame-changed-notifications self)
   (tell #:type _bool (coerce-arg self) postsFrameChangedNotifications))
 (define (nssplitview-set-posts-frame-changed-notifications! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setPostsFrameChangedNotifications:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setPostsFrameChangedNotifications:") value))
 (define (nssplitview-prefers-compact-control-size-metrics self)
   (tell #:type _bool (coerce-arg self) prefersCompactControlSizeMetrics))
 (define (nssplitview-set-prefers-compact-control-size-metrics! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setPrefersCompactControlSizeMetrics:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setPrefersCompactControlSizeMetrics:") value))
 (define (nssplitview-prepared-content-rect self)
   (tell #:type _NSRect (coerce-arg self) preparedContentRect))
 (define (nssplitview-set-prepared-content-rect! self value)
-  (_msg-15 (coerce-arg self) (sel_registerName "setPreparedContentRect:") value))
+  (_msg-22 (coerce-arg self) (sel_registerName "setPreparedContentRect:") value))
 (define (nssplitview-preserves-content-during-live-resize self)
   (tell #:type _bool (coerce-arg self) preservesContentDuringLiveResize))
 (define (nssplitview-pressure-configuration self)
@@ -841,7 +1262,7 @@
 (define (nssplitview-translates-autoresizing-mask-into-constraints self)
   (tell #:type _bool (coerce-arg self) translatesAutoresizingMaskIntoConstraints))
 (define (nssplitview-set-translates-autoresizing-mask-into-constraints! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setTranslatesAutoresizingMaskIntoConstraints:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setTranslatesAutoresizingMaskIntoConstraints:") value))
 (define (nssplitview-undo-manager self)
   (wrap-objc-object
    (tell (coerce-arg self) undoManager)))
@@ -853,35 +1274,35 @@
 (define (nssplitview-user-interface-layout-direction self)
   (tell #:type _int64 (coerce-arg self) userInterfaceLayoutDirection))
 (define (nssplitview-set-user-interface-layout-direction! self value)
-  (_msg-34 (coerce-arg self) (sel_registerName "setUserInterfaceLayoutDirection:") value))
+  (_msg-45 (coerce-arg self) (sel_registerName "setUserInterfaceLayoutDirection:") value))
 (define (nssplitview-vertical self)
   (tell #:type _bool (coerce-arg self) vertical))
 (define (nssplitview-set-vertical! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setVertical:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setVertical:") value))
 (define (nssplitview-vertical-content-size-constraint-active self)
   (tell #:type _bool (coerce-arg self) verticalContentSizeConstraintActive))
 (define (nssplitview-set-vertical-content-size-constraint-active! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setVerticalContentSizeConstraintActive:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setVerticalContentSizeConstraintActive:") value))
 (define (nssplitview-visible-rect self)
   (tell #:type _NSRect (coerce-arg self) visibleRect))
 (define (nssplitview-wants-best-resolution-open-gl-surface self)
   (tell #:type _bool (coerce-arg self) wantsBestResolutionOpenGLSurface))
 (define (nssplitview-set-wants-best-resolution-open-gl-surface! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setWantsBestResolutionOpenGLSurface:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setWantsBestResolutionOpenGLSurface:") value))
 (define (nssplitview-wants-default-clipping self)
   (tell #:type _bool (coerce-arg self) wantsDefaultClipping))
 (define (nssplitview-wants-extended-dynamic-range-open-gl-surface self)
   (tell #:type _bool (coerce-arg self) wantsExtendedDynamicRangeOpenGLSurface))
 (define (nssplitview-set-wants-extended-dynamic-range-open-gl-surface! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setWantsExtendedDynamicRangeOpenGLSurface:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setWantsExtendedDynamicRangeOpenGLSurface:") value))
 (define (nssplitview-wants-layer self)
   (tell #:type _bool (coerce-arg self) wantsLayer))
 (define (nssplitview-set-wants-layer! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setWantsLayer:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setWantsLayer:") value))
 (define (nssplitview-wants-resting-touches self)
   (tell #:type _bool (coerce-arg self) wantsRestingTouches))
 (define (nssplitview-set-wants-resting-touches! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setWantsRestingTouches:") value))
+  (_msg-31 (coerce-arg self) (sel_registerName "setWantsRestingTouches:") value))
 (define (nssplitview-wants-update-layer self)
   (tell #:type _bool (coerce-arg self) wantsUpdateLayer))
 (define (nssplitview-width-adjust-limit self)
@@ -900,78 +1321,484 @@
 
 ;; --- Instance methods ---
 (define (nssplitview-accepts-first-mouse self event)
-  (_msg-28 (coerce-arg self) (sel_registerName "acceptsFirstMouse:") (coerce-arg event)))
+  (_msg-36 (coerce-arg self) (sel_registerName "acceptsFirstMouse:") (coerce-arg event)))
+(define (nssplitview-accessibility-activation-point self)
+  (_msg-0 (coerce-arg self) (sel_registerName "accessibilityActivationPoint")))
+(define (nssplitview-accessibility-allowed-values self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityAllowedValues)))
+(define (nssplitview-accessibility-application-focused-ui-element self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityApplicationFocusedUIElement)))
+(define (nssplitview-accessibility-attributed-string-for-range self range)
+  (wrap-objc-object
+   (_msg-17 (coerce-arg self) (sel_registerName "accessibilityAttributedStringForRange:") range)
+   ))
+(define (nssplitview-accessibility-attributed-user-input-labels self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityAttributedUserInputLabels)))
+(define (nssplitview-accessibility-cancel-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityCancelButton)))
+(define (nssplitview-accessibility-cell-for-column-row self column row)
+  (wrap-objc-object
+   (_msg-46 (coerce-arg self) (sel_registerName "accessibilityCellForColumn:row:") column row)
+   ))
+(define (nssplitview-accessibility-children self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityChildren)))
+(define (nssplitview-accessibility-children-in-navigation-order self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityChildrenInNavigationOrder)))
+(define (nssplitview-accessibility-clear-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityClearButton)))
+(define (nssplitview-accessibility-close-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityCloseButton)))
+(define (nssplitview-accessibility-column-count self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityColumnCount")))
+(define (nssplitview-accessibility-column-header-ui-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityColumnHeaderUIElements)))
+(define (nssplitview-accessibility-column-index-range self)
+  (_msg-1 (coerce-arg self) (sel_registerName "accessibilityColumnIndexRange")))
+(define (nssplitview-accessibility-column-titles self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityColumnTitles)))
+(define (nssplitview-accessibility-columns self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityColumns)))
+(define (nssplitview-accessibility-contents self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityContents)))
+(define (nssplitview-accessibility-critical-value self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityCriticalValue)))
+(define (nssplitview-accessibility-custom-actions self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityCustomActions)))
+(define (nssplitview-accessibility-custom-rotors self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityCustomRotors)))
+(define (nssplitview-accessibility-decrement-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityDecrementButton)))
+(define (nssplitview-accessibility-default-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityDefaultButton)))
+(define (nssplitview-accessibility-disclosed-by-row self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityDisclosedByRow)))
+(define (nssplitview-accessibility-disclosed-rows self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityDisclosedRows)))
+(define (nssplitview-accessibility-disclosure-level self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityDisclosureLevel")))
+(define (nssplitview-accessibility-document self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityDocument)))
+(define (nssplitview-accessibility-extras-menu-bar self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityExtrasMenuBar)))
+(define (nssplitview-accessibility-filename self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityFilename)))
+(define (nssplitview-accessibility-focused-window self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityFocusedWindow)))
+(define (nssplitview-accessibility-frame self)
+  (_msg-2 (coerce-arg self) (sel_registerName "accessibilityFrame")))
+(define (nssplitview-accessibility-frame-for-range self range)
+  (_msg-16 (coerce-arg self) (sel_registerName "accessibilityFrameForRange:") range))
+(define (nssplitview-accessibility-full-screen-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityFullScreenButton)))
+(define (nssplitview-accessibility-grow-area self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityGrowArea)))
+(define (nssplitview-accessibility-handles self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityHandles)))
+(define (nssplitview-accessibility-header self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityHeader)))
+(define (nssplitview-accessibility-help self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityHelp)))
+(define (nssplitview-accessibility-horizontal-scroll-bar self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityHorizontalScrollBar)))
+(define (nssplitview-accessibility-horizontal-unit-description self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityHorizontalUnitDescription)))
+(define (nssplitview-accessibility-horizontal-units self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityHorizontalUnits")))
+(define (nssplitview-accessibility-identifier self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityIdentifier)))
+(define (nssplitview-accessibility-increment-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityIncrementButton)))
+(define (nssplitview-accessibility-index self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityIndex")))
+(define (nssplitview-accessibility-insertion-point-line-number self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityInsertionPointLineNumber")))
+(define (nssplitview-accessibility-label self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityLabel)))
+(define (nssplitview-accessibility-label-ui-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityLabelUIElements)))
+(define (nssplitview-accessibility-label-value self)
+  (_msg-5 (coerce-arg self) (sel_registerName "accessibilityLabelValue")))
+(define (nssplitview-accessibility-layout-point-for-screen-point self point)
+  (_msg-9 (coerce-arg self) (sel_registerName "accessibilityLayoutPointForScreenPoint:") point))
+(define (nssplitview-accessibility-layout-size-for-screen-size self size)
+  (_msg-28 (coerce-arg self) (sel_registerName "accessibilityLayoutSizeForScreenSize:") size))
+(define (nssplitview-accessibility-line-for-index self index)
+  (_msg-44 (coerce-arg self) (sel_registerName "accessibilityLineForIndex:") index))
+(define (nssplitview-accessibility-linked-ui-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityLinkedUIElements)))
+(define (nssplitview-accessibility-main-window self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMainWindow)))
+(define (nssplitview-accessibility-marker-group-ui-element self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMarkerGroupUIElement)))
+(define (nssplitview-accessibility-marker-type-description self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMarkerTypeDescription)))
+(define (nssplitview-accessibility-marker-ui-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMarkerUIElements)))
+(define (nssplitview-accessibility-marker-values self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMarkerValues)))
+(define (nssplitview-accessibility-max-value self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMaxValue)))
+(define (nssplitview-accessibility-menu-bar self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMenuBar)))
+(define (nssplitview-accessibility-min-value self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMinValue)))
+(define (nssplitview-accessibility-minimize-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityMinimizeButton)))
+(define (nssplitview-accessibility-next-contents self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityNextContents)))
+(define (nssplitview-accessibility-number-of-characters self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityNumberOfCharacters")))
+(define (nssplitview-accessibility-orientation self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityOrientation")))
+(define (nssplitview-accessibility-overflow-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityOverflowButton)))
+(define (nssplitview-accessibility-parent self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityParent)))
+(define (nssplitview-accessibility-perform-cancel self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformCancel")))
+(define (nssplitview-accessibility-perform-confirm self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformConfirm")))
+(define (nssplitview-accessibility-perform-decrement self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformDecrement")))
+(define (nssplitview-accessibility-perform-delete self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformDelete")))
+(define (nssplitview-accessibility-perform-increment self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformIncrement")))
+(define (nssplitview-accessibility-perform-pick self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformPick")))
+(define (nssplitview-accessibility-perform-press self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformPress")))
+(define (nssplitview-accessibility-perform-raise self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformRaise")))
+(define (nssplitview-accessibility-perform-show-alternate-ui self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformShowAlternateUI")))
+(define (nssplitview-accessibility-perform-show-default-ui self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformShowDefaultUI")))
+(define (nssplitview-accessibility-perform-show-menu self)
+  (_msg-3 (coerce-arg self) (sel_registerName "accessibilityPerformShowMenu")))
+(define (nssplitview-accessibility-placeholder-value self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityPlaceholderValue)))
+(define (nssplitview-accessibility-previous-contents self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityPreviousContents)))
+(define (nssplitview-accessibility-proxy self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityProxy)))
+(define (nssplitview-accessibility-rtf-for-range self range)
+  (wrap-objc-object
+   (_msg-17 (coerce-arg self) (sel_registerName "accessibilityRTFForRange:") range)
+   ))
+(define (nssplitview-accessibility-range-for-index self index)
+  (_msg-39 (coerce-arg self) (sel_registerName "accessibilityRangeForIndex:") index))
+(define (nssplitview-accessibility-range-for-line self line)
+  (_msg-39 (coerce-arg self) (sel_registerName "accessibilityRangeForLine:") line))
+(define (nssplitview-accessibility-range-for-position self point)
+  (_msg-10 (coerce-arg self) (sel_registerName "accessibilityRangeForPosition:") point))
+(define (nssplitview-accessibility-role self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityRole)))
+(define (nssplitview-accessibility-role-description self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityRoleDescription)))
+(define (nssplitview-accessibility-row-count self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityRowCount")))
+(define (nssplitview-accessibility-row-header-ui-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityRowHeaderUIElements)))
+(define (nssplitview-accessibility-row-index-range self)
+  (_msg-1 (coerce-arg self) (sel_registerName "accessibilityRowIndexRange")))
+(define (nssplitview-accessibility-rows self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityRows)))
+(define (nssplitview-accessibility-ruler-marker-type self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityRulerMarkerType")))
+(define (nssplitview-accessibility-screen-point-for-layout-point self point)
+  (_msg-9 (coerce-arg self) (sel_registerName "accessibilityScreenPointForLayoutPoint:") point))
+(define (nssplitview-accessibility-screen-size-for-layout-size self size)
+  (_msg-28 (coerce-arg self) (sel_registerName "accessibilityScreenSizeForLayoutSize:") size))
+(define (nssplitview-accessibility-search-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySearchButton)))
+(define (nssplitview-accessibility-search-menu self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySearchMenu)))
+(define (nssplitview-accessibility-selected-cells self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySelectedCells)))
+(define (nssplitview-accessibility-selected-children self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySelectedChildren)))
+(define (nssplitview-accessibility-selected-columns self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySelectedColumns)))
+(define (nssplitview-accessibility-selected-rows self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySelectedRows)))
+(define (nssplitview-accessibility-selected-text self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySelectedText)))
+(define (nssplitview-accessibility-selected-text-range self)
+  (_msg-1 (coerce-arg self) (sel_registerName "accessibilitySelectedTextRange")))
+(define (nssplitview-accessibility-selected-text-ranges self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySelectedTextRanges)))
+(define (nssplitview-accessibility-serves-as-title-for-ui-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityServesAsTitleForUIElements)))
+(define (nssplitview-accessibility-shared-character-range self)
+  (_msg-1 (coerce-arg self) (sel_registerName "accessibilitySharedCharacterRange")))
+(define (nssplitview-accessibility-shared-focus-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySharedFocusElements)))
+(define (nssplitview-accessibility-shared-text-ui-elements self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySharedTextUIElements)))
+(define (nssplitview-accessibility-shown-menu self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityShownMenu)))
+(define (nssplitview-accessibility-sort-direction self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilitySortDirection")))
+(define (nssplitview-accessibility-splitters self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySplitters)))
+(define (nssplitview-accessibility-string-for-range self range)
+  (wrap-objc-object
+   (_msg-17 (coerce-arg self) (sel_registerName "accessibilityStringForRange:") range)
+   ))
+(define (nssplitview-accessibility-style-range-for-index self index)
+  (_msg-39 (coerce-arg self) (sel_registerName "accessibilityStyleRangeForIndex:") index))
+(define (nssplitview-accessibility-subrole self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilitySubrole)))
+(define (nssplitview-accessibility-tabs self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityTabs)))
+(define (nssplitview-accessibility-title self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityTitle)))
+(define (nssplitview-accessibility-title-ui-element self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityTitleUIElement)))
+(define (nssplitview-accessibility-toolbar-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityToolbarButton)))
+(define (nssplitview-accessibility-top-level-ui-element self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityTopLevelUIElement)))
+(define (nssplitview-accessibility-url self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityURL)))
+(define (nssplitview-accessibility-unit-description self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityUnitDescription)))
+(define (nssplitview-accessibility-units self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityUnits")))
+(define (nssplitview-accessibility-user-input-labels self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityUserInputLabels)))
+(define (nssplitview-accessibility-value self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityValue)))
+(define (nssplitview-accessibility-value-description self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityValueDescription)))
+(define (nssplitview-accessibility-vertical-scroll-bar self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityVerticalScrollBar)))
+(define (nssplitview-accessibility-vertical-unit-description self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityVerticalUnitDescription)))
+(define (nssplitview-accessibility-vertical-units self)
+  (_msg-6 (coerce-arg self) (sel_registerName "accessibilityVerticalUnits")))
+(define (nssplitview-accessibility-visible-cells self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityVisibleCells)))
+(define (nssplitview-accessibility-visible-character-range self)
+  (_msg-1 (coerce-arg self) (sel_registerName "accessibilityVisibleCharacterRange")))
+(define (nssplitview-accessibility-visible-children self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityVisibleChildren)))
+(define (nssplitview-accessibility-visible-columns self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityVisibleColumns)))
+(define (nssplitview-accessibility-visible-rows self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityVisibleRows)))
+(define (nssplitview-accessibility-warning-value self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityWarningValue)))
+(define (nssplitview-accessibility-window self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityWindow)))
+(define (nssplitview-accessibility-windows self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityWindows)))
+(define (nssplitview-accessibility-zoom-button self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityZoomButton)))
 (define (nssplitview-add-subview! self view)
   (tell #:type _void (coerce-arg self) addSubview: (coerce-arg view)))
 (define (nssplitview-add-subview-positioned-relative-to! self view place other-view)
-  (_msg-29 (coerce-arg self) (sel_registerName "addSubview:positioned:relativeTo:") (coerce-arg view) place (coerce-arg other-view)))
+  (_msg-38 (coerce-arg self) (sel_registerName "addSubview:positioned:relativeTo:") (coerce-arg view) place (coerce-arg other-view)))
 (define (nssplitview-add-tool-tip-rect-owner-user-data! self rect owner data)
-  (_msg-19 (coerce-arg self) (sel_registerName "addToolTipRect:owner:userData:") rect (coerce-arg owner) data))
+  (_msg-26 (coerce-arg self) (sel_registerName "addToolTipRect:owner:userData:") rect (coerce-arg owner) data))
 (define (nssplitview-adjust-scroll self new-visible)
-  (_msg-12 (coerce-arg self) (sel_registerName "adjustScroll:") new-visible))
+  (_msg-19 (coerce-arg self) (sel_registerName "adjustScroll:") new-visible))
 (define (nssplitview-adjust-subviews self)
   (tell #:type _void (coerce-arg self) adjustSubviews))
 (define (nssplitview-ancestor-shared-with-view self view)
   (wrap-objc-object
    (tell (coerce-arg self) ancestorSharedWithView: (coerce-arg view))))
+(define (nssplitview-animation-for-key self key)
+  (wrap-objc-object
+   (tell (coerce-arg self) animationForKey: (coerce-arg key))))
+(define (nssplitview-animations self)
+  (wrap-objc-object
+   (tell (coerce-arg self) animations)))
+(define (nssplitview-animator self)
+  (wrap-objc-object
+   (tell (coerce-arg self) animator)))
+(define (nssplitview-appearance self)
+  (wrap-objc-object
+   (tell (coerce-arg self) appearance)))
 (define (nssplitview-autoscroll self event)
-  (_msg-28 (coerce-arg self) (sel_registerName "autoscroll:") (coerce-arg event)))
+  (_msg-36 (coerce-arg self) (sel_registerName "autoscroll:") (coerce-arg event)))
 (define (nssplitview-backing-aligned-rect-options self rect options)
-  (_msg-20 (coerce-arg self) (sel_registerName "backingAlignedRect:options:") rect options))
+  (_msg-27 (coerce-arg self) (sel_registerName "backingAlignedRect:options:") rect options))
 (define (nssplitview-become-first-responder self)
-  (_msg-1 (coerce-arg self) (sel_registerName "becomeFirstResponder")))
+  (_msg-3 (coerce-arg self) (sel_registerName "becomeFirstResponder")))
 (define (nssplitview-begin-gesture-with-event! self event)
   (tell #:type _void (coerce-arg self) beginGestureWithEvent: (coerce-arg event)))
 (define (nssplitview-bitmap-image-rep-for-caching-display-in-rect self rect)
   (wrap-objc-object
-   (_msg-14 (coerce-arg self) (sel_registerName "bitmapImageRepForCachingDisplayInRect:") rect)
+   (_msg-21 (coerce-arg self) (sel_registerName "bitmapImageRepForCachingDisplayInRect:") rect)
    ))
 (define (nssplitview-cache-display-in-rect-to-bitmap-image-rep self rect bitmap-image-rep)
-  (_msg-18 (coerce-arg self) (sel_registerName "cacheDisplayInRect:toBitmapImageRep:") rect (coerce-arg bitmap-image-rep)))
+  (_msg-25 (coerce-arg self) (sel_registerName "cacheDisplayInRect:toBitmapImageRep:") rect (coerce-arg bitmap-image-rep)))
+(define (nssplitview-cancel-operation self sender)
+  (tell #:type _void (coerce-arg self) cancelOperation: (coerce-arg sender)))
+(define (nssplitview-capitalize-word self sender)
+  (tell #:type _void (coerce-arg self) capitalizeWord: (coerce-arg sender)))
 (define (nssplitview-center-scan-rect! self rect)
-  (_msg-12 (coerce-arg self) (sel_registerName "centerScanRect:") rect))
+  (_msg-19 (coerce-arg self) (sel_registerName "centerScanRect:") rect))
+(define (nssplitview-center-selection-in-visible-area! self sender)
+  (tell #:type _void (coerce-arg self) centerSelectionInVisibleArea: (coerce-arg sender)))
+(define (nssplitview-change-case-of-letter self sender)
+  (tell #:type _void (coerce-arg self) changeCaseOfLetter: (coerce-arg sender)))
 (define (nssplitview-change-mode-with-event self event)
   (tell #:type _void (coerce-arg self) changeModeWithEvent: (coerce-arg event)))
+(define (nssplitview-complete self sender)
+  (tell #:type _void (coerce-arg self) complete: (coerce-arg sender)))
+(define (nssplitview-conclude-drag-operation self sender)
+  (tell #:type _void (coerce-arg self) concludeDragOperation: (coerce-arg sender)))
 (define (nssplitview-context-menu-key-down self event)
   (tell #:type _void (coerce-arg self) contextMenuKeyDown: (coerce-arg event)))
 (define (nssplitview-convert-point-from-view self point view)
-  (_msg-11 (coerce-arg self) (sel_registerName "convertPoint:fromView:") point (coerce-arg view)))
+  (_msg-15 (coerce-arg self) (sel_registerName "convertPoint:fromView:") point (coerce-arg view)))
 (define (nssplitview-convert-point-to-view self point view)
-  (_msg-11 (coerce-arg self) (sel_registerName "convertPoint:toView:") point (coerce-arg view)))
+  (_msg-15 (coerce-arg self) (sel_registerName "convertPoint:toView:") point (coerce-arg view)))
 (define (nssplitview-convert-point-from-backing self point)
-  (_msg-6 (coerce-arg self) (sel_registerName "convertPointFromBacking:") point))
+  (_msg-9 (coerce-arg self) (sel_registerName "convertPointFromBacking:") point))
 (define (nssplitview-convert-point-from-layer self point)
-  (_msg-6 (coerce-arg self) (sel_registerName "convertPointFromLayer:") point))
+  (_msg-9 (coerce-arg self) (sel_registerName "convertPointFromLayer:") point))
 (define (nssplitview-convert-point-to-backing self point)
-  (_msg-6 (coerce-arg self) (sel_registerName "convertPointToBacking:") point))
+  (_msg-9 (coerce-arg self) (sel_registerName "convertPointToBacking:") point))
 (define (nssplitview-convert-point-to-layer self point)
-  (_msg-6 (coerce-arg self) (sel_registerName "convertPointToLayer:") point))
+  (_msg-9 (coerce-arg self) (sel_registerName "convertPointToLayer:") point))
 (define (nssplitview-convert-rect-from-view self rect view)
-  (_msg-17 (coerce-arg self) (sel_registerName "convertRect:fromView:") rect (coerce-arg view)))
+  (_msg-24 (coerce-arg self) (sel_registerName "convertRect:fromView:") rect (coerce-arg view)))
 (define (nssplitview-convert-rect-to-view self rect view)
-  (_msg-17 (coerce-arg self) (sel_registerName "convertRect:toView:") rect (coerce-arg view)))
+  (_msg-24 (coerce-arg self) (sel_registerName "convertRect:toView:") rect (coerce-arg view)))
 (define (nssplitview-convert-rect-from-backing self rect)
-  (_msg-12 (coerce-arg self) (sel_registerName "convertRectFromBacking:") rect))
+  (_msg-19 (coerce-arg self) (sel_registerName "convertRectFromBacking:") rect))
 (define (nssplitview-convert-rect-from-layer self rect)
-  (_msg-12 (coerce-arg self) (sel_registerName "convertRectFromLayer:") rect))
+  (_msg-19 (coerce-arg self) (sel_registerName "convertRectFromLayer:") rect))
 (define (nssplitview-convert-rect-to-backing self rect)
-  (_msg-12 (coerce-arg self) (sel_registerName "convertRectToBacking:") rect))
+  (_msg-19 (coerce-arg self) (sel_registerName "convertRectToBacking:") rect))
 (define (nssplitview-convert-rect-to-layer self rect)
-  (_msg-12 (coerce-arg self) (sel_registerName "convertRectToLayer:") rect))
+  (_msg-19 (coerce-arg self) (sel_registerName "convertRectToLayer:") rect))
 (define (nssplitview-convert-size-from-view self size view)
-  (_msg-23 (coerce-arg self) (sel_registerName "convertSize:fromView:") size (coerce-arg view)))
+  (_msg-30 (coerce-arg self) (sel_registerName "convertSize:fromView:") size (coerce-arg view)))
 (define (nssplitview-convert-size-to-view self size view)
-  (_msg-23 (coerce-arg self) (sel_registerName "convertSize:toView:") size (coerce-arg view)))
+  (_msg-30 (coerce-arg self) (sel_registerName "convertSize:toView:") size (coerce-arg view)))
 (define (nssplitview-convert-size-from-backing self size)
-  (_msg-21 (coerce-arg self) (sel_registerName "convertSizeFromBacking:") size))
+  (_msg-28 (coerce-arg self) (sel_registerName "convertSizeFromBacking:") size))
 (define (nssplitview-convert-size-from-layer self size)
-  (_msg-21 (coerce-arg self) (sel_registerName "convertSizeFromLayer:") size))
+  (_msg-28 (coerce-arg self) (sel_registerName "convertSizeFromLayer:") size))
 (define (nssplitview-convert-size-to-backing self size)
-  (_msg-21 (coerce-arg self) (sel_registerName "convertSizeToBacking:") size))
+  (_msg-28 (coerce-arg self) (sel_registerName "convertSizeToBacking:") size))
 (define (nssplitview-convert-size-to-layer self size)
-  (_msg-21 (coerce-arg self) (sel_registerName "convertSizeToLayer:") size))
+  (_msg-28 (coerce-arg self) (sel_registerName "convertSizeToLayer:") size))
 (define (nssplitview-cursor-update self event)
   (tell #:type _void (coerce-arg self) cursorUpdate: (coerce-arg event)))
+(define (nssplitview-delete-backward self sender)
+  (tell #:type _void (coerce-arg self) deleteBackward: (coerce-arg sender)))
+(define (nssplitview-delete-backward-by-decomposing-previous-character self sender)
+  (tell #:type _void (coerce-arg self) deleteBackwardByDecomposingPreviousCharacter: (coerce-arg sender)))
+(define (nssplitview-delete-forward self sender)
+  (tell #:type _void (coerce-arg self) deleteForward: (coerce-arg sender)))
+(define (nssplitview-delete-to-beginning-of-line self sender)
+  (tell #:type _void (coerce-arg self) deleteToBeginningOfLine: (coerce-arg sender)))
+(define (nssplitview-delete-to-beginning-of-paragraph self sender)
+  (tell #:type _void (coerce-arg self) deleteToBeginningOfParagraph: (coerce-arg sender)))
+(define (nssplitview-delete-to-end-of-line self sender)
+  (tell #:type _void (coerce-arg self) deleteToEndOfLine: (coerce-arg sender)))
+(define (nssplitview-delete-to-end-of-paragraph self sender)
+  (tell #:type _void (coerce-arg self) deleteToEndOfParagraph: (coerce-arg sender)))
+(define (nssplitview-delete-to-mark self sender)
+  (tell #:type _void (coerce-arg self) deleteToMark: (coerce-arg sender)))
+(define (nssplitview-delete-word-backward self sender)
+  (tell #:type _void (coerce-arg self) deleteWordBackward: (coerce-arg sender)))
+(define (nssplitview-delete-word-forward self sender)
+  (tell #:type _void (coerce-arg self) deleteWordForward: (coerce-arg sender)))
 (define (nssplitview-did-add-subview self subview)
   (tell #:type _void (coerce-arg self) didAddSubview: (coerce-arg subview)))
 (define (nssplitview-did-close-menu-with-event self menu event)
@@ -983,19 +1810,34 @@
 (define (nssplitview-display-if-needed-ignoring-opacity! self)
   (tell #:type _void (coerce-arg self) displayIfNeededIgnoringOpacity))
 (define (nssplitview-display-if-needed-in-rect! self rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "displayIfNeededInRect:") rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "displayIfNeededInRect:") rect))
 (define (nssplitview-display-if-needed-in-rect-ignoring-opacity! self rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "displayIfNeededInRectIgnoringOpacity:") rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "displayIfNeededInRectIgnoringOpacity:") rect))
 (define (nssplitview-display-rect! self rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "displayRect:") rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "displayRect:") rect))
 (define (nssplitview-display-rect-ignoring-opacity! self rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "displayRectIgnoringOpacity:") rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "displayRectIgnoringOpacity:") rect))
 (define (nssplitview-display-rect-ignoring-opacity-in-context! self rect context)
-  (_msg-18 (coerce-arg self) (sel_registerName "displayRectIgnoringOpacity:inContext:") rect (coerce-arg context)))
+  (_msg-25 (coerce-arg self) (sel_registerName "displayRectIgnoringOpacity:inContext:") rect (coerce-arg context)))
+(define (nssplitview-do-command-by-selector self selector)
+  (_msg-48 (coerce-arg self) (sel_registerName "doCommandBySelector:") (sel_registerName selector)))
+(define (nssplitview-dragging-ended self sender)
+  (tell #:type _void (coerce-arg self) draggingEnded: (coerce-arg sender)))
+(define (nssplitview-dragging-entered self sender)
+  (_msg-37 (coerce-arg self) (sel_registerName "draggingEntered:") (coerce-arg sender)))
+(define (nssplitview-dragging-exited self sender)
+  (tell #:type _void (coerce-arg self) draggingExited: (coerce-arg sender)))
+(define (nssplitview-dragging-updated self sender)
+  (_msg-37 (coerce-arg self) (sel_registerName "draggingUpdated:") (coerce-arg sender)))
 (define (nssplitview-draw-divider-in-rect self rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "drawDividerInRect:") rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "drawDividerInRect:") rect))
 (define (nssplitview-draw-rect self dirty-rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "drawRect:") dirty-rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "drawRect:") dirty-rect))
+(define (nssplitview-effective-appearance self)
+  (wrap-objc-object
+   (tell (coerce-arg self) effectiveAppearance)))
+(define (nssplitview-encode-with-coder self coder)
+  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
 (define (nssplitview-end-gesture-with-event! self event)
   (tell #:type _void (coerce-arg self) endGestureWithEvent: (coerce-arg event)))
 (define (nssplitview-flags-changed self event)
@@ -1003,37 +1845,98 @@
 (define (nssplitview-flush-buffered-key-events self)
   (tell #:type _void (coerce-arg self) flushBufferedKeyEvents))
 (define (nssplitview-get-rects-being-drawn-count self rects count)
-  (_msg-38 (coerce-arg self) (sel_registerName "getRectsBeingDrawn:count:") rects count))
+  (_msg-51 (coerce-arg self) (sel_registerName "getRectsBeingDrawn:count:") rects count))
 (define (nssplitview-get-rects-exposed-during-live-resize-count self exposed-rects count)
-  (_msg-38 (coerce-arg self) (sel_registerName "getRectsExposedDuringLiveResize:count:") exposed-rects count))
+  (_msg-51 (coerce-arg self) (sel_registerName "getRectsExposedDuringLiveResize:count:") exposed-rects count))
 (define (nssplitview-help-requested self event-ptr)
   (tell #:type _void (coerce-arg self) helpRequested: (coerce-arg event-ptr)))
 (define (nssplitview-hit-test self point)
   (wrap-objc-object
-   (_msg-7 (coerce-arg self) (sel_registerName "hitTest:") point)
+   (_msg-11 (coerce-arg self) (sel_registerName "hitTest:") point)
    ))
 (define (nssplitview-holding-priority-for-subview-at-index self subview-index)
-  (_msg-32 (coerce-arg self) (sel_registerName "holdingPriorityForSubviewAtIndex:") subview-index))
+  (_msg-42 (coerce-arg self) (sel_registerName "holdingPriorityForSubviewAtIndex:") subview-index))
+(define (nssplitview-identifier self)
+  (wrap-objc-object
+   (tell (coerce-arg self) identifier)))
+(define (nssplitview-indent self sender)
+  (tell #:type _void (coerce-arg self) indent: (coerce-arg sender)))
+(define (nssplitview-insert-backtab! self sender)
+  (tell #:type _void (coerce-arg self) insertBacktab: (coerce-arg sender)))
+(define (nssplitview-insert-container-break! self sender)
+  (tell #:type _void (coerce-arg self) insertContainerBreak: (coerce-arg sender)))
+(define (nssplitview-insert-double-quote-ignoring-substitution! self sender)
+  (tell #:type _void (coerce-arg self) insertDoubleQuoteIgnoringSubstitution: (coerce-arg sender)))
+(define (nssplitview-insert-line-break! self sender)
+  (tell #:type _void (coerce-arg self) insertLineBreak: (coerce-arg sender)))
+(define (nssplitview-insert-newline! self sender)
+  (tell #:type _void (coerce-arg self) insertNewline: (coerce-arg sender)))
+(define (nssplitview-insert-newline-ignoring-field-editor! self sender)
+  (tell #:type _void (coerce-arg self) insertNewlineIgnoringFieldEditor: (coerce-arg sender)))
+(define (nssplitview-insert-paragraph-separator! self sender)
+  (tell #:type _void (coerce-arg self) insertParagraphSeparator: (coerce-arg sender)))
+(define (nssplitview-insert-single-quote-ignoring-substitution! self sender)
+  (tell #:type _void (coerce-arg self) insertSingleQuoteIgnoringSubstitution: (coerce-arg sender)))
+(define (nssplitview-insert-tab! self sender)
+  (tell #:type _void (coerce-arg self) insertTab: (coerce-arg sender)))
+(define (nssplitview-insert-tab-ignoring-field-editor! self sender)
+  (tell #:type _void (coerce-arg self) insertTabIgnoringFieldEditor: (coerce-arg sender)))
+(define (nssplitview-insert-text! self insert-string)
+  (tell #:type _void (coerce-arg self) insertText: (coerce-arg insert-string)))
 (define (nssplitview-interpret-key-events self event-array)
   (tell #:type _void (coerce-arg self) interpretKeyEvents: (coerce-arg event-array)))
+(define (nssplitview-is-accessibility-alternate-ui-visible self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityAlternateUIVisible")))
+(define (nssplitview-is-accessibility-disclosed self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityDisclosed")))
+(define (nssplitview-is-accessibility-edited self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityEdited")))
+(define (nssplitview-is-accessibility-element self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityElement")))
+(define (nssplitview-is-accessibility-enabled self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityEnabled")))
+(define (nssplitview-is-accessibility-expanded self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityExpanded")))
+(define (nssplitview-is-accessibility-focused self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityFocused")))
+(define (nssplitview-is-accessibility-frontmost self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityFrontmost")))
+(define (nssplitview-is-accessibility-hidden self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityHidden")))
+(define (nssplitview-is-accessibility-main self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityMain")))
+(define (nssplitview-is-accessibility-minimized self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityMinimized")))
+(define (nssplitview-is-accessibility-modal self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityModal")))
+(define (nssplitview-is-accessibility-ordered-by-row self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityOrderedByRow")))
+(define (nssplitview-is-accessibility-protected-content self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityProtectedContent")))
+(define (nssplitview-is-accessibility-required self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilityRequired")))
+(define (nssplitview-is-accessibility-selected self)
+  (_msg-3 (coerce-arg self) (sel_registerName "isAccessibilitySelected")))
+(define (nssplitview-is-accessibility-selector-allowed self selector)
+  (_msg-47 (coerce-arg self) (sel_registerName "isAccessibilitySelectorAllowed:") (sel_registerName selector)))
 (define (nssplitview-is-descendant-of self view)
-  (_msg-28 (coerce-arg self) (sel_registerName "isDescendantOf:") (coerce-arg view)))
+  (_msg-36 (coerce-arg self) (sel_registerName "isDescendantOf:") (coerce-arg view)))
 (define (nssplitview-is-flipped self)
-  (_msg-1 (coerce-arg self) (sel_registerName "isFlipped")))
+  (_msg-3 (coerce-arg self) (sel_registerName "isFlipped")))
 (define (nssplitview-is-hidden self)
-  (_msg-1 (coerce-arg self) (sel_registerName "isHidden")))
+  (_msg-3 (coerce-arg self) (sel_registerName "isHidden")))
 (define (nssplitview-is-hidden-or-has-hidden-ancestor self)
-  (_msg-1 (coerce-arg self) (sel_registerName "isHiddenOrHasHiddenAncestor")))
+  (_msg-3 (coerce-arg self) (sel_registerName "isHiddenOrHasHiddenAncestor")))
 (define (nssplitview-is-opaque self)
-  (_msg-1 (coerce-arg self) (sel_registerName "isOpaque")))
+  (_msg-3 (coerce-arg self) (sel_registerName "isOpaque")))
 (define (nssplitview-is-rotated-from-base self)
-  (_msg-1 (coerce-arg self) (sel_registerName "isRotatedFromBase")))
+  (_msg-3 (coerce-arg self) (sel_registerName "isRotatedFromBase")))
 (define (nssplitview-is-rotated-or-scaled-from-base self)
-  (_msg-1 (coerce-arg self) (sel_registerName "isRotatedOrScaledFromBase")))
+  (_msg-3 (coerce-arg self) (sel_registerName "isRotatedOrScaledFromBase")))
 (define (nssplitview-is-subview-collapsed self subview)
-  (_msg-28 (coerce-arg self) (sel_registerName "isSubviewCollapsed:") (coerce-arg subview)))
+  (_msg-36 (coerce-arg self) (sel_registerName "isSubviewCollapsed:") (coerce-arg subview)))
 (define (nssplitview-is-vertical self)
-  (_msg-1 (coerce-arg self) (sel_registerName "isVertical")))
+  (_msg-3 (coerce-arg self) (sel_registerName "isVertical")))
 (define (nssplitview-key-down self event)
   (tell #:type _void (coerce-arg self) keyDown: (coerce-arg event)))
 (define (nssplitview-key-up self event)
@@ -1042,20 +1945,34 @@
   (tell #:type _void (coerce-arg self) layout))
 (define (nssplitview-layout-subtree-if-needed self)
   (tell #:type _void (coerce-arg self) layoutSubtreeIfNeeded))
+(define (nssplitview-lowercase-word self sender)
+  (tell #:type _void (coerce-arg self) lowercaseWord: (coerce-arg sender)))
 (define (nssplitview-magnify-with-event self event)
   (tell #:type _void (coerce-arg self) magnifyWithEvent: (coerce-arg event)))
 (define (nssplitview-make-backing-layer self)
   (wrap-objc-object
    (tell (coerce-arg self) makeBackingLayer)))
+(define (nssplitview-make-base-writing-direction-left-to-right self sender)
+  (tell #:type _void (coerce-arg self) makeBaseWritingDirectionLeftToRight: (coerce-arg sender)))
+(define (nssplitview-make-base-writing-direction-natural self sender)
+  (tell #:type _void (coerce-arg self) makeBaseWritingDirectionNatural: (coerce-arg sender)))
+(define (nssplitview-make-base-writing-direction-right-to-left self sender)
+  (tell #:type _void (coerce-arg self) makeBaseWritingDirectionRightToLeft: (coerce-arg sender)))
+(define (nssplitview-make-text-writing-direction-left-to-right self sender)
+  (tell #:type _void (coerce-arg self) makeTextWritingDirectionLeftToRight: (coerce-arg sender)))
+(define (nssplitview-make-text-writing-direction-natural self sender)
+  (tell #:type _void (coerce-arg self) makeTextWritingDirectionNatural: (coerce-arg sender)))
+(define (nssplitview-make-text-writing-direction-right-to-left self sender)
+  (tell #:type _void (coerce-arg self) makeTextWritingDirectionRightToLeft: (coerce-arg sender)))
 (define (nssplitview-max-possible-position-of-divider-at-index self divider-index)
-  (_msg-31 (coerce-arg self) (sel_registerName "maxPossiblePositionOfDividerAtIndex:") divider-index))
+  (_msg-41 (coerce-arg self) (sel_registerName "maxPossiblePositionOfDividerAtIndex:") divider-index))
 (define (nssplitview-menu-for-event self event)
   (wrap-objc-object
    (tell (coerce-arg self) menuForEvent: (coerce-arg event))))
 (define (nssplitview-min-possible-position-of-divider-at-index self divider-index)
-  (_msg-31 (coerce-arg self) (sel_registerName "minPossiblePositionOfDividerAtIndex:") divider-index))
+  (_msg-41 (coerce-arg self) (sel_registerName "minPossiblePositionOfDividerAtIndex:") divider-index))
 (define (nssplitview-mouse-in-rect self point rect)
-  (_msg-10 (coerce-arg self) (sel_registerName "mouse:inRect:") point rect))
+  (_msg-14 (coerce-arg self) (sel_registerName "mouse:inRect:") point rect))
 (define (nssplitview-mouse-cancelled self event)
   (tell #:type _void (coerce-arg self) mouseCancelled: (coerce-arg event)))
 (define (nssplitview-mouse-down self event)
@@ -1070,28 +1987,118 @@
   (tell #:type _void (coerce-arg self) mouseMoved: (coerce-arg event)))
 (define (nssplitview-mouse-up self event)
   (tell #:type _void (coerce-arg self) mouseUp: (coerce-arg event)))
+(define (nssplitview-move-backward! self sender)
+  (tell #:type _void (coerce-arg self) moveBackward: (coerce-arg sender)))
+(define (nssplitview-move-backward-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveBackwardAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-down! self sender)
+  (tell #:type _void (coerce-arg self) moveDown: (coerce-arg sender)))
+(define (nssplitview-move-down-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveDownAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-forward! self sender)
+  (tell #:type _void (coerce-arg self) moveForward: (coerce-arg sender)))
+(define (nssplitview-move-forward-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveForwardAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-left! self sender)
+  (tell #:type _void (coerce-arg self) moveLeft: (coerce-arg sender)))
+(define (nssplitview-move-left-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveLeftAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-paragraph-backward-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveParagraphBackwardAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-paragraph-forward-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveParagraphForwardAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-right! self sender)
+  (tell #:type _void (coerce-arg self) moveRight: (coerce-arg sender)))
+(define (nssplitview-move-right-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveRightAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-beginning-of-document! self sender)
+  (tell #:type _void (coerce-arg self) moveToBeginningOfDocument: (coerce-arg sender)))
+(define (nssplitview-move-to-beginning-of-document-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToBeginningOfDocumentAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-beginning-of-line! self sender)
+  (tell #:type _void (coerce-arg self) moveToBeginningOfLine: (coerce-arg sender)))
+(define (nssplitview-move-to-beginning-of-line-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToBeginningOfLineAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-beginning-of-paragraph! self sender)
+  (tell #:type _void (coerce-arg self) moveToBeginningOfParagraph: (coerce-arg sender)))
+(define (nssplitview-move-to-beginning-of-paragraph-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToBeginningOfParagraphAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-end-of-document! self sender)
+  (tell #:type _void (coerce-arg self) moveToEndOfDocument: (coerce-arg sender)))
+(define (nssplitview-move-to-end-of-document-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToEndOfDocumentAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-end-of-line! self sender)
+  (tell #:type _void (coerce-arg self) moveToEndOfLine: (coerce-arg sender)))
+(define (nssplitview-move-to-end-of-line-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToEndOfLineAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-end-of-paragraph! self sender)
+  (tell #:type _void (coerce-arg self) moveToEndOfParagraph: (coerce-arg sender)))
+(define (nssplitview-move-to-end-of-paragraph-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToEndOfParagraphAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-left-end-of-line! self sender)
+  (tell #:type _void (coerce-arg self) moveToLeftEndOfLine: (coerce-arg sender)))
+(define (nssplitview-move-to-left-end-of-line-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToLeftEndOfLineAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-to-right-end-of-line! self sender)
+  (tell #:type _void (coerce-arg self) moveToRightEndOfLine: (coerce-arg sender)))
+(define (nssplitview-move-to-right-end-of-line-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveToRightEndOfLineAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-up! self sender)
+  (tell #:type _void (coerce-arg self) moveUp: (coerce-arg sender)))
+(define (nssplitview-move-up-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveUpAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-word-backward! self sender)
+  (tell #:type _void (coerce-arg self) moveWordBackward: (coerce-arg sender)))
+(define (nssplitview-move-word-backward-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveWordBackwardAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-word-forward! self sender)
+  (tell #:type _void (coerce-arg self) moveWordForward: (coerce-arg sender)))
+(define (nssplitview-move-word-forward-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveWordForwardAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-word-left! self sender)
+  (tell #:type _void (coerce-arg self) moveWordLeft: (coerce-arg sender)))
+(define (nssplitview-move-word-left-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveWordLeftAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-move-word-right! self sender)
+  (tell #:type _void (coerce-arg self) moveWordRight: (coerce-arg sender)))
+(define (nssplitview-move-word-right-and-modify-selection! self sender)
+  (tell #:type _void (coerce-arg self) moveWordRightAndModifySelection: (coerce-arg sender)))
 (define (nssplitview-needs-to-draw-rect self rect)
-  (_msg-13 (coerce-arg self) (sel_registerName "needsToDrawRect:") rect))
+  (_msg-20 (coerce-arg self) (sel_registerName "needsToDrawRect:") rect))
 (define (nssplitview-no-responder-for self event-selector)
-  (_msg-35 (coerce-arg self) (sel_registerName "noResponderFor:") (sel_registerName event-selector)))
+  (_msg-48 (coerce-arg self) (sel_registerName "noResponderFor:") (sel_registerName event-selector)))
 (define (nssplitview-other-mouse-down self event)
   (tell #:type _void (coerce-arg self) otherMouseDown: (coerce-arg event)))
 (define (nssplitview-other-mouse-dragged self event)
   (tell #:type _void (coerce-arg self) otherMouseDragged: (coerce-arg event)))
 (define (nssplitview-other-mouse-up self event)
   (tell #:type _void (coerce-arg self) otherMouseUp: (coerce-arg event)))
+(define (nssplitview-page-down self sender)
+  (tell #:type _void (coerce-arg self) pageDown: (coerce-arg sender)))
+(define (nssplitview-page-down-and-modify-selection self sender)
+  (tell #:type _void (coerce-arg self) pageDownAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-page-up self sender)
+  (tell #:type _void (coerce-arg self) pageUp: (coerce-arg sender)))
+(define (nssplitview-page-up-and-modify-selection self sender)
+  (tell #:type _void (coerce-arg self) pageUpAndModifySelection: (coerce-arg sender)))
+(define (nssplitview-perform-drag-operation! self sender)
+  (_msg-36 (coerce-arg self) (sel_registerName "performDragOperation:") (coerce-arg sender)))
 (define (nssplitview-perform-key-equivalent! self event)
-  (_msg-28 (coerce-arg self) (sel_registerName "performKeyEquivalent:") (coerce-arg event)))
+  (_msg-36 (coerce-arg self) (sel_registerName "performKeyEquivalent:") (coerce-arg event)))
 (define (nssplitview-prepare-content-in-rect self rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "prepareContentInRect:") rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "prepareContentInRect:") rect))
+(define (nssplitview-prepare-for-drag-operation self sender)
+  (_msg-36 (coerce-arg self) (sel_registerName "prepareForDragOperation:") (coerce-arg sender)))
 (define (nssplitview-prepare-for-reuse self)
   (tell #:type _void (coerce-arg self) prepareForReuse))
 (define (nssplitview-pressure-change-with-event self event)
   (tell #:type _void (coerce-arg self) pressureChangeWithEvent: (coerce-arg event)))
+(define (nssplitview-quick-look-preview-items self sender)
+  (tell #:type _void (coerce-arg self) quickLookPreviewItems: (coerce-arg sender)))
 (define (nssplitview-quick-look-with-event self event)
   (tell #:type _void (coerce-arg self) quickLookWithEvent: (coerce-arg event)))
 (define (nssplitview-rect-for-smart-magnification-at-point-in-rect self location visible-rect)
-  (_msg-9 (coerce-arg self) (sel_registerName "rectForSmartMagnificationAtPoint:inRect:") location visible-rect))
+  (_msg-13 (coerce-arg self) (sel_registerName "rectForSmartMagnificationAtPoint:inRect:") location visible-rect))
 (define (nssplitview-remove-all-tool-tips! self)
   (tell #:type _void (coerce-arg self) removeAllToolTips))
 (define (nssplitview-remove-from-superview! self)
@@ -1099,15 +2106,17 @@
 (define (nssplitview-remove-from-superview-without-needing-display! self)
   (tell #:type _void (coerce-arg self) removeFromSuperviewWithoutNeedingDisplay))
 (define (nssplitview-remove-tool-tip! self tag)
-  (_msg-34 (coerce-arg self) (sel_registerName "removeToolTip:") tag))
+  (_msg-45 (coerce-arg self) (sel_registerName "removeToolTip:") tag))
 (define (nssplitview-replace-subview-with! self old-view new-view)
   (tell #:type _void (coerce-arg self) replaceSubview: (coerce-arg old-view) with: (coerce-arg new-view)))
 (define (nssplitview-resign-first-responder self)
-  (_msg-1 (coerce-arg self) (sel_registerName "resignFirstResponder")))
+  (_msg-3 (coerce-arg self) (sel_registerName "resignFirstResponder")))
 (define (nssplitview-resize-subviews-with-old-size self old-size)
-  (_msg-22 (coerce-arg self) (sel_registerName "resizeSubviewsWithOldSize:") old-size))
+  (_msg-29 (coerce-arg self) (sel_registerName "resizeSubviewsWithOldSize:") old-size))
 (define (nssplitview-resize-with-old-superview-size self old-size)
-  (_msg-22 (coerce-arg self) (sel_registerName "resizeWithOldSuperviewSize:") old-size))
+  (_msg-29 (coerce-arg self) (sel_registerName "resizeWithOldSuperviewSize:") old-size))
+(define (nssplitview-restore-user-activity-state self user-activity)
+  (tell #:type _void (coerce-arg self) restoreUserActivityState: (coerce-arg user-activity)))
 (define (nssplitview-right-mouse-down self event)
   (tell #:type _void (coerce-arg self) rightMouseDown: (coerce-arg event)))
 (define (nssplitview-right-mouse-dragged self event)
@@ -1115,45 +2124,327 @@
 (define (nssplitview-right-mouse-up self event)
   (tell #:type _void (coerce-arg self) rightMouseUp: (coerce-arg event)))
 (define (nssplitview-rotate-by-angle self angle)
-  (_msg-25 (coerce-arg self) (sel_registerName "rotateByAngle:") angle))
+  (_msg-32 (coerce-arg self) (sel_registerName "rotateByAngle:") angle))
 (define (nssplitview-rotate-with-event self event)
   (tell #:type _void (coerce-arg self) rotateWithEvent: (coerce-arg event)))
 (define (nssplitview-scale-unit-square-to-size self new-unit-size)
-  (_msg-22 (coerce-arg self) (sel_registerName "scaleUnitSquareToSize:") new-unit-size))
+  (_msg-29 (coerce-arg self) (sel_registerName "scaleUnitSquareToSize:") new-unit-size))
+(define (nssplitview-scroll-line-down self sender)
+  (tell #:type _void (coerce-arg self) scrollLineDown: (coerce-arg sender)))
+(define (nssplitview-scroll-line-up self sender)
+  (tell #:type _void (coerce-arg self) scrollLineUp: (coerce-arg sender)))
+(define (nssplitview-scroll-page-down self sender)
+  (tell #:type _void (coerce-arg self) scrollPageDown: (coerce-arg sender)))
+(define (nssplitview-scroll-page-up self sender)
+  (tell #:type _void (coerce-arg self) scrollPageUp: (coerce-arg sender)))
 (define (nssplitview-scroll-point self point)
-  (_msg-8 (coerce-arg self) (sel_registerName "scrollPoint:") point))
+  (_msg-12 (coerce-arg self) (sel_registerName "scrollPoint:") point))
 (define (nssplitview-scroll-rect-to-visible self rect)
-  (_msg-13 (coerce-arg self) (sel_registerName "scrollRectToVisible:") rect))
+  (_msg-20 (coerce-arg self) (sel_registerName "scrollRectToVisible:") rect))
+(define (nssplitview-scroll-to-beginning-of-document self sender)
+  (tell #:type _void (coerce-arg self) scrollToBeginningOfDocument: (coerce-arg sender)))
+(define (nssplitview-scroll-to-end-of-document self sender)
+  (tell #:type _void (coerce-arg self) scrollToEndOfDocument: (coerce-arg sender)))
 (define (nssplitview-scroll-wheel self event)
   (tell #:type _void (coerce-arg self) scrollWheel: (coerce-arg event)))
+(define (nssplitview-select-all self sender)
+  (tell #:type _void (coerce-arg self) selectAll: (coerce-arg sender)))
+(define (nssplitview-select-line self sender)
+  (tell #:type _void (coerce-arg self) selectLine: (coerce-arg sender)))
+(define (nssplitview-select-paragraph self sender)
+  (tell #:type _void (coerce-arg self) selectParagraph: (coerce-arg sender)))
+(define (nssplitview-select-to-mark self sender)
+  (tell #:type _void (coerce-arg self) selectToMark: (coerce-arg sender)))
+(define (nssplitview-select-word self sender)
+  (tell #:type _void (coerce-arg self) selectWord: (coerce-arg sender)))
+(define (nssplitview-set-accessibility-activation-point! self accessibility-activation-point)
+  (_msg-12 (coerce-arg self) (sel_registerName "setAccessibilityActivationPoint:") accessibility-activation-point))
+(define (nssplitview-set-accessibility-allowed-values! self accessibility-allowed-values)
+  (tell #:type _void (coerce-arg self) setAccessibilityAllowedValues: (coerce-arg accessibility-allowed-values)))
+(define (nssplitview-set-accessibility-alternate-ui-visible! self accessibility-alternate-ui-visible)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityAlternateUIVisible:") accessibility-alternate-ui-visible))
+(define (nssplitview-set-accessibility-application-focused-ui-element! self accessibility-application-focused-ui-element)
+  (tell #:type _void (coerce-arg self) setAccessibilityApplicationFocusedUIElement: (coerce-arg accessibility-application-focused-ui-element)))
+(define (nssplitview-set-accessibility-attributed-user-input-labels! self accessibility-attributed-user-input-labels)
+  (tell #:type _void (coerce-arg self) setAccessibilityAttributedUserInputLabels: (coerce-arg accessibility-attributed-user-input-labels)))
+(define (nssplitview-set-accessibility-cancel-button! self accessibility-cancel-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityCancelButton: (coerce-arg accessibility-cancel-button)))
+(define (nssplitview-set-accessibility-children! self accessibility-children)
+  (tell #:type _void (coerce-arg self) setAccessibilityChildren: (coerce-arg accessibility-children)))
+(define (nssplitview-set-accessibility-children-in-navigation-order! self accessibility-children-in-navigation-order)
+  (tell #:type _void (coerce-arg self) setAccessibilityChildrenInNavigationOrder: (coerce-arg accessibility-children-in-navigation-order)))
+(define (nssplitview-set-accessibility-clear-button! self accessibility-clear-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityClearButton: (coerce-arg accessibility-clear-button)))
+(define (nssplitview-set-accessibility-close-button! self accessibility-close-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityCloseButton: (coerce-arg accessibility-close-button)))
+(define (nssplitview-set-accessibility-column-count! self accessibility-column-count)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityColumnCount:") accessibility-column-count))
+(define (nssplitview-set-accessibility-column-header-ui-elements! self accessibility-column-header-ui-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilityColumnHeaderUIElements: (coerce-arg accessibility-column-header-ui-elements)))
+(define (nssplitview-set-accessibility-column-index-range! self accessibility-column-index-range)
+  (_msg-18 (coerce-arg self) (sel_registerName "setAccessibilityColumnIndexRange:") accessibility-column-index-range))
+(define (nssplitview-set-accessibility-column-titles! self accessibility-column-titles)
+  (tell #:type _void (coerce-arg self) setAccessibilityColumnTitles: (coerce-arg accessibility-column-titles)))
+(define (nssplitview-set-accessibility-columns! self accessibility-columns)
+  (tell #:type _void (coerce-arg self) setAccessibilityColumns: (coerce-arg accessibility-columns)))
+(define (nssplitview-set-accessibility-contents! self accessibility-contents)
+  (tell #:type _void (coerce-arg self) setAccessibilityContents: (coerce-arg accessibility-contents)))
+(define (nssplitview-set-accessibility-critical-value! self accessibility-critical-value)
+  (tell #:type _void (coerce-arg self) setAccessibilityCriticalValue: (coerce-arg accessibility-critical-value)))
+(define (nssplitview-set-accessibility-custom-actions! self accessibility-custom-actions)
+  (tell #:type _void (coerce-arg self) setAccessibilityCustomActions: (coerce-arg accessibility-custom-actions)))
+(define (nssplitview-set-accessibility-custom-rotors! self accessibility-custom-rotors)
+  (tell #:type _void (coerce-arg self) setAccessibilityCustomRotors: (coerce-arg accessibility-custom-rotors)))
+(define (nssplitview-set-accessibility-decrement-button! self accessibility-decrement-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityDecrementButton: (coerce-arg accessibility-decrement-button)))
+(define (nssplitview-set-accessibility-default-button! self accessibility-default-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityDefaultButton: (coerce-arg accessibility-default-button)))
+(define (nssplitview-set-accessibility-disclosed! self accessibility-disclosed)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityDisclosed:") accessibility-disclosed))
+(define (nssplitview-set-accessibility-disclosed-by-row! self accessibility-disclosed-by-row)
+  (tell #:type _void (coerce-arg self) setAccessibilityDisclosedByRow: (coerce-arg accessibility-disclosed-by-row)))
+(define (nssplitview-set-accessibility-disclosed-rows! self accessibility-disclosed-rows)
+  (tell #:type _void (coerce-arg self) setAccessibilityDisclosedRows: (coerce-arg accessibility-disclosed-rows)))
+(define (nssplitview-set-accessibility-disclosure-level! self accessibility-disclosure-level)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityDisclosureLevel:") accessibility-disclosure-level))
+(define (nssplitview-set-accessibility-document! self accessibility-document)
+  (tell #:type _void (coerce-arg self) setAccessibilityDocument: (coerce-arg accessibility-document)))
+(define (nssplitview-set-accessibility-edited! self accessibility-edited)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityEdited:") accessibility-edited))
+(define (nssplitview-set-accessibility-element! self accessibility-element)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityElement:") accessibility-element))
+(define (nssplitview-set-accessibility-enabled! self accessibility-enabled)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityEnabled:") accessibility-enabled))
+(define (nssplitview-set-accessibility-expanded! self accessibility-expanded)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityExpanded:") accessibility-expanded))
+(define (nssplitview-set-accessibility-extras-menu-bar! self accessibility-extras-menu-bar)
+  (tell #:type _void (coerce-arg self) setAccessibilityExtrasMenuBar: (coerce-arg accessibility-extras-menu-bar)))
+(define (nssplitview-set-accessibility-filename! self accessibility-filename)
+  (tell #:type _void (coerce-arg self) setAccessibilityFilename: (coerce-arg accessibility-filename)))
+(define (nssplitview-set-accessibility-focused! self accessibility-focused)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityFocused:") accessibility-focused))
+(define (nssplitview-set-accessibility-focused-window! self accessibility-focused-window)
+  (tell #:type _void (coerce-arg self) setAccessibilityFocusedWindow: (coerce-arg accessibility-focused-window)))
+(define (nssplitview-set-accessibility-frame! self accessibility-frame)
+  (_msg-22 (coerce-arg self) (sel_registerName "setAccessibilityFrame:") accessibility-frame))
+(define (nssplitview-set-accessibility-frontmost! self accessibility-frontmost)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityFrontmost:") accessibility-frontmost))
+(define (nssplitview-set-accessibility-full-screen-button! self accessibility-full-screen-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityFullScreenButton: (coerce-arg accessibility-full-screen-button)))
+(define (nssplitview-set-accessibility-grow-area! self accessibility-grow-area)
+  (tell #:type _void (coerce-arg self) setAccessibilityGrowArea: (coerce-arg accessibility-grow-area)))
+(define (nssplitview-set-accessibility-handles! self accessibility-handles)
+  (tell #:type _void (coerce-arg self) setAccessibilityHandles: (coerce-arg accessibility-handles)))
+(define (nssplitview-set-accessibility-header! self accessibility-header)
+  (tell #:type _void (coerce-arg self) setAccessibilityHeader: (coerce-arg accessibility-header)))
+(define (nssplitview-set-accessibility-help! self accessibility-help)
+  (tell #:type _void (coerce-arg self) setAccessibilityHelp: (coerce-arg accessibility-help)))
+(define (nssplitview-set-accessibility-hidden! self accessibility-hidden)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityHidden:") accessibility-hidden))
+(define (nssplitview-set-accessibility-horizontal-scroll-bar! self accessibility-horizontal-scroll-bar)
+  (tell #:type _void (coerce-arg self) setAccessibilityHorizontalScrollBar: (coerce-arg accessibility-horizontal-scroll-bar)))
+(define (nssplitview-set-accessibility-horizontal-unit-description! self accessibility-horizontal-unit-description)
+  (tell #:type _void (coerce-arg self) setAccessibilityHorizontalUnitDescription: (coerce-arg accessibility-horizontal-unit-description)))
+(define (nssplitview-set-accessibility-horizontal-units! self accessibility-horizontal-units)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityHorizontalUnits:") accessibility-horizontal-units))
+(define (nssplitview-set-accessibility-identifier! self accessibility-identifier)
+  (tell #:type _void (coerce-arg self) setAccessibilityIdentifier: (coerce-arg accessibility-identifier)))
+(define (nssplitview-set-accessibility-increment-button! self accessibility-increment-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityIncrementButton: (coerce-arg accessibility-increment-button)))
+(define (nssplitview-set-accessibility-index! self accessibility-index)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityIndex:") accessibility-index))
+(define (nssplitview-set-accessibility-insertion-point-line-number! self accessibility-insertion-point-line-number)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityInsertionPointLineNumber:") accessibility-insertion-point-line-number))
+(define (nssplitview-set-accessibility-label! self accessibility-label)
+  (tell #:type _void (coerce-arg self) setAccessibilityLabel: (coerce-arg accessibility-label)))
+(define (nssplitview-set-accessibility-label-ui-elements! self accessibility-label-ui-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilityLabelUIElements: (coerce-arg accessibility-label-ui-elements)))
+(define (nssplitview-set-accessibility-label-value! self accessibility-label-value)
+  (_msg-34 (coerce-arg self) (sel_registerName "setAccessibilityLabelValue:") accessibility-label-value))
+(define (nssplitview-set-accessibility-linked-ui-elements! self accessibility-linked-ui-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilityLinkedUIElements: (coerce-arg accessibility-linked-ui-elements)))
+(define (nssplitview-set-accessibility-main! self accessibility-main)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityMain:") accessibility-main))
+(define (nssplitview-set-accessibility-main-window! self accessibility-main-window)
+  (tell #:type _void (coerce-arg self) setAccessibilityMainWindow: (coerce-arg accessibility-main-window)))
+(define (nssplitview-set-accessibility-marker-group-ui-element! self accessibility-marker-group-ui-element)
+  (tell #:type _void (coerce-arg self) setAccessibilityMarkerGroupUIElement: (coerce-arg accessibility-marker-group-ui-element)))
+(define (nssplitview-set-accessibility-marker-type-description! self accessibility-marker-type-description)
+  (tell #:type _void (coerce-arg self) setAccessibilityMarkerTypeDescription: (coerce-arg accessibility-marker-type-description)))
+(define (nssplitview-set-accessibility-marker-ui-elements! self accessibility-marker-ui-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilityMarkerUIElements: (coerce-arg accessibility-marker-ui-elements)))
+(define (nssplitview-set-accessibility-marker-values! self accessibility-marker-values)
+  (tell #:type _void (coerce-arg self) setAccessibilityMarkerValues: (coerce-arg accessibility-marker-values)))
+(define (nssplitview-set-accessibility-max-value! self accessibility-max-value)
+  (tell #:type _void (coerce-arg self) setAccessibilityMaxValue: (coerce-arg accessibility-max-value)))
+(define (nssplitview-set-accessibility-menu-bar! self accessibility-menu-bar)
+  (tell #:type _void (coerce-arg self) setAccessibilityMenuBar: (coerce-arg accessibility-menu-bar)))
+(define (nssplitview-set-accessibility-min-value! self accessibility-min-value)
+  (tell #:type _void (coerce-arg self) setAccessibilityMinValue: (coerce-arg accessibility-min-value)))
+(define (nssplitview-set-accessibility-minimize-button! self accessibility-minimize-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityMinimizeButton: (coerce-arg accessibility-minimize-button)))
+(define (nssplitview-set-accessibility-minimized! self accessibility-minimized)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityMinimized:") accessibility-minimized))
+(define (nssplitview-set-accessibility-modal! self accessibility-modal)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityModal:") accessibility-modal))
+(define (nssplitview-set-accessibility-next-contents! self accessibility-next-contents)
+  (tell #:type _void (coerce-arg self) setAccessibilityNextContents: (coerce-arg accessibility-next-contents)))
+(define (nssplitview-set-accessibility-number-of-characters! self accessibility-number-of-characters)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityNumberOfCharacters:") accessibility-number-of-characters))
+(define (nssplitview-set-accessibility-ordered-by-row! self accessibility-ordered-by-row)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityOrderedByRow:") accessibility-ordered-by-row))
+(define (nssplitview-set-accessibility-orientation! self accessibility-orientation)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityOrientation:") accessibility-orientation))
+(define (nssplitview-set-accessibility-overflow-button! self accessibility-overflow-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityOverflowButton: (coerce-arg accessibility-overflow-button)))
+(define (nssplitview-set-accessibility-parent! self accessibility-parent)
+  (tell #:type _void (coerce-arg self) setAccessibilityParent: (coerce-arg accessibility-parent)))
+(define (nssplitview-set-accessibility-placeholder-value! self accessibility-placeholder-value)
+  (tell #:type _void (coerce-arg self) setAccessibilityPlaceholderValue: (coerce-arg accessibility-placeholder-value)))
+(define (nssplitview-set-accessibility-previous-contents! self accessibility-previous-contents)
+  (tell #:type _void (coerce-arg self) setAccessibilityPreviousContents: (coerce-arg accessibility-previous-contents)))
+(define (nssplitview-set-accessibility-protected-content! self accessibility-protected-content)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityProtectedContent:") accessibility-protected-content))
+(define (nssplitview-set-accessibility-proxy! self accessibility-proxy)
+  (tell #:type _void (coerce-arg self) setAccessibilityProxy: (coerce-arg accessibility-proxy)))
+(define (nssplitview-set-accessibility-required! self accessibility-required)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilityRequired:") accessibility-required))
+(define (nssplitview-set-accessibility-role! self accessibility-role)
+  (tell #:type _void (coerce-arg self) setAccessibilityRole: (coerce-arg accessibility-role)))
+(define (nssplitview-set-accessibility-role-description! self accessibility-role-description)
+  (tell #:type _void (coerce-arg self) setAccessibilityRoleDescription: (coerce-arg accessibility-role-description)))
+(define (nssplitview-set-accessibility-row-count! self accessibility-row-count)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityRowCount:") accessibility-row-count))
+(define (nssplitview-set-accessibility-row-header-ui-elements! self accessibility-row-header-ui-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilityRowHeaderUIElements: (coerce-arg accessibility-row-header-ui-elements)))
+(define (nssplitview-set-accessibility-row-index-range! self accessibility-row-index-range)
+  (_msg-18 (coerce-arg self) (sel_registerName "setAccessibilityRowIndexRange:") accessibility-row-index-range))
+(define (nssplitview-set-accessibility-rows! self accessibility-rows)
+  (tell #:type _void (coerce-arg self) setAccessibilityRows: (coerce-arg accessibility-rows)))
+(define (nssplitview-set-accessibility-ruler-marker-type! self accessibility-ruler-marker-type)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityRulerMarkerType:") accessibility-ruler-marker-type))
+(define (nssplitview-set-accessibility-search-button! self accessibility-search-button)
+  (tell #:type _void (coerce-arg self) setAccessibilitySearchButton: (coerce-arg accessibility-search-button)))
+(define (nssplitview-set-accessibility-search-menu! self accessibility-search-menu)
+  (tell #:type _void (coerce-arg self) setAccessibilitySearchMenu: (coerce-arg accessibility-search-menu)))
+(define (nssplitview-set-accessibility-selected! self accessibility-selected)
+  (_msg-31 (coerce-arg self) (sel_registerName "setAccessibilitySelected:") accessibility-selected))
+(define (nssplitview-set-accessibility-selected-cells! self accessibility-selected-cells)
+  (tell #:type _void (coerce-arg self) setAccessibilitySelectedCells: (coerce-arg accessibility-selected-cells)))
+(define (nssplitview-set-accessibility-selected-children! self accessibility-selected-children)
+  (tell #:type _void (coerce-arg self) setAccessibilitySelectedChildren: (coerce-arg accessibility-selected-children)))
+(define (nssplitview-set-accessibility-selected-columns! self accessibility-selected-columns)
+  (tell #:type _void (coerce-arg self) setAccessibilitySelectedColumns: (coerce-arg accessibility-selected-columns)))
+(define (nssplitview-set-accessibility-selected-rows! self accessibility-selected-rows)
+  (tell #:type _void (coerce-arg self) setAccessibilitySelectedRows: (coerce-arg accessibility-selected-rows)))
+(define (nssplitview-set-accessibility-selected-text! self accessibility-selected-text)
+  (tell #:type _void (coerce-arg self) setAccessibilitySelectedText: (coerce-arg accessibility-selected-text)))
+(define (nssplitview-set-accessibility-selected-text-range! self accessibility-selected-text-range)
+  (_msg-18 (coerce-arg self) (sel_registerName "setAccessibilitySelectedTextRange:") accessibility-selected-text-range))
+(define (nssplitview-set-accessibility-selected-text-ranges! self accessibility-selected-text-ranges)
+  (tell #:type _void (coerce-arg self) setAccessibilitySelectedTextRanges: (coerce-arg accessibility-selected-text-ranges)))
+(define (nssplitview-set-accessibility-serves-as-title-for-ui-elements! self accessibility-serves-as-title-for-ui-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilityServesAsTitleForUIElements: (coerce-arg accessibility-serves-as-title-for-ui-elements)))
+(define (nssplitview-set-accessibility-shared-character-range! self accessibility-shared-character-range)
+  (_msg-18 (coerce-arg self) (sel_registerName "setAccessibilitySharedCharacterRange:") accessibility-shared-character-range))
+(define (nssplitview-set-accessibility-shared-focus-elements! self accessibility-shared-focus-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilitySharedFocusElements: (coerce-arg accessibility-shared-focus-elements)))
+(define (nssplitview-set-accessibility-shared-text-ui-elements! self accessibility-shared-text-ui-elements)
+  (tell #:type _void (coerce-arg self) setAccessibilitySharedTextUIElements: (coerce-arg accessibility-shared-text-ui-elements)))
+(define (nssplitview-set-accessibility-shown-menu! self accessibility-shown-menu)
+  (tell #:type _void (coerce-arg self) setAccessibilityShownMenu: (coerce-arg accessibility-shown-menu)))
+(define (nssplitview-set-accessibility-sort-direction! self accessibility-sort-direction)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilitySortDirection:") accessibility-sort-direction))
+(define (nssplitview-set-accessibility-splitters! self accessibility-splitters)
+  (tell #:type _void (coerce-arg self) setAccessibilitySplitters: (coerce-arg accessibility-splitters)))
+(define (nssplitview-set-accessibility-subrole! self accessibility-subrole)
+  (tell #:type _void (coerce-arg self) setAccessibilitySubrole: (coerce-arg accessibility-subrole)))
+(define (nssplitview-set-accessibility-tabs! self accessibility-tabs)
+  (tell #:type _void (coerce-arg self) setAccessibilityTabs: (coerce-arg accessibility-tabs)))
+(define (nssplitview-set-accessibility-title! self accessibility-title)
+  (tell #:type _void (coerce-arg self) setAccessibilityTitle: (coerce-arg accessibility-title)))
+(define (nssplitview-set-accessibility-title-ui-element! self accessibility-title-ui-element)
+  (tell #:type _void (coerce-arg self) setAccessibilityTitleUIElement: (coerce-arg accessibility-title-ui-element)))
+(define (nssplitview-set-accessibility-toolbar-button! self accessibility-toolbar-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityToolbarButton: (coerce-arg accessibility-toolbar-button)))
+(define (nssplitview-set-accessibility-top-level-ui-element! self accessibility-top-level-ui-element)
+  (tell #:type _void (coerce-arg self) setAccessibilityTopLevelUIElement: (coerce-arg accessibility-top-level-ui-element)))
+(define (nssplitview-set-accessibility-url! self accessibility-url)
+  (tell #:type _void (coerce-arg self) setAccessibilityURL: (coerce-arg accessibility-url)))
+(define (nssplitview-set-accessibility-unit-description! self accessibility-unit-description)
+  (tell #:type _void (coerce-arg self) setAccessibilityUnitDescription: (coerce-arg accessibility-unit-description)))
+(define (nssplitview-set-accessibility-units! self accessibility-units)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityUnits:") accessibility-units))
+(define (nssplitview-set-accessibility-user-input-labels! self accessibility-user-input-labels)
+  (tell #:type _void (coerce-arg self) setAccessibilityUserInputLabels: (coerce-arg accessibility-user-input-labels)))
+(define (nssplitview-set-accessibility-value! self accessibility-value)
+  (tell #:type _void (coerce-arg self) setAccessibilityValue: (coerce-arg accessibility-value)))
+(define (nssplitview-set-accessibility-value-description! self accessibility-value-description)
+  (tell #:type _void (coerce-arg self) setAccessibilityValueDescription: (coerce-arg accessibility-value-description)))
+(define (nssplitview-set-accessibility-vertical-scroll-bar! self accessibility-vertical-scroll-bar)
+  (tell #:type _void (coerce-arg self) setAccessibilityVerticalScrollBar: (coerce-arg accessibility-vertical-scroll-bar)))
+(define (nssplitview-set-accessibility-vertical-unit-description! self accessibility-vertical-unit-description)
+  (tell #:type _void (coerce-arg self) setAccessibilityVerticalUnitDescription: (coerce-arg accessibility-vertical-unit-description)))
+(define (nssplitview-set-accessibility-vertical-units! self accessibility-vertical-units)
+  (_msg-45 (coerce-arg self) (sel_registerName "setAccessibilityVerticalUnits:") accessibility-vertical-units))
+(define (nssplitview-set-accessibility-visible-cells! self accessibility-visible-cells)
+  (tell #:type _void (coerce-arg self) setAccessibilityVisibleCells: (coerce-arg accessibility-visible-cells)))
+(define (nssplitview-set-accessibility-visible-character-range! self accessibility-visible-character-range)
+  (_msg-18 (coerce-arg self) (sel_registerName "setAccessibilityVisibleCharacterRange:") accessibility-visible-character-range))
+(define (nssplitview-set-accessibility-visible-children! self accessibility-visible-children)
+  (tell #:type _void (coerce-arg self) setAccessibilityVisibleChildren: (coerce-arg accessibility-visible-children)))
+(define (nssplitview-set-accessibility-visible-columns! self accessibility-visible-columns)
+  (tell #:type _void (coerce-arg self) setAccessibilityVisibleColumns: (coerce-arg accessibility-visible-columns)))
+(define (nssplitview-set-accessibility-visible-rows! self accessibility-visible-rows)
+  (tell #:type _void (coerce-arg self) setAccessibilityVisibleRows: (coerce-arg accessibility-visible-rows)))
+(define (nssplitview-set-accessibility-warning-value! self accessibility-warning-value)
+  (tell #:type _void (coerce-arg self) setAccessibilityWarningValue: (coerce-arg accessibility-warning-value)))
+(define (nssplitview-set-accessibility-window! self accessibility-window)
+  (tell #:type _void (coerce-arg self) setAccessibilityWindow: (coerce-arg accessibility-window)))
+(define (nssplitview-set-accessibility-windows! self accessibility-windows)
+  (tell #:type _void (coerce-arg self) setAccessibilityWindows: (coerce-arg accessibility-windows)))
+(define (nssplitview-set-accessibility-zoom-button! self accessibility-zoom-button)
+  (tell #:type _void (coerce-arg self) setAccessibilityZoomButton: (coerce-arg accessibility-zoom-button)))
+(define (nssplitview-set-animations! self animations)
+  (tell #:type _void (coerce-arg self) setAnimations: (coerce-arg animations)))
+(define (nssplitview-set-appearance! self appearance)
+  (tell #:type _void (coerce-arg self) setAppearance: (coerce-arg appearance)))
 (define (nssplitview-set-bounds-origin! self new-origin)
-  (_msg-8 (coerce-arg self) (sel_registerName "setBoundsOrigin:") new-origin))
+  (_msg-12 (coerce-arg self) (sel_registerName "setBoundsOrigin:") new-origin))
 (define (nssplitview-set-bounds-size! self new-size)
-  (_msg-22 (coerce-arg self) (sel_registerName "setBoundsSize:") new-size))
+  (_msg-29 (coerce-arg self) (sel_registerName "setBoundsSize:") new-size))
 (define (nssplitview-set-frame-origin! self new-origin)
-  (_msg-8 (coerce-arg self) (sel_registerName "setFrameOrigin:") new-origin))
+  (_msg-12 (coerce-arg self) (sel_registerName "setFrameOrigin:") new-origin))
 (define (nssplitview-set-frame-size! self new-size)
-  (_msg-22 (coerce-arg self) (sel_registerName "setFrameSize:") new-size))
+  (_msg-29 (coerce-arg self) (sel_registerName "setFrameSize:") new-size))
 (define (nssplitview-set-holding-priority-for-subview-at-index! self priority subview-index)
-  (_msg-27 (coerce-arg self) (sel_registerName "setHoldingPriority:forSubviewAtIndex:") priority subview-index))
+  (_msg-35 (coerce-arg self) (sel_registerName "setHoldingPriority:forSubviewAtIndex:") priority subview-index))
+(define (nssplitview-set-identifier! self identifier)
+  (tell #:type _void (coerce-arg self) setIdentifier: (coerce-arg identifier)))
+(define (nssplitview-set-mark! self sender)
+  (tell #:type _void (coerce-arg self) setMark: (coerce-arg sender)))
 (define (nssplitview-set-needs-display-in-rect! self invalid-rect)
-  (_msg-15 (coerce-arg self) (sel_registerName "setNeedsDisplayInRect:") invalid-rect))
+  (_msg-22 (coerce-arg self) (sel_registerName "setNeedsDisplayInRect:") invalid-rect))
 (define (nssplitview-set-position-of-divider-at-index! self position divider-index)
-  (_msg-26 (coerce-arg self) (sel_registerName "setPosition:ofDividerAtIndex:") position divider-index))
+  (_msg-33 (coerce-arg self) (sel_registerName "setPosition:ofDividerAtIndex:") position divider-index))
 (define (nssplitview-should-be-treated-as-ink-event self event)
-  (_msg-28 (coerce-arg self) (sel_registerName "shouldBeTreatedAsInkEvent:") (coerce-arg event)))
+  (_msg-36 (coerce-arg self) (sel_registerName "shouldBeTreatedAsInkEvent:") (coerce-arg event)))
 (define (nssplitview-should-delay-window-ordering-for-event self event)
-  (_msg-28 (coerce-arg self) (sel_registerName "shouldDelayWindowOrderingForEvent:") (coerce-arg event)))
+  (_msg-36 (coerce-arg self) (sel_registerName "shouldDelayWindowOrderingForEvent:") (coerce-arg event)))
 (define (nssplitview-show-context-help self sender)
   (tell #:type _void (coerce-arg self) showContextHelp: (coerce-arg sender)))
+(define (nssplitview-show-context-menu-for-selection self sender)
+  (tell #:type _void (coerce-arg self) showContextMenuForSelection: (coerce-arg sender)))
 (define (nssplitview-smart-magnify-with-event self event)
   (tell #:type _void (coerce-arg self) smartMagnifyWithEvent: (coerce-arg event)))
 (define (nssplitview-sort-subviews-using-function-context self compare context)
-  (_msg-38 (coerce-arg self) (sel_registerName "sortSubviewsUsingFunction:context:") compare context))
+  (_msg-51 (coerce-arg self) (sel_registerName "sortSubviewsUsingFunction:context:") compare context))
 (define (nssplitview-supplemental-target-for-action-sender self action sender)
   (wrap-objc-object
-   (_msg-37 (coerce-arg self) (sel_registerName "supplementalTargetForAction:sender:") (sel_registerName action) (coerce-arg sender))
+   (_msg-50 (coerce-arg self) (sel_registerName "supplementalTargetForAction:sender:") (sel_registerName action) (coerce-arg sender))
    ))
+(define (nssplitview-swap-with-mark self sender)
+  (tell #:type _void (coerce-arg self) swapWithMark: (coerce-arg sender)))
 (define (nssplitview-swipe-with-event self event)
   (tell #:type _void (coerce-arg self) swipeWithEvent: (coerce-arg event)))
 (define (nssplitview-tablet-point self event)
@@ -1169,13 +2460,21 @@
 (define (nssplitview-touches-moved-with-event self event)
   (tell #:type _void (coerce-arg self) touchesMovedWithEvent: (coerce-arg event)))
 (define (nssplitview-translate-origin-to-point self translation)
-  (_msg-8 (coerce-arg self) (sel_registerName "translateOriginToPoint:") translation))
+  (_msg-12 (coerce-arg self) (sel_registerName "translateOriginToPoint:") translation))
 (define (nssplitview-translate-rects-needing-display-in-rect-by self clip-rect delta)
-  (_msg-16 (coerce-arg self) (sel_registerName "translateRectsNeedingDisplayInRect:by:") clip-rect delta))
+  (_msg-23 (coerce-arg self) (sel_registerName "translateRectsNeedingDisplayInRect:by:") clip-rect delta))
+(define (nssplitview-transpose self sender)
+  (tell #:type _void (coerce-arg self) transpose: (coerce-arg sender)))
+(define (nssplitview-transpose-words self sender)
+  (tell #:type _void (coerce-arg self) transposeWords: (coerce-arg sender)))
 (define (nssplitview-try-to-perform-with self action object)
-  (_msg-36 (coerce-arg self) (sel_registerName "tryToPerform:with:") (sel_registerName action) (coerce-arg object)))
+  (_msg-49 (coerce-arg self) (sel_registerName "tryToPerform:with:") (sel_registerName action) (coerce-arg object)))
+(define (nssplitview-update-dragging-items-for-drag self sender)
+  (tell #:type _void (coerce-arg self) updateDraggingItemsForDrag: (coerce-arg sender)))
 (define (nssplitview-update-layer self)
   (tell #:type _void (coerce-arg self) updateLayer))
+(define (nssplitview-uppercase-word self sender)
+  (tell #:type _void (coerce-arg self) uppercaseWord: (coerce-arg sender)))
 (define (nssplitview-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (tell (coerce-arg self) validRequestorForSendType: (coerce-arg send-type) returnType: (coerce-arg return-type))))
@@ -1203,17 +2502,24 @@
   (tell #:type _void (coerce-arg self) viewWillStartLiveResize))
 (define (nssplitview-view-with-tag self tag)
   (wrap-objc-object
-   (_msg-33 (coerce-arg self) (sel_registerName "viewWithTag:") tag)
+   (_msg-43 (coerce-arg self) (sel_registerName "viewWithTag:") tag)
    ))
 (define (nssplitview-wants-forwarded-scroll-events-for-axis self axis)
-  (_msg-30 (coerce-arg self) (sel_registerName "wantsForwardedScrollEventsForAxis:") axis))
+  (_msg-40 (coerce-arg self) (sel_registerName "wantsForwardedScrollEventsForAxis:") axis))
+(define (nssplitview-wants-periodic-dragging-updates self)
+  (_msg-3 (coerce-arg self) (sel_registerName "wantsPeriodicDraggingUpdates")))
 (define (nssplitview-wants-scroll-events-for-swipe-tracking-on-axis self axis)
-  (_msg-30 (coerce-arg self) (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:") axis))
+  (_msg-40 (coerce-arg self) (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:") axis))
 (define (nssplitview-will-open-menu-with-event self menu event)
   (tell #:type _void (coerce-arg self) willOpenMenu: (coerce-arg menu) withEvent: (coerce-arg event)))
 (define (nssplitview-will-remove-subview self subview)
   (tell #:type _void (coerce-arg self) willRemoveSubview: (coerce-arg subview)))
+(define (nssplitview-yank self sender)
+  (tell #:type _void (coerce-arg self) yank: (coerce-arg sender)))
 
 ;; --- Class methods ---
+(define (nssplitview-default-animation-for-key key)
+  (wrap-objc-object
+   (tell NSSplitView defaultAnimationForKey: (coerce-arg key))))
 (define (nssplitview-is-compatible-with-responsive-scrolling)
-  (_msg-1 NSSplitView (sel_registerName "isCompatibleWithResponsiveScrolling")))
+  (_msg-3 NSSplitView (sel_registerName "isCompatibleWithResponsiveScrolling")))

@@ -16,13 +16,16 @@
 
 
 ;; --- Class predicates ---
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
 (define (nsimagerep? v) (objc-instance-of? v "NSImageRep"))
 (define (nsimagesymbolconfiguration? v) (objc-instance-of? v "NSImageSymbolConfiguration"))
 (define (nslocale? v) (objc-instance-of? v "NSLocale"))
+(define (nsprogress? v) (objc-instance-of? v "NSProgress"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (nsurl? v) (objc-instance-of? v "NSURL"))
 (define (opaquetypearchetype? v) (objc-instance-of? v "OpaqueTypeArchetype"))
 (provide NSImage)
 (provide/contract
@@ -33,6 +36,7 @@
   [make-nsimage-init-with-data (c-> (or/c string? objc-object? #f) any/c)]
   [make-nsimage-init-with-data-ignoring-orientation (c-> (or/c string? objc-object? #f) any/c)]
   [make-nsimage-init-with-pasteboard (c-> (or/c string? objc-object? #f) any/c)]
+  [make-nsimage-init-with-pasteboard-property-list-of-type (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [make-nsimage-init-with-size (c-> any/c any/c)]
   [nsimage-tiff-representation (c-> objc-object? (or/c nsdata? objc-nil?))]
   [nsimage-accessibility-description (c-> objc-object? (or/c nsstring? objc-nil?))]
@@ -73,24 +77,33 @@
   [nsimage-add-representation! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsimage-add-representations! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsimage-best-representation-for-rect-context-hints (c-> objc-object? any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsimagerep? objc-nil?))]
+  [nsimage-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
   [nsimage-draw-at-point-from-rect-operation-fraction (c-> objc-object? any/c any/c exact-nonnegative-integer? real? void?)]
   [nsimage-draw-in-rect (c-> objc-object? any/c void?)]
   [nsimage-draw-in-rect-from-rect-operation-fraction (c-> objc-object? any/c any/c exact-nonnegative-integer? real? void?)]
   [nsimage-draw-in-rect-from-rect-operation-fraction-respect-flipped-hints (c-> objc-object? any/c any/c exact-nonnegative-integer? real? boolean? (or/c string? objc-object? #f) void?)]
   [nsimage-draw-representation-in-rect (c-> objc-object? (or/c string? objc-object? #f) any/c boolean?)]
+  [nsimage-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsimage-hit-test-rect-with-image-destination-rect-context-hints-flipped (c-> objc-object? any/c any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean? boolean?)]
   [nsimage-image-with-locale (c-> objc-object? (or/c string? objc-object? #f) (or/c nsimage? objc-nil?))]
   [nsimage-image-with-symbol-configuration (c-> objc-object? (or/c string? objc-object? #f) (or/c nsimage? objc-nil?))]
+  [nsimage-imported-content-types (c-> objc-object? (or/c nsarray? objc-nil?))]
   [nsimage-init-by-referencing-file (c-> objc-object? (or/c string? objc-object? #f) any/c)]
   [nsimage-init-by-referencing-url (c-> objc-object? (or/c string? objc-object? #f) any/c)]
   [nsimage-is-template (c-> objc-object? boolean?)]
   [nsimage-is-valid (c-> objc-object? boolean?)]
+  [nsimage-item-provider-visibility-for-representation-with-type-identifier (c-> objc-object? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsimage-layer-contents-for-contents-scale (c-> objc-object? real? any/c)]
+  [nsimage-load-data-with-type-identifier-for-item-provider-completion-handler (c-> objc-object? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
   [nsimage-name (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [nsimage-pasteboard-property-list-for-type (c-> objc-object? (or/c string? objc-object? #f) any/c)]
   [nsimage-recache (c-> objc-object? void?)]
   [nsimage-recommended-layer-contents-scale (c-> objc-object? real? real?)]
   [nsimage-remove-representation! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsimage-set-name! (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
+  [nsimage-writable-type-identifiers-for-item-provider (c-> objc-object? any/c)]
+  [nsimage-writable-types-for-pasteboard (c-> objc-object? (or/c string? objc-object? #f) any/c)]
+  [nsimage-writing-options-for-type-pasteboard (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsimage-can-init-with-pasteboard (c-> (or/c string? objc-object? #f) boolean?)]
   [nsimage-image-named (c-> (or/c string? objc-object? #f) (or/c nsimage? objc-nil?))]
   [nsimage-image-with-size-flipped-drawing-handler (c-> any/c boolean? (or/c procedure? #f) any/c)]
@@ -98,6 +111,11 @@
   [nsimage-image-with-symbol-name-variable-value (c-> (or/c string? objc-object? #f) real? any/c)]
   [nsimage-image-with-system-symbol-name-accessibility-description (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nsimage-image-with-system-symbol-name-variable-value-accessibility-description (c-> (or/c string? objc-object? #f) real? (or/c string? objc-object? #f) any/c)]
+  [nsimage-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
+  [nsimage-readable-type-identifiers-for-item-provider (c-> any/c)]
+  [nsimage-readable-types-for-pasteboard (c-> (or/c string? objc-object? #f) any/c)]
+  [nsimage-reading-options-for-type-pasteboard (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsimage-supports-secure-coding (c-> boolean?)]
   )
 
 ;; --- Class reference ---
@@ -144,29 +162,39 @@
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double -> _id)))
 (define _msg-19  ; (_fun _pointer _pointer _id -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _bool)))
-(define _msg-20  ; (_fun _pointer _pointer _id _NSRect -> _bool)
+(define _msg-20  ; (_fun _pointer _pointer _id -> _int64)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _int64)))
+(define _msg-21  ; (_fun _pointer _pointer _id _NSRect -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _NSRect -> _bool)))
-(define _msg-21  ; (_fun _pointer _pointer _id _double -> _id)
+(define _msg-22  ; (_fun _pointer _pointer _id _double -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _double -> _id)))
-(define _msg-22  ; (_fun _pointer _pointer _id _double _id -> _id)
+(define _msg-23  ; (_fun _pointer _pointer _id _double _id -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _double _id -> _id)))
-(define _msg-23  ; (_fun _pointer _pointer _id _id _double -> _id)
+(define _msg-24  ; (_fun _pointer _pointer _id _id -> _uint64)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id -> _uint64)))
+(define _msg-25  ; (_fun _pointer _pointer _id _id _double -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _double -> _id)))
-(define _msg-24  ; (_fun _pointer _pointer _int64 -> _void)
+(define _msg-26  ; (_fun _pointer _pointer _id _id _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _pointer -> _id)))
+(define _msg-27  ; (_fun _pointer _pointer _id _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _id)))
+(define _msg-28  ; (_fun _pointer _pointer _int64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _void)))
-(define _msg-25  ; (_fun _pointer _pointer _pointer _NSSize -> _id)
+(define _msg-29  ; (_fun _pointer _pointer _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
+(define _msg-30  ; (_fun _pointer _pointer _pointer _NSSize -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _NSSize -> _id)))
-(define _msg-26  ; (_fun _pointer _pointer _pointer _id _id -> _pointer)
+(define _msg-31  ; (_fun _pointer _pointer _pointer _id _id -> _pointer)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _id _id -> _pointer)))
-(define _msg-27  ; (_fun _pointer _pointer _uint64 -> _void)
+(define _msg-32  ; (_fun _pointer _pointer _uint64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _void)))
-(define _msg-28  ; (_fun _pointer _pointer _uint64 _float -> _id)
+(define _msg-33  ; (_fun _pointer _pointer _uint64 _float -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 _float -> _id)))
 
 ;; --- Constructors ---
 (define (make-nsimage-init-with-cg-image-size cg-image size)
   (wrap-objc-object
-   (_msg-25 (tell NSImage alloc)
+   (_msg-30 (tell NSImage alloc)
        (sel_registerName "initWithCGImage:size:")
        cg-image
        size)
@@ -208,6 +236,12 @@
          initWithPasteboard: (coerce-arg pasteboard))
    #:retained #t))
 
+(define (make-nsimage-init-with-pasteboard-property-list-of-type property-list type)
+  (wrap-objc-object
+   (tell (tell NSImage alloc)
+         initWithPasteboardPropertyList: (coerce-arg property-list) ofType: (coerce-arg type))
+   #:retained #t))
+
 (define (make-nsimage-init-with-size size)
   (wrap-objc-object
    (_msg-13 (tell NSImage alloc)
@@ -237,7 +271,7 @@
 (define (nsimage-cache-mode self)
   (tell #:type _uint64 (coerce-arg self) cacheMode))
 (define (nsimage-set-cache-mode! self value)
-  (_msg-27 (coerce-arg self) (sel_registerName "setCacheMode:") value))
+  (_msg-32 (coerce-arg self) (sel_registerName "setCacheMode:") value))
 (define (nsimage-cap-insets self)
   (tell #:type _NSEdgeInsets (coerce-arg self) capInsets))
 (define (nsimage-set-cap-insets! self value)
@@ -274,7 +308,7 @@
 (define (nsimage-resizing-mode self)
   (tell #:type _int64 (coerce-arg self) resizingMode))
 (define (nsimage-set-resizing-mode! self value)
-  (_msg-24 (coerce-arg self) (sel_registerName "setResizingMode:") value))
+  (_msg-28 (coerce-arg self) (sel_registerName "setResizingMode:") value))
 (define (nsimage-size self)
   (tell #:type _NSSize (coerce-arg self) size))
 (define (nsimage-set-size! self value)
@@ -298,10 +332,10 @@
 
 ;; --- Instance methods ---
 (define (nsimage-cg-image-for-proposed-rect-context-hints self proposed-dest-rect reference-context hints)
-  (_msg-26 (coerce-arg self) (sel_registerName "CGImageForProposedRect:context:hints:") proposed-dest-rect (coerce-arg reference-context) (coerce-arg hints)))
+  (_msg-31 (coerce-arg self) (sel_registerName "CGImageForProposedRect:context:hints:") proposed-dest-rect (coerce-arg reference-context) (coerce-arg hints)))
 (define (nsimage-tiff-representation-using-compression-factor self comp factor)
   (wrap-objc-object
-   (_msg-28 (coerce-arg self) (sel_registerName "TIFFRepresentationUsingCompression:factor:") comp factor)
+   (_msg-33 (coerce-arg self) (sel_registerName "TIFFRepresentationUsingCompression:factor:") comp factor)
    ))
 (define (nsimage-add-representation! self image-rep)
   (tell #:type _void (coerce-arg self) addRepresentation: (coerce-arg image-rep)))
@@ -311,6 +345,10 @@
   (wrap-objc-object
    (_msg-12 (coerce-arg self) (sel_registerName "bestRepresentationForRect:context:hints:") rect (coerce-arg reference-context) (coerce-arg hints))
    ))
+(define (nsimage-copy-with-zone self zone)
+  (wrap-objc-object
+   (_msg-29 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   #:retained #t))
 (define (nsimage-draw-at-point-from-rect-operation-fraction self point from-rect op delta)
   (_msg-7 (coerce-arg self) (sel_registerName "drawAtPoint:fromRect:operation:fraction:") point from-rect op delta))
 (define (nsimage-draw-in-rect self rect)
@@ -320,7 +358,9 @@
 (define (nsimage-draw-in-rect-from-rect-operation-fraction-respect-flipped-hints self dst-space-portion-rect src-space-portion-rect op requested-alpha respect-context-is-flipped hints)
   (_msg-11 (coerce-arg self) (sel_registerName "drawInRect:fromRect:operation:fraction:respectFlipped:hints:") dst-space-portion-rect src-space-portion-rect op requested-alpha respect-context-is-flipped (coerce-arg hints)))
 (define (nsimage-draw-representation-in-rect self image-rep rect)
-  (_msg-20 (coerce-arg self) (sel_registerName "drawRepresentation:inRect:") (coerce-arg image-rep) rect))
+  (_msg-21 (coerce-arg self) (sel_registerName "drawRepresentation:inRect:") (coerce-arg image-rep) rect))
+(define (nsimage-encode-with-coder self coder)
+  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
 (define (nsimage-hit-test-rect-with-image-destination-rect-context-hints-flipped self test-rect-dest-space image-rect-dest-space context hints flipped)
   (_msg-9 (coerce-arg self) (sel_registerName "hitTestRect:withImageDestinationRect:context:hints:flipped:") test-rect-dest-space image-rect-dest-space (coerce-arg context) (coerce-arg hints) flipped))
 (define (nsimage-image-with-locale self locale)
@@ -329,6 +369,9 @@
 (define (nsimage-image-with-symbol-configuration self configuration)
   (wrap-objc-object
    (tell (coerce-arg self) imageWithSymbolConfiguration: (coerce-arg configuration))))
+(define (nsimage-imported-content-types self)
+  (wrap-objc-object
+   (tell (coerce-arg self) importedContentTypes)))
 (define (nsimage-init-by-referencing-file self file-name)
   (wrap-objc-object
    (tell (coerce-arg self) initByReferencingFile: (coerce-arg file-name))
@@ -341,13 +384,24 @@
   (_msg-3 (coerce-arg self) (sel_registerName "isTemplate")))
 (define (nsimage-is-valid self)
   (_msg-3 (coerce-arg self) (sel_registerName "isValid")))
+(define (nsimage-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
+  (_msg-20 (coerce-arg self) (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:") (coerce-arg type-identifier)))
 (define (nsimage-layer-contents-for-contents-scale self layer-contents-scale)
   (wrap-objc-object
    (_msg-18 (coerce-arg self) (sel_registerName "layerContentsForContentsScale:") layer-contents-scale)
    ))
+(define (nsimage-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
+  (define-values (_blk1 _blk1-id)
+    (make-objc-block completion-handler (list _id _id) _void))
+  (wrap-objc-object
+   (_msg-27 (coerce-arg self) (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:") (coerce-arg type-identifier) _blk1)
+   ))
 (define (nsimage-name self)
   (wrap-objc-object
    (tell (coerce-arg self) name)))
+(define (nsimage-pasteboard-property-list-for-type self type)
+  (wrap-objc-object
+   (tell (coerce-arg self) pasteboardPropertyListForType: (coerce-arg type))))
 (define (nsimage-recache self)
   (tell #:type _void (coerce-arg self) recache))
 (define (nsimage-recommended-layer-contents-scale self preferred-contents-scale)
@@ -356,6 +410,14 @@
   (tell #:type _void (coerce-arg self) removeRepresentation: (coerce-arg image-rep)))
 (define (nsimage-set-name! self string)
   (_msg-19 (coerce-arg self) (sel_registerName "setName:") (coerce-arg string)))
+(define (nsimage-writable-type-identifiers-for-item-provider self)
+  (wrap-objc-object
+   (tell (coerce-arg self) writableTypeIdentifiersForItemProvider)))
+(define (nsimage-writable-types-for-pasteboard self pasteboard)
+  (wrap-objc-object
+   (tell (coerce-arg self) writableTypesForPasteboard: (coerce-arg pasteboard))))
+(define (nsimage-writing-options-for-type-pasteboard self type pasteboard)
+  (_msg-24 (coerce-arg self) (sel_registerName "writingOptionsForType:pasteboard:") (coerce-arg type) (coerce-arg pasteboard)))
 
 ;; --- Class methods ---
 (define (nsimage-can-init-with-pasteboard pasteboard)
@@ -371,16 +433,30 @@
    ))
 (define (nsimage-image-with-symbol-name-bundle-variable-value name bundle value)
   (wrap-objc-object
-   (_msg-23 NSImage (sel_registerName "imageWithSymbolName:bundle:variableValue:") (coerce-arg name) (coerce-arg bundle) value)
+   (_msg-25 NSImage (sel_registerName "imageWithSymbolName:bundle:variableValue:") (coerce-arg name) (coerce-arg bundle) value)
    ))
 (define (nsimage-image-with-symbol-name-variable-value name value)
   (wrap-objc-object
-   (_msg-21 NSImage (sel_registerName "imageWithSymbolName:variableValue:") (coerce-arg name) value)
+   (_msg-22 NSImage (sel_registerName "imageWithSymbolName:variableValue:") (coerce-arg name) value)
    ))
 (define (nsimage-image-with-system-symbol-name-accessibility-description name description)
   (wrap-objc-object
    (tell NSImage imageWithSystemSymbolName: (coerce-arg name) accessibilityDescription: (coerce-arg description))))
 (define (nsimage-image-with-system-symbol-name-variable-value-accessibility-description name value description)
   (wrap-objc-object
-   (_msg-22 NSImage (sel_registerName "imageWithSystemSymbolName:variableValue:accessibilityDescription:") (coerce-arg name) value (coerce-arg description))
+   (_msg-23 NSImage (sel_registerName "imageWithSystemSymbolName:variableValue:accessibilityDescription:") (coerce-arg name) value (coerce-arg description))
    ))
+(define (nsimage-object-with-item-provider-data-type-identifier-error data type-identifier out-error)
+  (wrap-objc-object
+   (_msg-26 NSImage (sel_registerName "objectWithItemProviderData:typeIdentifier:error:") (coerce-arg data) (coerce-arg type-identifier) out-error)
+   ))
+(define (nsimage-readable-type-identifiers-for-item-provider)
+  (wrap-objc-object
+   (tell NSImage readableTypeIdentifiersForItemProvider)))
+(define (nsimage-readable-types-for-pasteboard pasteboard)
+  (wrap-objc-object
+   (tell NSImage readableTypesForPasteboard: (coerce-arg pasteboard))))
+(define (nsimage-reading-options-for-type-pasteboard type pasteboard)
+  (_msg-24 NSImage (sel_registerName "readingOptionsForType:pasteboard:") (coerce-arg type) (coerce-arg pasteboard)))
+(define (nsimage-supports-secure-coding)
+  (_msg-3 NSImage (sel_registerName "supportsSecureCoding")))

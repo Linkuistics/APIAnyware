@@ -23,7 +23,7 @@
 (define (nstimezone? v) (objc-instance-of? v "NSTimeZone"))
 (provide NSDateFormatter)
 (provide/contract
-  [make-nsdateformatter (c-> any/c)]
+  [make-nsdateformatter-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
   [nsdateformatter-am-symbol (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nsdateformatter-set-am-symbol! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsdateformatter-pm-symbol (c-> objc-object? (or/c nsstring? objc-nil?))]
@@ -95,8 +95,10 @@
   [nsdateformatter-weekday-symbols (c-> objc-object? any/c)]
   [nsdateformatter-set-weekday-symbols! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsdateformatter-attributed-string-for-object-value-with-default-attributes (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsattributedstring? objc-nil?))]
+  [nsdateformatter-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
   [nsdateformatter-date-from-string (c-> objc-object? (or/c string? objc-object? #f) (or/c nsdate? objc-nil?))]
   [nsdateformatter-editing-string-for-object-value (c-> objc-object? (or/c string? objc-object? #f) (or/c nsstring? objc-nil?))]
+  [nsdateformatter-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsdateformatter-get-object-value-for-string-error-description (c-> objc-object? (or/c cpointer? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
   [nsdateformatter-get-object-value-for-string-range-error (c-> objc-object? (or/c cpointer? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c cpointer? #f) boolean?)]
   [nsdateformatter-is-lenient (c-> objc-object? boolean?)]
@@ -129,19 +131,22 @@
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _uint64 _uint64 -> _id)))
 (define _msg-7  ; (_fun _pointer _pointer _int64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _void)))
-(define _msg-8  ; (_fun _pointer _pointer _pointer _id _pointer -> _bool)
+(define _msg-8  ; (_fun _pointer _pointer _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
+(define _msg-9  ; (_fun _pointer _pointer _pointer _id _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _id _pointer -> _bool)))
-(define _msg-9  ; (_fun _pointer _pointer _pointer _id _pointer _pointer -> _bool)
+(define _msg-10  ; (_fun _pointer _pointer _pointer _id _pointer _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _id _pointer _pointer -> _bool)))
-(define _msg-10  ; (_fun _pointer _pointer _pointer _pointer _id _NSRange _pointer -> _bool)
+(define _msg-11  ; (_fun _pointer _pointer _pointer _pointer _id _NSRange _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer _id _NSRange _pointer -> _bool)))
-(define _msg-11  ; (_fun _pointer _pointer _uint64 -> _void)
+(define _msg-12  ; (_fun _pointer _pointer _uint64 -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _void)))
 
 ;; --- Constructors ---
-(define (make-nsdateformatter)
+(define (make-nsdateformatter-init-with-coder coder)
   (wrap-objc-object
-   (tell (tell NSDateFormatter alloc) init)
+   (tell (tell NSDateFormatter alloc)
+         initWithCoder: (coerce-arg coder))
    #:retained #t))
 
 
@@ -169,7 +174,7 @@
 (define (nsdateformatter-date-style self)
   (tell #:type _uint64 (coerce-arg self) dateStyle))
 (define (nsdateformatter-set-date-style! self value)
-  (_msg-11 (coerce-arg self) (sel_registerName "setDateStyle:") value))
+  (_msg-12 (coerce-arg self) (sel_registerName "setDateStyle:") value))
 (define (nsdateformatter-default-date self)
   (wrap-objc-object
    (tell (coerce-arg self) defaultDate)))
@@ -178,7 +183,7 @@
 (define (nsdateformatter-default-formatter-behavior)
   (tell #:type _uint64 NSDateFormatter defaultFormatterBehavior))
 (define (nsdateformatter-set-default-formatter-behavior! value)
-  (_msg-11 NSDateFormatter (sel_registerName "setDefaultFormatterBehavior:") value))
+  (_msg-12 NSDateFormatter (sel_registerName "setDefaultFormatterBehavior:") value))
 (define (nsdateformatter-does-relative-date-formatting self)
   (tell #:type _bool (coerce-arg self) doesRelativeDateFormatting))
 (define (nsdateformatter-set-does-relative-date-formatting! self value)
@@ -191,7 +196,7 @@
 (define (nsdateformatter-formatter-behavior self)
   (tell #:type _uint64 (coerce-arg self) formatterBehavior))
 (define (nsdateformatter-set-formatter-behavior! self value)
-  (_msg-11 (coerce-arg self) (sel_registerName "setFormatterBehavior:") value))
+  (_msg-12 (coerce-arg self) (sel_registerName "setFormatterBehavior:") value))
 (define (nsdateformatter-formatting-context self)
   (tell #:type _int64 (coerce-arg self) formattingContext))
 (define (nsdateformatter-set-formatting-context! self value)
@@ -277,7 +282,7 @@
 (define (nsdateformatter-time-style self)
   (tell #:type _uint64 (coerce-arg self) timeStyle))
 (define (nsdateformatter-set-time-style! self value)
-  (_msg-11 (coerce-arg self) (sel_registerName "setTimeStyle:") value))
+  (_msg-12 (coerce-arg self) (sel_registerName "setTimeStyle:") value))
 (define (nsdateformatter-time-zone self)
   (wrap-objc-object
    (tell (coerce-arg self) timeZone)))
@@ -318,22 +323,28 @@
 (define (nsdateformatter-attributed-string-for-object-value-with-default-attributes self obj attrs)
   (wrap-objc-object
    (tell (coerce-arg self) attributedStringForObjectValue: (coerce-arg obj) withDefaultAttributes: (coerce-arg attrs))))
+(define (nsdateformatter-copy-with-zone self zone)
+  (wrap-objc-object
+   (_msg-8 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   #:retained #t))
 (define (nsdateformatter-date-from-string self string)
   (wrap-objc-object
    (tell (coerce-arg self) dateFromString: (coerce-arg string))))
 (define (nsdateformatter-editing-string-for-object-value self obj)
   (wrap-objc-object
    (tell (coerce-arg self) editingStringForObjectValue: (coerce-arg obj))))
+(define (nsdateformatter-encode-with-coder self coder)
+  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
 (define (nsdateformatter-get-object-value-for-string-error-description self obj string error)
-  (_msg-8 (coerce-arg self) (sel_registerName "getObjectValue:forString:errorDescription:") obj (coerce-arg string) error))
+  (_msg-9 (coerce-arg self) (sel_registerName "getObjectValue:forString:errorDescription:") obj (coerce-arg string) error))
 (define (nsdateformatter-get-object-value-for-string-range-error self obj string rangep error)
-  (_msg-9 (coerce-arg self) (sel_registerName "getObjectValue:forString:range:error:") obj (coerce-arg string) rangep error))
+  (_msg-10 (coerce-arg self) (sel_registerName "getObjectValue:forString:range:error:") obj (coerce-arg string) rangep error))
 (define (nsdateformatter-is-lenient self)
   (_msg-0 (coerce-arg self) (sel_registerName "isLenient")))
 (define (nsdateformatter-is-partial-string-valid-new-editing-string-error-description self partial-string new-string error)
   (_msg-4 (coerce-arg self) (sel_registerName "isPartialStringValid:newEditingString:errorDescription:") (coerce-arg partial-string) new-string error))
 (define (nsdateformatter-is-partial-string-valid-proposed-selected-range-original-string-original-selected-range-error-description self partial-string-ptr proposed-sel-range-ptr orig-string orig-sel-range error)
-  (_msg-10 (coerce-arg self) (sel_registerName "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:") partial-string-ptr proposed-sel-range-ptr (coerce-arg orig-string) orig-sel-range error))
+  (_msg-11 (coerce-arg self) (sel_registerName "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:") partial-string-ptr proposed-sel-range-ptr (coerce-arg orig-string) orig-sel-range error))
 (define (nsdateformatter-set-localized-date-format-from-template! self date-format-template)
   (tell #:type _void (coerce-arg self) setLocalizedDateFormatFromTemplate: (coerce-arg date-format-template)))
 (define (nsdateformatter-string-for-object-value self obj)

@@ -623,6 +623,281 @@ fn inherited_method_satisfies_protocol() {
     );
 }
 
+#[test]
+fn class_inherits_protocol_method_when_not_declared() {
+    // Class conforms to a protocol but does not declare the protocol's method.
+    // The resolved `all_methods` should contain the protocol method with the
+    // protocol name as origin, so emitters can render it on the class binding.
+    let mut cls = make_class("MyClass", "");
+    cls.protocols = vec!["MyActionable".to_string()];
+
+    let proto = Protocol {
+        name: "MyActionable".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method_with_params(
+            "runAction:",
+            vec![Param {
+                name: "action".to_string(),
+                param_type: TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Id,
+                },
+            }],
+        )],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![proto];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyClass");
+
+    let run_action = cls
+        .all_methods
+        .iter()
+        .find(|m| m.selector == "runAction:")
+        .expect("class should inherit runAction: from MyActionable protocol");
+
+    assert_eq!(
+        run_action.origin.as_deref(),
+        Some("MyActionable"),
+        "protocol-inherited method origin should be the protocol name"
+    );
+    assert_eq!(
+        run_action.params.len(),
+        1,
+        "protocol-inherited method should preserve the protocol's parameter list"
+    );
+}
+
+#[test]
+fn class_does_not_duplicate_protocol_method_already_declared() {
+    // When a class both conforms to a protocol AND declares the protocol's
+    // method directly, the class's declaration wins and no duplicate is emitted.
+    let mut cls = make_class("MyClass", "");
+    cls.protocols = vec!["MyActionable".to_string()];
+    cls.methods = vec![make_method_with_params(
+        "runAction:",
+        vec![Param {
+            name: "action".to_string(),
+            param_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Id,
+            },
+        }],
+    )];
+
+    let proto = Protocol {
+        name: "MyActionable".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method_with_params(
+            "runAction:",
+            vec![Param {
+                name: "action".to_string(),
+                param_type: TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Id,
+                },
+            }],
+        )],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![proto];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyClass");
+
+    let matching: Vec<_> = cls
+        .all_methods
+        .iter()
+        .filter(|m| m.selector == "runAction:")
+        .collect();
+
+    assert_eq!(
+        matching.len(),
+        1,
+        "class's own declaration should override protocol inheritance, not duplicate"
+    );
+    assert_eq!(
+        matching[0].origin, None,
+        "own method should have no origin (declared on the class itself)"
+    );
+}
+
+#[test]
+fn class_inherits_optional_protocol_methods() {
+    // Optional protocol methods should also propagate to conforming classes —
+    // emitters need to know about them so the binding exposes them.
+    let mut cls = make_class("MyView", "");
+    cls.protocols = vec!["MyDelegate".to_string()];
+
+    let proto = Protocol {
+        name: "MyDelegate".to_string(),
+        inherits: vec![],
+        required_methods: vec![],
+        optional_methods: vec![make_method("optionalCallback", false)],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![proto];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyView");
+
+    assert!(
+        cls.all_methods
+            .iter()
+            .any(|m| m.selector == "optionalCallback"),
+        "class should inherit optional protocol methods"
+    );
+}
+
+#[test]
+fn class_inherits_methods_from_transitive_protocol_inheritance() {
+    // Class conforms to ProtoA which inherits from ProtoB.
+    // The class should see methods from both ProtoA and ProtoB.
+    let mut cls = make_class("MyRenderer", "");
+    cls.protocols = vec!["ProtoA".to_string()];
+
+    let proto_a = Protocol {
+        name: "ProtoA".to_string(),
+        inherits: vec!["ProtoB".to_string()],
+        required_methods: vec![make_method("methodA", false)],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+    };
+    let proto_b = Protocol {
+        name: "ProtoB".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method("methodB", false)],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![proto_a, proto_b];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyRenderer");
+
+    assert!(
+        cls.all_methods.iter().any(|m| m.selector == "methodA"),
+        "should have direct-protocol method"
+    );
+    assert!(
+        cls.all_methods.iter().any(|m| m.selector == "methodB"),
+        "should have transitive-protocol method via inherits"
+    );
+}
+
+#[test]
+fn subclass_inherits_protocol_methods_from_superclass_conformance() {
+    // Parent class conforms to a protocol; child class inherits from parent.
+    // Child should see the protocol methods via the existing inherits_from rule
+    // (no special-casing required — protocol propagation puts them on parent's
+    // effective_method, and superclass inheritance carries them down).
+    let mut parent = make_class("Parent", "");
+    parent.protocols = vec!["MyActionable".to_string()];
+
+    let child = make_class("Child", "Parent");
+
+    let proto = Protocol {
+        name: "MyActionable".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method("act", false)],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![parent, child];
+    fw.protocols = vec![proto];
+
+    let resolved = resolve(&[fw]);
+    let child = find_class(&resolved, "Child");
+
+    assert!(
+        child.all_methods.iter().any(|m| m.selector == "act"),
+        "subclass should see protocol methods inherited via parent conformance"
+    );
+}
+
+#[test]
+fn cross_framework_protocol_method_inheritance() {
+    // Protocol declared in one framework, class conforming to it in another.
+    // The resolved class should still get the protocol's methods.
+    let proto = Protocol {
+        name: "NSCopying".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method_with_params(
+            "copyWithZone:",
+            vec![Param {
+                name: "zone".to_string(),
+                param_type: TypeRef {
+                    nullable: true,
+                    kind: TypeRefKind::Pointer,
+                },
+            }],
+        )],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+    };
+    let mut fw_foundation = empty_framework("Foundation");
+    fw_foundation.protocols = vec![proto];
+
+    let mut cls = make_class("MyDoc", "");
+    cls.protocols = vec!["NSCopying".to_string()];
+    let mut fw_app = empty_framework("AppKit");
+    fw_app.classes = vec![cls];
+
+    let resolved = resolve(&[fw_foundation, fw_app]);
+    let cls = find_class(&resolved, "MyDoc");
+
+    let copy = cls
+        .all_methods
+        .iter()
+        .find(|m| m.selector == "copyWithZone:")
+        .expect("class should inherit copyWithZone: from cross-framework protocol");
+
+    assert_eq!(copy.origin.as_deref(), Some("NSCopying"));
+    assert_eq!(
+        copy.params.len(),
+        1,
+        "cross-framework lookup should preserve the actual parameter list"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Multi-framework isolation
 // ---------------------------------------------------------------------------

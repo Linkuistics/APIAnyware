@@ -6,7 +6,8 @@
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../../runtime/objc-base.rkt"
-         "../../../runtime/coerce.rkt")
+         "../../../runtime/coerce.rkt"
+         "../../../runtime/block.rkt")
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/Foundation.framework/Foundation"))
@@ -15,6 +16,7 @@
 
 ;; --- Class predicates ---
 (define (dynamicself? v) (objc-instance-of? v "DynamicSelf"))
+(define (nsprogress? v) (objc-instance-of? v "NSProgress"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (_playgroundquicklook? v) (objc-instance-of? v "_PlaygroundQuickLook"))
 (provide NSString)
@@ -58,15 +60,34 @@
   [nsstring-string-by-standardizing-path (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nsstring-uppercase-string (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nsstring-character-at-index (c-> objc-object? exact-nonnegative-integer? exact-nonnegative-integer?)]
+  [nsstring-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
+  [nsstring-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nsstring-item-provider-visibility-for-representation-with-type-identifier (c-> objc-object? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsstring-load-data-with-type-identifier-for-item-provider-completion-handler (c-> objc-object? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
+  [nsstring-mutable-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
+  [nsstring-writable-type-identifiers-for-item-provider (c-> objc-object? any/c)]
+  [nsstring-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
+  [nsstring-readable-type-identifiers-for-item-provider (c-> any/c)]
+  [nsstring-supports-secure-coding (c-> boolean?)]
   )
 
 ;; --- Class reference ---
 (import-class NSString)
 
 ;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _uint64)
+(define _msg-0  ; (_fun _pointer _pointer -> _bool)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
+(define _msg-1  ; (_fun _pointer _pointer -> _uint64)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _uint64)))
-(define _msg-1  ; (_fun _pointer _pointer _uint64 -> _uint16)
+(define _msg-2  ; (_fun _pointer _pointer _id -> _int64)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _int64)))
+(define _msg-3  ; (_fun _pointer _pointer _id _id _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _pointer -> _id)))
+(define _msg-4  ; (_fun _pointer _pointer _id _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _id)))
+(define _msg-5  ; (_fun _pointer _pointer _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
+(define _msg-6  ; (_fun _pointer _pointer _uint64 -> _uint16)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _uint16)))
 
 ;; --- Constructors ---
@@ -177,6 +198,36 @@
 
 ;; --- Instance methods ---
 (define (nsstring-character-at-index self index)
-  (_msg-1 (coerce-arg self) (sel_registerName "characterAtIndex:") index))
+  (_msg-6 (coerce-arg self) (sel_registerName "characterAtIndex:") index))
+(define (nsstring-copy-with-zone self zone)
+  (wrap-objc-object
+   (_msg-5 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   #:retained #t))
+(define (nsstring-encode-with-coder self coder)
+  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
+(define (nsstring-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
+  (_msg-2 (coerce-arg self) (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:") (coerce-arg type-identifier)))
+(define (nsstring-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
+  (define-values (_blk1 _blk1-id)
+    (make-objc-block completion-handler (list _id _id) _void))
+  (wrap-objc-object
+   (_msg-4 (coerce-arg self) (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:") (coerce-arg type-identifier) _blk1)
+   ))
+(define (nsstring-mutable-copy-with-zone self zone)
+  (wrap-objc-object
+   (_msg-5 (coerce-arg self) (sel_registerName "mutableCopyWithZone:") zone)
+   #:retained #t))
+(define (nsstring-writable-type-identifiers-for-item-provider self)
+  (wrap-objc-object
+   (tell (coerce-arg self) writableTypeIdentifiersForItemProvider)))
 
 ;; --- Class methods ---
+(define (nsstring-object-with-item-provider-data-type-identifier-error data type-identifier out-error)
+  (wrap-objc-object
+   (_msg-3 NSString (sel_registerName "objectWithItemProviderData:typeIdentifier:error:") (coerce-arg data) (coerce-arg type-identifier) out-error)
+   ))
+(define (nsstring-readable-type-identifiers-for-item-provider)
+  (wrap-objc-object
+   (tell NSString readableTypeIdentifiersForItemProvider)))
+(define (nsstring-supports-secure-coding)
+  (_msg-0 NSString (sel_registerName "supportsSecureCoding")))

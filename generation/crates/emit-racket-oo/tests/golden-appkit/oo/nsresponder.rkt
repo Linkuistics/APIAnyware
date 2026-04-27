@@ -38,6 +38,7 @@
   [nsresponder-change-mode-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsresponder-context-menu-key-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsresponder-cursor-update (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nsresponder-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsresponder-end-gesture-with-event! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsresponder-flags-changed (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsresponder-flush-buffered-key-events (c-> objc-object? void?)]
@@ -149,6 +150,8 @@
   (tell #:type _void (coerce-arg self) contextMenuKeyDown: (coerce-arg event)))
 (define (nsresponder-cursor-update self event)
   (tell #:type _void (coerce-arg self) cursorUpdate: (coerce-arg event)))
+(define (nsresponder-encode-with-coder self coder)
+  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
 (define (nsresponder-end-gesture-with-event! self event)
   (tell #:type _void (coerce-arg self) endGestureWithEvent: (coerce-arg event)))
 (define (nsresponder-flags-changed self event)

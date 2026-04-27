@@ -314,8 +314,8 @@ fn nscoding_methods_matched() {
     let nscoding_selectors: HashSet<&str> = prog
         .protocol_method
         .iter()
-        .filter(|(proto, _, _, _)| proto == "NSCoding")
-        .map(|(_, sel, _, _)| sel.as_str())
+        .filter(|(proto, _, _, _, _, _, _)| proto == "NSCoding")
+        .map(|(_, sel, _, _, _, _, _)| sel.as_str())
         .collect();
 
     if nscoding_selectors.is_empty() {

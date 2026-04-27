@@ -1,15 +1,15 @@
-id: 2026-04-27-modaliser-fold-portfolio-complete-ravel-lite-migration
-timestamp: 2026-04-27T08:55:10Z
+id: session-32
+timestamp: 2026-04-27T09:28:36Z
 phase: work
 body: |
-  ### Session 31 (2026-04-27T08:55:10Z) — Fold Modaliser, complete sample-app portfolio, migrate to Ravel-Lite
+  ### Session 32 (2026-04-27T09:28:36Z) — Protocol-inherited methods now emitted on class bindings
 
-  - Folded the peer Modaliser-Racket project into this repo under `generation/targets/racket-oo/apps/modaliser/` (40+ source files: core state machine, FFI layer, UI, services, tests, bundle scripts). Bindings symlinks (`generated`, `lib`, `runtime`) corrected from absolute-style `../../APIAnyware-MacOS/` paths to repo-relative `../../../` paths.
-  - Completed the sample-app portfolio: added Mini Browser (`mini-browser/mini-browser.rkt`, 302 lines), Note Editor (`note-editor/note-editor.rkt`, 521 lines), and Modaliser as capstone — portfolio now at 8/8 planned apps. Retired four scaffolding apps (`counter/`, `file-lister/`, `menu-bar-tool/`, `text-editor/`); `hello-window` established as canonical demo for bundler integration tests and developer guide.
-  - Added `runtime/objc-subclass.rkt` (287 lines) with `define-objc-subclass` macro; rewrote `drawing-canvas` as the canonical consumer.
-  - Landed a comprehensive developer guide (`generation/targets/racket-oo/docs/developer-guide.md`, 833 lines) covering the full bindings usage surface.
-  - Bootstrapped website content (`website/index.md`, `website/meta.yml`).
-  - Migrated all LLM_STATE plan files to typed YAML format (ravel-lite); created per-app state directory `LLM_STATE/apps/modaliser-racket/`. Path references throughout LLM_STATE documentation migrated from `LLM_CONTEXT/` to `Ravel-Lite/`.
-  - Improved Rust generation crates: `bundle-racket-oo` gained Info.plist override support and stable codesigning tests; `stub-launcher` gained codesigning module; `emit-racket-oo` golden tests expanded with 7 new snapshot files.
-  - Promoted 5 collection/emission gap tasks to the core backlog (bare c:@<name> macro USR filter, anonymous-enum leak, GCD OS_OBJECT annotation, CF struct globals, protocol-inherited methods) — all surfaced during app development; all not_started, low-to-medium priority.
-  - What this suggests trying next: run the triage cycle to assign priority to the 5 new core tasks; Modaliser live VM shake-down (modaliser-racket backlog Task 26 Step 6) gated on GUIVisionVMDriver spec-v1 log tailer support.
+  - Implemented protocol-inherited method propagation at the resolve (Datalog) layer in `analysis/crates/resolve/`. The fix was placed here rather than per-emitter so every current and future language emitter inherits it automatically.
+  - `src/program.rs`: Enriched `protocol_method` relation from 4 to 7 fields; added `transitively_conforms_to` derived relation (reflexive transitive closure over `conforms_to` / `protocol_inherits`); added new `effective_method` Datalog rule for protocol-origin methods; updated `satisfies_protocol_method` for new arity.
+  - `src/fact_loader.rs`: Push new `is_init`, `is_deprecated`, `is_variadic` flags when loading both required and optional protocol methods.
+  - `src/checkpoint.rs`: Added `build_protocol_method_index` keyed by `(protocol_name, selector, is_class_method)`; `build_effective_methods_for_class` now falls back to this index for protocol-origin methods, preserving full parameter/return-type metadata from the Protocol declaration.
+  - Added 6 TDD-first tests in `tests/synthetic_resolution.rs` covering: basic propagation, no-duplicate when directly declared, optional methods, transitive protocol inheritance, subclass-via-superclass conformance, cross-framework protocol methods.
+  - 23 golden files under `generation/crates/emit-racket-oo/tests/golden-{appkit,foundation}/` regenerated; diffs are additive — protocol-inherited methods (NSCoding, NSCopying, NSAccessibility etc.) now appear in provide blocks and method-emission sections.
+  - All 32 tests in the resolve crate pass (up from 26). Canary cases from the task description confirmed: SCNNode.runAction:, SCNView.setAutoenablesDefaultLighting:, NSString.encodeWithCoder: all emitted correctly.
+  - Nothing failed. The full pipeline (resolve → annotate → enrich → generate) was rerun and verified end-to-end.
+  - Next: remaining backlog tasks — likely sample app polish or more language targets now that protocol methods are present in the IR.

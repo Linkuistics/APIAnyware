@@ -6,7 +6,8 @@
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../../runtime/objc-base.rkt"
-         "../../../runtime/coerce.rkt")
+         "../../../runtime/coerce.rkt"
+         "../../../runtime/block.rkt")
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/Foundation.framework/Foundation"))
@@ -16,11 +17,13 @@
 ;; --- Class predicates ---
 (define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsnumber? v) (objc-instance-of? v "NSNumber"))
+(define (nsprogress? v) (objc-instance-of? v "NSProgress"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (nsurl? v) (objc-instance-of? v "NSURL"))
 (define (_playgroundquicklook? v) (objc-instance-of? v "_PlaygroundQuickLook"))
 (provide NSURL)
 (provide/contract
+  [make-nsurl-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
   [make-nsurl-init-with-data-representation-relative-to-url (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [make-nsurl-init-with-string (c-> (or/c string? objc-object? #f) any/c)]
   [make-nsurl-init-with-string-encoding-invalid-characters (c-> (or/c string? objc-object? #f) boolean? any/c)]
@@ -55,6 +58,8 @@
   [nsurl-standardized-url (c-> objc-object? (or/c nsurl? objc-nil?))]
   [nsurl-user (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error (c-> objc-object? exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c nsdata? objc-nil?))]
+  [nsurl-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
+  [nsurl-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsurl-file-reference-url (c-> objc-object? (or/c nsurl? objc-nil?))]
   [nsurl-get-file-system-representation-max-length (c-> objc-object? (or/c cpointer? #f) exact-nonnegative-integer? boolean?)]
   [nsurl-get-resource-value-for-key-error (c-> objc-object? (or/c cpointer? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
@@ -67,6 +72,8 @@
   [nsurl-init-file-url-with-path-relative-to-url (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nsurl-is-file-reference-url (c-> objc-object? boolean?)]
   [nsurl-is-file-url (c-> objc-object? boolean?)]
+  [nsurl-item-provider-visibility-for-representation-with-type-identifier (c-> objc-object? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsurl-load-data-with-type-identifier-for-item-provider-completion-handler (c-> objc-object? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
   [nsurl-remove-all-cached-resource-values! (c-> objc-object? void?)]
   [nsurl-remove-cached-resource-value-for-key! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nsurl-resource-values-for-keys-error (c-> objc-object? (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
@@ -75,6 +82,7 @@
   [nsurl-set-temporary-resource-value-for-key! (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsurl-start-accessing-security-scoped-resource (c-> objc-object? boolean?)]
   [nsurl-stop-accessing-security-scoped-resource (c-> objc-object? void?)]
+  [nsurl-writable-type-identifiers-for-item-provider (c-> objc-object? any/c)]
   [nsurl-url-by-resolving-alias-file-at-url-options-error (c-> (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c cpointer? #f) any/c)]
   [nsurl-url-by-resolving-bookmark-data-options-relative-to-url-bookmark-data-is-stale-error (c-> (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c cpointer? #f) any/c)]
   [nsurl-url-with-data-representation-relative-to-url (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
@@ -88,7 +96,10 @@
   [nsurl-file-url-with-path-is-directory (c-> (or/c string? objc-object? #f) boolean? (or/c nsurl? objc-nil?))]
   [nsurl-file-url-with-path-is-directory-relative-to-url (c-> (or/c string? objc-object? #f) boolean? (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
   [nsurl-file-url-with-path-relative-to-url (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
+  [nsurl-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
+  [nsurl-readable-type-identifiers-for-item-provider (c-> any/c)]
   [nsurl-resource-values-for-keys-from-bookmark-data (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nsurl-supports-secure-coding (c-> boolean?)]
   [nsurl-write-bookmark-data-to-url-options-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c cpointer? #f) boolean?)]
   )
 
@@ -100,32 +111,44 @@
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
 (define _msg-1  ; (_fun _pointer _pointer -> _string)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _string)))
-(define _msg-2  ; (_fun _pointer _pointer _id _bool -> _id)
+(define _msg-2  ; (_fun _pointer _pointer _id -> _int64)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _int64)))
+(define _msg-3  ; (_fun _pointer _pointer _id _bool -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _bool -> _id)))
-(define _msg-3  ; (_fun _pointer _pointer _id _bool _id -> _id)
+(define _msg-4  ; (_fun _pointer _pointer _id _bool _id -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _bool _id -> _id)))
-(define _msg-4  ; (_fun _pointer _pointer _id _id _pointer -> _bool)
+(define _msg-5  ; (_fun _pointer _pointer _id _id _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _pointer -> _bool)))
-(define _msg-5  ; (_fun _pointer _pointer _id _id _uint64 _pointer -> _bool)
+(define _msg-6  ; (_fun _pointer _pointer _id _id _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _pointer -> _id)))
+(define _msg-7  ; (_fun _pointer _pointer _id _id _uint64 _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _uint64 _pointer -> _bool)))
-(define _msg-6  ; (_fun _pointer _pointer _id _pointer -> _bool)
+(define _msg-8  ; (_fun _pointer _pointer _id _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _bool)))
-(define _msg-7  ; (_fun _pointer _pointer _id _pointer -> _id)
+(define _msg-9  ; (_fun _pointer _pointer _id _pointer -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _id)))
-(define _msg-8  ; (_fun _pointer _pointer _id _uint64 _id _pointer _pointer -> _id)
+(define _msg-10  ; (_fun _pointer _pointer _id _uint64 _id _pointer _pointer -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _uint64 _id _pointer _pointer -> _id)))
-(define _msg-9  ; (_fun _pointer _pointer _id _uint64 _pointer -> _id)
+(define _msg-11  ; (_fun _pointer _pointer _id _uint64 _pointer -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _uint64 _pointer -> _id)))
-(define _msg-10  ; (_fun _pointer _pointer _pointer _id _pointer -> _bool)
+(define _msg-12  ; (_fun _pointer _pointer _pointer -> _id)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
+(define _msg-13  ; (_fun _pointer _pointer _pointer _id _pointer -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _id _pointer -> _bool)))
-(define _msg-11  ; (_fun _pointer _pointer _pointer _uint64 -> _bool)
+(define _msg-14  ; (_fun _pointer _pointer _pointer _uint64 -> _bool)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _uint64 -> _bool)))
-(define _msg-12  ; (_fun _pointer _pointer _string _bool _id -> _id)
+(define _msg-15  ; (_fun _pointer _pointer _string _bool _id -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _string _bool _id -> _id)))
-(define _msg-13  ; (_fun _pointer _pointer _uint64 _id _id _pointer -> _id)
+(define _msg-16  ; (_fun _pointer _pointer _uint64 _id _id _pointer -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 _id _id _pointer -> _id)))
 
 ;; --- Constructors ---
+(define (make-nsurl-init-with-coder coder)
+  (wrap-objc-object
+   (tell (tell NSURL alloc)
+         initWithCoder: (coerce-arg coder))
+   #:retained #t))
+
 (define (make-nsurl-init-with-data-representation-relative-to-url data base-url)
   (wrap-objc-object
    (tell (tell NSURL alloc)
@@ -140,7 +163,7 @@
 
 (define (make-nsurl-init-with-string-encoding-invalid-characters url-string encoding-invalid-characters)
   (wrap-objc-object
-   (_msg-2 (tell NSURL alloc)
+   (_msg-3 (tell NSURL alloc)
        (sel_registerName "initWithString:encodingInvalidCharacters:")
        (coerce-arg url-string)
        encoding-invalid-characters)
@@ -242,26 +265,32 @@
 ;; --- Instance methods ---
 (define (nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error self options keys relative-url error)
   (wrap-objc-object
-   (_msg-13 (coerce-arg self) (sel_registerName "bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error:") options (coerce-arg keys) (coerce-arg relative-url) error)
+   (_msg-16 (coerce-arg self) (sel_registerName "bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error:") options (coerce-arg keys) (coerce-arg relative-url) error)
    ))
+(define (nsurl-copy-with-zone self zone)
+  (wrap-objc-object
+   (_msg-12 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   #:retained #t))
+(define (nsurl-encode-with-coder self coder)
+  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
 (define (nsurl-file-reference-url self)
   (wrap-objc-object
    (tell (coerce-arg self) fileReferenceURL)))
 (define (nsurl-get-file-system-representation-max-length self buffer max-buffer-length)
-  (_msg-11 (coerce-arg self) (sel_registerName "getFileSystemRepresentation:maxLength:") buffer max-buffer-length))
+  (_msg-14 (coerce-arg self) (sel_registerName "getFileSystemRepresentation:maxLength:") buffer max-buffer-length))
 (define (nsurl-get-resource-value-for-key-error self value key error)
-  (_msg-10 (coerce-arg self) (sel_registerName "getResourceValue:forKey:error:") value (coerce-arg key) error))
+  (_msg-13 (coerce-arg self) (sel_registerName "getResourceValue:forKey:error:") value (coerce-arg key) error))
 (define (nsurl-init-absolute-url-with-data-representation-relative-to-url self data base-url)
   (wrap-objc-object
    (tell (coerce-arg self) initAbsoluteURLWithDataRepresentation: (coerce-arg data) relativeToURL: (coerce-arg base-url))
    #:retained #t))
 (define (nsurl-init-by-resolving-bookmark-data-options-relative-to-url-bookmark-data-is-stale-error self bookmark-data options relative-url is-stale error)
   (wrap-objc-object
-   (_msg-8 (coerce-arg self) (sel_registerName "initByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:") (coerce-arg bookmark-data) options (coerce-arg relative-url) is-stale error)
+   (_msg-10 (coerce-arg self) (sel_registerName "initByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:") (coerce-arg bookmark-data) options (coerce-arg relative-url) is-stale error)
    #:retained #t))
 (define (nsurl-init-file-url-with-file-system-representation-is-directory-relative-to-url self path is-dir base-url)
   (wrap-objc-object
-   (_msg-12 (coerce-arg self) (sel_registerName "initFileURLWithFileSystemRepresentation:isDirectory:relativeToURL:") path is-dir (coerce-arg base-url))
+   (_msg-15 (coerce-arg self) (sel_registerName "initFileURLWithFileSystemRepresentation:isDirectory:relativeToURL:") path is-dir (coerce-arg base-url))
    #:retained #t))
 (define (nsurl-init-file-url-with-path self path)
   (wrap-objc-object
@@ -269,11 +298,11 @@
    #:retained #t))
 (define (nsurl-init-file-url-with-path-is-directory self path is-dir)
   (wrap-objc-object
-   (_msg-2 (coerce-arg self) (sel_registerName "initFileURLWithPath:isDirectory:") (coerce-arg path) is-dir)
+   (_msg-3 (coerce-arg self) (sel_registerName "initFileURLWithPath:isDirectory:") (coerce-arg path) is-dir)
    #:retained #t))
 (define (nsurl-init-file-url-with-path-is-directory-relative-to-url self path is-dir base-url)
   (wrap-objc-object
-   (_msg-3 (coerce-arg self) (sel_registerName "initFileURLWithPath:isDirectory:relativeToURL:") (coerce-arg path) is-dir (coerce-arg base-url))
+   (_msg-4 (coerce-arg self) (sel_registerName "initFileURLWithPath:isDirectory:relativeToURL:") (coerce-arg path) is-dir (coerce-arg base-url))
    #:retained #t))
 (define (nsurl-init-file-url-with-path-relative-to-url self path base-url)
   (wrap-objc-object
@@ -283,33 +312,44 @@
   (_msg-0 (coerce-arg self) (sel_registerName "isFileReferenceURL")))
 (define (nsurl-is-file-url self)
   (_msg-0 (coerce-arg self) (sel_registerName "isFileURL")))
+(define (nsurl-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
+  (_msg-2 (coerce-arg self) (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:") (coerce-arg type-identifier)))
+(define (nsurl-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
+  (define-values (_blk1 _blk1-id)
+    (make-objc-block completion-handler (list _id _id) _void))
+  (wrap-objc-object
+   (_msg-9 (coerce-arg self) (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:") (coerce-arg type-identifier) _blk1)
+   ))
 (define (nsurl-remove-all-cached-resource-values! self)
   (tell #:type _void (coerce-arg self) removeAllCachedResourceValues))
 (define (nsurl-remove-cached-resource-value-for-key! self key)
   (tell #:type _void (coerce-arg self) removeCachedResourceValueForKey: (coerce-arg key)))
 (define (nsurl-resource-values-for-keys-error self keys error)
   (wrap-objc-object
-   (_msg-7 (coerce-arg self) (sel_registerName "resourceValuesForKeys:error:") (coerce-arg keys) error)
+   (_msg-9 (coerce-arg self) (sel_registerName "resourceValuesForKeys:error:") (coerce-arg keys) error)
    ))
 (define (nsurl-set-resource-value-for-key-error! self value key error)
-  (_msg-4 (coerce-arg self) (sel_registerName "setResourceValue:forKey:error:") (coerce-arg value) (coerce-arg key) error))
+  (_msg-5 (coerce-arg self) (sel_registerName "setResourceValue:forKey:error:") (coerce-arg value) (coerce-arg key) error))
 (define (nsurl-set-resource-values-error! self keyed-values error)
-  (_msg-6 (coerce-arg self) (sel_registerName "setResourceValues:error:") (coerce-arg keyed-values) error))
+  (_msg-8 (coerce-arg self) (sel_registerName "setResourceValues:error:") (coerce-arg keyed-values) error))
 (define (nsurl-set-temporary-resource-value-for-key! self value key)
   (tell #:type _void (coerce-arg self) setTemporaryResourceValue: (coerce-arg value) forKey: (coerce-arg key)))
 (define (nsurl-start-accessing-security-scoped-resource self)
   (_msg-0 (coerce-arg self) (sel_registerName "startAccessingSecurityScopedResource")))
 (define (nsurl-stop-accessing-security-scoped-resource self)
   (tell #:type _void (coerce-arg self) stopAccessingSecurityScopedResource))
+(define (nsurl-writable-type-identifiers-for-item-provider self)
+  (wrap-objc-object
+   (tell (coerce-arg self) writableTypeIdentifiersForItemProvider)))
 
 ;; --- Class methods ---
 (define (nsurl-url-by-resolving-alias-file-at-url-options-error url options error)
   (wrap-objc-object
-   (_msg-9 NSURL (sel_registerName "URLByResolvingAliasFileAtURL:options:error:") (coerce-arg url) options error)
+   (_msg-11 NSURL (sel_registerName "URLByResolvingAliasFileAtURL:options:error:") (coerce-arg url) options error)
    ))
 (define (nsurl-url-by-resolving-bookmark-data-options-relative-to-url-bookmark-data-is-stale-error bookmark-data options relative-url is-stale error)
   (wrap-objc-object
-   (_msg-8 NSURL (sel_registerName "URLByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:") (coerce-arg bookmark-data) options (coerce-arg relative-url) is-stale error)
+   (_msg-10 NSURL (sel_registerName "URLByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:") (coerce-arg bookmark-data) options (coerce-arg relative-url) is-stale error)
    ))
 (define (nsurl-url-with-data-representation-relative-to-url data base-url)
   (wrap-objc-object
@@ -319,7 +359,7 @@
    (tell NSURL URLWithString: (coerce-arg url-string))))
 (define (nsurl-url-with-string-encoding-invalid-characters url-string encoding-invalid-characters)
   (wrap-objc-object
-   (_msg-2 NSURL (sel_registerName "URLWithString:encodingInvalidCharacters:") (coerce-arg url-string) encoding-invalid-characters)
+   (_msg-3 NSURL (sel_registerName "URLWithString:encodingInvalidCharacters:") (coerce-arg url-string) encoding-invalid-characters)
    ))
 (define (nsurl-url-with-string-relative-to-url url-string base-url)
   (wrap-objc-object
@@ -329,28 +369,37 @@
    (tell NSURL absoluteURLWithDataRepresentation: (coerce-arg data) relativeToURL: (coerce-arg base-url))))
 (define (nsurl-bookmark-data-with-contents-of-url-error bookmark-file-url error)
   (wrap-objc-object
-   (_msg-7 NSURL (sel_registerName "bookmarkDataWithContentsOfURL:error:") (coerce-arg bookmark-file-url) error)
+   (_msg-9 NSURL (sel_registerName "bookmarkDataWithContentsOfURL:error:") (coerce-arg bookmark-file-url) error)
    ))
 (define (nsurl-file-url-with-file-system-representation-is-directory-relative-to-url path is-dir base-url)
   (wrap-objc-object
-   (_msg-12 NSURL (sel_registerName "fileURLWithFileSystemRepresentation:isDirectory:relativeToURL:") path is-dir (coerce-arg base-url))
+   (_msg-15 NSURL (sel_registerName "fileURLWithFileSystemRepresentation:isDirectory:relativeToURL:") path is-dir (coerce-arg base-url))
    ))
 (define (nsurl-file-url-with-path path)
   (wrap-objc-object
    (tell NSURL fileURLWithPath: (coerce-arg path))))
 (define (nsurl-file-url-with-path-is-directory path is-dir)
   (wrap-objc-object
-   (_msg-2 NSURL (sel_registerName "fileURLWithPath:isDirectory:") (coerce-arg path) is-dir)
+   (_msg-3 NSURL (sel_registerName "fileURLWithPath:isDirectory:") (coerce-arg path) is-dir)
    ))
 (define (nsurl-file-url-with-path-is-directory-relative-to-url path is-dir base-url)
   (wrap-objc-object
-   (_msg-3 NSURL (sel_registerName "fileURLWithPath:isDirectory:relativeToURL:") (coerce-arg path) is-dir (coerce-arg base-url))
+   (_msg-4 NSURL (sel_registerName "fileURLWithPath:isDirectory:relativeToURL:") (coerce-arg path) is-dir (coerce-arg base-url))
    ))
 (define (nsurl-file-url-with-path-relative-to-url path base-url)
   (wrap-objc-object
    (tell NSURL fileURLWithPath: (coerce-arg path) relativeToURL: (coerce-arg base-url))))
+(define (nsurl-object-with-item-provider-data-type-identifier-error data type-identifier out-error)
+  (wrap-objc-object
+   (_msg-6 NSURL (sel_registerName "objectWithItemProviderData:typeIdentifier:error:") (coerce-arg data) (coerce-arg type-identifier) out-error)
+   ))
+(define (nsurl-readable-type-identifiers-for-item-provider)
+  (wrap-objc-object
+   (tell NSURL readableTypeIdentifiersForItemProvider)))
 (define (nsurl-resource-values-for-keys-from-bookmark-data keys bookmark-data)
   (wrap-objc-object
    (tell NSURL resourceValuesForKeys: (coerce-arg keys) fromBookmarkData: (coerce-arg bookmark-data))))
+(define (nsurl-supports-secure-coding)
+  (_msg-0 NSURL (sel_registerName "supportsSecureCoding")))
 (define (nsurl-write-bookmark-data-to-url-options-error bookmark-data bookmark-file-url options error)
-  (_msg-5 NSURL (sel_registerName "writeBookmarkData:toURL:options:error:") (coerce-arg bookmark-data) (coerce-arg bookmark-file-url) options error))
+  (_msg-7 NSURL (sel_registerName "writeBookmarkData:toURL:options:error:") (coerce-arg bookmark-data) (coerce-arg bookmark-file-url) options error))

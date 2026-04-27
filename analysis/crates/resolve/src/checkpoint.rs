@@ -42,6 +42,7 @@ pub fn build_resolved_framework(
     // Index methods and properties across ALL frameworks for cross-framework lookup
     let method_index = build_method_index(all_frameworks);
     let property_index = build_property_index(all_frameworks);
+    let protocol_method_index = build_protocol_method_index(all_frameworks);
 
     // Index returns_retained results: (class, selector, is_class_method)
     let retained_set: HashSet<(&str, &str, bool)> = prog
@@ -77,6 +78,7 @@ pub fn build_resolved_framework(
             &class.name,
             prog,
             &method_index,
+            &protocol_method_index,
             &retained_set,
             &protocol_satisfaction,
         );
@@ -114,6 +116,38 @@ fn build_method_index<'a>(all_frameworks: &'a [Framework]) -> HashMap<MethodKey<
     index
 }
 
+/// Protocol-method lookup key: (protocol_name, selector, is_class_method)
+type ProtocolMethodKey<'a> = (&'a str, &'a str, bool);
+
+/// Build an index from (protocol, selector, is_class_method) → Method
+/// across all protocols in all loaded frameworks, covering both
+/// `required_methods` and `optional_methods`. Used to resolve full metadata
+/// when a class's effective_method has a protocol name as its origin.
+fn build_protocol_method_index<'a>(
+    all_frameworks: &'a [Framework],
+) -> HashMap<ProtocolMethodKey<'a>, &'a Method> {
+    let mut index = HashMap::new();
+    for framework in all_frameworks {
+        for proto in &framework.protocols {
+            for method in proto
+                .required_methods
+                .iter()
+                .chain(proto.optional_methods.iter())
+            {
+                index.insert(
+                    (
+                        proto.name.as_str(),
+                        method.selector.as_str(),
+                        method.class_method,
+                    ),
+                    method,
+                );
+            }
+        }
+    }
+    index
+}
+
 /// Property lookup key: (class_name, property_name)
 type PropertyKey<'a> = (&'a str, &'a str);
 
@@ -139,6 +173,7 @@ fn build_effective_methods_for_class(
     class_name: &str,
     prog: &ResolutionProgram,
     method_index: &HashMap<MethodKey<'_>, &Method>,
+    protocol_method_index: &HashMap<ProtocolMethodKey<'_>, &Method>,
     retained_set: &HashSet<(&str, &str, bool)>,
     protocol_satisfaction: &HashMap<(&str, &str, bool), &str>,
 ) -> Vec<Method> {
@@ -147,9 +182,15 @@ fn build_effective_methods_for_class(
         .iter()
         .filter(|(class, _, _, _, _, _, _)| class == class_name)
         .map(|(class, sel, is_cm, is_init, is_dep, is_var, origin)| {
-            // Try to find the original method declaration for full metadata
+            // Try to find the original method declaration for full metadata.
+            // Origin is either a class name (direct/inherited method) or a
+            // protocol name (protocol-inherited method) — try both indexes.
             let key = (origin.as_str(), sel.as_str(), *is_cm);
-            if let Some(original) = method_index.get(&key) {
+            let resolved_method = method_index
+                .get(&key)
+                .or_else(|| protocol_method_index.get(&key));
+
+            if let Some(original) = resolved_method {
                 let mut method = (*original).clone();
                 // Set resolved-phase fields
                 if origin != class {

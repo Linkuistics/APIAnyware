@@ -16,14 +16,18 @@
 
 
 ;; --- Class predicates ---
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nscolorspace? v) (objc-instance-of? v "NSColorSpace"))
+(define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (nsurl? v) (objc-instance-of? v "NSURL"))
 (define (opaquetypearchetype? v) (objc-instance-of? v "OpaqueTypeArchetype"))
 (provide NSColor)
 (provide/contract
   [make-nscolor-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
+  [make-nscolor-init-with-pasteboard-property-list-of-type (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nscolor-cg-color (c-> objc-object? (or/c cpointer? #f))]
   [nscolor-alpha-component (c-> objc-object? real?)]
   [nscolor-alternate-selected-control-color (c-> (or/c nscolor? objc-nil?))]
@@ -135,24 +139,31 @@
   [nscolor-window-frame-text-color (c-> (or/c nscolor? objc-nil?))]
   [nscolor-yellow-color (c-> (or/c nscolor? objc-nil?))]
   [nscolor-yellow-component (c-> objc-object? real?)]
+  [nscolor-accessibility-name (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nscolor-blended-color-with-fraction-of-color (c-> objc-object? real? (or/c string? objc-object? #f) (or/c nscolor? objc-nil?))]
   [nscolor-color-by-applying-content-headroom (c-> objc-object? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-using-color-space (c-> objc-object? (or/c string? objc-object? #f) (or/c nscolor? objc-nil?))]
   [nscolor-color-using-type (c-> objc-object? exact-nonnegative-integer? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-alpha-component (c-> objc-object? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-system-effect (c-> objc-object? exact-nonnegative-integer? (or/c nscolor? objc-nil?))]
+  [nscolor-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
   [nscolor-draw-swatch-in-rect (c-> objc-object? any/c void?)]
+  [nscolor-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nscolor-get-components (c-> objc-object? (or/c cpointer? #f) void?)]
   [nscolor-get-cyan-magenta-yellow-black-alpha (c-> objc-object? (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nscolor-get-hue-saturation-brightness-alpha (c-> objc-object? (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nscolor-get-red-green-blue-alpha (c-> objc-object? (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nscolor-get-white-alpha (c-> objc-object? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nscolor-highlight-with-level (c-> objc-object? real? (or/c nscolor? objc-nil?))]
+  [nscolor-imported-content-types (c-> objc-object? (or/c nsarray? objc-nil?))]
+  [nscolor-pasteboard-property-list-for-type (c-> objc-object? (or/c string? objc-object? #f) any/c)]
   [nscolor-set! (c-> objc-object? void?)]
   [nscolor-set-fill! (c-> objc-object? void?)]
   [nscolor-set-stroke! (c-> objc-object? void?)]
   [nscolor-shadow-with-level (c-> objc-object? real? (or/c nscolor? objc-nil?))]
+  [nscolor-writable-types-for-pasteboard (c-> objc-object? (or/c string? objc-object? #f) any/c)]
   [nscolor-write-to-pasteboard (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nscolor-writing-options-for-type-pasteboard (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nscolor-color-for-control-tint (c-> exact-nonnegative-integer? (or/c nscolor? objc-nil?))]
   [nscolor-color-from-pasteboard (c-> (or/c string? objc-object? #f) (or/c nscolor? objc-nil?))]
   [nscolor-color-named (c-> (or/c string? objc-object? #f) (or/c nscolor? objc-nil?))]
@@ -178,6 +189,9 @@
   [nscolor-color-with-red-green-blue-alpha-linear-exposure (c-> real? real? real? real? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-srgb-red-green-blue-alpha (c-> real? real? real? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-white-alpha (c-> real? real? (or/c nscolor? objc-nil?))]
+  [nscolor-readable-types-for-pasteboard (c-> (or/c string? objc-object? #f) any/c)]
+  [nscolor-reading-options-for-type-pasteboard (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nscolor-supports-secure-coding (c-> boolean?)]
   )
 
 ;; --- Class reference ---
@@ -210,23 +224,25 @@
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double _id -> _id)))
 (define _msg-12  ; (_fun _pointer _pointer _id _double _double _double _double -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _double _double _double _double -> _id)))
-(define _msg-13  ; (_fun _pointer _pointer _id _pointer -> _id)
+(define _msg-13  ; (_fun _pointer _pointer _id _id -> _uint64)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id -> _uint64)))
+(define _msg-14  ; (_fun _pointer _pointer _id _pointer -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _id)))
-(define _msg-14  ; (_fun _pointer _pointer _id _pointer _int64 -> _id)
+(define _msg-15  ; (_fun _pointer _pointer _id _pointer _int64 -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer _int64 -> _id)))
-(define _msg-15  ; (_fun _pointer _pointer _int64 -> _id)
+(define _msg-16  ; (_fun _pointer _pointer _int64 -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _id)))
-(define _msg-16  ; (_fun _pointer _pointer _pointer -> _id)
+(define _msg-17  ; (_fun _pointer _pointer _pointer -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
-(define _msg-17  ; (_fun _pointer _pointer _pointer -> _void)
+(define _msg-18  ; (_fun _pointer _pointer _pointer -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _void)))
-(define _msg-18  ; (_fun _pointer _pointer _pointer _pointer -> _void)
+(define _msg-19  ; (_fun _pointer _pointer _pointer _pointer -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer -> _void)))
-(define _msg-19  ; (_fun _pointer _pointer _pointer _pointer _pointer _pointer -> _void)
+(define _msg-20  ; (_fun _pointer _pointer _pointer _pointer _pointer _pointer -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer _pointer _pointer -> _void)))
-(define _msg-20  ; (_fun _pointer _pointer _pointer _pointer _pointer _pointer _pointer -> _void)
+(define _msg-21  ; (_fun _pointer _pointer _pointer _pointer _pointer _pointer _pointer -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer _pointer _pointer _pointer -> _void)))
-(define _msg-21  ; (_fun _pointer _pointer _uint64 -> _id)
+(define _msg-22  ; (_fun _pointer _pointer _uint64 -> _id)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _id)))
 
 ;; --- Constructors ---
@@ -234,6 +250,12 @@
   (wrap-objc-object
    (tell (tell NSColor alloc)
          initWithCoder: (coerce-arg coder))
+   #:retained #t))
+
+(define (make-nscolor-init-with-pasteboard-property-list-of-type property-list type)
+  (wrap-objc-object
+   (tell (tell NSColor alloc)
+         initWithPasteboardPropertyList: (coerce-arg property-list) ofType: (coerce-arg type))
    #:retained #t))
 
 
@@ -554,6 +576,9 @@
   (tell #:type _double (coerce-arg self) yellowComponent))
 
 ;; --- Instance methods ---
+(define (nscolor-accessibility-name self)
+  (wrap-objc-object
+   (tell (coerce-arg self) accessibilityName)))
 (define (nscolor-blended-color-with-fraction-of-color self fraction color)
   (wrap-objc-object
    (_msg-11 (coerce-arg self) (sel_registerName "blendedColorWithFraction:ofColor:") fraction (coerce-arg color))
@@ -567,7 +592,7 @@
    (tell (coerce-arg self) colorUsingColorSpace: (coerce-arg space))))
 (define (nscolor-color-using-type self type)
   (wrap-objc-object
-   (_msg-15 (coerce-arg self) (sel_registerName "colorUsingType:") type)
+   (_msg-16 (coerce-arg self) (sel_registerName "colorUsingType:") type)
    ))
 (define (nscolor-color-with-alpha-component self alpha)
   (wrap-objc-object
@@ -575,24 +600,36 @@
    ))
 (define (nscolor-color-with-system-effect self system-effect)
   (wrap-objc-object
-   (_msg-15 (coerce-arg self) (sel_registerName "colorWithSystemEffect:") system-effect)
+   (_msg-16 (coerce-arg self) (sel_registerName "colorWithSystemEffect:") system-effect)
    ))
+(define (nscolor-copy-with-zone self zone)
+  (wrap-objc-object
+   (_msg-17 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   #:retained #t))
 (define (nscolor-draw-swatch-in-rect self rect)
   (_msg-5 (coerce-arg self) (sel_registerName "drawSwatchInRect:") rect))
+(define (nscolor-encode-with-coder self coder)
+  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
 (define (nscolor-get-components self components)
-  (_msg-17 (coerce-arg self) (sel_registerName "getComponents:") components))
+  (_msg-18 (coerce-arg self) (sel_registerName "getComponents:") components))
 (define (nscolor-get-cyan-magenta-yellow-black-alpha self cyan magenta yellow black alpha)
-  (_msg-20 (coerce-arg self) (sel_registerName "getCyan:magenta:yellow:black:alpha:") cyan magenta yellow black alpha))
+  (_msg-21 (coerce-arg self) (sel_registerName "getCyan:magenta:yellow:black:alpha:") cyan magenta yellow black alpha))
 (define (nscolor-get-hue-saturation-brightness-alpha self hue saturation brightness alpha)
-  (_msg-19 (coerce-arg self) (sel_registerName "getHue:saturation:brightness:alpha:") hue saturation brightness alpha))
+  (_msg-20 (coerce-arg self) (sel_registerName "getHue:saturation:brightness:alpha:") hue saturation brightness alpha))
 (define (nscolor-get-red-green-blue-alpha self red green blue alpha)
-  (_msg-19 (coerce-arg self) (sel_registerName "getRed:green:blue:alpha:") red green blue alpha))
+  (_msg-20 (coerce-arg self) (sel_registerName "getRed:green:blue:alpha:") red green blue alpha))
 (define (nscolor-get-white-alpha self white alpha)
-  (_msg-18 (coerce-arg self) (sel_registerName "getWhite:alpha:") white alpha))
+  (_msg-19 (coerce-arg self) (sel_registerName "getWhite:alpha:") white alpha))
 (define (nscolor-highlight-with-level self val)
   (wrap-objc-object
    (_msg-7 (coerce-arg self) (sel_registerName "highlightWithLevel:") val)
    ))
+(define (nscolor-imported-content-types self)
+  (wrap-objc-object
+   (tell (coerce-arg self) importedContentTypes)))
+(define (nscolor-pasteboard-property-list-for-type self type)
+  (wrap-objc-object
+   (tell (coerce-arg self) pasteboardPropertyListForType: (coerce-arg type))))
 (define (nscolor-set! self)
   (tell #:type _void (coerce-arg self) set))
 (define (nscolor-set-fill! self)
@@ -603,13 +640,18 @@
   (wrap-objc-object
    (_msg-7 (coerce-arg self) (sel_registerName "shadowWithLevel:") val)
    ))
+(define (nscolor-writable-types-for-pasteboard self pasteboard)
+  (wrap-objc-object
+   (tell (coerce-arg self) writableTypesForPasteboard: (coerce-arg pasteboard))))
 (define (nscolor-write-to-pasteboard self paste-board)
   (tell #:type _void (coerce-arg self) writeToPasteboard: (coerce-arg paste-board)))
+(define (nscolor-writing-options-for-type-pasteboard self type pasteboard)
+  (_msg-13 (coerce-arg self) (sel_registerName "writingOptionsForType:pasteboard:") (coerce-arg type) (coerce-arg pasteboard)))
 
 ;; --- Class methods ---
 (define (nscolor-color-for-control-tint control-tint)
   (wrap-objc-object
-   (_msg-21 NSColor (sel_registerName "colorForControlTint:") control-tint)
+   (_msg-22 NSColor (sel_registerName "colorForControlTint:") control-tint)
    ))
 (define (nscolor-color-from-pasteboard paste-board)
   (wrap-objc-object
@@ -622,7 +664,7 @@
    (tell NSColor colorNamed: (coerce-arg name) bundle: (coerce-arg bundle))))
 (define (nscolor-color-with-cg-color cg-color)
   (wrap-objc-object
-   (_msg-16 NSColor (sel_registerName "colorWithCGColor:") cg-color)
+   (_msg-17 NSColor (sel_registerName "colorWithCGColor:") cg-color)
    ))
 (define (nscolor-color-with-calibrated-hue-saturation-brightness-alpha hue saturation brightness alpha)
   (wrap-objc-object
@@ -641,7 +683,7 @@
    (tell NSColor colorWithCatalogName: (coerce-arg list-name) colorName: (coerce-arg color-name))))
 (define (nscolor-color-with-color-space-components-count space components number-of-components)
   (wrap-objc-object
-   (_msg-14 NSColor (sel_registerName "colorWithColorSpace:components:count:") (coerce-arg space) components number-of-components)
+   (_msg-15 NSColor (sel_registerName "colorWithColorSpace:components:count:") (coerce-arg space) components number-of-components)
    ))
 (define (nscolor-color-with-color-space-hue-saturation-brightness-alpha space hue saturation brightness alpha)
   (wrap-objc-object
@@ -679,7 +721,7 @@
   (define-values (_blk1 _blk1-id)
     (make-objc-block dynamic-provider (list _id) _id))
   (wrap-objc-object
-   (_msg-13 NSColor (sel_registerName "colorWithName:dynamicProvider:") (coerce-arg color-name) _blk1)
+   (_msg-14 NSColor (sel_registerName "colorWithName:dynamicProvider:") (coerce-arg color-name) _blk1)
    ))
 (define (nscolor-color-with-pattern-image image)
   (wrap-objc-object
@@ -704,3 +746,10 @@
   (wrap-objc-object
    (_msg-8 NSColor (sel_registerName "colorWithWhite:alpha:") white alpha)
    ))
+(define (nscolor-readable-types-for-pasteboard pasteboard)
+  (wrap-objc-object
+   (tell NSColor readableTypesForPasteboard: (coerce-arg pasteboard))))
+(define (nscolor-reading-options-for-type-pasteboard type pasteboard)
+  (_msg-13 NSColor (sel_registerName "readingOptionsForType:pasteboard:") (coerce-arg type) (coerce-arg pasteboard)))
+(define (nscolor-supports-secure-coding)
+  (_msg-0 NSColor (sel_registerName "supportsSecureCoding")))

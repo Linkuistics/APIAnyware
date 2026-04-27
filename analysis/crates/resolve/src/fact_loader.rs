@@ -67,6 +67,9 @@ pub fn load_framework_facts(prog: &mut ResolutionProgram, framework: &Framework)
                 method.selector.clone(),
                 true,
                 method.class_method,
+                method.init_method,
+                method.deprecated,
+                method.variadic,
             ));
         }
 
@@ -76,6 +79,9 @@ pub fn load_framework_facts(prog: &mut ResolutionProgram, framework: &Framework)
                 method.selector.clone(),
                 false,
                 method.class_method,
+                method.init_method,
+                method.deprecated,
+                method.variadic,
             ));
         }
 

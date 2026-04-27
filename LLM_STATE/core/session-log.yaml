@@ -1604,3 +1604,18 @@ sessions:
     - Improved Rust generation crates: `bundle-racket-oo` gained Info.plist override support and stable codesigning tests; `stub-launcher` gained codesigning module; `emit-racket-oo` golden tests expanded with 7 new snapshot files.
     - Promoted 5 collection/emission gap tasks to the core backlog (bare c:@<name> macro USR filter, anonymous-enum leak, GCD OS_OBJECT annotation, CF struct globals, protocol-inherited methods) — all surfaced during app development; all not_started, low-to-medium priority.
     - What this suggests trying next: run the triage cycle to assign priority to the 5 new core tasks; Modaliser live VM shake-down (modaliser-racket backlog Task 26 Step 6) gated on GUIVisionVMDriver spec-v1 log tailer support.
+- id: session-32
+  timestamp: 2026-04-27T09:28:36Z
+  phase: work
+  body: |
+    ### Session 32 (2026-04-27T09:28:36Z) — Protocol-inherited methods now emitted on class bindings
+
+    - Implemented protocol-inherited method propagation at the resolve (Datalog) layer in `analysis/crates/resolve/`. The fix was placed here rather than per-emitter so every current and future language emitter inherits it automatically.
+    - `src/program.rs`: Enriched `protocol_method` relation from 4 to 7 fields; added `transitively_conforms_to` derived relation (reflexive transitive closure over `conforms_to` / `protocol_inherits`); added new `effective_method` Datalog rule for protocol-origin methods; updated `satisfies_protocol_method` for new arity.
+    - `src/fact_loader.rs`: Push new `is_init`, `is_deprecated`, `is_variadic` flags when loading both required and optional protocol methods.
+    - `src/checkpoint.rs`: Added `build_protocol_method_index` keyed by `(protocol_name, selector, is_class_method)`; `build_effective_methods_for_class` now falls back to this index for protocol-origin methods, preserving full parameter/return-type metadata from the Protocol declaration.
+    - Added 6 TDD-first tests in `tests/synthetic_resolution.rs` covering: basic propagation, no-duplicate when directly declared, optional methods, transitive protocol inheritance, subclass-via-superclass conformance, cross-framework protocol methods.
+    - 23 golden files under `generation/crates/emit-racket-oo/tests/golden-{appkit,foundation}/` regenerated; diffs are additive — protocol-inherited methods (NSCoding, NSCopying, NSAccessibility etc.) now appear in provide blocks and method-emission sections.
+    - All 32 tests in the resolve crate pass (up from 26). Canary cases from the task description confirmed: SCNNode.runAction:, SCNView.setAutoenablesDefaultLighting:, NSString.encodeWithCoder: all emitted correctly.
+    - Nothing failed. The full pipeline (resolve → annotate → enrich → generate) was rerun and verified end-to-end.
+    - Next: remaining backlog tasks — likely sample app polish or more language targets now that protocol methods are present in the IR.

@@ -29,7 +29,8 @@ ascent! {
     relation property_decl(String, String, bool, bool, bool);
     relation protocol_decl(String,);
     relation protocol_inherits(String, String);
-    relation protocol_method(String, String, bool, bool);
+    // (protocol, selector, is_required, is_class_method, is_init, is_deprecated, is_variadic)
+    relation protocol_method(String, String, bool, bool, bool, bool, bool);
     relation protocol_property(String, String, bool);
     relation enum_decl(String,);
     relation enum_value_decl(String, String, i64);
@@ -104,5 +105,34 @@ ascent! {
     satisfies_protocol_method(class.clone(), sel.clone(), *is_cm, proto.clone()) <--
         effective_method(class, sel, is_cm, _is_init, _is_dep, _is_var, _origin),
         conforms_to(class, proto),
-        protocol_method(proto, sel, _is_req, is_cm);
+        protocol_method(proto, sel, _is_req, is_cm, _is_init2, _is_dep2, _is_var2);
+
+    // === Derived: transitive protocol conformance ===
+    //
+    // A class conforms to a protocol either directly (via `conforms_to`) or
+    // transitively, when it conforms to a protocol that inherits from another.
+    // Used by the protocol-method propagation rule below.
+
+    relation transitively_conforms_to(String, String);
+
+    transitively_conforms_to(class.clone(), proto.clone()) <--
+        conforms_to(class, proto);
+    transitively_conforms_to(class.clone(), parent_proto.clone()) <--
+        transitively_conforms_to(class, child_proto),
+        protocol_inherits(child_proto, parent_proto);
+
+    // === Derived: protocol-method propagation into effective_method ===
+    //
+    // Methods declared on a protocol the class transitively conforms to are
+    // available on instances of the class — unless the class declares its own
+    // method with the same selector and class/instance kind. The "origin" of
+    // the effective_method is set to the protocol name so the checkpoint
+    // builder can look up the original protocol method declaration for full
+    // metadata (parameters, return type).
+    effective_method(
+        class.clone(), sel.clone(), *is_cm, *is_init, *is_dep, *is_var, proto.clone()
+    ) <--
+        transitively_conforms_to(class, proto),
+        protocol_method(proto, sel, _is_req, is_cm, is_init, is_dep, is_var),
+        !method_decl(class, sel, is_cm, _, _, _);
 }

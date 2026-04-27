@@ -20,8 +20,10 @@
   [make-nslock (c-> any/c)]
   [nslock-name (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nslock-set-name! (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nslock-lock (c-> objc-object? void?)]
   [nslock-lock-before-date (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nslock-try-lock (c-> objc-object? boolean?)]
+  [nslock-unlock (c-> objc-object? void?)]
   )
 
 ;; --- Class reference ---
@@ -48,7 +50,11 @@
   (tell #:type _void (coerce-arg self) setName: (coerce-arg value)))
 
 ;; --- Instance methods ---
+(define (nslock-lock self)
+  (tell #:type _void (coerce-arg self) lock))
 (define (nslock-lock-before-date self limit)
   (_msg-1 (coerce-arg self) (sel_registerName "lockBeforeDate:") (coerce-arg limit)))
 (define (nslock-try-lock self)
   (_msg-0 (coerce-arg self) (sel_registerName "tryLock")))
+(define (nslock-unlock self)
+  (tell #:type _void (coerce-arg self) unlock))
