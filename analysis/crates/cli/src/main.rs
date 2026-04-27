@@ -69,6 +69,23 @@ enum Command {
         output_dir: PathBuf,
     },
 
+    /// Validate a `.llm.json` file produced by a Claude Code subagent against
+    /// its source `.methods.json` summary.
+    ///
+    /// Surfaces semantic errors that JSON-schema validation cannot see:
+    /// references to classes/selectors/parameters that do not exist in the
+    /// summary, block annotations on non-block parameters, or annotations
+    /// whose `source` is not `"llm"`. Exits non-zero on any validation error.
+    LlmValidate {
+        /// Path to the source `.methods.json` summary.
+        #[arg(long)]
+        methods_file: PathBuf,
+
+        /// Path to the `.llm.json` annotations to validate.
+        #[arg(long)]
+        llm_file: PathBuf,
+    },
+
     /// Datalog pass 2: annotation-derived enrichment and verification.
     Enrich {
         /// Directory containing annotated IR JSON files.
@@ -112,6 +129,11 @@ fn main() -> Result<()> {
             input_dir,
             output_dir,
         }) => run_llm_extract(&input_dir, &output_dir, only),
+
+        Some(Command::LlmValidate {
+            methods_file,
+            llm_file,
+        }) => run_llm_validate(&methods_file, &llm_file),
 
         Some(Command::Enrich {
             input_dir,
@@ -223,6 +245,28 @@ fn run_llm_extract(input_dir: &Path, output_dir: &Path, only: Option<&[String]>)
     );
 
     Ok(())
+}
+
+fn run_llm_validate(methods_file: &Path, llm_file: &Path) -> Result<()> {
+    let report = apianyware_macos_annotate::llm::validate_llm_file(methods_file, llm_file)?;
+
+    if report.is_ok() {
+        tracing::info!(
+            methods = %methods_file.display(),
+            llm = %llm_file.display(),
+            "LLM annotations validated"
+        );
+        return Ok(());
+    }
+
+    for err in &report.errors {
+        tracing::error!("{}", err);
+    }
+    anyhow::bail!(
+        "LLM annotations failed validation ({} error{})",
+        report.errors.len(),
+        if report.errors.len() == 1 { "" } else { "s" }
+    )
 }
 
 fn run_enrich(input_dir: &Path, output_dir: &Path, only: Option<&[String]>) -> Result<()> {

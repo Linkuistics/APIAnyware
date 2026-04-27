@@ -184,8 +184,8 @@ pub fn bundle_app_with_entry(
 ) -> Result<PathBuf, BundleError> {
     let abs_root = absolutize(source_root)
         .map_err(|e| BundleError::ResolveSourceRoot(source_root.to_path_buf(), e))?;
-    let abs_entry = absolutize(entry)
-        .map_err(|e| BundleError::ResolveEntry(entry.to_path_buf(), e))?;
+    let abs_entry =
+        absolutize(entry).map_err(|e| BundleError::ResolveEntry(entry.to_path_buf(), e))?;
 
     if !abs_entry.starts_with(&abs_root) {
         return Err(BundleError::EntryOutsideRoot {
@@ -471,10 +471,8 @@ mod tests {
 
     #[test]
     fn script_resource_dir_nested_subdir() {
-        let dir = derive_script_resource_dir(
-            Path::new("/root/src/cli/tool.rkt"),
-            Path::new("/root"),
-        );
+        let dir =
+            derive_script_resource_dir(Path::new("/root/src/cli/tool.rkt"), Path::new("/root"));
         assert_eq!(dir, "racket-app/src/cli");
     }
 }

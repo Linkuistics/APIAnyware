@@ -23,6 +23,32 @@ tasks:
     from collected IR (known gap in memory.md); decide whether to extend IR
     extraction or document the `(get-ffi-obj ... _pointer)` workaround as
     canonical; add a harness canary for whichever path is chosen.
+- id: cleanup-scenekit-viewer-msgsend-aliases
+  title: Clean up SceneKit Viewer msgSend aliases (protocol-inherited bindings now emitted)
+  category: sample-apps
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** low
+
+    The SceneKit Viewer sample app uses app-local typed `objc_msgSend` aliases as
+    workarounds for two previously-missing protocol-inherited bindings:
+    - `runAction:` (SCNActionable protocol) — alias for the missing `scnnode-run-action`
+    - `setAutoenablesDefaultLighting:` (SCNSceneRenderer protocol) — alias for the missing
+      `scnview-set-autoenables-default-lighting!`
+
+    These workarounds are now obsolete: the protocol-inherited-methods fix (commit 0901f23,
+    2026-04-27) added a Datalog rule in `analysis/crates/resolve/` that propagates
+    protocol-conformance methods into `Class.all_methods` at the resolve layer. After a full
+    pipeline regeneration (collect → analyze → generate), both bindings are emitted correctly.
+
+    Steps:
+    1. Run full pipeline regeneration.
+    2. Confirm `scnnode-run-action` and `scnview-set-autoenables-default-lighting!` appear
+       in the generated SceneKit class files.
+    3. Remove the app-local `objc_msgSend` aliases from `apps/scenekit-viewer/scenekit-viewer.rkt`.
+    4. Replace call sites with the generated bindings.
+    5. Visual verification via GUIVisionVMDriver.
 - id: framework-coverage-deepening
   title: Framework Coverage Deepening
   category: future-work

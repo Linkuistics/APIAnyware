@@ -155,7 +155,8 @@ fn info_plist_override_replaces_base_template_key() {
         "override did not replace the base template CFBundleVersion"
     );
     assert_eq!(
-        dict.get("LSMinimumSystemVersion").and_then(Value::as_string),
+        dict.get("LSMinimumSystemVersion")
+            .and_then(Value::as_string),
         Some("15.0"),
     );
 }
@@ -229,8 +230,8 @@ fn info_plist_empty_overrides_preserves_base_template() {
     let app_path =
         bundle_app_with_entry(&spec, &entry, project.path(), out.path()).expect("bundle");
 
-    let plist_text = fs::read_to_string(app_path.join("Contents").join("Info.plist"))
-        .expect("read Info.plist");
+    let plist_text =
+        fs::read_to_string(app_path.join("Contents").join("Info.plist")).expect("read Info.plist");
     // Byte-level check: the base template is a human-readable XML doc
     // with a DOCTYPE line; the plist crate's writer would strip or
     // reformat it. If overrides are empty, we must not touch the file.

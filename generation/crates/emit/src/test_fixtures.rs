@@ -540,12 +540,15 @@ fn build_tk_register_callback() -> Function {
                     nullable: false,
                     kind: TypeRefKind::FunctionPointer {
                         name: Some("TKCallbackFunc".to_string()),
-                        params: vec![type_pointer(), TypeRef {
-                            nullable: false,
-                            kind: TypeRefKind::Primitive {
-                                name: "int32".to_string(),
+                        params: vec![
+                            type_pointer(),
+                            TypeRef {
+                                nullable: false,
+                                kind: TypeRefKind::Primitive {
+                                    name: "int32".to_string(),
+                                },
                             },
-                        }],
+                        ],
                         return_type: Box::new(type_void()),
                     },
                 },

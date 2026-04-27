@@ -283,6 +283,218 @@ pub fn load_llm_annotations(
     Ok(Some(annotations))
 }
 
+/// Semantic mismatch between an LLM annotations file and its source method summary.
+///
+/// Serde already enforces JSON shape and enum-variant validity; these errors cover
+/// what serde cannot see — references to classes/selectors/parameters that do not
+/// exist in the original `.methods.json` summary, or annotations whose `source`
+/// is not `Llm`.
+#[derive(Debug, thiserror::Error)]
+pub enum ValidationError {
+    #[error("framework name mismatch: summary has {expected:?}, annotations have {actual:?}")]
+    FrameworkMismatch { expected: String, actual: String },
+
+    #[error("class {class:?} in annotations not found in methods summary")]
+    UnknownClass { class: String },
+
+    #[error("class {class:?}: selector {selector:?} not found in methods summary")]
+    UnknownSelector { class: String, selector: String },
+
+    #[error(
+        "class {class:?} selector {selector:?}: is_instance ({actual}) does not match \
+         summary ({expected})"
+    )]
+    IsInstanceMismatch {
+        class: String,
+        selector: String,
+        expected: bool,
+        actual: bool,
+    },
+
+    #[error(
+        "class {class:?} selector {selector:?}: parameter_ownership param_index {index} \
+         out of range (params: {n_params})"
+    )]
+    ParamOwnershipOutOfRange {
+        class: String,
+        selector: String,
+        index: usize,
+        n_params: usize,
+    },
+
+    #[error(
+        "class {class:?} selector {selector:?}: block_parameters param_index {index} \
+         out of range (params: {n_params})"
+    )]
+    BlockParamOutOfRange {
+        class: String,
+        selector: String,
+        index: usize,
+        n_params: usize,
+    },
+
+    #[error(
+        "class {class:?} selector {selector:?}: block_parameters param_index {index} \
+         refers to non-block param of type {kind:?}"
+    )]
+    BlockParamNotBlockType {
+        class: String,
+        selector: String,
+        index: usize,
+        kind: String,
+    },
+
+    #[error("class {class:?} selector {selector:?}: source must be \"llm\", got {actual:?}")]
+    WrongSource {
+        class: String,
+        selector: String,
+        actual: String,
+    },
+}
+
+/// Aggregated validation result. Holds every error found so subagents can fix
+/// all problems in one pass instead of one-at-a-time.
+#[derive(Debug, Default)]
+pub struct ValidationReport {
+    pub errors: Vec<ValidationError>,
+}
+
+impl ValidationReport {
+    pub fn is_ok(&self) -> bool {
+        self.errors.is_empty()
+    }
+}
+
+/// Cross-validate `.llm.json` annotations against the corresponding `.methods.json`
+/// summary that the subagent was asked to annotate.
+///
+/// Validates that:
+/// - the `framework` names match,
+/// - every class in the annotations exists in the summary,
+/// - every selector in those classes exists in the summary,
+/// - `is_instance` agrees with the summary,
+/// - every `parameter_ownership.param_index` and `block_parameters.param_index`
+///   is in range,
+/// - every `block_parameters.param_index` points at a parameter whose `type_kind`
+///   is `"block"`,
+/// - every annotation has `source: "llm"`.
+pub fn validate_llm_annotations(
+    summary: &FrameworkSummary,
+    annotations: &FrameworkAnnotations,
+) -> ValidationReport {
+    let mut report = ValidationReport::default();
+
+    if summary.framework != annotations.framework {
+        report.errors.push(ValidationError::FrameworkMismatch {
+            expected: summary.framework.clone(),
+            actual: annotations.framework.clone(),
+        });
+    }
+
+    for class_ann in &annotations.classes {
+        let Some(class_summary) = summary
+            .classes
+            .iter()
+            .find(|c| c.class_name == class_ann.class_name)
+        else {
+            report.errors.push(ValidationError::UnknownClass {
+                class: class_ann.class_name.clone(),
+            });
+            continue;
+        };
+
+        for method_ann in &class_ann.methods {
+            let Some(method_summary) = class_summary
+                .methods
+                .iter()
+                .find(|m| m.selector == method_ann.selector)
+            else {
+                report.errors.push(ValidationError::UnknownSelector {
+                    class: class_ann.class_name.clone(),
+                    selector: method_ann.selector.clone(),
+                });
+                continue;
+            };
+
+            if method_summary.is_instance != method_ann.is_instance {
+                report.errors.push(ValidationError::IsInstanceMismatch {
+                    class: class_ann.class_name.clone(),
+                    selector: method_ann.selector.clone(),
+                    expected: method_summary.is_instance,
+                    actual: method_ann.is_instance,
+                });
+            }
+
+            let n_params = method_summary.params.len();
+
+            for ownership in &method_ann.parameter_ownership {
+                if ownership.param_index >= n_params {
+                    report
+                        .errors
+                        .push(ValidationError::ParamOwnershipOutOfRange {
+                            class: class_ann.class_name.clone(),
+                            selector: method_ann.selector.clone(),
+                            index: ownership.param_index,
+                            n_params,
+                        });
+                }
+            }
+
+            for block in &method_ann.block_parameters {
+                if block.param_index >= n_params {
+                    report.errors.push(ValidationError::BlockParamOutOfRange {
+                        class: class_ann.class_name.clone(),
+                        selector: method_ann.selector.clone(),
+                        index: block.param_index,
+                        n_params,
+                    });
+                    continue;
+                }
+                let kind = &method_summary.params[block.param_index].type_kind;
+                if kind != "block" {
+                    report.errors.push(ValidationError::BlockParamNotBlockType {
+                        class: class_ann.class_name.clone(),
+                        selector: method_ann.selector.clone(),
+                        index: block.param_index,
+                        kind: kind.clone(),
+                    });
+                }
+            }
+
+            if !matches!(
+                method_ann.source,
+                apianyware_macos_types::annotation::AnnotationSource::Llm
+            ) {
+                report.errors.push(ValidationError::WrongSource {
+                    class: class_ann.class_name.clone(),
+                    selector: method_ann.selector.clone(),
+                    actual: format!("{:?}", method_ann.source).to_lowercase(),
+                });
+            }
+        }
+    }
+
+    report
+}
+
+/// Validate a `.llm.json` file against its source `.methods.json` summary.
+///
+/// Returns the validation report. Returns an error only for I/O or JSON-parse
+/// failures — semantic mismatches are surfaced via `ValidationReport.errors`.
+pub fn validate_llm_file(methods_path: &Path, llm_path: &Path) -> Result<ValidationReport> {
+    let methods_json = std::fs::read_to_string(methods_path)
+        .with_context(|| format!("failed to read {}", methods_path.display()))?;
+    let summary: FrameworkSummary = serde_json::from_str(&methods_json)
+        .with_context(|| format!("failed to parse {}", methods_path.display()))?;
+
+    let llm_json = std::fs::read_to_string(llm_path)
+        .with_context(|| format!("failed to read {}", llm_path.display()))?;
+    let annotations: FrameworkAnnotations = serde_json::from_str(&llm_json)
+        .with_context(|| format!("failed to parse {}", llm_path.display()))?;
+
+    Ok(validate_llm_annotations(&summary, &annotations))
+}
+
 /// Scan an LLM annotations directory and return framework names that have `.llm.json` files.
 pub fn discover_llm_annotations(llm_dir: &Path) -> Result<Vec<String>> {
     if !llm_dir.exists() {
@@ -308,7 +520,10 @@ pub fn discover_llm_annotations(llm_dir: &Path) -> Result<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::annotation::ClassAnnotations;
+    use apianyware_macos_types::annotation::{
+        AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations,
+        MethodAnnotation, OwnershipKind, ParamOwnership,
+    };
     use apianyware_macos_types::ir::{CategoryGroup, Class, Method, Param};
     use apianyware_macos_types::type_ref::TypeRef;
 
@@ -655,6 +870,430 @@ mod tests {
         let dir = std::env::temp_dir().join("test_llm_discover_none_12345");
         let result = discover_llm_annotations(&dir).unwrap();
         assert!(result.is_empty());
+    }
+
+    fn make_summary(framework: &str, classes: Vec<ClassSummary>) -> FrameworkSummary {
+        let method_count = classes.iter().map(|c| c.methods.len()).sum();
+        FrameworkSummary {
+            framework: framework.to_string(),
+            classes,
+            method_count,
+        }
+    }
+
+    fn block_method_summary(selector: &str, is_instance: bool) -> MethodSummary {
+        MethodSummary {
+            selector: selector.to_string(),
+            is_instance,
+            params: vec![ParamSummary {
+                name: "handler".to_string(),
+                type_kind: "block".to_string(),
+            }],
+            return_type: "void".to_string(),
+            reasons: vec!["has_block_params".to_string()],
+        }
+    }
+
+    fn delegate_method_summary(selector: &str) -> MethodSummary {
+        MethodSummary {
+            selector: selector.to_string(),
+            is_instance: true,
+            params: vec![ParamSummary {
+                name: "delegate".to_string(),
+                type_kind: "id".to_string(),
+            }],
+            return_type: "void".to_string(),
+            reasons: vec!["delegate_observer_pattern".to_string()],
+        }
+    }
+
+    fn block_annotation(selector: &str, index: usize) -> MethodAnnotation {
+        MethodAnnotation {
+            selector: selector.to_string(),
+            is_instance: true,
+            parameter_ownership: vec![],
+            block_parameters: vec![BlockParamAnnotation {
+                param_index: index,
+                invocation: BlockInvocationStyle::AsyncCopied,
+            }],
+            threading: None,
+            error_pattern: None,
+            source: AnnotationSource::Llm,
+        }
+    }
+
+    #[test]
+    fn validate_passes_for_well_formed_annotations() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_annotation("doBlock:", 0)],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(report.is_ok(), "expected ok, got {:?}", report.errors);
+    }
+
+    #[test]
+    fn validate_rejects_framework_name_mismatch() {
+        let summary = make_summary("TestKit", vec![]);
+        let annotations = FrameworkAnnotations {
+            framework: "WrongKit".to_string(),
+            classes: vec![],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(matches!(
+            report.errors[0],
+            ValidationError::FrameworkMismatch { .. }
+        ));
+    }
+
+    #[test]
+    fn validate_rejects_unknown_class() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKBar".to_string(),
+                methods: vec![block_annotation("doBlock:", 0)],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::UnknownClass { class } if class == "TKBar")));
+    }
+
+    #[test]
+    fn validate_rejects_unknown_selector() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_annotation("notARealSelector:", 0)],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(report.errors.iter().any(|e| matches!(
+            e,
+            ValidationError::UnknownSelector { selector, .. } if selector == "notARealSelector:"
+        )));
+    }
+
+    #[test]
+    fn validate_rejects_param_ownership_index_out_of_range() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![delegate_method_summary("setDelegate:")],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                methods: vec![MethodAnnotation {
+                    selector: "setDelegate:".to_string(),
+                    is_instance: true,
+                    parameter_ownership: vec![ParamOwnership {
+                        param_index: 5,
+                        ownership: OwnershipKind::Weak,
+                    }],
+                    block_parameters: vec![],
+                    threading: None,
+                    error_pattern: None,
+                    source: AnnotationSource::Llm,
+                }],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(report.errors.iter().any(|e| matches!(
+            e,
+            ValidationError::ParamOwnershipOutOfRange {
+                index: 5,
+                n_params: 1,
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn validate_rejects_block_param_index_out_of_range() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_annotation("doBlock:", 7)],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(report.errors.iter().any(|e| matches!(
+            e,
+            ValidationError::BlockParamOutOfRange {
+                index: 7,
+                n_params: 1,
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn validate_rejects_block_param_index_pointing_to_non_block() {
+        // Method has one id param, not a block — annotation says param 0 is a block.
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![delegate_method_summary("setDelegate:")],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_annotation("setDelegate:", 0)],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(report.errors.iter().any(|e| matches!(
+            e,
+            ValidationError::BlockParamNotBlockType { kind, .. } if kind == "id"
+        )));
+    }
+
+    #[test]
+    fn validate_rejects_wrong_source() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                methods: vec![MethodAnnotation {
+                    selector: "doBlock:".to_string(),
+                    is_instance: true,
+                    parameter_ownership: vec![],
+                    block_parameters: vec![BlockParamAnnotation {
+                        param_index: 0,
+                        invocation: BlockInvocationStyle::AsyncCopied,
+                    }],
+                    threading: None,
+                    error_pattern: None,
+                    source: AnnotationSource::Heuristic,
+                }],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::WrongSource { .. })));
+    }
+
+    #[test]
+    fn validate_rejects_is_instance_mismatch() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                // Class method in summary
+                methods: vec![block_method_summary("doBlock:", false)],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                // Annotation says instance method
+                methods: vec![block_annotation("doBlock:", 0)],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::IsInstanceMismatch { .. })));
+    }
+
+    #[test]
+    fn validate_llm_file_happy_path() {
+        let dir = std::env::temp_dir().join("test_llm_validate_files_ok");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        let methods_path = dir.join("TestKit.methods.json");
+        std::fs::write(&methods_path, serde_json::to_string(&summary).unwrap()).unwrap();
+
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_annotation("doBlock:", 0)],
+            }],
+        };
+        let llm_path = dir.join("TestKit.llm.json");
+        std::fs::write(&llm_path, serde_json::to_string(&annotations).unwrap()).unwrap();
+
+        let report = validate_llm_file(&methods_path, &llm_path).unwrap();
+        assert!(report.is_ok(), "expected ok, got {:?}", report.errors);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn validate_llm_file_surfaces_semantic_errors() {
+        let dir = std::env::temp_dir().join("test_llm_validate_files_bad");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        std::fs::write(
+            dir.join("TestKit.methods.json"),
+            serde_json::to_string(&summary).unwrap(),
+        )
+        .unwrap();
+
+        let annotations = FrameworkAnnotations {
+            framework: "TestKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKBar".to_string(), // unknown class
+                methods: vec![block_annotation("doBlock:", 0)],
+            }],
+        };
+        std::fs::write(
+            dir.join("TestKit.llm.json"),
+            serde_json::to_string(&annotations).unwrap(),
+        )
+        .unwrap();
+
+        let report = validate_llm_file(
+            &dir.join("TestKit.methods.json"),
+            &dir.join("TestKit.llm.json"),
+        )
+        .unwrap();
+
+        assert!(!report.is_ok());
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::UnknownClass { .. })));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn validate_llm_file_returns_io_error_for_missing_file() {
+        let result = validate_llm_file(
+            Path::new("/nonexistent/methods.json"),
+            Path::new("/nonexistent/llm.json"),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn validate_collects_multiple_errors() {
+        let summary = make_summary(
+            "TestKit",
+            vec![ClassSummary {
+                class_name: "TKFoo".to_string(),
+                methods: vec![block_method_summary("doBlock:", true)],
+            }],
+        );
+        let annotations = FrameworkAnnotations {
+            framework: "WrongKit".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "TKBar".to_string(),
+                methods: vec![block_annotation("nope:", 99)],
+            }],
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(!report.is_ok());
+        // FrameworkMismatch + UnknownClass at minimum.
+        assert!(report.errors.len() >= 2);
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::FrameworkMismatch { .. })));
+        assert!(report
+            .errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::UnknownClass { .. })));
     }
 
     #[test]

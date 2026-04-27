@@ -104,7 +104,10 @@ fn bundles_hello_window_into_app_directory() {
 
     // Runtime modules (every Racket OO app pulls these in transitively)
     assert!(racket_app.join("runtime").join("objc-base.rkt").is_file());
-    assert!(racket_app.join("runtime").join("type-mapping.rkt").is_file());
+    assert!(racket_app
+        .join("runtime")
+        .join("type-mapping.rkt")
+        .is_file());
     assert!(racket_app.join("runtime").join("app-menu.rkt").is_file());
 
     // Generated bindings statically required by hello-window. Five
@@ -238,9 +241,13 @@ fn bundles_root_level_entry_with_symlinked_bindings_subdir() {
     spec.app_name = "Root Entry Demo".to_string();
     spec.bundle_id = "com.linkuistics.RootEntryDemo".to_string();
 
-    let app_path =
-        bundle_app_with_entry(&spec, &project_root.join("main.rkt"), project_root, out.path())
-            .expect("bundle with root-level entry");
+    let app_path = bundle_app_with_entry(
+        &spec,
+        &project_root.join("main.rkt"),
+        project_root,
+        out.path(),
+    )
+    .expect("bundle with root-level entry");
 
     // Bundle skeleton — binary named after the display app_name.
     let contents = app_path.join("Contents");
@@ -287,7 +294,11 @@ fn bundle_lib_copy_excludes_compiled_subdirectory() {
         return;
     }
     let real_racket_oo = racket_oo_root();
-    if !real_racket_oo.join("runtime").join("objc-base.rkt").is_file() {
+    if !real_racket_oo
+        .join("runtime")
+        .join("objc-base.rkt")
+        .is_file()
+    {
         eprintln!("SKIPPED: racket-oo source tree not present");
         return;
     }
@@ -317,11 +328,18 @@ fn bundle_lib_copy_excludes_compiled_subdirectory() {
     spec.app_name = "Compiled Exclude".to_string();
     spec.bundle_id = "com.linkuistics.CompiledExclude".to_string();
 
-    let app_path =
-        bundle_app_with_entry(&spec, &project_root.join("main.rkt"), project_root, out.path())
-            .expect("bundle");
+    let app_path = bundle_app_with_entry(
+        &spec,
+        &project_root.join("main.rkt"),
+        project_root,
+        out.path(),
+    )
+    .expect("bundle");
 
-    let racket_app = app_path.join("Contents").join("Resources").join("racket-app");
+    let racket_app = app_path
+        .join("Contents")
+        .join("Resources")
+        .join("racket-app");
     let bundle_lib = racket_app.join("lib");
 
     assert!(

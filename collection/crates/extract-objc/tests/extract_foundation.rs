@@ -252,9 +252,9 @@ fn foundation_bool_return_resolves_to_primitive_bool() {
                 "NSBundle -load should return Primitive {{ name: \"bool\" }}, got {name:?}"
             );
         }
-        other => panic!(
-            "NSBundle -load return should be Primitive {{ name: \"bool\" }}, got {other:?}"
-        ),
+        other => {
+            panic!("NSBundle -load return should be Primitive {{ name: \"bool\" }}, got {other:?}")
+        }
     }
 }
 

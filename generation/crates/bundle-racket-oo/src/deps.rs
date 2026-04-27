@@ -46,8 +46,8 @@ pub fn collect_dependencies(
 ) -> Result<HashSet<PathBuf>, BundleError> {
     let abs_root = absolutize(source_root)
         .map_err(|e| BundleError::ResolveSourceRoot(source_root.to_path_buf(), e))?;
-    let abs_entry = absolutize(entry)
-        .map_err(|e| BundleError::ResolveEntry(entry.to_path_buf(), e))?;
+    let abs_entry =
+        absolutize(entry).map_err(|e| BundleError::ResolveEntry(entry.to_path_buf(), e))?;
 
     if !abs_entry.starts_with(&abs_root) {
         return Err(BundleError::EntryOutsideRoot {
@@ -343,7 +343,11 @@ mod tests {
         fs::create_dir_all(&project).unwrap();
         fs::create_dir_all(&external).unwrap();
 
-        write(&project, "entry.rkt", r#"(require "bindings/runtime/a.rkt")"#);
+        write(
+            &project,
+            "entry.rkt",
+            r#"(require "bindings/runtime/a.rkt")"#,
+        );
         write(&external, "runtime/a.rkt", r#"(require "b.rkt")"#);
         write(&external, "runtime/b.rkt", "");
 

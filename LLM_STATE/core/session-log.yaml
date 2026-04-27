@@ -1619,3 +1619,22 @@ sessions:
     - All 32 tests in the resolve crate pass (up from 26). Canary cases from the task description confirmed: SCNNode.runAction:, SCNView.setAutoenablesDefaultLighting:, NSString.encodeWithCoder: all emitted correctly.
     - Nothing failed. The full pipeline (resolve → annotate → enrich → generate) was rerun and verified end-to-end.
     - Next: remaining backlog tasks — likely sample app polish or more language targets now that protocol methods are present in the IR.
+- id: session-33
+  timestamp: 2026-04-27T12:00:55Z
+  phase: work
+  body: |
+    ### Session 33 (2026-04-27T12:00:55Z) — Build LLM annotation pipeline middle layer
+
+    - **Attempted:** Deliver the middle layer of the LLM annotation pipeline: the strict semantic validator, the `llm-validate` CLI subcommand, a rewritten subagent prompt, and a new orchestration doc describing how the main agent fans out subagent calls.
+    - **What worked:**
+      - `validate_llm_annotations` and `validate_llm_file` implemented in `analysis/crates/annotate/src/llm.rs` with 8 error kinds; 13 new unit tests green; full annotate suite at 51 tests, workspace at 248 tests, clippy clean.
+      - `llm-validate` CLI subcommand wired in `analysis/crates/cli/src/main.rs`; verified exit 0 on valid fixture, exit 1 with structured errors on bad fixture.
+      - `analysis/scripts/llm-annotate-subagent.md` rewritten: explicit schema with hard rules matching the validator, mandatory `llm-validate` pre-return step, report-back format.
+      - `analysis/scripts/llm-annotate-orchestration.md` (new): describes how the main Claude Code agent drives the loop — `llm-extract` → parallel subagent dispatch (one per framework) → `annotate --llm-dir` → `enrich` → `jq '.verification'`.
+      - End-to-end on PushKit: hand-crafted `.llm.json` passes `llm-validate`; `annotate --only PushKit --llm-dir` merges it; `jq` confirms `source: "llm"` in the merged output.
+      - `.gitignore` updated to ignore `analysis/ir/llm-summaries/` and `analysis/ir/llm-annotations/`.
+      - `thiserror` dependency added to `analysis/crates/annotate/Cargo.toml`.
+      - Workspace-wide `rustfmt` formatting applied (touched `collection/crates/extract-objc/tests/`, `generation/crates/bundle-racket-oo/`, `generation/crates/emit/`).
+    - **What was NOT done:** Actual subagent dispatch producing a real `.llm.json` was deferred — the orchestration doc is the executable artifact; real token spend waits for user decision.
+    - **What this suggests next:** Run the first real subagent dispatch on PushKit (2 methods, small cost), record tokens + wall time in the orchestration doc table. Once proven, run a medium framework, then Foundation for the original acceptance target.
+    - **Key learnings:** Separating serde-level structural validation (done automatically) from semantic cross-referencing (the validator's job) kept the validator focused and testable without reinventing JSON schema checks.

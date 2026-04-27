@@ -76,7 +76,10 @@ mod tests {
     fn skips_leading_blank_lines() {
         let dir = TempDir::new().unwrap();
         let p = write(dir.path(), "spec.md", "\n\n# Modaliser\n");
-        assert_eq!(read_display_name_from_spec(&p), Some("Modaliser".to_string()));
+        assert_eq!(
+            read_display_name_from_spec(&p),
+            Some("Modaliser".to_string())
+        );
     }
 
     #[test]

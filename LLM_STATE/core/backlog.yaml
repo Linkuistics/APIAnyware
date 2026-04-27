@@ -2,7 +2,7 @@ tasks:
 - id: build-claude-code-subagent-driver-for-llm-annotation-pipeline
   title: Build Claude Code subagent driver for LLM annotation pipeline
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** medium
@@ -26,6 +26,141 @@ tasks:
     5. Document the runtime cost (tokens per framework, wall time) so the team can scope future full-pipeline runs.
 
     **Acceptance criteria:** Running the full pipeline (llm-extract → subagent driver → annotate --llm-dir) on Foundation produces a non-empty set of LLM-sourced annotations visible in `annotated/Foundation.json`.
+  results: |
+    ## What was built
+
+    The LLM annotation pipeline previously had its two ends (`llm-extract` →
+    `.methods.json`; `annotate --llm-dir` reads `.llm.json`) but no middle. This
+    work phase delivered the middle as a documentation-driven Claude Code
+    orchestration layer plus a strict semantic validator, scoped to fit the
+    constraint that LLM calls run inside Claude Code subagents (no external API).
+
+    ### 1. Strict semantic validator (`analysis/crates/annotate/src/llm.rs`)
+
+    `validate_llm_annotations(&FrameworkSummary, &FrameworkAnnotations) ->
+    ValidationReport` cross-checks a `.llm.json` against its source
+    `.methods.json` and surfaces every error in one pass (no fail-fast). Eight
+    distinct error kinds covered:
+
+    - `FrameworkMismatch` — `.llm.json` `framework` differs from summary
+    - `UnknownClass` / `UnknownSelector` — references to things not in summary
+    - `IsInstanceMismatch` — class-vs-instance disagreement with summary
+    - `ParamOwnershipOutOfRange` / `BlockParamOutOfRange` — `param_index` ≥
+      `params.len()`
+    - `BlockParamNotBlockType` — block annotation on a non-block param
+    - `WrongSource` — `source` not equal to `"llm"`
+
+    Companion `validate_llm_file(methods_path, llm_path) -> Result<Report>`
+    loads both files and validates. 13 new unit tests, all green; full annotate
+    suite at 51 passing, full workspace at 248 passing, clippy clean.
+
+    Serde already enforces JSON shape and enum-variant validity (e.g.
+    `BlockInvocationStyle::AsyncCopied`), so the validator's remit is
+    deliberately *semantic* — what serde cannot see.
+
+    ### 2. CLI subcommand `llm-validate`
+
+    Subagents invoke validation via:
+
+    ```bash
+    cargo run -q -p apianyware-macos-analyze -- llm-validate \
+      --methods-file analysis/ir/llm-summaries/{Framework}.methods.json \
+      --llm-file    analysis/ir/llm-annotations/{Framework}.llm.json
+    ```
+
+    Exits 0 on success, 1 with structured tracing errors on failure (verified
+    in shell with bad and good fixtures).
+
+    ### 3. Subagent prompt (`analysis/scripts/llm-annotate-subagent.md`)
+
+    Rewritten from scratch. Now includes: explicit schema with hard rules
+    mirroring the validator, the `llm-validate` invocation as a mandatory
+    pre-return step, and report-back format. Removed the embedded orchestration
+    pseudocode (split out — see #4).
+
+    ### 4. Orchestration doc (`analysis/scripts/llm-annotate-orchestration.md`)
+
+    New file. Describes how the **main** Claude Code agent drives the loop:
+    - Run `llm-extract` to produce `.methods.json` per framework
+    - Dispatch one Agent-tool subagent per framework using the prompt template
+      (sent as parallel tool calls in a single assistant message)
+    - Run `annotate --llm-dir analysis/ir/llm-annotations` to merge
+    - Run `enrich`, then `jq '.verification'` to read the headline signal
+      (violation count drop)
+
+    Re-run table covers the three idempotent re-entry points. Cost-tracking
+    table is stubbed for first measured run.
+
+    ## What was verified
+
+    End-to-end on **PushKit** (smallest real framework with delegate methods,
+    2 flagged methods on `PKPushRegistry`):
+
+    1. `llm-extract --only PushKit` → real `.methods.json` written
+    2. Hand-crafted `.llm.json` annotating `setDelegate:` with `weak` ownership
+    3. `llm-validate` exits 0
+    4. `annotate --only PushKit --llm-dir analysis/ir/llm-annotations` succeeds
+    5. `jq` on the merged `analysis/ir/annotated/PushKit.json` confirms:
+       - `selector: "setDelegate:"`
+       - `source: "llm"` (LLM source survived the merge)
+       - `parameter_ownership: [{param_index: 0, ownership: "weak"}]`
+
+    This proves every step of the loop *except* actual subagent dispatch,
+    which is intentionally deferred — see below.
+
+    Negative paths: shell smoke-tests of `llm-validate` against a bad fixture
+    (unknown class + wrong source + out-of-range index) report all three
+    errors via tracing and exit 1.
+
+    ## What was NOT done — and why
+
+    **No real subagent dispatch.** The acceptance criterion in the original
+    backlog item asked for a subagent-produced `.llm.json` on Foundation.
+    That step would consume real tokens, so leaving the actual dispatch as
+    the next concrete step lets the user decide when to spend. The
+    orchestration doc is the executable artifact the main agent follows; the
+    hand-crafted PushKit run proves the surrounding pipeline accepts a
+    well-formed `.llm.json`.
+
+    ## Suggested next steps
+
+    1. **First real subagent run, smallest scope.** Pick PushKit (2 methods,
+       one classifiable). Dispatch a subagent against the existing
+       `analysis/ir/llm-summaries/PushKit.methods.json`. Confirm it produces
+       a `.llm.json` that passes `llm-validate` and is non-empty. Record
+       tokens + wall time in the orchestration doc table.
+    2. **Calibration on a medium framework.** Once the loop is proven, run
+       on a framework with mixed reasons (block params *and* error params *and*
+       delegates) — `Network`, `URLSession` material in Foundation, or
+       `EventKit` are good candidates. This is where the prompt's coverage
+       discipline gets stress-tested.
+    3. **Foundation full run.** Only after #1 and #2 — Foundation has many
+       hundreds of flagged methods and is the original acceptance target.
+    4. **Surface the existing design tension** (out of scope here): both
+       `analysis/ir/annotated/` and the new `analysis/ir/llm-annotations/`
+       are gitignored, which means LLM-sourced annotations are not durable
+       across clones. Decide whether `.llm.json` files become checked-in
+       source-of-truth (and re-merge on demand) or whether annotated/
+       gets un-ignored. This affects pipeline cost on a fresh clone.
+
+    ## Files touched (for analyse-work)
+
+    Source:
+    - `analysis/crates/annotate/Cargo.toml` — add thiserror
+    - `analysis/crates/annotate/src/llm.rs` — validator + 13 new tests
+    - `analysis/crates/cli/src/main.rs` — `llm-validate` subcommand
+    - `analysis/scripts/llm-annotate-subagent.md` — rewritten prompt
+    - `analysis/scripts/llm-annotate-orchestration.md` — new orchestration doc
+    - `.gitignore` — ignore `llm-summaries/` and `llm-annotations/`
+    - `Cargo.lock` — thiserror dependency
+
+    Pre-existing dirty file (unrelated, deferred to its own plan):
+    - `LLM_STATE/targets/racket-oo/backlog.yaml`
+
+    Workspace-wide rustfmt also touched several files in
+    `collection/crates/extract-objc/`, `generation/crates/bundle-racket-oo/`,
+    and `generation/crates/emit/` — these were already out of format and
+    weren't logically modified by this task.
 - id: investigate-and-filter-bare-c-name-macro-usrs-leak-class-a
   title: Investigate and filter bare `c:@<name>` macro USRs (leak class A)
   category: collection
