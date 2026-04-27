@@ -142,14 +142,12 @@ entries:
 
     - `s:` — Swift-native; not `dlsym`-able
     - `c:@F@<name>` — C function; exported as `_<name>`
-    - `c:@<name>` — C var / enum constant (but see bare `c:@<name>` macro variant below)
+    - `c:@<name>` — C var / enum constant; always a VarDecl USR form
     - `c:@E@<Enum>@<Member>` — named C enum member; routed through `Enum` → `EnumElement`
     - `c:@Ea@<dummy>@<member>` — anonymous C enum member, no typedef wrapper; no dylib symbol
     - `c:@EA@<typedef>@<member>` — anonymous C enum member with typedef; no dylib symbol. Single-character case difference from `Ea` — both must be filtered together or 95% of the leak survives
     - `c:@macro@<name>` — preprocessor macro; no dylib symbol
     - `So<mangled>` — Obj-C declaration
-
-    **Bare `c:@<name>` macro variant (leak class A):** libclang sometimes exposes a macro as a `VarDecl` cursor with a plain `c:@<name>` USR — without the `@macro@` prefix — instead of routing it through `EntityKind::MacroDefinition`. This happens for macros that expand to typed casts or typed literals. Neither extractor catches this form: extract-objc sees a `VarDecl` with `Linkage::External` (passes the linkage filter and the availability filter), extract-swift sees a `Var` node without the `c:@macro@` prefix (passes `non_c_linkable_skip_reason`). The result enters IR as a normal constant but has no dylib symbol, causing `get-ffi-obj` failure at runtime. Canary: `kAudioServicesDetailIntendedSpatialExperience` (AudioToolbox, `AudioServices.h:401`). Extent across frameworks unknown — audit before filtering. Backlog task: "Investigate and filter bare `c:@<name>` macro USRs (leak class A)".
 - id: skipped-symbols-is-per-pipeline-not-global
   title: skipped_symbols is per-pipeline, not global
   body: |
@@ -400,3 +398,11 @@ entries:
   title: Apple developer docs are JS-rendered; SDK headers are authoritative
   body: |
     `developer.apple.com` returns only `<title>` via WebFetch (JS-rendered SPA). The MacOSX SDK headers at `MacOSX.sdk/System/Library/Frameworks/<F>.framework/Headers/` are the authoritative source for LLM annotation: they carry `weak`/`copy`/`assign`/`nullable` attributes and doc comments unavailable from the web. LLM annotation subagent prompts must prioritize SDK headers, not web docs.
+- id: extract-objc-anonymous-enum-members-route-to-enums-values-only
+  title: extract-objc anonymous enum members route to enums[].values only
+  body: |
+    `EnumDecl` child cursors in `extract_declarations.rs` feed `enums[].values`, not `constants[]`. No extract-objc path exists by which anonymous enum members can appear in IR `constants[]`. The corresponding non-C-linkable filter in extract-swift (`c:@Ea@`/`c:@EA@` → `skipped_symbols`) handles the same symbols from the digester side. Audit of all 13,091 ObjC constants across 252 frameworks confirmed zero anonymous-enum leaks.
+- id: anonymous-enum-ir-names-embed-absolute-sdk-paths
+  title: Anonymous enum IR names embed absolute SDK paths
+  body: |
+    libclang synthesizes names for anonymous enums from the first member, embedding the absolute SDK path in the name. These appear in IR `enums[].name` fields and cause cosmetic diffs when IR is generated under different Xcode installations or SDK locations. Not a correctness issue — values and types are unaffected. Normalize by stripping the path prefix if cross-toolchain reproducibility is needed.
