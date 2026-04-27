@@ -253,7 +253,7 @@ entries:
 - id: llm-annotations-use-a-dedicated-input-directory
   title: LLM annotations use a dedicated input directory
   body: |
-    Two annotation sources: (1) heuristic annotations via checkpoint output dir (`load_existing_annotations()`), (2) LLM-generated `.llm.json` files from `--llm-dir` (`load_llm_annotations()` in `llm.rs`). LLM annotations take precedence via merge logic. Workflow: `llm-extract` CLI → `.methods.json` summaries of interesting methods (block params, error out-params, delegate/observer patterns) → Claude Code subagent → `.llm.json` → `annotate --llm-dir` merges. Runs within Claude Code for cost reasons.
+    Two annotation sources: (1) heuristic annotations via checkpoint output dir (`load_existing_annotations()`), (2) LLM-generated `.llm.json` files from `--llm-dir` (`load_llm_annotations()` in `llm.rs`). LLM annotations take precedence via merge logic. Full workflow: `llm-extract` CLI → `.methods.json` summaries → Claude Code subagents (one per framework, parallel) → each subagent runs `llm-validate` pre-return → `.llm.json` → `annotate --llm-dir` → `enrich` → `jq '.verification'`. Runs within Claude Code for cost reasons. Scripts: `analysis/scripts/llm-annotate-subagent.md` (subagent prompt with schema and hard rules), `analysis/scripts/llm-annotate-orchestration.md` (main-agent orchestration loop). IR staging dirs gitignored: `analysis/ir/llm-summaries/`, `analysis/ir/llm-annotations/`.
 - id: const-char-maps-to-typerefkind-cstring
   title: '`const char *` maps to `TypeRefKind::CString`'
   body: |
@@ -388,3 +388,7 @@ entries:
     return-type metadata fallback keyed by `(protocol_name, selector, is_class_method)`.
     Fix lives at the resolve layer — not per-emitter — so every current and future
     language emitter inherits protocol-method propagation automatically.
+- id: llm-annotation-validator-separates-semantic-from-structural-checks
+  title: LLM annotation validator separates semantic from structural checks
+  body: |
+    `validate_llm_annotations` / `validate_llm_file` in `analysis/crates/annotate/src/llm.rs` perform semantic cross-referencing (8 error kinds) beyond serde's automatic structural checks. Serde handles field types and required keys; the validator catches cross-referencing failures (e.g., method names that don't exist in IR). `llm-validate` CLI subcommand exits 0 on valid input, 1 with structured errors. Subagents must run `llm-validate` before returning a `.llm.json`.
