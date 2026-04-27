@@ -2,15 +2,15 @@ entries:
 - id: synthetic-pseudo-framework-pattern-for-non-framework-system-headers
   title: Synthetic pseudo-framework pattern for non-.framework system headers
   body: |
-    Headers that live outside the standard `.framework` tree (e.g. libdispatch in
-    `/usr/include/dispatch/`, pthread in `/usr/lib/system/`) use a four-part pattern:
+    Headers outside the standard `.framework` tree (e.g. libdispatch in
+    `/usr/include/dispatch/`) use a four-part pattern:
     (1) checked-in umbrella header at
     `collection/crates/extract-objc/synthetic-frameworks/<name>/<name>.h`;
     (2) `sdk.rs::synthetic_frameworks()` appends a synthetic `FrameworkInfo` to the
     framework list; (3) `is_from_framework()` branches on the synthetic name to accept
     the relevant `usr/include/<subdir>/` paths; (4) the emitter's `framework_ffi_lib_arg`
     in `shared_signatures.rs` maps the synthetic framework name to the real dylib short
-    name (e.g. `"libdispatch"` → `"libSystem"`). Established 2026-04-15 for libdispatch.
+    name (e.g. `"libdispatch"` → `"libSystem"`).
     Use this pattern for any future system-header extraction that lacks a `.framework`
     directory.
 - id: enumdecl-forward-decl-shadow-is-definition-guard-is-required
@@ -37,10 +37,10 @@ entries:
     `child.get_enum_constant_value()` returns `Option<(i64, u64)>`. For enums with a
     signed underlying type, use `.0` (i64). For unsigned underlying types
     (`CF_ENUM(uint32_t, ...)`, `CG_ENUM(uint32_t, ...)`), clang sign-extends top-bit-set
-    values into the i64 component, so `.0` is wrong (e.g. 0xFFFFFFFE → `-2`). Fixed
-    2026-04-15: `extract_declarations.rs` now calls `get_canonical_type()` on the enum's
-    underlying type to determine signedness, takes `.1` (u64) for unsigned types, and skips
-    constants exceeding `i64::MAX` with a warning. Canonical verification canary:
+    values into the i64 component, so `.0` is wrong (e.g. 0xFFFFFFFE → `-2`).
+    `extract_declarations.rs` calls `get_canonical_type()` on the enum's underlying type
+    to determine signedness, takes `.1` (u64) for unsigned types, and skips constants
+    exceeding `i64::MAX` with a warning. Canonical canary:
     `kCGEventTapDisabledByTimeout` emits as `4294967294` (not `-2`).
 - id: typedefs-resolve-at-extraction-time
   title: Typedefs resolve at extraction time
@@ -74,7 +74,7 @@ entries:
   title: Stub launcher gives unique CDHash per app
   body: |
     macOS TCC grants permissions per-CDHash. Without per-app stubs, all apps sharing a runtime binary (e.g., `/opt/homebrew/bin/racket`) share one TCC permission set. `apianyware-macos-stub-launcher` (`generation/crates/stub-launcher/`) generates a ~50KB Swift binary per app that `execv`s into the language runtime. API: `StubConfig` → `create_app_bundle()` for full `.app` assembly, or `generate_stub_source()` + `compile_stub()` for custom workflows. Compiles via `swiftc`.
-    **Ad-hoc codesigning invalidates TCC grants on every rebuild.** Each `swiftc` compilation with ad-hoc signing (`-`) produces a new CDHash, so any Accessibility/Screen Recording TCC grant must be re-granted after every rebuild. The systemic fix is a stable signing identity (Developer ID or self-signed cert with a fixed key) so the CDHash is stable across recompiles. Until the `.app` bundler implements stable signing, document re-grant as a known workflow step.
+    **Ad-hoc codesigning invalidates TCC grants on every rebuild.** Each `swiftc` compilation with ad-hoc signing (`-`) produces a new CDHash, voiding any Accessibility/Screen Recording TCC grant. Fix: stable signing identity (Developer ID or self-signed cert with a fixed key). Until the `.app` bundler implements stable signing, re-grant TCC after every rebuild.
 - id: prefer-synthetic-tests-over-sdk-dependent-tests
   title: Prefer synthetic tests over SDK-dependent tests
   body: |
@@ -94,7 +94,7 @@ entries:
 - id: extract-objc-filters-internal-linkage
   title: 'extract-objc filters: internal linkage'
   body: |
-    `extract_constant` / `extract_function` in `extract_declarations.rs` skip declarations with `entity.get_linkage() == Some(Linkage::Internal)`. `static const` variables and `static inline` functions are inlined at use sites and emit no dylib symbol — extracting them causes runtime `get-ffi-obj` failures. Canonical examples: `NSHashTableCopyIn`, `NSHashTableStrongMemory`, `NSHashTableWeakMemory`. Macros never reach `VarDecl`/`FunctionDecl` cursors — they appear as `EntityKind::MacroDefinition` (see "Macros reach IR only via swift-api-digester").
+    `extract_constant` / `extract_function` in `extract_declarations.rs` skip declarations with `entity.get_linkage() == Some(Linkage::Internal)`. `static const` variables and `static inline` functions are inlined at use sites and emit no dylib symbol — extracting them causes runtime `get-ffi-obj` failures. Canonical examples: `NSHashTableCopyIn`, `NSHashTableStrongMemory`, `NSHashTableWeakMemory`. Macros are filtered separately — see "Macros reach IR only via swift-api-digester".
 - id: extract-objc-filters-platform-unavailability
   title: 'extract-objc filters: platform unavailability'
   body: |
@@ -102,7 +102,7 @@ entries:
 - id: extract-objc-availability-filter-covers-all-declaration-kinds
   title: extract-objc availability filter covers all declaration kinds
   body: |
-    `extract_class`, `extract_protocol`, `extract_method`, and `extract_property` each gate on `is_unavailable_on_macos`. Class/protocol-level hits are wholesale drops (see "Wholesale drop is the right default for unavailable parent types"). `extract_method` fires per-selector inside both direct-class and `extract_category` visits. `extract_property` fires per-property for both instance and class properties. libclang's `get_platform_availability()` is reliable at all four granularities (confirmed via synthetic `MixedClass` fixture). Blast radius: class/protocol/method — 53 frameworks, −450 classes, −151 protocols, −2,982 class methods, −414 protocol methods; property — 31 frameworks, −303 properties (AVFoundation alone −223, 74% of total). The filter quartet is complete; all four declaration kinds share one predicate with zero refactoring across additions.
+    `extract_class`, `extract_protocol`, `extract_method`, and `extract_property` each gate on `is_unavailable_on_macos`. Class/protocol-level hits are wholesale drops (see "Wholesale drop is the right default for unavailable parent types"). `extract_method` fires per-selector inside both direct-class and `extract_category` visits. `extract_property` fires per-property for both instance and class properties. `get_platform_availability()` is reliable at all four granularities. Blast radius: class/protocol/method — 53 frameworks, −450 classes, −151 protocols, −2,982 class methods, −414 protocol methods; property — 31 frameworks, −303 properties (AVFoundation alone −223). The filter quartet is complete; all four declaration kinds share one predicate.
 - id: wholesale-drop-is-the-right-default-for-unavailable-parent-types
   title: Wholesale drop is the right default for unavailable parent types
   body: |
@@ -114,7 +114,7 @@ entries:
 - id: shared-skipped-symbol-reason-vocabulary
   title: Shared skipped_symbol reason vocabulary
   body: |
-    `apianyware_macos_types::skipped_symbol_reason` holds the five `&'static str` tags used by both extractors: `internal_linkage`, `platform_unavailable_macos`, `swift_native`, `preprocessor_macro`, `anonymous_enum_member`. Format: `"<tag>: <human description>"`. Audit tooling matches via `reason.contains(tag)`. When adding a new filter, extend this module first — do not inline the reason string at the filter site. extract-objc records via the `record_skip(skipped_symbols, name, kind, reason)` helper in `extract_declarations.rs`; method and property records qualify the name as `"{owner}.{selector|prop}"` so class context survives the flat list. extract-swift records via the `non_c_linkable_skip_reason` predicate. Both feed the same `fw.skipped_symbols` vec; `merge.rs::merge_swift_into_objc` extends objc's list with swift's. NSLog / NSApplicationMain confirmed single-entry (objc keeps the C function, swift records only the overlay as `swift_native`). Known duplicate-name edge case: `printed_name` qualification (parameter labels) reduced duplicate `(name, kind)` pairs from 30 to 12 per fresh collection. The remaining 12 are true type-based overloads sharing identical parameter labels (e.g., CoreML `pointwiseMin(_:_:)`×3, TabularData `/(_:_:)`×4, Network `withNetworkConnection(to:using:_:)`×4). Resolving these requires mangled signatures or parameter-type lists (see "Swift printed_name catches label overloads not type overloads").
+    `apianyware_macos_types::skipped_symbol_reason` holds five `&'static str` tags used by both extractors: `internal_linkage`, `platform_unavailable_macos`, `swift_native`, `preprocessor_macro`, `anonymous_enum_member`. Format: `"<tag>: <human description>"`. Audit tooling matches via `reason.contains(tag)`. When adding a new filter, extend this module first — do not inline the reason string at the filter site. extract-objc records via `record_skip(skipped_symbols, name, kind, reason)` in `extract_declarations.rs`; method and property records qualify the name as `"{owner}.{selector|prop}"`. extract-swift records via the `non_c_linkable_skip_reason` predicate. Both feed `fw.skipped_symbols`; `merge.rs::merge_swift_into_objc` extends objc's list with swift's. Remaining 12 duplicate `(name, kind)` pairs per fresh collection are true type-based overloads with identical parameter labels (e.g., CoreML `pointwiseMin(_:_:)`×3) — resolving them requires mangled signatures (see "Swift printed_name catches label overloads not type overloads").
 - id: non-c-linkable-usr-families-in-extract-swift
   title: Non-C-linkable USR families in extract-swift
   body: |
@@ -149,13 +149,11 @@ entries:
     - `c:@macro@<name>` — preprocessor macro; no dylib symbol
     - `So<mangled>` — Obj-C declaration
 
-    Analogous to libclang's `Linkage` enum for the ObjC path.
-
     **Bare `c:@<name>` macro variant (leak class A):** libclang sometimes exposes a macro as a `VarDecl` cursor with a plain `c:@<name>` USR — without the `@macro@` prefix — instead of routing it through `EntityKind::MacroDefinition`. This happens for macros that expand to typed casts or typed literals. Neither extractor catches this form: extract-objc sees a `VarDecl` with `Linkage::External` (passes the linkage filter and the availability filter), extract-swift sees a `Var` node without the `c:@macro@` prefix (passes `non_c_linkable_skip_reason`). The result enters IR as a normal constant but has no dylib symbol, causing `get-ffi-obj` failure at runtime. Canary: `kAudioServicesDetailIntendedSpatialExperience` (AudioToolbox, `AudioServices.h:401`). Extent across frameworks unknown — audit before filtering. Backlog task: "Investigate and filter bare `c:@<name>` macro USRs (leak class A)".
 - id: skipped-symbols-is-per-pipeline-not-global
   title: skipped_symbols is per-pipeline, not global
   body: |
-    Each extractor records its own filter decisions. `merge.rs::merge_swift_into_objc` appends swift's list onto the objc framework. A symbol can appear in both `functions`/`constants` (from one extractor) and `skipped_symbols` (from the other). Canonical: NSLog — extract-objc keeps the C function (`c:@F@NSLog`), extract-swift skips the Swift-ABI overlay (`s:10Foundation5NSLog…`), merge dedup drops the Swift version, final IR carries NSLog once with ObjC metadata. Same pattern: NSApplicationMain in AppKit. `skipped_symbols` membership does not mean "absent from final IR."
+    Each extractor records its own filter decisions. `merge.rs::merge_swift_into_objc` appends swift's list onto the objc framework. A symbol can appear in both `functions`/`constants` (from one extractor) and `skipped_symbols` (from the other). Canonical example: NSLog — extract-objc keeps `c:@F@NSLog`, extract-swift skips the Swift-ABI overlay (`s:10Foundation5NSLog…`); final IR carries NSLog once with ObjC metadata. `skipped_symbols` membership does not mean "absent from final IR."
 - id: macros-reach-ir-only-via-swift-api-digester
   title: Macros reach IR only via swift-api-digester
   body: |
@@ -201,7 +199,7 @@ entries:
 - id: downstream-checkpoints-can-predate-source-fixes
   title: Downstream checkpoints can predate source fixes
   body: |
-    A fresh `collected/` can sit above stale `resolved/` for weeks if analysis was not re-run after an extraction filter landed. Symptom: canary absent from `collected/*.json` but present in `resolved/*.json` — frozen before the filter existed. Pre-investigation check: compare checkpoint mtime to `collection/crates/extract-{swift,objc}/src/**` mtimes. If source is newer, regenerate (`cargo run -p apianyware-macos-analyze`) before forming hypotheses. Automated by `analysis/scripts/regenerate-stale-pipeline.sh`. See "Codegen freshness uses newest-input vs newest-output" for the comparison rule.
+    A fresh `collected/` can coexist with stale `resolved/` if analysis was not re-run after an extraction filter landed. Symptom: canary absent from `collected/*.json` but present in `resolved/*.json`. Pre-investigation check: compare checkpoint mtime to `collection/crates/extract-{swift,objc}/src/**` mtimes. If source is newer, regenerate (`cargo run -p apianyware-macos-analyze`) before forming hypotheses. Automated by `analysis/scripts/regenerate-stale-pipeline.sh`. See "Codegen freshness uses newest-input vs newest-output" for the comparison rule.
 - id: workspace-lint-requires-two-escape-hatches
   title: Workspace lint requires two escape hatches
   body: |
@@ -231,27 +229,27 @@ entries:
     The IR distinguishes struct-typed globals from pointer-typed globals at the clang-AST level. Emitters must use these differently:
     - **Pointer global** (e.g. `kCFRunLoopCommonModes`): the symbol *is* the pointer — use `get-ffi-obj` (or equivalent dereference) to read the pointer value.
     - **Struct global** (e.g. `_dispatch_main_q`): the symbol *is* the struct — consumers need the symbol's **address**, not its first field. Use `ffi-obj-ref` (or equivalent address-of) to obtain the pointer to the struct.
-    Using `get-ffi-obj` on a struct global dereferences the first field as if it were a pointer — wrong on all platforms. This distinction applies to every language binding emitter (Python, JavaScript, etc.) whenever a framework has struct-typed global constants. Surfaced 2026-04-16 from racket-oo libdispatch `_dispatch_main_q` binding.
+    Using `get-ffi-obj` on a struct global dereferences the first field as if it were a pointer — wrong on all platforms. This distinction applies to every language binding emitter whenever a framework has struct-typed global constants.
 - id: os-object-use-objc-makes-gcd-types-appear-as-objc-objects-in-ir
   title: OS_OBJECT_USE_OBJC makes GCD types appear as ObjC objects in IR
   body: |
-    When SDK headers are compiled with `OS_OBJECT_USE_OBJC=1` (the macOS default), `dispatch_queue_t` and similar GCD types are declared as ObjC objects. The IR therefore maps them to an `_id`-equivalent type. This creates friction for emitters that obtain queue values via `dlsym`/`ffi-obj-ref`/pointer arithmetic: the raw pointer is not automatically an `_id`-tagged value, so an explicit cast is required before passing it to any function whose IR signature declares a GCD type as `_id`-equivalent. Every future language binding emitter will face this same cast requirement. A potential long-term fix is an IR annotation marking these types as "ObjC-object-via-OS_OBJECT macro" so emitters can generate the cast automatically. Surfaced 2026-04-16 from racket-oo libdispatch `_dispatch_main_q` usage.
+    When SDK headers are compiled with `OS_OBJECT_USE_OBJC=1` (the macOS default), `dispatch_queue_t` and similar GCD types are declared as ObjC objects. The IR maps them to an `_id`-equivalent type. Emitters obtaining queue values via `dlsym`/`ffi-obj-ref`/pointer arithmetic get a raw pointer that is not automatically `_id`-tagged — an explicit cast is required before passing it to any function whose IR signature declares a GCD type as `_id`-equivalent. Every future language binding emitter faces this same cast requirement. A potential long-term fix is an IR annotation marking these types as "ObjC-object-via-OS_OBJECT macro" so emitters can generate the cast automatically.
 - id: make-objc-block-does-not-accept-f
   title: '`make-objc-block` does not accept `#f`'
   body: |
-    `make-objc-block` in `runtime/block.rkt` stores its `proc` argument directly. Passing `#f` (a common idiom for "no completion handler") causes `(apply #f ...)` on the first block invocation — a Racket error. The fix is to normalise `#f` → `(lambda args (void))` at the top of `make-objc-block`. Until fixed, callers must pass an explicit no-op lambda. Surfaced 2026-04-16 from Modaliser-Racket. Backlog task: "Fix `make-objc-block` to treat `#f` as a no-op lambda".
+    `make-objc-block` in `runtime/block.rkt` stores its `proc` argument directly. Passing `#f` (a common idiom for "no completion handler") causes `(apply #f ...)` on the first block invocation — a Racket error. The fix is to normalise `#f` → `(lambda args (void))` at the top of `make-objc-block`. Until fixed, callers must pass an explicit no-op lambda. Backlog task: "Fix `make-objc-block` to treat `#f` as a no-op lambda".
 - id: generator-maps-bool-bool-to-uint8-breaking-racket-boolean-logic
   title: Generator maps `bool`/`BOOL` to `_uint8`, breaking Racket boolean logic
   body: |
-    The racket-oo emitter currently maps C `bool`/`BOOL` return types to `_uint8`. In Racket, `_uint8` decodes to an integer, and all integers (including `0`) are truthy — only `#f` is falsy. A method returning `false`/`0` is therefore silently misidentified as true in any boolean context. The correct FFI type is `_bool`, which decodes `0` → `#f` and non-zero → `#t`. Until fixed, callers must wrap boolean returns with `(positive? ...)` or `(not (zero? ...))`. Surfaced 2026-04-16 from Modaliser-Racket. Backlog task: "Fix generator to emit `bool`/`BOOL` return types as `_bool` not `_uint8`".
+    The racket-oo emitter maps C `bool`/`BOOL` return types to `_uint8`. In Racket, `_uint8` decodes to an integer, and all integers (including `0`) are truthy — only `#f` is falsy. A method returning `false`/`0` is silently misidentified as true in any boolean context. The correct FFI type is `_bool`, which decodes `0` → `#f` and non-zero → `#t`. Until fixed, callers must wrap boolean returns with `(positive? ...)` or `(not (zero? ...))`. Backlog task: "Fix generator to emit `bool`/`BOOL` return types as `_bool` not `_uint8`".
 - id: generated-binding-contracts-are-any-c-no-receiver-or-type-checking
   title: Generated binding contracts are `any/c` — no receiver or type checking
   body: |
-    `provide/contract` forms in generated bindings use `any/c` for all parameters and return types. Passing the wrong receiver class, an unwrapped `objc-object` instead of `_id`, a missing `coerce-arg`, or a raw Racket string where an NSString pointer is expected all bypass the contract boundary and fail late (or silently). The minimum useful improvement is a receiver-class predicate on `self`. Surfaced 2026-04-16 from Modaliser-Racket. Backlog task: "Strengthen generated binding contracts beyond `any/c`".
+    `provide/contract` forms in generated bindings use `any/c` for all parameters and return types. Passing the wrong receiver class, an unwrapped `objc-object` instead of `_id`, a missing `coerce-arg`, or a raw Racket string where an NSString pointer is expected all bypass the contract boundary and fail late (or silently). The minimum useful improvement is a receiver-class predicate on `self`. Backlog task: "Strengthen generated binding contracts beyond `any/c`".
 - id: racket-malloc-is-gc-managed-use-raw-for-c-heap-allocation
   title: Racket `malloc` is GC-managed; use `'raw` for C-heap allocation
   body: |
-    Plain `(malloc n)` in Racket CS calls `scheme_malloc_atomic` — the buffer is GC-managed and must NOT be passed to C `free()`. Calling `(free buf)` on a GC-managed buffer causes SIGABRT (exit 134). When a C function requires a caller-allocated buffer that C code (or explicit Racket code) must later `free`, use `(malloc n 'raw)`. Canonical reference: `ax-get-pid` in `ax-helpers.rkt` (GC path, no free) vs any `'raw` allocation paired with an explicit `(free ...)`. Surfaced 2026-04-17 from a `(free buf)` on a plain-`malloc` buffer in `ax-element-get-window` (`spi-helpers.rkt`); same fix was confirmed across 9 sites in `cf-bridge.rkt` and `ax-helpers.rkt`.
+    Plain `(malloc n)` in Racket CS calls `scheme_malloc_atomic` — the buffer is GC-managed and must NOT be passed to C `free()`. Calling `(free buf)` on a GC-managed buffer causes SIGABRT (exit 134). When a C function requires a caller-allocated buffer that C code (or explicit Racket code) must later `free`, use `(malloc n 'raw)`. Canonical reference: `ax-get-pid` in `ax-helpers.rkt` (GC path, no free) vs any `'raw` allocation paired with an explicit `(free ...)`.
 - id: llm-annotations-use-a-dedicated-input-directory
   title: LLM annotations use a dedicated input directory
   body: |
@@ -339,8 +337,7 @@ entries:
     `enum_underlying_primitive()` in `type_mapping.rs` (see "Enum-typedef underlying
     type needs get_canonical_type"). The FFI mapper consults `underlying_primitive`
     for `Alias` kinds to select the correct width and signedness — without it,
-    enum-typedef aliases silently map to a wrong-width FFI type. All ~37
-    `TypeRefKind::Alias` construction sites supply this field; `None` is valid when
+    enum-typedef aliases silently map to a wrong-width FFI type. `None` is valid when
     no canonical primitive is determinable. Shared helper
     `racket_ffi_type_for_primitive` in `ffi_type_mapping.rs` converts the canonical
     name to an FFI type string and is called from both the `Alias` arm and the
@@ -371,8 +368,8 @@ entries:
     just `"racket-app"`. For the APIAnyware sample-app layout (entry at
     `apps/<name>/<name>.rkt`), `inDirectory` is `"racket-app/apps/<name>"`. The
     general formula: `racket-app/ + (entry.parent() - source_root)`. Encoded in
-    `bundle-racket-oo::bundle::derive_script_resource_dir`; hardcoding it (the
-    pre-2026-04-18 behavior) blocks non-sample-app layouts.
+    `bundle-racket-oo::bundle::derive_script_resource_dir`; hardcoding it blocks
+    non-sample-app layouts.
 - id: define-objc-subclass-macro-lives-in-runtime-objc-subclass-rkt
   title: define-objc-subclass macro lives in runtime/objc-subclass.rkt
   body: |
@@ -384,4 +381,4 @@ entries:
 - id: protocol-inherited-methods-missing-from-class-ir
   title: Protocol-inherited methods missing from class IR
   body: |
-    Methods that a class inherits via protocol conformance (not direct declaration) are currently missing from the IR — the collector does not traverse the protocol inheritance graph to attach methods to conforming classes. Surfaced during Modaliser development. Core backlog task: "Protocol-inherited methods missing from class IR". Affects any language target that relies on the IR for method dispatch rather than runtime introspection.
+    Methods that a class inherits via protocol conformance (not direct declaration) are missing from the IR — the collector does not traverse the protocol inheritance graph to attach methods to conforming classes. Core backlog task: "Protocol-inherited methods missing from class IR". Affects any language target that relies on the IR for method dispatch rather than runtime introspection.
