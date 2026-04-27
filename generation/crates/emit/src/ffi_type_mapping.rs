@@ -6,6 +6,14 @@
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Maps IR types to FFI type strings for a specific target language.
+///
+/// New target emitters: read [`generation/docs/emitter-contract.md`] before
+/// implementing this trait. It documents IR shapes whose handling is not
+/// obvious from the type itself (currently: OS_OBJECT_USE_OBJC bridged GCD
+/// handles), so each new target does not have to re-discover them at
+/// integration time.
+///
+/// [`generation/docs/emitter-contract.md`]: ../../../../docs/emitter-contract.md
 pub trait FfiTypeMapper {
     /// Convert a [`TypeRef`] to its FFI type string representation.
     ///

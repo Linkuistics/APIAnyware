@@ -417,6 +417,7 @@ Languages with both OO and functional paradigms produce multiple binding styles 
 - [Annotation Workflow](analysis/docs/annotation-workflow.md) -- when and how to run each pipeline step, LLM annotation options, merge precedence
 - [Enrichment Rules](analysis/docs/enrich-rules.md) -- what each Datalog-derived relation means and how emitters use it
 - [API Pattern Catalog](analysis/docs/api-pattern-catalog.md) -- 10 stereotypical API patterns with detection rules and per-language translation templates
+- [Emitter Contract](generation/docs/emitter-contract.md) -- cross-language conventions every target emitter must implement (e.g. OS_OBJECT_USE_OBJC handling)
 
 ## License
 

@@ -210,7 +210,10 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
                 // libdispatch OS-object types (dispatch_queue_t etc.) resolve
                 // to _id via OS_OBJECT_USE_OBJC, but no wrapper classes exist.
                 // Emit _pointer so consumers can pass raw cpointers (e.g. from
-                // ffi-obj-ref) without a (cast ... _pointer _id) ceremony.
+                // ffi-obj-ref) without a (cast ... _pointer _id) ceremony. New
+                // target emitters: see generation/docs/emitter-contract.md
+                // ("OS_OBJECT_USE_OBJC bridged types") for the cross-language
+                // contract.
                 if is_libdispatch && t == "_id" {
                     "_pointer".to_string()
                 } else {

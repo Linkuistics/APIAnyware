@@ -27,7 +27,7 @@ tasks:
 - id: ir-annotation-for-os-object-use-objc-typed-gcd-handles
   title: IR annotation for OS_OBJECT_USE_OBJC-typed GCD handles
   category: collection
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** low
@@ -39,10 +39,50 @@ tasks:
     **Scope:** Add an IR-level annotation (e.g. a flag on `TypeRef` or a new `TypeRefKind` variant) marking types that are "ObjC objects via OS_OBJECT macro" rather than "genuine ObjC class declarations". Emitters can then auto-generate the cast for values obtained outside the normal message-send path. Alternatively, document the cast requirement prominently in the emitter contract so future targets don't rediscover it from scratch.
 
     **Priority justification:** Low — only bites when a framework exposes a struct global whose declared type is OS_OBJECT-based (currently only libdispatch). The manual workaround (explicit cast at the call site) is well understood. Promote if a second framework triggers the same pattern.
+  results: |
+    **Outcome:** Resolved via documentation path (option B from the task scope) — the lighter alternative the task explicitly endorsed. No IR annotation added; promotion to IR-level annotation deferred per the task's "promote if a second framework triggers" clause.
+
+    **Reasoning for choosing option B over option A:**
+
+    - **Surface area is one framework.** Audit confirmed only libdispatch exposes the pattern (struct global whose typed consumer signatures use `Id` for an OS_OBJECT-bridged ObjC handle). Network and other OS_OBJECT-using frameworks expose their handles via factory functions, not struct globals, so the runtime cast issue does not bite there.
+    - **Manual handling already in place and tested.** `emit-racket-oo/src/emit_functions.rs:214` substitutes `_pointer` for `_id` when `framework == "libdispatch"`. Regression tests at `emit_functions.rs:869` (`test_libdispatch_id_params_emit_pointer`) and `:914` (`test_libdispatch_id_return_emits_pointer`) lock the behavior in. `test_non_libdispatch_id_params_keep_id` (line 942) guards the substitution from leaking to other frameworks.
+    - **Per the task's priority justification:** "low — only bites when a framework exposes a struct global whose declared type is OS_OBJECT-based (currently only libdispatch). The manual workaround (explicit cast at the call site) is well understood. Promote if a second framework triggers the same pattern." A full IR-level annotation would be over-engineering for a one-framework case.
+
+    **What landed:**
+
+    1. **New doc: `generation/docs/emitter-contract.md`** — Single source of truth for cross-emitter conventions whose handling is not obvious from the IR type alone. The OS_OBJECT_USE_OBJC section explains:
+       - The IR shape (`TypeRefKind::Id` for `dispatch_queue_t` etc., `TypeRefKind::Struct` for `_dispatch_main_q`)
+       - The fundamental mismatch (raw pointer from struct-global → `Id`-typed consumer)
+       - Two acceptable resolutions (per-emitter framework gate vs explicit call-site cast)
+       - When to promote to IR annotation (when a second framework exhibits the pattern)
+       - Cross-references to relevant memory entries
+
+    2. **Trait-level doc cross-reference: `generation/crates/emit/src/ffi_type_mapping.rs`** — `FfiTypeMapper` trait doc now points new emitter authors at the contract doc before they implement the trait. This is the natural choke point — every new target language must implement `FfiTypeMapper`.
+
+    3. **Inline comment cross-reference: `generation/crates/emit-racket-oo/src/emit_functions.rs:210-216`** — The existing libdispatch substitution comment now points to the contract doc, so a developer reading the workaround sees the cross-emitter context.
+
+    4. **README.md Documentation section** — Added the new doc to the list alongside Memory Architecture, Annotation Workflow, etc.
+
+    **Verification:**
+
+    - `cargo test -p apianyware-macos-emit -p apianyware-macos-emit-racket-oo`: all tests pass (124+ in emit-racket-oo), including the 3 libdispatch-specific regression tests and the 1 doctest in emit.
+    - `cargo clippy -p apianyware-macos-emit -p apianyware-macos-emit-racket-oo --all-targets -- -D warnings`: clean, no warnings.
+
+    **Files touched:**
+    - `generation/docs/emitter-contract.md` (new)
+    - `generation/crates/emit/src/ffi_type_mapping.rs` (trait doc)
+    - `generation/crates/emit-racket-oo/src/emit_functions.rs` (comment cross-reference)
+    - `README.md` (documentation index)
+
+    **What this suggests next:**
+
+    - The single-section doc is intentionally narrow. As more cross-language conventions surface (e.g. block-lifecycle handling differences, error-pointer out-param patterns, retain/release ownership at FFI boundaries), they should be added as sibling sections to `emitter-contract.md` with the same shape: IR shape → mismatch → acceptable resolutions → cross-references.
+    - When a second framework triggers the OS_OBJECT_USE_OBJC pattern, *promote* this from doc-only to an IR-level annotation. The doc already contains the design sketch (boolean `os_object_bridged` flag on `TypeRef` set during ObjC extraction by recognising `OS_OBJECT_DECL_*` macro origin). Promoting will be a three-step change: (a) add the flag during extract-objc, (b) consume in `FfiTypeMapper` trait default methods, (c) remove per-emitter framework-name gates.
+    - No memory entry needs updating. The existing memory `os-object-use-objc-makes-gcd-types-appear-as-objc-objects-in-ir` already documents the underlying pattern; the new `emitter-contract.md` provides the prescriptive cross-emitter handling that the memory entry intentionally left to "potential long-term fix".
 - id: cf-struct-globals-from-corefoundation-absent-from-collected-ir
   title: CF struct globals from CoreFoundation absent from collected IR
   category: collection
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** low
@@ -68,6 +108,47 @@ tasks:
     `ffi-obj-ref` (or equivalent struct-data references). Audit blast radius across
     CoreFoundation and adjacent frameworks before merging — there may be a broader
     family of `kCF*CallBacks`-style struct globals.
+  results: |
+    **Outcome:** Already resolved — no code changes needed. The symptom in the task description ("absent from collected IR") no longer reproduces against current source. Closing as `done` with audit evidence.
+
+    **Evidence:**
+
+    1. **Collected IR:** `collection/ir/collected/CoreFoundation.json` already contains all 8 `kCF*CallBacks` struct globals (plus `kCFStringBinaryHeapCallBacks` from CFBinaryHeap.h that the original task description missed):
+       ```
+       kCFCopyStringBagCallBacks         → struct CFBagCallBacks
+       kCFCopyStringDictionaryKeyCallBacks → struct CFDictionaryKeyCallBacks
+       kCFCopyStringSetCallBacks         → struct CFSetCallBacks
+       kCFStringBinaryHeapCallBacks      → struct CFBinaryHeapCallBacks
+       kCFTypeArrayCallBacks             → struct CFArrayCallBacks
+       kCFTypeBagCallBacks               → struct CFBagCallBacks
+       kCFTypeDictionaryKeyCallBacks     → struct CFDictionaryKeyCallBacks
+       kCFTypeDictionaryValueCallBacks   → struct CFDictionaryValueCallBacks
+       kCFTypeSetCallBacks               → struct CFSetCallBacks
+       ```
+       Each is correctly typed `TypeRefKind::Struct { name }` (the routing prerequisite for the `ffi-obj-ref` emit path).
+
+    2. **Generated output:** `generation/targets/racket-oo/generated/oo/corefoundation/constants.rkt` emits each as
+       `(define kCFTypeDictionaryKeyCallBacks (ffi-obj-ref 'kCFTypeDictionaryKeyCallBacks _fw-lib))` with contract `cpointer?` — exactly the address-of form required by the "Struct globals need address-of; pointer globals need dereference" rule from memory.
+
+    3. **Regression coverage:** `generation/crates/emit-racket-oo/src/emit_constants.rs:557-576` has `test_struct_typedef_global_uses_ffi_obj_ref` which exercises `kCFTypeDictionaryKeyCallBacks` with the exact `TypeRefKind::Struct { name: "CFDictionaryKeyCallBacks" }` shape. All 24 emit_constants tests pass.
+
+    **Blast-radius audit (per task scope):** Across all 283 frameworks, struct-typed global constants are extracted and emit through the same `is_struct_data_symbol → ffi-obj-ref` path:
+    | Framework | Count |
+    |---|---|
+    | Security | 543 |
+    | CoreMedia | 27 |
+    | Foundation | 25 |
+    | libdispatch | 15 |
+    | CoreFoundation | 9 |
+    | CoreGraphics | 6 |
+    | MapKit / SceneKit / PCSC | 3 each |
+    | (15 more frameworks with 1–2 each) | ~28 |
+
+    Total: ~663 struct globals across 20 frameworks. None are in `skipped_symbols`. The earlier `_dispatch_main_q` work (canonical struct-global motivator) and the kCF*CallBacks regression test landed alongside the `is_struct_data_symbol` branch and `TypeRefKind::Struct` mapping for typedef'd record types.
+
+    **What this suggests next:** The task description in the backlog was written before the fix landed. Triage hygiene: when surfacing a task during a future racket-oo workaround sweep, verify the symptom against the *current* IR before promoting — the project's pipeline evolves under the task. The "Backlog task descriptions are hypotheses" memory entry already captures this lesson.
+
+    **No action items.** No follow-up backlog entries needed.
 - id: decide-llm-annotation-durability-strategy-after-medium-framework-calibration-run
   title: Decide LLM annotation durability strategy after medium-framework calibration run
   category: analysis

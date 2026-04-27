@@ -1,43 +1,17 @@
-id: session-35
-timestamp: 2026-04-27T13:20:25Z
+id: session-36
+timestamp: 2026-04-27T13:39:50Z
 phase: work
 body: |
-  ### Session 35 (2026-04-27T13:20:25Z) — Fix prompt-template issues and close two IR leak investigations
+  ### Session 36 (2026-04-27T13:39:50Z) — Emitter contract doc and backlog audit close two collection tasks
 
-  - **Attempted:** Three independent tasks: fix three prompt-template defects in
-    `llm-annotate-subagent.md` (surfaced by the first real PushKit subagent run),
-    and investigate/close two hypothesized IR leak classes (bare `c:@<name>` macro
-    USRs and anonymous-enum member leakage through extract-objc).
+  - **Attempted:** Two backlog tasks addressed — both closed as `done`.
 
   - **What worked:**
-    - All three prompt-template fixes were applied cleanly to
-      `analysis/scripts/llm-annotate-subagent.md`. Fix #1 repositioned SDK
-      headers as the primary annotation source with a clear rationale (SPA/JS
-      rendering limitation of developer.apple.com). Fix #2 added an explicit
-      getter/setter rule to eliminate ambiguity when both are flagged. Fix #3
-      added an `NSNotificationCenter addObserver:selector:name:object:` worked
-      example showing the `parameter_ownership` field shape.
-    - Leak class A investigation (bare `c:@<name>` USR leaks into `constants[]`)
-      audited all 13,091 constants across 252 frameworks against SDK `.tbd` exports.
-      Found only 2 genuine leaks; both have no common libclang-visible filter signal.
-      The original hypothesis (libclang emits macros with bare VarDecl USRs) was
-      wrong — bare `c:@<name>` is simply the VarDecl USR form. No extractor change
-      needed.
-    - Leak class B investigation (anonymous-enum members leaking into `constants[]`
-      via extract-objc) confirmed zero such leaks exist. `EnumDecl` children go into
-      `enums[].values`, not `constants[]`. The hypothesized asymmetry with
-      extract-swift is real but harmless — both paths converge correctly.
+    - `ir-annotation-for-os-object-use-objc-typed-gcd-handles`: Resolved via documentation path (Option B endorsed by the task's own priority justification). The OS_OBJECT_USE_OBJC pattern bites only one framework (libdispatch); the manual per-emitter gate is already in place and tested. Rather than adding an IR-level annotation, a new cross-emitter contract doc was written at `generation/docs/emitter-contract.md` and cross-referenced from two natural choke points: the `FfiTypeMapper` trait doc in `generation/crates/emit/src/ffi_type_mapping.rs` and the existing inline comment in `generation/crates/emit-racket-oo/src/emit_functions.rs`. `README.md` documentation index updated. All tests (`cargo test` + `cargo clippy`) pass clean.
+    - `cf-struct-globals-from-corefoundation-absent-from-collected-ir`: Already resolved — symptom did not reproduce. Full audit confirmed all 9 `kCF*CallBacks` struct globals are present in the collected IR and emitted correctly via the `is_struct_data_symbol → ffi-obj-ref` path. 663 struct globals across 20 frameworks are in scope; regression test `test_struct_typedef_global_uses_ffi_obj_ref` covers the key case. No code changes needed; closed with audit evidence.
 
-  - **What this suggests trying next:** `llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons`
-    is now unblocked. Good candidates are `Network`, `EventKit`, or URLSession-adjacent
-    frameworks whose `.methods.json` exercises all three annotation-reason categories
-    simultaneously.
+  - **What this suggests trying next:** LLM annotation calibration run on a medium framework (`llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons`) is the highest-priority unblocked item. Good candidates: `Network`, `EventKit`, or URLSession-adjacent material.
 
   - **Key learnings:**
-    - Both leak-class investigations were negative: the suspected paths do not exist
-      in the current extractor. Audit scripts confirmed exact counts (0 anonymous-enum
-      leaks, 2/13,091 genuine constant leaks — both without a shared filter signal).
-    - An adjacent find in leak class B: anonymous enum names in IR embed absolute SDK
-      paths (libclang synthetic names), which causes cosmetic IR diffs across Xcode
-      toolchains. Not a correctness issue, but worth normalizing if cross-toolchain
-      reproducibility ever matters.
+    - Backlog task descriptions are hypotheses against the state at the time they were written. The CF struct globals task was stale — always verify a symptom against *current* IR before promoting to a work cycle.
+    - The `generation/docs/emitter-contract.md` pattern (IR shape → mismatch → acceptable resolutions → cross-references → promote trigger) is the right template for future cross-language conventions (block lifecycle, error-pointer out-params, retain/release ownership).
