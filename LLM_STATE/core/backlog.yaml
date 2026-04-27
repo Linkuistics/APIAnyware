@@ -1,70 +1,9 @@
 tasks:
-- id: fix-three-prompt-template-issues-in-llm-annotate-subagent-md-before-medium-framework-run
-  title: Fix three prompt-template issues in llm-annotate-subagent.md before medium-framework run
-  category: analysis
-  status: done
-  dependencies: []
-  description: |
-    **Priority:** high
-
-    **Promoted from:** session 34 results (first real PushKit subagent run), prompt issues #1, #2, #3.
-
-    **Depends on:** `llm-annotation-first-real-subagent-run-on-pushkit` (done).
-
-    **Summary:** The first real subagent run surfaced three prompt-template defects that are cheap to fix now and will compound badly at scale (more methods × more frameworks). They must be applied before the medium-framework calibration run.
-
-    **Fix #1 — Make SDK headers the primary source (highest leverage).**
-    `WebFetch` on `developer.apple.com` returns only `<title>` — the site is a JS-rendered SPA. The subagent burned ~30s on a failed fetch before falling back to the SDK header, which was strictly more authoritative anyway (carries `weak`/`copy`/`assign`/`nullable` attributes and `///` doc comments that the web UI strips). Every framework will hit this. Update the prompt at `analysis/scripts/llm-annotate-subagent.md` to list SDK headers first and WebFetch as an optional secondary: "Look up the framework headers at `$SDKROOT/System/Library/Frameworks/<Framework>.framework/Headers/`. Use WebFetch on `developer.apple.com` only as a supplemental cross-check."
-
-    **Fix #2 — Explicit rule for property getter/setter pairs.**
-    The `delegate_observer_pattern` heuristic flags both `delegate` (getter) and `setDelegate:` (setter). `parameter_ownership` applies only to the setter (it describes backing-storage reference type via the setter's parameter). The subagent had to interpret the general "skip methods with no applicable annotations" instruction to correctly drop the getter. Add a one-line explicit rule to the prompt: "If a property getter and its corresponding setter are both flagged, annotate the setter only — property getters have no `parameter_ownership` or `block_parameters` surface."
-
-    **Fix #3 — Add a `parameter_ownership` worked example.**
-    The existing prompt example shows `block_parameters` field shape but not `parameter_ownership`. The subagent confirmed the correct field shape (`{"param_index": N, "ownership": "weak"}`) by reading `llm.rs` directly — an unnecessary round-trip that costs tokens. Add a one-line worked example for `parameter_ownership` alongside the existing `block_parameters` example.
-
-    **Reference:** `analysis/scripts/llm-annotate-subagent.md` is the prompt template to edit. The existing `block_parameters` example is the anchor for where to insert the `parameter_ownership` example.
-
-    **Acceptance criteria:** The three rules/examples are present in `llm-annotate-subagent.md`; a re-read of the prompt confirms all three are clear to a future subagent without requiring any SDK code lookups to interpret them.
-  results: |
-    **Done.** All three fixes applied to `analysis/scripts/llm-annotate-subagent.md`.
-
-    **What worked:**
-    - **Fix #1** rewrote the "How to decide" section so SDK headers at
-      `$SDKROOT/System/Library/Frameworks/{FRAMEWORK}.framework/Headers/` are
-      the primary source, with explicit reasoning (they carry
-      `weak`/`copy`/`assign`/`nullable` attributes and `///` doc comments that
-      developer.apple.com strips). `WebFetch` is now positioned as supplemental
-      cross-check only, with an explanation of why it commonly fails on the SPA
-      (returns only `<title>`).
-    - **Fix #2** added a one-line getter/setter rule below the "omit the field"
-      guidance. Placed under "How to decide" (not "Hard rules") because the
-      validator cannot decide which member of a getter/setter pair is "right";
-      this is decision guidance, not a validator-enforced rule.
-    - **Fix #3** added a second class (`NSNotificationCenter` /
-      `addObserver:selector:name:object:`) to the worked-example JSON,
-      demonstrating the `parameter_ownership` field shape
-      (`{"param_index": 0, "ownership": "weak"}`) alongside the existing
-      `block_parameters` example. Confirmed shape against
-      `analysis/crates/annotate/src/llm.rs` (lines 1029–1040).
-
-    **Acceptance criteria met:** the three rules/examples are present in
-    `llm-annotate-subagent.md`, and a re-read confirms all three are
-    self-explanatory without requiring SDK-code lookups to interpret.
-
-    **What this suggests next:** the dependent task
-    `llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons`
-    is now unblocked. That task should pick a framework whose
-    `.methods.json` exhibits all three annotation reason categories
-    simultaneously (block params + error out-params + delegate methods) —
-    candidates flagged in the task description are `Network`, `EventKit`, and
-    URLSession-adjacent material. The medium-framework run will be the first
-    real validation that the prompt scales beyond PushKit.
 - id: llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons
   title: LLM annotation calibration run on medium framework (mixed annotation reasons)
   category: analysis
   status: not_started
-  dependencies:
-  - fix-three-prompt-template-issues-in-llm-annotate-subagent-md-before-medium-framework-run
+  dependencies: []
   description: |
     **Priority:** medium
 
@@ -85,239 +24,6 @@ tasks:
     6. Record cost and any prompt corrections needed.
 
     **Acceptance criteria:** All three annotation reason categories produce non-empty LLM-sourced annotations in the merged output, with prompt issues (if any) resolved.
-- id: investigate-and-filter-bare-c-name-macro-usrs-leak-class-a
-  title: Investigate and filter bare `c:@<name>` macro USRs (leak class A)
-  category: collection
-  status: done
-  dependencies: []
-  description: |
-    **Priority:** low
-
-    **Surfaced by:** racket-oo Task #7 (migration of `ffi/*.rkt` to generated bindings)
-
-    **Symptom:** libclang sometimes exposes a macro through a naked `c:@<name>` USR
-    without the `@macro@` prefix. Neither the extract-objc nor extract-swift extractor
-    catches this form. Canary: `kAudioServicesDetailIntendedSpatialExperience`
-    (AudioToolbox, `AudioServices.h:401`, ObjC source).
-
-    **Suspected root cause:** libclang re-exposes certain `#define` macros as `VarDecl`
-    cursors with a `c:@<name>`-form USR rather than `EntityKind::MacroDefinition` —
-    possibly for macros that expand to a typed cast. The result lands in extracted IR
-    as a constant but has no dylib symbol, causing `get-ffi-obj` failure at runtime.
-
-    **Scope:** Audit extent across all frameworks before adding a filter. Confirm the
-    symbol is absent from the dylib via `dyld_info -exports`. Then decide: add a
-    denylist by name, add a libclang `is_definition()` / `get_linkage()` secondary
-    guard, or detect via failed `get_platform_availability()` + macro expansion path.
-    See memory entry "USR prefix families encode declaration origin — bare c:@<name>
-    macro variant" for the USR-family context.
-  results: |
-    **Decision: no filter needed. The hypothesis in the task description was wrong.**
-
-    ## Investigation method
-
-    Audited every `constants[]` entry in every collected framework JSON
-    (13,091 constants, 252 frameworks) against a substring search of every
-    `.tbd` file in the macOS SDK (interface tbd graph, including reexports).
-    Then re-audited treating CFSTR macros (`macro_value: Some(...)`) as
-    non-leaks since those carry their own value and are never resolved via
-    `get-ffi-obj`.
-
-    Audit script: `/tmp/audit_leak_a_v3.py` (kept under `/tmp/`, not committed).
-
-    ## What the audit found
-
-    | Category | Count |
-    |---|---|
-    | Total constants in IR | 13,091 |
-    | With dylib export anywhere in SDK tbd graph | 12,430 |
-    | No dylib export, but `macro_value` set (CFSTR macros — correctly extracted) | 659 |
-    | **Real leaks: no export AND no `macro_value`** | **2** |
-
-    The 2 real leaks:
-
-    1. `MLModelCollectionDidChangeNotification` (CoreML, USR `c:@MLModelCollectionDidChangeNotification`).
-       SDK header at `MLModelCollection.h:68` declares it as
-       `extern NSNotificationName const ... MODELCOLLECTION_SUNSET("...", macos(11.0, 14.4), ios(14.0, 17.4))`.
-       The `MODELCOLLECTION_SUNSET` macro has two definitions selected by
-       `__MAC_OS_X_VERSION_MIN_REQUIRED`. With our extractor's
-       `-mmacosx-version-min=10.15`, it expands to `API_DEPRECATED(macos(11.0, 14.4), ...)`,
-       not `API_UNAVAILABLE(macos)` — so `is_unavailable_on_macos` doesn't
-       catch it. But the symbol IS missing from the dylib (Apple stripped it
-       without setting the `obsoleted` availability field).
-    2. `rb_cCont` (Ruby, USR `c:@rb_cCont`).
-       `Ruby.framework/Versions/2.6/Ruby.tbd` lists ~20 `_rb_c*` exports
-       (`_rb_cArray`, `_rb_cClass`, `_rb_cTrueClass`, …) but not
-       `_rb_cCont`. Apple's bundled Ruby 2.6 has an inconsistency between
-       its public header (`ruby.h:1981`) and its tbd. There's no libclang
-       availability signal for this — purely an SDK packaging gap.
-
-    ## What the original hypothesis claimed
-
-    > libclang sometimes exposes a macro through a naked `c:@<name>` USR
-    > without the `@macro@` prefix.
-
-    False. Every macro in the SDK that libclang surfaces either:
-    - arrives as `EntityKind::MacroDefinition` with a `c:...@macro@<name>`
-      USR and is correctly handled by the existing `extract_cfstr_macro_constant`
-      path (with `macro_value` populated), or
-    - doesn't reach the `VarDecl` arm at all.
-
-    The bare `c:@<name>` USR shape is a `VarDecl`-form USR for genuine
-    `extern const` declarations. The original canary
-    `kAudioServicesDetailIntendedSpatialExperience` is itself an
-    `extern const CFStringRef` (not a macro) and is already correctly
-    filtered by `is_unavailable_on_macos` (it carries `API_UNAVAILABLE(macos)`).
-
-    ## Why no extractor-level filter
-
-    - The 2 remaining cases have no shared libclang-visible signal
-      (one has `deprecated` set without `obsoleted`; the other has no
-      availability metadata at all). A filter would need to be either a
-      name denylist or a tbd-export cross-check — both ugly, both worse
-      than a 0.015% leak rate.
-    - 2/13,091 constants is well below noise and well below the cost of
-      any filter mechanism. Downstream emitters that hit this at runtime
-      can denylist by name in their own constants emitter.
-    - The relevant comment in `extract_constant` already says preprocessor
-      `#define` macros arrive as `MacroDefinition`, not `VarDecl`. The
-      audit confirms this is true. No comment correction needed.
-
-    ## Suggested follow-ups (none required by this finding)
-
-    - If a future SDK update reveals more leaks in this category, re-run
-      the audit script (template kept in `/tmp/audit_leak_a_v3.py`).
-    - If a downstream Racket-OO sample app actually hits the
-      `MLModelCollectionDidChangeNotification` symbol, denylist it in the
-      per-language constants emitter — not in extract-objc.
-    - The `is_unavailable_on_macos` filter could be extended to consult
-      the `obsoleted` field of `PlatformAvailability` once Apple starts
-      setting it. Not relevant for the current 2 outliers (Apple didn't
-      set `obsoleted` for either).
-- id: investigate-and-filter-anonymous-enum-members-leaking-through-extract-objc-leak-class-b
-  title: Investigate and filter anonymous-enum members leaking through extract-objc (leak class B)
-  category: collection
-  status: done
-  dependencies: []
-  description: |
-    **Priority:** low
-
-    **Surfaced by:** racket-oo triage session 2026-04-15
-
-    **Symptom:** Anonymous-enum members with `c:@Ea@<dummy>@<member>` or
-    `c:@EA@<typedef>@<member>` USRs are correctly filtered by extract-swift's
-    `non_c_linkable_skip_reason` predicate, but may leak through the extract-objc
-    path if libclang surfaces them as `EnumConstantDecl` children of an anonymous
-    `EnumDecl`. Canary: `nw_browse_result_change_identical` (Network framework).
-
-    **Suspected root cause:** extract-objc's `EnumDecl` arm visits all children
-    regardless of whether the parent enum has a name. Anonymous enums produce
-    constants with no dylib symbol — their values are inlined at use sites — so
-    emitting them as `fw.constants` entries causes `get-ffi-obj` failure at runtime.
-
-    **Scope:** Confirm whether the canary appears in Network's `collected/*.json`
-    `constants` array (re-collect first). If so, add an anonymous-enum guard in
-    `extract_enum` (check `entity.get_name().is_none()` or USR prefix) and record
-    skipped members via `skipped_symbol_reason::anonymous_enum_member`. Audit blast
-    radius across all frameworks before merging. The extract-swift filter already
-    catches the same symbols from that path; the fix closes the extract-objc gap so
-    both paths are symmetric.
-  results: |
-    **Decision: no filter needed. The hypothesis in the task description was wrong.**
-
-    ## Investigation method
-
-    1. Confirmed the canary `nw_browse_result_change_identical` lives in
-       Network's IR. It appears:
-       - In `enums[]` as a value of an anonymous enum (parent name is the
-         libclang synthetic `enum (unnamed at <path>:56:1)`).
-       - In `skipped_symbols[]` with `kind: "constant"` and reason
-         `anonymous_enum_member` — recorded by extract-swift's
-         `non_c_linkable_skip_reason` filter at
-         `extract-swift/src/declaration_mapping.rs:149`.
-       - **Not** in `constants[]`.
-
-    2. Audited every `constants[]` entry across all 252 frameworks
-       (13,091 constants) for USRs starting with `c:@Ea@` or `c:@EA@`
-       (the anonymous-enum USR families). **Zero matches.**
-
-    3. Inspected the racket-oo emitter's enum file:
-       `generation/targets/racket-oo/generated/oo/network/enums.rkt`
-       contains `(define nw_browse_result_change_identical 1)`. Enum values
-       render as Racket-level integer defines — no `get-ffi-obj` lookup,
-       no runtime failure.
-
-    Audit script: `/tmp/audit_leak_b.py` (kept under `/tmp/`).
-
-    ## Why the hypothesized leak doesn't happen
-
-    `extract-objc`'s `EnumDecl` arm at
-    `extract_declarations.rs` visits enum children and puts them into
-    `enums[].values`, not `constants[]`. The `VarDecl` arm at line 141 only
-    fires for `extern const` declarations, never for enum members. So
-    extract-objc never has the chance to leak anonymous-enum members into
-    `constants[]` — they go through a different emission path.
-
-    The original task suspected:
-    > extract-objc's `EnumDecl` arm visits all children regardless of
-    > whether the parent enum has a name. Anonymous enums produce constants
-    > with no dylib symbol — their values are inlined at use sites — so
-    > emitting them as `fw.constants` entries causes `get-ffi-obj` failure
-    > at runtime.
-
-    The first sentence is correct. The second is wrong: the children become
-    **enum values**, not **constants**. Enum values do not produce
-    `get-ffi-obj` calls in any current emitter (they render as Racket
-    `define` of integers via `emit_enums.rs`).
-
-    ## Quantified anonymous-enum surface
-
-    | Stat | Value |
-    |---|---|
-    | Constants with anonymous-enum USR | 0 |
-    | Anonymous enums in `enums[]` across all frameworks | 1,085 |
-    | Total members in those anonymous enums | 10,083 |
-    | Frameworks with at least one anonymous enum | 50 (Security 169, AudioToolbox 190, ApplicationServices 171…) |
-
-    All 10,083 members render correctly as Racket integer defines today.
-
-    ## What the existing infrastructure already does correctly
-
-    - `extract-swift/src/declaration_mapping.rs:143` (`non_c_linkable_skip_reason`)
-      drops anonymous-enum members from extract-swift's constants emission
-      using the `c:@Ea@` / `c:@EA@` USR prefix as the discriminator. Tests
-      cover this at `extract-swift/tests/extract_network.rs:129` and
-      `declaration_mapping.rs:481` / `:630`.
-    - `extract-objc`'s `EnumDecl` arm puts members into `enums[].values`,
-      which is the correct shape for the Racket emitter.
-    - `emit-racket-oo/src/emit_enums.rs:18-19` renders every enum value as
-      `(define <name> <value>)`, parent-named or not.
-
-    The "asymmetry" the task description worried about (extract-objc and
-    extract-swift behaving differently) is real but harmless: they
-    correctly handle the same source declarations through different IR
-    shapes that converge to the same downstream behavior.
-
-    ## Adjacent finding (not in scope, but worth flagging)
-
-    Anonymous enum names in IR carry an absolute SDK path, e.g.:
-
-        "name": "enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Network.framework/Headers/browse_result.h:56:1)"
-
-    This path is libclang's diagnostic synthetic name. It leaks into
-    generated output as a comment line in `enums.rkt`. If a developer
-    points `xcrun --show-sdk-path` at a different toolchain (Xcode-beta,
-    sideloaded Xcode, CI image with relocated developer dir), the IR diff
-    changes for cosmetic reasons only. A future cleanup task could
-    normalize the synthetic name to a stable form like
-    `<sdk-relative-header>:<line>:<col>`. Out of scope for this task.
-
-    ## Suggested next
-
-    - Promote the SDK-path normalization for anonymous-enum names to a new
-      backlog task only if reproducibility-of-IR matters across
-      Xcode-beta/CI environments (currently it doesn't appear to bite).
-    - Otherwise: this leak class is closed; no extractor change needed.
 - id: ir-annotation-for-os-object-use-objc-typed-gcd-handles
   title: IR annotation for OS_OBJECT_USE_OBJC-typed GCD handles
   category: collection
@@ -362,3 +68,29 @@ tasks:
     `ffi-obj-ref` (or equivalent struct-data references). Audit blast radius across
     CoreFoundation and adjacent frameworks before merging — there may be a broader
     family of `kCF*CallBacks`-style struct globals.
+- id: decide-llm-annotation-durability-strategy-after-medium-framework-calibration-run
+  title: Decide LLM annotation durability strategy after medium-framework calibration run
+  category: analysis
+  status: not_started
+  dependencies:
+  - llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons
+  description: |
+    **Priority:** medium
+
+    **Depends on:** `llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons`
+
+    **Summary:** Both `analysis/ir/annotated/` and `analysis/ir/llm-annotations/` are gitignored. Fresh clones must re-run the LLM annotation pipeline to reproduce annotated IR. The cost anchor from PushKit (2-method framework) is ~54k tokens / ~2 min / 23 tool uses. The medium-framework calibration run will establish per-framework cost at scale, which is the key data point needed to choose a durability strategy.
+
+    **Options to evaluate:**
+    - **(A) Check in `.llm.json` files as source-of-truth** and re-run `annotate --llm-dir` on clone — low storage cost, free re-merge, `.llm.json` stays versioned alongside framework changes. Preferred if per-framework cost is non-trivial (>$0.05).
+    - **(B) Un-ignore `analysis/ir/annotated/`** — no re-run cost on clone but risks merge conflicts as IR evolves across SDK updates and extractor changes.
+    - **(C) Accept ephemerality and document re-run requirement** — viable only if the full-pipeline cost stays under ~$0.10 USD total (not per-framework).
+
+    **Reference:** Memory entry `llm-annotation-durability-llm-json-files-are-gitignored-decide-before-foundation-run` for rationale and cost anchor.
+
+    **Steps:**
+    1. Read the calibration run's cost and token usage for the medium framework.
+    2. Extrapolate to the Foundation framework (large — hundreds of methods) and the full framework set (~252 frameworks, skipping those with zero LLM-extractable methods).
+    3. Pick an option, update `.gitignore` accordingly, and document the decision in `analysis/scripts/llm-annotate-orchestration.md`.
+
+    **Acceptance criteria:** `.gitignore` updated to reflect the chosen strategy; re-run requirement (or absence thereof) documented in the orchestration script.
