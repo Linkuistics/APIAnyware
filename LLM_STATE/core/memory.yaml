@@ -373,3 +373,15 @@ entries:
     general formula: `racket-app/ + (entry.parent() - source_root)`. Encoded in
     `bundle-racket-oo::bundle::derive_script_resource_dir`; hardcoding it (the
     pre-2026-04-18 behavior) blocks non-sample-app layouts.
+- id: define-objc-subclass-macro-lives-in-runtime-objc-subclass-rkt
+  title: define-objc-subclass macro lives in runtime/objc-subclass.rkt
+  body: |
+    `define-objc-subclass` in `runtime/objc-subclass.rkt` declares ObjC subclasses from Racket. `drawing-canvas` in the sample apps is the canonical consumer pattern. Required when a Racket app must subclass an ObjC class (e.g., to provide a custom NSView delegate or override lifecycle methods).
+- id: hello-window-is-canonical-bundler-integration-demo
+  title: hello-window is canonical bundler integration demo
+  body: |
+    `hello-window` is the designated app for bundler integration tests and the developer guide entry point. Do not replace it with another sample app for these roles. Other sample apps (mini-browser, note-editor, modaliser, etc.) serve as portfolio demos only.
+- id: protocol-inherited-methods-missing-from-class-ir
+  title: Protocol-inherited methods missing from class IR
+  body: |
+    Methods that a class inherits via protocol conformance (not direct declaration) are currently missing from the IR — the collector does not traverse the protocol inheritance graph to attach methods to conforming classes. Surfaced during Modaliser development. Core backlog task: "Protocol-inherited methods missing from class IR". Affects any language target that relies on the IR for method dispatch rather than runtime introspection.
