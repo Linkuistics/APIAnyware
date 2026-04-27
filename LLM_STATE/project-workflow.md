@@ -14,7 +14,7 @@ Modaliser as the capstone proving a target's bindings are production-ready.
 
 ## Plans and Progress
 
-Plans use the backlog format described in `../LLM_CONTEXT/README.md`. Each plan
+Plans use the backlog format described in `../Ravel-Lite/README.md`. Each plan
 has a continuation prompt you copy to start a session.
 
 - `LLM_STATE/overview.md` — at-a-glance status dashboard
@@ -24,7 +24,7 @@ has a continuation prompt you copy to start a session.
 Core pipeline and target plans are independent. If a target needs a pipeline feature,
 it marks a task as `blocked` with a dependency on the core plan.
 
-To create a new plan, follow `../LLM_CONTEXT/create-plan.md`.
+To create a new plan, follow `../Ravel-Lite/defaults/create-plan.md`.
 
 ## The Knowledge System
 
@@ -87,7 +87,7 @@ When app/generation work reveals pipeline bugs:
 
 ## Coding Standards
 
-See `../LLM_CONTEXT/fixed-memory/coding-style.md` and `../LLM_CONTEXT/fixed-memory/coding-style-rust.md`.
+See `../Ravel-Lite/defaults/fixed-memory/coding-style.md` and `../Ravel-Lite/defaults/fixed-memory/coding-style-rust.md`.
 
 Key points: TDD, descriptive names, small files, `thiserror`/`anyhow`, `tracing`,
 bounded channels, no `unwrap`/`expect`, `cargo +nightly fmt`.

@@ -22,7 +22,7 @@ Collection ──► Analysis ──► Generation
 
 ## Current Status
 
-The full pipeline is implemented and working end-to-end. The first language target, **Racket OO**, is substantially complete: 283 frameworks generated (~7,500 files), 4 of 7 sample apps implemented, app bundling via proper macOS `.app` bundles (correct `CFBundleName` and per-app TCC identity), and 249 Rust + 64 Swift tests covering the pipeline.
+The full pipeline is implemented and working end-to-end. The first language target, **Racket OO**, is substantially complete: 283 frameworks generated (~7,500 files), all 8 sample apps in the portfolio implemented, app bundling via proper macOS `.app` bundles (correct `CFBundleName` and per-app TCC identity), and 249 Rust + 64 Swift tests covering the pipeline.
 
 All other language targets (Chez Scheme, Gerbil, Common Lisp, Haskell, Idris2, OCaml, Prolog/Mercury, Rhombus, Pharo Smalltalk, Zig) are planned but not yet started.
 

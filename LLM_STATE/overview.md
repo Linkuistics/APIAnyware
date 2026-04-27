@@ -12,7 +12,7 @@ At-a-glance view of the project. Updated at session boundaries.
 Each plan directory contains `backlog.md` (task backlog), `session-log.md` (history),
 `memory.md` (distilled learnings), `phase.md` (current phase), `prompt-{work,reflect,triage}.md`
 (phase prompts), and `run.sh` (generic cycle driver).
-See `../LLM_CONTEXT/README.md` for the phase cycle spec.
+See `../Ravel-Lite/README.md` for the phase cycle spec.
 
 ## Core Pipeline
 

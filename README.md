@@ -394,7 +394,7 @@ APIAnyware-MacOS/
 
 | Language | Style(s) | Status |
 |---|---|---|
-| Racket OO | OO (classes) | Emitter complete, 283 frameworks generated, 4/7 sample apps, snapshot tests, app bundling |
+| Racket OO | OO (classes) | Emitter complete, 283 frameworks generated, 8/8 sample apps, snapshot tests, app bundling |
 | Racket Functional | Functional (procedures) | Crate registered, stub emitter |
 | Chez Scheme | Functional | Planned (Swift dylib stub exists) |
 | Gerbil Scheme | OO + functional | Planned (Swift dylib stub exists) |

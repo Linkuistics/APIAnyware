@@ -10,7 +10,7 @@ This template is for `backlog.md` only. Each target plan directory also needs:
 - `prompt-work.md`, `prompt-reflect.md`, `prompt-triage.md` — phase prompts
 - `run.sh` — generic cycle driver (identical across all plans)
 
-See `../LLM_CONTEXT/README.md` for the full plan directory structure and phase cycle.
+See `../Ravel-Lite/README.md` for the full plan directory structure and phase cycle.
 
 ```
 Language: {display name}

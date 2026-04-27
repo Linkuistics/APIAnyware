@@ -8,7 +8,7 @@ Step-by-step guide for adding a language target to APIAnyware-MacOS.
 
 > **Knowledge system:** After creating a target, populate `knowledge/targets/{target}.md`
 > with learnings. Run `./LLM_STATE/targets/{target}/run.sh` to start the three-phase
-> work cycle (see `../LLM_CONTEXT/README.md`).
+> work cycle (see `../Ravel-Lite/README.md`).
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ Step-by-step guide for adding a language target to APIAnyware-MacOS.
 ## Step 1: Plan the target
 
 Create the plan directory `LLM_STATE/targets/{target}/` with four files by following
-`../LLM_CONTEXT/create-plan.md`. Start with `backlog.md` by instantiating
+`../Ravel-Lite/defaults/create-plan.md`. Start with `backlog.md` by instantiating
 `LLM_STATE/targets/template.md`:
 
 1. Copy the template structure into `backlog.md`

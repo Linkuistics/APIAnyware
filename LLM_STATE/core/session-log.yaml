@@ -1589,3 +1589,18 @@ sessions:
       - `printed_name` qualification catches label overloads but not type overloads. The ObjC analog (`{owner}.{selector}`) is actually stronger because selectors in ObjC encode the full parameter structure — Swift's `printed_name` hides parameter types entirely.
       - Design-doc example JSON matters: `docs/specs/2026-03-26-macos-workspace-design.md` had a `"framework": "Foundation"` example that needed updating to `"name"` alongside the code change. Doc examples that show wire format are a hidden coupling surface.
       - `foundation_serializes_to_json` is a subtle test shape: it pinned the JSON *key* directly rather than going through the struct field. Tests that assert on `serde_json::to_string` output are tightly coupled to the wire format and must be updated in lockstep with serde annotations.
+- id: 2026-04-27-modaliser-fold-portfolio-complete-ravel-lite-migration
+  timestamp: 2026-04-27T08:55:10Z
+  phase: work
+  body: |
+    ### Session 31 (2026-04-27T08:55:10Z) — Fold Modaliser, complete sample-app portfolio, migrate to Ravel-Lite
+
+    - Folded the peer Modaliser-Racket project into this repo under `generation/targets/racket-oo/apps/modaliser/` (40+ source files: core state machine, FFI layer, UI, services, tests, bundle scripts). Bindings symlinks (`generated`, `lib`, `runtime`) corrected from absolute-style `../../APIAnyware-MacOS/` paths to repo-relative `../../../` paths.
+    - Completed the sample-app portfolio: added Mini Browser (`mini-browser/mini-browser.rkt`, 302 lines), Note Editor (`note-editor/note-editor.rkt`, 521 lines), and Modaliser as capstone — portfolio now at 8/8 planned apps. Retired four scaffolding apps (`counter/`, `file-lister/`, `menu-bar-tool/`, `text-editor/`); `hello-window` established as canonical demo for bundler integration tests and developer guide.
+    - Added `runtime/objc-subclass.rkt` (287 lines) with `define-objc-subclass` macro; rewrote `drawing-canvas` as the canonical consumer.
+    - Landed a comprehensive developer guide (`generation/targets/racket-oo/docs/developer-guide.md`, 833 lines) covering the full bindings usage surface.
+    - Bootstrapped website content (`website/index.md`, `website/meta.yml`).
+    - Migrated all LLM_STATE plan files to typed YAML format (ravel-lite); created per-app state directory `LLM_STATE/apps/modaliser-racket/`. Path references throughout LLM_STATE documentation migrated from `LLM_CONTEXT/` to `Ravel-Lite/`.
+    - Improved Rust generation crates: `bundle-racket-oo` gained Info.plist override support and stable codesigning tests; `stub-launcher` gained codesigning module; `emit-racket-oo` golden tests expanded with 7 new snapshot files.
+    - Promoted 5 collection/emission gap tasks to the core backlog (bare c:@<name> macro USR filter, anonymous-enum leak, GCD OS_OBJECT annotation, CF struct globals, protocol-inherited methods) — all surfaced during app development; all not_started, low-to-medium priority.
+    - What this suggests trying next: run the triage cycle to assign priority to the 5 new core tasks; Modaliser live VM shake-down (modaliser-racket backlog Task 26 Step 6) gated on GUIVisionVMDriver spec-v1 log tailer support.

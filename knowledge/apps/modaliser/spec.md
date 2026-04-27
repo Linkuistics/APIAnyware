@@ -24,7 +24,7 @@ they exercise.
 - Theme customisation
 
 ## Specification
-_Derived from the working POC at `../Modaliser`. To be filled in by cataloguing
+_Derived from the working POC at `{{DEV_ROOT}}/Modaliser`. To be filled in by cataloguing
 all features and behaviours from the POC, abstracting away Swift/Scheme-specific
 implementation details._
 
@@ -43,7 +43,7 @@ neighbouring files:
 _To be defined during spec derivation._
 
 ## Reference Implementation
-The POC at `../Modaliser` is a working Swift app with LispKit (Scheme) scripting.
+The POC at `{{DEV_ROOT}}/Modaliser` is a working Swift app with LispKit (Scheme) scripting.
 It is the authoritative source for behaviour, features, and UX expectations.
 
 The Racket-OO target's reference implementation lives at

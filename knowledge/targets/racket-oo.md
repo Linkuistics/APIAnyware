@@ -34,12 +34,12 @@ The bundling story is two crates:
 Build a sample-app bundle with:
 
 ```sh
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- file-lister
+cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
 ```
 
 Output: `apps/<name>/build/<App Name>.app` (gitignored). The display
-name is derived from the kebab-case script name (`file-lister` →
-`File Lister`); the bundle id is `com.linkuistics.<NoSpaceTitle>`.
+name is derived from the kebab-case script name (`hello-window` →
+`Hello Window`); the bundle id is `com.linkuistics.<NoSpaceTitle>`.
 
 Layout convention inside `Resources/racket-app/` mirrors the source
 tree: `apps/<name>/<name>.rkt` for the entry, sibling `runtime/`,

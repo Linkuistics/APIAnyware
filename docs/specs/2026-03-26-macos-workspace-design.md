@@ -106,8 +106,11 @@ APIAnyware-MacOS/
   .claude/commands/                       # Claude Code commands for LLM analysis
     analyze.md                            # /analyze — annotate all frameworks
   LLM_STATE/                              # plan files for Claude Code sessions
-  LLM_CONTEXT/                            # coding style, project instructions
 ```
+
+The Ravel-Lite runner (peer project at `{{DEV_ROOT}}/Ravel-Lite/`) drives
+the multi-phase work cycle and supplies the universal coding-style and
+phase-prompt material that LLM_STATE plans reference.
 
 ---
 
