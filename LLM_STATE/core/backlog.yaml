@@ -2,7 +2,7 @@ tasks:
 - id: llm-annotation-first-real-subagent-run-on-pushkit
   title: LLM annotation first real subagent run on PushKit
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** high
@@ -21,6 +21,57 @@ tasks:
     5. Record token count and wall time in the cost-tracking table in `analysis/scripts/llm-annotate-orchestration.md`.
 
     **Acceptance criteria:** A real subagent-produced `PushKit.llm.json` that passes `llm-validate` and whose annotations survive the merge step, with cost recorded.
+  results: |
+    **Outcome:** PushKit LLM annotation pipeline proven end-to-end with a real Claude Code subagent. Acceptance criteria met:
+    - Real subagent-produced `analysis/ir/llm-annotations/PushKit.llm.json` (replaces hand-crafted fixture).
+    - Passes `llm-validate` (re-validated independently by orchestrator after subagent reported success).
+    - Annotation survives the merge: `analysis/ir/annotated/PushKit.json` contains `setDelegate:` with `parameter_ownership[0] = weak` and `source: "llm"`.
+    - `enrich --only PushKit` passes verification (no new violations introduced).
+    - Cost row appended to `analysis/scripts/llm-annotate-orchestration.md` (table header changed from `tokens (in/out)` to `tokens (total)` because subagent dispatch reports a single `total_tokens` figure, not separate in/out).
+
+    **Run metrics (first real subagent run):**
+
+    | Field | Value |
+    |---|---|
+    | Framework | PushKit |
+    | Flagged methods in summary | 2 (`PKPushRegistry.delegate`, `PKPushRegistry.setDelegate:`) |
+    | Annotated by subagent | 1 (`setDelegate:` → `weak`) |
+    | Deliberately skipped | 1 (`delegate` getter — no schema field applies to a property getter) |
+    | Total tokens | 54,327 |
+    | Tool uses | 23 |
+    | Wall time (subagent self-report) | ~2m 9s |
+    | Validator | passed |
+    | Merge `source: "llm"` count | 1 |
+    | Enrich verification | passed |
+
+    **What worked:**
+    - The orchestration loop is exactly as documented: extract summary → dispatch subagent → subagent writes + self-validates → orchestrator runs `annotate --llm-dir` → `enrich`. No tooling changes needed for the small-framework case.
+    - Read-precedence (`human_reviewed` > `llm` > `heuristic`) handled the merge transparently — the LLM `weak` annotation appears in the output without colliding with heuristic output.
+    - Subagent self-validation (the `llm-validate` step inside the prompt) means the orchestrator only needs to re-validate as a sanity check, not as a fix loop.
+
+    **What didn't work / what to tighten before scaling:**
+
+    The subagent surfaced five concrete prompt-template issues — none blocked PushKit, but several will compound badly across hundreds of frameworks:
+
+    1. **`WebFetch` is unusable on `developer.apple.com`.** The site is a JS-rendered SPA and returns only the `<title>` element to WebFetch. The subagent burned its first ~30s on a failed fetch before falling back to the SDK header at `/Applications/Xcode.app/.../MacOSX.sdk/System/Library/Frameworks/<F>.framework/Headers/`. The header was strictly more authoritative anyway (carries `weak`/`copy`/`assign`/`nullable` attributes plus `///` doc comments). **Recommendation:** the subagent prompt should make SDK headers the *primary* source and treat WebFetch as the fallback, not the other way around. This is the highest-leverage fix — every framework will hit this.
+
+    2. **Property getters are flagged alongside their setters but have no annotation surface.** The `delegate_observer_pattern` regex flags both `delegate` and `setDelegate:`. `parameter_ownership` is only meaningful on the setter (it describes the backing storage's reference type, expressible only via the setter's parameter). The subagent had to *interpret* the rule "skip methods you have no annotations for" to drop the getter. **Recommendation:** either filter property getters out of `llm-extract` when their setter is also flagged, or add a one-line rule to the prompt: "Property getters paired with a flagged setter should be skipped — annotate the setter only."
+
+    3. **Schema example only shows `block_parameters`.** The prompt's worked example doesn't show the field shape for `parameter_ownership` (`{"param_index": N, "ownership": "weak"}`). The subagent confirmed the field name by reading `llm.rs`. Adding a one-line example for each annotation type to the prompt removes that round-trip and shrinks token spend.
+
+    4. **No schema slot for return-value ownership.** A delegate *getter* returns a non-retained reference, but the schema only carries `parameter_ownership`. Not a blocker for PushKit; will become real once `dataSource`/`target`/`assignTo:` getters appear in larger frameworks. Worth a backlog entry for schema extension if downstream emitters need it.
+
+    5. **Threading semantics: method-call vs callback firing.** PushKit's `threading` field describes when the *method itself* may be called, but for block-heavy frameworks the more interesting question is when *the block fires*. A future medium-framework run may need a separate `callback_threading` slot or an explicit clarification in the prompt.
+
+    **What this suggests next:**
+
+    - **Before the medium-framework calibration task** (`llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons`), apply fixes #1, #2, #3 to the subagent prompt. They're cheap, isolated, and will prevent the medium-framework subagent from re-burning time on the same issues at higher token cost (block-heavy frameworks have more methods → more wall time × more bad WebFetches).
+    - Items #4 and #5 are schema/design questions, not prompt fixes. Defer to the medium-framework run to confirm whether they bite in practice — promote to backlog only if real symptoms surface.
+    - The cost-table row format (single `total_tokens` figure) should be confirmed as adequate. If future runs need separated input/output tokens for budgeting, the dispatch interface would need to surface them.
+
+    **Memory candidates** (for the analyse/reflect phase to consider promoting):
+    - *"Apple developer docs are JS-rendered; SDK headers are the authoritative LLM-annotation source."* This is a load-bearing operational fact for every future LLM annotation run.
+    - *"Subagent first-run cost shape: ~54k tokens / ~2 min for a 2-method framework."* Useful as the anchor for budget extrapolation when sizing batches of larger frameworks.
 - id: llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons
   title: LLM annotation calibration run on medium framework (mixed annotation reasons)
   category: analysis
@@ -145,3 +196,29 @@ tasks:
     `ffi-obj-ref` (or equivalent struct-data references). Audit blast radius across
     CoreFoundation and adjacent frameworks before merging — there may be a broader
     family of `kCF*CallBacks`-style struct globals.
+- id: fix-three-prompt-template-issues-in-llm-annotate-subagent-md-before-medium-framework-run
+  title: Fix three prompt-template issues in llm-annotate-subagent.md before medium-framework run
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** high
+
+    **Promoted from:** session 34 results (first real PushKit subagent run), prompt issues #1, #2, #3.
+
+    **Depends on:** `llm-annotation-first-real-subagent-run-on-pushkit` (done).
+
+    **Summary:** The first real subagent run surfaced three prompt-template defects that are cheap to fix now and will compound badly at scale (more methods × more frameworks). They must be applied before the medium-framework calibration run.
+
+    **Fix #1 — Make SDK headers the primary source (highest leverage).**
+    `WebFetch` on `developer.apple.com` returns only `<title>` — the site is a JS-rendered SPA. The subagent burned ~30s on a failed fetch before falling back to the SDK header, which was strictly more authoritative anyway (carries `weak`/`copy`/`assign`/`nullable` attributes and `///` doc comments that the web UI strips). Every framework will hit this. Update the prompt at `analysis/scripts/llm-annotate-subagent.md` to list SDK headers first and WebFetch as an optional secondary: "Look up the framework headers at `$SDKROOT/System/Library/Frameworks/<Framework>.framework/Headers/`. Use WebFetch on `developer.apple.com` only as a supplemental cross-check."
+
+    **Fix #2 — Explicit rule for property getter/setter pairs.**
+    The `delegate_observer_pattern` heuristic flags both `delegate` (getter) and `setDelegate:` (setter). `parameter_ownership` applies only to the setter (it describes backing-storage reference type via the setter's parameter). The subagent had to interpret the general "skip methods with no applicable annotations" instruction to correctly drop the getter. Add a one-line explicit rule to the prompt: "If a property getter and its corresponding setter are both flagged, annotate the setter only — property getters have no `parameter_ownership` or `block_parameters` surface."
+
+    **Fix #3 — Add a `parameter_ownership` worked example.**
+    The existing prompt example shows `block_parameters` field shape but not `parameter_ownership`. The subagent confirmed the correct field shape (`{"param_index": N, "ownership": "weak"}`) by reading `llm.rs` directly — an unnecessary round-trip that costs tokens. Add a one-line worked example for `parameter_ownership` alongside the existing `block_parameters` example.
+
+    **Reference:** `analysis/scripts/llm-annotate-subagent.md` is the prompt template to edit. The existing `block_parameters` example is the anchor for where to insert the `parameter_ownership` example.
+
+    **Acceptance criteria:** The three rules/examples are present in `llm-annotate-subagent.md`; a re-read of the prompt confirms all three are clear to a future subagent without requiring any SDK code lookups to interpret them.

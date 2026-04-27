@@ -1638,3 +1638,14 @@ sessions:
     - **What was NOT done:** Actual subagent dispatch producing a real `.llm.json` was deferred — the orchestration doc is the executable artifact; real token spend waits for user decision.
     - **What this suggests next:** Run the first real subagent dispatch on PushKit (2 methods, small cost), record tokens + wall time in the orchestration doc table. Once proven, run a medium framework, then Foundation for the original acceptance target.
     - **Key learnings:** Separating serde-level structural validation (done automatically) from semantic cross-referencing (the validator's job) kept the validator focused and testable without reinventing JSON schema checks.
+- id: session-34
+  timestamp: 2026-04-27T12:37:23Z
+  phase: work
+  body: |
+    ### Session 34 (2026-04-27T12:37:23Z) — PushKit LLM annotation first real subagent run
+
+    - **Attempted:** Ran the full LLM annotation pipeline end-to-end on PushKit using a real Claude Code subagent, replacing the hand-crafted fixture with a subagent-produced `PushKit.llm.json`.
+    - **What worked:** All acceptance criteria met. Subagent produced a valid `.llm.json` (`setDelegate:` annotated `weak`), `llm-validate` passed, annotation survived the merge step (`source: "llm"` in `annotated/PushKit.json`), and `enrich --only PushKit` passed verification. Cost row appended to `llm-annotate-orchestration.md` (table header updated from `tokens (in/out)` to `tokens (total)` — subagent dispatch surfaces a single total figure). Run cost: 54,327 tokens / ~2m 9s / 23 tool uses.
+    - **What didn't work:** Five prompt-template issues surfaced. None blocked PushKit but will compound at scale: (1) `WebFetch` on `developer.apple.com` returns only `<title>` (JS-rendered SPA); SDK headers are the authoritative source and should be primary in the prompt. (2) Property getters are flagged alongside setters but have no annotation surface — subagent had to infer to skip the getter. (3) The schema example only shows `block_parameters`; `parameter_ownership` field shape wasn't illustrated, causing a round-trip to `llm.rs`. (4) No schema slot for return-value ownership. (5) `threading` field describes method-call timing, not callback-firing timing — relevant for block-heavy frameworks.
+    - **What this suggests next:** Apply prompt fixes for issues #1, #2, #3 before the medium-framework calibration run — cheap, isolated, and each missed WebFetch costs proportionally more on larger frameworks. Issues #4 and #5 are schema/design questions; defer until the medium-framework run confirms they surface in practice.
+    - **Key learnings:** Apple developer docs are JS-rendered and unusable via WebFetch; SDK headers at `MacOSX.sdk/System/Library/Frameworks/<F>.framework/Headers/` are strictly more authoritative (carry `weak`/`copy`/`assign`/`nullable` attributes plus doc comments). First real subagent cost anchor: ~54k tokens / ~2 min for a 2-method framework.

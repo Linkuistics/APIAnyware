@@ -137,6 +137,6 @@ collection logic change).
 After each real run, append a row to the table below so future runs can
 budget against measured numbers, not guesses.
 
-| Date | Framework(s) | Methods | Subagent tokens (in/out) | Wall time | Notes |
+| Date | Framework(s) | Methods | Subagent tokens (total) | Wall time | Notes |
 |---|---|---|---|---|---|
-| _to be measured on first end-to-end run_ |
+| 2026-04-27 | PushKit | 2 (1 annotated, 1 skipped) | 54,327 | ~2m 9s | First real subagent run. `setDelegate:` annotated `weak`; `delegate` getter deliberately skipped (no schema field applies to a property getter). WebFetch on `developer.apple.com` returned only `<title>`; subagent fell back to SDK header at `MacOSX.sdk/.../PushKit.framework/Headers/PKPushRegistry.h` and used the `weak` declaration there. `llm-validate` and `enrich` verification both passed. |
