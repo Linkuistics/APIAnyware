@@ -66,7 +66,7 @@ fn minimal_project(project_root: &Path, display: &str) -> (PathBuf, AppSpec) {
 
 #[test]
 fn default_app_spec_has_no_signing_identity() {
-    let spec = AppSpec::from_script_name("counter");
+    let spec = AppSpec::from_script_name("modaliser");
     assert!(spec.signing_identity.is_none());
 }
 

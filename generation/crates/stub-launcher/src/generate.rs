@@ -120,13 +120,13 @@ mod tests {
 
     fn test_config() -> StubConfig {
         StubConfig {
-            app_name: "Counter".to_string(),
+            app_name: "Hello Window".to_string(),
             runtime_path: "/opt/homebrew/bin/racket".to_string(),
             runtime_args: vec![],
             script_resource_name: "main".to_string(),
             script_resource_type: "rkt".to_string(),
             script_resource_dir: "racket-app".to_string(),
-            bundle_identifier: "com.example.Counter".to_string(),
+            bundle_identifier: "com.example.HelloWindow".to_string(),
             signing_identity: None,
         }
     }
@@ -175,7 +175,7 @@ mod tests {
     fn stub_source_handles_missing_script() {
         let source = generate_stub_source(&test_config());
         assert!(
-            source.contains("Counter: could not find main.rkt in app bundle"),
+            source.contains("Hello Window: could not find main.rkt in app bundle"),
             "should print an error if the script is not found"
         );
     }
@@ -184,7 +184,7 @@ mod tests {
     fn stub_source_handles_exec_failure() {
         let source = generate_stub_source(&test_config());
         assert!(
-            source.contains("Counter: exec failed"),
+            source.contains("Hello Window: exec failed"),
             "should print an error if execv returns (which means it failed)"
         );
     }
@@ -237,14 +237,14 @@ mod tests {
     fn info_plist_contains_bundle_name() {
         let plist = generate_info_plist(&test_config());
         assert!(plist.contains("<key>CFBundleName</key>"));
-        assert!(plist.contains("<string>Counter</string>"));
+        assert!(plist.contains("<string>Hello Window</string>"));
     }
 
     #[test]
     fn info_plist_contains_bundle_identifier() {
         let plist = generate_info_plist(&test_config());
         assert!(plist.contains("<key>CFBundleIdentifier</key>"));
-        assert!(plist.contains("<string>com.example.Counter</string>"));
+        assert!(plist.contains("<string>com.example.HelloWindow</string>"));
     }
 
     #[test]
@@ -255,7 +255,7 @@ mod tests {
             .expect("CFBundleExecutable key missing");
         let after = &plist[exec_pos..];
         assert!(
-            after.contains("<string>Counter</string>"),
+            after.contains("<string>Hello Window</string>"),
             "CFBundleExecutable must match app_name"
         );
     }

@@ -11,13 +11,13 @@
 //! use std::path::Path;
 //!
 //! let config = StubConfig {
-//!     app_name: "Counter".into(),
+//!     app_name: "Hello Window".into(),
 //!     runtime_path: "/opt/homebrew/bin/racket".into(),
 //!     runtime_args: vec![],
 //!     script_resource_name: "main".into(),
 //!     script_resource_type: "rkt".into(),
 //!     script_resource_dir: "racket-app".into(),
-//!     bundle_identifier: "com.example.Counter".into(),
+//!     bundle_identifier: "com.example.HelloWindow".into(),
 //!     signing_identity: None,
 //! };
 //!
@@ -35,7 +35,7 @@ pub use generate::{generate_info_plist, generate_stub_source};
 /// Configuration for generating a Swift stub launcher.
 #[derive(Debug, Clone)]
 pub struct StubConfig {
-    /// Display name of the application (e.g., "Counter").
+    /// Display name of the application (e.g., "Hello Window").
     /// Used as the bundle executable name and in error messages.
     pub app_name: String,
 

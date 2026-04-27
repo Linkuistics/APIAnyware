@@ -2,10 +2,10 @@
 //!
 //! Each sample app has a spec file whose first markdown H1 is the
 //! human-readable display name — `# UI Controls Gallery` for the
-//! `ui-controls-gallery` script, `# File Lister` for `file-lister`, and
-//! so on. Bundlers should prefer this over kebab→title conversion of the
-//! script name, because it preserves multi-letter acronyms (`UI`) and
-//! editorial casing the conversion can't recover.
+//! `ui-controls-gallery` script, `# Hello Window` for `hello-window`,
+//! and so on. Bundlers should prefer this over kebab→title conversion
+//! of the script name, because it preserves multi-letter acronyms
+//! (`UI`) and editorial casing the conversion can't recover.
 
 use std::fs;
 use std::path::Path;
@@ -75,8 +75,8 @@ mod tests {
     #[test]
     fn skips_leading_blank_lines() {
         let dir = TempDir::new().unwrap();
-        let p = write(dir.path(), "spec.md", "\n\n# Counter\n");
-        assert_eq!(read_display_name_from_spec(&p), Some("Counter".to_string()));
+        let p = write(dir.path(), "spec.md", "\n\n# Modaliser\n");
+        assert_eq!(read_display_name_from_spec(&p), Some("Modaliser".to_string()));
     }
 
     #[test]
@@ -94,10 +94,10 @@ mod tests {
     #[test]
     fn trims_whitespace_around_h1_text() {
         let dir = TempDir::new().unwrap();
-        let p = write(dir.path(), "spec.md", "#   File Lister   \n");
+        let p = write(dir.path(), "spec.md", "#   Hello Window   \n");
         assert_eq!(
             read_display_name_from_spec(&p),
-            Some("File Lister".to_string())
+            Some("Hello Window".to_string())
         );
     }
 }

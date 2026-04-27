@@ -147,7 +147,7 @@
 ;;
 ;; Install the standard application menu on `application` (typically the
 ;; result of `nsapplication-shared-application`). Pass the human-readable
-;; `app-name` (e.g. "File Lister") — it gets interpolated into "About",
+;; `app-name` (e.g. "Hello Window") — it gets interpolated into "About",
 ;; "Hide", and "Quit" item titles.
 (define (install-standard-app-menu! application app-name)
   (define main-menu (make-menu ""))

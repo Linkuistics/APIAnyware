@@ -13,7 +13,7 @@ The full three-phase pipeline (Collection, Analysis, Generation) is implemented 
 - **Collection** extracts 218 ObjC frameworks and 151 Swift modules from the macOS SDK, merging ObjC and Swift declarations into a unified IR.
 - **Analysis** runs Datalog-based inheritance resolution, heuristic + LLM semantic annotation (block lifecycle, ownership, threading, error patterns), API pattern recognition (10 stereotype categories, 36+ pattern instances in Foundation alone), and enrichment with verification.
 - **Generation** produces Racket OO bindings for all 283 discovered frameworks (312 files for Foundation alone, ~7,500 total), with a 7-file Racket runtime library and a Swift helper dylib providing C-callable ObjC runtime access.
-- **4 of 7 sample apps** are implemented for Racket OO: hello-window, counter, ui-controls-gallery, and file-lister. Sample apps can be packaged as proper macOS `.app` bundles (with correct `CFBundleName` and per-app TCC identity) via `apianyware-macos-bundle-racket-oo`.
+- **All 8 active sample apps** in the portfolio (per `knowledge/apps/_index.md` and `docs/specs/2026-04-16-sample-app-portfolio-design.md`) are implemented for Racket OO. Sample apps can be packaged as proper macOS `.app` bundles (with correct `CFBundleName` and per-app TCC identity) via `apianyware-macos-bundle-racket-oo`.
 - **Racket Functional** emitter crate exists as a registered stub; not yet implemented.
 - **Snapshot tests** use a synthetic TestKit framework plus a curated Foundation subset for regression testing.
 - **249 Rust tests** and **64 Swift tests** cover the pipeline.
@@ -225,21 +225,21 @@ layout so the script's relative `../../runtime` and `../../generated/oo/...`
 paths still resolve at runtime.
 
 ```sh
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- file-lister
-# → generation/targets/racket-oo/apps/file-lister/build/File Lister.app
+cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
+# → generation/targets/racket-oo/apps/hello-window/build/Hello Window.app
 ```
 
-The `file-lister` argument is the script name (the `apps/<name>/<name>.rkt`
-identifier). Display name (`File Lister`) and bundle id
-(`com.linkuistics.FileLister`) are derived from the kebab-case form. Full
+The `hello-window` argument is the script name (the `apps/<name>/<name>.rkt`
+identifier). Display name (`Hello Window`) and bundle id
+(`com.linkuistics.HelloWindow`) are derived from the kebab-case form. Full
 API:
 
 ```rust
 use apianyware_macos_bundle_racket_oo::{bundle_app, AppSpec};
 
-let spec = AppSpec::from_script_name("file-lister");
+let spec = AppSpec::from_script_name("hello-window");
 let source_root = Path::new("generation/targets/racket-oo");
-let output_dir = Path::new("generation/targets/racket-oo/apps/file-lister/build");
+let output_dir = Path::new("generation/targets/racket-oo/apps/hello-window/build");
 let app_path = bundle_app(&spec, source_root, output_dir)?;
 ```
 
@@ -247,14 +247,14 @@ Resulting bundle layout (Resources mirrors the source tree so relative
 requires keep working):
 
 ```
-File Lister.app/
+Hello Window.app/
   Contents/
-    MacOS/File Lister                 <- Swift stub, execvs into racket
-    Info.plist                        <- CFBundleName = "File Lister"
+    MacOS/Hello Window                <- Swift stub, execvs into racket
+    Info.plist                        <- CFBundleName = "Hello Window"
     Resources/racket-app/
-      apps/file-lister/file-lister.rkt
+      apps/hello-window/hello-window.rkt
       runtime/*.rkt                   <- only files the entry transitively requires
-      generated/oo/{appkit,foundation}/...
+      generated/oo/appkit/...         <- only the appkit classes hello-window requires
       lib/libAPIAnywareRacket.dylib   <- if present in the source tree
 ```
 
@@ -274,16 +274,16 @@ targets get their own bundle convention crate that wraps it.
 use apianyware_macos_stub_launcher::{StubConfig, create_app_bundle};
 
 let config = StubConfig {
-    app_name: "Counter".into(),                     // Bundle and binary name
-    runtime_path: "/opt/homebrew/bin/racket".into(), // Baked in at compile time
-    runtime_args: vec![],                            // Extra args before script path
-    script_resource_name: "main".into(),             // Script filename (no ext)
-    script_resource_type: "rkt".into(),              // Script extension
-    script_resource_dir: "racket-app".into(),        // Subdir in Resources/
-    bundle_identifier: "com.example.Counter".into(), // CFBundleIdentifier
+    app_name: "Hello Window".into(),                       // Bundle and binary name
+    runtime_path: "/opt/homebrew/bin/racket".into(),       // Baked in at compile time
+    runtime_args: vec![],                                  // Extra args before script path
+    script_resource_name: "main".into(),                   // Script filename (no ext)
+    script_resource_type: "rkt".into(),                    // Script extension
+    script_resource_dir: "racket-app".into(),              // Subdir in Resources/
+    bundle_identifier: "com.example.HelloWindow".into(),   // CFBundleIdentifier
 };
 let app_path = create_app_bundle(&config, Path::new("output/"))?;
-// Caller populates: output/Counter.app/Contents/Resources/racket-app/
+// Caller populates: output/Hello Window.app/Contents/Resources/racket-app/
 // (Use bundle-racket-oo to do this automatically for Racket OO apps.)
 ```
 
@@ -319,16 +319,16 @@ vmid=$($TA/provisioner/scripts/vm-start.sh --viewer)
 $TA_BIN exec --vm "$vmid" "/opt/homebrew/bin/brew install minimal-racket"
 
 # Build and ship a sample app as a .app bundle
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- file-lister
-APP="generation/targets/racket-oo/apps/file-lister/build/File Lister.app"
+cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
+APP="generation/targets/racket-oo/apps/hello-window/build/Hello Window.app"
 tar -C "$(dirname "$APP")" -czf /tmp/app.tgz "$(basename "$APP")"
 $TA_BIN upload --vm "$vmid" /tmp/app.tgz /Users/admin/app.tgz
-$TA_BIN exec --vm "$vmid" "tar -xzf /Users/admin/app.tgz -C /Users/admin/ && open '/Users/admin/File Lister.app'"
+$TA_BIN exec --vm "$vmid" "tar -xzf /Users/admin/app.tgz -C /Users/admin/ && open '/Users/admin/Hello Window.app'"
 
 # Verify visually
-$TA_BIN agent snapshot --vm "$vmid" --window "File Lister"
+$TA_BIN agent snapshot --vm "$vmid" --window "Hello Window"
 $TA_BIN screenshot --vm "$vmid" -o /tmp/screen.png
-$TA_BIN find-text --vm "$vmid" "File Lister"
+$TA_BIN find-text --vm "$vmid" "Hello Window"
 
 # Always kill before relaunch
 $TA_BIN exec --vm "$vmid" "pkill -9 -f racket"
@@ -340,7 +340,7 @@ $TA/provisioner/scripts/vm-stop.sh "$vmid"
 App specs at `knowledge/apps/{app}/spec.md`, validation checklists at
 `knowledge/apps/{app}/test-strategy.md`. The bundling step is required
 for menu-bar app names and per-app TCC permissions — running the script
-directly via `racket file-lister.rkt` shows up as "racket" in the menu
+directly via `racket hello-window.rkt` shows up as "racket" in the menu
 bar.
 
 ## Workspace Structure

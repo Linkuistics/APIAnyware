@@ -1,5 +1,9 @@
-//! Integration test: bundle the real File Lister sample app and verify
-//! the resulting `.app` is structurally complete.
+//! Integration tests: bundle real sample apps and verify the resulting
+//! `.app` is structurally complete.
+//!
+//! Uses hello-window as the per-test fixture (simplest app, smallest
+//! transitive require tree; minimises noise in negative assertions).
+//! `bundles_every_sample_app` covers all apps under `apps/` dynamically.
 //!
 //! Skipped if `swiftc` isn't available (stub-launcher needs it). Also
 //! skipped if the racket-oo source tree is missing — keeps the workspace
@@ -13,7 +17,7 @@ use apianyware_macos_bundle_racket_oo::{
     bundle_app, bundle_app_with_entry, read_display_name_from_spec, AppSpec,
 };
 
-const SCRIPT_NAME: &str = "file-lister";
+const SCRIPT_NAME: &str = "hello-window";
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -70,13 +74,13 @@ fn entry_script_present() -> bool {
 }
 
 #[test]
-fn bundles_file_lister_into_app_directory() {
+fn bundles_hello_window_into_app_directory() {
     if !swiftc_available() {
         eprintln!("SKIPPED: swiftc not available");
         return;
     }
     if !entry_script_present() {
-        eprintln!("SKIPPED: file-lister source not present");
+        eprintln!("SKIPPED: hello-window source not present");
         return;
     }
 
@@ -85,10 +89,10 @@ fn bundles_file_lister_into_app_directory() {
     let app_path = bundle_app(&spec, &racket_oo_root(), temp.path()).expect("bundle");
 
     // Bundle skeleton from stub-launcher
-    assert!(app_path.ends_with("File Lister.app"), "{app_path:?}");
+    assert!(app_path.ends_with("Hello Window.app"), "{app_path:?}");
     let contents = app_path.join("Contents");
     assert!(contents.join("Info.plist").is_file());
-    assert!(contents.join("MacOS").join("File Lister").is_file());
+    assert!(contents.join("MacOS").join("Hello Window").is_file());
 
     // Resource layout — entry script and sibling deps
     let racket_app = contents.join("Resources").join("racket-app");
@@ -98,29 +102,23 @@ fn bundles_file_lister_into_app_directory() {
         .join(format!("{SCRIPT_NAME}.rkt"));
     assert!(entry.is_file(), "entry script missing: {entry:?}");
 
-    // Runtime modules
+    // Runtime modules (every Racket OO app pulls these in transitively)
     assert!(racket_app.join("runtime").join("objc-base.rkt").is_file());
-    assert!(racket_app.join("runtime").join("delegate.rkt").is_file());
-    assert!(racket_app
-        .join("runtime")
-        .join("type-mapping.rkt")
-        .is_file());
+    assert!(racket_app.join("runtime").join("type-mapping.rkt").is_file());
+    assert!(racket_app.join("runtime").join("app-menu.rkt").is_file());
 
-    // Generated bindings actually statically required by file-lister.
-    // The shared `runtime/app-menu.rkt` helper uses raw objc_msgSend, so
-    // nsmenu/nsmenuitem are NOT transitively required — and correctly
-    // not copied. NSString conversions go through type-mapping.rkt,
-    // which calls into objc dynamically, so nsstring.rkt isn't either.
+    // Generated bindings statically required by hello-window. Five
+    // appkit classes (NSApplication setup, NSWindow creation,
+    // NSTextField label, NSView base class, NSFont label styling).
     let oo = racket_app.join("generated").join("oo");
-    assert!(oo.join("appkit").join("nstableview.rkt").is_file());
-    assert!(oo.join("appkit").join("nstablecolumn.rkt").is_file());
-    assert!(oo.join("appkit").join("nsopenpanel.rkt").is_file());
-    assert!(oo.join("foundation").join("nsfilemanager.rkt").is_file());
-    assert!(oo.join("foundation").join("nsarray.rkt").is_file());
-    assert!(oo.join("foundation").join("nsurl.rkt").is_file());
+    assert!(oo.join("appkit").join("nsapplication.rkt").is_file());
+    assert!(oo.join("appkit").join("nswindow.rkt").is_file());
+    assert!(oo.join("appkit").join("nstextfield.rkt").is_file());
+    assert!(oo.join("appkit").join("nsview.rkt").is_file());
+    assert!(oo.join("appkit").join("nsfont.rkt").is_file());
 
     // Unrelated frameworks should NOT have been pulled in. CoreText /
-    // WebKit are unreachable from file-lister's require tree and must
+    // WebKit are unreachable from hello-window's require tree and must
     // stay out of the bundle.
     assert!(
         !oo.join("coretext").exists(),
@@ -129,19 +127,37 @@ fn bundles_file_lister_into_app_directory() {
     assert!(!oo.join("webkit").exists(), "webkit leaked into the bundle");
 
     // Files NOT statically required (sanity check on tree pruning).
+    // NSString conversions go through type-mapping.rkt which calls
+    // objc dynamically, so nsstring.rkt isn't required. Menu APIs go
+    // through runtime/app-menu.rkt which uses raw objc_msgSend, so
+    // nsmenu/nsmenuitem aren't required either. The tableview /
+    // openpanel / filemanager / array / url bindings have no consumer
+    // in this simple app.
     assert!(
         !oo.join("foundation").join("nsstring.rkt").exists(),
-        "nsstring.rkt leaked: it isn't a static require of file-lister"
+        "nsstring.rkt leaked: it isn't a static require of hello-window"
     );
     assert!(
         !oo.join("appkit").join("nsmenu.rkt").exists(),
-        "nsmenu.rkt leaked: file-lister gets its menu via runtime/app-menu.rkt"
+        "nsmenu.rkt leaked: hello-window gets its menu via runtime/app-menu.rkt"
+    );
+    assert!(
+        !oo.join("appkit").join("nstableview.rkt").exists(),
+        "nstableview.rkt leaked: hello-window has no table"
+    );
+    assert!(
+        !oo.join("appkit").join("nsopenpanel.rkt").exists(),
+        "nsopenpanel.rkt leaked: hello-window has no open dialog"
+    );
+    assert!(
+        !oo.join("foundation").join("nsfilemanager.rkt").exists(),
+        "nsfilemanager.rkt leaked: hello-window doesn't touch the filesystem"
     );
 
     // Info.plist carries the derived bundle metadata
     let plist = std::fs::read_to_string(contents.join("Info.plist")).unwrap();
-    assert!(plist.contains("<string>File Lister</string>"));
-    assert!(plist.contains("<string>com.linkuistics.FileLister</string>"));
+    assert!(plist.contains("<string>Hello Window</string>"));
+    assert!(plist.contains("<string>com.linkuistics.HelloWindow</string>"));
 }
 
 #[test]
@@ -327,7 +343,7 @@ fn bundle_has_no_compiled_directories_anywhere() {
         return;
     }
     if !entry_script_present() {
-        eprintln!("SKIPPED: file-lister source not present");
+        eprintln!("SKIPPED: hello-window source not present");
         return;
     }
 
@@ -366,7 +382,7 @@ fn bundle_dylib_install_name_is_bundle_relative() {
         return;
     }
     if !entry_script_present() {
-        eprintln!("SKIPPED: file-lister source not present");
+        eprintln!("SKIPPED: hello-window source not present");
         return;
     }
     let dylib_source = racket_oo_root()

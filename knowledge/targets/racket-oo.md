@@ -52,8 +52,9 @@ import never enter the bundle.
 
 NSTableViewDataSource's `numberOfRowsInTableView:` returns NSInteger,
 which the `runtime/delegate.rkt` trampoline doesn't speak natively
-(it only supports `'void`, `'bool`, `'id` returns). Workaround in use
-in `file-lister.rkt`: declare the method `'id` and return `(ptr-add #f
+(it only supports `'void`, `'bool`, `'id` returns). Workaround
+(originally surfaced while building the retired file-lister sample
+app, 2026-04-15): declare the method `'id` and return `(ptr-add #f
 count)` — on arm64 both NSInteger and id ride in `x0` so the bit
 pattern survives the lying type encoding. The ObjC caller (NSTableView)
 reads `x0` as NSInteger via the compile-time-known protocol signature
@@ -80,7 +81,8 @@ y-coordinate fiddling will land within ~1 px but not perfect across
 font sizes. Use `NSStackView` with horizontal orientation and
 `NSLayoutAttributeFirstBaseline` (= 12) alignment instead — Auto Layout
 pins the children's `firstBaselineAnchor`s together, exactly. Pattern
-from `apps/file-lister/file-lister.rkt`.
+originally surfaced while building the retired file-lister sample app
+(2026-04-15).
 
 ## Dated Discoveries
 

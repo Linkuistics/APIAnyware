@@ -74,7 +74,7 @@ fn parse_bundle_plist(app_path: &Path) -> plist::Dictionary {
 
 #[test]
 fn default_app_spec_has_empty_info_plist_overrides() {
-    let spec = AppSpec::from_script_name("counter");
+    let spec = AppSpec::from_script_name("modaliser");
     assert!(
         spec.info_plist_overrides.is_empty(),
         "fresh AppSpec must have no overrides"

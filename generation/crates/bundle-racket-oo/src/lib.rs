@@ -11,9 +11,9 @@
 //! use apianyware_macos_bundle_racket_oo::{bundle_app, AppSpec};
 //! use std::path::Path;
 //!
-//! let spec = AppSpec::from_script_name("file-lister");
+//! let spec = AppSpec::from_script_name("hello-window");
 //! let source_root = Path::new("generation/targets/racket-oo");
-//! let output_dir = Path::new("generation/targets/racket-oo/apps/file-lister/build");
+//! let output_dir = Path::new("generation/targets/racket-oo/apps/hello-window/build");
 //! let app_path = bundle_app(&spec, source_root, output_dir).unwrap();
 //! println!("built: {}", app_path.display());
 //! ```

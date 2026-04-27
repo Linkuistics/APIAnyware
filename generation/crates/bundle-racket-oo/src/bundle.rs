@@ -24,11 +24,11 @@ pub const DEFAULT_RACKET_PATH: &str = "/opt/homebrew/bin/racket";
 /// [`AppSpec::from_script_name`] to derive both from the kebab form.
 #[derive(Debug, Clone)]
 pub struct AppSpec {
-    /// Display name (`CFBundleName`, menu-bar bold name). Example: `"File Lister"`.
+    /// Display name (`CFBundleName`, menu-bar bold name). Example: `"Hello Window"`.
     pub app_name: String,
-    /// Bundle identifier (`CFBundleIdentifier`). Example: `"com.linkuistics.FileLister"`.
+    /// Bundle identifier (`CFBundleIdentifier`). Example: `"com.linkuistics.HelloWindow"`.
     pub bundle_id: String,
-    /// Source directory + entry-script base name. Example: `"file-lister"`.
+    /// Source directory + entry-script base name. Example: `"hello-window"`.
     pub script_name: String,
     /// Absolute path to the racket runtime binary baked into the stub.
     pub runtime_path: String,
@@ -51,8 +51,8 @@ pub struct AppSpec {
 impl AppSpec {
     /// Derive an [`AppSpec`] from a kebab-case script name.
     ///
-    /// `"file-lister"` → display `"File Lister"`, bundle id
-    /// `"com.linkuistics.FileLister"`. The runtime path defaults to
+    /// `"hello-window"` → display `"Hello Window"`, bundle id
+    /// `"com.linkuistics.HelloWindow"`. The runtime path defaults to
     /// [`DEFAULT_RACKET_PATH`] and can be overridden afterwards.
     /// `info_plist_overrides` defaults to empty.
     pub fn from_script_name(script_name: impl Into<String>) -> Self {
@@ -400,7 +400,7 @@ fn normalize_dylib_install_names(lib_dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-/// `"file-lister"` → `"File Lister"`. Splits on `-`, capitalizes each
+/// `"hello-window"` → `"Hello Window"`. Splits on `-`, capitalizes each
 /// word's first ASCII char, joins with a single space.
 fn title_case_kebab(kebab: &str) -> String {
     kebab
@@ -422,12 +422,12 @@ mod tests {
 
     #[test]
     fn title_case_single_word() {
-        assert_eq!(title_case_kebab("counter"), "Counter");
+        assert_eq!(title_case_kebab("modaliser"), "Modaliser");
     }
 
     #[test]
     fn title_case_two_words() {
-        assert_eq!(title_case_kebab("file-lister"), "File Lister");
+        assert_eq!(title_case_kebab("hello-window"), "Hello Window");
     }
 
     #[test]
@@ -440,18 +440,18 @@ mod tests {
 
     #[test]
     fn from_script_name_derives_display_and_bundle_id() {
-        let spec = AppSpec::from_script_name("file-lister");
-        assert_eq!(spec.app_name, "File Lister");
-        assert_eq!(spec.bundle_id, "com.linkuistics.FileLister");
-        assert_eq!(spec.script_name, "file-lister");
+        let spec = AppSpec::from_script_name("hello-window");
+        assert_eq!(spec.app_name, "Hello Window");
+        assert_eq!(spec.bundle_id, "com.linkuistics.HelloWindow");
+        assert_eq!(spec.script_name, "hello-window");
         assert_eq!(spec.runtime_path, DEFAULT_RACKET_PATH);
     }
 
     #[test]
     fn from_script_name_handles_single_word() {
-        let spec = AppSpec::from_script_name("counter");
-        assert_eq!(spec.app_name, "Counter");
-        assert_eq!(spec.bundle_id, "com.linkuistics.Counter");
+        let spec = AppSpec::from_script_name("modaliser");
+        assert_eq!(spec.app_name, "Modaliser");
+        assert_eq!(spec.bundle_id, "com.linkuistics.Modaliser");
     }
 
     #[test]
@@ -463,10 +463,10 @@ mod tests {
     #[test]
     fn script_resource_dir_apps_sample_layout_appends_path() {
         let dir = derive_script_resource_dir(
-            Path::new("/root/apps/file-lister/file-lister.rkt"),
+            Path::new("/root/apps/hello-window/hello-window.rkt"),
             Path::new("/root"),
         );
-        assert_eq!(dir, "racket-app/apps/file-lister");
+        assert_eq!(dir, "racket-app/apps/hello-window");
     }
 
     #[test]

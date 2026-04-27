@@ -647,8 +647,8 @@ Two reasons a `racket script.rkt` invocation is not production-ready:
 ### Building a bundle
 
 ```sh
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- file-lister
-# → generation/targets/racket-oo/apps/file-lister/build/File Lister.app
+cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
+# → generation/targets/racket-oo/apps/hello-window/build/Hello Window.app
 ```
 
 What `bundle-racket-oo` does:
@@ -669,7 +669,7 @@ What `bundle-racket-oo` does:
 
 - **Bundle ID domain:** `com.linkuistics.*`, never `com.apianyware.*`.
   The kebab→Title conversion for the app name produces the bundle ID
-  automatically: `file-lister` → `com.linkuistics.FileLister`.
+  automatically: `hello-window` → `com.linkuistics.HelloWindow`.
 - **Display name:** read from the `# <Display Name>` H1 of
   `knowledge/apps/<name>/spec.md` when present. The kebab→Title
   fallback mis-capitalises acronyms ("Ui Controls Gallery").
@@ -712,15 +712,15 @@ TA_BIN=$TA/cli/.build/release/testanyware
 ID=$($TA/provisioner/scripts/vm-start.sh --viewer)
 
 # Ship a bundled .app.
-APP="apps/file-lister/build/File Lister.app"
+APP="apps/hello-window/build/Hello Window.app"
 tar -C "$(dirname "$APP")" -czf /tmp/app.tgz "$(basename "$APP")"
 $TA_BIN upload --vm $ID /tmp/app.tgz /Users/admin/app.tgz
-$TA_BIN exec --vm $ID "tar -xzf /Users/admin/app.tgz -C /Users/admin/ && open '/Users/admin/File Lister.app'"
+$TA_BIN exec --vm $ID "tar -xzf /Users/admin/app.tgz -C /Users/admin/ && open '/Users/admin/Hello Window.app'"
 
 # Visual verification.
-$TA_BIN agent snapshot --vm $ID --window "File Lister"
+$TA_BIN agent snapshot --vm $ID --window "Hello Window"
 $TA_BIN screenshot --vm $ID -o /tmp/s.png
-$TA_BIN find-text --vm $ID "File Lister"
+$TA_BIN find-text --vm $ID "Hello Window"
 
 # Always kill before relaunch.
 $TA_BIN exec --vm $ID "pkill -9 -f racket"
@@ -823,9 +823,8 @@ Real-world details discovered while building the sample apps:
   model that shapes the annotations the emitter consumes.
 - Sample apps (`apps/<name>/<name>.rkt`) — the best working references
   for each pattern:
-  - `hello-window`, `counter` — minimal app structure.
+  - `hello-window` — minimal app structure.
   - `ui-controls-gallery` — most common AppKit widgets.
-  - `file-lister` — NSTableView with a data source delegate.
   - `drawing-canvas` — multi-method dynamic subclassing + CGContext.
   - `pdfkit-viewer` — PDFKit + NSNotificationCenter observer.
   - `scenekit-viewer` — SceneKit.
