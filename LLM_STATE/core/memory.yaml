@@ -231,7 +231,7 @@ entries:
 - id: os-object-use-objc-makes-gcd-types-appear-as-objc-objects-in-ir
   title: OS_OBJECT_USE_OBJC makes GCD types appear as ObjC objects in IR
   body: |
-    When SDK headers are compiled with `OS_OBJECT_USE_OBJC=1` (the macOS default), `dispatch_queue_t` and similar GCD types are declared as ObjC objects. The IR maps them to an `_id`-equivalent type. Emitters obtaining queue values via `dlsym`/`ffi-obj-ref`/pointer arithmetic get a raw pointer that is not automatically `_id`-tagged — an explicit cast is required before passing it to any function whose IR signature declares a GCD type as `_id`-equivalent. Every future language binding emitter faces this same cast requirement. A potential long-term fix is an IR annotation marking these types as "ObjC-object-via-OS_OBJECT macro" so emitters can generate the cast automatically.
+    When SDK headers are compiled with `OS_OBJECT_USE_OBJC=1` (the macOS default), `dispatch_queue_t` and similar GCD types are declared as ObjC objects. The IR maps them to an `_id`-equivalent type. Emitters obtaining queue values via `dlsym`/`ffi-obj-ref`/pointer arithmetic get a raw pointer that is not automatically `_id`-tagged — an explicit cast is required before passing it to any function whose IR signature declares a GCD type as `_id`-equivalent. Every future language binding emitter faces this same cast requirement. The current resolution is documentation in `generation/docs/emitter-contract.md` (see "`emitter-contract.md` documents cross-emitter IR conventions"); IR annotation is deferred until more than one framework hits this pattern.
 - id: make-objc-block-does-not-accept-f
   title: '`make-objc-block` does not accept `#f`'
   body: |
@@ -406,3 +406,7 @@ entries:
   title: Anonymous enum IR names embed absolute SDK paths
   body: |
     libclang synthesizes names for anonymous enums from the first member, embedding the absolute SDK path in the name. These appear in IR `enums[].name` fields and cause cosmetic diffs when IR is generated under different Xcode installations or SDK locations. Not a correctness issue — values and types are unaffected. Normalize by stripping the path prefix if cross-toolchain reproducibility is needed.
+- id: emitter-contract-md-documents-cross-emitter-ir-conventions
+  title: emitter-contract.md documents cross-emitter IR conventions
+  body: |
+    `generation/docs/emitter-contract.md` is the canonical location for cross-emitter IR conventions — cases where the IR shape alone is insufficient to drive correct emission without additional rules. Template sections: IR shape → mismatch scenario → acceptable resolutions → cross-references → promote-to-IR-annotation trigger. Entry points cross-referenced from the `FfiTypeMapper` trait doc in `generation/crates/emit/src/ffi_type_mapping.rs` and from relevant inline call sites in emitter crates. Future conventions to document under this pattern: block lifecycle, error-pointer out-params, retain/release ownership semantics.
