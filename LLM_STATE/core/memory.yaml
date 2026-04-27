@@ -392,3 +392,19 @@ entries:
   title: LLM annotation validator separates semantic from structural checks
   body: |
     `validate_llm_annotations` / `validate_llm_file` in `analysis/crates/annotate/src/llm.rs` perform semantic cross-referencing (8 error kinds) beyond serde's automatic structural checks. Serde handles field types and required keys; the validator catches cross-referencing failures (e.g., method names that don't exist in IR). `llm-validate` CLI subcommand exits 0 on valid input, 1 with structured errors. Subagents must run `llm-validate` before returning a `.llm.json`.
+- id: llm-annotation-durability-llm-json-files-are-gitignored-decide-before-foundation-run
+  title: 'LLM annotation durability: .llm.json files are gitignored — decide before Foundation run'
+  body: |
+    **Design tension: LLM annotation files are gitignored, breaking durability across clones.**
+
+    Both `analysis/ir/annotated/` and `analysis/ir/llm-annotations/` are listed in `.gitignore`, which means:
+    - LLM-sourced annotations are not durable across fresh clones.
+    - Every fresh clone must re-run the LLM annotation pipeline (consuming tokens) to reproduce the annotated IR.
+    - There is a risk that hand-curated corrections or expensive LLM runs are silently lost on branch switches.
+
+    **Options considered (not yet decided):**
+    - **Option A: Check in `.llm.json` files** — treat them as source-of-truth, re-merge on demand. Annotated IR stays generated; only the LLM input is durable. Low storage cost (small JSON per framework). Re-running `annotate --llm-dir` from checked-in `.llm.json` is fast and free.
+    - **Option B: Un-ignore `analysis/ir/annotated/`** — check in fully merged IR. Eliminates re-run cost on clone but risks merge conflicts as IR evolves. Harder to diff "what did the LLM add vs heuristics".
+    - **Option C: Accept ephemerality** — document that fresh clones require a pipeline re-run; only viable if LLM cost per full run is small enough to be routine.
+
+    **Recommendation:** Decide after the PushKit and medium-framework calibration runs establish a realistic per-framework token cost. If the full-pipeline cost is under ~$0.10 USD, Option C may be acceptable. If it is non-trivial, Option A is the natural answer.
