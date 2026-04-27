@@ -56,10 +56,22 @@ better than guessing.
 
 ## How to decide
 
-Use `WebSearch` and `WebFetch` against `developer.apple.com/documentation/`
-for the framework. Read the method's prose, "Discussion" section, and any
-threading notes. If documentation does not address a question, omit the
-field — heuristics will fill the gap.
+Look up the framework headers at
+`$SDKROOT/System/Library/Frameworks/{FRAMEWORK}.framework/Headers/`. They
+are the authoritative source — they carry `weak`/`copy`/`assign`/`nullable`
+attributes and `///` doc comments that the developer.apple.com web UI
+strips. Use `WebFetch` on `developer.apple.com/documentation/` only as a
+supplemental cross-check for prose/Discussion notes that may not appear in
+the headers; the rendered web pages are JS-built SPAs and `WebFetch` often
+returns only `<title>`, so do not rely on them as the primary source.
+
+If neither headers nor documentation address a question, omit the field —
+heuristics will fill the gap.
+
+If a property getter and its corresponding setter are both flagged in the
+summary, annotate the setter only and skip the getter — property getters
+have no `parameter_ownership` or `block_parameters` surface (the setter
+parameter is what carries the backing-storage reference type).
 
 ## Output
 
@@ -86,6 +98,19 @@ arrays/objects may be omitted entirely if empty):
             {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSNotificationCenter",
+      "methods": [
+        {
+          "selector": "addObserver:selector:name:object:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
           "source": "llm"
         }
       ]

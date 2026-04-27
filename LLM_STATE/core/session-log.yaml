@@ -1649,3 +1649,46 @@ sessions:
     - **What didn't work:** Five prompt-template issues surfaced. None blocked PushKit but will compound at scale: (1) `WebFetch` on `developer.apple.com` returns only `<title>` (JS-rendered SPA); SDK headers are the authoritative source and should be primary in the prompt. (2) Property getters are flagged alongside setters but have no annotation surface — subagent had to infer to skip the getter. (3) The schema example only shows `block_parameters`; `parameter_ownership` field shape wasn't illustrated, causing a round-trip to `llm.rs`. (4) No schema slot for return-value ownership. (5) `threading` field describes method-call timing, not callback-firing timing — relevant for block-heavy frameworks.
     - **What this suggests next:** Apply prompt fixes for issues #1, #2, #3 before the medium-framework calibration run — cheap, isolated, and each missed WebFetch costs proportionally more on larger frameworks. Issues #4 and #5 are schema/design questions; defer until the medium-framework run confirms they surface in practice.
     - **Key learnings:** Apple developer docs are JS-rendered and unusable via WebFetch; SDK headers at `MacOSX.sdk/System/Library/Frameworks/<F>.framework/Headers/` are strictly more authoritative (carry `weak`/`copy`/`assign`/`nullable` attributes plus doc comments). First real subagent cost anchor: ~54k tokens / ~2 min for a 2-method framework.
+- id: session-35
+  timestamp: 2026-04-27T13:20:25Z
+  phase: work
+  body: |
+    ### Session 35 (2026-04-27T13:20:25Z) — Fix prompt-template issues and close two IR leak investigations
+
+    - **Attempted:** Three independent tasks: fix three prompt-template defects in
+      `llm-annotate-subagent.md` (surfaced by the first real PushKit subagent run),
+      and investigate/close two hypothesized IR leak classes (bare `c:@<name>` macro
+      USRs and anonymous-enum member leakage through extract-objc).
+
+    - **What worked:**
+      - All three prompt-template fixes were applied cleanly to
+        `analysis/scripts/llm-annotate-subagent.md`. Fix #1 repositioned SDK
+        headers as the primary annotation source with a clear rationale (SPA/JS
+        rendering limitation of developer.apple.com). Fix #2 added an explicit
+        getter/setter rule to eliminate ambiguity when both are flagged. Fix #3
+        added an `NSNotificationCenter addObserver:selector:name:object:` worked
+        example showing the `parameter_ownership` field shape.
+      - Leak class A investigation (bare `c:@<name>` USR leaks into `constants[]`)
+        audited all 13,091 constants across 252 frameworks against SDK `.tbd` exports.
+        Found only 2 genuine leaks; both have no common libclang-visible filter signal.
+        The original hypothesis (libclang emits macros with bare VarDecl USRs) was
+        wrong — bare `c:@<name>` is simply the VarDecl USR form. No extractor change
+        needed.
+      - Leak class B investigation (anonymous-enum members leaking into `constants[]`
+        via extract-objc) confirmed zero such leaks exist. `EnumDecl` children go into
+        `enums[].values`, not `constants[]`. The hypothesized asymmetry with
+        extract-swift is real but harmless — both paths converge correctly.
+
+    - **What this suggests trying next:** `llm-annotation-calibration-run-on-medium-framework-mixed-annotation-reasons`
+      is now unblocked. Good candidates are `Network`, `EventKit`, or URLSession-adjacent
+      frameworks whose `.methods.json` exercises all three annotation-reason categories
+      simultaneously.
+
+    - **Key learnings:**
+      - Both leak-class investigations were negative: the suspected paths do not exist
+        in the current extractor. Audit scripts confirmed exact counts (0 anonymous-enum
+        leaks, 2/13,091 genuine constant leaks — both without a shared filter signal).
+      - An adjacent find in leak class B: anonymous enum names in IR embed absolute SDK
+        paths (libclang synthetic names), which causes cosmetic IR diffs across Xcode
+        toolchains. Not a correctness issue, but worth normalizing if cross-toolchain
+        reproducibility ever matters.
