@@ -106,7 +106,7 @@ entries:
 - id: wholesale-drop-is-the-right-default-for-unavailable-parent-types
   title: Wholesale drop is the right default for unavailable parent types
   body: |
-    Class- or protocol-level `API_UNAVAILABLE(macos)` drops the entire declaration, not just flags it. Rationale: the macOS variant of the dylib does not export the class/protocol symbols at all, so every inherited method would crash at first call with "unrecognized selector"; a flagged-but-populated IR only defers the runtime failure to language targets. Matches how iOS-family classes inside shared Foundation headers are silently absent from the macOS Foundation dylib today. Applied in `extract_class` and `extract_protocol`; the same predicate fires per-selector in `extract_method` for the subtler mixed-availability case (class available, some selectors not).
+    Class- or protocol-level `API_UNAVAILABLE(macos)` drops the entire declaration, not just flags it. Rationale: the macOS variant of the dylib does not export the class/protocol symbols at all, so every inherited method would crash at first call with "unrecognized selector"; a flagged-but-populated IR only defers the runtime failure to language targets. Matches how iOS-family classes inside shared Foundation headers are silently absent from the macOS Foundation dylib. Applied in `extract_class` and `extract_protocol`; the same predicate fires per-selector in `extract_method` for the subtler mixed-availability case (class available, some selectors not).
 - id: synthetic-libclang-tests-need-lazylock
   title: Synthetic libclang tests need LazyLock
   body: |
@@ -231,7 +231,7 @@ entries:
 - id: os-object-use-objc-makes-gcd-types-appear-as-objc-objects-in-ir
   title: OS_OBJECT_USE_OBJC makes GCD types appear as ObjC objects in IR
   body: |
-    When SDK headers are compiled with `OS_OBJECT_USE_OBJC=1` (the macOS default), `dispatch_queue_t` and similar GCD types are declared as ObjC objects. The IR maps them to an `_id`-equivalent type. Emitters obtaining queue values via `dlsym`/`ffi-obj-ref`/pointer arithmetic get a raw pointer that is not automatically `_id`-tagged — an explicit cast is required before passing it to any function whose IR signature declares a GCD type as `_id`-equivalent. Every future language binding emitter faces this same cast requirement. The current resolution is documentation in `generation/docs/emitter-contract.md` (see "`emitter-contract.md` documents cross-emitter IR conventions"); IR annotation is deferred until more than one framework hits this pattern.
+    When SDK headers are compiled with `OS_OBJECT_USE_OBJC=1` (the macOS default), `dispatch_queue_t` and similar GCD types are declared as ObjC objects. The IR maps them to an `_id`-equivalent type. Emitters obtaining queue values via `dlsym`/`ffi-obj-ref`/pointer arithmetic get a raw pointer that is not automatically `_id`-tagged — an explicit cast is required before passing it to any function whose IR signature declares a GCD type as `_id`-equivalent. Every future language binding emitter faces this same cast requirement. Resolution: documentation in `generation/docs/emitter-contract.md` (see "`emitter-contract.md` documents cross-emitter IR conventions"); IR annotation deferred until more than one framework hits this pattern.
 - id: make-objc-block-does-not-accept-f
   title: '`make-objc-block` does not accept `#f`'
   body: |
@@ -405,7 +405,7 @@ entries:
   title: LLM .llm.json files are versioned in git
   body: |
     `analysis/ir/llm-annotations/*.llm.json` files are checked into git (Option A).
-    All 284 workspace frameworks are now annotated and versioned; storage cost is <1 MB total.
+    All 284 workspace frameworks are annotated and versioned; storage cost is <1 MB total.
     Regenerating from scratch costs ~14M tokens: naming-compliant/Swift-only frameworks (272) at 35k + N × 250 marginal; code-generated frameworks (Matter) at ~57k via template-based bulk annotation (see "Template-based bulk annotation for code-generated frameworks").
     Fresh-clone workflow: run `annotate --llm-dir analysis/ir/llm-annotations/` — no LLM calls required on clone. `analysis/ir/llm-summaries/` remains gitignored.
 - id: apple-developer-docs-are-js-rendered-sdk-headers-are-authoritative
@@ -446,7 +446,7 @@ entries:
 - id: llm-adds-value-only-on-naming-pattern-defeating-frameworks
   title: Block-invocation reclassification is primary LLM value-add
   body: |
-    Block-invocation re-classification is the primary LLM value-add: heuristics emit 0 `stored` block lifecycle annotations; LLM identifies stored handlers. AppKit: 0→25 `stored_blocks`; 47 async demoted to 22 sync + 25 stored. CoreData: 0→11 `stored` (NSBatchInsertRequest row handlers, NSCustomMigrationStage will/did-migrate handlers, NSFetchRequestExpression block expressions); 30 async demoted to 4 sync + 15 async + 11 stored. AVFoundation: 198 methods, 68 classes, +15 `stored` reclassifications (6→21); `subagent_report` reconciliation warnings=0 on first real use. `stored` blocks require GC-prevention pinning that `async_copied` blocks do not.
+    Block-invocation re-classification is the primary LLM value-add: heuristics emit 0 `stored` block lifecycle annotations; LLM identifies stored handlers. AppKit: 0→25 `stored_blocks`; 47 async demoted to 22 sync + 25 stored. CoreData: 0→11 `stored` (NSBatchInsertRequest row handlers, NSCustomMigrationStage will/did-migrate handlers, NSFetchRequestExpression block expressions); 30 async demoted to 4 sync + 15 async + 11 stored. AVFoundation: 198 methods, 68 classes, +15 `stored` reclassifications (6→21); `subagent_report` reconciliation warnings=0. `stored` blocks require GC-prevention pinning that `async_copied` blocks do not.
 
     Threading: LLM was high-yield on WebKit (C-macro `WK_SWIFT_UI_ACTOR`). AppKit threading delta was smaller (+278 method-level entries) because heuristics now propagate class-level `_SWIFT_UI_ACTOR` to methods — LLM is supplementing, not discovering. CoreData threading=0 is correct: queue-flexibility is implicit in `performBlock:` semantics, not a per-method rule. Threading yield declines as heuristics mature.
 
@@ -474,22 +474,11 @@ entries:
     `source = Heuristic` entries and prunes classes with no remaining methods —
     then returns `None` when no LLM-sourced entries survive. A heuristic-only
     rerun therefore produces only `source = Heuristic` output with no LLM-source
-    contamination. The prior workaround (delete `analysis/ir/annotated/{Framework}.json`
-    before a heuristic-only run) is no longer needed.
+    contamination.
 - id: block-parameters-list-replace-is-safe-by-coincidence-apply-per-elem-union-if-divergence-observed
-  title: block_parameters list-replace is safe-by-coincidence — apply per-elem union if divergence observed
+  title: '`block_parameters` merge: list-replace safe until divergence'
   body: |
-    **Audit concern (archived from fix-parameter-ownership-merge-clobber results — "What this suggests next" item 4):**
-
-    `block_parameters` in `merge_annotations` (`analysis/crates/annotate/src/validate.rs`) uses the same all-or-nothing list-replace pattern that caused the `parameter_ownership` clobber bug. Currently this is "safe by coincidence": heuristics and LLM tend to annotate the same block params, so the list-replace doesn't silently drop heuristic entries.
-
-    If a future pattern emerges where one source legitimately enumerates more block params than the other, the same per-element union should be applied (matching the fix for `parameter_ownership`).
-
-    **Trigger condition:** Apply per-element union to `block_parameters` if:
-    - A calibration run shows the LLM and heuristic enumerate different block params for the same method, OR
-    - A new framework or SDK update introduces methods where heuristic block-param classification (e.g., `*completionHandler*` name matching) and LLM block-param detection diverge.
-
-    **Status:** Deferred; no evidence of divergence in current calibration data (WebKit: 0 delta on block/error patterns). Revisit during or after Foundation LLM annotation pass if unexpected drops appear.
+    `block_parameters` in `merge_annotations` (`analysis/crates/annotate/src/validate.rs`) uses all-or-nothing list-replace — the same pattern that caused the `parameter_ownership` clobber bug. Currently safe because heuristics and LLM annotate the same block params. Apply per-element union (matching the `parameter_ownership` fix) if LLM and heuristic enumerate different block params for the same method, or if a framework/SDK update introduces heuristic vs. LLM block-param divergence. No divergence in current calibration data.
 - id: is-observer-param-heuristic-covers-add-observer-first-param-weak
   title: '`is_observer_param` heuristic covers add…Observer: first-param weak'
   body: |
@@ -499,26 +488,23 @@ entries:
     covers `addObserver:`, `addSharedObserver:forKey:options:context:`, and future
     `addXxxObserver:` variants automatically. Excludes block-form
     `addObserverForName:object:queue:usingBlock:` (first segment is `addObserverForName`,
-    which does not end with `"Observer"`). With this heuristic, Foundation heuristic-only
-    annotation produces 302 `parameter_ownership` entries, closing the 29-entry gap
-    previously filled by LLM annotation.
+    which does not end with `"Observer"`). Foundation heuristic-only annotation produces
+    302 `parameter_ownership` entries; LLM provides no additional ownership coverage.
 - id: llm-subagent-self-reports-need-jq-cross-check
   title: LLM subagent self-reports reconciled via subagent_report field
   body: |
-    `subagent_report` in `FrameworkAnnotations` (`analysis/crates/types/src/annotation.rs`) carries seven `Option<usize>` count fields (`None` = not tracked; `Some(0)` = tracked, none found). `llm-validate` emits `ValidationWarning::SubagentReportMismatch` and logs `warnings=N` when subagent-stated counts diverge from actual output; strict equality is the threshold (no tolerance). Subagents include a structured self-report via `analysis/scripts/llm-annotate-subagent.md` template. Manual `jq` cross-check is available for ad-hoc inspection. AVFoundation first real use: `warnings=0`. Canonical discrepancy (pre-formal-reconciliation): CoreData subagent reported async_copied=18/stored=8/ownership=7; actual `.llm.json` held 15/11/5.
+    `subagent_report` in `FrameworkAnnotations` (`analysis/crates/types/src/annotation.rs`) carries seven `Option<usize>` count fields (`None` = not tracked; `Some(0)` = tracked, none found). `llm-validate` emits `ValidationWarning::SubagentReportMismatch` and logs `warnings=N` when subagent-stated counts diverge from actual output; strict equality is the threshold (no tolerance). Subagents include a structured self-report via `analysis/scripts/llm-annotate-subagent.md` template. Manual `jq` cross-check is available for ad-hoc inspection. AVFoundation first run: `warnings=0`. CoreData reference discrepancy: subagent reported async_copied=18/stored=8/ownership=7; actual `.llm.json` held 15/11/5.
 - id: avfoundation-stored-block-signals-require-racket-oo-emitter-audit-before-avplayer-sample-apps
-  title: AVFoundation stored-block signals require Racket-OO emitter audit before AVPlayer sample apps
+  title: 'AVFoundation stored-block signals: Racket-OO emitter audit required'
   body: |
-    AVFoundation's LLM annotation pass (2026-04-28) identified 15 stored-block reclassifications that are high-impact codegen signals for language binding emitters. The key ones:
+    AVFoundation's LLM annotation identified 15 stored-block reclassifications critical for language binding emitters:
 
     - `addPeriodicTimeObserverForInterval:queue:usingBlock:` (AVPlayer, AVPlayerItemIntegratedTimeline, AVSampleBufferRenderSynchronizer) — long-lived periodic observer
     - `addBoundaryTimeObserverForTimes:queue:usingBlock:` — long-lived boundary observer
-    - `requestMediaDataWhenReadyOnQueue:usingBlock:` / `respondToEachPassDescriptionOnQueue:usingBlock:` — pull-style callbacks invoked repeatedly
-    - `videoCompositionWithAsset:applyingCIFiltersWithHandler:` — per-frame applier block (stored), plus separate async_copied one-shot completion
+    - `requestMediaDataWhenReadyOnQueue:usingBlock:` / `respondToEachPassDescriptionOnQueue:usingBlock:` — pull-style callbacks, repeatedly invoked
+    - `videoCompositionWithAsset:applyingCIFiltersWithHandler:` — per-frame applier block (stored), plus a separate async_copied one-shot completion
 
-    **Implication for Racket-OO emitter:** Any emitter that labeled these callbacks as `async_copied` before the AVFoundation `.llm.json` was merged would have under-pinned them, causing intermittent observer disappearance under GC pressure. The Racket-OO emitter should be audited against the new AVFoundation annotations before any sample app exercises an AVPlayer time observer.
-
-    **Action needed in racket-oo target plan:** Add a task to audit generated AVFoundation bindings — specifically the `addPeriodicTimeObserverForInterval:` family — against the new `stored` annotations and verify that the emitter generates correct GC-prevention pinning (not `async_copied`-style blocks). This should run before any Racket sample app using AVFoundation time observers ships.
+    Emitters that label these as `async_copied` under-pin them, causing intermittent observer disappearance under GC pressure. The Racket-OO emitter requires audit of generated AVFoundation bindings — specifically the `addPeriodicTimeObserverForInterval:` family — against the `stored` annotations to verify correct GC-prevention pinning before any sample app using AVFoundation time observers ships.
 - id: llm-annotation-parallel-dispatch-safe-at-25-way-fan-out
   title: LLM annotation parallel dispatch safe at 25-way fan-out
   body: |
