@@ -1835,3 +1835,32 @@ sessions:
       - The post-Foundation-fix merge logic is empirically sound at 524-method scale — the WebKit-era parameter_ownership clobber bug is definitively gone.
       - Block-invocation re-classification is the consistent per-framework LLM win. Future framework selection should weight "headers with NS_NOESCAPE / `@property (copy)` block setters" alongside threading attributes.
       - Next high-value candidates: **CoreData** (ownership/error patterns, rich delegate-and-observer surface) or **AVFoundation** (block lifecycle, large completion-handler and stored-observer surface). Threading prior is now empirically lower-yield than block-invocation prior on most frameworks.
+- id: session-44
+  timestamp: 2026-04-28T04:14:14Z
+  phase: work
+  body: |
+    ### Session 44 (2026-04-28T04:14:14Z) — CoreData LLM annotation pass
+
+    - **What was attempted:** LLM annotation pass on CoreData, the fourth framework in the annotation pipeline (after WebKit, Foundation, AppKit). Targeted block-invocation re-classification and ownership annotation using the single-subagent dispatch pattern established for previous runs.
+
+    - **What worked:**
+      - Subagent wrote `analysis/ir/llm-annotations/CoreData.llm.json` (89 methods / 20 classes) and `llm-validate` passed first run.
+      - Block-invocation re-classification is the headline win: heuristics placed all 30 block-param methods as `async_copied`; LLM split into 4 `synchronous` (NS_NOESCAPE-verified `performBlockAndWait:` / `performAndWait(_:)`), 15 `async_copied`, and 11 `stored` (NSBatchInsertRequest row handlers, NSCustomMigrationStage will/did-migrate handlers, NSFetchRequestExpression block expressions).
+      - `enrich --only CoreData` passed with 0 violations; enrich totals: sync=4, async=15, stored=11, error_methods=58, main_thread_classes=0, scoped_resources=3, iterables=2.
+      - Threading=0 is correct for CoreData — queue-flexibility is implicit in `performBlock:` semantics, not a per-method rule. Not a gap.
+      - Ownership unchanged (31 → 31). The merge-clobber fix held — 5 LLM ownership entries all overlapped with heuristic coverage.
+      - Cost: 71,384 tokens (~22% over the 57.5k projection — small absolute miss on a small 90-method framework; per-class header inspection rather than batched synthesis was the driver).
+      - Runs table in `analysis/scripts/llm-annotate-orchestration.md` updated with one new row.
+
+    - **What didn't:**
+      - Subagent self-reported counts disagreed with actual `.llm.json` content (`async_copied: 18 / stored: 8 / ownership: 7` reported vs `15 / 11 / 5` in file). Validator is the source of truth, but cross-checking via `jq` post-run is now the established practice.
+
+    - **What this suggests trying next:**
+      1. **AVFoundation** is the natural next target — highest expected stored-handler density (capture session observers, audio route change handlers, player item notifications, asset loading callbacks). Check flagged-method count first: `jq '.method_count' analysis/ir/llm-summaries/AVFoundation.methods.json`.
+      2. The `stored`-count delta as headline metric is now confirmed across four frameworks (WebKit 2, Foundation 47, AppKit 25, CoreData 11) — consistently the highest-yield LLM contribution where heuristics are blind.
+      3. Consider seeding a `llm-validate` enhancement: auto-reconcile subagent self-reported counts against actual `.llm.json` content as a structured check.
+
+    - **Key learnings:**
+      - The 11 `stored` annotations on NSBatchInsertRequest / NSCustomMigrationStage handlers are consequential for Racket binding codegen — these need GC-prevention pinning that `async_copied` blocks don't.
+      - Per-class header inspection (subagent's approach) was right for a small framework; batched Python synthesis may be more token-efficient for large ones (Foundation's approach was ~60% under projection).
+      - Budget model `35k + N × 250` continues to hold as a reliable upper bound; small frameworks like CoreData may run slightly over on a per-method basis due to fixed dispatch overhead.

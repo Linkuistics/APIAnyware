@@ -2,7 +2,7 @@ tasks:
 - id: run-llm-annotation-pass-on-coredata-or-avfoundation
   title: Run LLM annotation pass on CoreData (or AVFoundation)
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** high
@@ -30,5 +30,77 @@ tasks:
     - `enrich --only <Framework>` verification passes.
     - LLM-vs-heuristic delta documented (especially stored-block count delta).
     - Runs table in `analysis/scripts/llm-annotate-orchestration.md` updated.
+
+    **Dependencies:** none
+  results: |
+    **Framework chosen:** CoreData (smaller and pattern-distinct from prior runs — managed-object lifecycle, batch-insert row handlers, custom-migration stages, NSPersistentStoreCoordinator concurrency).
+
+    **Procedure (single Claude Code subagent dispatch per orchestration doc):**
+
+    1. Confirmed `analysis/ir/llm-summaries/CoreData.methods.json` exists (90 methods / 20 classes; 58 `error_out_param` + 30 `has_block_params` + 2 `delegate_observer_pattern`).
+    2. Wiped stale `analysis/ir/annotated/CoreData.json` (had `source: "llm"` tags from earlier merge bug per WebKit-refresh row guidance) and ran heuristic-only baseline: `cargo run -q -p apianyware-macos-analyze -- annotate --only CoreData`.
+    3. Dispatched a `general-purpose` subagent with the prompt template from `analysis/scripts/llm-annotate-subagent.md`, framework substituted to `CoreData`. Subagent ran `xcrun --show-sdk-path` to locate headers and inspected each class's `.h` file directly rather than relying on `WebFetch` (developer.apple.com SPA pages return only `<title>` for this surface).
+    4. Subagent wrote `analysis/ir/llm-annotations/CoreData.llm.json` (89 methods across 20 classes) and ran `llm-validate` (passed first try).
+    5. Re-merged with `cargo run -q -p apianyware-macos-analyze -- annotate --only CoreData --llm-dir analysis/ir/llm-annotations`.
+    6. Ran `cargo run -q -p apianyware-macos-analyze -- enrich --only CoreData` — verification passed (0 violations).
+    7. Appended a row to the cost-tracking table in `analysis/scripts/llm-annotate-orchestration.md`.
+
+    **Numbers (heuristic-only baseline → post-merge):**
+    - ownership: 31 → 31 (no net change; 5 LLM ownership entries all overlapped with heuristic naming-pattern coverage; merge-clobber fix held)
+    - block_methods: 30 → 30 (same flagged set — the rewrite is in invocation classification)
+    - block invocation: **0 sync + 30 async + 0 stored → 4 sync + 15 async + 11 stored**
+    - threading: 0 → 0 (correct for CoreData — queue-flexibility model, not per-method `main_thread_only`)
+    - error_pattern: 58 → 58
+    - enrich totals: sync=4, async=15, stored=11, error_methods=58, main_thread_classes=0, scoped_resources=3, iterables=2
+
+    **What worked:**
+    - Block-invocation re-classification is the headline LLM contribution. The 11 `stored` annotations on NSBatchInsertRequest row handlers, NSCustomMigrationStage will/did-migrate handlers, and NSFetchRequestExpression block expressions are the consequential codegen signal — these need GC-prevention pinning that `async_copied` blocks don't, so any Racket binding emitter that previously labeled `setHandler:`-family setters as `async_copied` would have under-pinned them under repeated invocation.
+    - The 4 `synchronous` annotations (`performBlockAndWait:` / `performAndWait(_:)` on NSManagedObjectContext and NSPersistentStoreCoordinator) are header-verified `NS_NOESCAPE` and confirm the heuristic gap on `*AndWait:` selector recognition.
+    - Subagent's per-class header inspection (rather than batched Python synthesis) was the right approach for a small framework — cost came in at 71,384 tokens (22% over the 35k + 90×250 = 57.5k projection, but a small absolute miss).
+    - Threading=0 is the *correct* answer, not a gap. CoreData's per-context queue binding is implicit in `performBlock:` semantics, not a per-method threading rule. Worth noting in the table so future runs don't treat zero-threading as a calibration failure.
+
+    **What didn't:**
+    - Subagent's self-reported counts disagreed with the file: report claimed `async_copied: 18 / stored: 8 / ownership: 7`, but `jq` of the file shows `15 / 11 / 5`. Validator passed on actual file content. Lesson noted in cost-tracking row: future runs should cross-check the subagent's report against `jq` of the file before recording in the table.
+    - One subtle judgment call: NSAsynchronousFetchRequest's `initWithFetchRequest:completionBlock:` is held on a `(strong, readonly)` property but classed as `async_copied` because it fires exactly once. Reasonable but could be argued either way; left it as `async_copied` for consistency with other one-shot completion handlers.
+
+    **What this suggests next:**
+    1. **AVFoundation is the natural next target** — it's the remaining large unmapped framework, with the highest expected stored-handler density of any Apple framework (capture session observers, audio route change handlers, player item notifications, asset loading callbacks). Budget projection: 35k + N × 250 ≈ several hundred K tokens depending on flagged-method count; check `jq '.method_count' analysis/ir/llm-summaries/AVFoundation.methods.json` first.
+    2. Ravel-Lite triage may want to seed a follow-up backlog item to LLM-annotate AVFoundation specifically, since the current task title was "CoreData (or AVFoundation)" and only CoreData was completed.
+    3. The `stored`-count delta as headline metric is now confirmed across three frameworks (Foundation 47, AppKit 25, CoreData 11) — this is consistently the highest-yield LLM contribution where heuristics are blind.
+    4. Consider adding a brief automated "subagent-report-vs-file" reconciliation check to `llm-validate` (read both `.llm.json` and the subagent's reported counts as a structured field, diff them) — would have flagged the 5/11 vs 7/8 discrepancy automatically rather than relying on manual `jq` cross-check.
+
+    **Files touched (handed off to analyse-work):**
+    - `analysis/ir/llm-annotations/CoreData.llm.json` (new — versioned source-of-truth annotation file)
+    - `analysis/scripts/llm-annotate-orchestration.md` (added one row to cost-tracking table)
+- id: run-llm-annotation-pass-on-avfoundation
+  title: Run LLM annotation pass on AVFoundation
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** high
+
+    **Promoted from:** CoreData LLM annotation pass results (session 44) — "What this suggests next" item 1.
+
+    **Problem:** AVFoundation is the remaining large unmapped framework and has the highest expected stored-handler density of any Apple framework. Capture session observers, audio route change handlers, player item notifications, and asset loading callbacks are all strong candidates for `stored` block invocations that heuristics would misclassify as `async_copied`.
+
+    **Settled design decisions:**
+    - Follow the same subagent dispatch pattern as Foundation, AppKit, and CoreData: `llm-extract --only AVFoundation`, wipe existing annotated checkpoint, heuristic-only baseline, dispatch single `llm-annotate-subagent.md` subagent, re-annotate with `--llm-dir`, enrich, verify.
+    - Budget: 35k + N × 250 tokens/method. Confirm method count before dispatch: `jq '.method_count' analysis/ir/llm-summaries/AVFoundation.methods.json`. If >500 methods, may need chunking per the subagent guide.
+    - Document per-field deltas (threading, ownership, block invocation breakdown: sync/async/stored) in the runs table.
+    - **Use stored-block count delta as the primary success metric.** Hypothesis: AVFoundation should have the highest `stored` count of any framework so far, because capture session and audio-routing handlers are long-lived observers, not one-shot completions.
+    - **Cross-check subagent self-reported counts against `jq` of the actual `.llm.json` file before recording in the table** (lesson from CoreData run: subagent reported `18/8/7` but file had `15/11/5`).
+    - Threading: expect non-trivial threading annotations — AVFoundation has documented main-thread-only delegation callbacks (`AVCaptureVideoDataOutputSampleBufferDelegate` on a serial dispatch queue; `AVAudioPlayerDelegate` / `AVAudioRecorderDelegate` on the calling thread) plus explicit thread-safe APIs.
+
+    **Preconditions:**
+    - `analysis/ir/llm-annotations/CoreData.llm.json` committed and present (done in session 44).
+    - No blocking merge issues (empirically validated across WebKit, Foundation, AppKit, CoreData).
+
+    **Acceptance criteria:**
+    - `llm-validate` passes on framework output.
+    - `enrich --only AVFoundation` verification passes.
+    - LLM-vs-heuristic delta documented (especially stored-block count delta, expected to be the highest of any framework so far).
+    - Runs table in `analysis/scripts/llm-annotate-orchestration.md` updated.
+    - Subagent self-reported counts reconciled against `jq` of the written file before table entry is finalized.
 
     **Dependencies:** none
