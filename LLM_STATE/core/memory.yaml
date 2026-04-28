@@ -506,3 +506,16 @@ entries:
   title: LLM subagent self-reports reconciled via subagent_report field
   body: |
     `subagent_report` in `FrameworkAnnotations` (`analysis/crates/types/src/annotation.rs`) carries seven `Option<usize>` count fields (`None` = not tracked; `Some(0)` = tracked, none found). `llm-validate` emits `ValidationWarning::SubagentReportMismatch` and logs `warnings=N` when subagent-stated counts diverge from actual output; strict equality is the threshold (no tolerance). Subagents include a structured self-report via `analysis/scripts/llm-annotate-subagent.md` template. Manual `jq` cross-check is available for ad-hoc inspection. AVFoundation first real use: `warnings=0`. Canonical discrepancy (pre-formal-reconciliation): CoreData subagent reported async_copied=18/stored=8/ownership=7; actual `.llm.json` held 15/11/5.
+- id: avfoundation-stored-block-signals-require-racket-oo-emitter-audit-before-avplayer-sample-apps
+  title: AVFoundation stored-block signals require Racket-OO emitter audit before AVPlayer sample apps
+  body: |
+    AVFoundation's LLM annotation pass (2026-04-28) identified 15 stored-block reclassifications that are high-impact codegen signals for language binding emitters. The key ones:
+
+    - `addPeriodicTimeObserverForInterval:queue:usingBlock:` (AVPlayer, AVPlayerItemIntegratedTimeline, AVSampleBufferRenderSynchronizer) — long-lived periodic observer
+    - `addBoundaryTimeObserverForTimes:queue:usingBlock:` — long-lived boundary observer
+    - `requestMediaDataWhenReadyOnQueue:usingBlock:` / `respondToEachPassDescriptionOnQueue:usingBlock:` — pull-style callbacks invoked repeatedly
+    - `videoCompositionWithAsset:applyingCIFiltersWithHandler:` — per-frame applier block (stored), plus separate async_copied one-shot completion
+
+    **Implication for Racket-OO emitter:** Any emitter that labeled these callbacks as `async_copied` before the AVFoundation `.llm.json` was merged would have under-pinned them, causing intermittent observer disappearance under GC pressure. The Racket-OO emitter should be audited against the new AVFoundation annotations before any sample app exercises an AVPlayer time observer.
+
+    **Action needed in racket-oo target plan:** Add a task to audit generated AVFoundation bindings — specifically the `addPeriodicTimeObserverForInterval:` family — against the new `stored` annotations and verify that the emitter generates correct GC-prevention pinning (not `async_copied`-style blocks). This should run before any Racket sample app using AVFoundation time observers ships.
