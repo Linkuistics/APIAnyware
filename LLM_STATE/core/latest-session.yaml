@@ -1,19 +1,23 @@
-id: session-42
-timestamp: 2026-04-28T03:23:00Z
+id: session-43
+timestamp: 2026-04-28T03:50:00Z
 phase: work
 body: |
-  ### Session 42 (2026-04-28T03:23:00Z) — Add observer-param weak heuristic; audit EventKit/PushKit checkpoints
+  ### Session 43 (2026-04-28T03:50:00Z) — AppKit LLM annotation pass
 
-  - **Attempted:** (1) Add a structural heuristic in `analysis/crates/annotate/src/heuristics.rs` to classify `add…Observer:` first-param as `weak` ownership; (2) audit EventKit and PushKit annotated checkpoints for merge-clobber damage.
+  - **What was attempted:** Ran the AppKit LLM annotation pass following the established subagent dispatch workflow: refreshed llm-summaries via `llm-extract --only AppKit`, captured a heuristic-only baseline, dispatched a single Claude Code subagent with the `llm-annotate-subagent.md` template, re-annotated and enriched, and appended a row to the runs table.
 
   - **What worked:**
-    - New `is_observer_param` function added to `heuristics.rs`, wired into `derive_parameter_ownership` alongside the existing `is_delegate_param` check.
-    - Structural match (first selector segment `starts_with("add") && ends_with("Observer")`) correctly covers KVO `addObserver:`, NSNotificationCenter `addObserver:selector:name:object:`, and `addSharedObserver:` (bulk KVO) while excluding block-form `addObserverForName:object:queue:usingBlock:`.
-    - Initial substring rule (`selector.contains("addObserver:")`) was replaced after it missed `addSharedObserver:forKey:options:context:`. The structural approach is generative — future `addXxxObserver:` variants are caught automatically.
-    - 5 tests added (3 positive, 2 negative); all 597 workspace tests pass.
-    - Heuristic-only Foundation annotate produces exactly 302 `parameter_ownership` entries (the target was ≥302 from the calibration; was 273 heur-only before this session, +29 previously LLM-only).
-    - EventKit and PushKit checkpoints are clean — neither was damaged by the merge-clobber bug. EventKit had 0 LLM-additive ownership entries (nothing to drop). PushKit's single `setDelegate:` weak entry is intact.
+    - Subagent wrote `analysis/ir/llm-annotations/AppKit.llm.json`; `llm-validate` passed first run (138 classes / 437 methods). `enrich --only AppKit` verification passed before and after merge.
+    - Cost came in 28% under projection (119,969 tokens vs 166k projected by 35k + 524×250). The 35k + N × 250 budget rule continues to hold; AppKit and Foundation both run 28–60% under the older 534/method WebKit figure, confirming the WebKit figure was a small-batch artifact.
+    - **Block-invocation re-classification** was the headline win: heuristics had 0 `stored` block annotations; LLM identified 25 stored handlers and demoted 47 async → 22 sync + 25 stored. `enrich` stored_blocks count: 0 → 25. These matter for Racket binding generation because `stored` blocks need GC-prevention pinning that `async_copied` blocks don't.
+    - Threading additive: +278 (15605 → 15883 method-level entries); per-class `main_thread_classes` 73 → 142.
+
+  - **What didn't / surprised:**
+    - Threading delta was smaller than the WebKit-calibrated expectation because heuristics now propagate class-level `NS_SWIFT_UI_ACTOR` to methods — the LLM is supplementing rather than discovering threading annotations.
+    - Ownership delta effectively zero (+1 method): AppKit's delegate setters overwhelmingly follow the `setDelegate:`/`setDataSource:` naming pattern that heuristics already classify correctly.
+    - 9 modal-completion-callback selectors deliberately left unannotated because Apple headers carry no explicit retention attribute on the callback target.
 
   - **What this suggests trying next:**
-    - Run LLM annotation on AppKit (already the top-priority backlog item). The observer heuristic now covers this pattern across all frameworks, reducing AppKit's expected LLM-additive ownership surface.
-    - The per-field comparison pattern (`.llm.json` input counts vs. `annotated/<F>.json` checkpoint counts) used to audit EventKit/PushKit could be a lightweight `analyze validate-merge` subcommand for future regression detection.
+    - The post-Foundation-fix merge logic is empirically sound at 524-method scale — the WebKit-era parameter_ownership clobber bug is definitively gone.
+    - Block-invocation re-classification is the consistent per-framework LLM win. Future framework selection should weight "headers with NS_NOESCAPE / `@property (copy)` block setters" alongside threading attributes.
+    - Next high-value candidates: **CoreData** (ownership/error patterns, rich delegate-and-observer surface) or **AVFoundation** (block lifecycle, large completion-handler and stored-observer surface). Threading prior is now empirically lower-yield than block-invocation prior on most frameworks.
