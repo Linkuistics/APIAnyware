@@ -132,6 +132,41 @@ The pipeline is idempotent at every step:
 re-running only after the `resolve` step changes (i.e. SDK update or
 collection logic change).
 
+## Durability — `.llm.json` files are versioned
+
+`analysis/ir/llm-annotations/*.llm.json` is **checked into the repo** (Option
+A in the durability decision). Rationale, decided 2026-04-28 after the
+EventKit calibration run:
+
+- **Cost of regeneration is non-trivial.** Across the 154 frameworks with
+  flagged methods (17,862 methods total), regenerating from scratch
+  consumes millions of subagent tokens and a substantial wall-time budget.
+- **Storage cost is trivial.** Each `.llm.json` is <5 KB; the full set is
+  well under 1 MB of versioned JSON.
+- **Co-evolution is clean.** Annotations are keyed to `(class, selector)`
+  pairs, so SDK or extractor changes that rename or remove methods produce
+  ordinary diffs rather than orphan data.
+- **Fresh-clone workflow is fully offline.** A clone runs:
+  `analyze llm-extract` (cheap, deterministic) → `analyze annotate --llm-dir
+  analysis/ir/llm-annotations` (free, no LLM calls) → `analyze enrich`. No
+  Claude Code session required to reproduce annotated IR.
+
+Re-running a subagent is required only when (a) the framework's resolved
+IR changed in a way that invalidates the existing annotations (renamed
+selectors, new flagged methods), or (b) the subagent prompt is revised
+and the existing annotations need to be re-derived.
+
+Options not chosen:
+
+- **(B) Versioning `analysis/ir/annotated/`** — the merged checkpoints
+  are 100×–1000× larger than the `.llm.json` source files and contain
+  redundant heuristic annotations that would conflict on every extractor
+  change. The `.llm.json` files are the load-bearing source-of-truth;
+  the annotated checkpoint is derived.
+- **(C) Accepting ephemerality** — only viable if total regeneration cost
+  is <$0.10. With ~14M tokens estimated for the full 154-framework run,
+  this is decisively non-viable.
+
 ## Cost & wall-time tracking
 
 After each real run, append a row to the table below so future runs can
@@ -140,3 +175,4 @@ budget against measured numbers, not guesses.
 | Date | Framework(s) | Methods | Subagent tokens (total) | Wall time | Notes |
 |---|---|---|---|---|---|
 | 2026-04-27 | PushKit | 2 (1 annotated, 1 skipped) | 54,327 | ~2m 9s | First real subagent run. `setDelegate:` annotated `weak`; `delegate` getter deliberately skipped (no schema field applies to a property getter). WebFetch on `developer.apple.com` returned only `<title>`; subagent fell back to SDK header at `MacOSX.sdk/.../PushKit.framework/Headers/PKPushRegistry.h` and used the `weak` declaration there. `llm-validate` and `enrich` verification both passed. |
+| 2026-04-28 | EventKit | 19 (17 annotated, 2 getters skipped) | 38,971 | ~73s | Calibration run for mixed annotation reasons (8 `has_block_params` + 9 `error_out_param` + 2 `delegate_observer_pattern`). 12 tool uses. All 8 block params classified (1 synchronous on `enumerateEventsMatchingPredicate:usingBlock:`, 7 async_copied for completion handlers and `request*Access*` permission prompts). All 9 `error_out_param` annotations emitted. 0 `parameter_ownership` and 0 `threading` annotations — no flagged methods take a delegate parameter, and headers don't carry explicit threading prose. **Heuristic vs LLM:** for EventKit, the heuristic pass already classifies block invocation styles and error patterns identically; the LLM pass was confirmatory rather than additive. **Prompt-clarity feedback:** explicitly state that classes with zero annotated methods should be omitted from `classes` (rather than emitted with empty `methods: []`). |

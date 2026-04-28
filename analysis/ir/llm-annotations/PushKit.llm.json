@@ -1,0 +1,18 @@
+{
+  "framework": "PushKit",
+  "classes": [
+    {
+      "class_name": "PKPushRegistry",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ]
+}

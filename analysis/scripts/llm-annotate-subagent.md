@@ -131,6 +131,9 @@ Hard rules — the validator (next step) will reject violations:
 - `source` must be `"llm"` for every annotation.
 - Skip methods you have no annotations for — do not emit empty
   `MethodAnnotation` shells.
+- Skip classes whose methods all fall under the previous rule — omit
+  the class from `classes` entirely rather than emitting it with an
+  empty `methods: []` array.
 
 ## Validate before returning
 

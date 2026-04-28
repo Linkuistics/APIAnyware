@@ -10,10 +10,11 @@ analysis/ir/annotated/
 analysis/ir/enriched/
 
 # LLM annotation pipeline intermediates: summaries are derivable from resolved IR
-# via `llm-extract`; annotations are LLM subagent outputs that get folded into
-# `annotated/` by `annotate --llm-dir` (which is itself gitignored).
+# via `llm-extract`. Subagent-produced `analysis/ir/llm-annotations/*.llm.json`
+# files are versioned (durability: Option A — see
+# `analysis/scripts/llm-annotate-orchestration.md`); regenerating them costs
+# millions of tokens, while the JSON itself is <5 KB per framework.
 analysis/ir/llm-summaries/
-analysis/ir/llm-annotations/
 
 # Generated language bindings (reproducible from enriched IR)
 generation/targets/*/generated/
