@@ -437,24 +437,20 @@ entries:
   body: |
     EventKit calibration: 38,971 tokens / 19 methods; marginal ~500 tokens/method, ~35k tokens fixed per framework.
     WebKit calibration (86 methods, naming-pattern-defeating): 80,907 tokens total; (80,907 − 35,000) / 86 ≈ 534 tokens/method.
-    Foundation calibration (546 methods, naming-compliant): 131,228 tokens total; marginal ~250 tokens/method — 60% under WebKit-derived projection.
-    Budget model: 35k + N × 250 tokens/method for naming-compliant frameworks; 35k + N × 534 tokens/method for naming-pattern-defeating (heavy class decorations like `_SWIFT_UI_ACTOR`).
+    Foundation calibration (546 methods, naming-compliant): 131,228 tokens total; marginal ~250 tokens/method.
+    AppKit calibration (437 methods, naming-compliant): 119,969 tokens total; marginal ~194 tokens/method — 28% under 35k + N × 250 projection.
+    Budget model: 35k + N × 250 tokens/method for naming-compliant frameworks (empirically 194–250); 35k + N × 534 tokens/method for naming-pattern-defeating (heavy class decorations like `_SWIFT_UI_ACTOR`).
     Matter (12,827 methods) requires class-level chunking before annotation.
 - id: llm-adds-value-only-on-naming-pattern-defeating-frameworks
-  title: LLM adds value only on naming-pattern-defeating frameworks
+  title: Block-invocation reclassification is primary LLM value-add
   body: |
-    Heuristic name-pattern matchers classify block/error/out-param patterns for naming-compliant
-    frameworks; LLM is confirmatory only on these. LLM is additive on naming-pattern-defeating
-    frameworks:
+    Block-invocation re-classification is the primary LLM value-add: heuristics emit 0 `stored` block lifecycle annotations; LLM identifies stored handlers. AppKit: 0→25 `stored_blocks`; 47 async demoted to 22 sync + 25 stored. `stored` blocks require GC-prevention pinning that `async_copied` blocks do not.
 
-    - **Threading**: +63 `threading: main_thread_only` on WebKit from `WK_SWIFT_UI_ACTOR` C-macro
-      class decorations — heuristics cannot read C-macro decorators. AppKit (`_SWIFT_UI_ACTOR`) is
-      the highest-value next LLM annotation target.
-    - **Ownership**: +2 methods on WebKit (pre-ARC `assign`-attribute delegate setters). Foundation:
-      0 LLM delta — the `addObserver:` first-param weak pattern is now covered by `is_observer_param`
-      heuristic (see "`is_observer_param` heuristic covers add…Observer: first-param weak").
-    - **Block/error patterns**: 0 delta across WebKit and Foundation — heuristic `*completionHandler*`
-      and `NSError**` patterns are complete.
+    Threading: LLM was high-yield on WebKit (C-macro `WK_SWIFT_UI_ACTOR`). AppKit threading delta was smaller (+278 method-level entries) because heuristics now propagate class-level `_SWIFT_UI_ACTOR` to methods — LLM is supplementing, not discovering. Threading yield declines as heuristics mature.
+
+    Ownership: Near-zero LLM delta on AppKit and Foundation. `setDelegate:`/`setDataSource:` patterns are fully covered by heuristics; Foundation `addObserver:` covered by `is_observer_param`.
+
+    Framework selection: weight "headers with `NS_NOESCAPE` / `@property (copy)` block setters" alongside threading attributes. Next highest-value: CoreData (ownership/error patterns, delegate/observer surface), AVFoundation (block lifecycle, completion-handler and stored-observer surface).
 - id: llm-merge-drops-heuristic-parameter-ownership-annotations
   title: parameter_ownership merge uses per-param union
   body: |
