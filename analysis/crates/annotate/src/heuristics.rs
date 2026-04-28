@@ -47,7 +47,9 @@ fn derive_parameter_ownership(
     let selector_parts: Vec<&str> = selector.split(':').collect();
 
     for (i, param) in method.params.iter().enumerate() {
-        let ownership = if is_delegate_param(selector, &selector_parts, i, &param.name) {
+        let ownership = if is_delegate_param(selector, &selector_parts, i, &param.name)
+            || is_observer_param(selector, i, &param.name)
+        {
             OwnershipKind::Weak
         } else if matches!(param.param_type.kind, TypeRefKind::Block { .. }) {
             OwnershipKind::Copy
@@ -94,6 +96,23 @@ fn is_delegate_param(
     }
 
     false
+}
+
+/// Check if a parameter is the observer in an `add…Observer:` family selector.
+///
+/// Covers KVO `addObserver:forKeyPath:options:context:`, NSNotificationCenter
+/// `addObserver:selector:name:object:`, and KVO bulk variants like
+/// `addSharedObserver:forKey:options:context:`. All store the observer as a
+/// weak reference — the same ownership semantics as a delegate, but the selector
+/// segment isn't `setDelegate:` so the existing delegate heuristic doesn't catch
+/// them. The block-form `addObserverForName:object:queue:usingBlock:` is correctly
+/// excluded because its first segment ends in `Name`, not `Observer`.
+fn is_observer_param(selector: &str, param_index: usize, param_name: &str) -> bool {
+    if param_index != 0 || !param_name.to_lowercase().contains("observer") {
+        return false;
+    }
+    let first_segment = selector.split(':').next().unwrap_or("");
+    first_segment.starts_with("add") && first_segment.ends_with("Observer")
 }
 
 /// Derive block parameter invocation style from selector naming.
@@ -532,6 +551,240 @@ mod tests {
         let ann = annotate_method_heuristic("NSTableView", &method);
         assert_eq!(ann.parameter_ownership.len(), 1);
         assert_eq!(ann.parameter_ownership[0].ownership, OwnershipKind::Weak);
+    }
+
+    #[test]
+    fn test_addobserver_kvo_observer_param_is_weak() {
+        // KVO addObserver:forKeyPath:options:context: passes a generic id observer
+        // that the framework holds weakly. The selector segment isn't setDelegate:
+        // so the existing delegate heuristic doesn't fire — this is the gap the
+        // observer heuristic closes.
+        let method = make_method(
+            "addObserver:forKeyPath:options:context:",
+            false,
+            vec![
+                Param {
+                    name: "observer".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "keyPath".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "options".to_string(),
+                    param_type: TypeRef {
+                        nullable: false,
+                        kind: TypeRefKind::Primitive {
+                            name: "NSKeyValueObservingOptions".to_string(),
+                        },
+                    },
+                },
+                Param {
+                    name: "context".to_string(),
+                    param_type: make_type_pointer(),
+                },
+            ],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        );
+
+        let ann = annotate_method_heuristic("NSArray", &method);
+        let observer = ann
+            .parameter_ownership
+            .iter()
+            .find(|p| p.param_index == 0)
+            .expect("observer ownership entry missing");
+        assert_eq!(observer.ownership, OwnershipKind::Weak);
+    }
+
+    #[test]
+    fn test_addobserver_notification_observer_param_is_weak() {
+        let method = make_method(
+            "addObserver:selector:name:object:",
+            false,
+            vec![
+                Param {
+                    name: "observer".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "aSelector".to_string(),
+                    param_type: TypeRef {
+                        nullable: false,
+                        kind: TypeRefKind::Primitive {
+                            name: "SEL".to_string(),
+                        },
+                    },
+                },
+                Param {
+                    name: "aName".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "anObject".to_string(),
+                    param_type: make_type_id(),
+                },
+            ],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        );
+
+        let ann = annotate_method_heuristic("NSNotificationCenter", &method);
+        let observer = ann
+            .parameter_ownership
+            .iter()
+            .find(|p| p.param_index == 0)
+            .expect("observer ownership entry missing");
+        assert_eq!(observer.ownership, OwnershipKind::Weak);
+    }
+
+    #[test]
+    fn test_add_shared_observer_kvo_variant_is_weak() {
+        // NSKeyValueSharedObservers.addSharedObserver:forKey:options:context: —
+        // first selector segment is `addSharedObserver`, not `addObserver`, but
+        // the observer ownership semantics are identical (KVO holds the observer
+        // weakly). The structural form `add<Qualifier>Observer:` should match.
+        let method = make_method(
+            "addSharedObserver:forKey:options:context:",
+            false,
+            vec![
+                Param {
+                    name: "observer".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "key".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "options".to_string(),
+                    param_type: TypeRef {
+                        nullable: false,
+                        kind: TypeRefKind::Primitive {
+                            name: "NSKeyValueObservingOptions".to_string(),
+                        },
+                    },
+                },
+                Param {
+                    name: "context".to_string(),
+                    param_type: make_type_pointer(),
+                },
+            ],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        );
+
+        let ann = annotate_method_heuristic("NSKeyValueSharedObservers", &method);
+        let observer = ann
+            .parameter_ownership
+            .iter()
+            .find(|p| p.param_index == 0)
+            .expect("observer ownership entry missing");
+        assert_eq!(observer.ownership, OwnershipKind::Weak);
+    }
+
+    #[test]
+    fn test_addobserver_does_not_misfire_on_block_form() {
+        // addObserverForName: returns a system-generated observer; it doesn't take
+        // an observer param, so the heuristic must not classify the first param
+        // (a name string) as weak.
+        let method = make_method(
+            "addObserverForName:object:queue:usingBlock:",
+            false,
+            vec![
+                Param {
+                    name: "name".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "obj".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "queue".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "block".to_string(),
+                    param_type: make_type_block(),
+                },
+            ],
+            make_type_id(),
+        );
+
+        let ann = annotate_method_heuristic("NSNotificationCenter", &method);
+        // Param 0 (name) must not be marked weak.
+        assert!(
+            !ann.parameter_ownership
+                .iter()
+                .any(|p| p.param_index == 0 && p.ownership == OwnershipKind::Weak),
+            "first param of addObserverForName:... is a name string, not an observer; \
+             must not be weak: {:?}",
+            ann.parameter_ownership
+        );
+    }
+
+    #[test]
+    fn test_addobserver_only_fires_on_first_param() {
+        // A hypothetical method with `addObserver:` substring but the observer at
+        // a non-zero index (or a non-observer-named first param) must not fire.
+        let method = make_method(
+            "addObserver:forKeyPath:options:context:",
+            false,
+            vec![
+                Param {
+                    // Non-observer name — must not match.
+                    name: "target".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "keyPath".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "options".to_string(),
+                    param_type: TypeRef {
+                        nullable: false,
+                        kind: TypeRefKind::Primitive {
+                            name: "NSUInteger".to_string(),
+                        },
+                    },
+                },
+                Param {
+                    name: "context".to_string(),
+                    param_type: make_type_pointer(),
+                },
+            ],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        );
+
+        let ann = annotate_method_heuristic("NSArray", &method);
+        // No weak entry for param 0 — name doesn't say "observer".
+        assert!(
+            !ann.parameter_ownership
+                .iter()
+                .any(|p| p.param_index == 0 && p.ownership == OwnershipKind::Weak),
+            "first param is named 'target', not an observer: {:?}",
+            ann.parameter_ownership
+        );
     }
 
     #[test]

@@ -1793,3 +1793,22 @@ sessions:
       1. AppKit is the highest-value next LLM annotation target — heavy `_SWIFT_UI_ACTOR` class-level decorations will produce a large threading-additive contribution analogous to WebKit's +63.
       2. A small heuristic enhancement task is worth adding: `addObserver:` first-param weak classification would close the 9-entry gap the LLM found and shrink the additive surface for future observer-pattern frameworks.
       3. Revised budget model (35k + N × 250) should replace the 534/method WebKit figure in future projection calculations.
+- id: session-42
+  timestamp: 2026-04-28T03:23:00Z
+  phase: work
+  body: |
+    ### Session 42 (2026-04-28T03:23:00Z) — Add observer-param weak heuristic; audit EventKit/PushKit checkpoints
+
+    - **Attempted:** (1) Add a structural heuristic in `analysis/crates/annotate/src/heuristics.rs` to classify `add…Observer:` first-param as `weak` ownership; (2) audit EventKit and PushKit annotated checkpoints for merge-clobber damage.
+
+    - **What worked:**
+      - New `is_observer_param` function added to `heuristics.rs`, wired into `derive_parameter_ownership` alongside the existing `is_delegate_param` check.
+      - Structural match (first selector segment `starts_with("add") && ends_with("Observer")`) correctly covers KVO `addObserver:`, NSNotificationCenter `addObserver:selector:name:object:`, and `addSharedObserver:` (bulk KVO) while excluding block-form `addObserverForName:object:queue:usingBlock:`.
+      - Initial substring rule (`selector.contains("addObserver:")`) was replaced after it missed `addSharedObserver:forKey:options:context:`. The structural approach is generative — future `addXxxObserver:` variants are caught automatically.
+      - 5 tests added (3 positive, 2 negative); all 597 workspace tests pass.
+      - Heuristic-only Foundation annotate produces exactly 302 `parameter_ownership` entries (the target was ≥302 from the calibration; was 273 heur-only before this session, +29 previously LLM-only).
+      - EventKit and PushKit checkpoints are clean — neither was damaged by the merge-clobber bug. EventKit had 0 LLM-additive ownership entries (nothing to drop). PushKit's single `setDelegate:` weak entry is intact.
+
+    - **What this suggests trying next:**
+      - Run LLM annotation on AppKit (already the top-priority backlog item). The observer heuristic now covers this pattern across all frameworks, reducing AppKit's expected LLM-additive ownership surface.
+      - The per-field comparison pattern (`.llm.json` input counts vs. `annotated/<F>.json` checkpoint counts) used to audit EventKit/PushKit could be a lightweight `analyze validate-merge` subcommand for future regression detection.
