@@ -6,8 +6,7 @@
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../../runtime/objc-base.rkt"
-         "../../../runtime/coerce.rkt"
-         "../../../runtime/block.rkt")
+         "../../../runtime/coerce.rkt")
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/Foundation.framework/Foundation"))
@@ -15,12 +14,9 @@
 
 
 ;; --- Class predicates ---
-(define (comparisonresult? v) (objc-instance-of? v "ComparisonResult"))
-(define (dependentmember? v) (objc-instance-of? v "DependentMember"))
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (range? v) (objc-instance-of? v "Range"))
-(define (tuple? v) (objc-instance-of? v "Tuple"))
 (provide NSData)
 (provide/contract
   [make-nsdata-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
@@ -30,10 +26,8 @@
   [nsdata-length (c-> objc-object? exact-nonnegative-integer?)]
   [nsdata-regions (c-> objc-object? (or/c nsarray? objc-nil?))]
   [nsdata-start-index (c-> objc-object? exact-integer?)]
-  [nsdata-clip (c-> objc-object? void?)]
   [nsdata-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
   [nsdata-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nsdata-formatted (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nsdata-mutable-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
   [nsdata-supports-secure-coding (c-> boolean?)]
   )
@@ -76,17 +70,12 @@
   (tell #:type _int64 (coerce-arg self) startIndex))
 
 ;; --- Instance methods ---
-(define (nsdata-clip self)
-  (tell #:type _void (coerce-arg self) clip))
 (define (nsdata-copy-with-zone self zone)
   (wrap-objc-object
    (_msg-3 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
    #:retained #t))
 (define (nsdata-encode-with-coder self coder)
   (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
-(define (nsdata-formatted self)
-  (wrap-objc-object
-   (tell (coerce-arg self) formatted)))
 (define (nsdata-mutable-copy-with-zone self zone)
   (wrap-objc-object
    (_msg-3 (coerce-arg self) (sel_registerName "mutableCopyWithZone:") zone)

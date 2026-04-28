@@ -214,6 +214,25 @@ The pipeline is idempotent at every step:
 re-running only after the `resolve` step changes (i.e. SDK update or
 collection logic change).
 
+## Drift gate — after extraction changes
+
+When an extraction fix (e.g. extract-objc filter, extract-swift mapping
+change) lands and may have shifted the method set for any framework, run:
+
+```bash
+./analysis/scripts/check-llm-annotation-drift.sh
+```
+
+It regenerates `analysis/ir/llm-summaries/` from current resolved IR and
+runs `llm-validate` on every checked-in `.llm.json`. Exits non-zero with a
+list of stale frameworks; remediation is to delete the listed `.llm.json`
+files and re-dispatch subagents (see `Re-running` above). Runs in seconds
+modulo the upfront `llm-extract` pass.
+
+Pass `--skip-regen` to validate against the existing `.methods.json` set
+without re-extracting (faster but only meaningful if the summaries are
+already known to match current IR).
+
 ## Durability — `.llm.json` files are versioned
 
 `analysis/ir/llm-annotations/*.llm.json` is **checked into the repo** (Option

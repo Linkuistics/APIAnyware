@@ -108,13 +108,13 @@ pub fn annotate_framework(
         };
 
         for method in methods {
-            annotate_and_push(&class.name, method, &llm_index, &mut method_annotations);
+            annotate_and_push(class, method, &llm_index, &mut method_annotations);
         }
 
         // Also annotate category methods (e.g., NSExtendedArray on NSArray).
         for category_group in &class.category_methods {
             for method in &category_group.methods {
-                annotate_and_push(&class.name, method, &llm_index, &mut method_annotations);
+                annotate_and_push(class, method, &llm_index, &mut method_annotations);
             }
         }
 
@@ -138,15 +138,15 @@ pub fn annotate_framework(
 
 /// Run heuristics on a method, merge with LLM annotation if available, and push to results.
 fn annotate_and_push(
-    class_name: &str,
+    class: &apianyware_macos_types::ir::Class,
     method: &apianyware_macos_types::ir::Method,
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
 ) {
-    let heuristic = heuristics::annotate_method_heuristic(class_name, method);
+    let heuristic = heuristics::annotate_method_heuristic(class, method);
 
     let llm_ann = llm_index
-        .get(&(class_name, method.selector.as_str()))
+        .get(&(class.name.as_str(), method.selector.as_str()))
         .copied();
 
     let overrides = AnnotationOverrides::default();

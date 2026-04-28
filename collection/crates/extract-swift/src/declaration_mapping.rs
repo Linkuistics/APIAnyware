@@ -241,6 +241,7 @@ fn map_class(node: &AbiNode) -> Option<ir::Class> {
         properties,
         methods,
         category_methods: vec![],
+        swift_attributes: node.decl_attributes.clone(),
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
@@ -484,6 +485,10 @@ fn map_property(node: &AbiNode) -> Option<ir::Property> {
         property_type,
         readonly,
         class_property,
+        // `(copy)` is an ObjC property attribute; Swift bridged properties
+        // surface as ObjC overrides which carry the attribute on the ObjC
+        // side. Default-false here; merge keeps the ObjC value.
+        is_copy: false,
         deprecated: false,
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),

@@ -117,6 +117,18 @@ fn merge_class_members(objc_class: &mut ir::Class, swift_class: ir::Class) {
             objc_class.protocols.push(protocol);
         }
     }
+
+    // Merge Swift-side declaration attributes (e.g. `MainActor`) into the
+    // ObjC class. ObjC extraction never produces swift_attributes today,
+    // but use set-union so future ObjC-side capture (e.g. _SWIFT_UI_ACTOR
+    // macro extraction) merges cleanly without duplicates.
+    let existing_swift_attrs: std::collections::HashSet<String> =
+        objc_class.swift_attributes.iter().cloned().collect();
+    for attr in swift_class.swift_attributes {
+        if !existing_swift_attrs.contains(&attr) {
+            objc_class.swift_attributes.push(attr);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -164,6 +176,7 @@ mod tests {
             property_type: void_type(),
             readonly: false,
             class_property: false,
+            is_copy: false,
             deprecated: false,
             source: Some(source),
             provenance: None,
@@ -204,6 +217,7 @@ mod tests {
             properties: vec![],
             methods: vec![make_method("init", DeclarationSource::ObjcHeader)],
             category_methods: vec![],
+            swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
@@ -225,6 +239,7 @@ mod tests {
                 make_method("swiftMethod", DeclarationSource::SwiftInterface),
             ],
             category_methods: vec![],
+            swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
@@ -261,6 +276,7 @@ mod tests {
             properties: vec![],
             methods: vec![make_method("doThing", DeclarationSource::SwiftInterface)],
             category_methods: vec![],
+            swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],

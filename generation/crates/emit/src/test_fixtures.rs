@@ -219,6 +219,7 @@ fn property(name: &str, property_type: TypeRef, readonly: bool) -> Property {
         property_type,
         readonly,
         class_property: false,
+        is_copy: false,
         deprecated: false,
         source: None,
         provenance: None,
@@ -244,6 +245,7 @@ fn build_tkobject() -> Class {
             method("description", false, false, vec![], type_class("NSString")),
         ],
         category_methods: vec![],
+        swift_attributes: vec![],
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
@@ -288,6 +290,7 @@ fn build_tkview() -> Class {
             method("appearance", true, false, vec![], type_id()),
         ],
         category_methods: vec![],
+        swift_attributes: vec![],
         ancestors: vec!["TKObject".to_string()],
         all_methods: vec![
             // Inherited from TKObject
@@ -325,6 +328,7 @@ fn build_tkbutton() -> Class {
             method("isHighlighted", false, false, vec![], type_bool()),
         ],
         category_methods: vec![],
+        swift_attributes: vec![],
         ancestors: vec!["TKView".to_string(), "TKObject".to_string()],
         all_methods: vec![
             method("dealloc", false, false, vec![], type_void()),
@@ -381,6 +385,7 @@ fn build_tkmanager() -> Class {
             ),
         ],
         category_methods: vec![],
+        swift_attributes: vec![],
         ancestors: vec!["TKObject".to_string()],
         all_methods: vec![
             method("init", false, true, vec![], type_instancetype()),
@@ -403,6 +408,7 @@ fn build_tkhelper() -> Class {
             method("maximumCount", true, false, vec![], type_int()),
         ],
         category_methods: vec![],
+        swift_attributes: vec![],
         ancestors: vec!["TKObject".to_string()],
         all_methods: vec![
             method("init", false, true, vec![], type_instancetype()),

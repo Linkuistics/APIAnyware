@@ -462,7 +462,6 @@
   "protocols/nswritingtoolscoordinatordelegate.rkt"
   "protocols/nstextsuggestionsdelegate.rkt"
   "protocols/nsviewinvalidating.rkt"
-  "protocols/sequence.rkt"
   )
 
 (provide (all-from-out
@@ -926,5 +925,4 @@
   "protocols/nswritingtoolscoordinatordelegate.rkt"
   "protocols/nstextsuggestionsdelegate.rkt"
   "protocols/nsviewinvalidating.rkt"
-  "protocols/sequence.rkt"
   ))

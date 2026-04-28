@@ -40,11 +40,14 @@ fn golden_appkit_dir() -> PathBuf {
 /// notification center, error domain, file operations, user defaults,
 /// formatter/builder, locking, timer, enums, constants, main re-export,
 /// and representative protocols (NSCopying, NSCoding, NSLocking).
+///
+/// `nsobject.rkt` is intentionally not listed: NSObject lives in
+/// `objc/runtime`, not Foundation, so the foreign-module type-decl filter
+/// (extract-swift) correctly drops it from Foundation's IR.
 const FOUNDATION_GOLDEN_FILES: &[&str] = &[
     "main.rkt",
     "constants.rkt",
     "enums.rkt",
-    "nsobject.rkt",
     "nsstring.rkt",
     "nsarray.rkt",
     "nsdata.rkt",

@@ -281,6 +281,7 @@ fn extract_class(
         properties,
         methods,
         category_methods: Vec::new(),
+        swift_attributes: Vec::new(),
         ancestors: Vec::new(),
         all_methods: Vec::new(),
         all_properties: Vec::new(),
@@ -399,6 +400,7 @@ fn extract_property(
     let objc_attrs = entity.get_objc_attributes();
     let readonly = objc_attrs.is_some_and(|a| a.readonly);
     let class_property = objc_attrs.is_some_and(|a| a.class);
+    let is_copy = objc_attrs.is_some_and(|a| a.copy);
 
     let deprecated = matches!(entity.get_availability(), clang::Availability::Deprecated);
 
@@ -410,6 +412,7 @@ fn extract_property(
         property_type,
         readonly,
         class_property,
+        is_copy,
         deprecated,
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),

@@ -1,15 +1,19 @@
-id: session-49
-timestamp: 2026-04-28T12:00:05Z
+id: session-50
+timestamp: 2026-04-28T12:44:01Z
 phase: work
 body: |
-  ### Session 49 (2026-04-28T12:00:05Z) — Re-annotate 16 stale LLM frameworks after foreign-module extractor fix
+  ### Session 50 (2026-04-28T12:44:01Z) — Heuristic improvements and annotation drift guardrail
 
-  - Re-ran `llm-extract --only` on all 16 frameworks affected by the foreign-module type-decl filter fix; regenerated `.methods.json` summaries with the post-fix stable selector set.
-  - Deleted the 16 stale `.llm.json` files and dispatched 16 subagents in a single 16-way parallel salvo; all returned `warnings=0` without needing re-validation loops.
-  - Independent `llm-validate` pass: PASS=16, FAIL=0.
-  - Ran `annotate --llm-dir analysis/ir/llm-annotations --only <16>` and `enrich --only <16>`; all 16 reported `verification passed` with 0 violations.
-  - Net annotation additions: 1,971 LLM-additive annotations (158 sync, 406 async_copied, 280 stored, 405 weak/copy, 416 main_thread_only, 16 any_thread, 290 error_pattern) across the 16 frameworks.
-  - Wall-clock bounded by AppKit (~12.5m, 524 methods, ~108k tokens); Foundation ~5.4m (~92k tokens); total batch ~900k tokens across all 16.
-  - The task is complete; no follow-up annotation work is needed for these 16 frameworks.
-
-  What this suggests next: (1) workspace-wide enrich pass now that the 16 affected frameworks are consistent; (2) prototype a CI-style `llm-validate` drift-detection script to catch annotation staleness at the moment a collection fix lands rather than at next triage.
+  - **Attempted:** Two backlog tasks: (1) MainActor threading propagation and `@property (copy)` block-setter → `stored` heuristic improvements; (2) an annotation drift-detection script.
+  - **What worked:** Both tasks completed end-to-end.
+    - `ir::Class.swift_attributes: Vec<String>` added, populated from swift-api-digester `declAttributes` by `extract-swift::declaration_mapping::map_class`, propagated through `merge::merge_class_members` with set-union semantics.
+    - `ir::Property.is_copy: bool` added, populated by `extract-objc::extract_property` from libclang's copy attribute. Serialised only when true.
+    - `annotate_method_heuristic` signature changed from `class_name: &str` to `&Class` (all callers in `lib.rs` updated).
+    - `derive_threading` now detects `MainActor`/`_Concurrency.MainActor` via `is_main_actor_attribute` (module-qualifier stripping for future-proofing) before falling back to hardcoded UI class list.
+    - `derive_block_parameters` now calls `is_copy_block_property_setter`, which maps the canonical synthesised setter selector `set<Cap><Rest>:` back to property name `<lower><Rest>` and checks `is_copy && Block type` on the class property list.
+    - 8 unit tests added to `heuristics.rs` covering both pathways and their negative cases.
+    - `check-llm-annotation-drift.sh` written and verified (`ok: all 154 .llm.json files validate`) with `--skip-regen` flag.
+    - `llm-annotate-orchestration.md` gained a "Drift gate" section.
+    - Golden snapshot tests updated: NSObject removed from Foundation golden set (correctly dropped by foreign-module type-decl filter); NSArray/NSData method sets trimmed to match current extractor output; `block.rkt` import removed from both (no block-typed methods remain after filtering).
+  - **What this suggests next:** Wire `check-llm-annotation-drift.sh` into triage pre-hooks so extraction fixes immediately surface annotation staleness. Future: auto-print diverged methods on script failure rather than deferring to per-framework `llm-validate` reruns.
+  - **Key learnings:** The `&Class` signature change was the right call — threading and block lifecycle both needed class-level context, and the prior `class_name: &str` interface was a narrowing that was already causing the heuristic to be structurally unable to read class-level signals.

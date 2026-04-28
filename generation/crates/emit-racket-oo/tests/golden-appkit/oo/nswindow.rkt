@@ -16,7 +16,6 @@
 
 
 ;; --- Class predicates ---
-(define (hostingsheetrepresentation? v) (objc-instance-of? v "HostingSheetRepresentation"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsattributedstring? v) (objc-instance-of? v "NSAttributedString"))
@@ -404,15 +403,10 @@
   [nswindow-begin-gesture-with-event! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-begin-sheet-completion-handler! (c-> objc-object? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
   [nswindow-can-represent-display-gamut (c-> objc-object? exact-nonnegative-integer? boolean?)]
-  [nswindow-cancel-operation (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-capitalize-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-cascade-top-left-from-point (c-> objc-object? any/c any/c)]
   [nswindow-center! (c-> objc-object? void?)]
-  [nswindow-center-selection-in-visible-area! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-change-case-of-letter (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-change-mode-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-close! (c-> objc-object? void?)]
-  [nswindow-complete (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-constrain-frame-rect-to-screen (c-> objc-object? any/c (or/c string? objc-object? #f) any/c)]
   [nswindow-content-border-thickness-for-edge (c-> objc-object? exact-nonnegative-integer? real?)]
   [nswindow-content-rect-for-frame-rect (c-> objc-object? any/c any/c)]
@@ -428,22 +422,11 @@
   [nswindow-cursor-update (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-data-with-eps-inside-rect (c-> objc-object? any/c (or/c nsdata? objc-nil?))]
   [nswindow-data-with-pdf-inside-rect (c-> objc-object? any/c (or/c nsdata? objc-nil?))]
-  [nswindow-delete-backward (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-backward-by-decomposing-previous-character (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-forward (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-to-beginning-of-line (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-to-beginning-of-paragraph (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-to-end-of-line (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-to-end-of-paragraph (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-to-mark (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-word-backward (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-delete-word-forward (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-deminiaturize (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-disable-key-equivalent-for-default-button-cell (c-> objc-object? void?)]
   [nswindow-display! (c-> objc-object? void?)]
   [nswindow-display-if-needed! (c-> objc-object? void?)]
   [nswindow-displays-when-screen-profile-changes! (c-> objc-object? boolean?)]
-  [nswindow-do-command-by-selector (c-> objc-object? string? void?)]
   [nswindow-effective-appearance (c-> objc-object? (or/c nsappearance? objc-nil?))]
   [nswindow-enable-key-equivalent-for-default-button-cell (c-> objc-object? void?)]
   [nswindow-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
@@ -457,18 +440,6 @@
   [nswindow-frame-rect-for-content-rect (c-> objc-object? any/c any/c)]
   [nswindow-help-requested (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-identifier (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nswindow-indent (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-backtab! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-container-break! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-double-quote-ignoring-substitution! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-line-break! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-newline! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-newline-ignoring-field-editor! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-paragraph-separator! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-single-quote-ignoring-substitution! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-tab! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-tab-ignoring-field-editor! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-insert-text! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-insert-titlebar-accessory-view-controller-at-index! (c-> objc-object? (or/c string? objc-object? #f) exact-integer? void?)]
   [nswindow-interpret-key-events (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-invalidate-shadow (c-> objc-object? void?)]
@@ -504,18 +475,11 @@
   [nswindow-is-zoomed (c-> objc-object? boolean?)]
   [nswindow-key-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-key-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-lowercase-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-magnify-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-make-base-writing-direction-left-to-right (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-make-base-writing-direction-natural (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-make-base-writing-direction-right-to-left (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-make-first-responder (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nswindow-make-key-and-order-front (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-make-key-window (c-> objc-object? void?)]
   [nswindow-make-main-window (c-> objc-object? void?)]
-  [nswindow-make-text-writing-direction-left-to-right (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-make-text-writing-direction-natural (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-make-text-writing-direction-right-to-left (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-merge-all-windows (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-miniaturize (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-mouse-cancelled (c-> objc-object? (or/c string? objc-object? #f) void?)]
@@ -525,45 +489,7 @@
   [nswindow-mouse-exited (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-mouse-moved (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-mouse-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-backward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-backward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-down! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-down-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-forward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-forward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-left! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-left-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-paragraph-backward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-paragraph-forward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-right! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-right-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-move-tab-to-new-window! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-beginning-of-document! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-beginning-of-document-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-beginning-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-beginning-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-beginning-of-paragraph! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-beginning-of-paragraph-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-end-of-document! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-end-of-document-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-end-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-end-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-end-of-paragraph! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-end-of-paragraph-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-left-end-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-left-end-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-right-end-of-line! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-to-right-end-of-line-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-up! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-up-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-backward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-backward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-forward! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-forward-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-left! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-left-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-right! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-move-word-right-and-modify-selection! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-no-responder-for (c-> objc-object? string? void?)]
   [nswindow-order-back! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-order-front! (c-> objc-object? (or/c string? objc-object? #f) void?)]
@@ -573,10 +499,6 @@
   [nswindow-other-mouse-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-other-mouse-dragged (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-other-mouse-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-page-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-page-down-and-modify-selection (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-page-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-page-up-and-modify-selection (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-perform-close! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-perform-key-equivalent! (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nswindow-perform-miniaturize! (c-> objc-object? (or/c string? objc-object? #f) void?)]
@@ -584,7 +506,6 @@
   [nswindow-perform-zoom! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-pressure-change-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-print (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-quick-look-preview-items (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-quick-look-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-recalculate-key-view-loop (c-> objc-object? void?)]
   [nswindow-remove-child-window! (c-> objc-object? (or/c string? objc-object? #f) void?)]
@@ -594,31 +515,19 @@
   [nswindow-resign-first-responder (c-> objc-object? boolean?)]
   [nswindow-resign-key-window (c-> objc-object? void?)]
   [nswindow-resign-main-window (c-> objc-object? void?)]
-  [nswindow-restore-user-activity-state (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-right-mouse-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-right-mouse-dragged (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-right-mouse-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-rotate-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-run-toolbar-customization-palette (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-save-frame-using-name (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-scroll-line-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-scroll-line-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-scroll-page-down (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-scroll-page-up (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-scroll-to-beginning-of-document (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-scroll-to-end-of-document (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-scroll-wheel (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-select-all (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-select-key-view-following-view (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-select-key-view-preceding-view (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-select-line (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-select-next-key-view (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-select-next-tab (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-select-paragraph (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-select-previous-key-view (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-select-previous-tab (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-select-to-mark (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-select-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-set-accessibility-activation-point! (c-> objc-object? any/c void?)]
   [nswindow-set-accessibility-allowed-values! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-set-accessibility-alternate-ui-visible! (c-> objc-object? boolean? void?)]
@@ -758,15 +667,12 @@
   [nswindow-set-frame-using-name! (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nswindow-set-frame-using-name-force! (c-> objc-object? (or/c string? objc-object? #f) boolean? boolean?)]
   [nswindow-set-identifier! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-set-mark! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-set-title-with-represented-filename! (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-should-be-treated-as-ink-event (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nswindow-show-context-help (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-show-context-menu-for-selection (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-smart-magnify-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-standard-window-button (c-> objc-object? exact-nonnegative-integer? (or/c nsbutton? objc-nil?))]
   [nswindow-supplemental-target-for-action-sender (c-> objc-object? string? (or/c string? objc-object? #f) any/c)]
-  [nswindow-swap-with-mark (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-swipe-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-tablet-point (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-tablet-proximity (c-> objc-object? (or/c string? objc-object? #f) void?)]
@@ -779,17 +685,13 @@
   [nswindow-touches-ended-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-touches-moved-with-event (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-transfer-window-sharing-to-window-completion-handler (c-> objc-object? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
-  [nswindow-transpose (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nswindow-transpose-words (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-try-to-perform-with (c-> objc-object? string? (or/c string? objc-object? #f) boolean?)]
   [nswindow-update (c-> objc-object? void?)]
-  [nswindow-uppercase-word (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-valid-requestor-for-send-type-return-type (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nswindow-validate-menu-item (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nswindow-validate-user-interface-item (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
   [nswindow-wants-forwarded-scroll-events-for-axis (c-> objc-object? exact-nonnegative-integer? boolean?)]
   [nswindow-wants-scroll-events-for-swipe-tracking-on-axis (c-> objc-object? exact-nonnegative-integer? boolean?)]
-  [nswindow-yank (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-zoom (c-> objc-object? (or/c string? objc-object? #f) void?)]
   [nswindow-content-rect-for-frame-rect-style-mask (c-> any/c exact-nonnegative-integer? any/c)]
   [nswindow-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
@@ -1811,24 +1713,14 @@
   (_msg-39 (coerce-arg self) (sel_registerName "beginSheet:completionHandler:") (coerce-arg sheet-window) _blk1))
 (define (nswindow-can-represent-display-gamut self display-gamut)
   (_msg-43 (coerce-arg self) (sel_registerName "canRepresentDisplayGamut:") display-gamut))
-(define (nswindow-cancel-operation self sender)
-  (tell #:type _void (coerce-arg self) cancelOperation: (coerce-arg sender)))
-(define (nswindow-capitalize-word self sender)
-  (tell #:type _void (coerce-arg self) capitalizeWord: (coerce-arg sender)))
 (define (nswindow-cascade-top-left-from-point self top-left-point)
   (_msg-10 (coerce-arg self) (sel_registerName "cascadeTopLeftFromPoint:") top-left-point))
 (define (nswindow-center! self)
   (tell #:type _void (coerce-arg self) center))
-(define (nswindow-center-selection-in-visible-area! self sender)
-  (tell #:type _void (coerce-arg self) centerSelectionInVisibleArea: (coerce-arg sender)))
-(define (nswindow-change-case-of-letter self sender)
-  (tell #:type _void (coerce-arg self) changeCaseOfLetter: (coerce-arg sender)))
 (define (nswindow-change-mode-with-event self event)
   (tell #:type _void (coerce-arg self) changeModeWithEvent: (coerce-arg event)))
 (define (nswindow-close! self)
   (tell #:type _void (coerce-arg self) close))
-(define (nswindow-complete self sender)
-  (tell #:type _void (coerce-arg self) complete: (coerce-arg sender)))
 (define (nswindow-constrain-frame-rect-to-screen self frame-rect screen)
   (_msg-23 (coerce-arg self) (sel_registerName "constrainFrameRect:toScreen:") frame-rect (coerce-arg screen)))
 (define (nswindow-content-border-thickness-for-edge self edge)
@@ -1863,26 +1755,6 @@
   (wrap-objc-object
    (_msg-19 (coerce-arg self) (sel_registerName "dataWithPDFInsideRect:") rect)
    ))
-(define (nswindow-delete-backward self sender)
-  (tell #:type _void (coerce-arg self) deleteBackward: (coerce-arg sender)))
-(define (nswindow-delete-backward-by-decomposing-previous-character self sender)
-  (tell #:type _void (coerce-arg self) deleteBackwardByDecomposingPreviousCharacter: (coerce-arg sender)))
-(define (nswindow-delete-forward self sender)
-  (tell #:type _void (coerce-arg self) deleteForward: (coerce-arg sender)))
-(define (nswindow-delete-to-beginning-of-line self sender)
-  (tell #:type _void (coerce-arg self) deleteToBeginningOfLine: (coerce-arg sender)))
-(define (nswindow-delete-to-beginning-of-paragraph self sender)
-  (tell #:type _void (coerce-arg self) deleteToBeginningOfParagraph: (coerce-arg sender)))
-(define (nswindow-delete-to-end-of-line self sender)
-  (tell #:type _void (coerce-arg self) deleteToEndOfLine: (coerce-arg sender)))
-(define (nswindow-delete-to-end-of-paragraph self sender)
-  (tell #:type _void (coerce-arg self) deleteToEndOfParagraph: (coerce-arg sender)))
-(define (nswindow-delete-to-mark self sender)
-  (tell #:type _void (coerce-arg self) deleteToMark: (coerce-arg sender)))
-(define (nswindow-delete-word-backward self sender)
-  (tell #:type _void (coerce-arg self) deleteWordBackward: (coerce-arg sender)))
-(define (nswindow-delete-word-forward self sender)
-  (tell #:type _void (coerce-arg self) deleteWordForward: (coerce-arg sender)))
 (define (nswindow-deminiaturize self sender)
   (tell #:type _void (coerce-arg self) deminiaturize: (coerce-arg sender)))
 (define (nswindow-disable-key-equivalent-for-default-button-cell self)
@@ -1893,8 +1765,6 @@
   (tell #:type _void (coerce-arg self) displayIfNeeded))
 (define (nswindow-displays-when-screen-profile-changes! self)
   (_msg-4 (coerce-arg self) (sel_registerName "displaysWhenScreenProfileChanges")))
-(define (nswindow-do-command-by-selector self selector)
-  (_msg-49 (coerce-arg self) (sel_registerName "doCommandBySelector:") (sel_registerName selector)))
 (define (nswindow-effective-appearance self)
   (wrap-objc-object
    (tell (coerce-arg self) effectiveAppearance)))
@@ -1925,30 +1795,6 @@
 (define (nswindow-identifier self)
   (wrap-objc-object
    (tell (coerce-arg self) identifier)))
-(define (nswindow-indent self sender)
-  (tell #:type _void (coerce-arg self) indent: (coerce-arg sender)))
-(define (nswindow-insert-backtab! self sender)
-  (tell #:type _void (coerce-arg self) insertBacktab: (coerce-arg sender)))
-(define (nswindow-insert-container-break! self sender)
-  (tell #:type _void (coerce-arg self) insertContainerBreak: (coerce-arg sender)))
-(define (nswindow-insert-double-quote-ignoring-substitution! self sender)
-  (tell #:type _void (coerce-arg self) insertDoubleQuoteIgnoringSubstitution: (coerce-arg sender)))
-(define (nswindow-insert-line-break! self sender)
-  (tell #:type _void (coerce-arg self) insertLineBreak: (coerce-arg sender)))
-(define (nswindow-insert-newline! self sender)
-  (tell #:type _void (coerce-arg self) insertNewline: (coerce-arg sender)))
-(define (nswindow-insert-newline-ignoring-field-editor! self sender)
-  (tell #:type _void (coerce-arg self) insertNewlineIgnoringFieldEditor: (coerce-arg sender)))
-(define (nswindow-insert-paragraph-separator! self sender)
-  (tell #:type _void (coerce-arg self) insertParagraphSeparator: (coerce-arg sender)))
-(define (nswindow-insert-single-quote-ignoring-substitution! self sender)
-  (tell #:type _void (coerce-arg self) insertSingleQuoteIgnoringSubstitution: (coerce-arg sender)))
-(define (nswindow-insert-tab! self sender)
-  (tell #:type _void (coerce-arg self) insertTab: (coerce-arg sender)))
-(define (nswindow-insert-tab-ignoring-field-editor! self sender)
-  (tell #:type _void (coerce-arg self) insertTabIgnoringFieldEditor: (coerce-arg sender)))
-(define (nswindow-insert-text! self insert-string)
-  (tell #:type _void (coerce-arg self) insertText: (coerce-arg insert-string)))
 (define (nswindow-insert-titlebar-accessory-view-controller-at-index! self child-view-controller index)
   (_msg-38 (coerce-arg self) (sel_registerName "insertTitlebarAccessoryViewController:atIndex:") (coerce-arg child-view-controller) index))
 (define (nswindow-interpret-key-events self event-array)
@@ -2019,16 +1865,8 @@
   (tell #:type _void (coerce-arg self) keyDown: (coerce-arg event)))
 (define (nswindow-key-up self event)
   (tell #:type _void (coerce-arg self) keyUp: (coerce-arg event)))
-(define (nswindow-lowercase-word self sender)
-  (tell #:type _void (coerce-arg self) lowercaseWord: (coerce-arg sender)))
 (define (nswindow-magnify-with-event self event)
   (tell #:type _void (coerce-arg self) magnifyWithEvent: (coerce-arg event)))
-(define (nswindow-make-base-writing-direction-left-to-right self sender)
-  (tell #:type _void (coerce-arg self) makeBaseWritingDirectionLeftToRight: (coerce-arg sender)))
-(define (nswindow-make-base-writing-direction-natural self sender)
-  (tell #:type _void (coerce-arg self) makeBaseWritingDirectionNatural: (coerce-arg sender)))
-(define (nswindow-make-base-writing-direction-right-to-left self sender)
-  (tell #:type _void (coerce-arg self) makeBaseWritingDirectionRightToLeft: (coerce-arg sender)))
 (define (nswindow-make-first-responder self responder)
   (_msg-35 (coerce-arg self) (sel_registerName "makeFirstResponder:") (coerce-arg responder)))
 (define (nswindow-make-key-and-order-front self sender)
@@ -2037,12 +1875,6 @@
   (tell #:type _void (coerce-arg self) makeKeyWindow))
 (define (nswindow-make-main-window self)
   (tell #:type _void (coerce-arg self) makeMainWindow))
-(define (nswindow-make-text-writing-direction-left-to-right self sender)
-  (tell #:type _void (coerce-arg self) makeTextWritingDirectionLeftToRight: (coerce-arg sender)))
-(define (nswindow-make-text-writing-direction-natural self sender)
-  (tell #:type _void (coerce-arg self) makeTextWritingDirectionNatural: (coerce-arg sender)))
-(define (nswindow-make-text-writing-direction-right-to-left self sender)
-  (tell #:type _void (coerce-arg self) makeTextWritingDirectionRightToLeft: (coerce-arg sender)))
 (define (nswindow-merge-all-windows self sender)
   (tell #:type _void (coerce-arg self) mergeAllWindows: (coerce-arg sender)))
 (define (nswindow-miniaturize self sender)
@@ -2061,84 +1893,8 @@
   (tell #:type _void (coerce-arg self) mouseMoved: (coerce-arg event)))
 (define (nswindow-mouse-up self event)
   (tell #:type _void (coerce-arg self) mouseUp: (coerce-arg event)))
-(define (nswindow-move-backward! self sender)
-  (tell #:type _void (coerce-arg self) moveBackward: (coerce-arg sender)))
-(define (nswindow-move-backward-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveBackwardAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-down! self sender)
-  (tell #:type _void (coerce-arg self) moveDown: (coerce-arg sender)))
-(define (nswindow-move-down-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveDownAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-forward! self sender)
-  (tell #:type _void (coerce-arg self) moveForward: (coerce-arg sender)))
-(define (nswindow-move-forward-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveForwardAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-left! self sender)
-  (tell #:type _void (coerce-arg self) moveLeft: (coerce-arg sender)))
-(define (nswindow-move-left-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveLeftAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-paragraph-backward-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveParagraphBackwardAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-paragraph-forward-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveParagraphForwardAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-right! self sender)
-  (tell #:type _void (coerce-arg self) moveRight: (coerce-arg sender)))
-(define (nswindow-move-right-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveRightAndModifySelection: (coerce-arg sender)))
 (define (nswindow-move-tab-to-new-window! self sender)
   (tell #:type _void (coerce-arg self) moveTabToNewWindow: (coerce-arg sender)))
-(define (nswindow-move-to-beginning-of-document! self sender)
-  (tell #:type _void (coerce-arg self) moveToBeginningOfDocument: (coerce-arg sender)))
-(define (nswindow-move-to-beginning-of-document-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToBeginningOfDocumentAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-to-beginning-of-line! self sender)
-  (tell #:type _void (coerce-arg self) moveToBeginningOfLine: (coerce-arg sender)))
-(define (nswindow-move-to-beginning-of-line-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToBeginningOfLineAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-to-beginning-of-paragraph! self sender)
-  (tell #:type _void (coerce-arg self) moveToBeginningOfParagraph: (coerce-arg sender)))
-(define (nswindow-move-to-beginning-of-paragraph-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToBeginningOfParagraphAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-to-end-of-document! self sender)
-  (tell #:type _void (coerce-arg self) moveToEndOfDocument: (coerce-arg sender)))
-(define (nswindow-move-to-end-of-document-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToEndOfDocumentAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-to-end-of-line! self sender)
-  (tell #:type _void (coerce-arg self) moveToEndOfLine: (coerce-arg sender)))
-(define (nswindow-move-to-end-of-line-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToEndOfLineAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-to-end-of-paragraph! self sender)
-  (tell #:type _void (coerce-arg self) moveToEndOfParagraph: (coerce-arg sender)))
-(define (nswindow-move-to-end-of-paragraph-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToEndOfParagraphAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-to-left-end-of-line! self sender)
-  (tell #:type _void (coerce-arg self) moveToLeftEndOfLine: (coerce-arg sender)))
-(define (nswindow-move-to-left-end-of-line-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToLeftEndOfLineAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-to-right-end-of-line! self sender)
-  (tell #:type _void (coerce-arg self) moveToRightEndOfLine: (coerce-arg sender)))
-(define (nswindow-move-to-right-end-of-line-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveToRightEndOfLineAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-up! self sender)
-  (tell #:type _void (coerce-arg self) moveUp: (coerce-arg sender)))
-(define (nswindow-move-up-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveUpAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-word-backward! self sender)
-  (tell #:type _void (coerce-arg self) moveWordBackward: (coerce-arg sender)))
-(define (nswindow-move-word-backward-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveWordBackwardAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-word-forward! self sender)
-  (tell #:type _void (coerce-arg self) moveWordForward: (coerce-arg sender)))
-(define (nswindow-move-word-forward-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveWordForwardAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-word-left! self sender)
-  (tell #:type _void (coerce-arg self) moveWordLeft: (coerce-arg sender)))
-(define (nswindow-move-word-left-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveWordLeftAndModifySelection: (coerce-arg sender)))
-(define (nswindow-move-word-right! self sender)
-  (tell #:type _void (coerce-arg self) moveWordRight: (coerce-arg sender)))
-(define (nswindow-move-word-right-and-modify-selection! self sender)
-  (tell #:type _void (coerce-arg self) moveWordRightAndModifySelection: (coerce-arg sender)))
 (define (nswindow-no-responder-for self event-selector)
   (_msg-49 (coerce-arg self) (sel_registerName "noResponderFor:") (sel_registerName event-selector)))
 (define (nswindow-order-back! self sender)
@@ -2157,14 +1913,6 @@
   (tell #:type _void (coerce-arg self) otherMouseDragged: (coerce-arg event)))
 (define (nswindow-other-mouse-up self event)
   (tell #:type _void (coerce-arg self) otherMouseUp: (coerce-arg event)))
-(define (nswindow-page-down self sender)
-  (tell #:type _void (coerce-arg self) pageDown: (coerce-arg sender)))
-(define (nswindow-page-down-and-modify-selection self sender)
-  (tell #:type _void (coerce-arg self) pageDownAndModifySelection: (coerce-arg sender)))
-(define (nswindow-page-up self sender)
-  (tell #:type _void (coerce-arg self) pageUp: (coerce-arg sender)))
-(define (nswindow-page-up-and-modify-selection self sender)
-  (tell #:type _void (coerce-arg self) pageUpAndModifySelection: (coerce-arg sender)))
 (define (nswindow-perform-close! self sender)
   (tell #:type _void (coerce-arg self) performClose: (coerce-arg sender)))
 (define (nswindow-perform-key-equivalent! self event)
@@ -2179,8 +1927,6 @@
   (tell #:type _void (coerce-arg self) pressureChangeWithEvent: (coerce-arg event)))
 (define (nswindow-print self sender)
   (tell #:type _void (coerce-arg self) print: (coerce-arg sender)))
-(define (nswindow-quick-look-preview-items self sender)
-  (tell #:type _void (coerce-arg self) quickLookPreviewItems: (coerce-arg sender)))
 (define (nswindow-quick-look-with-event self event)
   (tell #:type _void (coerce-arg self) quickLookWithEvent: (coerce-arg event)))
 (define (nswindow-recalculate-key-view-loop self)
@@ -2203,8 +1949,6 @@
   (tell #:type _void (coerce-arg self) resignKeyWindow))
 (define (nswindow-resign-main-window self)
   (tell #:type _void (coerce-arg self) resignMainWindow))
-(define (nswindow-restore-user-activity-state self user-activity)
-  (tell #:type _void (coerce-arg self) restoreUserActivityState: (coerce-arg user-activity)))
 (define (nswindow-right-mouse-down self event)
   (tell #:type _void (coerce-arg self) rightMouseDown: (coerce-arg event)))
 (define (nswindow-right-mouse-dragged self event)
@@ -2217,42 +1961,20 @@
   (tell #:type _void (coerce-arg self) runToolbarCustomizationPalette: (coerce-arg sender)))
 (define (nswindow-save-frame-using-name self name)
   (tell #:type _void (coerce-arg self) saveFrameUsingName: (coerce-arg name)))
-(define (nswindow-scroll-line-down self sender)
-  (tell #:type _void (coerce-arg self) scrollLineDown: (coerce-arg sender)))
-(define (nswindow-scroll-line-up self sender)
-  (tell #:type _void (coerce-arg self) scrollLineUp: (coerce-arg sender)))
-(define (nswindow-scroll-page-down self sender)
-  (tell #:type _void (coerce-arg self) scrollPageDown: (coerce-arg sender)))
-(define (nswindow-scroll-page-up self sender)
-  (tell #:type _void (coerce-arg self) scrollPageUp: (coerce-arg sender)))
-(define (nswindow-scroll-to-beginning-of-document self sender)
-  (tell #:type _void (coerce-arg self) scrollToBeginningOfDocument: (coerce-arg sender)))
-(define (nswindow-scroll-to-end-of-document self sender)
-  (tell #:type _void (coerce-arg self) scrollToEndOfDocument: (coerce-arg sender)))
 (define (nswindow-scroll-wheel self event)
   (tell #:type _void (coerce-arg self) scrollWheel: (coerce-arg event)))
-(define (nswindow-select-all self sender)
-  (tell #:type _void (coerce-arg self) selectAll: (coerce-arg sender)))
 (define (nswindow-select-key-view-following-view self view)
   (tell #:type _void (coerce-arg self) selectKeyViewFollowingView: (coerce-arg view)))
 (define (nswindow-select-key-view-preceding-view self view)
   (tell #:type _void (coerce-arg self) selectKeyViewPrecedingView: (coerce-arg view)))
-(define (nswindow-select-line self sender)
-  (tell #:type _void (coerce-arg self) selectLine: (coerce-arg sender)))
 (define (nswindow-select-next-key-view self sender)
   (tell #:type _void (coerce-arg self) selectNextKeyView: (coerce-arg sender)))
 (define (nswindow-select-next-tab self sender)
   (tell #:type _void (coerce-arg self) selectNextTab: (coerce-arg sender)))
-(define (nswindow-select-paragraph self sender)
-  (tell #:type _void (coerce-arg self) selectParagraph: (coerce-arg sender)))
 (define (nswindow-select-previous-key-view self sender)
   (tell #:type _void (coerce-arg self) selectPreviousKeyView: (coerce-arg sender)))
 (define (nswindow-select-previous-tab self sender)
   (tell #:type _void (coerce-arg self) selectPreviousTab: (coerce-arg sender)))
-(define (nswindow-select-to-mark self sender)
-  (tell #:type _void (coerce-arg self) selectToMark: (coerce-arg sender)))
-(define (nswindow-select-word self sender)
-  (tell #:type _void (coerce-arg self) selectWord: (coerce-arg sender)))
 (define (nswindow-set-accessibility-activation-point! self accessibility-activation-point)
   (_msg-12 (coerce-arg self) (sel_registerName "setAccessibilityActivationPoint:") accessibility-activation-point))
 (define (nswindow-set-accessibility-allowed-values! self accessibility-allowed-values)
@@ -2531,16 +2253,12 @@
   (_msg-36 (coerce-arg self) (sel_registerName "setFrameUsingName:force:") (coerce-arg name) force))
 (define (nswindow-set-identifier! self identifier)
   (tell #:type _void (coerce-arg self) setIdentifier: (coerce-arg identifier)))
-(define (nswindow-set-mark! self sender)
-  (tell #:type _void (coerce-arg self) setMark: (coerce-arg sender)))
 (define (nswindow-set-title-with-represented-filename! self filename)
   (tell #:type _void (coerce-arg self) setTitleWithRepresentedFilename: (coerce-arg filename)))
 (define (nswindow-should-be-treated-as-ink-event self event)
   (_msg-35 (coerce-arg self) (sel_registerName "shouldBeTreatedAsInkEvent:") (coerce-arg event)))
 (define (nswindow-show-context-help self sender)
   (tell #:type _void (coerce-arg self) showContextHelp: (coerce-arg sender)))
-(define (nswindow-show-context-menu-for-selection self sender)
-  (tell #:type _void (coerce-arg self) showContextMenuForSelection: (coerce-arg sender)))
 (define (nswindow-smart-magnify-with-event self event)
   (tell #:type _void (coerce-arg self) smartMagnifyWithEvent: (coerce-arg event)))
 (define (nswindow-standard-window-button self b)
@@ -2551,8 +2269,6 @@
   (wrap-objc-object
    (_msg-51 (coerce-arg self) (sel_registerName "supplementalTargetForAction:sender:") (sel_registerName action) (coerce-arg sender))
    ))
-(define (nswindow-swap-with-mark self sender)
-  (tell #:type _void (coerce-arg self) swapWithMark: (coerce-arg sender)))
 (define (nswindow-swipe-with-event self event)
   (tell #:type _void (coerce-arg self) swipeWithEvent: (coerce-arg event)))
 (define (nswindow-tablet-point self event)
@@ -2579,16 +2295,10 @@
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id) _void))
   (_msg-39 (coerce-arg self) (sel_registerName "transferWindowSharingToWindow:completionHandler:") (coerce-arg window) _blk1))
-(define (nswindow-transpose self sender)
-  (tell #:type _void (coerce-arg self) transpose: (coerce-arg sender)))
-(define (nswindow-transpose-words self sender)
-  (tell #:type _void (coerce-arg self) transposeWords: (coerce-arg sender)))
 (define (nswindow-try-to-perform-with self action object)
   (_msg-50 (coerce-arg self) (sel_registerName "tryToPerform:with:") (sel_registerName action) (coerce-arg object)))
 (define (nswindow-update self)
   (tell #:type _void (coerce-arg self) update))
-(define (nswindow-uppercase-word self sender)
-  (tell #:type _void (coerce-arg self) uppercaseWord: (coerce-arg sender)))
 (define (nswindow-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (tell (coerce-arg self) validRequestorForSendType: (coerce-arg send-type) returnType: (coerce-arg return-type))))
@@ -2600,8 +2310,6 @@
   (_msg-43 (coerce-arg self) (sel_registerName "wantsForwardedScrollEventsForAxis:") axis))
 (define (nswindow-wants-scroll-events-for-swipe-tracking-on-axis self axis)
   (_msg-43 (coerce-arg self) (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:") axis))
-(define (nswindow-yank self sender)
-  (tell #:type _void (coerce-arg self) yank: (coerce-arg sender)))
 (define (nswindow-zoom self sender)
   (tell #:type _void (coerce-arg self) zoom: (coerce-arg sender)))
 

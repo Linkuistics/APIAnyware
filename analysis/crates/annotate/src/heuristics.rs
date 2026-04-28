@@ -8,17 +8,24 @@ use apianyware_macos_types::annotation::{
     AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ErrorPattern, MethodAnnotation,
     OwnershipKind, ParamOwnership, ThreadingConstraint,
 };
-use apianyware_macos_types::ir::Method;
+use apianyware_macos_types::ir::{Class, Method, Property};
 use apianyware_macos_types::type_ref::TypeRefKind;
 
-/// Derive heuristic annotations for a single method.
-pub fn annotate_method_heuristic(class_name: &str, method: &Method) -> MethodAnnotation {
+/// Derive heuristic annotations for a single method, given its owning class.
+///
+/// The class context provides class-level Swift attributes (used for
+/// `@MainActor` threading propagation) and the property list (used to
+/// classify block-typed setters of `@property (copy)` properties as
+/// `stored`). Methods on synthetic classes that lack richer context can
+/// pass an empty `Class { name, .. }` shell — only `name`, `properties`,
+/// and `swift_attributes` are consulted here.
+pub fn annotate_method_heuristic(class: &Class, method: &Method) -> MethodAnnotation {
     let selector = &method.selector;
     let is_instance = !method.class_method;
 
-    let parameter_ownership = derive_parameter_ownership(class_name, selector, method);
-    let block_parameters = derive_block_parameters(selector, method);
-    let threading = derive_threading(class_name, selector);
+    let parameter_ownership = derive_parameter_ownership(&class.name, selector, method);
+    let block_parameters = derive_block_parameters(selector, method, &class.properties);
+    let threading = derive_threading(&class.name, selector, &class.swift_attributes);
     let error_pattern = derive_error_pattern(method);
 
     MethodAnnotation {
@@ -116,7 +123,11 @@ fn is_observer_param(selector: &str, param_index: usize, param_name: &str) -> bo
 }
 
 /// Derive block parameter invocation style from selector naming.
-fn derive_block_parameters(selector: &str, method: &Method) -> Vec<BlockParamAnnotation> {
+fn derive_block_parameters(
+    selector: &str,
+    method: &Method,
+    class_properties: &[Property],
+) -> Vec<BlockParamAnnotation> {
     let mut result = Vec::new();
 
     for (i, param) in method.params.iter().enumerate() {
@@ -124,7 +135,15 @@ fn derive_block_parameters(selector: &str, method: &Method) -> Vec<BlockParamAnn
             continue;
         }
 
-        let invocation = classify_block_invocation(selector, i, method.params.len());
+        let invocation = if is_copy_block_property_setter(selector, i, class_properties) {
+            // ObjC `@property (copy)` of block type: the synthesised setter
+            // `Block_copy`-es and stores the block on the instance, holding
+            // it across many invocations until reassignment / dealloc. This
+            // is the textbook `stored` lifecycle.
+            BlockInvocationStyle::Stored
+        } else {
+            classify_block_invocation(selector, i, method.params.len())
+        };
         result.push(BlockParamAnnotation {
             param_index: i,
             invocation,
@@ -132,6 +151,52 @@ fn derive_block_parameters(selector: &str, method: &Method) -> Vec<BlockParamAnn
     }
 
     result
+}
+
+/// Return true when `selector` is the synthesised ObjC setter for an
+/// `@property (copy)` whose declared type is a block, and `param_index` is
+/// the setter's only argument (index 0).
+///
+/// Recognises the canonical synthesised form `set<Cap><Rest>:` for a
+/// property named `<lower><Rest>`. Custom `setter=` annotations are not
+/// covered (rare on block properties; would require resolving the override
+/// at extraction time).
+fn is_copy_block_property_setter(
+    selector: &str,
+    param_index: usize,
+    class_properties: &[Property],
+) -> bool {
+    if param_index != 0 {
+        return false;
+    }
+    let Some(property_name) = setter_target_property_name(selector) else {
+        return false;
+    };
+    class_properties.iter().any(|p| {
+        p.is_copy
+            && !p.class_property
+            && matches!(p.property_type.kind, TypeRefKind::Block { .. })
+            && p.name == property_name
+    })
+}
+
+/// Map a synthesised setter selector `set<Cap><Rest>:` to the property
+/// name `<lower><Rest>`. Returns `None` for selectors that are not
+/// single-argument synthesised setters.
+fn setter_target_property_name(selector: &str) -> Option<String> {
+    let stripped = selector.strip_prefix("set")?.strip_suffix(':')?;
+    if stripped.split(':').count() != 1 {
+        return None;
+    }
+    let mut chars = stripped.chars();
+    let first = chars.next()?;
+    if !first.is_ascii_uppercase() {
+        return None;
+    }
+    let mut name = String::with_capacity(stripped.len());
+    name.push(first.to_ascii_lowercase());
+    name.extend(chars);
+    Some(name)
 }
 
 /// Classify a block parameter as synchronous, async-copied, or stored based on naming.
@@ -193,8 +258,27 @@ fn classify_block_invocation(
     BlockInvocationStyle::AsyncCopied
 }
 
-/// Derive threading constraints from class/selector naming.
-fn derive_threading(class_name: &str, selector: &str) -> Option<ThreadingConstraint> {
+/// Derive threading constraints from class-level Swift attributes,
+/// hardcoded UI classes, or UI-related selector names.
+fn derive_threading(
+    class_name: &str,
+    selector: &str,
+    class_swift_attributes: &[String],
+) -> Option<ThreadingConstraint> {
+    // Class-level `@MainActor` (or `@_Concurrency.MainActor`) propagates to
+    // every instance method on the class. swift-api-digester emits the bare
+    // attribute names without the `@` prefix and sometimes with the
+    // `_Concurrency.` module qualifier — accept all observed variants. The
+    // ObjC-side `_SWIFT_UI_ACTOR` macro is not currently captured by
+    // libclang extraction; classes that get propagation only via the macro
+    // still rely on the hardcoded UI list below.
+    if class_swift_attributes
+        .iter()
+        .any(|a| is_main_actor_attribute(a))
+    {
+        return Some(ThreadingConstraint::MainThreadOnly);
+    }
+
     // UI classes are main-thread-only
     let main_thread_classes = [
         "NSView",
@@ -256,6 +340,19 @@ fn derive_threading(class_name: &str, selector: &str) -> Option<ThreadingConstra
     None
 }
 
+/// Recognise the swift-api-digester representations of `@MainActor`.
+///
+/// Observed variants (across the 154 annotated frameworks in the workspace):
+/// `MainActor`, `_Concurrency.MainActor`. Match conservatively: equality
+/// after stripping a leading module qualifier, so future-added qualifiers
+/// (e.g. a fully-qualified `Swift._Concurrency.MainActor`) still match
+/// without code changes — and unrelated attributes like `Available`,
+/// `HasStorage`, `MacroRole` do not.
+fn is_main_actor_attribute(attr: &str) -> bool {
+    let unqualified = attr.rsplit('.').next().unwrap_or(attr);
+    unqualified == "MainActor"
+}
+
 /// Derive error handling pattern from method signature.
 fn derive_error_pattern(method: &Method) -> Option<ErrorPattern> {
     // Check for NSError** out-param (last parameter is pointer to NSError class)
@@ -307,6 +404,38 @@ mod tests {
         }
     }
 
+    /// Build a minimal `Class` shell carrying only the fields the heuristic
+    /// inspects: `name`, `properties`, and `swift_attributes`.
+    fn make_class(name: &str) -> Class {
+        Class {
+            name: name.to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        }
+    }
+
+    fn make_property(name: &str, property_type: TypeRef, is_copy: bool) -> Property {
+        Property {
+            name: name.to_string(),
+            property_type,
+            readonly: false,
+            class_property: false,
+            is_copy,
+            deprecated: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+        }
+    }
+
     fn make_method(
         selector: &str,
         class_method: bool,
@@ -349,7 +478,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSWindow", &method);
+        let ann = annotate_method_heuristic(&make_class("NSWindow"), &method);
         assert_eq!(ann.parameter_ownership.len(), 1);
         assert_eq!(ann.parameter_ownership[0].ownership, OwnershipKind::Weak);
     }
@@ -371,7 +500,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSArray", &method);
+        let ann = annotate_method_heuristic(&make_class("NSArray"), &method);
         assert_eq!(ann.block_parameters.len(), 1);
         assert_eq!(
             ann.block_parameters[0].invocation,
@@ -402,7 +531,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSURLSession", &method);
+        let ann = annotate_method_heuristic(&make_class("NSURLSession"), &method);
         assert_eq!(ann.block_parameters.len(), 1);
         assert_eq!(
             ann.block_parameters[0].invocation,
@@ -436,7 +565,7 @@ mod tests {
             make_type_id(),
         );
 
-        let ann = annotate_method_heuristic("NSNotificationCenter", &method);
+        let ann = annotate_method_heuristic(&make_class("NSNotificationCenter"), &method);
         assert_eq!(ann.block_parameters.len(), 1);
         assert_eq!(
             ann.block_parameters[0].invocation,
@@ -462,7 +591,7 @@ mod tests {
             make_type_id(),
         );
 
-        let ann = annotate_method_heuristic("NSFileManager", &method);
+        let ann = annotate_method_heuristic(&make_class("NSFileManager"), &method);
         assert_eq!(ann.error_pattern, Some(ErrorPattern::ErrorOutParam));
     }
 
@@ -483,7 +612,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSWindow", &method);
+        let ann = annotate_method_heuristic(&make_class("NSWindow"), &method);
         assert_eq!(ann.threading, Some(ThreadingConstraint::MainThreadOnly));
     }
 
@@ -501,7 +630,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSString", &method);
+        let ann = annotate_method_heuristic(&make_class("NSString"), &method);
         assert_eq!(ann.threading, None);
     }
 
@@ -527,7 +656,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("MyCustomView", &method);
+        let ann = annotate_method_heuristic(&make_class("MyCustomView"), &method);
         assert_eq!(ann.threading, Some(ThreadingConstraint::MainThreadOnly));
     }
 
@@ -548,7 +677,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSTableView", &method);
+        let ann = annotate_method_heuristic(&make_class("NSTableView"), &method);
         assert_eq!(ann.parameter_ownership.len(), 1);
         assert_eq!(ann.parameter_ownership[0].ownership, OwnershipKind::Weak);
     }
@@ -593,7 +722,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSArray", &method);
+        let ann = annotate_method_heuristic(&make_class("NSArray"), &method);
         let observer = ann
             .parameter_ownership
             .iter()
@@ -638,7 +767,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSNotificationCenter", &method);
+        let ann = annotate_method_heuristic(&make_class("NSNotificationCenter"), &method);
         let observer = ann
             .parameter_ownership
             .iter()
@@ -687,7 +816,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSKeyValueSharedObservers", &method);
+        let ann = annotate_method_heuristic(&make_class("NSKeyValueSharedObservers"), &method);
         let observer = ann
             .parameter_ownership
             .iter()
@@ -725,7 +854,7 @@ mod tests {
             make_type_id(),
         );
 
-        let ann = annotate_method_heuristic("NSNotificationCenter", &method);
+        let ann = annotate_method_heuristic(&make_class("NSNotificationCenter"), &method);
         // Param 0 (name) must not be marked weak.
         assert!(
             !ann.parameter_ownership
@@ -776,7 +905,7 @@ mod tests {
             },
         );
 
-        let ann = annotate_method_heuristic("NSArray", &method);
+        let ann = annotate_method_heuristic(&make_class("NSArray"), &method);
         // No weak entry for param 0 — name doesn't say "observer".
         assert!(
             !ann.parameter_ownership
@@ -799,7 +928,7 @@ mod tests {
             make_type_id(),
         );
 
-        let ann = annotate_method_heuristic("NSArray", &method);
+        let ann = annotate_method_heuristic(&make_class("NSArray"), &method);
         // Block params should be Copy ownership AND synchronous invocation
         assert_eq!(ann.parameter_ownership.len(), 1);
         assert_eq!(ann.parameter_ownership[0].ownership, OwnershipKind::Copy);
@@ -808,5 +937,224 @@ mod tests {
             ann.block_parameters[0].invocation,
             BlockInvocationStyle::Synchronous
         );
+    }
+
+    // -----------------------------------------------------------------
+    // MainActor threading propagation
+    // -----------------------------------------------------------------
+
+    fn make_void_method(selector: &str) -> Method {
+        make_method(
+            selector,
+            false,
+            vec![],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        )
+    }
+
+    #[test]
+    fn class_main_actor_attribute_propagates_to_all_instance_methods() {
+        // Canonical Swift digester form: bare `MainActor` attribute on a
+        // Swift-only class. `someMethod` doesn't match any selector
+        // heuristic and the class isn't in the hardcoded UI list — so the
+        // class-level attribute is the only signal that fires.
+        let mut class = make_class("ImageRenderer");
+        class.swift_attributes = vec!["MainActor".to_string()];
+
+        let ann = annotate_method_heuristic(&class, &make_void_method("render"));
+        assert_eq!(ann.threading, Some(ThreadingConstraint::MainThreadOnly));
+    }
+
+    #[test]
+    fn class_concurrency_qualified_main_actor_propagates() {
+        // Module-qualified form observed on Swift-only frameworks
+        // (RealityKit, SwiftUICore, ClassKitUI).
+        let mut class = make_class("Entity");
+        class.swift_attributes = vec!["_Concurrency.MainActor".to_string()];
+
+        let ann = annotate_method_heuristic(&class, &make_void_method("update"));
+        assert_eq!(ann.threading, Some(ThreadingConstraint::MainThreadOnly));
+    }
+
+    #[test]
+    fn unrelated_swift_attributes_do_not_trigger_main_thread() {
+        // `Available`, `HasStorage`, `MacroRole` are common attributes that
+        // must not trigger main-thread propagation.
+        let mut class = make_class("PlainModel");
+        class.swift_attributes = vec![
+            "Available".to_string(),
+            "HasStorage".to_string(),
+            "MacroRole".to_string(),
+        ];
+
+        let ann = annotate_method_heuristic(&class, &make_void_method("describe"));
+        assert_eq!(ann.threading, None);
+    }
+
+    #[test]
+    fn main_actor_propagation_also_applies_to_class_methods() {
+        // Class-level `@MainActor` covers class methods too. The hardcoded
+        // UI-class list behaves the same way (selector check is independent
+        // of `class_method`), and `effective_method` resolution treats both
+        // alike — so we mirror that here.
+        let mut class = make_class("ImageRenderer");
+        class.swift_attributes = vec!["MainActor".to_string()];
+        let class_method = make_method(
+            "shared",
+            true,
+            vec![],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Id,
+            },
+        );
+
+        let ann = annotate_method_heuristic(&class, &class_method);
+        assert_eq!(ann.threading, Some(ThreadingConstraint::MainThreadOnly));
+    }
+
+    // -----------------------------------------------------------------
+    // @property (copy) block-setter -> stored
+    // -----------------------------------------------------------------
+
+    fn make_block_property_setter_method(prop_name: &str) -> Method {
+        let cap = {
+            let mut c = prop_name.chars();
+            let first = c.next().unwrap().to_ascii_uppercase();
+            let mut s = String::with_capacity(prop_name.len());
+            s.push(first);
+            s.extend(c);
+            s
+        };
+        make_method(
+            &format!("set{cap}:"),
+            false,
+            vec![Param {
+                name: prop_name.to_string(),
+                param_type: make_type_block(),
+            }],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        )
+    }
+
+    #[test]
+    fn copy_block_property_setter_is_stored() {
+        // The canonical pattern: `@property (copy) MyHandler completionBlock;`
+        // synthesises `setCompletionBlock:`, which Block_copy-es and stores
+        // the block on the instance until reassignment.
+        let mut class = make_class("NSOperation");
+        class
+            .properties
+            .push(make_property("completionBlock", make_type_block(), true));
+
+        let ann = annotate_method_heuristic(
+            &class,
+            &make_block_property_setter_method("completionBlock"),
+        );
+        assert_eq!(ann.block_parameters.len(), 1);
+        assert_eq!(
+            ann.block_parameters[0].invocation,
+            BlockInvocationStyle::Stored,
+            "@property (copy) block setter must classify as stored, not async_copied",
+        );
+    }
+
+    #[test]
+    fn non_copy_block_property_setter_uses_default_classification() {
+        // Without the `copy` attribute we cannot statically conclude the
+        // setter stores the block — fall back to the selector heuristic
+        // (which here finds no `Handler`/`Completion` token and defaults
+        // to `async_copied`).
+        let mut class = make_class("MyClass");
+        class
+            .properties
+            .push(make_property("callback", make_type_block(), false));
+
+        let ann = annotate_method_heuristic(
+            &class,
+            &make_block_property_setter_method("callback"),
+        );
+        assert_eq!(ann.block_parameters.len(), 1);
+        assert_ne!(
+            ann.block_parameters[0].invocation,
+            BlockInvocationStyle::Stored,
+        );
+    }
+
+    #[test]
+    fn copy_attribute_on_non_block_property_does_not_make_block_setter_stored() {
+        // The class has a copy NSString property, but the setter we're
+        // annotating targets `block` (a different name). The string
+        // property's `copy` must not pull the unrelated block setter into
+        // the `stored` category.
+        let mut class = make_class("MyClass");
+        let id_type = make_type_id();
+        class
+            .properties
+            .push(make_property("title", id_type, true));
+
+        let ann = annotate_method_heuristic(
+            &class,
+            &make_block_property_setter_method("block"),
+        );
+        // setBlock: doesn't match a `(copy) block` property → falls through
+        // to the selector heuristic (default async_copied).
+        assert_ne!(
+            ann.block_parameters[0].invocation,
+            BlockInvocationStyle::Stored,
+        );
+    }
+
+    #[test]
+    fn unrelated_setter_for_copy_block_property_does_not_match() {
+        // A method whose selector resembles a setter for property X but
+        // doesn't actually correspond — e.g., extra selector segment —
+        // must not be misclassified.
+        let mut class = make_class("MyClass");
+        class
+            .properties
+            .push(make_property("handler", make_type_block(), true));
+
+        // Two-arg "setter" — not a synthesised setter shape.
+        let two_arg_setter = make_method(
+            "setHandler:withOptions:",
+            false,
+            vec![
+                Param {
+                    name: "handler".to_string(),
+                    param_type: make_type_block(),
+                },
+                Param {
+                    name: "options".to_string(),
+                    param_type: make_type_id(),
+                },
+            ],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        );
+
+        let ann = annotate_method_heuristic(&class, &two_arg_setter);
+        // First param is the block; it must not be classified as stored
+        // because the selector is not the synthesised single-arg setter.
+        let first_block = ann
+            .block_parameters
+            .iter()
+            .find(|b| b.param_index == 0)
+            .expect("first param is a block");
+        assert_ne!(first_block.invocation, BlockInvocationStyle::Stored);
     }
 }

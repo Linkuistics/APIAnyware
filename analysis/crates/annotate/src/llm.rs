@@ -698,6 +698,7 @@ mod tests {
             properties: vec![],
             methods,
             category_methods: vec![],
+            swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],

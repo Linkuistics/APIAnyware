@@ -273,6 +273,7 @@ fn build_effective_properties_for_class(
                     property_type: apianyware_macos_types::TypeRef::void(),
                     readonly: *ro,
                     class_property: *cp,
+                    is_copy: false,
                     deprecated: *dep,
                     source: None,
                     provenance: None,

@@ -6,8 +6,7 @@
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../../runtime/objc-base.rkt"
-         "../../../runtime/coerce.rkt"
-         "../../../runtime/block.rkt")
+         "../../../runtime/coerce.rkt")
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/Foundation.framework/Foundation"))
@@ -15,14 +14,11 @@
 
 
 ;; --- Class predicates ---
-(define (comparisonresult? v) (objc-instance-of? v "ComparisonResult"))
-(define (dependentmember? v) (objc-instance-of? v "DependentMember"))
 (define (mirror? v) (objc-instance-of? v "Mirror"))
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsfastenumerationiterator? v) (objc-instance-of? v "NSFastEnumerationIterator"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
-(define (tuple? v) (objc-instance-of? v "Tuple"))
 (provide NSArray)
 (provide/contract
   [make-nsarray-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
@@ -34,11 +30,9 @@
   [nsarray-last-object (c-> objc-object? any/c)]
   [nsarray-sorted-array-hint (c-> objc-object? (or/c nsdata? objc-nil?))]
   [nsarray-underestimated-count (c-> objc-object? exact-integer?)]
-  [nsarray-clip (c-> objc-object? void?)]
   [nsarray-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
   [nsarray-count-by-enumerating-with-state-objects-count (c-> objc-object? (or/c cpointer? #f) (or/c cpointer? #f) exact-nonnegative-integer? exact-nonnegative-integer?)]
   [nsarray-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nsarray-formatted (c-> objc-object? (or/c nsstring? objc-nil?))]
   [nsarray-make-iterator (c-> objc-object? (or/c nsfastenumerationiterator? objc-nil?))]
   [nsarray-mutable-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
   [nsarray-object-at-index (c-> objc-object? exact-nonnegative-integer? any/c)]
@@ -100,8 +94,6 @@
   (tell #:type _int64 (coerce-arg self) underestimatedCount))
 
 ;; --- Instance methods ---
-(define (nsarray-clip self)
-  (tell #:type _void (coerce-arg self) clip))
 (define (nsarray-copy-with-zone self zone)
   (wrap-objc-object
    (_msg-2 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
@@ -110,9 +102,6 @@
   (_msg-3 (coerce-arg self) (sel_registerName "countByEnumeratingWithState:objects:count:") state buffer len))
 (define (nsarray-encode-with-coder self coder)
   (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
-(define (nsarray-formatted self)
-  (wrap-objc-object
-   (tell (coerce-arg self) formatted)))
 (define (nsarray-make-iterator self)
   (wrap-objc-object
    (tell (coerce-arg self) makeIterator)))

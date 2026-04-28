@@ -132,6 +132,14 @@ pub struct Class {
     #[serde(default)]
     pub category_methods: Vec<CategoryGroup>,
 
+    /// Swift declaration attributes attached to the class
+    /// (e.g. `"MainActor"`, `"_Concurrency.MainActor"`, `"Available"`).
+    /// Sourced from swift-api-digester `declAttributes`. Used by the
+    /// annotate step to propagate class-level threading constraints to
+    /// every instance method.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub swift_attributes: Vec<String>,
+
     // --- Resolved phase additions ---
     /// Transitive ancestor classes (populated by resolve step).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -257,6 +265,13 @@ pub struct Property {
     /// Whether this is a class property (vs instance property).
     #[serde(default)]
     pub class_property: bool,
+
+    /// Whether the property carries the `(copy)` attribute. For block-typed
+    /// properties this is the canonical signal that the synthesised setter
+    /// stores the block (`Block_copy`-ed) on the instance — used by the
+    /// annotate step to classify the setter's block parameter as `stored`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub is_copy: bool,
 
     /// Whether this property is deprecated.
     #[serde(default)]

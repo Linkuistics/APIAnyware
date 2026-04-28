@@ -2404,10 +2404,6 @@
 (define up 0)
 (define down 1)
 
-;; AttributeScopes
-
-;; AttributeDynamicLookup
-
 ;; Depth
 
 ;; FrameResizePosition

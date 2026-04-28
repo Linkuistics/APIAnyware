@@ -1473,23 +1473,5 @@
 (define termsOfAddress 0)
 (define localizedPhrase 1)
 
-;; MachErrorCode
-
-;; POSIXErrorCode
-
-;; FloatingPointRoundingRule
-
-;; EncodingError
-
-;; DecodingError
-
-;; Optional
-
 ;; ComparisonResult
-
-;; Never
-
-;; Change
-
-;; CGRectEdge
 
