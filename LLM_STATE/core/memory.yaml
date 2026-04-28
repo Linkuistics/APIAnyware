@@ -463,3 +463,17 @@ entries:
   title: annotate without --llm-dir re-tags prior annotations as LLM source
   body: |
     `annotate` without `--llm-dir` falls back to the prior annotated checkpoint file as its LLM source (`analysis/crates/annotate/src/lib.rs:62-77`) and re-tags every annotation as `source = Llm`. Workaround for heuristic-only baseline runs: delete `analysis/ir/annotated/{Framework}.json` before running `annotate` without `--llm-dir`.
+- id: block-parameters-list-replace-is-safe-by-coincidence-apply-per-elem-union-if-divergence-observed
+  title: block_parameters list-replace is safe-by-coincidence — apply per-elem union if divergence observed
+  body: |
+    **Audit concern (archived from fix-parameter-ownership-merge-clobber results — "What this suggests next" item 4):**
+
+    `block_parameters` in `merge_annotations` (`analysis/crates/annotate/src/validate.rs`) uses the same all-or-nothing list-replace pattern that caused the `parameter_ownership` clobber bug. Currently this is "safe by coincidence": heuristics and LLM tend to annotate the same block params, so the list-replace doesn't silently drop heuristic entries.
+
+    If a future pattern emerges where one source legitimately enumerates more block params than the other, the same per-element union should be applied (matching the fix for `parameter_ownership`).
+
+    **Trigger condition:** Apply per-element union to `block_parameters` if:
+    - A calibration run shows the LLM and heuristic enumerate different block params for the same method, OR
+    - A new framework or SDK update introduces methods where heuristic block-param classification (e.g., `*completionHandler*` name matching) and LLM block-param detection diverge.
+
+    **Status:** Deferred; no evidence of divergence in current calibration data (WebKit: 0 delta on block/error patterns). Revisit during or after Foundation LLM annotation pass if unexpected drops appear.

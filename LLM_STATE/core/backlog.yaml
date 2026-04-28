@@ -1,132 +1,9 @@
 tasks:
-- id: fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
-  title: Fix parameter_ownership merge-clobber in validate::merge_annotations
-  category: analysis
-  status: done
-  dependencies: []
-  description: |
-    **Priority:** high
-
-    **Promoted from:** WebKit calibration session (session 38) "What this suggests next" item 1.
-
-    **Problem:** `validate::merge_annotations` in `analysis/crates/annotate/src/validate.rs` (around line 111) clones the LLM `parameter_ownership` list wholesale and never falls back to heuristic entries for params the LLM didn't touch. Result: any heuristic-classified `copy`/`weak` ownerships on params not mentioned by the LLM are silently dropped. On WebKit this dropped 52 entries (66 → 15). Foundation's heuristic ownership coverage is larger, so the loss would be more material there.
-
-    Fields that use a per-field empty-fallback (`block_parameters`, `threading`, `error_pattern`) do NOT have this issue. The bug is specific to list-typed fields where the LLM typically emits a sparse subset.
-
-    **Design decision (settled in session 38):** Use a per-param union with LLM-precedence on conflicts. Concretely: for each param in the heuristic `parameter_ownership` list, if the LLM list contains an entry for the same param, use the LLM entry; otherwise keep the heuristic entry. Any LLM entries for params not in the heuristic list are appended (new params the heuristic missed). This matches the existing per-field empty-fallback philosophy already applied to scalar fields.
-
-    **Reference:**
-    - Bug site: `analysis/crates/annotate/src/validate.rs` ~line 111 (`merge_annotations` function, `parameter_ownership` handling).
-    - Pattern to replicate: the per-field empty-fallback used for `threading` / `block_parameters` / `error_pattern` in the same function.
-    - Test gap: no existing test covers the case where `--llm-dir` is given and LLM output omits a param that heuristics annotated. A regression test should be added.
-
-    **Secondary (optional, lower priority):** `annotate` without `--llm-dir` re-uses the prior annotated checkpoint as a fallback "LLM" source and re-tags every annotation as `source = Llm` (`analysis/crates/annotate/src/lib.rs:62-77`). This makes a stale checkpoint look LLM-derived. Consider only treating the existing checkpoint as fallback when `llm_dir` is `None` AND the checkpoint has `source = Llm` entries — or at minimum document the workaround (delete `analysis/ir/annotated/{Framework}.json` before heuristic-only baseline runs).
-
-    **Acceptance criteria:**
-    - `annotate --llm-dir` preserves heuristic `parameter_ownership` entries for params the LLM did not annotate.
-    - `annotate --llm-dir` uses LLM `parameter_ownership` for params the LLM did annotate (LLM-precedence on conflicts).
-    - A regression test exercises the mixed case.
-    - Optionally: re-run WebKit merge to confirm 66 ownership annotations (or close) are preserved.
-
-    **Dependencies:** none (can be done before Foundation).
-  results: |
-    ## What was done
-
-    Replaced the whole-list LLM clone for `parameter_ownership` in
-    `analysis/crates/annotate/src/validate.rs::merge_annotations` with a
-    per-param union: start from the LLM annotation (so LLM keeps precedence on
-    conflicting `param_index`), then for each heuristic entry whose index isn't
-    already in the LLM list, append it. This matches the existing per-field
-    empty-fallback philosophy already applied to the scalar fields
-    (`threading`, `error_pattern`) and to `block_parameters`.
-
-    Two regression tests were added next to the existing merge tests:
-
-    - `test_merge_parameter_ownership_per_param_union` — heuristic annotates
-      params 0 and 2; LLM annotates only param 1. Asserts the merged
-      annotation has all 3 entries with the expected ownership kinds.
-    - `test_merge_parameter_ownership_llm_precedence_on_conflict` — both
-      sources annotate `param_index=0` with different ownership kinds.
-      Asserts LLM wins (`Weak`) and there is exactly one entry.
-
-    The first test fails on the unfixed code (1 vs 3 entries), which proved
-    the bug existed before the fix and is fixed after.
-
-    ## Verification
-
-    - `cargo test -p apianyware-macos-annotate` — 56/56 pass (was 54 + 2 new).
-    - `cargo test --workspace` — all crates green; no regressions.
-    - `cargo clippy -p apianyware-macos-annotate --all-targets -D warnings` — clean.
-    - `cargo +nightly fmt -p apianyware-macos-annotate` — clean (no diff).
-
-    End-to-end validation on real WebKit data (the calibration framework that
-    surfaced the bug in session 38):
-
-    | run                                            | ownership entries |
-    |------------------------------------------------|-------------------|
-    | Heuristic-only (no `--llm-dir`)                | **66**            |
-    | LLM-only (raw LLM annotation file)             | 13                |
-    | Existing pre-fix checkpoint (the bug)          | 15                |
-    | **Post-fix merge with `--llm-dir`**            | **67**            |
-
-    The 67 = 66 (heuristic) + 1 (LLM-only param the heuristic missed); LLM
-    and heuristic overlapping indices kept the LLM value (per-param union,
-    not concatenation). This matches the acceptance criterion: "66 ownership
-    annotations (or close) are preserved."
-
-    ## What worked
-
-    - Tight TDD loop: the failing test was added in the same edit as the
-      passing-on-conflict test, so a single `cargo test` showed both the bug
-      shape (sparse-LLM clobber) and the conflict semantics in one run.
-    - The clone-and-fill pattern composed cleanly with per-param union — no
-      branching needed for the conflict case, because LLM entries were
-      already in the cloned `merged` and the heuristic-append guard skips
-      any `param_index` already present.
-    - Running the actual annotate CLI against WebKit (heuristic-only +
-      --llm-dir) made the fix observable beyond unit tests and produced
-      numbers that match the session-38 calibration report.
-
-    ## What didn't work / wasn't attempted
-
-    - The "secondary, lower priority" sub-task — gating the
-      existing-checkpoint fallback in `lib.rs:62-77` so it isn't relabelled
-      `source = Llm` — was deliberately left for a separate task. It's an
-      orthogonal hazard about *where* annotations come from (reads), not
-      *how* they're merged (writes). Bundling it would have widened the
-      blast radius and made the regression test harder to scope.
-
-    ## What this suggests next
-
-    1. **Foundation LLM annotation pass is now safe to run.** The blocked
-       backlog item `Run LLM annotation pass on Foundation` no longer risks
-       silently dropping heuristic ownership entries on params the LLM
-       doesn't touch — and Foundation has materially more heuristic
-       ownership coverage than WebKit, so the impact-avoided is larger.
-    2. **Refresh the WebKit annotated checkpoint.** The existing
-       `analysis/ir/annotated/WebKit.json` was produced by the buggy merge
-       (15 entries instead of 67). When Foundation runs, sweep WebKit
-       through the same fixed annotate step so downstream enrichment sees
-       the right ownership facts.
-    3. **Promote the secondary fix to its own backlog item.** The stale-
-       checkpoint-relabelled-as-LLM hazard is real (it makes a heuristic-
-       only baseline indistinguishable from an LLM-merged run in the
-       `source` field). Suggested wording: gate the
-       `load_existing_annotations` fallback to only run when `llm_dir` is
-       `None` *and* the existing checkpoint actually contains
-       `source = Llm` entries; otherwise re-run heuristics fresh.
-    4. **Audit other list-typed annotation fields for the same shape bug.**
-       `block_parameters` is currently safe-by-coincidence (heuristic and
-       LLM tend to annotate the same block param), but the same all-or-
-       nothing list-replace exists there. If a future pattern emerges where
-       one source legitimately enumerates more block params than the other,
-       the same per-element union should be applied.
 - id: run-llm-annotation-pass-on-foundation
   title: Run LLM annotation pass on Foundation
   category: analysis
   status: not_started
-  dependencies:
-  - fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
+  dependencies: []
   description: |
     **Priority:** high
 
@@ -157,3 +34,50 @@ tasks:
     - Runs table updated.
 
     **Dependencies:** fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
+- id: refresh-webkit-annotated-checkpoint-after-parameter-ownership-merge-fix
+  title: Refresh WebKit annotated checkpoint after parameter_ownership merge fix
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** medium
+
+    **Promoted from:** fix-parameter-ownership-merge-clobber-in-validate-merge-annotations results — "What this suggests next" item 2.
+
+    **Problem:** `analysis/ir/annotated/WebKit.json` was produced by the buggy `merge_annotations` that wholesale-cloned the LLM `parameter_ownership` list, dropping heuristic entries for params the LLM didn't annotate. The checkpoint records 15 ownership annotations instead of the correct 67. Downstream enrichment (and any future Racket binding generation from WebKit) currently sees the degraded ownership data.
+
+    **Steps:**
+    1. Confirm the fix is in place (`cargo test -p apianyware-macos-annotate` — all 56 pass).
+    2. Delete `analysis/ir/annotated/WebKit.json` to force a clean re-run.
+    3. Run `annotate --only WebKit --llm-dir analysis/ir/llm-annotations/` (the versioned `.llm.json` already exists from the calibration session).
+    4. Verify: `jq '[.methods[].annotations.parameter_ownership // [] | length] | add' analysis/ir/annotated/WebKit.json` should be ≥ 66 (target ~67).
+    5. Run `enrich --only WebKit` and `llm-validate` (if applicable) to confirm downstream passes.
+
+    **Acceptance criteria:**
+    - `analysis/ir/annotated/WebKit.json` records ~67 `parameter_ownership` entries (matching the post-fix calibration figure).
+    - `enrich` passes on the refreshed checkpoint.
+- id: gate-annotate-checkpoint-fallback-to-avoid-re-tagging-heuristic-annotations-as-llm-source
+  title: Gate annotate checkpoint fallback to avoid re-tagging heuristic annotations as LLM source
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** low
+
+    **Promoted from:** fix-parameter-ownership-merge-clobber-in-validate-merge-annotations results — "What this suggests next" item 3.
+
+    **Problem:** `annotate` without `--llm-dir` falls back to the prior annotated checkpoint file as a pseudo-LLM source (`analysis/crates/annotate/src/lib.rs:62-77`) and re-tags every annotation as `source = Llm`. A heuristic-only baseline run is therefore indistinguishable from an LLM-merged run in the `source` field. This makes it impossible to audit which annotations came from heuristics vs. the LLM without consulting git history.
+
+    **Current workaround:** Delete `analysis/ir/annotated/{Framework}.json` before running `annotate` without `--llm-dir`. This is documented in the memory entry "annotate without --llm-dir re-tags prior annotations as LLM source".
+
+    **Proposed fix:** Gate `load_existing_annotations` in `lib.rs:62-77` to only run when:
+    - `llm_dir` is `None`, AND
+    - The existing checkpoint actually contains `source = Llm` entries.
+
+    Or alternatively: when falling back to the existing checkpoint without an explicit `--llm-dir`, tag re-used entries as `source = Heuristic` (their original source) rather than `source = Llm`.
+
+    **Why lower priority:** The workaround (delete checkpoint) is simple. No correctness impact on post-merge annotation quality. Purely an observability/auditability issue.
+
+    **Acceptance criteria:**
+    - Running `annotate --only <Framework>` without `--llm-dir` on a framework that has an existing annotated checkpoint does not re-tag `source` fields as `Llm`.
+    - Heuristic-only runs are distinguishable from LLM-merged runs via the `source` field alone.
