@@ -439,18 +439,20 @@ entries:
     WebKit calibration (86 methods, naming-pattern-defeating): 80,907 tokens total; (80,907 − 35,000) / 86 ≈ 534 tokens/method.
     Foundation calibration (546 methods, naming-compliant): 131,228 tokens total; marginal ~250 tokens/method.
     AppKit calibration (437 methods, naming-compliant): 119,969 tokens total; marginal ~194 tokens/method — 28% under 35k + N × 250 projection.
-    Budget model: 35k + N × 250 tokens/method for naming-compliant frameworks (empirically 194–250); 35k + N × 534 tokens/method for naming-pattern-defeating (heavy class decorations like `_SWIFT_UI_ACTOR`).
+    CoreData calibration (89 methods, naming-compliant, per-class header inspection): 71,384 tokens total; marginal ~409 tokens/method — 22% over 35k + N × 250 projection; fixed dispatch overhead dominates on small frameworks.
+    Budget model: 35k + N × 250 tokens/method for naming-compliant frameworks (empirically 194–409; higher end for small per-class-inspection runs); 35k + N × 534 tokens/method for naming-pattern-defeating (heavy class decorations like `_SWIFT_UI_ACTOR`).
+    Per-class header inspection costs more per method than batched Python synthesis; batched synthesis preferred for large naming-compliant frameworks.
     Matter (12,827 methods) requires class-level chunking before annotation.
 - id: llm-adds-value-only-on-naming-pattern-defeating-frameworks
   title: Block-invocation reclassification is primary LLM value-add
   body: |
-    Block-invocation re-classification is the primary LLM value-add: heuristics emit 0 `stored` block lifecycle annotations; LLM identifies stored handlers. AppKit: 0→25 `stored_blocks`; 47 async demoted to 22 sync + 25 stored. `stored` blocks require GC-prevention pinning that `async_copied` blocks do not.
+    Block-invocation re-classification is the primary LLM value-add: heuristics emit 0 `stored` block lifecycle annotations; LLM identifies stored handlers. AppKit: 0→25 `stored_blocks`; 47 async demoted to 22 sync + 25 stored. CoreData: 0→11 `stored` (NSBatchInsertRequest row handlers, NSCustomMigrationStage will/did-migrate handlers, NSFetchRequestExpression block expressions); 30 async demoted to 4 sync + 15 async + 11 stored. `stored` blocks require GC-prevention pinning that `async_copied` blocks do not.
 
-    Threading: LLM was high-yield on WebKit (C-macro `WK_SWIFT_UI_ACTOR`). AppKit threading delta was smaller (+278 method-level entries) because heuristics now propagate class-level `_SWIFT_UI_ACTOR` to methods — LLM is supplementing, not discovering. Threading yield declines as heuristics mature.
+    Threading: LLM was high-yield on WebKit (C-macro `WK_SWIFT_UI_ACTOR`). AppKit threading delta was smaller (+278 method-level entries) because heuristics now propagate class-level `_SWIFT_UI_ACTOR` to methods — LLM is supplementing, not discovering. CoreData threading=0 is correct: queue-flexibility is implicit in `performBlock:` semantics, not a per-method rule. Threading yield declines as heuristics mature.
 
-    Ownership: Near-zero LLM delta on AppKit and Foundation. `setDelegate:`/`setDataSource:` patterns are fully covered by heuristics; Foundation `addObserver:` covered by `is_observer_param`.
+    Ownership: Near-zero LLM delta on AppKit, Foundation, CoreData. `setDelegate:`/`setDataSource:` patterns are fully covered by heuristics; Foundation `addObserver:` covered by `is_observer_param`.
 
-    Framework selection: weight "headers with `NS_NOESCAPE` / `@property (copy)` block setters" alongside threading attributes. Next highest-value: CoreData (ownership/error patterns, delegate/observer surface), AVFoundation (block lifecycle, completion-handler and stored-observer surface).
+    Framework selection: weight "headers with `NS_NOESCAPE` / `@property (copy)` block setters" alongside threading attributes. Next highest-value: AVFoundation (block lifecycle, completion-handler and stored-observer surface — capture session observers, audio route change handlers, player item notifications, asset loading callbacks).
 - id: llm-merge-drops-heuristic-parameter-ownership-annotations
   title: parameter_ownership merge uses per-param union
   body: |
@@ -500,3 +502,7 @@ entries:
     which does not end with `"Observer"`). With this heuristic, Foundation heuristic-only
     annotation produces 302 `parameter_ownership` entries, closing the 29-entry gap
     previously filled by LLM annotation.
+- id: llm-subagent-self-reports-need-jq-cross-check
+  title: LLM subagent self-reports need jq cross-check
+  body: |
+    LLM subagent self-reported block lifecycle and ownership counts may disagree with actual `.llm.json` content. `llm-validate` is the authoritative correctness check; `jq` cross-check of actual output against subagent's stated counts is the established post-run practice. Discrepancy arises from counts formed mid-generation before a final pass. Canonical: CoreData subagent reported async_copied=18/stored=8/ownership=7; actual `.llm.json` held 15/11/5.
