@@ -440,6 +440,7 @@ entries:
     Foundation calibration (546 methods, naming-compliant): 131,228 tokens total; marginal ~250 tokens/method.
     AppKit calibration (437 methods, naming-compliant): 119,969 tokens total; marginal ~194 tokens/method — 28% under 35k + N × 250 projection.
     CoreData calibration (89 methods, naming-compliant, per-class header inspection): 71,384 tokens total; marginal ~409 tokens/method — 22% over 35k + N × 250 projection; fixed dispatch overhead dominates on small frameworks.
+    25-framework batch (≤2 methods each, Swift-only, no ObjC headers): avg 26,027 tokens/framework (24% under 35k baseline). The 35k fixed cost over-estimates for sub-3-method Swift-only frameworks — use 35k + N × 250 as an upper bound for pre-batch sizing.
     Budget model: 35k + N × 250 tokens/method for naming-compliant frameworks (empirically 194–409; higher end for small per-class-inspection runs); 35k + N × 534 tokens/method for naming-pattern-defeating (heavy class decorations like `_SWIFT_UI_ACTOR`).
     Per-class header inspection costs more per method than batched Python synthesis; batched synthesis preferred for large naming-compliant frameworks.
     Matter (12,827 methods) requires class-level chunking before annotation.
@@ -519,3 +520,7 @@ entries:
     **Implication for Racket-OO emitter:** Any emitter that labeled these callbacks as `async_copied` before the AVFoundation `.llm.json` was merged would have under-pinned them, causing intermittent observer disappearance under GC pressure. The Racket-OO emitter should be audited against the new AVFoundation annotations before any sample app exercises an AVPlayer time observer.
 
     **Action needed in racket-oo target plan:** Add a task to audit generated AVFoundation bindings — specifically the `addPeriodicTimeObserverForInterval:` family — against the new `stored` annotations and verify that the emitter generates correct GC-prevention pinning (not `async_copied`-style blocks). This should run before any Racket sample app using AVFoundation time observers ships.
+- id: llm-annotation-parallel-dispatch-safe-at-25-way-fan-out
+  title: LLM annotation parallel dispatch safe at 25-way fan-out
+  body: |
+    25 simultaneous subagents returned `llm-validate warnings=0`; `subagent_report` reconciliation held with zero divergences. Wall-clock ~105s for 25 frameworks vs ~1,100s serial-aggregate (~10× speedup). Orchestration context overhead is negligible at this fan-out. Orchestration history tracked in `analysis/scripts/llm-annotate-orchestration.md`.
