@@ -1,158 +1,4 @@
 tasks:
-- id: run-llm-annotation-pass-on-foundation
-  title: Run LLM annotation pass on Foundation
-  category: analysis
-  status: done
-  dependencies: []
-  description: |
-    **Priority:** high
-
-    **Promoted from:** WebKit calibration session (session 38) decision block and "What this suggests next" item 3.
-
-    **Summary:** Run the full LLM annotation pass on Foundation — the largest and most important framework for downstream Racket binding generation. Budget is confirmed acceptable (~326k tokens = 35k fixed + 546 × 534).
-
-    **Why Foundation:** Foundation methods are the dominant target for both `parameter_ownership` (delegate weak/copy patterns are pervasive) and async-copy block classification. The WebKit calibration confirmed the LLM's additive value for threading-macro annotations; Foundation is mostly thread-flexible, so the dominant additive value here will be ownership and delegate-setter annotations that heuristics miss on non-standard naming.
-
-    **Precondition (blocker):** The `parameter_ownership` merge-clobber bug must be fixed first (see task `fix-parameter-ownership-merge-clobber-in-validate-merge-annotations`). Foundation's heuristic ownership coverage is much larger than WebKit's; losing it wholesale would defeat the purpose of the LLM pass.
-
-    **Steps:**
-    1. Verify merge bug is fixed and merged.
-    2. Run `llm-extract --only Foundation` to produce `.methods.json`; confirm method count ~546.
-    3. Delete any existing `analysis/ir/annotated/Foundation.json` checkpoint.
-    4. Run `annotate --only Foundation` (heuristic-only) and record baseline annotation counts.
-    5. Dispatch one subagent per `analysis/scripts/llm-annotate-subagent.md` (Foundation-sized; expect ~326k tokens, ~10–15m wall time).
-    6. Run `annotate --only Foundation --llm-dir …` and verify via `llm-validate` and `enrich`.
-    7. Record: token count, wall time, tool uses, LLM-vs-heuristic delta by field.
-    8. Update `analysis/scripts/llm-annotate-orchestration.md` runs table.
-
-    **Cost projection:** `35,000 + 546 × 534 ≈ 326,564 tokens`. Decision in session 38: acceptable for a one-time-per-SDK-update cost.
-
-    **Acceptance criteria:**
-    - `llm-validate` passes on Foundation output.
-    - `enrich` verification passes.
-    - LLM-vs-heuristic delta documented (threading, ownership, block params).
-    - Runs table updated.
-
-    **Dependencies:** fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
-  results: |
-    **What was done:**
-    - Verified preconditions: merge-clobber fix in place (`cargo test -p apianyware-macos-annotate` → 62/62), and the WebKit refresh task was completed first as empirical validation that the fix works on a real LLM checkpoint (67 ownership entries, target met).
-    - Ran `cargo run -q -p apianyware-macos-analyze -- llm-extract --only Foundation` → produced `analysis/ir/llm-summaries/Foundation.methods.json` with 546 methods across 125 classes (matches the projection).
-    - Captured heuristic-only baseline: deleted `analysis/ir/annotated/Foundation.json`, re-ran `annotate --only Foundation` (no `--llm-dir`). Counts: 293 ownership / 250 block / 0 threading / 204 error_pattern. 7,040 method annotations across 300 classes.
-    - Dispatched one Claude Code subagent (general-purpose) per `analysis/scripts/llm-annotate-subagent.md` with the Foundation-substituted prompt plus chunking guidance (546 > 200-method threshold).
-    - Subagent wrote `analysis/ir/llm-annotations/Foundation.llm.json`: 121 classes / 483 methods. Validation passed first run.
-    - Independently re-ran `llm-validate --methods-file … --llm-file …` → passed.
-    - Re-ran `annotate --only Foundation --llm-dir analysis/ir/llm-annotations/` to merge.
-    - Ran `enrich --only Foundation` → verification passed.
-    - Updated the runs table in `analysis/scripts/llm-annotate-orchestration.md` with full numbers and per-pattern breakdown.
-
-    **Cost — actual vs. projected:**
-    - Projection (from WebKit calibration): 35k + 546 × 534 ≈ **326,564** tokens.
-    - Actual: **131,228** tokens (52 tool uses, ~7m 35s wall time).
-    - 60% under projection. Reason: subagent built the output JSON in a single Python pass after establishing per-pattern rules from a representative sample of headers, rather than per-method `WebFetch`/header lookups. Suggests future budget projections should use closer to 35k + N × 250 tokens/method for any framework with similarly stable naming conventions.
-
-    **LLM-vs-heuristic delta (the headline question):**
-
-    | Field | Heuristic | Heur+LLM | Δ |
-    |---|---|---|---|
-    | `parameter_ownership` | 293 | 302 | **+9** |
-    | `block_parameters` | 250 | 250 | 0 |
-    | `threading` | 0 | 0 | 0 |
-    | `error_pattern` | 204 | 204 | 0 |
-
-    The +9 ownership entries are KVO `addObserver:forKeyPath:options:context:` observer params and `NSNotificationCenter addObserver:` observer params — heuristics don't classify these as `weak` because the method isn't named `setDelegate:`/`setDataSource:`. This is genuinely additive and matters for downstream Racket binding generation around observer-registration patterns.
-
-    The 0-deltas confirm the calibration thesis: Foundation is documented as thread-flexible (no `NS_SWIFT_UI_ACTOR`), and heuristics already nail Foundation's pervasive completion-handler / `:error:` patterns identically to the LLM. Foundation's threading-additive surface is essentially zero — by contrast, WebKit got +63 threading annotations because its 13 `WK*` classes all carry class-level Swift UI-actor decorations.
-
-    **Block-invocation breakdown (250 LLM block_parameters):**
-    - 120 `synchronous` — NS_NOESCAPE enumerations, comparators, file-coordinator accessors
-    - 83 `async_copied` — completion handlers, run-loop / op-queue scheduled blocks, item-loader async APIs
-    - 47 `stored` — timer blocks, op completion blocks, `setReadabilityHandler:`, XPC interruption/invalidation handlers, `NSPredicate predicateWithBlock:`, sort-descriptor comparators
-
-    Round-trip check: 120+83+47 = 250 = block_parameters count, and enrich reports `sync_blocks=120, async_blocks=83, stored_blocks=47` — matches exactly.
-
-    **Notable subagent decisions worth recording:**
-    - Treated `NSSortDescriptor` comparator block as `stored` (descriptor caches the block until later application) rather than synchronous — distinguishes it from comparator-taking call-site selectors elsewhere in Foundation.
-    - Treated `NSXPCConnection.{remoteObjectProxyWithErrorHandler:, synchronousRemoteObjectProxyWithErrorHandler:}` error handlers as `stored` on the returned proxy, not async_copied/synchronous.
-    - Deliberately did NOT mark `NSURLSession`/`NSXPCConnection` delegates as `weak` — Apple's headers explicitly document those as retained for the lifetime of the session/connection. This is important nuance: the "delegates are weak" rule has well-known exceptions in Foundation, and the subagent correctly read the headers rather than applying the pattern blindly.
-
-    **Acceptance criteria — all met:**
-    - ✅ `llm-validate` passes on Foundation output (twice — once by subagent, once independently).
-    - ✅ `enrich` verification passes.
-    - ✅ LLM-vs-heuristic delta documented (above).
-    - ✅ Runs table updated.
-
-    **What this suggests next:**
-    1. **Budget refinement.** The 326k projection methodology over-estimated by ~60%. For future frameworks, project 35k + N × 250 tokens as a refined baseline; the WebKit 534/method figure was inflated by webfetch-heavy retrieval of class-decoration prose that doesn't apply to most frameworks.
-    2. **Heuristic gap follow-up.** The +9 KVO/notification-observer additions point to a clean heuristic enhancement: `addObserver:` first-param weak classification (any class+selector pair where the first param is a generic `id` named `observer`, especially when followed by a `forKeyPath:`/`name:` param). Worth a small backlog task to encode this rule and shrink future LLM-additive surface for observer-pattern frameworks.
-    3. **AppKit/UIKit threading windfall.** Foundation gave 0 threading; AppKit will likely match WebKit's pattern (heavy class-level `_SWIFT_UI_ACTOR` decorations) and produce a large additive contribution. AppKit annotation should be the next priority framework when LLM annotation continues — the threading additive value there will likely justify its budget more clearly than Foundation did.
-    4. **Schema/checkpoint impact.** Downstream Racket binding generation should now use the enriched Foundation checkpoint for any future emitter changes touching observer registration code-gen. The 9 new weak observer annotations are the ones that change behaviour.
-- id: refresh-webkit-annotated-checkpoint-after-parameter-ownership-merge-fix
-  title: Refresh WebKit annotated checkpoint after parameter_ownership merge fix
-  category: analysis
-  status: done
-  dependencies: []
-  description: |
-    **Priority:** medium
-
-    **Promoted from:** fix-parameter-ownership-merge-clobber-in-validate-merge-annotations results — "What this suggests next" item 2.
-
-    **Problem:** `analysis/ir/annotated/WebKit.json` was produced by the buggy `merge_annotations` that wholesale-cloned the LLM `parameter_ownership` list, dropping heuristic entries for params the LLM didn't annotate. The checkpoint records 15 ownership annotations instead of the correct 67. Downstream enrichment (and any future Racket binding generation from WebKit) currently sees the degraded ownership data.
-
-    **Steps:**
-    1. Confirm the fix is in place (`cargo test -p apianyware-macos-annotate` — all 56 pass).
-    2. Delete `analysis/ir/annotated/WebKit.json` to force a clean re-run.
-    3. Run `annotate --only WebKit --llm-dir analysis/ir/llm-annotations/` (the versioned `.llm.json` already exists from the calibration session).
-    4. Verify: `jq '[.methods[].annotations.parameter_ownership // [] | length] | add' analysis/ir/annotated/WebKit.json` should be ≥ 66 (target ~67).
-    5. Run `enrich --only WebKit` and `llm-validate` (if applicable) to confirm downstream passes.
-
-    **Acceptance criteria:**
-    - `analysis/ir/annotated/WebKit.json` records ~67 `parameter_ownership` entries (matching the post-fix calibration figure).
-    - `enrich` passes on the refreshed checkpoint.
-  results: |
-    **What was done:**
-    - Verified merge fix is in place: `cargo test -p apianyware-macos-annotate` → 62/62 tests pass (test count grown from the 56 mentioned in the task; the new tests guard the merge behaviour explicitly).
-    - Pre-deletion check confirmed the bug's effect: `analysis/ir/annotated/WebKit.json` reported 15 `parameter_ownership` entries (matches the figure in the task body).
-    - Deleted `analysis/ir/annotated/WebKit.json` to force a clean re-merge.
-    - Re-ran `cargo run -p apianyware-macos-analyze -- annotate --only WebKit --llm-dir analysis/ir/llm-annotations/`. Loaded LLM annotations: classes=13, methods=72. Wrote checkpoint with 12,568 method annotations across 164 classes.
-    - Re-ran `cargo run -p apianyware-macos-analyze -- enrich --only WebKit`. Verification passed; enriched checkpoint written to `analysis/ir/enriched/WebKit.json`.
-
-    **What worked:**
-    - Post-fix `parameter_ownership` count: **67** — exactly the target figure from the calibration session and the task acceptance criterion (≥66).
-    - Enrichment numbers stable vs. the pre-fix baseline (sync=1, async=51, stored=2, delegate_protocols=0, error_methods=6, main_thread_classes=13). The 15 → 67 jump is purely the heuristic entries the buggy clobber had been dropping; downstream enrich relations don't fan out from those annotations in WebKit's case, so totals stay the same.
-    - `verification passed framework=WebKit` confirms no contradictions introduced by the merge.
-
-    **Acceptance criteria — both met:**
-    - ✅ `analysis/ir/annotated/WebKit.json` records 67 `parameter_ownership` entries.
-    - ✅ `enrich --only WebKit` passes.
-
-    **What this suggests next:**
-    - The merge fix is now empirically validated on a real-world checkpoint with both heuristic and LLM input. This is the precondition the Foundation LLM annotation task requires; that task is now unblocked.
-    - Worth checking whether other previously-annotated frameworks (EventKit, PushKit — the other `.llm.json` files in `analysis/ir/llm-annotations/`) also need refresh. Quick `jq` count would tell. Out of scope for this task but a candidate for a small follow-up if any of them already have a stale `annotated/<F>.json`.
-- id: add-addobserver-observer-param-weak-heuristic-to-shrink-llm-additive-surface
-  title: 'Add addObserver: observer-param weak heuristic to shrink LLM-additive surface'
-  category: analysis
-  status: not_started
-  dependencies: []
-  description: |
-    **Priority:** medium
-
-    **Promoted from:** Foundation LLM annotation pass results (session 41) — "What this suggests next" item 2.
-
-    **Problem:** The LLM annotation pass on Foundation found 9 `parameter_ownership` annotations that heuristics missed: KVO `addObserver:forKeyPath:options:context:` observer params and `NSNotificationCenter addObserver:` family observer params. Heuristics don't classify these as `weak` because the selectors don't match the `setDelegate:` / `setDataSource:` naming pattern, even though `observer` (generic `id`) is semantically identical to a delegate in its ownership semantics.
-
-    **Settled design:**
-    - Add a new heuristic rule in the annotate crate: for any method whose selector contains `addObserver:` (case-sensitive substring match is fine; the ObjC naming convention is stable), classify the first parameter typed as a generic `id` or `id<protocol>` named `observer` (or `aNotificationObserver`, the NSNotificationCenter variant) as `weak`.
-    - Optionally: also cover the `forKeyPath:` + `options:context:` suffix to narrow false positives if the `addObserver:` substring match turns out to fire on unrelated selectors.
-    - Reference example in diff: Foundation task results block in `LLM_STATE/core/backlog.yaml` under `run-llm-annotation-pass-on-foundation` → "The +9 ownership entries are KVO `addObserver:forKeyPath:options:context:` observer params and `NSNotificationCenter addObserver:` observer params".
-
-    **Goal:** Encode this rule and shrink future LLM-additive surface for observer-pattern frameworks to zero for this pattern. The +9 entries are currently only in the enriched Foundation checkpoint via the LLM path; a heuristic rule would make them robust to future re-runs without LLM cost.
-
-    **Acceptance criteria:**
-    - Heuristic-only annotate run on Foundation (no `--llm-dir`) produces ≥302 `parameter_ownership` entries (the current heur+LLM figure).
-    - Existing tests pass; new unit test covers at least the `addObserver:forKeyPath:options:context:` selector.
-
-    **Dependencies:** none (merge-clobber fix already landed)
 - id: run-llm-annotation-pass-on-appkit
   title: Run LLM annotation pass on AppKit
   category: analysis
@@ -182,3 +28,51 @@ tasks:
     - Runs table in `analysis/scripts/llm-annotate-orchestration.md` updated.
 
     **Dependencies:** none
+- id: add-addobserver-observer-param-weak-heuristic-to-shrink-llm-additive-surface
+  title: 'Add addObserver: observer-param weak heuristic to shrink LLM-additive surface'
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** medium
+
+    **Promoted from:** Foundation LLM annotation pass results (session 41) — "What this suggests next" item 2.
+
+    **Problem:** The LLM annotation pass on Foundation found 9 `parameter_ownership` annotations that heuristics missed: KVO `addObserver:forKeyPath:options:context:` observer params and `NSNotificationCenter addObserver:` family observer params. Heuristics don't classify these as `weak` because the selectors don't match the `setDelegate:` / `setDataSource:` naming pattern, even though `observer` (generic `id`) is semantically identical to a delegate in its ownership semantics.
+
+    **Settled design:**
+    - Add a new heuristic rule in the annotate crate: for any method whose selector contains `addObserver:` (case-sensitive substring match is fine; the ObjC naming convention is stable), classify the first parameter typed as a generic `id` or `id<protocol>` named `observer` (or `aNotificationObserver`, the NSNotificationCenter variant) as `weak`.
+    - Optionally: also cover the `forKeyPath:` + `options:context:` suffix to narrow false positives if the `addObserver:` substring match turns out to fire on unrelated selectors.
+    - Reference example in diff: Foundation task results block in `LLM_STATE/core/backlog.yaml` under `run-llm-annotation-pass-on-foundation` → "The +9 ownership entries are KVO `addObserver:forKeyPath:options:context:` observer params and `NSNotificationCenter addObserver:` observer params".
+
+    **Goal:** Encode this rule and shrink future LLM-additive surface for observer-pattern frameworks to zero for this pattern. The +9 entries are currently only in the enriched Foundation checkpoint via the LLM path; a heuristic rule would make them robust to future re-runs without LLM cost.
+
+    **Acceptance criteria:**
+    - Heuristic-only annotate run on Foundation (no `--llm-dir`) produces ≥302 `parameter_ownership` entries (the current heur+LLM figure).
+    - Existing tests pass; new unit test covers at least the `addObserver:forKeyPath:options:context:` selector.
+
+    **Dependencies:** none (merge-clobber fix already landed)
+- id: check-eventkit-pushkit-for-stale-annotated-checkpoints-from-merge-clobber-bug
+  title: Check EventKit/PushKit for stale annotated checkpoints from merge-clobber bug
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** low
+
+    **Promoted from:** refresh-webkit-annotated-checkpoint-after-parameter-ownership-merge-fix results — "What this suggests next" item 2.
+
+    **Problem:** The parameter_ownership merge-clobber bug (now fixed) may have affected other frameworks that already have both an `.llm.json` annotation file and an `annotated/<F>.json` checkpoint. EventKit and PushKit are the known candidates (they have `.llm.json` files in `analysis/ir/llm-annotations/`). If they were annotated while the bug was active, their checkpoints will have degraded ownership data — same as WebKit had (15 entries instead of the correct figure).
+
+    **Steps:**
+    1. For each framework F in {EventKit, PushKit} (and any other F where `analysis/ir/llm-annotations/<F>.llm.json` exists):
+       - Check if `analysis/ir/annotated/<F>.json` exists.
+       - If it does, run `jq '[.methods[].annotations.parameter_ownership // [] | length] | add' analysis/ir/annotated/<F>.json` to get the current count.
+       - Compare to what a fresh `annotate --only <F> --llm-dir analysis/ir/llm-annotations/` would produce (or just re-run if count looks suspiciously low).
+    2. For any framework where the count looks degraded (compare to heuristic-only baseline), delete the checkpoint and re-run `annotate --only <F> --llm-dir analysis/ir/llm-annotations/`, then `enrich --only <F>`.
+
+    **Acceptance criteria:**
+    - All frameworks with `.llm.json` files have refreshed `annotated/<F>.json` checkpoints produced by the fixed merge logic.
+    - `enrich` passes for each refreshed framework.
+
+    **Dependencies:** none (merge-clobber fix already landed and validated)
