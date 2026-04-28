@@ -543,6 +543,7 @@ entries:
   title: LLM annotations stale after extraction method-set changes
   body: |
     `.llm.json` files become stale when an extraction fix changes the method set for affected frameworks — `llm-validate` reports methods referenced in the file that are absent from current IR.
+    Detection: `analysis/scripts/check-llm-annotation-drift.sh` runs `llm-validate` on all `.llm.json` files without regenerating IR (`--skip-regen` flag). Run after any extraction change.
     Remediation: delete stale `.llm.json` files, dispatch parallel subagents (see "LLM annotation parallel dispatch safe at 25-way fan-out"), validate with `llm-validate`. Unlike pipeline stages in "Downstream checkpoints can predate source fixes", LLM annotation staleness requires LLM subagent re-dispatch, not a pipeline rerun.
 - id: workspace-wide-enrich-pass-optional-follow-up-after-16-framework-annotation-cycle
   title: 'Workspace-wide enrich pass: optional follow-up after 16-framework annotation cycle'
@@ -552,3 +553,15 @@ entries:
     A workspace-wide `enrich` pass is a low-risk optional next step if downstream emitters (racket-oo, future language targets) need fully-fresh derived relations across all frameworks. Not urgent: the 16 frameworks are now consistent with the rest of the pipeline. Run when preparing a release checkpoint or when emitter output quality issues surface that could stem from stale enrichment data.
 
     Command: `cargo run -p apianyware-macos-analyze -- enrich` (without `--only`) or the equivalent `run-plan` step.
+- id: heuristic-context-parameter-is-class-not-class-name-str
+  title: 'Heuristic context parameter is `&Class`, not `class_name: &str`'
+  body: |
+    `annotate_method_heuristic` in `analysis/crates/annotate/src/heuristics.rs` takes `&Class`, not `class_name: &str`. Class-level signals — `swift_attributes` (MainActor detection) and `properties` (copy-block-setter detection) — are only accessible via `&Class`. Future heuristics requiring class-level data must use this signature; a `class_name: &str` narrowing silently makes those signals inaccessible.
+- id: ir-property-is-copy-enables-copy-block-setter-stored-heuristic
+  title: '`ir::Property.is_copy` enables copy-block-setter → stored heuristic'
+  body: |
+    `ir::Property.is_copy: bool` is populated from libclang's copy attribute (serialised only when true). `is_copy_block_property_setter` in heuristics maps synthesised setter selectors (`set<Cap><Rest>:`) to property name (`<lower><Rest>`) and checks `is_copy && Block type`. This classifies `@property (copy)` block-setter calls as `stored` lifecycle rather than `async_copied`.
+- id: ir-class-swift-attributes-carries-swift-declaration-attributes
+  title: '`ir::Class.swift_attributes` carries Swift declaration attributes'
+  body: |
+    `ir::Class.swift_attributes: Vec<String>` is populated from swift-api-digester `declAttributes` by `extract-swift::declaration_mapping::map_class`, merged with set-union semantics in `merge::merge_class_members`. `derive_threading` calls `is_main_actor_attribute(attr)` (strips `_Concurrency.` module prefix) over this field before falling back to the hardcoded UI class list, detecting both bare `"MainActor"` and `"_Concurrency.MainActor"`.
