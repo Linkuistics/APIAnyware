@@ -443,11 +443,18 @@ entries:
 - id: llm-adds-value-only-on-naming-pattern-defeating-frameworks
   title: LLM adds value only on naming-pattern-defeating frameworks
   body: |
-    Heuristic name-pattern matchers classify block/error/out-param patterns for naming-compliant frameworks; LLM is confirmatory only on these. LLM is additive on naming-pattern-defeating frameworks:
+    Heuristic name-pattern matchers classify block/error/out-param patterns for naming-compliant
+    frameworks; LLM is confirmatory only on these. LLM is additive on naming-pattern-defeating
+    frameworks:
 
-    - **Threading**: +63 `threading: main_thread_only` on WebKit from `WK_SWIFT_UI_ACTOR` C-macro class decorations — heuristics cannot read C-macro decorators. AppKit (`_SWIFT_UI_ACTOR`) is the highest-value next LLM annotation target.
-    - **Ownership**: +2 methods on WebKit (pre-ARC `assign`-attribute delegate setters); +9 methods on Foundation (`addObserver:` family — first-param `observer` typed as generic `id`, not caught by `setDelegate:`/`setDataSource:` heuristics). Observer-pattern first-params are a persistent heuristic gap; a dedicated `addObserver:` first-param weak classifier would close this.
-    - **Block/error patterns**: 0 delta across WebKit and Foundation — heuristic `*completionHandler*` and `NSError**` patterns are complete.
+    - **Threading**: +63 `threading: main_thread_only` on WebKit from `WK_SWIFT_UI_ACTOR` C-macro
+      class decorations — heuristics cannot read C-macro decorators. AppKit (`_SWIFT_UI_ACTOR`) is
+      the highest-value next LLM annotation target.
+    - **Ownership**: +2 methods on WebKit (pre-ARC `assign`-attribute delegate setters). Foundation:
+      0 LLM delta — the `addObserver:` first-param weak pattern is now covered by `is_observer_param`
+      heuristic (see "`is_observer_param` heuristic covers add…Observer: first-param weak").
+    - **Block/error patterns**: 0 delta across WebKit and Foundation — heuristic `*completionHandler*`
+      and `NSError**` patterns are complete.
 - id: llm-merge-drops-heuristic-parameter-ownership-annotations
   title: parameter_ownership merge uses per-param union
   body: |
@@ -485,3 +492,15 @@ entries:
     - A new framework or SDK update introduces methods where heuristic block-param classification (e.g., `*completionHandler*` name matching) and LLM block-param detection diverge.
 
     **Status:** Deferred; no evidence of divergence in current calibration data (WebKit: 0 delta on block/error patterns). Revisit during or after Foundation LLM annotation pass if unexpected drops appear.
+- id: is-observer-param-heuristic-covers-add-observer-first-param-weak
+  title: '`is_observer_param` heuristic covers add…Observer: first-param weak'
+  body: |
+    `is_observer_param` in `analysis/crates/annotate/src/heuristics.rs` classifies the
+    first parameter of `add…Observer:` selectors as `weak` ownership. Structural rule:
+    first selector segment `starts_with("add") && ends_with("Observer")`. Generative —
+    covers `addObserver:`, `addSharedObserver:forKey:options:context:`, and future
+    `addXxxObserver:` variants automatically. Excludes block-form
+    `addObserverForName:object:queue:usingBlock:` (first segment is `addObserverForName`,
+    which does not end with `"Observer"`). With this heuristic, Foundation heuristic-only
+    annotation produces 302 `parameter_ownership` entries, closing the 29-entry gap
+    previously filled by LLM annotation.
