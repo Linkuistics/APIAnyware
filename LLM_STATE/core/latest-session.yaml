@@ -1,17 +1,11 @@
-id: session-45
-timestamp: 2026-04-28T05:01:33Z
+id: session-46
+timestamp: 2026-04-28T05:56:04Z
 phase: work
 body: |
-  ### Session 45 (2026-04-28T05:01:33Z) — Add subagent-report reconciliation to llm-validate and run AVFoundation LLM pass
+  ### Session 46 (2026-04-28T05:56:04Z) — LLM annotation parallel batch: 25 small frameworks (1–2 methods each)
 
-  - **Attempted:** (1) Add `subagent_report` field and reconciliation warnings to the LLM annotation validator; (2) run the first real AVFoundation LLM annotation pass using the new reconciliation path.
-  - **What worked:** Both tasks completed cleanly in a single work phase. Schema, validator, CLI, subagent prompt, tests, and AVFoundation run all landed without incident.
-    - `SubagentReport` struct added to `collection/crates/types/src/annotation.rs` with seven optional count fields; `FrameworkAnnotations` gains an optional `subagent_report` field that is backwards-compatible with all six existing `.llm.json` files.
-    - `ValidationWarning::SubagentReportMismatch` added to `analysis/crates/annotate/src/llm.rs`; `ValidationReport` gains a `warnings` vec. `is_ok()` remains errors-only so warnings never fail the validator. Private `aggregate_actual_counts()` helper drives reconciliation.
-    - CLI (`analysis/crates/cli/src/main.rs`) logs warnings via `tracing::warn!` and includes `warnings=N` in the success line.
-    - `analysis/scripts/llm-annotate-subagent.md` extended with a structured self-report template section.
-    - 5 new validator unit tests + 3 new annotation roundtrip tests; all 72+12 tests pass; clippy and fmt clean.
-    - AVFoundation run: 198 methods across 68 classes; +15 `stored` reclassifications (6→21); `subagent_report` reconciliation gave `warnings=0` on first real use.
-  - **What didn't work:** Nothing notable — the CoreData reconciliation smoke test reproduced the known discrepancy exactly as expected.
-  - **What this suggests trying next:** Racket-OO emitter audit against AVFoundation's new `stored` annotations before any sample app uses `AVPlayer` time observers (15 high-impact codegen signals identified). Backfilling `subagent_report` on older `.llm.json` files is explicitly deferred.
-  - **Key learnings:** The `subagent_report` design with `Option<usize>` fields (where `None` = "not tracked" vs `Some(0)` = "tracked and found zero") correctly handles the distinction without a special sentinel. Strict equality is the right starting point — tolerance can be added if a real case demands it.
+  - **What was attempted:** First parallel-dispatch run of LLM annotation subagents fanning out 25 small frameworks (1–2 flagged methods each) in a single orchestrator message. Frameworks sourced from `analysis/ir/llm-summaries/` where flagged-method count was ≤2. Target: validate the 25-way fan-out pattern before scaling to higher-method-count buckets.
+  - **What worked:** All 25 subagents returned with `llm-validate warnings=0` on first try; all 25 passed `enrich` verification (0 violations). Workspace-wide `annotate --llm-dir` + `enrich` re-run completed without new violations across the full 283-framework set. Orchestration-table row added to `analysis/scripts/llm-annotate-orchestration.md`. The `subagent_report` reconciliation check (landed earlier this session) held under 25-way fan-out with zero divergences. Total subagent tokens: 650,680 (avg 26,027/framework, 24% under the 35k baseline projection). Wall-clock: ~105s vs ~1,100s aggregate compute — ~10× parallel speedup over serial dispatch.
+  - **What didn't work / surprises:** Nothing failed. 14 of the 25 frameworks were Swift-only (no `Headers/`), requiring `.swiftinterface` inspection; the "partial > guessing" rule applied correctly for CarKey and CoreHID where `.swiftinterface` carries no `weak` attribute on actor-isolated delegate params.
+  - **What this suggests trying next:** Scale the parallel batch to the ~47 frameworks with 3–5 flagged methods (estimated ~50k–60k tokens each at observed rates; ~2.5M total). Defer Matter (12,827 methods) to its own dedicated work phase with a chunked strategy. No tooling changes warranted — orchestration is production-ready for higher-fan-out batches.
+  - **Key learnings:** 25-way parallel subagent dispatch is orchestrator-context-cheap and empirically safe. The 35k fixed-cost figure is a high estimate for sub-3-method Swift-only frameworks; for next-batch sizing, use 35k + N × 250 with the understanding that tiny frameworks under-spend on header lookup. The `subagent_report` reconciliation check adds zero overhead at 25-way fan-out and correctly validates count consistency.

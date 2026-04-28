@@ -2,7 +2,7 @@ tasks:
 - id: run-llm-annotation-passes-on-remaining-medium-priority-frameworks-batch
   title: Run LLM annotation passes on remaining medium-priority frameworks (batch)
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** high
@@ -31,3 +31,46 @@ tasks:
     - Runs table in `analysis/scripts/llm-annotate-orchestration.md` updated with per-framework rows.
 
     **Dependencies:** none
+  results: |
+    **What was done:** First parallel-dispatch run of LLM annotation subagents, fanning out 25 small frameworks (1–2 flagged methods each) in a single message. All 25 subagents returned with `llm-validate warnings=0` first-try, all 25 subsequently passed `enrich` verification with 0 violations. The full workspace `annotate --llm-dir` and `enrich` re-run completed without introducing new violations anywhere across the 283-framework set.
+
+    **Frameworks annotated (25):** _SwiftData_CoreData, _WebKit_SwiftUI, AdServices, AppTrackingTransparency, CarKey, ClassKitUI, CoreHID, CreateML, JavaRuntimeSupport, SecurityUI, SwiftUICore, WidgetKit, _SwiftData_SwiftUI, AutomaticAssessmentConfiguration, Collaboration, CreateMLComponents, ExceptionHandling, ExecutionPolicy, ExternalAccessory, JavaScriptCore, LinkPresentation, Metal, MetricKit, SecurityFoundation, SwiftData.
+
+    **Aggregate `subagent_report` totals (sum of 25):**
+    - block_synchronous: 9
+    - block_async_copied: 8
+    - block_stored: 6
+    - parameter_ownership: 4
+    - threading_main_thread_only: 4
+    - threading_any_thread: 0
+    - error_pattern: 8
+
+    **Cost & wall-time:**
+    - Total subagent tokens: 650,680 (avg 26,027/framework — **24% under** the 35k baseline-per-framework projection)
+    - Wall-clock: ~105 s (longest single subagent: CarKey at 104,820 ms; shortest: ExternalAccessory at 31,878 ms)
+    - Aggregate compute: ~1,100 s — **~10× speedup** vs serial dispatch
+
+    **What worked:**
+    - The parallel-dispatch pattern in `llm-annotate-orchestration.md` works as designed at 25-way fan-out. Orchestrator overhead remains comfortable.
+    - The `subagent_report` reconciliation check (landed earlier today) caught nothing on this run because all 25 self-reports matched their files exactly — the new tooling holds up under fan-out.
+    - Skipping property getters paired with annotated setters worked uniformly (3 such skips in this batch: AutomaticAssessmentConfiguration / ExceptionHandling / ExternalAccessory).
+    - Two Swift-only frameworks (CarKey `start(delegate:…)`, CoreHID `activate(delegate:)`) correctly applied the "partial > guessing" rule and skipped indefensible delegate-pattern annotations rather than asserting `weak` on actor-isolated Swift existentials. This is the right call.
+
+    **LLM additive contribution highlights:**
+    - **6 stored-block classifications** are the headline additive value (heuristics emit zero stored annotations) — concentrated in:
+      - ClassKitUI: 4× `AssignedDocumentMenuItem` lifecycle handlers stored on the menu item
+      - JavaScriptCore: `JSContext.exceptionHandler` (copy-stored, invoked on every uncaught exception)
+      - CreateMLComponents: `UniformRandomIntegerParameter.init` augmentation factory stored on the result transformer
+    - **4 `main_thread_only` annotations** from `@_Concurrency.MainActor` propagation in Swift-only modules (SwiftUICore.ImageRenderer.render, ClassKitUI, plus 2× MetricKit `extendLaunchMeasurement*` selectors with explicit "needs to be called on the main thread" header doc comments).
+    - **4 `weak` ownership annotations** sourced from `assign`-pre-ARC delegate setters (ExceptionHandling NSExceptionHandler, ExternalAccessory EAAccessory) and explicit `weak` properties (AutomaticAssessmentConfiguration AEAssessmentSession, Collaboration CBIdentityPicker modal-delegate).
+    - **8 `error_out_param` annotations** mostly confirmatory (heuristics already pattern-match `…:error:`); kept to validate small-framework error-path merges.
+
+    **What didn't work / surprises:**
+    - Nothing failed. One observation: 14 of the 25 frameworks were Swift-only (no `Headers/` directory) and required `.swiftinterface` inspection. For these, `.swiftinterface`'s lack of explicit `weak`/`copy` attributes makes Cocoa-style ownership assertions less defensible — the spec's "partial > guessing" rule held up here.
+
+    **What this suggests next:**
+    1. **Scale the parallel batch.** 25-way fan-out is empirically safe and orchestrator-context-cheap. Next batch can include the **47 frameworks with 3–5 flagged methods** (estimated ~50k–60k tokens each at observed rates; ~2.5M total), or all 102 remaining non-Matter frameworks if you want to push harder.
+    2. **Defer Matter (12,827 methods, 26-frameworks-worth-of-methods on its own).** This needs its own strategy — likely a chunked subagent or a different prompt that batches by class. The 35k + N × 250 model would predict ~3.2M tokens for Matter alone — feasible but worth its own work-phase budget.
+    3. **Consider a dedicated promotion** for the medium-large remaining frameworks (CloudKit 184, GameKit 186, Vision 195, NetworkExtension 228, _AppIntents_SwiftUI 68, OpenDirectory 71, SpriteKit 73, SceneKit 93, HealthKit 98, AppIntents 105, RealityFoundation 105, IOUSBHost 115, AVFAudio 130, Combine 161). These will benefit most from LLM annotation given their size and the calibrated ~250 tok/method rate.
+    4. **Refine the cost model.** Sub-3-method Swift-only frameworks come in ~24% under the 35k baseline. The 35k figure should probably be reframed as a "median per-framework fixed cost" rather than a floor; tiny frameworks under-spend on header lookup.
+    5. **No tooling changes warranted from this run.** The reconciliation check held; the merge bug fix held; verification passed everywhere. The orchestration is now production-ready for higher-fan-out batches.
