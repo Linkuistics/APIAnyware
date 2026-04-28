@@ -251,7 +251,18 @@ entries:
 - id: llm-annotations-use-a-dedicated-input-directory
   title: LLM annotations use a dedicated input directory
   body: |
-    Two annotation sources: (1) heuristic annotations via checkpoint output dir (`load_existing_annotations()`), (2) LLM-generated `.llm.json` files from `--llm-dir` (`load_llm_annotations()` in `llm.rs`). LLM annotations take precedence via merge logic. Full workflow: `llm-extract` CLI → `.methods.json` summaries → Claude Code subagents (one per framework, parallel) → each subagent runs `llm-validate` pre-return → `.llm.json` → `annotate --llm-dir` → `enrich` → `jq '.verification'`. Runs within Claude Code for cost reasons. Scripts: `analysis/scripts/llm-annotate-subagent.md` (subagent prompt with schema and hard rules), `analysis/scripts/llm-annotate-orchestration.md` (main-agent orchestration loop). IR staging dirs gitignored: `analysis/ir/llm-summaries/`, `analysis/ir/llm-annotations/`.
+    Two annotation sources: (1) heuristic annotations via checkpoint output dir
+    (`load_existing_annotations()`), (2) LLM-generated `.llm.json` files from
+    `--llm-dir` (`load_llm_annotations()` in `llm.rs`). LLM annotations take
+    precedence via merge logic. Full workflow: `llm-extract` CLI → `.methods.json`
+    summaries → Claude Code subagents (one per framework, parallel) → each subagent
+    runs `llm-validate` pre-return → `.llm.json` → `annotate --llm-dir` → `enrich`
+    → `jq '.verification'`. Runs within Claude Code for cost reasons. Scripts:
+    `analysis/scripts/llm-annotate-subagent.md` (subagent prompt with schema and
+    hard rules), `analysis/scripts/llm-annotate-orchestration.md` (main-agent
+    orchestration loop). IR staging: `analysis/ir/llm-summaries/` is gitignored;
+    `analysis/ir/llm-annotations/*.llm.json` is versioned (see "LLM .llm.json files
+    are versioned in git").
 - id: const-char-maps-to-typerefkind-cstring
   title: '`const char *` maps to `TypeRefKind::CString`'
   body: |
@@ -391,9 +402,13 @@ entries:
   body: |
     `validate_llm_annotations` / `validate_llm_file` in `analysis/crates/annotate/src/llm.rs` perform semantic cross-referencing (8 error kinds) beyond serde's automatic structural checks. Serde handles field types and required keys; the validator catches cross-referencing failures (e.g., method names that don't exist in IR). `llm-validate` CLI subcommand exits 0 on valid input, 1 with structured errors. Subagents must run `llm-validate` before returning a `.llm.json`.
 - id: llm-annotation-durability-llm-json-files-are-gitignored-decide-before-foundation-run
-  title: 'LLM annotation durability: .llm.json files are gitignored'
+  title: LLM .llm.json files are versioned in git
   body: |
-    Both `analysis/ir/annotated/` and `analysis/ir/llm-annotations/` are gitignored. Fresh clones must re-run the LLM annotation pipeline to reproduce annotated IR. Cost anchor from PushKit (2-method framework): ~54k tokens / ~2 min / 23 tool uses. Durability options: (A) check in `.llm.json` files as source-of-truth and re-run `annotate --llm-dir` on clone — low storage cost, free re-merge; (B) un-ignore `analysis/ir/annotated/` — no re-run cost but risks merge conflicts as IR evolves; (C) accept ephemerality and document re-run requirement — viable only if full-pipeline cost stays under ~$0.10 USD. Decision pending medium-framework calibration run to establish per-framework cost at scale.
+    `analysis/ir/llm-annotations/*.llm.json` files are checked into git (Option A).
+    Regenerating from scratch costs ~14M tokens (154 frameworks × ~35k fixed overhead +
+    17,862 methods × ~500 marginal tokens/method); storage cost is <1 MB total.
+    Fresh-clone workflow: run `annotate --llm-dir analysis/ir/llm-annotations/` — no
+    LLM calls required on clone. `analysis/ir/llm-summaries/` remains gitignored.
 - id: apple-developer-docs-are-js-rendered-sdk-headers-are-authoritative
   title: Apple developer docs are JS-rendered; SDK headers are authoritative
   body: |
@@ -410,3 +425,27 @@ entries:
   title: emitter-contract.md documents cross-emitter IR conventions
   body: |
     `generation/docs/emitter-contract.md` is the canonical location for cross-emitter IR conventions — cases where the IR shape alone is insufficient to drive correct emission without additional rules. Template sections: IR shape → mismatch scenario → acceptable resolutions → cross-references → promote-to-IR-annotation trigger. Entry points cross-referenced from the `FfiTypeMapper` trait doc in `generation/crates/emit/src/ffi_type_mapping.rs` and from relevant inline call sites in emitter crates. Future conventions to document under this pattern: block lifecycle, error-pointer out-params, retain/release ownership semantics.
+- id: llm-subagent-must-omit-classes-with-zero-annotations
+  title: LLM subagent must omit classes with zero annotations
+  body: |
+    `analysis/scripts/llm-annotate-subagent.md` requires that classes with no
+    annotated methods be omitted from the `classes` array in the returned
+    `.llm.json` entirely. Returning empty class objects causes `llm-validate`
+    failures. This rule is now explicit in the subagent prompt.
+- id: llm-annotation-marginal-cost-is-500-tokens-method
+  title: LLM annotation marginal cost is ~500 tokens/method
+  body: |
+    EventKit calibration: 38,971 tokens / 19 methods (~73s, 12 tool uses).
+    Extrapolated: ~500 tokens/method marginal, ~35k tokens fixed per framework.
+    Full corpus projected at ~14M tokens (154 frameworks + 17,862 methods).
+    Matter (12,827 methods) requires class-level chunking before annotation.
+    Tighten the ~500 tokens/method estimate with a 100-method calibration run
+    before committing to Foundation.
+- id: llm-adds-value-only-on-naming-pattern-defeating-frameworks
+  title: LLM adds value only on naming-pattern-defeating frameworks
+  body: |
+    Heuristic name-pattern matchers already classify block/error/out-param patterns
+    for naming-compliant frameworks (e.g., EventKit). On such frameworks the LLM
+    pass is confirmatory, not additive. LLM additive contribution is only measurable
+    on naming-pattern-defeating frameworks (e.g., WebKit, IOUSBHost). Calibrate on
+    one of those before committing to full Foundation annotation.
