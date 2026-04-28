@@ -268,6 +268,120 @@ Options not chosen:
   is <$0.10. With ~14M tokens estimated for the full 154-framework run,
   this is decisively non-viable.
 
+## LLM redundancy audit (2026-04-28, post-MainActor heuristic)
+
+After landing the `_SWIFT_UI_ACTOR` extract-objc capture (NS / WK / CF / MP /
+generic `*_SWIFT_UI_ACTOR` and `*_SWIFT_MAIN_ACTOR` aliases) and the
+copy-block-setter `stored` heuristic, a per-framework redundancy audit was
+run. For each `.llm.json`, every (class, selector) annotation was compared
+against a fresh heuristic-only re-annotate (output to
+`/tmp/heuristic-only-annotated/`). A method's LLM annotation is **redundant**
+if the heuristic-only `block_parameters`, `parameter_ownership`, `threading`,
+and `error_pattern` fields equal the merged checkpoint's.
+
+### Skip on next re-annotation cycle (52 frameworks, 501 methods)
+
+These frameworks have an existing `.llm.json` whose every annotation is now
+also produced by heuristics. Re-running their subagents is pure cost; their
+`.llm.json` files can be re-used as-is, or deleted and the framework excluded
+from the dispatch loop entirely (the heuristic-only output is identical).
+
+Token saving on a full re-annotation cycle: 52 × 35k fixed dispatch ≈
+**1.82M tokens**, plus the marginal per-method tokens these subagents would
+have consumed. Cumulative wall-time saving: roughly 30–60 minutes across the
+parallel-dispatch batches.
+
+| Methods | Frameworks |
+|---:|---|
+| 195 | Vision |
+| 29  | FileProvider |
+| 23  | BackgroundAssets |
+| 20  | NaturalLanguage |
+| 19  | MetalKit |
+| 18  | GLKit |
+| 16  | CoreWLAN |
+| 15  | IOBluetooth |
+| 12  | ShazamKit |
+| 10  | Cinematic |
+| 9   | ThreadNetwork |
+| 7   | CoreBluetooth, Intents, ScreenTime |
+| 6   | AddressBook, CalendarStore, FinderSync |
+| 5   | CoreMediaIO, MediaExtension, OSLog, VideoSubscriberAccount, VideoToolbox |
+| 4   | Accounts, DeviceCheck, DiscRecording, IOBluetoothUI, NotificationCenter, PencilKit, SafetyKit |
+| 3   | GameSave, InputMethodKit, MailKit, OSAKit, ServiceManagement, SharedWithYouCore |
+| 2   | Collaboration, ExecutionPolicy, FileProviderUI, LinkPresentation, MediaAccessibility, Metal, SecurityFoundation, SystemExtensions |
+| 1   | AdServices, AppTrackingTransparency, AutomaticAssessmentConfiguration, ExceptionHandling, ExternalAccessory, PushKit, SecurityUI, SyncServices, WidgetKit |
+
+### Orphaned (7 frameworks, 96 methods)
+
+These frameworks have a `.llm.json` from a prior cycle, but the current
+resolved IR has 0 classes — extract-swift's synthetic cross-framework
+modules (`_AppIntents_SwiftUI`, `_PhotosUI_SwiftUI`, etc.) and Swift-only
+single-protocol shims (`CoreTransferable`) lose their declarations through
+resolve. Their LLM annotations exist on disk but never merge into
+`analysis/ir/annotated/` because annotate iterates `framework.classes`.
+Re-running the subagent is futile until the resolved-IR drop is fixed (a
+separate triage item).
+
+| Methods | Framework |
+|---:|---|
+| 68 | _AppIntents_SwiftUI |
+| 15 | CoreTransferable |
+| 6  | _RealityKit_SwiftUI |
+| 3  | _PhotosUI_SwiftUI |
+| 2  | _SwiftData_SwiftUI |
+| 1  | _SwiftData_CoreData, _WebKit_SwiftUI |
+
+### LLM-additive (91 frameworks, ~17M flagged methods of which Matter is 12,821)
+
+LLM still contributes ≥1 net new annotation. Highlights (top by additive
+count):
+
+| Framework | LLM methods | Net additive |
+|---|---:|---:|
+| Matter | 12821 | +3315 |
+| NetworkExtension | 228 | +204 |
+| AppKit | 405 | +166 |
+| Combine | 161 | +161 |
+| IOUSBHost | 115 | +115 |
+| RealityFoundation | 97 | +97 |
+| AppIntents | 94 | +92 |
+| OpenDirectory | 70 | +69 |
+| SceneKit | 77 | +46 |
+| AVFAudio | 126 | +41 |
+| Foundation | 447 | +41 |
+| GameKit | 175 | +41 |
+| SecurityInterface | 41 | +41 |
+| Virtualization | 57 | +37 |
+| CoreML | 57 | +36 |
+| DiscRecordingUI | 33 | +33 |
+| Network | 33 | +33 |
+| AudioToolbox | 56 | +30 |
+| WebKit | 72 | +29 |
+| GameController | 47 | +27 |
+
+The pattern: high-additive frameworks all carry `stored` block-setter
+classifications that the copy-block-setter heuristic alone cannot recover
+(every `addObserverFor*…usingBlock:` callback the LLM marked stored, every
+Combine operator closure, every `CKOperation.recordChangedBlock`, every
+NetworkExtension queue-handler). The heuristic for `stored` requires a
+matching `(copy)` property; closures attached via init params or category
+methods don't carry a property to read.
+
+### Reproducing the audit
+
+```bash
+mkdir -p /tmp/empty-llm-dir /tmp/heuristic-only-annotated
+./target/release/apianyware-macos-analyze annotate \
+    --output-dir /tmp/heuristic-only-annotated \
+    --llm-dir /tmp/empty-llm-dir
+python3 analysis/scripts/audit-llm-redundancy.py  # see script comment
+```
+
+The Python audit script lives at `analysis/scripts/audit-llm-redundancy.py`
+(checked-in, ~80 lines). Re-run after any heuristic change to refresh the
+skip list.
+
 ## Cost & wall-time tracking
 
 After each real run, append a row to the table below so future runs can

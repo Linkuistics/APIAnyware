@@ -31,3 +31,6 @@ LLM_STATE/**/compact-baseline
 
 # AppSpec runner artifacts captured per-app (regenerable from runner output)
 knowledge/apps/*/artifacts/
+
+# Claude Code scheduled-task lock file (per-session tooling state)
+.claude/scheduled_tasks.lock

@@ -259,6 +259,45 @@ fn foundation_bool_return_resolves_to_primitive_bool() {
 }
 
 #[test]
+fn foundation_nsundomanager_captures_swift_ui_actor_macro() {
+    // `NSUndoManager` carries class-level `NS_SWIFT_UI_ACTOR`, which expands
+    // to `__attribute__((swift_attr("@MainActor")))`. The ObjC extractor must
+    // surface this in `swift_attributes` so the `derive_threading` heuristic
+    // sees the MainActor signal even when the Swift digester output omits it
+    // (e.g. for a pure-ObjC re-extraction without the Swift merge step).
+    let fw = foundation();
+    let undo_manager = fw
+        .classes
+        .iter()
+        .find(|c| c.name == "NSUndoManager")
+        .expect("NSUndoManager not found");
+
+    assert!(
+        undo_manager
+            .swift_attributes
+            .iter()
+            .any(|a| a == "MainActor"),
+        "NSUndoManager should carry \"MainActor\" in swift_attributes, got {:?}",
+        undo_manager.swift_attributes
+    );
+}
+
+#[test]
+fn foundation_nsstring_has_no_swift_ui_actor_attribute() {
+    // Negative case: NSString has no MainActor annotation in its ObjC header,
+    // so the extractor must not spuriously synthesise one.
+    let fw = foundation();
+    let nsstring = fw.classes.iter().find(|c| c.name == "NSString").unwrap();
+    assert!(
+        !nsstring
+            .swift_attributes
+            .iter()
+            .any(|a| a == "MainActor"),
+        "NSString should not carry MainActor swift_attribute"
+    );
+}
+
+#[test]
 fn foundation_serializes_to_json() {
     let fw = foundation();
     let json = serde_json::to_string_pretty(&fw).expect("should serialize to JSON");

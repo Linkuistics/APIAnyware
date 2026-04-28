@@ -256,6 +256,7 @@ fn extract_class(
 
     let mut methods = Vec::new();
     let mut properties = Vec::new();
+    let swift_attributes = detect_class_swift_attributes(entity);
 
     entity.visit_children(|child, _parent| {
         match child.get_kind() {
@@ -281,11 +282,159 @@ fn extract_class(
         properties,
         methods,
         category_methods: Vec::new(),
-        swift_attributes: Vec::new(),
+        swift_attributes,
         ancestors: Vec::new(),
         all_methods: Vec::new(),
         all_properties: Vec::new(),
     })
+}
+
+/// Detect Swift declaration attributes on a class entity (currently only
+/// `MainActor`, sourced from `__attribute__((swift_attr("@MainActor")))` —
+/// the expansion of `NS_SWIFT_UI_ACTOR` / `NS_SWIFT_MAIN_ACTOR`).
+///
+/// libclang surfaces `swift_attr` as `EntityKind::UnexposedAttr` children of
+/// the class entity. We probe the attribute cursor via accessors that do not
+/// invoke `clang_tokenize` — its display name reliably contains the Swift
+/// attribute spelling (`@MainActor`) for `swift_attr`-derived cursors.
+///
+/// `clang_tokenize` is avoided here because some macro-expansion-internal
+/// `UnexposedAttr` cursors return source ranges whose backing token buffer
+/// is null, and the resulting `slice::from_raw_parts` aborts the process
+/// across the visitor's `extern "C"` boundary. `get_display_name`,
+/// `get_name`, and `get_pretty_printer` do not have this hazard.
+/// Detect Swift declaration attributes on a class entity by scanning the
+/// header source for macros that precede the `@interface` line. Currently
+/// detects `MainActor` (sourced from `NS_SWIFT_UI_ACTOR`,
+/// `NS_SWIFT_MAIN_ACTOR`, or a raw `__attribute__((swift_attr("@MainActor")))`).
+///
+/// Why scan source text rather than libclang attribute children:
+/// `clang_tokenize` aborts the process when called on `UnexposedAttr`
+/// cursors whose backing token buffer is null (a libclang shape that occurs
+/// for some macro-expansion-internal attribute cursors). The class entity's
+/// own extent starts at the `@interface` keyword and does not include the
+/// preceding macro line. Reading the header file and looking at the lines
+/// immediately above the class declaration is the only library-supported
+/// route that is both safe and reliable.
+///
+/// The scan walks upward from the `@interface` line and stops at the first
+/// line that ends a previous declaration (`;`, `}`, `@end`) or starts a
+/// preprocessor / declaration boundary (`#import`, `#include`, `#endif`,
+/// `@interface`, `@class`, `@protocol`). This bounds the scan to the
+/// attribute stack that decorates the current class — usually 1-5 lines.
+fn detect_class_swift_attributes(class_entity: &Entity<'_>) -> Vec<String> {
+    let Some(location) = class_entity.get_location() else {
+        return Vec::new();
+    };
+    let file_loc = location.get_file_location();
+    let Some(file) = file_loc.file else {
+        return Vec::new();
+    };
+    let class_line = file_loc.line as usize;
+    if class_line == 0 {
+        return Vec::new();
+    }
+    let path = file.get_path();
+    let Ok(source) = std::fs::read_to_string(&path) else {
+        return Vec::new();
+    };
+    let lines: Vec<&str> = source.lines().collect();
+    let class_idx = class_line.saturating_sub(1);
+    if class_idx == 0 || class_idx >= lines.len() {
+        return Vec::new();
+    }
+    // `class_idx` is the 0-based index of the `@interface` line. Walk upward
+    // through the immediately preceding lines, which (per macOS SDK style)
+    // hold any attribute macros decorating the class. Bound the scan to 15
+    // lines so a malformed header cannot cause unbounded scanning.
+    let mut found_main_actor = false;
+    let scan_floor = class_idx.saturating_sub(15);
+    for i in (scan_floor..class_idx).rev() {
+        let line = lines[i];
+        let trimmed = line.trim();
+        if line_carries_main_actor(trimmed) {
+            found_main_actor = true;
+        }
+        if line_is_decl_boundary(trimmed) {
+            break;
+        }
+    }
+    if found_main_actor {
+        vec!["MainActor".to_string()]
+    } else {
+        Vec::new()
+    }
+}
+
+/// Match the macro spellings that resolve to `swift_attr("@MainActor")` on
+/// macOS SDK headers, plus a raw `__attribute__((swift_attr("@MainActor")))`
+/// in case a header inlines the attribute.
+///
+/// Frameworks alias the underlying `swift_attr("@MainActor")` macro under
+/// per-framework prefixes — Foundation uses `NS_SWIFT_UI_ACTOR` /
+/// `NS_SWIFT_MAIN_ACTOR`, CoreFoundation uses `CF_SWIFT_MAIN_ACTOR`,
+/// MediaPlayer uses `MP_SWIFT_MAIN_ACTOR`, WebKit uses `WK_SWIFT_UI_ACTOR`,
+/// and future frameworks may add their own. Match any token whose suffix is
+/// `_SWIFT_UI_ACTOR` or `_SWIFT_MAIN_ACTOR` so new aliases are picked up
+/// without code changes. Reject macros being **defined** (`#define X …`)
+/// rather than used so the umbrella headers that introduce the alias
+/// don't self-trigger.
+fn line_carries_main_actor(trimmed_line: &str) -> bool {
+    if trimmed_line.starts_with("//") || trimmed_line.starts_with("#define") {
+        return false;
+    }
+    if trimmed_line.contains("swift_attr") && trimmed_line.contains("@MainActor") {
+        return true;
+    }
+    line_contains_main_actor_alias(trimmed_line)
+}
+
+fn line_contains_main_actor_alias(trimmed_line: &str) -> bool {
+    for suffix in ["_SWIFT_UI_ACTOR", "_SWIFT_MAIN_ACTOR"] {
+        for (start, _) in trimmed_line.match_indices(suffix) {
+            // Require an identifier prefix to ensure we're matching a token
+            // boundary (e.g. `NS_SWIFT_UI_ACTOR`) rather than a substring of
+            // some larger token. The prefix must be at least one identifier
+            // character (`[A-Za-z0-9_]`) and must not start mid-identifier
+            // beyond what an identifier prefix permits.
+            if start == 0 {
+                continue;
+            }
+            let prefix_byte = trimmed_line.as_bytes()[start - 1];
+            if !prefix_byte.is_ascii_alphanumeric() && prefix_byte != b'_' {
+                continue;
+            }
+            // Ensure the suffix isn't itself followed by identifier chars
+            // (otherwise `_SWIFT_UI_ACTOR_FOO` would match).
+            let after = start + suffix.len();
+            if after < trimmed_line.len() {
+                let next_byte = trimmed_line.as_bytes()[after];
+                if next_byte.is_ascii_alphanumeric() || next_byte == b'_' {
+                    continue;
+                }
+            }
+            return true;
+        }
+    }
+    false
+}
+
+/// Return true if the line ends a previous declaration or starts a new one,
+/// bounding the upward attribute-stack scan above an `@interface` line.
+fn line_is_decl_boundary(trimmed_line: &str) -> bool {
+    if trimmed_line.is_empty() || trimmed_line.starts_with("//") {
+        return false;
+    }
+    let stripped = trimmed_line.trim_end_matches(|c: char| c == '/' || c.is_whitespace());
+    stripped.ends_with(';')
+        || stripped.ends_with('}')
+        || stripped == "@end"
+        || trimmed_line.starts_with("@interface")
+        || trimmed_line.starts_with("@class")
+        || trimmed_line.starts_with("@protocol")
+        || trimmed_line.starts_with("#import")
+        || trimmed_line.starts_with("#include")
+        || trimmed_line.starts_with("#endif")
 }
 
 // ---------------------------------------------------------------------------
@@ -1128,5 +1277,59 @@ mod tests {
 
         let some_case: Option<Option<&str>> = catch_clang_utf8_panic(|| Some("hi"));
         assert_eq!(some_case, Some(Some("hi")));
+    }
+
+    #[test]
+    fn line_carries_main_actor_matches_macro_spellings() {
+        assert!(line_carries_main_actor("NS_SWIFT_UI_ACTOR"));
+        assert!(line_carries_main_actor("NS_SWIFT_MAIN_ACTOR"));
+        // Framework-prefixed aliases that all expand to swift_attr("@MainActor")
+        assert!(line_carries_main_actor("WK_SWIFT_UI_ACTOR"));
+        assert!(line_carries_main_actor("CF_SWIFT_MAIN_ACTOR"));
+        assert!(line_carries_main_actor("MP_SWIFT_MAIN_ACTOR"));
+        assert!(line_carries_main_actor(
+            "__attribute__((swift_attr(\"@MainActor\")))"
+        ));
+    }
+
+    #[test]
+    fn line_carries_main_actor_ignores_unrelated_swift_attrs() {
+        // `swift_name` is a different attribute with similar spelling.
+        assert!(!line_carries_main_actor("NS_SWIFT_NAME(UndoManager)"));
+        // A doc comment that mentions `@MainActor` must not match.
+        assert!(!line_carries_main_actor("/// Use on @MainActor only."));
+        // `swift_attr` with a different value must not match.
+        assert!(!line_carries_main_actor(
+            "__attribute__((swift_attr(\"@objc\")))"
+        ));
+        // The umbrella header line that *defines* the alias must not match —
+        // otherwise the macro definition self-triggers on the framework
+        // header that introduces the alias.
+        assert!(!line_carries_main_actor(
+            "#define WK_SWIFT_UI_ACTOR NS_SWIFT_UI_ACTOR"
+        ));
+        assert!(!line_carries_main_actor("#define WK_SWIFT_UI_ACTOR"));
+        // A different suffix that resembles the actor pattern must not match.
+        assert!(!line_carries_main_actor("FOO_SWIFT_UI_ACTOR_HELPER"));
+    }
+
+    #[test]
+    fn line_is_decl_boundary_recognises_decl_terminators() {
+        assert!(line_is_decl_boundary("@end"));
+        assert!(line_is_decl_boundary("};"));
+        assert!(line_is_decl_boundary("static const NSUInteger Foo = 1;"));
+        assert!(line_is_decl_boundary("#import <Foundation/Foundation.h>"));
+        assert!(line_is_decl_boundary("#endif"));
+        assert!(line_is_decl_boundary("@class NSDate;"));
+    }
+
+    #[test]
+    fn line_is_decl_boundary_skips_attribute_lines() {
+        assert!(!line_is_decl_boundary("NS_SWIFT_UI_ACTOR"));
+        assert!(!line_is_decl_boundary(
+            "API_AVAILABLE(macos(10.0), ios(3.0))"
+        ));
+        assert!(!line_is_decl_boundary(""));
+        assert!(!line_is_decl_boundary("// trailing line comment"));
     }
 }

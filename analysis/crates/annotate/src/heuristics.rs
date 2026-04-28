@@ -269,9 +269,13 @@ fn derive_threading(
     // every instance method on the class. swift-api-digester emits the bare
     // attribute names without the `@` prefix and sometimes with the
     // `_Concurrency.` module qualifier — accept all observed variants. The
-    // ObjC-side `_SWIFT_UI_ACTOR` macro is not currently captured by
-    // libclang extraction; classes that get propagation only via the macro
-    // still rely on the hardcoded UI list below.
+    // ObjC-side `NS_SWIFT_UI_ACTOR` / `NS_SWIFT_MAIN_ACTOR` macros are also
+    // captured by extract-objc's class header scan (see
+    // `detect_class_swift_attributes`) and contribute to `swift_attributes`
+    // before the merge with the Swift-side digester output, so a class that
+    // is annotated only via the ObjC macro reaches this branch too. The
+    // hardcoded UI list below remains as a fallback for any class whose
+    // header omits both the macro and a Swift digester `@MainActor`.
     if class_swift_attributes
         .iter()
         .any(|a| is_main_actor_attribute(a))

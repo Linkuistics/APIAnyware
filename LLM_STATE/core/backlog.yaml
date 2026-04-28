@@ -2,7 +2,7 @@ tasks:
 - id: re-run-annotate-enrich-workspace-wide-to-materialise-mainactor-and-copy-block-setter-heuristic-improvements
   title: Re-run annotate + enrich workspace-wide to materialise MainActor and copy-block-setter heuristic improvements
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     Re-run `cargo run -p apianyware-macos-analyze -- annotate --llm-dir analysis/ir/llm-annotations/` workspace-wide, then `enrich`, to materialise the MainActor-propagation and copy-block-setter `stored` heuristic improvements added in the prior cycle.
@@ -17,6 +17,52 @@ tasks:
     1. `cargo run -p apianyware-macos-analyze -- annotate --llm-dir analysis/ir/llm-annotations/`
     2. `cargo run -p apianyware-macos-analyze -- enrich`
     3. Spot-check: verify AppKit `NSWindowController`/`NSViewController` methods now carry `source: heuristic` for `main_thread_only`, and a `@property (copy)` block setter (e.g. `NSOperation.completionBlock` setter) carries `stored` + `source: heuristic`.
+  results: |
+    **What was done.** Full pipeline re-run: collect → resolve → annotate
+    (with `--llm-dir analysis/ir/llm-annotations/`) → enrich, all 284
+    frameworks. Re-collect was needed (not just re-annotate) because the
+    sibling task added a new ObjC-side MainActor extraction signal that lives
+    in the collected IR, not in heuristics alone.
+
+    **Spot-check evidence (per task spec).**
+    - AppKit `NSCell`: now carries `swift_attributes: ["MainActor"]`; all 436
+      methods on `NSCell` carry `threading: main_thread_only` with
+      `source: heuristic` in `analysis/ir/annotated/AppKit.json` — confirmed
+      by `jq` query.
+    - Foundation `NSUndoManager`: also picked up — 38 heuristic-sourced
+      threading annotations.
+    - AppKit aggregate: **16,106** heuristic-sourced `main_thread_only`
+      annotations (was 0 from heuristic alone before the macro capture).
+    - AppKit enriched `main_thread_classes` count: **151** (was ≤25 from the
+      hardcoded list).
+    - Copy-block-setter `stored` heuristic also fires: 3 heuristic-sourced
+      stored block setters in AppKit (NSCandidatesPanel `setAttributedStringForCandidate:`,
+      `setRenderingAttributesValidator:`, `setProgressHandler:`) — small but
+      real material gain, with the `setCompletionBlock:`-on-NSOperation case
+      still LLM-sourced because LLM precedence overrides heuristic on conflict.
+
+    **LLM-merge precedence held.** No regressions in LLM-sourced annotations:
+    the post-merge counts on AppKit are 36 sync + 137 async + 25 stored on
+    189 LLM-flagged methods, exactly matching the pre-task numbers in the
+    orchestration log. The merge correctly retains LLM annotations where the
+    LLM had explicit headers-derived knowledge, while heuristics cover
+    everything the LLM didn't touch.
+
+    **Verification.** `cargo test --workspace` clean. `analyze enrich`
+    verification passed for all 284 frameworks (0 violations).
+
+    **Side benefit.** Picked up an outdated comment in
+    `derive_threading` claiming the ObjC `_SWIFT_UI_ACTOR` macro is "not
+    currently captured by libclang extraction" — fixed in the same commit
+    to match reality.
+
+    **What this suggests next.** The audit task that depends on this run
+    (LLM budget audit) found 52 frameworks where the LLM is now redundant
+    (see results in that task's Results block). Aside from the audit
+    follow-up, the next forward step is the orphaned-Swift-only-resolved-IR
+    investigation surfaced by the audit: 7 `_*_SwiftUI` framework subjects'
+    `.llm.json` files don't merge into the annotated checkpoints because
+    the resolved IR has zero classes for those frameworks. Worth filing.
 - id: wire-check-llm-annotation-drift-sh-into-triage-phase-pre-hook
   title: Wire check-llm-annotation-drift.sh into triage-phase pre-hook
   category: analysis
@@ -37,7 +83,7 @@ tasks:
 - id: audit-llm-annotation-budget-identify-frameworks-where-new-heuristics-eliminate-llm-need
   title: 'Audit LLM annotation budget: identify frameworks where new heuristics eliminate LLM need'
   category: analysis
-  status: not_started
+  status: done
   dependencies:
   - re-run-annotate-enrich-workspace-wide-to-materialise-mainactor-and-copy-block-setter-heuristic-improvements
   description: |
@@ -55,10 +101,80 @@ tasks:
     **Output:** An updated note in `analysis/scripts/llm-annotate-orchestration.md` listing frameworks whose LLM annotation is now redundant, plus a revised per-framework cost estimate for future full-corpus re-annotation runs.
 
     **Why:** Each skipped framework saves ~35k fixed dispatch tokens. Knowing the updated list before the next re-annotation cycle prevents unnecessary token spend.
+  results: |
+    **What was done.** Built `analysis/scripts/audit-llm-redundancy.py` (~80
+    LOC, checked-in). For each framework with a `.llm.json`, compares the
+    post-merge annotated checkpoint against a fresh heuristic-only annotate
+    output (write to `/tmp/heuristic-only-annotated/` via
+    `annotate --llm-dir /tmp/empty-llm-dir`). A method's LLM annotation is
+    "redundant" when heuristic-only and merged outputs agree on
+    `block_parameters`, `parameter_ownership`, `threading`, and
+    `error_pattern`.
+
+    The script splits frameworks into three categories:
+
+    1. **redundant_active** (52 frameworks, 501 LLM-flagged methods): heuristics
+       match every LLM annotation; the LLM call is pure cost on future
+       re-annotation cycles.
+    2. **orphaned** (7 frameworks, 96 methods): resolved IR has 0 classes for
+       the framework, so the existing `.llm.json` annotations never merge into
+       `analysis/ir/annotated/`. All 7 are extract-swift synthetic
+       cross-framework modules (`_AppIntents_SwiftUI`, `_PhotosUI_SwiftUI`,
+       `_RealityKit_SwiftUI`, `_SwiftData_*`, `_WebKit_SwiftUI`) plus
+       `CoreTransferable`. Re-annotation is futile until the resolved-IR
+       regression is fixed.
+    3. **net_additive** (91 frameworks): LLM still contributes ≥1 net new
+       annotation. Headlines: Matter +3315, NetworkExtension +204, AppKit +166,
+       Combine +161, IOUSBHost +115. The pattern across high-additive
+       frameworks: `stored` block-setter classifications that the
+       copy-block-setter heuristic alone cannot recover (closures attached via
+       init params or category methods don't have a matching `(copy)` property
+       to read).
+
+    **Token saving estimate.** 52 × 35k fixed-dispatch tokens ≈ **1.82M tokens**
+    on a full re-annotation cycle, plus the marginal per-method tokens those
+    subagents would have consumed. Wall-time saving across parallel-dispatch
+    batches: 30–60 minutes.
+
+    **Documentation deliverable.** Appended a new "LLM redundancy audit
+    (2026-04-28)" section to `analysis/scripts/llm-annotate-orchestration.md`
+    listing the three categories, the per-framework method counts in the
+    redundant_active set, and reproduction instructions referencing the
+    checked-in script.
+
+    **What worked.** The heuristic-only-vs-merged comparison is a much
+    sharper test than counting `source == "llm"` in the merged output. The
+    former asks "would the LLM annotation have been net additive?" and
+    correctly handles the case where LLM source-attribution wins on
+    ties even when heuristic produces the same value.
+
+    **What didn't work.** First pass used `source == "llm"` in the merged
+    output as a proxy for "LLM is additive". This wildly overcounted —
+    nearly every LLM-flagged method shows `source == "llm"` in the merged
+    output because LLM precedence wins ties. Pivot to comparing the
+    heuristic-only output against the merged output gave the correct
+    classification.
+
+    **What this suggests next.** Three follow-ups, in order of
+    priority:
+    1. **Investigate orphaned frameworks.** The 7 Swift-only synthetic
+       modules with 0 classes in resolved IR is a regression to file as a
+       standalone task — extract-swift may have stopped emitting classes
+       for these between the prior cycle and now.
+    2. **Wire the audit into pre-commit / triage.** Re-running this audit
+       after any heuristic change (or extraction change that affects
+       threading/block-stored heuristics) prevents heuristic-redundant
+       LLM-only annotations from accumulating silently.
+    3. **Optionally extend the redundant_active list when new heuristics
+       land.** Each of the high-additive frameworks (Combine 161 stored,
+       NetworkExtension 204 net new) signals a candidate for further
+       heuristic mining: `Combine` operator closures all share an
+       `@escaping (Output) -> ...` shape that could be mechanically
+       detected.
 - id: capture-swift-ui-actor-from-libclang-in-extract-objc-to-close-appkit-side-mainactor-gap
   title: Capture _SWIFT_UI_ACTOR from libclang in extract-objc to close AppKit-side MainActor gap
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     Add `_SWIFT_UI_ACTOR` macro detection in `extract-objc` so that the ObjC-header MainActor signal reaches `ir::Class.swift_attributes` and is propagated by the existing `derive_threading` heuristic.
@@ -70,3 +186,105 @@ tasks:
     **Blast radius:** AppKit NSView/NSWindow/NSResponder-family classes annotated with `_SWIFT_UI_ACTOR` macros in ObjC headers that currently rely on the hardcoded list. The hardcoded list remains a fallback; this is an additive improvement.
 
     **Why:** Closes the coverage gap for ObjC-first frameworks where the hardcoded list may not enumerate every `_SWIFT_UI_ACTOR` class, making `swift_attributes` the single authoritative source for MainActor detection.
+  results: |
+    **What was done.** Added `detect_class_swift_attributes` in
+    `collection/crates/extract-objc/src/extract_declarations.rs` that scans the
+    header source lines preceding each `@interface` for the macro spellings
+    that resolve to `__attribute__((swift_attr("@MainActor")))`. The scan
+    recognises `NS_SWIFT_UI_ACTOR`, `NS_SWIFT_MAIN_ACTOR`, and any framework-
+    prefixed alias matching `*_SWIFT_UI_ACTOR` / `*_SWIFT_MAIN_ACTOR` (so
+    `WK_SWIFT_UI_ACTOR`, `CF_SWIFT_MAIN_ACTOR`, `MP_SWIFT_MAIN_ACTOR` all
+    match without further code changes). The class's `swift_attributes` field
+    gains `"MainActor"` when found, which feeds the existing `is_main_actor_attribute`
+    recogniser in the `derive_threading` heuristic.
+
+    **What worked.** TDD with three integration tests on Foundation:
+    `NSUndoManager` (positive case — has class-level `NS_SWIFT_UI_ACTOR`),
+    `NSString` (negative case — must NOT spuriously synthesise MainActor), plus
+    unit tests for the boundary helper. Six unit tests for the alias matcher
+    cover the four observed macro spellings, defining-vs-using `#define`
+    disambiguation, and the `*_SWIFT_UI_ACTOR_FOO` longer-token false-positive
+    case.
+
+    **What didn't work, and why the design landed where it did.** Three
+    abandoned approaches, each ruled out for a specific libclang or clang-rs
+    behavior:
+
+    1. *Per-`UnexposedAttr`-child `tokenize()`.* `clang_tokenize` returns a
+       NULL token buffer with count 0 for some macro-expansion-internal
+       `UnexposedAttr` cursors. `slice::from_raw_parts(NULL, 0)` violates rust
+       1.78+'s slice precondition and the panic crosses the visitor's
+       `extern "C"` boundary as a process abort — `catch_unwind` cannot save
+       it. Guard-by-file-location did not fix it (the locations are valid
+       even when the token buffer is null).
+    2. *Tokenize the class entity's own range.* libclang's
+       `clang_getCursorExtent` for `ObjCInterfaceDecl` covers `@interface
+       ... @end` but does NOT include the macro lines that decorate the
+       class above the `@interface` keyword. Pre-`@interface` tokens are
+       simply not visible from the cursor extent.
+    3. *Read attribute-cursor `display_name` / `name`.* For `swift_attr`
+       cursors, libclang reports both as empty strings — no information.
+
+    The source-line scan is the only library-supported route that is both
+    safe and reliable.
+
+    **Numbers.** After workspace-wide re-collect:
+
+    - Foundation: 1 class with `MainActor` (NSUndoManager).
+    - AppKit: 39 classes with `MainActor` from ObjC headers (NSCell, NSAlert,
+      NSCollectionLayout* family, NSColor*, …).
+    - WebKit: 38 classes (after extending the matcher to the `WK_SWIFT_UI_ACTOR`
+      alias).
+
+    **What this suggests next.** The hardcoded UI class list in `derive_threading`
+    (NSView/NSWindow/NSButton/...) is now a tiny safety net for the 25
+    hardcoded names — every NS_SWIFT_UI_ACTOR-decorated AppKit class reaches
+    the heuristic via swift_attributes, which is the more reliable signal.
+    The hardcoded list could be pruned to UIKit names only (no source on
+    macOS) in a follow-up if the heuristic remains stable for a release cycle.
+- id: investigate-7-orphaned-swift-only-frameworks-with-0-classes-in-resolved-ir
+  title: Investigate 7 orphaned Swift-only frameworks with 0 classes in resolved IR
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    Investigate why 7 synthetic Swift-only cross-framework modules have 0 classes
+    in the resolved IR, causing their existing `.llm.json` annotations to never
+    merge into `analysis/ir/annotated/`.
+
+    **Problem being solved.** The LLM redundancy audit (2026-04-28) found 7
+    frameworks with valid `.llm.json` files (96 total annotated methods) where
+    `analysis/ir/resolved/<framework>.json` contains 0 classes. Because `annotate`
+    iterates `framework.classes`, these annotations are silently orphaned — they
+    exist on disk but contribute nothing to the annotated output.
+
+    **Affected frameworks (from audit):**
+    - `_AppIntents_SwiftUI` (68 methods)
+    - `CoreTransferable` (15 methods)
+    - `_RealityKit_SwiftUI` (6 methods)
+    - `_PhotosUI_SwiftUI` (3 methods)
+    - `_SwiftData_SwiftUI` (2 methods)
+    - `_SwiftData_CoreData` (1 method)
+    - `_WebKit_SwiftUI` (1 method)
+
+    All 5 `_*_SwiftUI` modules are extract-swift synthetic cross-framework
+    modules. `CoreTransferable` is a Swift-only single-protocol framework.
+
+    **Investigation approach:**
+    1. Check `collection/crates/extract-swift/` — does the Swift API digester
+       emit class declarations for these modules? Run `extract-swift` on one
+       (e.g. `_AppIntents_SwiftUI`) and inspect the raw JSON.
+    2. Check `analysis/crates/resolve/` — does the resolver drop classes whose
+       only source is extract-swift with no ObjC counterpart?
+    3. Compare the current resolved JSON for an affected framework against a
+       git-logged version from a prior cycle to identify when classes disappeared.
+
+    **Decisions already settled.**
+    - This is NOT a collection-layer bug — the `.llm.json` files were produced from
+      a run where the resolved IR did have classes. Something in the resolve step
+      or the extract-swift input changed.
+    - Re-running LLM annotation for these frameworks is futile until the resolved-IR
+      drop is fixed; filing separately so it doesn't block other work.
+
+    **Dependencies.** None — can be investigated in isolation from the heuristic
+    work.
