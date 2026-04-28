@@ -1,121 +1,72 @@
 tasks:
-- id: add-llm-validate-drift-detection-guardrail-for-annotation-staleness-after-extraction-changes
-  title: Add llm-validate drift detection guardrail for annotation staleness after extraction changes
+- id: re-run-annotate-enrich-workspace-wide-to-materialise-mainactor-and-copy-block-setter-heuristic-improvements
+  title: Re-run annotate + enrich workspace-wide to materialise MainActor and copy-block-setter heuristic improvements
   category: analysis
-  status: done
+  status: not_started
   dependencies: []
   description: |
-    **Problem:** When an extraction fix changes the method set (e.g. the foreign-module type-decl filter landed 2026-04-20, affecting 16 frameworks), stale `.llm.json` files pass `llm-validate` *until* the next manual annotation run discovers the mismatch — there is no automated gate between the fix commit and the next triage cycle.
+    Re-run `cargo run -p apianyware-macos-analyze -- annotate --llm-dir analysis/ir/llm-annotations/` workspace-wide, then `enrich`, to materialise the MainActor-propagation and copy-block-setter `stored` heuristic improvements added in the prior cycle.
 
-    **Signal from cycle:** The 16-framework re-annotation cycle (completed 2026-04-28) noted: "A script that re-runs `llm-validate` on all 154 annotated frameworks would have caught this regression at the moment the foreign-module fix landed, rather than at the next manual triage."
+    **Why needed now:** `analysis/ir/annotated/*.json` was generated before `ir::Class.swift_attributes` and `ir::Property.is_copy` landed in the IR and before heuristics began propagating them. The currently-checked-in annotated output therefore reflects the old heuristic layer. The new annotations will show up as `source: heuristic`; LLM-sourced entries win on conflict, so the merge is information-preserving.
 
-    **Proposed guardrail:**
-    Write `analysis/scripts/check-llm-annotation-drift.sh` (or a Makefile target) that:
-    1. Iterates `analysis/ir/llm-annotations/*.llm.json`.
-    2. For each file, runs `llm-validate --framework <name>` (or the equivalent invocation).
-    3. Exits non-zero on first failure and prints a summary of failed frameworks.
-    4. Can be called from `run-plan: triage` hooks or manual pre-commit verification.
+    **Expected effects:**
+    - Frameworks with `@MainActor`/`@_Concurrency.MainActor` classes (AppKit ~273, DiscRecordingUI ~33, RealityFoundation ~50, SecurityInterface ~41, QuickLookUI ~7, plus any other frameworks) pick up heuristic-sourced `main_thread_only` threading constraints.
+    - Frameworks with `@property (copy)` block setters gain heuristic-sourced `stored` block lifecycle annotations.
 
-    **Scope:** The validator already exists (`llm-validate` CLI); this is a thin shell loop. Should be ~20 LOC. Add a note to `analysis/scripts/llm-annotate-orchestration.md` pointing to it as a post-extraction-fix verification step.
-
-    **Why matters:** Catches annotation staleness immediately after extraction fixes rather than at the next triage cycle, preventing silent `.llm.json` drift from accumulating across multiple extraction changes.
-  results: |
-    **Done.** Added `analysis/scripts/check-llm-annotation-drift.sh` and a "Drift gate" section in `analysis/scripts/llm-annotate-orchestration.md` pointing to it.
-
-    ## What it does
-
-    Iterates `analysis/ir/llm-annotations/*.llm.json` and validates each against a freshly-regenerated `.methods.json` summary:
-
-    1. Re-runs `cargo run -p apianyware-macos-analyze -- llm-extract` against current resolved IR (so the summaries match the *current* extractor's output, not a stale checkpoint).
-    2. For each `.llm.json`, runs `cargo run -p apianyware-macos-analyze -- llm-validate --methods-file <fresh>.methods.json --llm-file <annotation>.llm.json`.
-    3. Prints `ok: all N validate` on success, or a list of failed frameworks with a remediation hint pointing to the orchestration playbook on failure.
-
-    `--skip-regen` flag bypasses the regeneration pass (useful in tight loops where `llm-extract` is known to have run recently).
-
-    ## Verified
-
-    `./analysis/scripts/check-llm-annotation-drift.sh --skip-regen` against the current workspace returned `ok: all 154 .llm.json files validate against current resolved IR` — confirming both that the loop logic works end-to-end and that the workspace is currently drift-free (consistent with the post-2026-04-28 16-framework re-annotation cycle).
-
-    ## Suggests next
-
-    - Wire the script into a `triage`-phase pre-hook so any extraction change that lands between cycles is caught immediately rather than at the next manual annotation pass.
-    - Future enhancement: when failures fire, automatically print which methods diverged (currently the script swallows `llm-validate` output for the summary; the user re-runs `llm-validate` directly per failed framework to see specifics).
-- id: improve-annotation-heuristics-mainactor-threading-propagation-and-block-setter-stored-signal
-  title: 'Improve annotation heuristics: MainActor threading propagation and block-setter stored signal'
+    **Steps:**
+    1. `cargo run -p apianyware-macos-analyze -- annotate --llm-dir analysis/ir/llm-annotations/`
+    2. `cargo run -p apianyware-macos-analyze -- enrich`
+    3. Spot-check: verify AppKit `NSWindowController`/`NSViewController` methods now carry `source: heuristic` for `main_thread_only`, and a `@property (copy)` block setter (e.g. `NSOperation.completionBlock` setter) carries `stored` + `source: heuristic`.
+- id: wire-check-llm-annotation-drift-sh-into-triage-phase-pre-hook
+  title: Wire check-llm-annotation-drift.sh into triage-phase pre-hook
   category: analysis
-  status: done
+  status: not_started
   dependencies: []
   description: |
-    **Two concrete heuristic improvements identified from the 16-framework LLM re-annotation cycle (2026-04-28). Both reduce future LLM subagent token spend by covering patterns that heuristics can determine statically.**
+    Wire `analysis/scripts/check-llm-annotation-drift.sh` into a triage-phase pre-hook so annotation staleness is caught immediately after any extraction change rather than at the next manual triage cycle.
 
-    ## 1. Propagate `@MainActor`/`@_Concurrency.MainActor` into the threading heuristic
+    **What the script does:** Iterates `analysis/ir/llm-annotations/*.llm.json`, re-runs `llm-validate` against freshly-regenerated summaries, exits non-zero with a summary of failed frameworks on staleness.
 
-    **Current state:** The heuristic threading pass propagates class-level `_SWIFT_UI_ACTOR` to methods (added in a prior cycle). However, Swift-native `@MainActor` and `@_Concurrency.MainActor` Swift interface attributes are NOT yet propagated by heuristics. The 16-framework cycle found 416 `main_thread_only` annotations where LLM was supplementing the heuristic gap (AppKit: 273, DiscRecordingUI: 33, RealityFoundation: 50, SecurityInterface: 41, QuickLookUI: 7, etc.).
+    **Implementation options:**
+    1. Add a `run-plan: triage` pre-hook entry in `.claude/settings.json` that calls `./analysis/scripts/check-llm-annotation-drift.sh --skip-regen` (fast path — skips re-extraction, just validates against current summaries).
+    2. Alternatively, add a `make lint-annotations` Makefile target callable from any CI/pre-commit context.
 
-    **Fix:** In `analysis/crates/annotate/src/heuristics.rs`, add a pass that reads `threading` from the IR's class-level `swift_attributes` field (or equivalent) for `@MainActor`/`@_Concurrency.MainActor` and propagates `main_thread_only` to all instance methods of that class.
+    **Constraint:** The script already exists and was verified clean against 154 `.llm.json` files. This task is purely about wiring it into an automated gate, not about writing the script.
 
-    **Blast radius:** ~416 methods across the 16 frameworks above, plus any other frameworks with `@MainActor` classes not yet re-annotated by LLM.
+    **Why:** Extraction changes that alter the method set (e.g. the foreign-module type-decl filter, 2026-04-20, affecting 16 frameworks) leave `.llm.json` files silently stale. Without an automated gate, staleness accumulates until the next manual triage discovers it.
+- id: audit-llm-annotation-budget-identify-frameworks-where-new-heuristics-eliminate-llm-need
+  title: 'Audit LLM annotation budget: identify frameworks where new heuristics eliminate LLM need'
+  category: analysis
+  status: not_started
+  dependencies:
+  - re-run-annotate-enrich-workspace-wide-to-materialise-mainactor-and-copy-block-setter-heuristic-improvements
+  description: |
+    After the workspace-wide `annotate + enrich` pass materialises the new MainActor and copy-block-setter heuristics, audit which frameworks may no longer need LLM annotation.
 
-    ## 2. Recognize `@property (copy)` block setters as `stored` signal
+    **Approach:**
+    1. Re-run `llm-extract` to produce fresh `.methods.json` summaries.
+    2. Check which frameworks now have empty or near-empty summaries (all methods covered by heuristics).
+    3. For frameworks with empty summaries, the LLM subagent call can be skipped on future re-annotation cycles.
 
-    **Current state:** Heuristics emit 0 `stored` block lifecycle annotations. The 16-framework cycle produced 280 `stored` annotations from LLM. A significant fraction come from Combine-style `@property (copy)` block setters (e.g., `NSOperation.completionBlock`, `NSTimer` blocks, per-result handlers on CKOperation subclasses, etc.).
+    **Expected candidates:**
+    - Frameworks dominated by `@MainActor` classes where the primary LLM value-add was `main_thread_only` threading (e.g. DiscRecordingUI, SecurityInterface, QuickLookUI).
+    - Frameworks with many `@property (copy)` block setters where the primary LLM value-add was `stored` classification.
 
-    **Fix:** In `analysis/crates/annotate/src/heuristics.rs`, add a rule: if a method sets a `@property (copy)` parameter that has a block type, classify the block parameter as `stored`. The ObjC IR property entries carry the `copy` attribute; cross-reference with matching setter selector names.
+    **Output:** An updated note in `analysis/scripts/llm-annotate-orchestration.md` listing frameworks whose LLM annotation is now redundant, plus a revised per-framework cost estimate for future full-corpus re-annotation runs.
 
-    **Expected yield:** Reduces `stored`-block LLM annotation need on frameworks with clear `@property (copy)` setter patterns. Won't cover all 280 `stored` cases (some require semantic reasoning about retention lifetime), but covers the mechanically-detectable subset.
+    **Why:** Each skipped framework saves ~35k fixed dispatch tokens. Knowing the updated list before the next re-annotation cycle prevents unnecessary token spend.
+- id: capture-swift-ui-actor-from-libclang-in-extract-objc-to-close-appkit-side-mainactor-gap
+  title: Capture _SWIFT_UI_ACTOR from libclang in extract-objc to close AppKit-side MainActor gap
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    Add `_SWIFT_UI_ACTOR` macro detection in `extract-objc` so that the ObjC-header MainActor signal reaches `ir::Class.swift_attributes` and is propagated by the existing `derive_threading` heuristic.
 
-    ## Priority
+    **Current state:** The `derive_threading` heuristic reads `ir::Class.swift_attributes` populated by `extract-swift`'s `map_class`. This captures `@MainActor`/`@_Concurrency.MainActor` from Swift API digester output. However, pure-ObjC classes annotated only with the `_SWIFT_UI_ACTOR` macro in ObjC headers do not reach `swift_attributes` from the Swift side; they currently rely on a hardcoded UI class list in the heuristic.
 
-    Both improvements are incremental quality upgrades to the heuristic layer. Do (1) first as it is purely additive and has a larger known blast radius.
-  results: |
-    **Done — both improvements landed in the heuristic layer plus the IR shape additions they required.**
+    **Fix location:** `collection/crates/extract-objc/src/extract_declarations.rs` — in the `extract_class` path, scan the entity's attributes or comment text for the `_SWIFT_UI_ACTOR` macro and populate `ir::Class.swift_attributes` with `"MainActor"` when found. The existing `merge::merge_class_members` set-union semantics then combine ObjC-side and Swift-side contributions correctly.
 
-    ## IR additions (load-bearing for both improvements)
+    **Blast radius:** AppKit NSView/NSWindow/NSResponder-family classes annotated with `_SWIFT_UI_ACTOR` macros in ObjC headers that currently rely on the hardcoded list. The hardcoded list remains a fallback; this is an additive improvement.
 
-    The task description framed both fixes as "in `heuristics.rs`", but neither signal was actually present in the IR:
-
-    1. `ir::Class.swift_attributes: Vec<String>` — populated by `extract-swift::declaration_mapping::map_class` from swift-api-digester's `decl_attributes` field, propagated through `merge::merge_class_members` (set-union to allow future ObjC-side capture of `_SWIFT_UI_ACTOR` macros). Defaults empty so existing on-disk checkpoints round-trip.
-    2. `ir::Property.is_copy: bool` — populated by `extract-objc::extract_property` from libclang's `entity.get_objc_attributes().copy`. Defaults false; skipped on serialization when false.
-
-    ## Heuristic API change
-
-    `heuristics::annotate_method_heuristic` now takes `&Class` instead of `class_name: &str`. The class context is needed to read both new fields (and is the natural shape for any future class-level signal). Callers in `lib.rs` updated; existing tests updated via a `make_class(name)` helper in the test module.
-
-    ## Heuristic logic
-
-    - **MainActor propagation** (`derive_threading`): if any of `class.swift_attributes` matches `MainActor` (after stripping a leading module qualifier — covers `MainActor`, `_Concurrency.MainActor`, and any future `Swift._Concurrency.MainActor`), every method (instance and class) on that class gets `ThreadingConstraint::MainThreadOnly`. Unrelated attributes (`Available`, `HasStorage`, `MacroRole`) are correctly ignored.
-    - **`@property (copy)` block setter → stored** (`derive_block_parameters` / `is_copy_block_property_setter`): when classifying a method's block param, if the selector parses as a synthesised single-arg setter `set<Cap><Rest>:` whose target property `<lower><Rest>` exists on the class with `is_copy=true` and a `Block` type, the param's invocation is `Stored` (overriding the selector-keyword default). Custom `setter=` annotations and multi-arg setters intentionally don't match.
-
-    ## Tests
-
-    8 new heuristic unit tests cover both pathways and edge cases (4 each):
-
-    - `class_main_actor_attribute_propagates_to_all_instance_methods`
-    - `class_concurrency_qualified_main_actor_propagates`
-    - `unrelated_swift_attributes_do_not_trigger_main_thread`
-    - `main_actor_propagation_also_applies_to_class_methods`
-    - `copy_block_property_setter_is_stored`
-    - `non_copy_block_property_setter_uses_default_classification`
-    - `copy_attribute_on_non_block_property_does_not_make_block_setter_stored`
-    - `unrelated_setter_for_copy_block_property_does_not_match`
-
-    All 23 heuristic tests + the wider `apianyware-macos-annotate` suite (80 tests) pass.
-
-    ## Snapshot test fix (incidental)
-
-    The Foundation/AppKit snapshot tests were failing on `main` (verified by `git stash` test) — goldens were stale relative to the foreign-module type-decl filter that landed in `ace678e` (2026-04-20). Regenerated goldens via `UPDATE_GOLDEN=1`; verified the diff is purely legitimate drops:
-
-    - `nsobject.rkt`, `cferror.rkt` — those classes belong to objc/runtime and CoreFoundation respectively, not Foundation. NSObject removed from `FOUNDATION_GOLDEN_FILES` (with explanatory comment); stale `nsobject.rkt` golden file deleted.
-    - 8 Swift core protocols (`sequence`, `regexcomponent`, `unkeyedencodingcontainer`, `binaryfloatingpoint`, etc.) — leaked from Swift extensions; correctly dropped now.
-    - `nswindow-cancel-operation`, `nswindow-delete-backward`, etc. — `NSStandardKeyBindingResponding` informal-protocol methods that leaked onto NSWindow via foreign-module extension; correctly dropped.
-    - Empty enum stubs (`MachErrorCode`, `POSIXErrorCode`, `AttributeScopes`, etc.) — same foreign-module noise.
-
-    ## Verification
-
-    `cargo test --workspace` clean (all crates). `cargo clippy --workspace --all-targets -- -D warnings` clean. The workspace-wide effect of the new heuristics requires re-running `apianyware-macos-analyze annotate` against current resolved IR — the unit tests confirm the logic; the production effect is per the task description's blast-radius estimates (~416 main_thread_only annotations from class-level `@MainActor` + a substantial fraction of the 280 `stored` annotations on frameworks with `@property (copy)` block setters).
-
-    ## Suggests next
-
-    - **Re-run `annotate` workspace-wide** to materialise the new heuristic coverage in `analysis/ir/annotated/*.json`. Then re-run `enrich`. The new annotations will show up as `source: heuristic` (they previously came from `source: llm`), so the merge is information-preserving (LLM still wins on conflict).
-    - **Audit if the LLM annotation budget can shrink**: with these two heuristic gaps closed, frameworks dominated by `@MainActor` and `@property (copy)` block setters may no longer need LLM annotation at all. Re-extract `llm-summaries` and check which frameworks now have empty summaries.
-    - **Consider capturing `_SWIFT_UI_ACTOR` from libclang** in extract-objc — would close the AppKit-side gap (the current MainActor heuristic only covers Swift digester output; ObjC headers with `_SWIFT_UI_ACTOR` macros still rely on the hardcoded UI class list). The merge code already supports per-side contribution to `swift_attributes`.
+    **Why:** Closes the coverage gap for ObjC-first frameworks where the hardcoded list may not enumerate every `_SWIFT_UI_ACTOR` class, making `swift_attributes` the single authoritative source for MainActor detection.
