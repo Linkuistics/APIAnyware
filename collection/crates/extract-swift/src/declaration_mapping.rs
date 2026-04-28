@@ -27,6 +27,21 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
     for child in &root.children {
         let decl_kind = child.decl_kind.as_deref().unwrap_or("");
 
+        // Drop top-level type declarations re-emitted from imported modules.
+        // `swift-api-digester -dump-sdk -module X` lists every external type
+        // X extends as a top-level `Class`/`Protocol`/`Struct`/`Enum` whose
+        // `moduleName` points back at the owning module (e.g. `Sequence` →
+        // `Swift`, `DataFrame` → `TabularData`); the children are X's
+        // extension members. Treating those as if X owned them caused the
+        // resolve pass to propagate `mapAnnotations(_:)` /
+        // `mapFeatures(_:)` (CreateMLComponents extensions on `Sequence`) to
+        // every conforming class in the SDK — `SBElementArray` included.
+        // Functions and Vars do not have this problem (they always carry the
+        // owning module's name) so the filter only gates type decls.
+        if is_foreign_module_type_decl(child, &root.name) {
+            continue;
+        }
+
         match decl_kind {
             "Class" => {
                 if let Some(class) = map_class(child) {
@@ -150,6 +165,30 @@ fn non_c_linkable_skip_reason(node: &AbiNode) -> Option<&'static str> {
         Some(skipped_symbol_reason::ANONYMOUS_ENUM_MEMBER)
     } else {
         None
+    }
+}
+
+/// Detect a top-level type declaration that the digester re-emitted from an
+/// imported module purely as a container for the current framework's
+/// extension members.
+///
+/// Returns true when `node` is a `Class`/`Protocol`/`Struct`/`Enum` whose
+/// `moduleName` is set to a value other than `framework_name`. Such nodes
+/// must be dropped: their identity belongs to the foreign module, and their
+/// children are extension members the current framework adds via
+/// `extension ForeignType { ... }` — keeping the node would cause downstream
+/// resolution to attribute those extension members to the foreign type.
+fn is_foreign_module_type_decl(node: &AbiNode, framework_name: &str) -> bool {
+    let is_type_decl = matches!(
+        node.decl_kind.as_deref(),
+        Some("Class") | Some("Protocol") | Some("Struct") | Some("Enum")
+    );
+    if !is_type_decl {
+        return false;
+    }
+    match node.module_name.as_deref() {
+        Some(module) => module != framework_name,
+        None => false,
     }
 }
 

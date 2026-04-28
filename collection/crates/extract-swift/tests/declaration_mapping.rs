@@ -706,6 +706,172 @@ fn map_test_framework_source_is_swift_interface() {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Foreign-module top-level decl filter — synthetic tests
+//
+// `swift-api-digester -dump-sdk -module X` re-emits any external type X
+// extends as a top-level declaration with `moduleName` pointing back at the
+// owning module (e.g. `Sequence` → `moduleName: "Swift"`). The body of that
+// re-emitted node carries X's extension methods. Without filtering, the
+// resolve pass treats those re-emitted protocols as if X declared them, then
+// propagates their extension methods to every conforming class anywhere in
+// the SDK — `SBElementArray.mapAnnotations(_:)` is the original sighting in
+// `analysis/ir/llm-summaries/ScriptingBridge.methods.json` (the method is a
+// `CreateMLComponents.Sequence` extension that does not exist in
+// ScriptingBridge headers). The filter must drop these foreign-module
+// declarations entirely.
+// ---------------------------------------------------------------------------
+
+fn doc_with_module(module: &str, children: Vec<Value>) -> AbiDocument {
+    let value = json!({
+        "ABIRoot": {
+            "kind": "Root",
+            "name": module,
+            "printedName": module,
+            "children": children,
+        }
+    });
+    serde_json::from_value(value).expect("build AbiDocument")
+}
+
+fn protocol_decl_with_module(name: &str, module: &str, child_funcs: Vec<Value>) -> Value {
+    json!({
+        "kind": "TypeDecl",
+        "name": name,
+        "printedName": name,
+        "declKind": "Protocol",
+        "moduleName": module,
+        "usr": format!("s:{}P", name),
+        "children": child_funcs,
+    })
+}
+
+fn extension_func_child(name: &str, module: &str) -> Value {
+    json!({
+        "kind": "Function",
+        "name": name,
+        "printedName": format!("{name}(_:)"),
+        "declKind": "Func",
+        "moduleName": module,
+        "isFromExtension": true,
+        "usr": format!("s:{}{}F", module, name),
+        "children": [
+            { "kind": "TypeNominal", "name": "Void", "printedName": "Swift.Void", "children": [] }
+        ]
+    })
+}
+
+#[test]
+fn foreign_module_protocol_with_extension_methods_is_skipped() {
+    // `CreateMLComponents` extends Swift's `Sequence` protocol with
+    // `mapAnnotations(_:)` and `mapFeatures(_:)`. The digester re-emits
+    // `Sequence` at the top level with `moduleName: "Swift"`, listing the
+    // extension methods as children with `isFromExtension: true`. Without
+    // filtering, downstream resolve treats `Sequence` as a CreateMLComponents-
+    // owned protocol and propagates `mapAnnotations`/`mapFeatures` to every
+    // class in the SDK that conforms to `Sequence` — including
+    // `SBElementArray` in ScriptingBridge.
+    let doc = doc_with_module(
+        "CreateMLComponents",
+        vec![protocol_decl_with_module(
+            "Sequence",
+            "Swift",
+            vec![
+                extension_func_child("mapAnnotations", "CreateMLComponents"),
+                extension_func_child("mapFeatures", "CreateMLComponents"),
+            ],
+        )],
+    );
+
+    let framework = map_abi_to_framework(&doc, "15.4");
+
+    assert!(
+        framework.protocols.is_empty(),
+        "foreign-module Sequence must not be emitted as a CreateMLComponents protocol; got {:?}",
+        framework
+            .protocols
+            .iter()
+            .map(|p| &p.name)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn foreign_module_struct_with_extension_methods_is_skipped() {
+    // CreateMLComponents extends `TabularData.DataFrame`. The digester re-
+    // emits the struct at the top level with `moduleName: "TabularData"`.
+    let doc = doc_with_module(
+        "CreateMLComponents",
+        vec![json!({
+            "kind": "TypeDecl",
+            "name": "DataFrame",
+            "printedName": "DataFrame",
+            "declKind": "Struct",
+            "moduleName": "TabularData",
+            "usr": "s:11TabularData9DataFrameV",
+            "children": [],
+        })],
+    );
+
+    let framework = map_abi_to_framework(&doc, "15.4");
+
+    assert!(
+        framework.structs.is_empty(),
+        "foreign-module DataFrame must not be emitted: got {:?}",
+        framework
+            .structs
+            .iter()
+            .map(|s| &s.name)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn own_protocol_with_matching_module_is_kept() {
+    // Sanity check: a protocol whose `moduleName` matches the framework
+    // root must still be emitted normally.
+    let doc = doc_with_module(
+        "MyFramework",
+        vec![json!({
+            "kind": "TypeDecl",
+            "name": "MyProtocol",
+            "printedName": "MyProtocol",
+            "declKind": "Protocol",
+            "moduleName": "MyFramework",
+            "usr": "s:11MyFramework10MyProtocolP",
+            "children": [],
+        })],
+    );
+
+    let framework = map_abi_to_framework(&doc, "15.4");
+
+    let names: Vec<&str> = framework.protocols.iter().map(|p| p.name.as_str()).collect();
+    assert_eq!(names, vec!["MyProtocol"]);
+}
+
+#[test]
+fn decl_without_module_name_is_kept() {
+    // Defensive: real digester output always has `moduleName`, but if a
+    // decl ever appears without it we should keep it (missing data is not
+    // evidence of foreign ownership).
+    let doc = doc_with_module(
+        "MyFramework",
+        vec![json!({
+            "kind": "TypeDecl",
+            "name": "Untagged",
+            "printedName": "Untagged",
+            "declKind": "Struct",
+            "usr": "s:11MyFramework8UntaggedV",
+            "children": [],
+        })],
+    );
+
+    let framework = map_abi_to_framework(&doc, "15.4");
+
+    let names: Vec<&str> = framework.structs.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(names, vec!["Untagged"]);
+}
+
 #[test]
 fn map_observation_framework() {
     let json =

@@ -1,25 +1,12 @@
-id: session-47
-timestamp: 2026-04-28T07:18:19Z
+id: session-48
+timestamp: 2026-04-28T11:25:47Z
 phase: work
 body: |
-  ### Session 47 (2026-04-28T07:18:19Z) — Complete LLM annotation of all remaining frameworks (121 non-Matter + Matter)
+  ### Session 48 (2026-04-28T11:25:47Z) — Fix Swift extension method misattribution in methods extractor
 
-  - **What was attempted:** Annotate all unannotated non-Matter frameworks (originally estimated 61, actual 121) and design+execute the Matter framework annotation strategy.
-
-  - **What worked:**
-    - All 121 non-Matter frameworks annotated via 5 parallel batches of 25/25/25/25/21 subagents; all validated clean on first run, zero divergences.
-    - Matter (12,827 flagged methods) annotated in a single subagent pass using template-based bulk annotation: 7 selector regex patterns cover ~99% of all methods, reducing token cost from naive 3.24M to ~57k (~50× under projection).
-    - Workspace total: 284 frameworks all enriched and verified, 0 violations.
-    - Stored-block discovery headline: 792 across 121 non-Matter frameworks; 3,314 from Matter alone — 3.4× the entire prior workspace combined.
-    - orchestration doc (`analysis/scripts/llm-annotate-orchestration.md`) updated with Matter strategy section including pattern table.
-
-  - **What didn't / partial:**
-    - Task description undercount: estimated 61 frameworks, actual was 121. Resolved by extending coverage to all unannotated non-Matter frameworks.
-    - Methods-extraction misattribution surfaced: ScriptingBridge subagent skipped `SBElementArray.mapAnnotations(_:)`/`mapFeatures(_:)` as they belong to `CreateMLComponents.Sequence` extensions, not ScriptingBridge. Promoted as a follow-up backlog task.
-
-  - **What this suggests next:** Workspace LLM annotation is complete. Future annotation work is surgical (changed-framework re-runs, prompt revisions). Next cycle should investigate the methods-extraction misattribution bug and consider next pipeline phase.
-
-  - **Key learnings:**
-    - Template-based bulk annotation is the right strategy for code-generated frameworks (Matter, and likely CryptoTokenKit TKToken* cluster, LDAP, GSS). Budget metric is 35k + ~5k × num_unique_patterns, not 35k + N × 250.
-    - The `subscribeAttribute*…reportHandler:` family in Matter is a paradigmatic stored-block supercluster — subscription/observer patterns with per-attribute callbacks always need LLM rather than heuristics.
-    - Reactive frameworks (Combine, CloudKit operations, RealityFoundation subscribe) and code-generated subscription frameworks should be prioritised in any future re-annotation cycles.
+  - Investigated root cause of `SBElementArray.mapAnnotations(_:)` / `mapFeatures(_:)` appearing in ScriptingBridge IR despite those methods belonging to `CreateMLComponents`.
+  - Root cause confirmed: `swift-api-digester -dump-sdk -module X` re-emits any external type X extends as a top-level decl with `moduleName` pointing at the owning module. Pre-fix, the extractor walked these nodes indiscriminately, storing extension members in framework X's IR as if X declared them. At resolve-time, Datalog's `effective_method` rule then propagated those methods to every conforming class across all SDK frameworks.
+  - Fix applied in `collection/crates/extract-swift/src/declaration_mapping.rs`: added `is_foreign_module_type_decl()` helper and early-continue in `map_abi_to_framework` to drop top-level `Class`/`Protocol`/`Struct`/`Enum` decls whose `moduleName` differs from the framework root name. Functions and Vars are unaffected (they always carry the correct owning module name).
+  - Four synthetic tests added in `collection/crates/extract-swift/tests/declaration_mapping.rs` covering: foreign Protocol skipped, foreign Struct skipped, own protocol with matching module kept, decl without moduleName kept (defensive).
+  - The fix also covers SwiftUI → AppKit leakage (`beginSheet`, `animate` etc.) and any other framework-extension pattern with the same shape.
+  - Next: re-run extraction pipeline for affected frameworks (CreateMLComponents, SwiftUI, and any framework that extends foreign types), re-run resolve + LLM annotation, and validate `SBElementArray` no longer carries the spurious methods.
