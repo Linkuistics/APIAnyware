@@ -12,7 +12,9 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-use apianyware_macos_types::annotation::FrameworkAnnotations;
+use apianyware_macos_types::annotation::{
+    BlockInvocationStyle, FrameworkAnnotations, ThreadingConstraint,
+};
 use apianyware_macos_types::ir::Framework;
 use apianyware_macos_types::type_ref::TypeRefKind;
 
@@ -352,17 +354,75 @@ pub enum ValidationError {
     },
 }
 
+/// Non-fatal divergence between the subagent's self-reported counts and the
+/// actual aggregate counts in the `.llm.json` file. The file content is
+/// authoritative for downstream merge — these warnings exist to flag the
+/// CoreData-style discrepancy where a subagent's narrative report disagrees
+/// with what it wrote (e.g. report claims `async_copied=18 / stored=8`,
+/// `jq` of the file finds `15 / 11`).
+#[derive(Debug, thiserror::Error)]
+pub enum ValidationWarning {
+    #[error("subagent_report.{field} = {reported} but file contains {actual}")]
+    SubagentReportMismatch {
+        field: &'static str,
+        reported: usize,
+        actual: usize,
+    },
+}
+
 /// Aggregated validation result. Holds every error found so subagents can fix
-/// all problems in one pass instead of one-at-a-time.
+/// all problems in one pass instead of one-at-a-time. Warnings are non-fatal
+/// signals (e.g. subagent self-report divergence) that surface alongside errors
+/// but do not affect `is_ok()`.
 #[derive(Debug, Default)]
 pub struct ValidationReport {
     pub errors: Vec<ValidationError>,
+    pub warnings: Vec<ValidationWarning>,
 }
 
 impl ValidationReport {
     pub fn is_ok(&self) -> bool {
         self.errors.is_empty()
     }
+}
+
+/// Aggregate counts computed by walking the actual content of a
+/// `FrameworkAnnotations`. Used to reconcile against `SubagentReport`.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+struct ActualCounts {
+    block_synchronous: usize,
+    block_async_copied: usize,
+    block_stored: usize,
+    parameter_ownership: usize,
+    threading_main_thread_only: usize,
+    threading_any_thread: usize,
+    error_pattern: usize,
+}
+
+fn aggregate_actual_counts(annotations: &FrameworkAnnotations) -> ActualCounts {
+    let mut counts = ActualCounts::default();
+    for class in &annotations.classes {
+        for method in &class.methods {
+            for block in &method.block_parameters {
+                match block.invocation {
+                    BlockInvocationStyle::Synchronous => counts.block_synchronous += 1,
+                    BlockInvocationStyle::AsyncCopied => counts.block_async_copied += 1,
+                    BlockInvocationStyle::Stored => counts.block_stored += 1,
+                }
+            }
+            counts.parameter_ownership += method.parameter_ownership.len();
+            if let Some(t) = method.threading {
+                match t {
+                    ThreadingConstraint::MainThreadOnly => counts.threading_main_thread_only += 1,
+                    ThreadingConstraint::AnyThread => counts.threading_any_thread += 1,
+                }
+            }
+            if method.error_pattern.is_some() {
+                counts.error_pattern += 1;
+            }
+        }
+    }
+    counts
 }
 
 /// Cross-validate `.llm.json` annotations against the corresponding `.methods.json`
@@ -474,6 +534,56 @@ pub fn validate_llm_annotations(
         }
     }
 
+    if let Some(subagent) = &annotations.subagent_report {
+        let actual = aggregate_actual_counts(annotations);
+        let checks: [(Option<usize>, &'static str, usize); 7] = [
+            (
+                subagent.block_synchronous,
+                "block_synchronous",
+                actual.block_synchronous,
+            ),
+            (
+                subagent.block_async_copied,
+                "block_async_copied",
+                actual.block_async_copied,
+            ),
+            (subagent.block_stored, "block_stored", actual.block_stored),
+            (
+                subagent.parameter_ownership,
+                "parameter_ownership",
+                actual.parameter_ownership,
+            ),
+            (
+                subagent.threading_main_thread_only,
+                "threading_main_thread_only",
+                actual.threading_main_thread_only,
+            ),
+            (
+                subagent.threading_any_thread,
+                "threading_any_thread",
+                actual.threading_any_thread,
+            ),
+            (
+                subagent.error_pattern,
+                "error_pattern",
+                actual.error_pattern,
+            ),
+        ];
+        for (reported_opt, field, actual_count) in checks {
+            if let Some(reported) = reported_opt {
+                if reported != actual_count {
+                    report
+                        .warnings
+                        .push(ValidationWarning::SubagentReportMismatch {
+                            field,
+                            reported,
+                            actual: actual_count,
+                        });
+                }
+            }
+        }
+    }
+
     report
 }
 
@@ -522,7 +632,7 @@ mod tests {
     use super::*;
     use apianyware_macos_types::annotation::{
         AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations,
-        MethodAnnotation, OwnershipKind, ParamOwnership,
+        MethodAnnotation, OwnershipKind, ParamOwnership, SubagentReport,
     };
     use apianyware_macos_types::ir::{CategoryGroup, Class, Method, Param};
     use apianyware_macos_types::type_ref::TypeRef;
@@ -821,6 +931,7 @@ mod tests {
                 class_name: "TKFoo".to_string(),
                 methods: vec![],
             }],
+            subagent_report: None,
         };
 
         let path = dir.join("TestKit.llm.json");
@@ -937,6 +1048,7 @@ mod tests {
                 class_name: "TKFoo".to_string(),
                 methods: vec![block_annotation("doBlock:", 0)],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -950,6 +1062,7 @@ mod tests {
         let annotations = FrameworkAnnotations {
             framework: "WrongKit".to_string(),
             classes: vec![],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -976,6 +1089,7 @@ mod tests {
                 class_name: "TKBar".to_string(),
                 methods: vec![block_annotation("doBlock:", 0)],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1002,6 +1116,7 @@ mod tests {
                 class_name: "TKFoo".to_string(),
                 methods: vec![block_annotation("notARealSelector:", 0)],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1039,6 +1154,7 @@ mod tests {
                     source: AnnotationSource::Llm,
                 }],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1069,6 +1185,7 @@ mod tests {
                 class_name: "TKFoo".to_string(),
                 methods: vec![block_annotation("doBlock:", 7)],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1100,6 +1217,7 @@ mod tests {
                 class_name: "TKFoo".to_string(),
                 methods: vec![block_annotation("setDelegate:", 0)],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1137,6 +1255,7 @@ mod tests {
                     source: AnnotationSource::Heuristic,
                 }],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1165,6 +1284,7 @@ mod tests {
                 // Annotation says instance method
                 methods: vec![block_annotation("doBlock:", 0)],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1198,6 +1318,7 @@ mod tests {
                 class_name: "TKFoo".to_string(),
                 methods: vec![block_annotation("doBlock:", 0)],
             }],
+            subagent_report: None,
         };
         let llm_path = dir.join("TestKit.llm.json");
         std::fs::write(&llm_path, serde_json::to_string(&annotations).unwrap()).unwrap();
@@ -1233,6 +1354,7 @@ mod tests {
                 class_name: "TKBar".to_string(), // unknown class
                 methods: vec![block_annotation("doBlock:", 0)],
             }],
+            subagent_report: None,
         };
         std::fs::write(
             dir.join("TestKit.llm.json"),
@@ -1279,6 +1401,7 @@ mod tests {
                 class_name: "TKBar".to_string(),
                 methods: vec![block_annotation("nope:", 99)],
             }],
+            subagent_report: None,
         };
 
         let report = validate_llm_annotations(&summary, &annotations);
@@ -1294,6 +1417,259 @@ mod tests {
             .errors
             .iter()
             .any(|e| matches!(e, ValidationError::UnknownClass { .. })));
+    }
+
+    fn ownership_method(selector: &str) -> MethodAnnotation {
+        MethodAnnotation {
+            selector: selector.to_string(),
+            is_instance: true,
+            parameter_ownership: vec![ParamOwnership {
+                param_index: 0,
+                ownership: OwnershipKind::Weak,
+            }],
+            block_parameters: vec![],
+            threading: None,
+            error_pattern: None,
+            source: AnnotationSource::Llm,
+        }
+    }
+
+    fn block_method_with_invocation(
+        selector: &str,
+        invocation: BlockInvocationStyle,
+    ) -> MethodAnnotation {
+        MethodAnnotation {
+            selector: selector.to_string(),
+            is_instance: true,
+            parameter_ownership: vec![],
+            block_parameters: vec![BlockParamAnnotation {
+                param_index: 0,
+                invocation,
+            }],
+            threading: None,
+            error_pattern: None,
+            source: AnnotationSource::Llm,
+        }
+    }
+
+    /// Build a CoreData-shaped summary covering every selector that the
+    /// reconciliation tests below want to annotate. Adding selectors here
+    /// rather than per-test keeps the fixtures honest: every annotation
+    /// the test emits will pass the unknown-selector check.
+    fn coredata_summary_fixture() -> FrameworkSummary {
+        make_summary(
+            "CoreData",
+            vec![
+                ClassSummary {
+                    class_name: "NSManagedObjectContext".to_string(),
+                    methods: vec![
+                        block_method_summary("performBlockAndWait:", true),
+                        block_method_summary("performBlock:", true),
+                    ],
+                },
+                ClassSummary {
+                    class_name: "NSBatchInsertRequest".to_string(),
+                    methods: vec![
+                        block_method_summary("setDictionaryHandler:", true),
+                        delegate_method_summary("setDelegate:"),
+                    ],
+                },
+            ],
+        )
+    }
+
+    #[test]
+    fn validate_emits_no_warning_when_subagent_report_absent() {
+        let summary = coredata_summary_fixture();
+        let annotations = FrameworkAnnotations {
+            framework: "CoreData".to_string(),
+            classes: vec![],
+            subagent_report: None,
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(report.is_ok());
+        assert!(report.warnings.is_empty());
+    }
+
+    #[test]
+    fn validate_emits_no_warning_when_reported_counts_match_actual() {
+        let summary = coredata_summary_fixture();
+        let annotations = FrameworkAnnotations {
+            framework: "CoreData".to_string(),
+            classes: vec![
+                ClassAnnotations {
+                    class_name: "NSManagedObjectContext".to_string(),
+                    methods: vec![
+                        block_method_with_invocation(
+                            "performBlockAndWait:",
+                            BlockInvocationStyle::Synchronous,
+                        ),
+                        block_method_with_invocation(
+                            "performBlock:",
+                            BlockInvocationStyle::AsyncCopied,
+                        ),
+                    ],
+                },
+                ClassAnnotations {
+                    class_name: "NSBatchInsertRequest".to_string(),
+                    methods: vec![
+                        block_method_with_invocation(
+                            "setDictionaryHandler:",
+                            BlockInvocationStyle::Stored,
+                        ),
+                        ownership_method("setDelegate:"),
+                    ],
+                },
+            ],
+            subagent_report: Some(SubagentReport {
+                block_synchronous: Some(1),
+                block_async_copied: Some(1),
+                block_stored: Some(1),
+                parameter_ownership: Some(1),
+                threading_main_thread_only: None,
+                threading_any_thread: None,
+                error_pattern: Some(0),
+            }),
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(report.is_ok(), "errors: {:?}", report.errors);
+        assert!(
+            report.warnings.is_empty(),
+            "unexpected warnings: {:?}",
+            report.warnings
+        );
+    }
+
+    #[test]
+    fn validate_emits_warning_per_diverging_count() {
+        // Mirrors the CoreData incident: subagent reported 18/8/7,
+        // file contains 1/1/1.
+        let summary = coredata_summary_fixture();
+        let annotations = FrameworkAnnotations {
+            framework: "CoreData".to_string(),
+            classes: vec![
+                ClassAnnotations {
+                    class_name: "NSManagedObjectContext".to_string(),
+                    methods: vec![block_method_with_invocation(
+                        "performBlock:",
+                        BlockInvocationStyle::AsyncCopied,
+                    )],
+                },
+                ClassAnnotations {
+                    class_name: "NSBatchInsertRequest".to_string(),
+                    methods: vec![
+                        block_method_with_invocation(
+                            "setDictionaryHandler:",
+                            BlockInvocationStyle::Stored,
+                        ),
+                        ownership_method("setDelegate:"),
+                    ],
+                },
+            ],
+            subagent_report: Some(SubagentReport {
+                block_synchronous: None,
+                block_async_copied: Some(18),
+                block_stored: Some(8),
+                parameter_ownership: Some(7),
+                threading_main_thread_only: None,
+                threading_any_thread: None,
+                error_pattern: None,
+            }),
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        // No errors — content is structurally valid; only warnings.
+        assert!(report.errors.is_empty(), "errors: {:?}", report.errors);
+        assert_eq!(report.warnings.len(), 3);
+
+        let mut fields: Vec<&str> = report
+            .warnings
+            .iter()
+            .map(|w| match w {
+                ValidationWarning::SubagentReportMismatch { field, .. } => *field,
+            })
+            .collect();
+        fields.sort_unstable();
+        assert_eq!(
+            fields,
+            vec!["block_async_copied", "block_stored", "parameter_ownership"]
+        );
+
+        let async_warn = report
+            .warnings
+            .iter()
+            .find_map(|w| {
+                let ValidationWarning::SubagentReportMismatch {
+                    field,
+                    reported,
+                    actual,
+                } = w;
+                if *field == "block_async_copied" {
+                    Some((*reported, *actual))
+                } else {
+                    None
+                }
+            })
+            .expect("async_copied warning present");
+        assert_eq!(async_warn, (18, 1));
+    }
+
+    #[test]
+    fn validate_warnings_do_not_make_report_fail() {
+        // A divergent subagent_report should leave is_ok() true — the file
+        // content is the source of truth for downstream merge.
+        let summary = coredata_summary_fixture();
+        let annotations = FrameworkAnnotations {
+            framework: "CoreData".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "NSManagedObjectContext".to_string(),
+                methods: vec![block_method_with_invocation(
+                    "performBlock:",
+                    BlockInvocationStyle::AsyncCopied,
+                )],
+            }],
+            subagent_report: Some(SubagentReport {
+                block_async_copied: Some(99),
+                ..SubagentReport::default()
+            }),
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(report.is_ok());
+        assert_eq!(report.warnings.len(), 1);
+    }
+
+    #[test]
+    fn validate_skips_unset_report_fields_even_if_actual_nonzero() {
+        // Subagent only tracks block invocations — it should not be
+        // warned about the actual ownership count it never reported on.
+        let summary = coredata_summary_fixture();
+        let annotations = FrameworkAnnotations {
+            framework: "CoreData".to_string(),
+            classes: vec![ClassAnnotations {
+                class_name: "NSBatchInsertRequest".to_string(),
+                methods: vec![ownership_method("setDelegate:")],
+            }],
+            subagent_report: Some(SubagentReport {
+                block_async_copied: Some(0),
+                ..SubagentReport::default()
+            }),
+        };
+
+        let report = validate_llm_annotations(&summary, &annotations);
+
+        assert!(report.is_ok(), "errors: {:?}", report.errors);
+        assert!(
+            report.warnings.is_empty(),
+            "unexpected warnings: {:?}",
+            report.warnings
+        );
     }
 
     #[test]

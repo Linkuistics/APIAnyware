@@ -3,7 +3,8 @@
 use apianyware_macos_types::annotation::{
     AnnotationOverride, AnnotationOverrides, AnnotationSource, ApiPattern, BlockInvocationStyle,
     BlockParamAnnotation, ClassAnnotations, ErrorPattern, FrameworkAnnotations, MethodAnnotation,
-    OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype, ThreadingConstraint,
+    OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype, SubagentReport,
+    ThreadingConstraint,
 };
 
 #[test]
@@ -74,6 +75,7 @@ fn framework_annotations_roundtrip() {
                 },
             ],
         }],
+        subagent_report: None,
     };
 
     let json = serde_json::to_string_pretty(&annotations).unwrap();
@@ -226,6 +228,64 @@ fn api_pattern_roundtrip() {
     assert_eq!(deserialized.constraints[0].kind, "ordering");
     assert_eq!(deserialized.source, AnnotationSource::Llm);
     assert!(deserialized.doc_ref.is_some());
+}
+
+#[test]
+fn framework_annotations_with_subagent_report_roundtrip() {
+    let annotations = FrameworkAnnotations {
+        framework: "CoreData".to_string(),
+        classes: vec![],
+        subagent_report: Some(SubagentReport {
+            block_synchronous: Some(4),
+            block_async_copied: Some(15),
+            block_stored: Some(11),
+            parameter_ownership: Some(5),
+            threading_main_thread_only: Some(0),
+            threading_any_thread: Some(0),
+            error_pattern: Some(58),
+        }),
+    };
+
+    let json = serde_json::to_string_pretty(&annotations).unwrap();
+    let deserialized: FrameworkAnnotations = serde_json::from_str(&json).unwrap();
+
+    let report = deserialized.subagent_report.expect("report present");
+    assert_eq!(report.block_async_copied, Some(15));
+    assert_eq!(report.block_stored, Some(11));
+    assert_eq!(report.parameter_ownership, Some(5));
+    assert_eq!(report.error_pattern, Some(58));
+}
+
+#[test]
+fn framework_annotations_without_subagent_report_is_backward_compatible() {
+    // Legacy .llm.json files have no subagent_report — they must still parse.
+    let legacy = r#"{
+        "framework": "TestKit",
+        "classes": []
+    }"#;
+    let parsed: FrameworkAnnotations = serde_json::from_str(legacy).unwrap();
+    assert_eq!(parsed.framework, "TestKit");
+    assert!(parsed.subagent_report.is_none());
+}
+
+#[test]
+fn subagent_report_omits_unset_fields_in_serialization() {
+    // A subagent that only tracked block invocations should not emit zeroed
+    // ownership/threading/error fields — None means "not tracked".
+    let report = SubagentReport {
+        block_synchronous: Some(4),
+        block_async_copied: Some(15),
+        block_stored: Some(11),
+        parameter_ownership: None,
+        threading_main_thread_only: None,
+        threading_any_thread: None,
+        error_pattern: None,
+    };
+    let json = serde_json::to_string(&report).unwrap();
+    assert!(json.contains("block_synchronous"));
+    assert!(!json.contains("parameter_ownership"));
+    assert!(!json.contains("threading_main_thread_only"));
+    assert!(!json.contains("error_pattern"));
 }
 
 #[test]

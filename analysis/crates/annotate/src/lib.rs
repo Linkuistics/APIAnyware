@@ -181,6 +181,7 @@ fn load_existing_llm_annotations(
                     Some(FrameworkAnnotations {
                         framework: framework_name.to_string(),
                         classes,
+                        subagent_report: None,
                     })
                 }
             }

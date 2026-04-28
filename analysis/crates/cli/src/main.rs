@@ -250,10 +250,15 @@ fn run_llm_extract(input_dir: &Path, output_dir: &Path, only: Option<&[String]>)
 fn run_llm_validate(methods_file: &Path, llm_file: &Path) -> Result<()> {
     let report = apianyware_macos_annotate::llm::validate_llm_file(methods_file, llm_file)?;
 
+    for warning in &report.warnings {
+        tracing::warn!("{}", warning);
+    }
+
     if report.is_ok() {
         tracing::info!(
             methods = %methods_file.display(),
             llm = %llm_file.display(),
+            warnings = report.warnings.len(),
             "LLM annotations validated"
         );
         return Ok(());

@@ -14,6 +14,41 @@ pub struct FrameworkAnnotations {
     pub framework: String,
     /// Per-class method annotations.
     pub classes: Vec<ClassAnnotations>,
+    /// Subagent's self-reported aggregate counts. Optional. When present,
+    /// `llm-validate` cross-checks these against the actual content of this
+    /// file and emits a warning (not an error) on divergence — the file
+    /// content is the authoritative source of truth for downstream merge.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_report: Option<SubagentReport>,
+}
+
+/// A subagent's self-reported aggregate counts of the annotations it emitted.
+///
+/// Stored alongside the annotations so `llm-validate` can flag the
+/// CoreData-style discrepancy where a subagent's narrative report disagrees
+/// with what it actually wrote (e.g. report claims `async_copied=18 / stored=8`
+/// but `jq` of the file finds `15 / 11`).
+///
+/// Each field is `Option<usize>` so we can distinguish "subagent did not
+/// track this category" (`None`) from "subagent tracked it and found zero"
+/// (`Some(0)`). A subagent that only classifies block invocations should
+/// emit only the `block_*` fields and leave the rest absent.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SubagentReport {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block_synchronous: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block_async_copied: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block_stored: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter_ownership: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub threading_main_thread_only: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub threading_any_thread: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_pattern: Option<usize>,
 }
 
 /// Annotations for all methods/properties of a single class.

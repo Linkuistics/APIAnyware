@@ -135,6 +135,35 @@ Hard rules — the validator (next step) will reject violations:
   the class from `classes` entirely rather than emitting it with an
   empty `methods: []` array.
 
+## Self-report (recommended)
+
+After writing all `classes`, append a `subagent_report` block to the
+top-level object recording your aggregate counts. The validator
+cross-checks these against the actual file content and emits a warning
+on divergence — this catches cases where the narrative count you
+report back disagrees with what you actually wrote (a real incident on
+the CoreData run).
+
+Include only the categories you tracked. Omit fields you did not count
+— `null` and missing both mean "not tracked", and the validator will
+silently skip them. `0` means "tracked, found none" and *is* checked.
+
+```json
+{
+  "framework": "{FRAMEWORK}",
+  "classes": [...],
+  "subagent_report": {
+    "block_synchronous": 4,
+    "block_async_copied": 15,
+    "block_stored": 11,
+    "parameter_ownership": 5,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 58
+  }
+}
+```
+
 ## Validate before returning
 
 After writing the file, run:
@@ -152,3 +181,7 @@ Report back:
 - path to the `.llm.json` you wrote
 - count of annotated classes and methods
 - any methods you deliberately left unannotated and why
+- the same per-category counts you wrote into `subagent_report` (so the
+  orchestrator can spot any drift between the narrative summary and the
+  block before re-running `jq` to confirm — though `llm-validate` will
+  also flag this as a warning)
