@@ -564,4 +564,38 @@ entries:
 - id: ir-class-swift-attributes-carries-swift-declaration-attributes
   title: '`ir::Class.swift_attributes` carries Swift declaration attributes'
   body: |
-    `ir::Class.swift_attributes: Vec<String>` is populated from swift-api-digester `declAttributes` by `extract-swift::declaration_mapping::map_class`, merged with set-union semantics in `merge::merge_class_members`. `derive_threading` calls `is_main_actor_attribute(attr)` (strips `_Concurrency.` module prefix) over this field before falling back to the hardcoded UI class list, detecting both bare `"MainActor"` and `"_Concurrency.MainActor"`.
+    `ir::Class.swift_attributes: Vec<String>` has two sources: (1) swift-api-digester
+    `declAttributes`, populated by `extract-swift::declaration_mapping::map_class`;
+    (2) source-line scanning of ObjC headers, populated by `detect_class_swift_attributes`
+    in `extract_declarations.rs` (covers `*_SWIFT_UI_ACTOR` / `*_SWIFT_MAIN_ACTOR` patterns
+    across NS/WK/CF/MP prefixes). Both are merged with set-union semantics in
+    `merge::merge_class_members`. `derive_threading` calls `is_main_actor_attribute(attr)`
+    (strips `_Concurrency.` module prefix) over this field before the hardcoded UI class list,
+    detecting both bare `"MainActor"` and `"_Concurrency.MainActor"`.
+- id: clang-tokenize-aborts-on-macro-expansion-unexposedattr-cursors
+  title: clang_tokenize aborts on macro-expansion UnexposedAttr cursors
+  body: |
+    `clang_tokenize` returns a NULL token buffer for `UnexposedAttr` cursors backed by macro
+    expansions (e.g., `NS_SWIFT_UI_ACTOR`). The NULL dereference causes a process abort across
+    the `extern "C"` visitor boundary — `catch_unwind` cannot intercept it. ObjC attribute
+    macros cannot be read via `clang_tokenize`; use source-line scanning instead (see "ObjC
+    pre-interface attribute macros require source-line scan").
+- id: objc-pre-interface-attribute-macros-require-source-line-scan
+  title: ObjC pre-interface attribute macros require source-line scan
+  body: |
+    The `ObjCInterfaceDecl` cursor extent starts at `@interface`; attribute macro lines above it
+    (e.g., `NS_SWIFT_UI_ACTOR`) are outside the extent and inaccessible via any libclang cursor
+    API. `detect_class_swift_attributes` in `extract_declarations.rs` reads the source file
+    directly, scanning lines above each `@interface` for `*_SWIFT_UI_ACTOR` /
+    `*_SWIFT_MAIN_ACTOR` token patterns. Covers NS/WK/CF/MP prefixes and future framework
+    aliases without code changes. Reuse this approach for any future pre-interface annotation
+    capture.
+- id: llm-redundancy-uses-heuristic-only-vs-merged-comparison
+  title: LLM redundancy uses heuristic-only vs merged comparison
+  body: |
+    Correct test: run `annotate` without `--llm-dir` (heuristic-only pass) and check where
+    output equals merged output exactly — those frameworks are LLM-redundant. Wrong proxy:
+    counting `source == "llm"` entries in merged output overcounts because LLM precedence wins
+    even on ties with equal heuristic values. `audit-llm-redundancy.py` implements the correct
+    comparison. Skip-list maintained in `analysis/scripts/llm-annotate-orchestration.md`;
+    52 frameworks currently redundant (~1.82M token saving on full re-annotation).
