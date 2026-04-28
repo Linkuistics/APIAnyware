@@ -447,12 +447,18 @@ entries:
     - **Threading**: +63 `threading: main_thread_only` on WebKit from `WK_SWIFT_UI_ACTOR` C-macro class decorations — heuristics cannot read C-macro decorators.
     - **Ownership**: +2 methods on WebKit — legacy `WebView` `assign`-attribute delegate setters get `weak`; heuristics miss pre-ARC attribute syntax.
     - **Block/error patterns**: 0 delta — heuristic `*completionHandler*` and `NSError**` patterns are complete.
-
-    Proceed with Foundation annotation once the `parameter_ownership` merge bug is fixed (see "LLM merge drops heuristic parameter_ownership annotations").
 - id: llm-merge-drops-heuristic-parameter-ownership-annotations
-  title: LLM merge drops heuristic parameter_ownership annotations
+  title: parameter_ownership merge uses per-param union
   body: |
-    `validate::merge_annotations` in `analysis/crates/annotate/src/validate.rs:111` replaces the heuristic `parameter_ownership` list with the LLM list wholesale. Fields using per-field empty-fallback (`block_parameters`, `threading`, `error_pattern`) are unaffected. Result on WebKit: 52 heuristic ownership annotations dropped (66 → 15). Foundation's heuristic ownership coverage is much larger — fix this bug before running Foundation annotation or the loss will be material.
+    `merge_annotations` in `validate.rs` merges `parameter_ownership` by cloning the LLM
+    list (LLM entries take precedence on any conflict — they are already in the clone),
+    then appending heuristic entries for `param_index` values absent from the LLM list.
+    Whole-list clone silently drops heuristic entries for params the LLM did not annotate.
+    Tests: `test_merge_parameter_ownership_per_param_union` (union of non-overlapping param
+    sets) and `test_merge_parameter_ownership_llm_precedence_on_conflict` (LLM wins on
+    conflict). WebKit canary: 67 ownership annotations with the fix vs 15 with clobber.
+    Contrast with scalar fields (`threading`, `error_pattern`): those use empty-fallback
+    (LLM value if non-empty, else heuristic), not per-param union.
 - id: annotate-without-llm-dir-re-tags-prior-annotations-as-llm-source
   title: annotate without --llm-dir re-tags prior annotations as LLM source
   body: |
