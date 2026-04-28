@@ -1,11 +1,16 @@
-id: session-39
-timestamp: 2026-04-28T01:04:35Z
+id: session-40
+timestamp: 2026-04-28T01:41:51Z
 phase: work
 body: |
-  ### Session 39 (2026-04-28T01:04:35Z) — Fix parameter_ownership merge-clobber in validate::merge_annotations
+  ### Session 40 (2026-04-28T01:41:51Z) — Gate annotate checkpoint fallback to avoid heuristic re-tagging
 
-  - **Attempted:** Fix the `parameter_ownership` whole-list clone in `validate::merge_annotations` that silently dropped heuristic ownership annotations for params the LLM didn't annotate (surfaced in session 38 WebKit calibration: 66 → 15 entries).
-  - **What worked:** Replaced the bare `llm_ann.clone()` with a per-param union: clone the LLM list (preserving LLM precedence on conflicts), then append any heuristic entry whose `param_index` isn't already present. Two regression tests added: `test_merge_parameter_ownership_per_param_union` (heuristic params 0+2, LLM param 1 → merged has all 3) and `test_merge_parameter_ownership_llm_precedence_on_conflict` (conflict on param 0 → LLM wins). End-to-end WebKit validation: 67 ownership annotations post-fix (vs 66 heuristic-only, 15 pre-fix), matching acceptance criteria. `cargo test --workspace` 56/56, clippy clean.
-  - **What didn't work / wasn't attempted:** The secondary sub-task (gating the existing-checkpoint fallback in `lib.rs:62-77` to avoid re-tagging stale annotations as `source = Llm`) was deliberately left for a separate task — orthogonal to the merge logic.
-  - **What this suggests next:** Run the Foundation LLM annotation pass (now unblocked). Address the `lib.rs` checkpoint-fallback source-tagging issue in a follow-up task.
-  - **Key learnings:** The per-param union pattern (start from LLM clone, append heuristic for missing indices) composes cleanly with the existing empty-fallback philosophy for scalar fields — no special-casing needed for the conflict path since LLM entries are already in the clone.
+  - **Attempted:** Fix the `annotate` checkpoint-fallback path (`analysis/crates/annotate/src/lib.rs:62-77`) so that heuristic-only reruns do not re-tag prior heuristic annotations as `source = Llm`. Surfaced in session 38 as a known bug; deferred from session 39.
+  - **What worked:**
+    - Renamed `load_existing_annotations` → `load_existing_llm_annotations` to signal that it returns only LLM/HumanReviewed entries.
+    - Extracted `retain_llm_sourced(Vec<ClassAnnotations>) -> Vec<ClassAnnotations>` — pure helper that filters per-method, dropping any `source = Heuristic` entries, and prunes classes with no remaining methods.
+    - The fallback now returns `None` when the prior checkpoint contains zero LLM-sourced entries, so a heuristic-only rerun produces only `source = Heuristic` annotations (no contamination).
+    - Updated the call-site comment and `analysis/scripts/regenerate-stale-pipeline.sh` shell comment to document the renamed function and the filtering behaviour.
+    - Six tests added in `#[cfg(test)] mod tests`: four unit tests for `retain_llm_sourced` covering the keep/drop/empty cases, plus two end-to-end tests for `load_existing_llm_annotations` (heuristic-only checkpoint → `None`; mixed checkpoint → only LLM entries returned). No `tempfile` crate dep — used `std::env::temp_dir()` with nanos disambiguation.
+  - **What didn't work / wasn't attempted:** Nothing failed; task was well-scoped from the hand-off in session 39.
+  - **What this suggests next:** Run the Foundation LLM annotation pass (unblocked after session 39's merge-clobber fix). The WebKit annotated checkpoint should be refreshed to pick up the merge-fix correction.
+  - **Key learnings:** The `retain_llm_sourced` extraction kept the fix incremental and easy to test in isolation — the gating logic doesn't need to know about file I/O. Nanos-suffixed temp dir names in `std::env::temp_dir()` are a reliable substitute for `tempfile` when adding a crate dep is undesirable.

@@ -59,7 +59,9 @@ pub fn annotate_frameworks(
     let mut annotated = Vec::with_capacity(frameworks.len());
 
     for framework in &frameworks {
-        // Load LLM annotations: prefer dedicated llm_dir, fall back to existing checkpoints
+        // Load LLM annotations: prefer dedicated llm_dir, fall back to LLM-sourced
+        // entries from the prior annotated checkpoint (so heuristic-only baselines
+        // produce only Heuristic-tagged annotations).
         let llm_annotations = if let Some(dir) = llm_dir {
             match llm::load_llm_annotations(dir, &framework.name) {
                 Ok(ann) => ann,
@@ -73,7 +75,7 @@ pub fn annotate_frameworks(
                 }
             }
         } else {
-            load_existing_annotations(output_dir, &framework.name)
+            load_existing_llm_annotations(output_dir, &framework.name)
         };
 
         let result = annotate_framework(framework, llm_annotations.as_ref());
@@ -153,8 +155,14 @@ fn annotate_and_push(
     results.push(merged);
 }
 
-/// Load existing annotations from a previously-written annotated checkpoint.
-fn load_existing_annotations(
+/// Load LLM-sourced annotations from a previously-written annotated checkpoint.
+///
+/// Filters out entries with `source = Heuristic` so a heuristic-only baseline
+/// rerun does not have its annotations re-tagged as `Llm` by `merge_annotations`.
+/// `Llm` and `HumanReviewed` entries are retained — heuristics re-run fresh on
+/// every method anyway, so dropping prior heuristic entries is information-
+/// preserving.
+fn load_existing_llm_annotations(
     output_dir: &Path,
     framework_name: &str,
 ) -> Option<FrameworkAnnotations> {
@@ -166,12 +174,13 @@ fn load_existing_annotations(
     match std::fs::read_to_string(&path) {
         Ok(content) => match serde_json::from_str::<Framework>(&content) {
             Ok(fw) => {
-                if fw.class_annotations.is_empty() {
+                let classes = retain_llm_sourced(fw.class_annotations);
+                if classes.is_empty() {
                     None
                 } else {
                     Some(FrameworkAnnotations {
                         framework: framework_name.to_string(),
-                        classes: fw.class_annotations,
+                        classes,
                     })
                 }
             }
@@ -193,6 +202,28 @@ fn load_existing_annotations(
             None
         }
     }
+}
+
+/// Keep only methods whose `source` is `Llm` or `HumanReviewed`; drop classes
+/// that end up with no methods.
+fn retain_llm_sourced(classes: Vec<ClassAnnotations>) -> Vec<ClassAnnotations> {
+    classes
+        .into_iter()
+        .filter_map(|mut class| {
+            class.methods.retain(|m| {
+                matches!(
+                    m.source,
+                    apianyware_macos_types::annotation::AnnotationSource::Llm
+                        | apianyware_macos_types::annotation::AnnotationSource::HumanReviewed
+                )
+            });
+            if class.methods.is_empty() {
+                None
+            } else {
+                Some(class)
+            }
+        })
+        .collect()
 }
 
 /// Build a lookup index from existing LLM/human annotations: (class_name, selector) → MethodAnnotation.
@@ -235,4 +266,168 @@ fn write_annotated_checkpoint(framework: &Framework, output_dir: &Path) -> Resul
     );
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use apianyware_macos_types::annotation::AnnotationSource;
+
+    fn method(selector: &str, source: AnnotationSource) -> MethodAnnotation {
+        MethodAnnotation {
+            selector: selector.to_string(),
+            is_instance: true,
+            parameter_ownership: vec![],
+            block_parameters: vec![],
+            threading: None,
+            error_pattern: None,
+            source,
+        }
+    }
+
+    fn class(name: &str, methods: Vec<MethodAnnotation>) -> ClassAnnotations {
+        ClassAnnotations {
+            class_name: name.to_string(),
+            methods,
+        }
+    }
+
+    #[test]
+    fn retain_llm_sourced_keeps_llm_and_human_reviewed_drops_heuristic() {
+        let input = vec![class(
+            "NSString",
+            vec![
+                method("length", AnnotationSource::Heuristic),
+                method("compare:", AnnotationSource::Llm),
+                method("hash", AnnotationSource::HumanReviewed),
+            ],
+        )];
+
+        let kept = retain_llm_sourced(input);
+
+        assert_eq!(kept.len(), 1);
+        let selectors: Vec<&str> = kept[0]
+            .methods
+            .iter()
+            .map(|m| m.selector.as_str())
+            .collect();
+        assert_eq!(selectors, vec!["compare:", "hash"]);
+    }
+
+    #[test]
+    fn retain_llm_sourced_drops_classes_with_only_heuristic_methods() {
+        let input = vec![
+            class(
+                "NSObject",
+                vec![method("description", AnnotationSource::Heuristic)],
+            ),
+            class("NSArray", vec![method("count", AnnotationSource::Llm)]),
+        ];
+
+        let kept = retain_llm_sourced(input);
+
+        assert_eq!(kept.len(), 1);
+        assert_eq!(kept[0].class_name, "NSArray");
+    }
+
+    #[test]
+    fn retain_llm_sourced_returns_empty_when_no_llm_sourced_entries() {
+        let input = vec![class(
+            "NSObject",
+            vec![
+                method("description", AnnotationSource::Heuristic),
+                method("hash", AnnotationSource::Heuristic),
+            ],
+        )];
+
+        let kept = retain_llm_sourced(input);
+
+        assert!(kept.is_empty());
+    }
+
+    #[test]
+    fn retain_llm_sourced_returns_empty_for_empty_input() {
+        let kept = retain_llm_sourced(vec![]);
+        assert!(kept.is_empty());
+    }
+
+    fn write_checkpoint(dir: &Path, name: &str, classes: serde_json::Value) {
+        let body = serde_json::json!({
+            "name": name,
+            "checkpoint": "annotated",
+            "class_annotations": classes,
+        });
+        std::fs::write(dir.join(format!("{name}.json")), body.to_string())
+            .expect("test setup: write checkpoint");
+    }
+
+    fn make_temp_dir(tag: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "apianyware-annotate-test-{}-{}-{}",
+            tag,
+            std::process::id(),
+            // Nanos disambiguate parallel tests in the same process.
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&dir).expect("test setup: create temp dir");
+        dir
+    }
+
+    #[test]
+    fn load_existing_llm_annotations_returns_none_when_only_heuristic_entries_present() {
+        // End-to-end check that a heuristic-only checkpoint cannot poison a
+        // heuristic-only baseline rerun by being re-treated as LLM source.
+        let dir = make_temp_dir("heuristic-only");
+        write_checkpoint(
+            &dir,
+            "TestFW",
+            serde_json::json!([
+                {
+                    "class_name": "TestClass",
+                    "methods": [
+                        {"selector": "foo", "is_instance": true, "source": "heuristic"}
+                    ]
+                }
+            ]),
+        );
+
+        let result = load_existing_llm_annotations(&dir, "TestFW");
+
+        std::fs::remove_dir_all(&dir).ok();
+
+        assert!(
+            result.is_none(),
+            "checkpoint with only Heuristic entries must not be re-presented as LLM source"
+        );
+    }
+
+    #[test]
+    fn load_existing_llm_annotations_returns_only_llm_entries_from_mixed_checkpoint() {
+        let dir = make_temp_dir("mixed");
+        write_checkpoint(
+            &dir,
+            "TestFW",
+            serde_json::json!([
+                {
+                    "class_name": "TestClass",
+                    "methods": [
+                        {"selector": "heuristicOnly", "is_instance": true, "source": "heuristic"},
+                        {"selector": "fromLlm", "is_instance": true, "source": "llm"}
+                    ]
+                }
+            ]),
+        );
+
+        let result = load_existing_llm_annotations(&dir, "TestFW");
+
+        std::fs::remove_dir_all(&dir).ok();
+
+        let fa = result.expect("checkpoint with an LLM entry should yield Some");
+        assert_eq!(fa.classes.len(), 1);
+        assert_eq!(fa.classes[0].methods.len(), 1);
+        assert_eq!(fa.classes[0].methods[0].selector, "fromLlm");
+    }
 }

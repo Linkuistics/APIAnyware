@@ -14,8 +14,9 @@
 #   1. analyze: inputs are analysis/crates/{datalog,resolve,annotate,enrich}/src
 #               + collection/ir/collected. Output: analysis/ir/enriched.
 #               LLM annotations in analysis/ir/annotated/*.llm.json are
-#               preserved across reruns by load_existing_annotations() as
-#               long as --llm-dir is omitted.
+#               preserved across reruns by load_existing_llm_annotations()
+#               (which filters out heuristic-sourced entries) as long as
+#               --llm-dir is omitted.
 #   2. generate: inputs are generation/crates/emit{,-*}/src
 #                + analysis/ir/enriched. Output: generation/targets/{lang}/
 #                generated. Runs all registered emitters by default.
