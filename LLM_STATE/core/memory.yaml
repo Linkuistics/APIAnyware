@@ -517,10 +517,6 @@ entries:
   title: Subscription/observer stored-block superclusters are high re-annotation yield
   body: |
     Per-attribute/per-event callback registration concentrates stored-block annotations in subscription superclusters. Paradigm: Matter `subscribeAttribute*…reportHandler:` family — each selector in the family takes a per-attribute stored block (3,314 stored blocks from Matter alone vs 792 for 121 non-Matter frameworks). Reactive frameworks (Combine, CloudKit operations, RealityFoundation subscribe) and code-generated subscription frameworks share the same pattern. These are the highest-yield targets for future re-annotation cycles if annotation strategy is revised. Stored-block superclusters require GC-prevention pinning that `async_copied` blocks do not.
-- id: methods-extraction-misattribution-at-cross-framework-extension-boundaries
-  title: Methods-extraction misattribution at cross-framework extension boundaries
-  body: |
-    Extensions from framework B on types declared in framework A may surface in framework A's annotation context. Canary: `SBElementArray.mapAnnotations(_:)` and `SBElementArray.mapFeatures(_:)` belong to `CreateMLComponents.Sequence` extensions (CreateMLComponents.framework), not ScriptingBridge; the annotation subagent skipped them as unrecognized. Risk: LLM subagents may silently skip or misannotate cross-framework extension methods when the framework boundary is unclear. Filed as backlog task: investigate methods-extraction misattribution bug.
 - id: swift-api-digester-re-emits-foreign-extension-targets-as-type-decls
   title: swift-api-digester re-emits foreign extension targets as type decls
   body: |
@@ -543,3 +539,8 @@ entries:
 
     Fix must target the extractor filter (upstream), not the Datalog propagation rule — the
     propagation semantics are correct for legitimate protocol methods.
+- id: llm-annotations-stale-after-extraction-method-set-changes
+  title: LLM annotations stale after extraction method-set changes
+  body: |
+    `.llm.json` files become stale when an extraction fix changes the method set for affected frameworks — `llm-validate` reports methods referenced in the file that are absent from current IR.
+    Remediation: delete stale `.llm.json` files, dispatch parallel subagents (see "LLM annotation parallel dispatch safe at 25-way fan-out"), validate with `llm-validate`. Unlike pipeline stages in "Downstream checkpoints can predate source fixes", LLM annotation staleness requires LLM subagent re-dispatch, not a pipeline rerun.
