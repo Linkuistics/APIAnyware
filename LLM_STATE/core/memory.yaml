@@ -405,10 +405,9 @@ entries:
   title: LLM .llm.json files are versioned in git
   body: |
     `analysis/ir/llm-annotations/*.llm.json` files are checked into git (Option A).
-    Regenerating from scratch costs ~14M tokens (154 frameworks × ~35k fixed overhead +
-    17,862 methods × ~500 marginal tokens/method); storage cost is <1 MB total.
-    Fresh-clone workflow: run `annotate --llm-dir analysis/ir/llm-annotations/` — no
-    LLM calls required on clone. `analysis/ir/llm-summaries/` remains gitignored.
+    All 284 workspace frameworks are now annotated and versioned; storage cost is <1 MB total.
+    Regenerating from scratch costs ~14M tokens: naming-compliant/Swift-only frameworks (272) at 35k + N × 250 marginal; code-generated frameworks (Matter) at ~57k via template-based bulk annotation (see "Template-based bulk annotation for code-generated frameworks").
+    Fresh-clone workflow: run `annotate --llm-dir analysis/ir/llm-annotations/` — no LLM calls required on clone. `analysis/ir/llm-summaries/` remains gitignored.
 - id: apple-developer-docs-are-js-rendered-sdk-headers-are-authoritative
   title: Apple developer docs are JS-rendered; SDK headers are authoritative
   body: |
@@ -443,7 +442,7 @@ entries:
     25-framework batch (≤2 methods each, Swift-only, no ObjC headers): avg 26,027 tokens/framework (24% under 35k baseline). The 35k fixed cost over-estimates for sub-3-method Swift-only frameworks — use 35k + N × 250 as an upper bound for pre-batch sizing.
     Budget model: 35k + N × 250 tokens/method for naming-compliant frameworks (empirically 194–409; higher end for small per-class-inspection runs); 35k + N × 534 tokens/method for naming-pattern-defeating (heavy class decorations like `_SWIFT_UI_ACTOR`).
     Per-class header inspection costs more per method than batched Python synthesis; batched synthesis preferred for large naming-compliant frameworks.
-    Matter (12,827 methods) requires class-level chunking before annotation.
+    Code-generated frameworks (Matter, and likely CryptoTokenKit TKToken* cluster, LDAP, GSS) use template-based bulk annotation instead of per-method dispatch — see "Template-based bulk annotation for code-generated frameworks".
 - id: llm-adds-value-only-on-naming-pattern-defeating-frameworks
   title: Block-invocation reclassification is primary LLM value-add
   body: |
@@ -524,3 +523,15 @@ entries:
   title: LLM annotation parallel dispatch safe at 25-way fan-out
   body: |
     25 simultaneous subagents returned `llm-validate warnings=0`; `subagent_report` reconciliation held with zero divergences. Wall-clock ~105s for 25 frameworks vs ~1,100s serial-aggregate (~10× speedup). Orchestration context overhead is negligible at this fan-out. Orchestration history tracked in `analysis/scripts/llm-annotate-orchestration.md`.
+- id: template-based-bulk-annotation-for-code-generated-frameworks
+  title: Template-based bulk annotation for code-generated frameworks
+  body: |
+    Code-generated frameworks (Matter, and likely CryptoTokenKit TKToken* cluster, LDAP, GSS) have mechanically structured selectors that permit template-based bulk annotation instead of per-method dispatch. Strategy: identify selector-family regex patterns (e.g. `subscribeAttribute.*:reportHandler:`, `readAttribute.*:completion:`) and annotate by pattern group, not individual method. Budget: `35k + ~5k × num_unique_patterns` (not `35k + N × 250`). Matter calibration: 12,827 methods, 7 patterns, ~57k tokens total — ~50× under naive projection of 3.24M. Orchestration: `analysis/scripts/llm-annotate-orchestration.md` includes a Matter strategy section with the full pattern table.
+- id: subscription-observer-stored-block-superclusters-are-high-re-annotation-yield
+  title: Subscription/observer stored-block superclusters are high re-annotation yield
+  body: |
+    Per-attribute/per-event callback registration concentrates stored-block annotations in subscription superclusters. Paradigm: Matter `subscribeAttribute*…reportHandler:` family — each selector in the family takes a per-attribute stored block (3,314 stored blocks from Matter alone vs 792 for 121 non-Matter frameworks). Reactive frameworks (Combine, CloudKit operations, RealityFoundation subscribe) and code-generated subscription frameworks share the same pattern. These are the highest-yield targets for future re-annotation cycles if annotation strategy is revised. Stored-block superclusters require GC-prevention pinning that `async_copied` blocks do not.
+- id: methods-extraction-misattribution-at-cross-framework-extension-boundaries
+  title: Methods-extraction misattribution at cross-framework extension boundaries
+  body: |
+    Extensions from framework B on types declared in framework A may surface in framework A's annotation context. Canary: `SBElementArray.mapAnnotations(_:)` and `SBElementArray.mapFeatures(_:)` belong to `CreateMLComponents.Sequence` extensions (CreateMLComponents.framework), not ScriptingBridge; the annotation subagent skipped them as unrecognized. Risk: LLM subagents may silently skip or misannotate cross-framework extension methods when the framework boundary is unclear. Filed as backlog task: investigate methods-extraction misattribution bug.
