@@ -1,0 +1,4903 @@
+{
+  "framework": "Foundation",
+  "classes": [
+    {
+      "class_name": "NSAppleEventDescriptor",
+      "methods": [
+        {
+          "selector": "sendEventWithOptions:timeout:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSArray",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "writeToURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsAtIndexes:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObjectPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObjectWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObjectAtIndexes:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesOfObjectsPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesOfObjectsWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesOfObjectsAtIndexes:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortedArrayUsingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortedArrayWithOptions:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObject:inSortedRange:options:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "arrayWithContentsOfURL:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "differenceFromArray:withOptions:usingEquivalenceTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addObserver:toObjectsAtIndexes:forKeyPath:options:context:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addObserver:forKeyPath:options:context:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSAttributedString",
+      "methods": [
+        {
+          "selector": "enumerateAttributesInRange:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateAttribute:inRange:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfMarkdownFileAtURL:options:baseURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithMarkdown:options:baseURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithMarkdownString:options:baseURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSBackgroundActivityScheduler",
+      "methods": [
+        {
+          "selector": "scheduleWithBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSBlockOperation",
+      "methods": [
+        {
+          "selector": "addExecutionBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "blockOperationWithBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setCompletionBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSBundle",
+      "methods": [
+        {
+          "selector": "loadAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "preflightAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSByteCountFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSCache",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSCalendar",
+      "methods": [
+        {
+          "selector": "enumerateDatesStartingAfterDate:matchingComponents:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSCoder",
+      "methods": [
+        {
+          "selector": "decodeTopLevelObjectAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "decodeTopLevelObjectForKey:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "decodeTopLevelObjectOfClass:forKey:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "decodeTopLevelObjectOfClasses:forKey:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSComparisonPredicate",
+      "methods": [
+        {
+          "selector": "allowEvaluationWithValidator:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "predicateWithBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSCompoundPredicate",
+      "methods": [
+        {
+          "selector": "allowEvaluationWithValidator:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "predicateWithBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSConnection",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSConstantString",
+      "methods": [
+        {
+          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSCountedSet",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSData",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateByteRangesUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithBytesNoCopy:length:deallocator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "decompressedDataUsingAlgorithm:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "compressedDataUsingAlgorithm:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSDataDetector",
+      "methods": [
+        {
+          "selector": "dataDetectorWithTypes:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithPattern:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithTypes:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "regularExpressionWithPattern:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSDateComponentsFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSDateFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getObjectValue:forString:range:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSDateIntervalFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSDictionary",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "writeToURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateKeysAndObjectsUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateKeysAndObjectsWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "keysSortedByValueUsingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "keysSortedByValueWithOptions:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "keysOfEntriesPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "keysOfEntriesWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "dictionaryWithContentsOfURL:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSDirectoryEnumerator",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSDistributedNotificationCenter",
+      "methods": [
+        {
+          "selector": "addObserver:selector:name:object:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addObserver:selector:name:object:suspensionBehavior:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addObserverForName:object:queue:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSEnergyFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSEnumerator",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSError",
+      "methods": [
+        {
+          "selector": "setUserInfoValueProviderForDomain:provider:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSExpression",
+      "methods": [
+        {
+          "selector": "expressionForBlock:arguments:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSExtensionContext",
+      "methods": [
+        {
+          "selector": "completeRequestReturningItems:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "openURL:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSFileCoordinator",
+      "methods": [
+        {
+          "selector": "coordinateAccessWithIntents:queue:byAccessor:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "coordinateReadingItemAtURL:options:error:byAccessor:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "coordinateReadingItemAtURL:options:writingItemAtURL:options:error:byAccessor:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "coordinateWritingItemAtURL:options:error:byAccessor:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "coordinateWritingItemAtURL:options:writingItemAtURL:options:error:byAccessor:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "prepareForReadingItemsAtURLs:options:writingItemsAtURLs:options:error:byAccessor:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSFileHandle",
+      "methods": [
+        {
+          "selector": "closeAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getOffset:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "readDataToEndOfFileAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "readDataUpToLength:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "seekToEndReturningOffset:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "seekToOffset:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "synchronizeAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "truncateAtOffset:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "writeData:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "fileHandleForReadingFromURL:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "fileHandleForWritingToURL:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "fileHandleForUpdatingURL:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setReadabilityHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setWriteabilityHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSFileManager",
+      "methods": [
+        {
+          "selector": "URLForDirectory:inDomain:appropriateForURL:create:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "URLForPublishingUbiquitousItemAtURL:expirationDate:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "attributesOfFileSystemForPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "attributesOfItemAtPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "contentsOfDirectoryAtPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "copyItemAtPath:toPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "copyItemAtURL:toURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "createDirectoryAtPath:withIntermediateDirectories:attributes:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "createDirectoryAtURL:withIntermediateDirectories:attributes:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "createSymbolicLinkAtPath:withDestinationPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "createSymbolicLinkAtURL:withDestinationURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "destinationOfSymbolicLinkAtPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "enumeratorAtURL:includingPropertiesForKeys:options:errorHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "evictUbiquitousItemAtURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchLatestRemoteVersionOfItemAtURL:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getFileProviderServicesForItemAtURL:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getRelationship:ofDirectory:inDomain:toItemAtURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getRelationship:ofDirectoryAtURL:toItemAtURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "linkItemAtPath:toPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "linkItemAtURL:toURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "moveItemAtPath:toPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "moveItemAtURL:toURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "pauseSyncForUbiquitousItemAtURL:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "removeItemAtPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "removeItemAtURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "replaceItemAtURL:withItemAtURL:backupItemName:options:resultingItemURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "resumeSyncForUbiquitousItemAtURL:withBehavior:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setAttributes:ofItemAtPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setUbiquitous:itemAtURL:destinationURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "startDownloadingUbiquitousItemAtURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "subpathsOfDirectoryAtPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "trashItemAtURL:resultingItemURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unmountVolumeAtURL:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "uploadLocalVersionOfUbiquitousItemAtURL:withConflictResolutionPolicy:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSFileProviderService",
+      "methods": [
+        {
+          "selector": "getFileProviderConnectionWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSFileVersion",
+      "methods": [
+        {
+          "selector": "addVersionOfItemAtURL:withContentsOfURL:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getNonlocalVersionsOfItemAtURL:completionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "removeAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "removeOtherVersionsOfItemAtURL:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "replaceItemAtURL:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSFileWrapper",
+      "methods": [
+        {
+          "selector": "initWithURL:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "readFromURL:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "writeToURL:options:originalContentsURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSHTTPCookieStorage",
+      "methods": [
+        {
+          "selector": "getCookiesForTask:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSISO8601DateFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSIndexSet",
+      "methods": [
+        {
+          "selector": "enumerateIndexesInRange:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateIndexesUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateIndexesWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateRangesInRange:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateRangesUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateRangesWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexInRange:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesInRange:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSInputStream",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSInvocationOperation",
+      "methods": [
+        {
+          "selector": "setCompletionBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSItemProvider",
+      "methods": [
+        {
+          "selector": "loadDataRepresentationForTypeIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadFileRepresentationForTypeIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadInPlaceFileRepresentationForTypeIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadItemForTypeIdentifier:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadObject(ofClass:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadObjectOfClass:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadTransferable(type:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "register(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerCKShare(container:allowedSharingOptions:preparationHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerDataRepresentationForTypeIdentifier:visibility:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerFileRepresentationForTypeIdentifier:fileOptions:visibility:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerGroupActivity(preparationHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerItemForTypeIdentifier:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerObject(ofClass:visibility:loadHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerObjectOfClass:visibility:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadPreviewImageWithOptions:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setPreviewImageHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSJSONSerialization",
+      "methods": [
+        {
+          "selector": "JSONObjectWithData:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "JSONObjectWithStream:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "dataWithJSONObject:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "writeJSONObject:toStream:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSKeyValueSharedObservers",
+      "methods": [
+        {
+          "selector": "addObserver:forKeyPath:options:context:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addSharedObserver:forKey:options:context:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSKeyedArchiver",
+      "methods": [
+        {
+          "selector": "archivedDataWithRootObject:requiringSecureCoding:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSKeyedUnarchiver",
+      "methods": [
+        {
+          "selector": "initForReadingFromData:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "unarchiveTopLevelObjectWithData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unarchivedArrayOfObjectsOfClass:fromData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unarchivedArrayOfObjectsOfClasses:fromData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unarchivedDictionaryWithKeysOfClass:objectsOfClass:fromData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unarchivedDictionaryWithKeysOfClasses:objectsOfClasses:fromData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unarchivedObjectOfClass:fromData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unarchivedObjectOfClasses:fromData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSLengthFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSLinguisticTagger",
+      "methods": [
+        {
+          "selector": "enumerateTagsForString:range:unit:scheme:options:orthography:usingBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 6,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateTagsInRange:scheme:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateTagsInRange:unit:scheme:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSListFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMachPort",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMassFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMeasurementFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMessagePort",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMetadataQuery",
+      "methods": [
+        {
+          "selector": "enumerateResultsUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateResultsWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMorphology",
+      "methods": [
+        {
+          "selector": "setCustomPronoun:forLanguage:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMutableArray",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortUsingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortWithOptions:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMutableData",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "decompressUsingAlgorithm:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "compressUsingAlgorithm:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMutableDictionary",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMutableIndexSet",
+      "methods": [
+        {
+          "selector": "enumerateIndexesInRange:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateIndexesUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateIndexesWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateRangesInRange:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateRangesUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateRangesWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexInRange:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesInRange:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMutableOrderedSet",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortUsingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortWithOptions:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortRange:options:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMutableSet",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSMutableString",
+      "methods": [
+        {
+          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSNetService",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSNetServiceBrowser",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSNotificationCenter",
+      "methods": [
+        {
+          "selector": "addObserver:selector:name:object:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addObserverForName:object:queue:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSNumberFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getObjectValue:forString:range:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSOperation",
+      "methods": [
+        {
+          "selector": "setCompletionBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSOperationQueue",
+      "methods": [
+        {
+          "selector": "addBarrierBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addOperationWithBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSOrderedCollectionDifference",
+      "methods": [
+        {
+          "selector": "differenceByTransformingChangesWithBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSOrderedSet",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsAtIndexes:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObjectPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObjectWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObjectAtIndexes:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesOfObjectsPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesOfObjectsWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexesOfObjectsAtIndexes:options:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "indexOfObject:inSortedRange:options:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortedArrayUsingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortedArrayWithOptions:usingComparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "differenceFromOrderedSet:withOptions:usingEquivalenceTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addObserver:forKeyPath:options:context:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSOutputStream",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSPersonNameComponentsFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSPort",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSPredicate",
+      "methods": [
+        {
+          "selector": "allowEvaluationWithValidator:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "predicateWithBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSProcessInfo",
+      "methods": [
+        {
+          "selector": "performActivityWithOptions:reason:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSProgress",
+      "methods": [
+        {
+          "selector": "addSubscriberForFileURL:withPublishingHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "performAsCurrentWithPendingUnitCount:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setCancellationHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setPausingHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setResumingHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSPropertyListSerialization",
+      "methods": [
+        {
+          "selector": "dataWithPropertyList:format:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "propertyListWithData:options:format:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "propertyListWithStream:options:format:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "writePropertyList:toStream:format:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSPurgeableData",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSRegularExpression",
+      "methods": [
+        {
+          "selector": "initWithPattern:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "regularExpressionWithPattern:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateMatchesInString:options:range:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSRelativeDateTimeFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSRunLoop",
+      "methods": [
+        {
+          "selector": "performInModes:block:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "performBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSSet",
+      "methods": [
+        {
+          "selector": "mapAnnotations(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "mapFeatures(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateObjectsWithOptions:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "objectsPassingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "objectsWithOptions:passingTest:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addObserver:forKeyPath:options:context:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSSimpleCString",
+      "methods": [
+        {
+          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSSocketPort",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSSortDescriptor",
+      "methods": [
+        {
+          "selector": "init(keyPath:ascending:comparator:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithKey:ascending:comparator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sortDescriptorWithKey:ascending:comparator:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSSpellServer",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSStream",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSString",
+      "methods": [
+        {
+          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateSubstringsInRange:options:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateLinesUsingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "writeToURL:atomically:encoding:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "writeToFile:atomically:encoding:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithCharactersNoCopy:length:deallocator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithValidatedFormat:validFormatSpecifiers:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithValidatedFormat:validFormatSpecifiers:locale:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithValidatedFormat:validFormatSpecifiers:arguments:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithValidatedFormat:validFormatSpecifiers:locale:arguments:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithBytesNoCopy:length:encoding:deallocator:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "stringWithValidatedFormat:validFormatSpecifiers:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "localizedStringWithValidatedFormat:validFormatSpecifiers:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfURL:encoding:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfFile:encoding:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "stringWithContentsOfURL:encoding:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "stringWithContentsOfFile:encoding:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfURL:usedEncoding:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfFile:usedEncoding:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "stringWithContentsOfURL:usedEncoding:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "stringWithContentsOfFile:usedEncoding:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateLinguisticTagsInRange:scheme:options:orthography:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSTask",
+      "methods": [
+        {
+          "selector": "launchAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setTerminationHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "launchedTaskWithExecutableURL:arguments:error:terminationHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSThread",
+      "methods": [
+        {
+          "selector": "detachNewThreadWithBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSTimer",
+      "methods": [
+        {
+          "selector": "initWithFireDate:interval:repeats:block:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "scheduledTimerWithTimeInterval:repeats:block:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "timerWithTimeInterval:repeats:block:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURL",
+      "methods": [
+        {
+          "selector": "URLByResolvingAliasFileAtURL:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "URLByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "bookmarkDataWithContentsOfURL:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getResourceValue:forKey:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "resourceValuesForKeys:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setResourceValue:forKey:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setResourceValues:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "writeBookmarkData:toURL:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getPromisedItemResourceValue:forKey:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "promisedItemResourceValuesForKeys:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "checkPromisedItemIsReachableAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "checkResourceIsReachableAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLCache",
+      "methods": [
+        {
+          "selector": "getCachedResponseForDataTask:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLConnection",
+      "methods": [
+        {
+          "selector": "sendSynchronousRequest:returningResponse:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "sendAsynchronousRequest:queue:completionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLCredentialStorage",
+      "methods": [
+        {
+          "selector": "getCredentialsForProtectionSpace:task:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getDefaultCredentialForProtectionSpace:task:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLSession",
+      "methods": [
+        {
+          "selector": "flushWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getAllTasksWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getTasksWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "resetWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "dataTaskWithRequest:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "dataTaskWithURL:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "uploadTaskWithRequest:fromFile:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "uploadTaskWithRequest:fromData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "uploadTaskWithResumeData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "downloadTaskWithRequest:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "downloadTaskWithURL:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "downloadTaskWithResumeData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLSessionDownloadTask",
+      "methods": [
+        {
+          "selector": "cancelByProducingResumeData:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLSessionStreamTask",
+      "methods": [
+        {
+          "selector": "readDataOfMinLength:maxLength:timeout:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "writeData:timeout:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLSessionUploadTask",
+      "methods": [
+        {
+          "selector": "cancelByProducingResumeData:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSURLSessionWebSocketTask",
+      "methods": [
+        {
+          "selector": "receiveMessageWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sendMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "sendPingWithPongReceiveHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSUndoManager",
+      "methods": [
+        {
+          "selector": "registerUndoWithTarget:handler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSUserActivity",
+      "methods": [
+        {
+          "selector": "deleteAllSavedUserActivitiesWithCompletionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "deleteSavedUserActivitiesWithPersistentIdentifiers:completionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getContinuationStreamsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSUserAppleScriptTask",
+      "methods": [
+        {
+          "selector": "executeWithAppleEvent:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSUserAutomatorTask",
+      "methods": [
+        {
+          "selector": "executeWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithInput:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSUserNotificationCenter",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSUserScriptTask",
+      "methods": [
+        {
+          "selector": "executeWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSUserUnixTask",
+      "methods": [
+        {
+          "selector": "executeWithArguments:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXMLDTD",
+      "methods": [
+        {
+          "selector": "initWithContentsOfURL:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithData:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "nodesForXPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:constants:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXMLDTDNode",
+      "methods": [
+        {
+          "selector": "nodesForXPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:constants:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXMLDocument",
+      "methods": [
+        {
+          "selector": "initWithContentsOfURL:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithData:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithXMLString:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "nodesForXPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectByApplyingXSLT:arguments:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectByApplyingXSLTAtURL:arguments:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectByApplyingXSLTString:arguments:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:constants:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "validateAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXMLElement",
+      "methods": [
+        {
+          "selector": "initWithXMLString:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "nodesForXPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:constants:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXMLNode",
+      "methods": [
+        {
+          "selector": "nodesForXPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:constants:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "objectsForXQuery:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXMLParser",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXPCConnection",
+      "methods": [
+        {
+          "selector": "remoteObjectProxyWithErrorHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "scheduleSendBarrierBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setInterruptionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setInvalidationHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "synchronousRemoteObjectProxyWithErrorHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSXPCListener",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "RunLoop",
+      "methods": [
+        {
+          "selector": "schedule(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:interval:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:interval:tolerance:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:interval:tolerance:options:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:tolerance:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:tolerance:options:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(options:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "FileManager",
+      "methods": [
+        {
+          "selector": "enumerator(at:includingPropertiesForKeys:options:errorHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NotificationCenter",
+      "methods": [
+        {
+          "selector": "addObserver(of:for:using:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "UndoManager",
+      "methods": [
+        {
+          "selector": "registerUndo(withTarget:handler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "OperationQueue",
+      "methods": [
+        {
+          "selector": "schedule(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:interval:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:interval:tolerance:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:interval:tolerance:options:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:tolerance:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(after:tolerance:options:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "schedule(options:_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "URLSessionWebSocketTask",
+      "methods": [
+        {
+          "selector": "receive(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "send(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "Progress",
+      "methods": [
+        {
+          "selector": "performAsCurrent(withPendingUnitCount:using:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ]
+}

@@ -1776,3 +1776,20 @@ sessions:
     - **What didn't work / wasn't attempted:** Nothing failed; task was well-scoped from the hand-off in session 39.
     - **What this suggests next:** Run the Foundation LLM annotation pass (unblocked after session 39's merge-clobber fix). The WebKit annotated checkpoint should be refreshed to pick up the merge-fix correction.
     - **Key learnings:** The `retain_llm_sourced` extraction kept the fix incremental and easy to test in isolation — the gating logic doesn't need to know about file I/O. Nanos-suffixed temp dir names in `std::env::temp_dir()` are a reliable substitute for `tempfile` when adding a crate dep is undesirable.
+- id: session-41
+  timestamp: 2026-04-28T02:43:24Z
+  phase: work
+  body: |
+    ### Session 41 (2026-04-28T02:43:24Z) — Foundation LLM annotation pass completed
+
+    - Completed two tasks: WebKit annotated-checkpoint refresh (merge-only re-run, ~10s) and Foundation full LLM annotation pass (546 methods, 131k tokens, ~7m 35s).
+    - WebKit refresh confirmed the parameter_ownership merge-clobber fix is empirically sound: ownership count moved from 15 (buggy clobber) → 67 (correct), matching the calibration figure. `enrich --only WebKit` passed; downstream enrichment relations unchanged.
+    - Foundation annotation dispatched as a single subagent per `analysis/scripts/llm-annotate-subagent.md`. Subagent produced `analysis/ir/llm-annotations/Foundation.llm.json` (121 classes / 483 methods). `llm-validate` passed first run; independently verified again; `enrich --only Foundation` passed.
+    - Actual cost (131,228 tokens) came in 60% under the 326,564-token projection. Reason: subagent built the output JSON in a single Python pass over a representative header sample rather than per-method WebFetch lookups. Budget model should be revised to 35k + N × 250 tokens/method for frameworks without heavy class-decoration prose.
+    - LLM-vs-heuristic delta: +9 `parameter_ownership` annotations (KVO addObserver:/NSNotificationCenter addObserver: family — first-param `observer` typed as generic `id`, not caught by `setDelegate:`/`setDataSource:` heuristics). All other fields (block, threading, error) had 0 LLM-additive delta — heuristics already cover Foundation's pervasive completion-handler and `:error:` patterns identically.
+    - Runs table in `analysis/scripts/llm-annotate-orchestration.md` updated with two new rows.
+
+    - What this suggests next:
+      1. AppKit is the highest-value next LLM annotation target — heavy `_SWIFT_UI_ACTOR` class-level decorations will produce a large threading-additive contribution analogous to WebKit's +63.
+      2. A small heuristic enhancement task is worth adding: `addObserver:` first-param weak classification would close the 9-entry gap the LLM found and shrink the additive surface for future observer-pattern frameworks.
+      3. Revised budget model (35k + N × 250) should replace the 534/method WebKit figure in future projection calculations.
