@@ -435,17 +435,25 @@ entries:
 - id: llm-annotation-marginal-cost-is-500-tokens-method
   title: LLM annotation marginal cost is ~500 tokens/method
   body: |
-    EventKit calibration: 38,971 tokens / 19 methods (~73s, 12 tool uses).
-    Extrapolated: ~500 tokens/method marginal, ~35k tokens fixed per framework.
-    Full corpus projected at ~14M tokens (154 frameworks + 17,862 methods).
+    EventKit calibration: 38,971 tokens / 19 methods (~73s, 12 tool uses); marginal ~500 tokens/method, ~35k tokens fixed per framework.
+    WebKit calibration (86 methods, naming-pattern-defeating): 80,907 tokens total; (80,907 − 35,000) / 86 ≈ 534 tokens/method — consistent with ~500/method.
+    Foundation projected at ~326k tokens (acceptable). Full corpus ~14M tokens (154 frameworks + 17,862 methods).
     Matter (12,827 methods) requires class-level chunking before annotation.
-    Tighten the ~500 tokens/method estimate with a 100-method calibration run
-    before committing to Foundation.
 - id: llm-adds-value-only-on-naming-pattern-defeating-frameworks
   title: LLM adds value only on naming-pattern-defeating frameworks
   body: |
-    Heuristic name-pattern matchers already classify block/error/out-param patterns
-    for naming-compliant frameworks (e.g., EventKit). On such frameworks the LLM
-    pass is confirmatory, not additive. LLM additive contribution is only measurable
-    on naming-pattern-defeating frameworks (e.g., WebKit, IOUSBHost). Calibrate on
-    one of those before committing to full Foundation annotation.
+    Heuristic name-pattern matchers classify block/error/out-param patterns for naming-compliant frameworks; LLM is confirmatory only on these. LLM is additive on naming-pattern-defeating frameworks:
+
+    - **Threading**: +63 `threading: main_thread_only` on WebKit from `WK_SWIFT_UI_ACTOR` C-macro class decorations — heuristics cannot read C-macro decorators.
+    - **Ownership**: +2 methods on WebKit — legacy `WebView` `assign`-attribute delegate setters get `weak`; heuristics miss pre-ARC attribute syntax.
+    - **Block/error patterns**: 0 delta — heuristic `*completionHandler*` and `NSError**` patterns are complete.
+
+    Proceed with Foundation annotation once the `parameter_ownership` merge bug is fixed (see "LLM merge drops heuristic parameter_ownership annotations").
+- id: llm-merge-drops-heuristic-parameter-ownership-annotations
+  title: LLM merge drops heuristic parameter_ownership annotations
+  body: |
+    `validate::merge_annotations` in `analysis/crates/annotate/src/validate.rs:111` replaces the heuristic `parameter_ownership` list with the LLM list wholesale. Fields using per-field empty-fallback (`block_parameters`, `threading`, `error_pattern`) are unaffected. Result on WebKit: 52 heuristic ownership annotations dropped (66 → 15). Foundation's heuristic ownership coverage is much larger — fix this bug before running Foundation annotation or the loss will be material.
+- id: annotate-without-llm-dir-re-tags-prior-annotations-as-llm-source
+  title: annotate without --llm-dir re-tags prior annotations as LLM source
+  body: |
+    `annotate` without `--llm-dir` falls back to the prior annotated checkpoint file as its LLM source (`analysis/crates/annotate/src/lib.rs:62-77`) and re-tags every annotation as `source = Llm`. Workaround for heuristic-only baseline runs: delete `analysis/ir/annotated/{Framework}.json` before running `annotate` without `--llm-dir`.
