@@ -1,76 +1,61 @@
 tasks:
-- id: run-llm-annotation-passes-on-remaining-medium-priority-frameworks-batch
-  title: Run LLM annotation passes on remaining medium-priority frameworks (batch)
+- id: run-llm-annotation-on-remaining-non-matter-frameworks-47-medium-14-medium-large
+  title: Run LLM annotation on remaining non-Matter frameworks (47 medium + 14 medium-large)
   category: analysis
-  status: done
+  status: not_started
   dependencies: []
   description: |
     **Priority:** high
 
-    **Promoted from:** AVFoundation LLM annotation pass results — "What this suggests next" item 1.
+    **Promoted from:** run-llm-annotation-passes-on-remaining-medium-priority-frameworks-batch results — "What this suggests next" items 1 and 3.
 
-    **Problem:** AVFoundation was the last large framework to be LLM-annotated. The ~146 remaining frameworks that have flagged methods (in `analysis/ir/llm-summaries/`) are medium-to-small frameworks (CoreLocation, MapKit, CoreBluetooth, AppleScriptObjC, etc.) that can now be dispatched in a parallel batch using the established orchestration-table pattern. The `subagent_report` reconciliation check is now in place (landed 2026-04-28), so any count divergence will be surfaced immediately rather than requiring a manual `jq` cross-check.
+    **Problem:** After the first 25-framework batch (all small, ≤2 flagged methods, ~105s wall-clock), two cohorts remain before Matter:
+
+    - **47 medium frameworks** with 3–5 flagged methods each. Estimated ~50k–60k tokens each at observed ~250 tok/method rate (~2.5M tokens total). Candidate list available via `jq` on `analysis/ir/llm-summaries/`.
+    - **14 medium-large frameworks** with 68–228 flagged methods each: _AppIntents_SwiftUI (68), OpenDirectory (71), SpriteKit (73), SceneKit (93), HealthKit (98), AppIntents (105), RealityFoundation (105), IOUSBHost (115), AVFAudio (130), Combine (161), CloudKit (184), GameKit (186), Vision (195), NetworkExtension (228). Total estimated ~1.9M–2.2M tokens at 35k + N × 250.
 
     **Settled design decisions:**
-    - Use the established orchestration pattern: `llm-extract --only <framework>`, wipe existing annotated checkpoint, heuristic-only baseline, dispatch `llm-annotate-subagent.md` subagent, re-annotate with `--llm-dir`, enrich, verify.
-    - Subagent prompt now includes the `subagent_report` self-report template — subagents must populate it.
-    - Budget: 35k + N × 250 tokens/method for naming-compliant frameworks. Confirm method count per framework via `jq '.method_count' analysis/ir/llm-summaries/<Framework>.methods.json` before dispatch.
-    - For large frameworks with naming-pattern-defeating headers (e.g., frameworks with heavy `_SWIFT_UI_ACTOR`): use 35k + N × 534 tokens/method budget model.
-    - Dispatch in parallel batches to amortize subagent fixed costs.
-    - Primary metric: stored-block count delta (stored-block reclassification is the primary LLM value-add; heuristics emit 0 stored-block annotations).
-    - Cross-check subagent self-reported counts against `jq` of the actual `.llm.json` file — `llm-validate` now reports `warnings=N` when counts diverge.
-
-    **Preconditions:**
-    - `analysis/ir/llm-annotations/AVFoundation.llm.json` committed (done 2026-04-28).
-    - `subagent_report` reconciliation check in `llm-validate` (done 2026-04-28).
+    - Same orchestration pattern as prior batches: `llm-extract --only <framework>`, wipe prior checkpoint, heuristic-only baseline, dispatch `llm-annotate-subagent.md` subagent, re-annotate with `--llm-dir`, enrich, verify.
+    - 25-way fan-out is empirically safe (warnings=0 first-try, negligible orchestrator overhead).
+    - Budget: 35k + N × 250 tokens/method for naming-compliant frameworks; 35k + N × 534 for naming-pattern-defeating (heavy Swift class decorations).
+    - Confirm method counts per framework via `jq '.method_count' analysis/ir/llm-summaries/<Framework>.methods.json` before dispatch.
+    - Dispatch cohorts in parallel; can split medium (47) and medium-large (14) into sub-batches if total context is unwieldy.
+    - Primary metric: `stored_block` reclassification count (heuristics emit 0 stored; LLM delta is the additive value).
 
     **Acceptance criteria:**
-    - All frameworks in `analysis/ir/llm-summaries/` that have flagged methods are annotated and their `.llm.json` files committed.
-    - `llm-validate` passes on each framework output with `warnings=0` (or warnings documented in the orchestration table with explanation).
+    - All 47 medium + 14 medium-large frameworks in `analysis/ir/llm-summaries/` annotated with `.llm.json` committed.
+    - `llm-validate` passes on each output with `warnings=0` (or divergences documented in orchestration table).
     - `enrich --only <Framework>` verification passes for each framework.
-    - Runs table in `analysis/scripts/llm-annotate-orchestration.md` updated with per-framework rows.
+    - Orchestration table in `analysis/scripts/llm-annotate-orchestration.md` updated with per-framework rows.
+    - Only Matter-scale frameworks (12,827 methods) and any discovered naming-pattern-defeating outliers remain unannotated after this task completes.
 
-    **Dependencies:** none
-  results: |
-    **What was done:** First parallel-dispatch run of LLM annotation subagents, fanning out 25 small frameworks (1–2 flagged methods each) in a single message. All 25 subagents returned with `llm-validate warnings=0` first-try, all 25 subsequently passed `enrich` verification with 0 violations. The full workspace `annotate --llm-dir` and `enrich` re-run completed without introducing new violations anywhere across the 283-framework set.
+    **Dependencies:** none (established tooling; prior batches already committed)
+- id: design-and-execute-chunked-llm-annotation-strategy-for-matter-framework
+  title: Design and execute chunked LLM annotation strategy for Matter framework
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** medium
 
-    **Frameworks annotated (25):** _SwiftData_CoreData, _WebKit_SwiftUI, AdServices, AppTrackingTransparency, CarKey, ClassKitUI, CoreHID, CreateML, JavaRuntimeSupport, SecurityUI, SwiftUICore, WidgetKit, _SwiftData_SwiftUI, AutomaticAssessmentConfiguration, Collaboration, CreateMLComponents, ExceptionHandling, ExecutionPolicy, ExternalAccessory, JavaScriptCore, LinkPresentation, Metal, MetricKit, SecurityFoundation, SwiftData.
+    **Promoted from:** run-llm-annotation-passes-on-remaining-medium-priority-frameworks-batch results — "What this suggests next" item 2.
 
-    **Aggregate `subagent_report` totals (sum of 25):**
-    - block_synchronous: 9
-    - block_async_copied: 8
-    - block_stored: 6
-    - parameter_ownership: 4
-    - threading_main_thread_only: 4
-    - threading_any_thread: 0
-    - error_pattern: 8
+    **Problem:** Matter is a single framework with 12,827 flagged methods — roughly 26 average-frameworks-worth of methods in one `.methods.json`. At the standard 35k + N × 250 tok/method model, this projects to ~3.2M tokens for a single subagent pass — far beyond the single-subagent budget. The standard orchestration pattern (one subagent per framework) does not scale to this size.
 
-    **Cost & wall-time:**
-    - Total subagent tokens: 650,680 (avg 26,027/framework — **24% under** the 35k baseline-per-framework projection)
-    - Wall-clock: ~105 s (longest single subagent: CarKey at 104,820 ms; shortest: ExternalAccessory at 31,878 ms)
-    - Aggregate compute: ~1,100 s — **~10× speedup** vs serial dispatch
+    **Options to evaluate:**
+    1. **Chunked subagent by class**: split `Matter.methods.json` into class-sized slices; dispatch one subagent per class (or per N classes). The orchestrator merges `.llm.json` fragments. Requires a split/merge utility or manual per-class prompt construction.
+    2. **Batched prompt by class group**: single subagent that receives 10–20 classes per invocation in a streaming loop, each returning a partial annotation set. More orchestration complexity, but avoids per-class subagent overhead.
+    3. **Heuristic-only + LLM for high-signal classes only**: run heuristics across all 12,827 methods, then LLM-annotate only classes with >5 heuristic-zero blocks or known stored-block patterns (e.g. delegate setters, completion handlers with matching naming defeats). Reduces LLM token spend by 60–80% at the cost of missing stored-block reclassifications in middle-tier classes.
 
-    **What worked:**
-    - The parallel-dispatch pattern in `llm-annotate-orchestration.md` works as designed at 25-way fan-out. Orchestrator overhead remains comfortable.
-    - The `subagent_report` reconciliation check (landed earlier today) caught nothing on this run because all 25 self-reports matched their files exactly — the new tooling holds up under fan-out.
-    - Skipping property getters paired with annotated setters worked uniformly (3 such skips in this batch: AutomaticAssessmentConfiguration / ExceptionHandling / ExternalAccessory).
-    - Two Swift-only frameworks (CarKey `start(delegate:…)`, CoreHID `activate(delegate:)`) correctly applied the "partial > guessing" rule and skipped indefensible delegate-pattern annotations rather than asserting `weak` on actor-isolated Swift existentials. This is the right call.
+    **Design call needed:**
+    - Inspect Matter's class distribution (`jq '[.classes[] | {name, methods: (.methods | length)}] | sort_by(-.methods)' analysis/ir/llm-summaries/Matter.methods.json`) to determine how many classes have >10 flagged methods.
+    - Pick chunking strategy based on class count and per-class token estimates.
+    - If chunked subagent, implement or script the merge step before dispatching.
 
-    **LLM additive contribution highlights:**
-    - **6 stored-block classifications** are the headline additive value (heuristics emit zero stored annotations) — concentrated in:
-      - ClassKitUI: 4× `AssignedDocumentMenuItem` lifecycle handlers stored on the menu item
-      - JavaScriptCore: `JSContext.exceptionHandler` (copy-stored, invoked on every uncaught exception)
-      - CreateMLComponents: `UniformRandomIntegerParameter.init` augmentation factory stored on the result transformer
-    - **4 `main_thread_only` annotations** from `@_Concurrency.MainActor` propagation in Swift-only modules (SwiftUICore.ImageRenderer.render, ClassKitUI, plus 2× MetricKit `extendLaunchMeasurement*` selectors with explicit "needs to be called on the main thread" header doc comments).
-    - **4 `weak` ownership annotations** sourced from `assign`-pre-ARC delegate setters (ExceptionHandling NSExceptionHandler, ExternalAccessory EAAccessory) and explicit `weak` properties (AutomaticAssessmentConfiguration AEAssessmentSession, Collaboration CBIdentityPicker modal-delegate).
-    - **8 `error_out_param` annotations** mostly confirmatory (heuristics already pattern-match `…:error:`); kept to validate small-framework error-path merges.
+    **Acceptance criteria:**
+    - A concrete chunking/batching strategy documented in `analysis/scripts/llm-annotate-orchestration.md`.
+    - At minimum a pilot run on the top-10 highest-method-count Matter classes to validate the chosen approach.
+    - Full Matter annotation with committed `.llm.json` and `llm-validate warnings=0`.
+    - `enrich --only Matter` verification passes.
 
-    **What didn't work / surprises:**
-    - Nothing failed. One observation: 14 of the 25 frameworks were Swift-only (no `Headers/` directory) and required `.swiftinterface` inspection. For these, `.swiftinterface`'s lack of explicit `weak`/`copy` attributes makes Cocoa-style ownership assertions less defensible — the spec's "partial > guessing" rule held up here.
-
-    **What this suggests next:**
-    1. **Scale the parallel batch.** 25-way fan-out is empirically safe and orchestrator-context-cheap. Next batch can include the **47 frameworks with 3–5 flagged methods** (estimated ~50k–60k tokens each at observed rates; ~2.5M total), or all 102 remaining non-Matter frameworks if you want to push harder.
-    2. **Defer Matter (12,827 methods, 26-frameworks-worth-of-methods on its own).** This needs its own strategy — likely a chunked subagent or a different prompt that batches by class. The 35k + N × 250 model would predict ~3.2M tokens for Matter alone — feasible but worth its own work-phase budget.
-    3. **Consider a dedicated promotion** for the medium-large remaining frameworks (CloudKit 184, GameKit 186, Vision 195, NetworkExtension 228, _AppIntents_SwiftUI 68, OpenDirectory 71, SpriteKit 73, SceneKit 93, HealthKit 98, AppIntents 105, RealityFoundation 105, IOUSBHost 115, AVFAudio 130, Combine 161). These will benefit most from LLM annotation given their size and the calibrated ~250 tok/method rate.
-    4. **Refine the cost model.** Sub-3-method Swift-only frameworks come in ~24% under the 35k baseline. The 35k figure should probably be reframed as a "median per-framework fixed cost" rather than a floor; tiny frameworks under-spend on header lookup.
-    5. **No tooling changes warranted from this run.** The reconciliation check held; the merge bug fix held; verification passed everywhere. The orchestration is now production-ready for higher-fan-out batches.
+    **Dependencies:** none (though proceeding after the remaining non-Matter batch is complete makes sense operationally)
