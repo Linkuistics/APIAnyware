@@ -83,12 +83,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -124,6 +136,12 @@
         {
           "selector": "beginSheetModalForWindow:modalDelegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -141,7 +159,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -149,22 +166,6 @@
     {
       "class_name": "NSAnimationContext",
       "methods": [
-        {
-          "selector": "animate(_:changes:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
         {
           "selector": "runAnimationGroup:",
           "is_instance": false,
@@ -174,7 +175,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -190,7 +190,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -202,7 +201,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -219,7 +217,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -279,6 +276,17 @@
           "is_instance": true,
           "error_pattern": "error_out_param",
           "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -305,12 +313,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -322,12 +342,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -337,18 +369,6 @@
       "class_name": "NSCandidateListTouchBarItem",
       "methods": [
         {
-          "selector": "setAttributedStringForCandidate:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
@@ -357,7 +377,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -368,12 +387,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -408,6 +439,7 @@
               "invocation": "stored"
             }
           ],
+          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -418,12 +450,7 @@
         {
           "selector": "setVisibleItemsInvalidationHandler:",
           "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
-          ],
+          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -437,7 +464,7 @@
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "async_copied"
+              "invocation": "synchronous"
             },
             {
               "param_index": 1,
@@ -491,6 +518,12 @@
         {
           "selector": "initWithSectionProvider:",
           "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -505,28 +538,6 @@
     {
       "class_name": "NSCollectionViewDiffableDataSource",
       "methods": [
-        {
-          "selector": "apply(_:animatingDifferences:completion:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "init(collectionView:itemProvider:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
-          ],
-          "source": "llm"
-        },
         {
           "selector": "initWithCollectionView:itemProvider:",
           "is_instance": true,
@@ -561,12 +572,6 @@
           "source": "llm"
         },
         {
-          "selector": "invalidateFlowLayoutDelegateMetrics",
-          "is_instance": true,
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "setInvalidateFlowLayoutDelegateMetrics:",
           "is_instance": true,
           "threading": "main_thread_only",
@@ -587,6 +592,12 @@
         {
           "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -616,17 +627,6 @@
             }
           ],
           "source": "llm"
-        },
-        {
-          "selector": "withExportedFile(contentType:fileHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "source": "llm"
         }
       ]
     },
@@ -637,22 +637,6 @@
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
             {
               "param_index": 1,
               "invocation": "async_copied"
@@ -735,7 +719,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -781,12 +764,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -816,12 +811,24 @@
         {
           "selector": "editWithFrame:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -835,12 +842,34 @@
           "is_instance": true,
           "error_pattern": "error_out_param",
           "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
         }
       ]
     },
     {
       "class_name": "NSCustomImageRep",
       "methods": [
+        {
+          "selector": "initWithDrawSelector:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
         {
           "selector": "initWithSize:flipped:drawingHandler:",
           "is_instance": true,
@@ -877,12 +906,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -908,6 +949,17 @@
           "is_instance": true,
           "error_pattern": "error_out_param",
           "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -923,7 +975,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -953,6 +1004,12 @@
         {
           "selector": "autosaveDocumentWithDelegate:didAutosaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -971,6 +1028,12 @@
         {
           "selector": "canCloseDocumentWithDelegate:shouldCloseSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -994,21 +1057,8 @@
           "source": "llm"
         },
         {
-          "selector": "continueAsynchronousWorkOnMainThreadUsingBlock:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "dataOfType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -1022,13 +1072,18 @@
         {
           "selector": "duplicateDocumentWithDelegate:didDuplicateSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "fileAttributesToWriteToURL:ofType:forSaveOperation:originalContentsURL:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -1121,18 +1176,6 @@
           "source": "llm"
         },
         {
-          "selector": "performAsynchronousFileAccessUsingBlock:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "performSynchronousFileAccessUsingBlock:",
           "is_instance": true,
           "block_parameters": [
@@ -1141,18 +1184,29 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "printDocumentWithSettings:showPrintPanel:delegate:didPrintSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1166,46 +1220,19 @@
         {
           "selector": "readFromData:ofType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
         {
           "selector": "readFromFileWrapper:ofType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
         {
           "selector": "readFromURL:ofType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
-          "source": "llm"
-        },
-        {
-          "selector": "relinquishPresentedItemToReader:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "relinquishPresentedItemToWriter:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -1218,24 +1245,48 @@
         {
           "selector": "runModalPageLayoutWithPrintInfo:delegate:didRunSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "runModalPrintOperation:delegate:didRunSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "runModalSavePanelForSaveOperation:delegate:didSaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "saveDocumentWithDelegate:didSaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1248,7 +1299,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -1266,6 +1316,12 @@
         {
           "selector": "saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1284,6 +1340,12 @@
         {
           "selector": "shouldCloseWindowController:delegate:shouldCloseSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1326,21 +1388,18 @@
         {
           "selector": "writeSafelyToURL:ofType:forSaveOperation:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
         {
           "selector": "writeToURL:ofType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
         {
           "selector": "writeToURL:ofType:forSaveOperation:originalContentsURL:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -1354,6 +1413,12 @@
         {
           "selector": "saveToFile:saveOperation:delegate:didSaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1401,6 +1466,12 @@
         {
           "selector": "closeAllDocumentsWithDelegate:didCloseAllSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1454,6 +1525,12 @@
         {
           "selector": "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1472,6 +1549,12 @@
         {
           "selector": "reviewUnsavedDocumentsWithAlertTitle:cancellable:delegate:didReviewAllSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -1510,7 +1593,6 @@
               "invocation": "stored"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -1527,7 +1609,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -1561,7 +1642,6 @@
               "invocation": "stored"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -1573,19 +1653,6 @@
               "invocation": "stored"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "trackSwipeEventWithOptions:dampenAmountThresholdMin:max:usingHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -1704,22 +1771,6 @@
           "source": "llm"
         },
         {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "beginSheet:completionHandler:",
           "is_instance": true,
           "block_parameters": [
@@ -1804,12 +1855,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -1844,7 +1907,6 @@
               "invocation": "stored"
             }
           ],
-          "threading": "any_thread",
           "source": "llm"
         },
         {
@@ -1856,13 +1918,11 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "any_thread",
           "source": "llm"
         },
         {
           "selector": "objectWithItemProviderData:typeIdentifier:error:",
           "is_instance": false,
-          "threading": "any_thread",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -1875,19 +1935,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "any_thread",
-          "source": "llm"
-        },
-        {
-          "selector": "withExportedFile(contentType:fileHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "any_thread",
           "source": "llm"
         }
       ]
@@ -1898,13 +1945,41 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSInputServer",
+      "methods": [
+        {
+          "selector": "initWithDelegate:name:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "source": "llm"
         }
       ]
@@ -1912,30 +1987,6 @@
     {
       "class_name": "NSLayoutManager",
       "methods": [
-        {
-          "selector": "enumerateEnclosingRectsForGlyphRange:withinSelectedGlyphRange:inTextContainer:usingBlock:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "enumerateLineFragmentsForGlyphRange:usingBlock:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
         {
           "selector": "setDelegate:",
           "is_instance": true,
@@ -1945,7 +1996,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -1956,12 +2006,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -2005,12 +2067,6 @@
       "class_name": "NSMenu",
       "methods": [
         {
-          "selector": "palette(colors:titles:template:onSelectionChange:)",
-          "is_instance": false,
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
@@ -2019,31 +2075,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "paletteMenuWithColors:titles:selectionHandler:",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "paletteMenuWithColors:titles:templateImage:selectionHandler:",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -2054,12 +2085,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -2098,18 +2141,7 @@
           "source": "llm"
         },
         {
-          "selector": "fetchWithRequest:merge:error:",
-          "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSOpenGLLayer",
-      "methods": [
-        {
-          "selector": "setDelegate:",
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
           "parameter_ownership": [
             {
@@ -2117,6 +2149,12 @@
               "ownership": "weak"
             }
           ],
+          "source": "llm"
+        },
+        {
+          "selector": "fetchWithRequest:merge:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
           "source": "llm"
         }
       ]
@@ -2128,22 +2166,6 @@
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
             {
               "param_index": 1,
               "invocation": "async_copied"
@@ -2239,12 +2261,24 @@
         {
           "selector": "beginSheetForDirectory:file:types:modalForWindow:modalDelegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 4,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "beginForDirectory:file:types:modelessDelegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -2259,7 +2293,7 @@
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "async_copied"
+              "invocation": "synchronous"
             }
           ],
           "threading": "main_thread_only",
@@ -2321,6 +2355,12 @@
         {
           "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2356,6 +2396,12 @@
         {
           "selector": "beginSheetWithPrintInfo:modalForWindow:delegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -2385,22 +2431,6 @@
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
             {
               "param_index": 1,
               "invocation": "async_copied"
@@ -2553,6 +2583,12 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2566,6 +2602,12 @@
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2589,12 +2631,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -2629,7 +2683,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -2659,6 +2712,12 @@
         {
           "selector": "autosaveDocumentWithDelegate:didAutosaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2677,6 +2736,12 @@
         {
           "selector": "canCloseDocumentWithDelegate:shouldCloseSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2707,21 +2772,8 @@
           "source": "llm"
         },
         {
-          "selector": "continueAsynchronousWorkOnMainThreadUsingBlock:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "dataOfType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -2735,13 +2787,18 @@
         {
           "selector": "duplicateDocumentWithDelegate:didDuplicateSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "fileAttributesToWriteToURL:ofType:forSaveOperation:originalContentsURL:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -2834,18 +2891,6 @@
           "source": "llm"
         },
         {
-          "selector": "performAsynchronousFileAccessUsingBlock:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "performSynchronousFileAccessUsingBlock:",
           "is_instance": true,
           "block_parameters": [
@@ -2854,18 +2899,29 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "printDocumentWithSettings:showPrintPanel:delegate:didPrintSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2879,14 +2935,12 @@
         {
           "selector": "readFromData:ofType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
         {
           "selector": "readFromFileWrapper:ofType:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -2895,30 +2949,6 @@
           "is_instance": true,
           "threading": "main_thread_only",
           "error_pattern": "error_out_param",
-          "source": "llm"
-        },
-        {
-          "selector": "relinquishPresentedItemToReader:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "relinquishPresentedItemToWriter:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -2931,24 +2961,48 @@
         {
           "selector": "runModalPageLayoutWithPrintInfo:delegate:didRunSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "runModalPrintOperation:delegate:didRunSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "runModalSavePanelForSaveOperation:delegate:didSaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "saveDocumentWithDelegate:didSaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2961,7 +3015,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -2979,6 +3032,12 @@
         {
           "selector": "saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -2997,6 +3056,12 @@
         {
           "selector": "shouldCloseWindowController:delegate:shouldCloseSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -3039,7 +3104,6 @@
         {
           "selector": "writeSafelyToURL:ofType:forSaveOperation:error:",
           "is_instance": true,
-          "threading": "main_thread_only",
           "error_pattern": "error_out_param",
           "source": "llm"
         },
@@ -3072,12 +3136,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3135,6 +3211,23 @@
       ]
     },
     {
+      "class_name": "NSPrintOperation",
+      "methods": [
+        {
+          "selector": "runOperationModalForWindow:delegate:didRunSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
       "class_name": "NSPrintPanel",
       "methods": [
         {
@@ -3152,6 +3245,12 @@
         {
           "selector": "beginSheetWithPrintInfo:modalForWindow:delegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3163,6 +3262,12 @@
         {
           "selector": "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3209,22 +3314,6 @@
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
             {
               "param_index": 1,
               "invocation": "async_copied"
@@ -3320,6 +3409,12 @@
         {
           "selector": "beginSheetForDirectory:file:modalForWindow:modalDelegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3331,6 +3426,12 @@
         {
           "selector": "performSequentialBatchUpdates:",
           "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -3383,12 +3484,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3417,12 +3530,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3434,12 +3559,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3454,7 +3591,7 @@
           "block_parameters": [
             {
               "param_index": 3,
-              "invocation": "async_copied"
+              "invocation": "stored"
             }
           ],
           "source": "llm"
@@ -3500,6 +3637,7 @@
               "ownership": "weak"
             }
           ],
+          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -3516,6 +3654,7 @@
               "ownership": "weak"
             }
           ],
+          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -3526,12 +3665,7 @@
         {
           "selector": "behaviorWithHandler:",
           "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
-          ],
+          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -3542,12 +3676,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3563,17 +3709,6 @@
             {
               "param_index": 0,
               "ownership": "weak"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "withExportedFile(contentType:fileHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
             }
           ],
           "source": "llm"
@@ -3636,7 +3771,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "any_thread",
           "source": "llm"
         },
         {
@@ -3648,7 +3782,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "any_thread",
           "source": "llm"
         },
         {
@@ -3660,7 +3793,6 @@
               "invocation": "async_copied"
             }
           ],
-          "threading": "any_thread",
           "source": "llm"
         }
       ]
@@ -3695,6 +3827,12 @@
         {
           "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3713,6 +3851,12 @@
         {
           "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3741,12 +3885,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3773,18 +3929,6 @@
       "class_name": "NSStoryboard",
       "methods": [
         {
-          "selector": "instantiateController(identifier:creator:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "instantiateControllerWithIdentifier:creator:",
           "is_instance": true,
           "block_parameters": [
@@ -3793,19 +3937,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "instantiateInitialController(creator:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -3817,7 +3948,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -3834,7 +3964,6 @@
               "invocation": "stored"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -3869,6 +3998,12 @@
         {
           "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3880,12 +4015,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -3900,7 +4047,7 @@
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "async_copied"
+              "invocation": "synchronous"
             }
           ],
           "threading": "main_thread_only",
@@ -3936,34 +4083,12 @@
       "class_name": "NSTableViewDiffableDataSource",
       "methods": [
         {
-          "selector": "apply(_:animatingDifferences:completion:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "applySnapshot:animatingDifferences:completion:",
           "is_instance": true,
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "init(tableView:cellProvider:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
             }
           ],
           "source": "llm"
@@ -4042,12 +4167,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -4065,13 +4202,17 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "performEditingTransactionUsingBlock:",
           "is_instance": true,
-          "threading": "main_thread_only",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
           "source": "llm"
         },
         {
@@ -4083,31 +4224,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "synchronizeTextLayoutManagers:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "synchronizeToBackingStore:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -4124,7 +4240,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4136,13 +4251,17 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "performEditingTransactionUsingBlock:",
           "is_instance": true,
-          "threading": "main_thread_only",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ],
           "source": "llm"
         },
         {
@@ -4154,31 +4273,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "synchronizeTextLayoutManagers:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "synchronizeToBackingStore:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -4206,12 +4300,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -4223,6 +4329,12 @@
         {
           "selector": "setEffectsViewInserter:",
           "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -4240,7 +4352,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4252,7 +4363,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4264,7 +4374,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4276,7 +4385,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4288,7 +4396,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4300,7 +4407,6 @@
               "invocation": "synchronous"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4312,19 +4418,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "setRenderingAttributesValidator:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -4341,13 +4434,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "textSelectionDataSource",
-          "is_instance": true,
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -4364,7 +4450,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         },
         {
@@ -4376,7 +4461,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -4422,7 +4506,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -4440,6 +4523,12 @@
         {
           "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -4468,12 +4557,24 @@
         {
           "selector": "editWithFrame:inView:editor:delegate:event:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
         {
           "selector": "selectWithFrame:inView:editor:delegate:start:length:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -4533,6 +4634,17 @@
           "is_instance": true,
           "error_pattern": "error_out_param",
           "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -4544,6 +4656,17 @@
           "is_instance": true,
           "error_pattern": "error_out_param",
           "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -4553,6 +4676,12 @@
         {
           "selector": "showDefinitionForAttributedString:range:options:baselineOriginProvider:",
           "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         }
@@ -4570,7 +4699,6 @@
               "ownership": "weak"
             }
           ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -4588,6 +4716,12 @@
         {
           "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
           "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
           "threading": "main_thread_only",
           "source": "llm"
         },
@@ -4612,22 +4746,6 @@
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
             {
               "param_index": 1,
               "invocation": "async_copied"
@@ -4702,7 +4820,7 @@
           "block_parameters": [
             {
               "param_index": 3,
-              "invocation": "async_copied"
+              "invocation": "synchronous"
             }
           ],
           "threading": "main_thread_only",
@@ -4893,25 +5011,21 @@
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "stored"
+              "invocation": "async_copied"
             }
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "setProgressHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
-          ],
-          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
     }
-  ]
+  ],
+  "subagent_report": {
+    "block_synchronous": 29,
+    "block_async_copied": 101,
+    "block_stored": 21,
+    "parameter_ownership": 174,
+    "threading_main_thread_only": 273,
+    "threading_any_thread": 0,
+    "error_pattern": 73
+  }
 }

@@ -8,6 +8,19 @@
           "selector": "commitEditingAndReturnError:",
           "is_instance": true,
           "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -16,10 +29,25 @@
       "class_name": "NSHostingMenu",
       "methods": [
         {
+          "selector": "delegate",
+          "is_instance": true,
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
           "selector": "palette(colors:titles:template:onSelectionChange:)",
           "is_instance": false,
           "block_parameters": [
             {"param_index": 3, "invocation": "stored"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -39,196 +67,14 @@
           "source": "llm"
         }
       ]
-    },
-    {
-      "class_name": "ImageRenderer",
-      "methods": [
-        {
-          "selector": "render(rasterizationScale:renderer:)",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "synchronous"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSApplication",
-      "methods": [
-        {
-          "selector": "enumerateWindowsWithOptions:usingBlock:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "synchronous"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSUserActivity",
-      "methods": [
-        {
-          "selector": "deleteAllSavedUserActivitiesWithCompletionHandler:",
-          "is_instance": false,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "async_copied"}
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "deleteSavedUserActivitiesWithPersistentIdentifiers:completionHandler:",
-          "is_instance": false,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "async_copied"}
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "getContinuationStreamsWithCompletionHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "async_copied"}
-          ],
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSColor",
-      "methods": [
-        {
-          "selector": "colorWithName:dynamicProvider:",
-          "is_instance": false,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "stored"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "withExportedFile(contentType:fileHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "synchronous"}
-          ],
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSAnimationContext",
-      "methods": [
-        {
-          "selector": "animate(_:changes:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "synchronous"},
-            {"param_index": 2, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "runAnimationGroup:",
-          "is_instance": false,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "synchronous"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "runAnimationGroup:completionHandler:",
-          "is_instance": false,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "synchronous"},
-            {"param_index": 1, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "setCompletionHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "stored"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSWindow",
-      "methods": [
-        {
-          "selector": "beginCriticalSheet:completionHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "synchronous"},
-            {"param_index": 1, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet:completionHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "requestSharingOfWindow:completionHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 2, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "transferWindowSharingToWindow:completionHandler:",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 1, "invocation": "async_copied"}
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        }
-      ]
     }
   ],
   "subagent_report": {
-    "block_synchronous": 8,
-    "block_async_copied": 11,
-    "block_stored": 3,
-    "parameter_ownership": 0,
-    "threading_main_thread_only": 15,
+    "block_synchronous": 1,
+    "block_async_copied": 0,
+    "block_stored": 1,
+    "parameter_ownership": 1,
+    "threading_main_thread_only": 7,
     "threading_any_thread": 0,
     "error_pattern": 1
   }

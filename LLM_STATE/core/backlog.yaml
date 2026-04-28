@@ -2,7 +2,7 @@ tasks:
 - id: re-run-llm-annotation-for-16-frameworks-with-stale-llm-json-after-foreign-module-extractor-fix
   title: Re-run LLM annotation for 16 frameworks with stale .llm.json after foreign-module extractor fix
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Problem:** The foreign-module type-decl filter fix (`is_foreign_module_type_decl()` in
@@ -33,3 +33,66 @@ tasks:
     `collection/crates/extract-swift/src/declaration_mapping.rs` lines 30–44 and 168–196.
 
     **Dependencies:** None — `.methods.json` regeneration is the first step.
+  results: |
+    **Outcome:** All 16 frameworks re-annotated; `llm-validate` exits 0 with `warnings=0` for every framework; `annotate` and `enrich` complete with `verification passed` on all 16.
+
+    ## Steps executed
+
+    1. Re-ran `llm-extract --only` on the 16 frameworks → 1583 methods across 119/140/15/29/5/1/2/10/1/17/2/15/1/6/2/3 classes (Foundation/AppKit/AppIntents/CloudKit/Cinematic/GroupActivities/QuickLookUI/IOBluetooth/RealityKit/Photos/SharedWithYou/RealityFoundation/OSLog/SecurityInterface/_/SwiftUI). Confirms the post-extractor-fix `.methods.json` is now stable.
+    2. Deleted the 16 stale `.llm.json` files and dispatched 16 subagents in a single parallel salvo. All returned `warnings=0` first run (no re-validation loops needed).
+    3. Independent re-validation: PASS=16, FAIL=0.
+    4. `annotate --llm-dir analysis/ir/llm-annotations --only <16>` → 16 frameworks merged.
+    5. `enrich --only <16>` → all 16 report `verification passed` with 0 violations.
+
+    ## Per-framework subagent_report (block_synchronous / block_async_copied / block_stored / parameter_ownership / threading_main_thread_only / threading_any_thread / error_pattern)
+
+    | Framework | sync | async | stored | weak/copy | mt_only | any_thr | error |
+    |---|---:|---:|---:|---:|---:|---:|---:|
+    | AppIntents | 2 | 1 | 102 | 0 | 0 | 0 | 0 |
+    | AppKit | 29 | 101 | 21 | 174 | 273 | 0 | 73 |
+    | Cinematic | 0 | 9 | 0 | 0 | 0 | 0 | 1 |
+    | CloudKit | 3 | 115 | 38 | 158 | 0 | 0 | 0 |
+    | DiscRecordingUI | 0 | 25 | 0 | 8 | 33 | 0 | 0 |
+    | Foundation | 88 | 85 | 41 | 29 | 0 | 0 | 204 |
+    | GroupActivities | 0 | 1 | 0 | 0 | 0 | 1 | 1 |
+    | IOBluetooth | 0 | 0 | 0 | 15 | 0 | 0 | 0 |
+    | OSLog | 0 | 0 | 0 | 0 | 0 | 0 | 5 |
+    | Photos | 7 | 21 | 8 | 0 | 0 | 0 | 4 |
+    | QuickLookUI | 0 | 5 | 3 | 2 | 7 | 3 | 0 |
+    | RealityFoundation | 28 | 11 | 66 | 0 | 50 | 7 | 0 |
+    | RealityKit | 0 | 1 | 0 | 0 | 1 | 0 | 0 |
+    | SecurityInterface | 0 | 27 | 0 | 14 | 41 | 0 | 0 |
+    | SharedWithYou | 0 | 4 | 0 | 4 | 4 | 5 | 1 |
+    | SwiftUI | 1 | 0 | 1 | 1 | 7 | 0 | 1 |
+    | **Total** | **158** | **406** | **280** | **405** | **416** | **16** | **290** |
+
+    ## Headline LLM-additive findings
+
+    - **AppIntents (102 stored / 105 block params):** ResolverSpecificationBuilder `resolvers:` closures, `EntityProperty.entityProvider`, comparator `mappingTransform` and `withResolvers:` closures are all retained on the parameter for repeated invocation during query evaluation — heuristics would mis-classify all of them as `async_copied`.
+    - **CloudKit (38 stored):** every CKOperation per-result handler family (`recordChangedBlock`, `recordWithIDWasDeletedBlock`, `recordZoneFetchCompletionBlock`, etc.) correctly marked stored vs the 115 one-shot operation completions.
+    - **Foundation (41 stored):** NSTimer block, NSOperation `completionBlock`, NSXPCConnection interruption/invalidation handlers, NSPredicate `predicateWithBlock:`, NSSortDescriptor comparator, NSItemProvider register-handlers, NSError `userInfoValueProvider`. Plus 29 weak-ownership annotations on KVO/NSNotificationCenter observer params (heuristics miss these because the methods aren't named `setDelegate:`/`setDataSource:`).
+    - **AppKit (273 main_thread_only):** NS_SWIFT_UI_ACTOR propagation across the 138-class AppKit hierarchy (sister of prior 142 figure; small variance from getter/setter pairing).
+    - **DiscRecordingUI / SecurityInterface / QuickLookUI:** all NSPanel-derived → main_thread_only across the board, consistent with AppKit conventions.
+    - **RealityFoundation (66 stored, 50 main_thread_only):** Combine `LoadRequest` operator chain closures (matches established Combine convention) + audio-render generators + per-step collision handlers; MainActor propagation across Entity hierarchy.
+    - **GroupActivities (1 any_thread):** `GroupSessionMessenger` is `@unchecked Sendable` per swiftinterface — first explicit `any_thread` claim where the headers document thread-safety.
+
+    ## Notable subagent decisions
+
+    - **AppKit:** declined to assert weak on 9 legacy modal-callback selectors (`commitEditingWithDelegate:didCommitSelector:`, `runOperationModalForWindow:delegate:didRunSelector:contextInfo:`) — Apple headers carry no explicit retention attribute, leaving heuristics to fill the gap.
+    - **Foundation:** explicitly skipped 24 NSURLSession/NSURLConnection/URLSession `delegate:` parameters where the header documents `retain` ownership (NOT `weak`) — these are the canonical exceptions to the AppKit weak-delegate convention.
+    - **IOBluetooth:** dropped IOBluetoothL2CAPChannel entirely because the header explicitly documents `strong` retention of the delegate (the framework is split across `assign`/`weak` for some classes and `strong` for L2CAP).
+    - **Photos:** correctly distinguished `performChanges:completionHandler:` `changeBlock` as `synchronous` (executed inline within transaction) vs the trailing `completionHandler` as `async_copied`.
+    - **RealityKit (1 method):** `ARView.snapshot(saveToHDR:completion:)` correctly marked main_thread_only via `@_Concurrency.MainActor` on the class; trivial but correct.
+
+    ## Cost & wall-time summary
+
+    - 15 of 16 subagents completed in < 4m. AppKit (the largest, 524 methods) took ~12.5m and consumed ~108k tokens. Foundation (510 methods) took ~5.4m and ~92k tokens. Total subagent wall-clock for the parallel batch was bounded by AppKit at ~12.5m.
+    - Aggregate token spend across all 16: ~900k (AppKit 108k, CloudKit 155k, Foundation 92k, RealityFoundation 66k, AppIntents 58k, others ≤ 50k each).
+    - The 35k + N×~250 tokens-per-method budget rule continued to hold; Foundation came in 30% under the rule again, AppKit slightly over (16-class delegate-pattern thoroughness on AppKit matters).
+
+    ## What this suggests next
+
+    1. **Workspace-wide enrich pass** is now a low-risk follow-up if downstream emitters need fresh derived relations across all frameworks (the 16 affected here are now consistent; the other 268 are unchanged).
+    2. **Annotation drift detection** could become a CI-style guardrail: a script that re-runs `llm-validate` on all 154 annotated frameworks would have caught this regression at the moment the foreign-module fix landed, rather than at the next manual triage. Prototype: `for f in analysis/ir/llm-annotations/*.llm.json; do … done` with a fail-fast.
+    3. **Subagent self-report drift** was clean on this run (all 16 reported counts matched validator-observed counts) — no recurrence of the CoreData-batch self-report drift incident.
+    4. **Heuristic improvements that could reduce future LLM additive value:** propagate `@MainActor`/`@_Concurrency.MainActor` Swift decorations into the heuristic threading pass (would cover the 416 main_thread_only annotations here automatically); recognize `@property (copy)` on block setters as a `stored` signal (Combine-family heuristic). Both would cut subagent token budget on future re-runs.

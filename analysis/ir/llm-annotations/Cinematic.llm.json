@@ -9,10 +9,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         },
         {
@@ -20,10 +17,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         }
       ]
@@ -36,10 +30,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         },
         {
@@ -47,10 +38,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         },
         {
@@ -58,10 +46,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         }
       ]
@@ -74,10 +59,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         },
         {
@@ -91,10 +73,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         }
       ]
@@ -107,10 +86,7 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ]
         }
       ]
@@ -123,44 +99,19 @@
           "is_instance": false,
           "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "async_copied"
-            }
+            {"param_index": 3, "invocation": "async_copied"}
           ]
-        }
-      ]
-    },
-    {
-      "class_name": "AVMutableComposition",
-      "methods": [
-        {
-          "selector": "loadValuesAsynchronouslyForKeys:completionHandler:",
-          "is_instance": true,
-          "source": "llm",
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ]
-        },
-        {
-          "selector": "statusOfValueForKey:error:",
-          "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param"
         }
       ]
     }
   ],
   "subagent_report": {
     "block_synchronous": 0,
-    "block_async_copied": 10,
+    "block_async_copied": 9,
     "block_stored": 0,
     "parameter_ownership": 0,
     "threading_main_thread_only": 0,
     "threading_any_thread": 0,
-    "error_pattern": 2
+    "error_pattern": 1
   }
 }

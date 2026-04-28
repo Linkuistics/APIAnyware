@@ -7,34 +7,38 @@
         {
           "selector": "dismissPopover:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "async_copied"}
-          ]
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
         },
         {
           "selector": "setCloudSharingDelegate:",
           "is_instance": true,
-          "source": "llm",
           "parameter_ownership": [
             {"param_index": 0, "ownership": "weak"}
-          ]
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
         },
         {
           "selector": "setCloudSharingServiceDelegate:",
           "is_instance": true,
-          "source": "llm",
           "parameter_ownership": [
             {"param_index": 0, "ownership": "weak"}
-          ]
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
-          "source": "llm",
           "parameter_ownership": [
             {"param_index": 0, "ownership": "weak"}
-          ]
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
         }
       ]
     },
@@ -44,78 +48,56 @@
         {
           "selector": "collaborationHighlightForIdentifier:error:",
           "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "threading": "any_thread",
+          "source": "llm"
         },
         {
           "selector": "getCollaborationHighlightForURL:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 1, "invocation": "async_copied"}
-          ]
+          ],
+          "threading": "any_thread",
+          "source": "llm"
         },
         {
           "selector": "getHighlightForURL:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 1, "invocation": "async_copied"}
-          ]
+          ],
+          "threading": "any_thread",
+          "source": "llm"
         },
         {
           "selector": "getSignedIdentityProofForCollaborationHighlight:usingData:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "threading": "any_thread",
+          "source": "llm"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
-          "source": "llm",
           "parameter_ownership": [
             {"param_index": 0, "ownership": "weak"}
-          ]
-        }
-      ]
-    },
-    {
-      "class_name": "SWCollaborationMetadata",
-      "methods": [
-        {
-          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
-          "is_instance": true,
-          "source": "llm",
-          "block_parameters": [
-            {"param_index": 1, "invocation": "async_copied"}
-          ]
-        },
-        {
-          "selector": "objectWithItemProviderData:typeIdentifier:error:",
-          "is_instance": false,
-          "source": "llm",
-          "error_pattern": "error_out_param"
-        },
-        {
-          "selector": "withExportedFile(contentType:fileHandler:)",
-          "is_instance": true,
-          "source": "llm",
-          "block_parameters": [
-            {"param_index": 1, "invocation": "synchronous"}
-          ]
+          ],
+          "threading": "any_thread",
+          "source": "llm"
         }
       ]
     }
   ],
   "subagent_report": {
-    "block_synchronous": 1,
-    "block_async_copied": 5,
+    "block_synchronous": 0,
+    "block_async_copied": 4,
     "block_stored": 0,
     "parameter_ownership": 4,
-    "threading_main_thread_only": 0,
-    "threading_any_thread": 0,
-    "error_pattern": 2
+    "threading_main_thread_only": 4,
+    "threading_any_thread": 5,
+    "error_pattern": 1
   }
 }

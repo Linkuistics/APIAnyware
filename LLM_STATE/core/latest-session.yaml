@@ -1,12 +1,15 @@
-id: session-48
-timestamp: 2026-04-28T11:25:47Z
+id: session-49
+timestamp: 2026-04-28T12:00:05Z
 phase: work
 body: |
-  ### Session 48 (2026-04-28T11:25:47Z) — Fix Swift extension method misattribution in methods extractor
+  ### Session 49 (2026-04-28T12:00:05Z) — Re-annotate 16 stale LLM frameworks after foreign-module extractor fix
 
-  - Investigated root cause of `SBElementArray.mapAnnotations(_:)` / `mapFeatures(_:)` appearing in ScriptingBridge IR despite those methods belonging to `CreateMLComponents`.
-  - Root cause confirmed: `swift-api-digester -dump-sdk -module X` re-emits any external type X extends as a top-level decl with `moduleName` pointing at the owning module. Pre-fix, the extractor walked these nodes indiscriminately, storing extension members in framework X's IR as if X declared them. At resolve-time, Datalog's `effective_method` rule then propagated those methods to every conforming class across all SDK frameworks.
-  - Fix applied in `collection/crates/extract-swift/src/declaration_mapping.rs`: added `is_foreign_module_type_decl()` helper and early-continue in `map_abi_to_framework` to drop top-level `Class`/`Protocol`/`Struct`/`Enum` decls whose `moduleName` differs from the framework root name. Functions and Vars are unaffected (they always carry the correct owning module name).
-  - Four synthetic tests added in `collection/crates/extract-swift/tests/declaration_mapping.rs` covering: foreign Protocol skipped, foreign Struct skipped, own protocol with matching module kept, decl without moduleName kept (defensive).
-  - The fix also covers SwiftUI → AppKit leakage (`beginSheet`, `animate` etc.) and any other framework-extension pattern with the same shape.
-  - Next: re-run extraction pipeline for affected frameworks (CreateMLComponents, SwiftUI, and any framework that extends foreign types), re-run resolve + LLM annotation, and validate `SBElementArray` no longer carries the spurious methods.
+  - Re-ran `llm-extract --only` on all 16 frameworks affected by the foreign-module type-decl filter fix; regenerated `.methods.json` summaries with the post-fix stable selector set.
+  - Deleted the 16 stale `.llm.json` files and dispatched 16 subagents in a single 16-way parallel salvo; all returned `warnings=0` without needing re-validation loops.
+  - Independent `llm-validate` pass: PASS=16, FAIL=0.
+  - Ran `annotate --llm-dir analysis/ir/llm-annotations --only <16>` and `enrich --only <16>`; all 16 reported `verification passed` with 0 violations.
+  - Net annotation additions: 1,971 LLM-additive annotations (158 sync, 406 async_copied, 280 stored, 405 weak/copy, 416 main_thread_only, 16 any_thread, 290 error_pattern) across the 16 frameworks.
+  - Wall-clock bounded by AppKit (~12.5m, 524 methods, ~108k tokens); Foundation ~5.4m (~92k tokens); total batch ~900k tokens across all 16.
+  - The task is complete; no follow-up annotation work is needed for these 16 frameworks.
+
+  What this suggests next: (1) workspace-wide enrich pass now that the 16 affected frameworks are consistent; (2) prototype a CI-style `llm-validate` drift-detection script to catch annotation staleness at the moment a collection fix lands rather than at next triage.

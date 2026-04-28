@@ -8,10 +8,7 @@
           "selector": "copyAsync(to:completionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -25,26 +22,19 @@
           "selector": "subscribe(to:on:componentType:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "stored"
-            }
+            {"param_index": 3, "invocation": "stored"}
           ],
+          "threading": "any_thread",
           "source": "llm"
         },
         {
           "selector": "updateAndRender(deltaTime:cameraOutput:whenScheduled:onComplete:actionsBeforeRender:actionsAfterRender:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            },
-            {
-              "param_index": 3,
-              "invocation": "async_copied"
-            }
+            {"param_index": 2, "invocation": "async_copied"},
+            {"param_index": 3, "invocation": "async_copied"}
           ],
+          "threading": "main_thread_only",
           "source": "llm"
         }
       ]
@@ -56,33 +46,27 @@
           "selector": "replaceUnsafeMutableBytes(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
+          "threading": "any_thread",
           "source": "llm"
         },
         {
           "selector": "withUnsafeBytes(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
+          "threading": "any_thread",
           "source": "llm"
         },
         {
           "selector": "withUnsafeMutableBytes(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
+          "threading": "any_thread",
           "source": "llm"
         }
       ]
@@ -91,29 +75,10 @@
       "class_name": "AnchorEntity",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -122,10 +87,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -134,10 +96,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -146,10 +105,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -158,10 +114,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -172,29 +125,10 @@
       "class_name": "PerspectiveCamera",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -203,10 +137,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -215,10 +146,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -227,10 +155,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -239,10 +164,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -253,29 +175,10 @@
       "class_name": "SpotLight",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -284,10 +187,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -296,10 +196,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -308,10 +205,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -320,10 +214,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -334,29 +225,10 @@
       "class_name": "DirectionalLight",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -365,10 +237,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -377,10 +246,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -389,10 +255,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -401,10 +264,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -415,29 +275,10 @@
       "class_name": "PointLight",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -446,10 +287,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -458,10 +296,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -470,10 +305,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -482,10 +314,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -496,29 +325,10 @@
       "class_name": "ModelEntity",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -527,10 +337,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -539,10 +346,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -551,10 +355,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -563,10 +364,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -577,29 +375,10 @@
       "class_name": "TriggerVolume",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -608,10 +387,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -620,10 +396,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -632,10 +405,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -644,10 +414,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -661,10 +428,7 @@
           "selector": "subscribe(to:on:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "stored"
-            }
+            {"param_index": 2, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -673,10 +437,7 @@
           "selector": "subscribe(to:on:componentType:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "stored"
-            }
+            {"param_index": 3, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -690,10 +451,7 @@
           "selector": "replaceUnsafeMutableBytes(bufferIndex:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            }
+            {"param_index": 1, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -702,10 +460,7 @@
           "selector": "replaceUnsafeMutableIndices(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -714,10 +469,7 @@
           "selector": "withUnsafeBytes(bufferIndex:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            }
+            {"param_index": 1, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -726,10 +478,7 @@
           "selector": "withUnsafeIndices(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -738,10 +487,7 @@
           "selector": "withUnsafeMutableBytes(bufferIndex:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            }
+            {"param_index": 1, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -750,10 +496,7 @@
           "selector": "withUnsafeMutableIndices(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -764,29 +507,10 @@
       "class_name": "Entity",
       "methods": [
         {
-          "selector": "animate(_:body:completion:)",
-          "is_instance": false,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "synchronous"
-            },
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
           "selector": "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "synchronous"
-            }
+            {"param_index": 3, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -795,10 +519,7 @@
           "selector": "playAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -807,10 +528,7 @@
           "selector": "prepareAudio(configuration:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -819,10 +537,7 @@
           "selector": "requestOwnership(timeout:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -831,10 +546,7 @@
           "selector": "withUnsynchronized(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
           "threading": "main_thread_only",
           "source": "llm"
@@ -848,33 +560,27 @@
           "selector": "replaceMutableTransforms(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
+          "threading": "any_thread",
           "source": "llm"
         },
         {
           "selector": "withMutableTransforms(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
+          "threading": "any_thread",
           "source": "llm"
         },
         {
           "selector": "withTransforms(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
+            {"param_index": 0, "invocation": "synchronous"}
           ],
+          "threading": "any_thread",
           "source": "llm"
         }
       ]
@@ -886,10 +592,7 @@
           "selector": "allSatisfy(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -897,18 +600,9 @@
           "selector": "breakpoint(receiveSubscription:receiveOutput:receiveCompletion:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            },
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            },
-            {
-              "param_index": 2,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"},
+            {"param_index": 1, "invocation": "stored"},
+            {"param_index": 2, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -916,10 +610,7 @@
           "selector": "catch(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -927,10 +618,7 @@
           "selector": "combineLatest(_:_:_:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "stored"
-            }
+            {"param_index": 3, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -938,10 +626,7 @@
           "selector": "compactMap(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -949,10 +634,7 @@
           "selector": "contains(where:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -960,10 +642,7 @@
           "selector": "drop(while:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -971,10 +650,7 @@
           "selector": "filter(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -982,10 +658,7 @@
           "selector": "first(where:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -993,10 +666,7 @@
           "selector": "flatMap(maxPublishers:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1004,26 +674,11 @@
           "selector": "handleEvents(receiveSubscription:receiveOutput:receiveCompletion:receiveCancel:receiveRequest:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            },
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            },
-            {
-              "param_index": 2,
-              "invocation": "stored"
-            },
-            {
-              "param_index": 3,
-              "invocation": "stored"
-            },
-            {
-              "param_index": 4,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"},
+            {"param_index": 1, "invocation": "stored"},
+            {"param_index": 2, "invocation": "stored"},
+            {"param_index": 3, "invocation": "stored"},
+            {"param_index": 4, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1031,10 +686,7 @@
           "selector": "last(where:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1042,10 +694,7 @@
           "selector": "map(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1053,10 +702,7 @@
           "selector": "mapError(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1064,10 +710,7 @@
           "selector": "max(by:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1075,10 +718,7 @@
           "selector": "min(by:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1086,10 +726,7 @@
           "selector": "multicast(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1097,10 +734,7 @@
           "selector": "prefix(while:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1108,10 +742,7 @@
           "selector": "reduce(_:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1119,10 +750,7 @@
           "selector": "removeDuplicates(by:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1130,10 +758,7 @@
           "selector": "scan(_:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1141,14 +766,8 @@
           "selector": "sink(receiveCompletion:receiveValue:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            },
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"},
+            {"param_index": 1, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1156,10 +775,7 @@
           "selector": "sink(receiveValue:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1167,10 +783,7 @@
           "selector": "timeout(_:scheduler:options:customError:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "stored"
-            }
+            {"param_index": 3, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1178,10 +791,7 @@
           "selector": "tryAllSatisfy(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1189,10 +799,7 @@
           "selector": "tryCatch(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1200,10 +807,7 @@
           "selector": "tryCompactMap(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1211,10 +815,7 @@
           "selector": "tryContains(where:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1222,10 +823,7 @@
           "selector": "tryDrop(while:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1233,10 +831,7 @@
           "selector": "tryFilter(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1244,10 +839,7 @@
           "selector": "tryFirst(where:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1255,10 +847,7 @@
           "selector": "tryLast(where:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1266,10 +855,7 @@
           "selector": "tryMap(_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1277,10 +863,7 @@
           "selector": "tryMax(by:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1288,10 +871,7 @@
           "selector": "tryMin(by:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1299,10 +879,7 @@
           "selector": "tryPrefix(while:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1310,10 +887,7 @@
           "selector": "tryReduce(_:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1321,10 +895,7 @@
           "selector": "tryRemoveDuplicates(by:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
+            {"param_index": 0, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1332,10 +903,7 @@
           "selector": "tryScan(_:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "stored"
-            }
+            {"param_index": 1, "invocation": "stored"}
           ],
           "source": "llm"
         },
@@ -1343,10 +911,7 @@
           "selector": "zip(_:_:_:_:)",
           "is_instance": true,
           "block_parameters": [
-            {
-              "param_index": 3,
-              "invocation": "stored"
-            }
+            {"param_index": 3, "invocation": "stored"}
           ],
           "source": "llm"
         }
@@ -1354,12 +919,12 @@
     }
   ],
   "subagent_report": {
-    "block_synchronous": 36,
-    "block_async_copied": 19,
+    "block_synchronous": 28,
+    "block_async_copied": 11,
     "block_stored": 66,
     "parameter_ownership": 0,
-    "threading_main_thread_only": 57,
-    "threading_any_thread": 0,
+    "threading_main_thread_only": 50,
+    "threading_any_thread": 7,
     "error_pattern": 0
   }
 }

@@ -7,89 +7,56 @@
         {
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
+            {"param_index": 2, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 0,
-              "ownership": "weak"
-            }
+            {"param_index": 0, "ownership": "weak"}
           ],
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "transferWindowSharingToWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         }
       ]
     },
@@ -99,101 +66,65 @@
         {
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 1,
-              "ownership": "weak"
-            }
+            {"param_index": 1, "ownership": "weak"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
+            {"param_index": 2, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 0,
-              "ownership": "weak"
-            }
+            {"param_index": 0, "ownership": "weak"}
           ],
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "transferWindowSharingToWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         }
       ]
     },
@@ -203,89 +134,56 @@
         {
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
+            {"param_index": 2, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 0,
-              "ownership": "weak"
-            }
+            {"param_index": 0, "ownership": "weak"}
           ],
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "transferWindowSharingToWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         }
       ]
     },
@@ -295,101 +193,65 @@
         {
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 1,
-              "ownership": "weak"
-            }
+            {"param_index": 1, "ownership": "weak"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
+            {"param_index": 2, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 0,
-              "ownership": "weak"
-            }
+            {"param_index": 0, "ownership": "weak"}
           ],
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "transferWindowSharingToWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         }
       ]
     },
@@ -399,108 +261,72 @@
         {
           "selector": "beginCriticalSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 1,
-              "ownership": "weak"
-            }
+            {"param_index": 1, "ownership": "weak"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
-        },
-        {
-          "selector": "beginSheet(content:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "async_copied"
-            },
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "beginSheet:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "async_copied"
-            }
+            {"param_index": 2, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
-            {
-              "param_index": 0,
-              "ownership": "weak"
-            }
+            {"param_index": 0, "ownership": "weak"}
           ],
-          "source": "llm"
+          "threading": "main_thread_only"
         },
         {
           "selector": "transferWindowSharingToWindow:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
+            {"param_index": 1, "invocation": "async_copied"}
           ],
-          "threading": "main_thread_only",
-          "source": "llm"
+          "threading": "main_thread_only"
         }
       ]
     }
   ],
   "subagent_report": {
     "block_synchronous": 0,
-    "block_async_copied": 35,
+    "block_async_copied": 25,
     "block_stored": 0,
     "parameter_ownership": 8,
     "threading_main_thread_only": 33,

@@ -5,42 +5,13 @@
       "class_name": "IOBluetoothDevice",
       "methods": [
         {
-          "selector": "openL2CAPChannelAsync:withPSM:delegate:",
-          "is_instance": true,
-          "parameter_ownership": [
-            {"param_index": 2, "ownership": "weak"}
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "openL2CAPChannelAsync:withPSM:withConfiguration:delegate:",
-          "is_instance": true,
-          "parameter_ownership": [
-            {"param_index": 3, "ownership": "weak"}
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "openL2CAPChannelSync:withPSM:delegate:",
-          "is_instance": true,
-          "parameter_ownership": [
-            {"param_index": 2, "ownership": "weak"}
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "openL2CAPChannelSync:withPSM:withConfiguration:delegate:",
-          "is_instance": true,
-          "parameter_ownership": [
-            {"param_index": 3, "ownership": "weak"}
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "openRFCOMMChannelAsync:withChannelID:delegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 2, "ownership": "weak"}
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         },
@@ -48,7 +19,10 @@
           "selector": "openRFCOMMChannelSync:withChannelID:delegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 2, "ownership": "weak"}
+            {
+              "param_index": 2,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -61,7 +35,10 @@
           "selector": "initWithDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         },
@@ -69,7 +46,10 @@
           "selector": "inquiryWithDelegate:",
           "is_instance": false,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         },
@@ -77,7 +57,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -90,7 +73,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -103,7 +89,10 @@
           "selector": "initWithDevice:delegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 1, "ownership": "weak"}
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         },
@@ -111,7 +100,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -124,7 +116,10 @@
           "selector": "initWithDevice:delegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 1, "ownership": "weak"}
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         },
@@ -132,7 +127,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -145,7 +143,10 @@
           "selector": "initWithDevice:delegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 1, "ownership": "weak"}
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         },
@@ -153,7 +154,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -166,28 +170,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
-          ],
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "IOBluetoothL2CAPChannel",
-      "methods": [
-        {
-          "selector": "setDelegate:",
-          "is_instance": true,
-          "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "setDelegate:withConfiguration:",
-          "is_instance": true,
-          "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -200,28 +186,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
-          ],
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "IOBluetoothSDPUUID",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "synchronous"}
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {"param_index": 0, "invocation": "synchronous"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -234,7 +202,10 @@
           "selector": "setDelegate:",
           "is_instance": true,
           "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
           ],
           "source": "llm"
         }
@@ -242,10 +213,10 @@
     }
   ],
   "subagent_report": {
-    "block_synchronous": 2,
+    "block_synchronous": 0,
     "block_async_copied": 0,
     "block_stored": 0,
-    "parameter_ownership": 21,
+    "parameter_ownership": 15,
     "threading_main_thread_only": 0,
     "threading_any_thread": 0,
     "error_pattern": 0

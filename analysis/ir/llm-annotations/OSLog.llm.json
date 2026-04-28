@@ -2,70 +2,43 @@
   "framework": "OSLog",
   "classes": [
     {
-      "class_name": "OSLogEnumerator",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "source": "llm",
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ]
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "source": "llm",
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "class_name": "OSLogStore",
       "methods": [
         {
           "selector": "entriesEnumeratorAndReturnError:",
           "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         },
         {
           "selector": "entriesEnumeratorWithOptions:position:predicate:error:",
           "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         },
         {
           "selector": "localStoreAndReturnError:",
           "is_instance": false,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         },
         {
           "selector": "storeWithScope:error:",
           "is_instance": false,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         },
         {
           "selector": "storeWithURL:error:",
           "is_instance": false,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         }
       ]
     }
   ],
   "subagent_report": {
-    "block_synchronous": 2,
+    "block_synchronous": 0,
     "block_async_copied": 0,
     "block_stored": 0,
     "parameter_ownership": 0,

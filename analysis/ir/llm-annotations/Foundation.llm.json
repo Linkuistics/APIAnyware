@@ -7,8 +7,8 @@
         {
           "selector": "sendEventWithOptions:timeout:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -16,209 +16,187 @@
       "class_name": "NSArray",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "writeToURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "enumerateObjectsUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateObjectsWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateObjectsAtIndexes:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObjectPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObjectWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObjectAtIndexes:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesOfObjectsPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesOfObjectsWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesOfObjectsAtIndexes:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortedArrayUsingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortedArrayWithOptions:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObject:inSortedRange:options:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithContentsOfURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "arrayWithContentsOfURL:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "differenceFromArray:withOptions:usingEquivalenceTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addObserver:toObjectsAtIndexes:forKeyPath:options:context:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addObserver:forKeyPath:options:context:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -228,42 +206,42 @@
         {
           "selector": "enumerateAttributesInRange:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateAttribute:inRange:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithContentsOfMarkdownFileAtURL:options:baseURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithMarkdown:options:baseURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithMarkdownString:options:baseURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -273,13 +251,13 @@
         {
           "selector": "scheduleWithBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "stored"
+              "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -289,35 +267,35 @@
         {
           "selector": "addExecutionBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "stored"
+              "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "blockOperationWithBlock:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "stored"
+              "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setCompletionBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -327,14 +305,14 @@
         {
           "selector": "loadAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "preflightAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -344,20 +322,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -367,13 +345,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -383,13 +361,13 @@
         {
           "selector": "enumerateDatesStartingAfterDate:matchingComponents:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -399,26 +377,26 @@
         {
           "selector": "decodeTopLevelObjectAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "decodeTopLevelObjectForKey:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "decodeTopLevelObjectOfClass:forKey:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "decodeTopLevelObjectOfClasses:forKey:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -428,19 +406,19 @@
         {
           "selector": "allowEvaluationWithValidator:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "predicateWithBlock:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -450,19 +428,19 @@
         {
           "selector": "allowEvaluationWithValidator:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "predicateWithBlock:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -472,13 +450,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -488,46 +466,19 @@
         {
           "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "objectWithItemProviderData:typeIdentifier:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSCountedSet",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -535,60 +486,38 @@
       "class_name": "NSData",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "enumerateByteRangesUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithBytesNoCopy:length:deallocator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "decompressedDataUsingAlgorithm:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "compressedDataUsingAlgorithm:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -598,26 +527,26 @@
         {
           "selector": "dataDetectorWithTypes:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithPattern:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithTypes:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "regularExpressionWithPattern:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -627,20 +556,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -650,26 +579,26 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "getObjectValue:forString:range:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -679,20 +608,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -700,137 +629,88 @@
       "class_name": "NSDictionary",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "writeToURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "enumerateKeysAndObjectsUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateKeysAndObjectsWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "keysSortedByValueUsingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "keysSortedByValueWithOptions:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "keysOfEntriesPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "keysOfEntriesWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithContentsOfURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "dictionaryWithContentsOfURL:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSDirectoryEnumerator",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -840,35 +720,35 @@
         {
           "selector": "addObserver:selector:name:object:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addObserver:selector:name:object:suspensionBehavior:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addObserverForName:object:queue:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -878,47 +758,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSEnumerator",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -928,13 +781,13 @@
         {
           "selector": "setUserInfoValueProviderForDomain:provider:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -944,13 +797,13 @@
         {
           "selector": "expressionForBlock:arguments:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -960,24 +813,24 @@
         {
           "selector": "completeRequestReturningItems:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "openURL:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -987,68 +840,68 @@
         {
           "selector": "coordinateAccessWithIntents:queue:byAccessor:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
-              "invocation": "synchronous"
+              "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "coordinateReadingItemAtURL:options:error:byAccessor:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "coordinateReadingItemAtURL:options:writingItemAtURL:options:error:byAccessor:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 5,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "coordinateWritingItemAtURL:options:error:byAccessor:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "coordinateWritingItemAtURL:options:writingItemAtURL:options:error:byAccessor:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 5,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "prepareForReadingItemsAtURLs:options:writingItemsAtURLs:options:error:byAccessor:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 5,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1058,96 +911,96 @@
         {
           "selector": "closeAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "getOffset:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "readDataToEndOfFileAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "readDataUpToLength:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "seekToEndReturningOffset:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "seekToOffset:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "synchronizeAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "truncateAtOffset:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "writeData:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "fileHandleForReadingFromURL:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "fileHandleForWritingToURL:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "fileHandleForUpdatingURL:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "setReadabilityHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setWriteabilityHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1157,258 +1010,258 @@
         {
           "selector": "URLForDirectory:inDomain:appropriateForURL:create:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "URLForPublishingUbiquitousItemAtURL:expirationDate:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "attributesOfFileSystemForPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "attributesOfItemAtPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "contentsOfDirectoryAtPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "copyItemAtPath:toPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "copyItemAtURL:toURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "createDirectoryAtPath:withIntermediateDirectories:attributes:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "createDirectoryAtURL:withIntermediateDirectories:attributes:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "createSymbolicLinkAtPath:withDestinationPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "createSymbolicLinkAtURL:withDestinationURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "destinationOfSymbolicLinkAtPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "enumeratorAtURL:includingPropertiesForKeys:options:errorHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
-              "invocation": "async_copied"
+              "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "evictUbiquitousItemAtURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "fetchLatestRemoteVersionOfItemAtURL:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "getFileProviderServicesForItemAtURL:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "getRelationship:ofDirectory:inDomain:toItemAtURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "getRelationship:ofDirectoryAtURL:toItemAtURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "linkItemAtPath:toPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "linkItemAtURL:toURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "moveItemAtPath:toPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "moveItemAtURL:toURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "pauseSyncForUbiquitousItemAtURL:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "removeItemAtPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "removeItemAtURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "replaceItemAtURL:withItemAtURL:backupItemName:options:resultingItemURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "resumeSyncForUbiquitousItemAtURL:withBehavior:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setAttributes:ofItemAtPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setUbiquitous:itemAtURL:destinationURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "startDownloadingUbiquitousItemAtURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "subpathsOfDirectoryAtPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "trashItemAtURL:resultingItemURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "unmountVolumeAtURL:options:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "uploadLocalVersionOfUbiquitousItemAtURL:withConflictResolutionPolicy:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1418,13 +1271,13 @@
         {
           "selector": "getFileProviderConnectionWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1434,37 +1287,37 @@
         {
           "selector": "addVersionOfItemAtURL:withContentsOfURL:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "getNonlocalVersionsOfItemAtURL:completionHandler:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "removeAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "removeOtherVersionsOfItemAtURL:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "replaceItemAtURL:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -1474,20 +1327,20 @@
         {
           "selector": "initWithURL:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "readFromURL:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "writeToURL:options:originalContentsURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -1497,20 +1350,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -1520,13 +1373,13 @@
         {
           "selector": "getCookiesForTask:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1536,20 +1389,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -1559,156 +1412,134 @@
         {
           "selector": "enumerateIndexesInRange:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateIndexesUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateIndexesWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateRangesInRange:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateRangesUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateRangesWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexInRange:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesInRange:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1718,13 +1549,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1734,13 +1565,13 @@
         {
           "selector": "setCompletionBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1750,189 +1581,145 @@
         {
           "selector": "loadDataRepresentationForTypeIdentifier:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "loadFileRepresentationForTypeIdentifier:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "loadInPlaceFileRepresentationForTypeIdentifier:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "loadItemForTypeIdentifier:options:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "loadObject(ofClass:completionHandler:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "loadObjectOfClass:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "loadTransferable(type:completionHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 1,
-              "invocation": "async_copied"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "register(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "registerCKShare(container:allowedSharingOptions:preparationHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 2,
-              "invocation": "stored"
-            }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "registerDataRepresentationForTypeIdentifier:visibility:loadHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "registerFileRepresentationForTypeIdentifier:fileOptions:visibility:loadHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "registerGroupActivity(preparationHandler:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "stored"
-            }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "registerItemForTypeIdentifier:loadHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "registerObject(ofClass:visibility:loadHandler:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "registerObjectOfClass:visibility:loadHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "loadPreviewImageWithOptions:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setPreviewImageHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1942,26 +1729,26 @@
         {
           "selector": "JSONObjectWithData:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "JSONObjectWithStream:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "dataWithJSONObject:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "writeJSONObject:toStream:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -1971,24 +1758,24 @@
         {
           "selector": "addObserver:forKeyPath:options:context:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addSharedObserver:forKey:options:context:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -1998,19 +1785,19 @@
         {
           "selector": "archivedDataWithRootObject:requiringSecureCoding:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2020,61 +1807,61 @@
         {
           "selector": "initForReadingFromData:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "unarchiveTopLevelObjectWithData:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "unarchivedArrayOfObjectsOfClass:fromData:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "unarchivedArrayOfObjectsOfClasses:fromData:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "unarchivedDictionaryWithKeysOfClass:objectsOfClass:fromData:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "unarchivedDictionaryWithKeysOfClasses:objectsOfClasses:fromData:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "unarchivedObjectOfClass:fromData:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "unarchivedObjectOfClasses:fromData:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2084,20 +1871,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2107,35 +1894,35 @@
         {
           "selector": "enumerateTagsForString:range:unit:scheme:options:orthography:usingBlock:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 6,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateTagsInRange:scheme:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateTagsInRange:unit:scheme:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 4,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2145,20 +1932,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2168,13 +1955,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2184,20 +1971,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2207,20 +1994,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2230,13 +2017,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2246,35 +2033,35 @@
         {
           "selector": "enumerateResultsUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateResultsWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2284,8 +2071,8 @@
         {
           "selector": "setCustomPronoun:forLanguage:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2293,48 +2080,26 @@
       "class_name": "NSMutableArray",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "sortUsingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortWithOptions:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2342,65 +2107,16 @@
       "class_name": "NSMutableData",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "decompressUsingAlgorithm:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "compressUsingAlgorithm:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSMutableDictionary",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2410,156 +2126,134 @@
         {
           "selector": "enumerateIndexesInRange:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateIndexesUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateIndexesWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateRangesInRange:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateRangesUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateRangesWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexInRange:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesInRange:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2567,86 +2261,37 @@
       "class_name": "NSMutableOrderedSet",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "sortUsingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortWithOptions:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortRange:options:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSMutableSet",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2656,19 +2301,19 @@
         {
           "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "objectWithItemProviderData:typeIdentifier:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2678,13 +2323,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2694,13 +2339,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2710,24 +2355,24 @@
         {
           "selector": "addObserver:selector:name:object:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addObserverForName:object:queue:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2737,26 +2382,26 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "getObjectValue:forString:range:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -2766,13 +2411,13 @@
         {
           "selector": "setCompletionBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2782,24 +2427,24 @@
         {
           "selector": "addBarrierBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addOperationWithBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2809,13 +2454,13 @@
         {
           "selector": "differenceByTransformingChangesWithBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "synchronous"
+              "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -2823,180 +2468,158 @@
       "class_name": "NSOrderedSet",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "enumerateObjectsUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateObjectsWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateObjectsAtIndexes:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObjectPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObjectWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObjectAtIndexes:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesOfObjectsPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesOfObjectsWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexesOfObjectsAtIndexes:options:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "indexOfObject:inSortedRange:options:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortedArrayUsingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortedArrayWithOptions:usingComparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "differenceFromOrderedSet:withOptions:usingEquivalenceTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addObserver:forKeyPath:options:context:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3006,13 +2629,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3022,20 +2645,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -3045,13 +2668,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3061,19 +2684,19 @@
         {
           "selector": "allowEvaluationWithValidator:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "predicateWithBlock:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3083,13 +2706,13 @@
         {
           "selector": "performActivityWithOptions:reason:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3099,57 +2722,57 @@
         {
           "selector": "addSubscriberForFileURL:withPublishingHandler:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "performAsCurrentWithPendingUnitCount:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setCancellationHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setPausingHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setResumingHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3159,53 +2782,26 @@
         {
           "selector": "dataWithPropertyList:format:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "propertyListWithData:options:format:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "propertyListWithStream:options:format:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "writePropertyList:toStream:format:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
-        }
-      ]
-    },
-    {
-      "class_name": "NSPurgeableData",
-      "methods": [
-        {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -3215,25 +2811,25 @@
         {
           "selector": "initWithPattern:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "regularExpressionWithPattern:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "enumerateMatchesInString:options:range:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3243,20 +2839,20 @@
         {
           "selector": "getObjectValue:forString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:newEditingString:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -3266,24 +2862,24 @@
         {
           "selector": "performInModes:block:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "performBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3291,81 +2887,59 @@
       "class_name": "NSSet",
       "methods": [
         {
-          "selector": "mapAnnotations(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
-          "selector": "mapFeatures(_:)",
-          "is_instance": true,
-          "block_parameters": [
-            {
-              "param_index": 0,
-              "invocation": "synchronous"
-            }
-          ],
-          "source": "llm"
-        },
-        {
           "selector": "enumerateObjectsUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateObjectsWithOptions:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "objectsPassingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "objectsWithOptions:passingTest:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "addObserver:forKeyPath:options:context:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3375,19 +2949,19 @@
         {
           "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "objectWithItemProviderData:typeIdentifier:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -3397,13 +2971,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3413,35 +2987,35 @@
         {
           "selector": "init(keyPath:ascending:comparator:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithKey:ascending:comparator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sortDescriptorWithKey:ascending:comparator:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3451,13 +3025,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3467,13 +3041,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3483,170 +3057,170 @@
         {
           "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "objectWithItemProviderData:typeIdentifier:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "enumerateSubstringsInRange:options:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "enumerateLinesUsingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "writeToURL:atomically:encoding:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "writeToFile:atomically:encoding:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithCharactersNoCopy:length:deallocator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithValidatedFormat:validFormatSpecifiers:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithValidatedFormat:validFormatSpecifiers:locale:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithValidatedFormat:validFormatSpecifiers:arguments:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithValidatedFormat:validFormatSpecifiers:locale:arguments:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithBytesNoCopy:length:encoding:deallocator:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "stringWithValidatedFormat:validFormatSpecifiers:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "localizedStringWithValidatedFormat:validFormatSpecifiers:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithContentsOfURL:encoding:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithContentsOfFile:encoding:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "stringWithContentsOfURL:encoding:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "stringWithContentsOfFile:encoding:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithContentsOfURL:usedEncoding:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithContentsOfFile:usedEncoding:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "stringWithContentsOfURL:usedEncoding:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "stringWithContentsOfFile:usedEncoding:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "enumerateLinguisticTagsInRange:scheme:options:orthography:usingBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 4,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3656,30 +3230,30 @@
         {
           "selector": "launchAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "setTerminationHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "launchedTaskWithExecutableURL:arguments:error:terminationHandler:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3689,24 +3263,24 @@
         {
           "selector": "detachNewThreadWithBlock:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3716,35 +3290,35 @@
         {
           "selector": "initWithFireDate:interval:repeats:block:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "scheduledTimerWithTimeInterval:repeats:block:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "timerWithTimeInterval:repeats:block:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3754,103 +3328,103 @@
         {
           "selector": "URLByResolvingAliasFileAtURL:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "URLByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "bookmarkDataWithContentsOfURL:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "getResourceValue:forKey:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "objectWithItemProviderData:typeIdentifier:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "resourceValuesForKeys:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "setResourceValue:forKey:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "setResourceValues:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "writeBookmarkData:toURL:options:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "getPromisedItemResourceValue:forKey:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "promisedItemResourceValuesForKeys:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "checkPromisedItemIsReachableAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "checkResourceIsReachableAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -3860,13 +3434,13 @@
         {
           "selector": "getCachedResponseForDataTask:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3876,19 +3450,19 @@
         {
           "selector": "sendSynchronousRequest:returningResponse:error:",
           "is_instance": false,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "sendAsynchronousRequest:queue:completionHandler:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3898,24 +3472,24 @@
         {
           "selector": "getCredentialsForProtectionSpace:task:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "getDefaultCredentialForProtectionSpace:task:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -3925,134 +3499,134 @@
         {
           "selector": "flushWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "getAllTasksWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "getTasksWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "resetWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "dataTaskWithRequest:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "dataTaskWithURL:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "uploadTaskWithRequest:fromFile:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "uploadTaskWithRequest:fromData:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "uploadTaskWithResumeData:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "downloadTaskWithRequest:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "downloadTaskWithURL:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "downloadTaskWithResumeData:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4062,13 +3636,13 @@
         {
           "selector": "cancelByProducingResumeData:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4078,24 +3652,24 @@
         {
           "selector": "readDataOfMinLength:maxLength:timeout:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "writeData:timeout:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4105,13 +3679,13 @@
         {
           "selector": "cancelByProducingResumeData:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4121,35 +3695,35 @@
         {
           "selector": "receiveMessageWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sendMessage:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "sendPingWithPongReceiveHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4159,13 +3733,13 @@
         {
           "selector": "registerUndoWithTarget:handler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4175,46 +3749,46 @@
         {
           "selector": "deleteAllSavedUserActivitiesWithCompletionHandler:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "deleteSavedUserActivitiesWithPersistentIdentifiers:completionHandler:",
           "is_instance": false,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "getContinuationStreamsWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4224,30 +3798,30 @@
         {
           "selector": "executeWithAppleEvent:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "executeWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4257,30 +3831,30 @@
         {
           "selector": "executeWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "executeWithInput:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4290,13 +3864,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4306,19 +3880,19 @@
         {
           "selector": "executeWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4328,30 +3902,30 @@
         {
           "selector": "executeWithArguments:completionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "executeWithCompletionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "initWithURL:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4361,32 +3935,32 @@
         {
           "selector": "initWithContentsOfURL:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithData:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "nodesForXPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:constants:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4396,20 +3970,20 @@
         {
           "selector": "nodesForXPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:constants:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4419,62 +3993,62 @@
         {
           "selector": "initWithContentsOfURL:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithData:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "initWithXMLString:options:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "nodesForXPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectByApplyingXSLT:arguments:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectByApplyingXSLTAtURL:arguments:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectByApplyingXSLTString:arguments:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:constants:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "validateAndReturnError:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4484,26 +4058,26 @@
         {
           "selector": "initWithXMLString:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "nodesForXPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:constants:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4513,20 +4087,20 @@
         {
           "selector": "nodesForXPath:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:constants:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         },
         {
           "selector": "objectsForXQuery:error:",
           "is_instance": true,
-          "error_pattern": "error_out_param",
-          "source": "llm"
+          "source": "llm",
+          "error_pattern": "error_out_param"
         }
       ]
     },
@@ -4536,13 +4110,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4552,57 +4126,57 @@
         {
           "selector": "remoteObjectProxyWithErrorHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "stored"
+              "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "scheduleSendBarrierBlock:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setInterruptionHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "setInvalidationHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "synchronousRemoteObjectProxyWithErrorHandler:",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
-              "invocation": "stored"
+              "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4612,13 +4186,13 @@
         {
           "selector": "setDelegate:",
           "is_instance": true,
+          "source": "llm",
           "parameter_ownership": [
             {
               "param_index": 0,
               "ownership": "weak"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4628,90 +4202,90 @@
         {
           "selector": "schedule(_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:interval:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:interval:tolerance:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:interval:tolerance:options:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 4,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:tolerance:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:tolerance:options:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(options:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4721,13 +4295,13 @@
         {
           "selector": "enumerator(at:includingPropertiesForKeys:options:errorHandler:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4737,13 +4311,13 @@
         {
           "selector": "addObserver(of:for:using:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4753,13 +4327,13 @@
         {
           "selector": "registerUndo(withTarget:handler:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "stored"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4769,90 +4343,90 @@
         {
           "selector": "schedule(_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:interval:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:interval:tolerance:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:interval:tolerance:options:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 4,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:tolerance:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 2,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(after:tolerance:options:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 3,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "schedule(options:_:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4862,24 +4436,24 @@
         {
           "selector": "receive(completionHandler:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 0,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         },
         {
           "selector": "send(_:completionHandler:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "async_copied"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     },
@@ -4889,15 +4463,24 @@
         {
           "selector": "performAsCurrent(withPendingUnitCount:using:)",
           "is_instance": true,
+          "source": "llm",
           "block_parameters": [
             {
               "param_index": 1,
               "invocation": "synchronous"
             }
-          ],
-          "source": "llm"
+          ]
         }
       ]
     }
-  ]
+  ],
+  "subagent_report": {
+    "block_synchronous": 88,
+    "block_async_copied": 85,
+    "block_stored": 41,
+    "parameter_ownership": 29,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 204
+  }
 }

@@ -7,10 +7,10 @@
         {
           "selector": "requestContentEditingInputWithOptions:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 1, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -20,19 +20,19 @@
         {
           "selector": "requestDataForAssetResource:options:dataReceivedHandler:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "stored"},
             {"param_index": 3, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "writeDataForAssetResource:toFile:options:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 3, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -42,10 +42,10 @@
         {
           "selector": "setProgressHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "stored"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -55,50 +55,50 @@
         {
           "selector": "requestAVAssetForVideo:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestExportSessionForVideo:options:exportPreset:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 3, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestImageDataAndOrientationForAsset:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestImageForAsset:targetSize:contentMode:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 4, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestLivePhotoForAsset:targetSize:contentMode:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 4, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestPlayerItemForVideo:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -108,18 +108,18 @@
         {
           "selector": "setCanHandleAdjustmentData:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "stored"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "setProgressHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "stored"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -129,8 +129,8 @@
         {
           "selector": "renderedContentURLForType:error:",
           "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         }
       ]
     },
@@ -140,26 +140,26 @@
         {
           "selector": "enumerateObjectsAtIndexes:options:usingBlock:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "synchronous"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "enumerateObjectsUsingBlock:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "synchronous"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "enumerateObjectsWithOptions:usingBlock:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 1, "invocation": "synchronous"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -169,10 +169,10 @@
         {
           "selector": "enumerateMovesWithBlock:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "synchronous"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -182,50 +182,50 @@
         {
           "selector": "requestAVAssetForVideo:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestExportSessionForVideo:options:exportPreset:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 3, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestImageDataAndOrientationForAsset:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestImageForAsset:targetSize:contentMode:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 4, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestLivePhotoForAsset:targetSize:contentMode:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 4, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestPlayerItemForVideo:options:resultHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -235,10 +235,10 @@
         {
           "selector": "setProgressHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "stored"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -246,18 +246,12 @@
       "class_name": "PHLivePhoto",
       "methods": [
         {
-          "selector": "objectWithItemProviderData:typeIdentifier:error:",
-          "is_instance": false,
-          "source": "llm",
-          "error_pattern": "error_out_param"
-        },
-        {
           "selector": "requestLivePhotoWithResourceFileURLs:placeholderImage:targetSize:contentMode:resultHandler:",
           "is_instance": false,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 4, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -267,26 +261,26 @@
         {
           "selector": "prepareLivePhotoForPlaybackWithTargetSize:options:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "saveLivePhotoToOutput:options:completionHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 2, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "setFrameProcessor:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "stored"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -296,10 +290,10 @@
         {
           "selector": "setProgressHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "stored"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -309,8 +303,8 @@
         {
           "selector": "changeDetailsForObjectType:error:",
           "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         }
       ]
     },
@@ -320,10 +314,10 @@
         {
           "selector": "enumerateChangesWithBlock:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "synchronous"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -333,75 +327,42 @@
         {
           "selector": "fetchPersistentChangesSinceToken:error:",
           "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param"
+          "error_pattern": "error_out_param",
+          "source": "llm"
         },
         {
           "selector": "performChanges:completionHandler:",
           "is_instance": true,
-          "source": "llm",
-          "threading": "any_thread",
           "block_parameters": [
-            {"param_index": 0, "invocation": "async_copied"},
+            {"param_index": 0, "invocation": "synchronous"},
             {"param_index": 1, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "performChangesAndWait:error:",
           "is_instance": true,
-          "source": "llm",
-          "error_pattern": "error_out_param",
           "block_parameters": [
             {"param_index": 0, "invocation": "synchronous"}
-          ]
-        },
-        {
-          "selector": "registerAvailabilityObserver:",
-          "is_instance": true,
-          "source": "llm",
-          "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
-          ]
-        },
-        {
-          "selector": "registerChangeObserver:",
-          "is_instance": true,
-          "source": "llm",
-          "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
-          ]
+          ],
+          "error_pattern": "error_out_param",
+          "source": "llm"
         },
         {
           "selector": "requestAuthorization:",
           "is_instance": false,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "async_copied"}
-          ]
+          ],
+          "source": "llm"
         },
         {
           "selector": "requestAuthorizationForAccessLevel:handler:",
           "is_instance": false,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 1, "invocation": "async_copied"}
-          ]
-        },
-        {
-          "selector": "unregisterAvailabilityObserver:",
-          "is_instance": true,
-          "source": "llm",
-          "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
-          ]
-        },
-        {
-          "selector": "unregisterChangeObserver:",
-          "is_instance": true,
-          "source": "llm",
-          "parameter_ownership": [
-            {"param_index": 0, "ownership": "weak"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     },
@@ -411,21 +372,21 @@
         {
           "selector": "setProgressHandler:",
           "is_instance": true,
-          "source": "llm",
           "block_parameters": [
             {"param_index": 0, "invocation": "stored"}
-          ]
+          ],
+          "source": "llm"
         }
       ]
     }
   ],
   "subagent_report": {
-    "block_synchronous": 6,
-    "block_async_copied": 22,
+    "block_synchronous": 7,
+    "block_async_copied": 21,
     "block_stored": 8,
-    "parameter_ownership": 4,
+    "parameter_ownership": 0,
     "threading_main_thread_only": 0,
-    "threading_any_thread": 1,
-    "error_pattern": 5
+    "threading_any_thread": 0,
+    "error_pattern": 4
   }
 }
