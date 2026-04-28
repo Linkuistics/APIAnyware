@@ -460,9 +460,16 @@ entries:
     Contrast with scalar fields (`threading`, `error_pattern`): those use empty-fallback
     (LLM value if non-empty, else heuristic), not per-param union.
 - id: annotate-without-llm-dir-re-tags-prior-annotations-as-llm-source
-  title: annotate without --llm-dir re-tags prior annotations as LLM source
+  title: annotate checkpoint fallback returns only LLM-sourced entries
   body: |
-    `annotate` without `--llm-dir` falls back to the prior annotated checkpoint file as its LLM source (`analysis/crates/annotate/src/lib.rs:62-77`) and re-tags every annotation as `source = Llm`. Workaround for heuristic-only baseline runs: delete `analysis/ir/annotated/{Framework}.json` before running `annotate` without `--llm-dir`.
+    `annotate` without `--llm-dir` falls back to the prior annotated checkpoint via
+    `load_existing_llm_annotations` (`analysis/crates/annotate/src/lib.rs`).
+    The fallback applies `retain_llm_sourced` — a pure filter that drops any
+    `source = Heuristic` entries and prunes classes with no remaining methods —
+    then returns `None` when no LLM-sourced entries survive. A heuristic-only
+    rerun therefore produces only `source = Heuristic` output with no LLM-source
+    contamination. The prior workaround (delete `analysis/ir/annotated/{Framework}.json`
+    before a heuristic-only run) is no longer needed.
 - id: block-parameters-list-replace-is-safe-by-coincidence-apply-per-elem-union-if-divergence-observed
   title: block_parameters list-replace is safe-by-coincidence — apply per-elem union if divergence observed
   body: |
