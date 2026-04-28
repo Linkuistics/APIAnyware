@@ -1,22 +1,11 @@
-id: session-38
-timestamp: 2026-04-28T00:27:48Z
+id: session-39
+timestamp: 2026-04-28T01:04:35Z
 phase: work
 body: |
-  ### Session 38 (2026-04-28T00:27:48Z) — WebKit LLM annotation calibration and 100-method cost anchor
+  ### Session 39 (2026-04-28T01:04:35Z) — Fix parameter_ownership merge-clobber in validate::merge_annotations
 
-  - **Attempted:** Run a full LLM annotation calibration pass on a naming-pattern-defeating framework (~100 methods) to measure LLM additive contribution vs heuristics and tighten the per-method token cost estimate before committing to a Foundation run.
-  - **Worked:**
-    - Chose WebKit (86 flagged methods; 54 `has_block_params` + 26 `delegate_observer_pattern` + 6 `error_out_param`) over IOUSBHost (115 methods but 92 `error_out_param` — would have diluted additive signal).
-    - Deleted the prior heuristic checkpoint, re-ran `llm-extract` and heuristic-only `annotate` to get a clean baseline (72/86 methods annotated, 66 `parameter_ownership`, 0 `threading`).
-    - Dispatched LLM subagent per template: 80,907 tokens, 24 tool uses, ~3m wall time. `llm-validate` and `enrich` verification both passed.
-    - **Headline win: +63 `threading: main_thread_only` annotations** from class-level `WK_SWIFT_UI_ACTOR` decorations on all 13 `WK*` classes — heuristics cannot read C-macro decorators.
-    - **Secondary win: +2 newly annotated methods** — legacy `WebView` `assign`-attribute delegate setters got `weak` ownership; heuristics miss pre-ARC attribute syntax.
-    - Block/error patterns: 0 LLM-vs-heuristic delta — confirms heuristic patterns are complete for `*completionHandler*` and `NSError**` cases.
-    - Marginal cost: `(80,907 − 35,000) / 86 ≈ 534 tokens/method`, consistent with the prior ~500/method estimate; Foundation projects to ~326k tokens (acceptable).
-    - Added WebKit row to `analysis/scripts/llm-annotate-orchestration.md` runs table.
-    - `analysis/ir/llm-annotations/WebKit.llm.json` produced and validated.
-  - **Didn't work / surfaced:**
-    - **Merge bug** in `validate::merge_annotations` (`analysis/crates/annotate/src/validate.rs:111`): LLM `parameter_ownership` list replaces the heuristic list wholesale — 52 heuristic ownership annotations dropped (66 → 15). Fields using per-field empty-fallback (`block_parameters`, `threading`, `error_pattern`) are unaffected.
-    - `annotate` without `--llm-dir` re-uses the prior annotated checkpoint as a fallback "LLM" source and re-tags every annotation as `source = Llm` (`analysis/crates/annotate/src/lib.rs:62-77`). Workaround: delete `analysis/ir/annotated/{Framework}.json` before heuristic-only baseline runs.
-  - **Decision made:** proceed to Foundation annotation, conditional on the `parameter_ownership` merge bug being fixed first. Foundation's heuristic ownership coverage is much larger than WebKit's, so the loss would be material.
-  - **What this suggests next:** Fix the merge bug, then run Foundation.
+  - **Attempted:** Fix the `parameter_ownership` whole-list clone in `validate::merge_annotations` that silently dropped heuristic ownership annotations for params the LLM didn't annotate (surfaced in session 38 WebKit calibration: 66 → 15 entries).
+  - **What worked:** Replaced the bare `llm_ann.clone()` with a per-param union: clone the LLM list (preserving LLM precedence on conflicts), then append any heuristic entry whose `param_index` isn't already present. Two regression tests added: `test_merge_parameter_ownership_per_param_union` (heuristic params 0+2, LLM param 1 → merged has all 3) and `test_merge_parameter_ownership_llm_precedence_on_conflict` (conflict on param 0 → LLM wins). End-to-end WebKit validation: 67 ownership annotations post-fix (vs 66 heuristic-only, 15 pre-fix), matching acceptance criteria. `cargo test --workspace` 56/56, clippy clean.
+  - **What didn't work / wasn't attempted:** The secondary sub-task (gating the existing-checkpoint fallback in `lib.rs:62-77` to avoid re-tagging stale annotations as `source = Llm`) was deliberately left for a separate task — orthogonal to the merge logic.
+  - **What this suggests next:** Run the Foundation LLM annotation pass (now unblocked). Address the `lib.rs` checkpoint-fallback source-tagging issue in a follow-up task.
+  - **Key learnings:** The per-param union pattern (start from LLM clone, append heuristic for missing indices) composes cleanly with the existing empty-fallback philosophy for scalar fields — no special-casing needed for the conflict path since LLM entries are already in the clone.

@@ -118,6 +118,22 @@ pub fn merge_annotations(
             // LLM takes precedence; fill in gaps from heuristic
             let mut merged = llm_ann.clone();
 
+            // Per-param union for ownership: LLM output is typically sparse (only
+            // params it has high-confidence calls on), so a whole-list clone would
+            // silently drop heuristic-classified copy/weak params the LLM didn't
+            // touch. For each heuristic entry whose param_index isn't already in
+            // the LLM list, append it. LLM entries keep precedence on conflicts
+            // because they're already in `merged`.
+            for h_param in &heuristic.parameter_ownership {
+                if !merged
+                    .parameter_ownership
+                    .iter()
+                    .any(|p| p.param_index == h_param.param_index)
+                {
+                    merged.parameter_ownership.push(h_param.clone());
+                }
+            }
+
             // If LLM has no block annotations but heuristic does, use heuristic
             if merged.block_parameters.is_empty() && !heuristic.block_parameters.is_empty() {
                 merged.block_parameters = heuristic.block_parameters.clone();
@@ -365,6 +381,94 @@ mod tests {
         // Threading from LLM
         assert_eq!(merged.threading, Some(ThreadingConstraint::AnyThread));
         assert_eq!(merged.source, AnnotationSource::Llm);
+    }
+
+    #[test]
+    fn test_merge_parameter_ownership_per_param_union() {
+        // Heuristic annotates params 0 and 2; LLM annotates only param 1.
+        // Without the per-param union, the LLM list clobbers heuristic entries
+        // and params 0/2 silently disappear from the merged annotation.
+        let heuristic = make_annotation(
+            "setDelegate:dataSource:options:",
+            vec![
+                ParamOwnership {
+                    param_index: 0,
+                    ownership: OwnershipKind::Weak,
+                },
+                ParamOwnership {
+                    param_index: 2,
+                    ownership: OwnershipKind::Copy,
+                },
+            ],
+            vec![],
+            None,
+            None,
+            AnnotationSource::Heuristic,
+        );
+
+        let llm = make_annotation(
+            "setDelegate:dataSource:options:",
+            vec![ParamOwnership {
+                param_index: 1,
+                ownership: OwnershipKind::Strong,
+            }],
+            vec![],
+            None,
+            None,
+            AnnotationSource::Llm,
+        );
+
+        let overrides = AnnotationOverrides::default();
+        let merged = merge_annotations(&heuristic, Some(&llm), &overrides);
+
+        assert_eq!(merged.parameter_ownership.len(), 3);
+        let by_index = |idx: usize| -> OwnershipKind {
+            merged
+                .parameter_ownership
+                .iter()
+                .find(|p| p.param_index == idx)
+                .unwrap_or_else(|| panic!("param {idx} missing from merged annotation"))
+                .ownership
+        };
+        assert_eq!(by_index(0), OwnershipKind::Weak);
+        assert_eq!(by_index(1), OwnershipKind::Strong);
+        assert_eq!(by_index(2), OwnershipKind::Copy);
+        assert_eq!(merged.source, AnnotationSource::Llm);
+    }
+
+    #[test]
+    fn test_merge_parameter_ownership_llm_precedence_on_conflict() {
+        // When both sources annotate the same param_index, LLM wins.
+        let heuristic = make_annotation(
+            "setTarget:",
+            vec![ParamOwnership {
+                param_index: 0,
+                ownership: OwnershipKind::Strong,
+            }],
+            vec![],
+            None,
+            None,
+            AnnotationSource::Heuristic,
+        );
+
+        let llm = make_annotation(
+            "setTarget:",
+            vec![ParamOwnership {
+                param_index: 0,
+                ownership: OwnershipKind::Weak,
+            }],
+            vec![],
+            None,
+            None,
+            AnnotationSource::Llm,
+        );
+
+        let overrides = AnnotationOverrides::default();
+        let merged = merge_annotations(&heuristic, Some(&llm), &overrides);
+
+        assert_eq!(merged.parameter_ownership.len(), 1);
+        assert_eq!(merged.parameter_ownership[0].param_index, 0);
+        assert_eq!(merged.parameter_ownership[0].ownership, OwnershipKind::Weak);
     }
 
     #[test]

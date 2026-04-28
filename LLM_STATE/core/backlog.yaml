@@ -2,7 +2,7 @@ tasks:
 - id: fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
   title: Fix parameter_ownership merge-clobber in validate::merge_annotations
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** high
@@ -29,11 +29,102 @@ tasks:
     - Optionally: re-run WebKit merge to confirm 66 ownership annotations (or close) are preserved.
 
     **Dependencies:** none (can be done before Foundation).
+  results: |
+    ## What was done
+
+    Replaced the whole-list LLM clone for `parameter_ownership` in
+    `analysis/crates/annotate/src/validate.rs::merge_annotations` with a
+    per-param union: start from the LLM annotation (so LLM keeps precedence on
+    conflicting `param_index`), then for each heuristic entry whose index isn't
+    already in the LLM list, append it. This matches the existing per-field
+    empty-fallback philosophy already applied to the scalar fields
+    (`threading`, `error_pattern`) and to `block_parameters`.
+
+    Two regression tests were added next to the existing merge tests:
+
+    - `test_merge_parameter_ownership_per_param_union` — heuristic annotates
+      params 0 and 2; LLM annotates only param 1. Asserts the merged
+      annotation has all 3 entries with the expected ownership kinds.
+    - `test_merge_parameter_ownership_llm_precedence_on_conflict` — both
+      sources annotate `param_index=0` with different ownership kinds.
+      Asserts LLM wins (`Weak`) and there is exactly one entry.
+
+    The first test fails on the unfixed code (1 vs 3 entries), which proved
+    the bug existed before the fix and is fixed after.
+
+    ## Verification
+
+    - `cargo test -p apianyware-macos-annotate` — 56/56 pass (was 54 + 2 new).
+    - `cargo test --workspace` — all crates green; no regressions.
+    - `cargo clippy -p apianyware-macos-annotate --all-targets -D warnings` — clean.
+    - `cargo +nightly fmt -p apianyware-macos-annotate` — clean (no diff).
+
+    End-to-end validation on real WebKit data (the calibration framework that
+    surfaced the bug in session 38):
+
+    | run                                            | ownership entries |
+    |------------------------------------------------|-------------------|
+    | Heuristic-only (no `--llm-dir`)                | **66**            |
+    | LLM-only (raw LLM annotation file)             | 13                |
+    | Existing pre-fix checkpoint (the bug)          | 15                |
+    | **Post-fix merge with `--llm-dir`**            | **67**            |
+
+    The 67 = 66 (heuristic) + 1 (LLM-only param the heuristic missed); LLM
+    and heuristic overlapping indices kept the LLM value (per-param union,
+    not concatenation). This matches the acceptance criterion: "66 ownership
+    annotations (or close) are preserved."
+
+    ## What worked
+
+    - Tight TDD loop: the failing test was added in the same edit as the
+      passing-on-conflict test, so a single `cargo test` showed both the bug
+      shape (sparse-LLM clobber) and the conflict semantics in one run.
+    - The clone-and-fill pattern composed cleanly with per-param union — no
+      branching needed for the conflict case, because LLM entries were
+      already in the cloned `merged` and the heuristic-append guard skips
+      any `param_index` already present.
+    - Running the actual annotate CLI against WebKit (heuristic-only +
+      --llm-dir) made the fix observable beyond unit tests and produced
+      numbers that match the session-38 calibration report.
+
+    ## What didn't work / wasn't attempted
+
+    - The "secondary, lower priority" sub-task — gating the
+      existing-checkpoint fallback in `lib.rs:62-77` so it isn't relabelled
+      `source = Llm` — was deliberately left for a separate task. It's an
+      orthogonal hazard about *where* annotations come from (reads), not
+      *how* they're merged (writes). Bundling it would have widened the
+      blast radius and made the regression test harder to scope.
+
+    ## What this suggests next
+
+    1. **Foundation LLM annotation pass is now safe to run.** The blocked
+       backlog item `Run LLM annotation pass on Foundation` no longer risks
+       silently dropping heuristic ownership entries on params the LLM
+       doesn't touch — and Foundation has materially more heuristic
+       ownership coverage than WebKit, so the impact-avoided is larger.
+    2. **Refresh the WebKit annotated checkpoint.** The existing
+       `analysis/ir/annotated/WebKit.json` was produced by the buggy merge
+       (15 entries instead of 67). When Foundation runs, sweep WebKit
+       through the same fixed annotate step so downstream enrichment sees
+       the right ownership facts.
+    3. **Promote the secondary fix to its own backlog item.** The stale-
+       checkpoint-relabelled-as-LLM hazard is real (it makes a heuristic-
+       only baseline indistinguishable from an LLM-merged run in the
+       `source` field). Suggested wording: gate the
+       `load_existing_annotations` fallback to only run when `llm_dir` is
+       `None` *and* the existing checkpoint actually contains
+       `source = Llm` entries; otherwise re-run heuristics fresh.
+    4. **Audit other list-typed annotation fields for the same shape bug.**
+       `block_parameters` is currently safe-by-coincidence (heuristic and
+       LLM tend to annotate the same block param), but the same all-or-
+       nothing list-replace exists there. If a future pattern emerges where
+       one source legitimately enumerates more block params than the other,
+       the same per-element union should be applied.
 - id: run-llm-annotation-pass-on-foundation
   title: Run LLM annotation pass on Foundation
   category: analysis
-  status: blocked
-  blocked_reason: merge bug fix must land first to avoid clobbering heuristic parameter_ownership annotations
+  status: not_started
   dependencies:
   - fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
   description: |
