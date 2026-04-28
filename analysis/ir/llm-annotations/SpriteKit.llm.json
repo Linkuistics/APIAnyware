@@ -1,0 +1,816 @@
+{
+  "framework": "SpriteKit",
+  "classes": [
+    {
+      "class_name": "SK3DNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKAction",
+      "methods": [
+        {
+          "selector": "setTimingFunction:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ]
+        },
+        {
+          "selector": "runBlock:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ]
+        },
+        {
+          "selector": "runBlock:queue:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ]
+        },
+        {
+          "selector": "customActionWithDuration:actionBlock:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKAudioNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKCameraNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKCropNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKEffectNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKEmitterNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKFieldNode",
+      "methods": [
+        {
+          "selector": "customFieldWithEvaluationBlock:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ]
+        },
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKLabelNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKLightNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKMutableTexture",
+      "methods": [
+        {
+          "selector": "modifyPixelDataWithBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "preloadTextures:withCompletionHandler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "preloadWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKPhysicsWorld",
+      "methods": [
+        {
+          "selector": "enumerateBodiesAlongRayStart:end:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "enumerateBodiesAtPoint:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "enumerateBodiesInRect:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "setContactDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKReferenceNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKScene",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only"
+        }
+      ]
+    },
+    {
+      "class_name": "SKShapeNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKSpriteNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKTexture",
+      "methods": [
+        {
+          "selector": "preloadTextures:withCompletionHandler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "preloadWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKTextureAtlas",
+      "methods": [
+        {
+          "selector": "preloadTextureAtlases:withCompletionHandler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "preloadTextureAtlasesNamed:withCompletionHandler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "preloadWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKTileMapNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKTransformNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKVideoNode",
+      "methods": [
+        {
+          "selector": "enumerateChildNodesWithName:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "nodeWithFileNamed:securelyWithClasses:andError:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "runAction:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKView",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 21,
+    "block_async_copied": 24,
+    "block_stored": 5,
+    "parameter_ownership": 3,
+    "threading_main_thread_only": 2,
+    "threading_any_thread": 0,
+    "error_pattern": 17
+  }
+}

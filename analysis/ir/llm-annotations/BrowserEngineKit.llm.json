@@ -1,0 +1,166 @@
+{
+  "framework": "BrowserEngineKit",
+  "classes": [
+    {
+      "class_name": "BENetworkingProcess",
+      "methods": [
+        {
+          "selector": "makeLibXPCConnectionError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "networkProcessWithBundleID:interruptionHandler:completion:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "networkProcessWithInterruptionHandler:completion:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "grantCapability:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "BEProcessCapability",
+      "methods": [
+        {
+          "selector": "requestWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "BERenderingProcess",
+      "methods": [
+        {
+          "selector": "makeLibXPCConnectionError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "renderingProcessWithBundleID:interruptionHandler:completion:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "renderingProcessWithInterruptionHandler:completion:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "grantCapability:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "BEWebContentProcess",
+      "methods": [
+        {
+          "selector": "makeLibXPCConnectionError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "webContentProcessWithBundleID:interruptionHandler:completion:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "webContentProcessWithInterruptionHandler:completion:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "grantCapability:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 6,
+    "block_stored": 6,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 7
+  }
+}

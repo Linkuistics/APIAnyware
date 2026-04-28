@@ -1,0 +1,111 @@
+{
+  "framework": "FSKit",
+  "classes": [
+    {
+      "class_name": "FSBlockDeviceResource",
+      "methods": [
+        {
+          "selector": "readInto:startingAt:length:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "read(into:startingAt:length:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeFrom:startingAt:length:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "write(from:startingAt:length:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "FSClient",
+      "methods": [
+        {
+          "selector": "fetchInstalledExtensionsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "FSMutableFileDataBuffer",
+      "methods": [
+        {
+          "selector": "withUnsafeMutableBytes(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "synchronous"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "FSTask",
+      "methods": [
+        {
+          "selector": "setCancellationHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "FSUnaryFileSystem",
+      "methods": [
+        {
+          "selector": "wipeResource:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 1,
+    "block_async_copied": 6,
+    "block_stored": 1,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 8,
+    "error_pattern": 0
+  }
+}

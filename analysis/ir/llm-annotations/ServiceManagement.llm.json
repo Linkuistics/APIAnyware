@@ -1,0 +1,39 @@
+{
+  "framework": "ServiceManagement",
+  "classes": [
+    {
+      "class_name": "SMAppService",
+      "methods": [
+        {
+          "selector": "registerAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unregisterAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "unregisterWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 1,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 2
+  }
+}

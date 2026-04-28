@@ -1,0 +1,510 @@
+{
+  "framework": "DiscRecordingUI",
+  "classes": [
+    {
+      "class_name": "DRBurnProgressPanel",
+      "methods": [
+        {
+          "selector": "beginCriticalSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet(content:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "transferWindowSharingToWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "DRBurnSetupPanel",
+      "methods": [
+        {
+          "selector": "beginCriticalSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet(content:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "transferWindowSharingToWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "DREraseProgressPanel",
+      "methods": [
+        {
+          "selector": "beginCriticalSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet(content:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "transferWindowSharingToWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "DREraseSetupPanel",
+      "methods": [
+        {
+          "selector": "beginCriticalSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet(content:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "transferWindowSharingToWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "DRSetupPanel",
+      "methods": [
+        {
+          "selector": "beginCriticalSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet(content:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            },
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginSheet:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestSharingOfWindowUsingPreview:title:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "transferWindowSharingToWindow:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 35,
+    "block_stored": 0,
+    "parameter_ownership": 8,
+    "threading_main_thread_only": 33,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

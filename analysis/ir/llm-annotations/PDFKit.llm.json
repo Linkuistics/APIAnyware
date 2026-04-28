@@ -1,0 +1,47 @@
+{
+  "framework": "PDFKit",
+  "classes": [
+    {
+      "class_name": "PDFDocument",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "PDFView",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 0,
+    "block_stored": 0,
+    "parameter_ownership": 2,
+    "threading_main_thread_only": 1,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

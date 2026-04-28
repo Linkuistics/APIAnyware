@@ -1,0 +1,79 @@
+{
+  "framework": "VideoSubscriberAccount",
+  "classes": [
+    {
+      "class_name": "VSAccountManager",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "VSUserAccountManager",
+      "methods": [
+        {
+          "selector": "deleteAutoSignInTokenWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "queryAutoSignInTokenWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "queryUserAccountsWithOptions:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "updateUserAccount:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 4,
+    "block_stored": 0,
+    "parameter_ownership": 1,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

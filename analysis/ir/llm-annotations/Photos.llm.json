@@ -1,0 +1,431 @@
+{
+  "framework": "Photos",
+  "classes": [
+    {
+      "class_name": "PHAsset",
+      "methods": [
+        {
+          "selector": "requestContentEditingInputWithOptions:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHAssetResourceManager",
+      "methods": [
+        {
+          "selector": "requestDataForAssetResource:options:dataReceivedHandler:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "stored"},
+            {"param_index": 3, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "writeDataForAssetResource:toFile:options:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHAssetResourceRequestOptions",
+      "methods": [
+        {
+          "selector": "setProgressHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHCachingImageManager",
+      "methods": [
+        {
+          "selector": "requestAVAssetForVideo:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestExportSessionForVideo:options:exportPreset:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestImageDataAndOrientationForAsset:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestImageForAsset:targetSize:contentMode:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestLivePhotoForAsset:targetSize:contentMode:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestPlayerItemForVideo:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHContentEditingInputRequestOptions",
+      "methods": [
+        {
+          "selector": "setCanHandleAdjustmentData:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "setProgressHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHContentEditingOutput",
+      "methods": [
+        {
+          "selector": "renderedContentURLForType:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "PHFetchResult",
+      "methods": [
+        {
+          "selector": "enumerateObjectsAtIndexes:options:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ]
+        },
+        {
+          "selector": "enumerateObjectsUsingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "synchronous"}
+          ]
+        },
+        {
+          "selector": "enumerateObjectsWithOptions:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHFetchResultChangeDetails",
+      "methods": [
+        {
+          "selector": "enumerateMovesWithBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "synchronous"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHImageManager",
+      "methods": [
+        {
+          "selector": "requestAVAssetForVideo:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestExportSessionForVideo:options:exportPreset:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestImageDataAndOrientationForAsset:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestImageForAsset:targetSize:contentMode:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestLivePhotoForAsset:targetSize:contentMode:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestPlayerItemForVideo:options:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHImageRequestOptions",
+      "methods": [
+        {
+          "selector": "setProgressHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHLivePhoto",
+      "methods": [
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "requestLivePhotoWithResourceFileURLs:placeholderImage:targetSize:contentMode:resultHandler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHLivePhotoEditingContext",
+      "methods": [
+        {
+          "selector": "prepareLivePhotoForPlaybackWithTargetSize:options:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "saveLivePhotoToOutput:options:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "setFrameProcessor:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHLivePhotoRequestOptions",
+      "methods": [
+        {
+          "selector": "setProgressHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHPersistentChange",
+      "methods": [
+        {
+          "selector": "changeDetailsForObjectType:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "PHPersistentChangeFetchResult",
+      "methods": [
+        {
+          "selector": "enumerateChangesWithBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "synchronous"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHPhotoLibrary",
+      "methods": [
+        {
+          "selector": "fetchPersistentChangesSinceToken:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "performChanges:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"},
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "performChangesAndWait:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "synchronous"}
+          ]
+        },
+        {
+          "selector": "registerAvailabilityObserver:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "registerChangeObserver:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "requestAuthorization:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "requestAuthorizationForAccessLevel:handler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "unregisterAvailabilityObserver:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "unregisterChangeObserver:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "PHVideoRequestOptions",
+      "methods": [
+        {
+          "selector": "setProgressHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 6,
+    "block_async_copied": 22,
+    "block_stored": 8,
+    "parameter_ownership": 4,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 1,
+    "error_pattern": 5
+  }
+}

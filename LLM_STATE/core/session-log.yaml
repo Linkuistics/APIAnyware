@@ -1892,3 +1892,28 @@ sessions:
     - **What didn't work / surprises:** Nothing failed. 14 of the 25 frameworks were Swift-only (no `Headers/`), requiring `.swiftinterface` inspection; the "partial > guessing" rule applied correctly for CarKey and CoreHID where `.swiftinterface` carries no `weak` attribute on actor-isolated delegate params.
     - **What this suggests trying next:** Scale the parallel batch to the ~47 frameworks with 3–5 flagged methods (estimated ~50k–60k tokens each at observed rates; ~2.5M total). Defer Matter (12,827 methods) to its own dedicated work phase with a chunked strategy. No tooling changes warranted — orchestration is production-ready for higher-fan-out batches.
     - **Key learnings:** 25-way parallel subagent dispatch is orchestrator-context-cheap and empirically safe. The 35k fixed-cost figure is a high estimate for sub-3-method Swift-only frameworks; for next-batch sizing, use 35k + N × 250 with the understanding that tiny frameworks under-spend on header lookup. The `subagent_report` reconciliation check adds zero overhead at 25-way fan-out and correctly validates count consistency.
+- id: session-47
+  timestamp: 2026-04-28T07:18:19Z
+  phase: work
+  body: |
+    ### Session 47 (2026-04-28T07:18:19Z) — Complete LLM annotation of all remaining frameworks (121 non-Matter + Matter)
+
+    - **What was attempted:** Annotate all unannotated non-Matter frameworks (originally estimated 61, actual 121) and design+execute the Matter framework annotation strategy.
+
+    - **What worked:**
+      - All 121 non-Matter frameworks annotated via 5 parallel batches of 25/25/25/25/21 subagents; all validated clean on first run, zero divergences.
+      - Matter (12,827 flagged methods) annotated in a single subagent pass using template-based bulk annotation: 7 selector regex patterns cover ~99% of all methods, reducing token cost from naive 3.24M to ~57k (~50× under projection).
+      - Workspace total: 284 frameworks all enriched and verified, 0 violations.
+      - Stored-block discovery headline: 792 across 121 non-Matter frameworks; 3,314 from Matter alone — 3.4× the entire prior workspace combined.
+      - orchestration doc (`analysis/scripts/llm-annotate-orchestration.md`) updated with Matter strategy section including pattern table.
+
+    - **What didn't / partial:**
+      - Task description undercount: estimated 61 frameworks, actual was 121. Resolved by extending coverage to all unannotated non-Matter frameworks.
+      - Methods-extraction misattribution surfaced: ScriptingBridge subagent skipped `SBElementArray.mapAnnotations(_:)`/`mapFeatures(_:)` as they belong to `CreateMLComponents.Sequence` extensions, not ScriptingBridge. Promoted as a follow-up backlog task.
+
+    - **What this suggests next:** Workspace LLM annotation is complete. Future annotation work is surgical (changed-framework re-runs, prompt revisions). Next cycle should investigate the methods-extraction misattribution bug and consider next pipeline phase.
+
+    - **Key learnings:**
+      - Template-based bulk annotation is the right strategy for code-generated frameworks (Matter, and likely CryptoTokenKit TKToken* cluster, LDAP, GSS). Budget metric is 35k + ~5k × num_unique_patterns, not 35k + N × 250.
+      - The `subscribeAttribute*…reportHandler:` family in Matter is a paradigmatic stored-block supercluster — subscription/observer patterns with per-attribute callbacks always need LLM rather than heuristics.
+      - Reactive frameworks (Combine, CloudKit operations, RealityFoundation subscribe) and code-generated subscription frameworks should be prioritised in any future re-annotation cycles.

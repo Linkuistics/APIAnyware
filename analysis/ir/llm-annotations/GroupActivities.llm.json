@@ -1,0 +1,200 @@
+{
+  "framework": "GroupActivities",
+  "classes": [
+    {
+      "class_name": "GroupSessionMessenger",
+      "methods": [
+        {
+          "selector": "send(_:to:completion:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NSItemProvider",
+      "methods": [
+        {
+          "selector": "loadDataRepresentationForTypeIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadFileRepresentationForTypeIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadInPlaceFileRepresentationForTypeIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadItemForTypeIdentifier:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadObject(ofClass:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadObjectOfClass:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "loadTransferable(type:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "register(_:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerCKShare(container:allowedSharingOptions:preparationHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerDataRepresentationForTypeIdentifier:visibility:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerFileRepresentationForTypeIdentifier:fileOptions:visibility:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerGroupActivity(preparationHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerItemForTypeIdentifier:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerObject(ofClass:visibility:loadHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "registerObjectOfClass:visibility:loadHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 8,
+    "block_stored": 8,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

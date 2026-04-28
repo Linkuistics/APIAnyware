@@ -1,0 +1,1128 @@
+{
+  "framework": "HealthKit",
+  "classes": [
+    {
+      "class_name": "HKActivitySummaryQuery",
+      "methods": [
+        {
+          "selector": "initWithPredicate:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setUpdateHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKAnchoredObjectQuery",
+      "methods": [
+        {
+          "selector": "initWithQueryDescriptors:anchor:limit:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithType:predicate:anchor:limit:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithType:predicate:anchor:limit:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setUpdateHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKAttachmentStore",
+      "methods": [
+        {
+          "selector": "addAttachment(to:name:contentType:url:metadata:completion:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addAttachmentToObject:name:contentType:URL:metadata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getAttachmentsForObject:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getDataForAttachment:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "removeAttachment:fromObject:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "streamDataForAttachment:dataHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKAudiogramSensitivityPoint",
+      "methods": [
+        {
+          "selector": "sensitivityPointWithFrequency:leftEarSensitivity:rightEarSensitivity:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKCDADocumentSample",
+      "methods": [
+        {
+          "selector": "CDADocumentSampleWithData:startDate:endDate:metadata:validationError:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKCorrelationQuery",
+      "methods": [
+        {
+          "selector": "initWithType:predicate:samplePredicates:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKDocumentQuery",
+      "methods": [
+        {
+          "selector": "initWithDocumentType:predicate:limit:sortDescriptors:includeDocumentData:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKElectrocardiogramQuery",
+      "methods": [
+        {
+          "selector": "init(_:dataHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithElectrocardiogram:dataHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKHealthStore",
+      "methods": [
+        {
+          "selector": "activityMoveModeWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "biologicalSexWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "bloodTypeWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "dateOfBirthComponentsWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "dateOfBirthWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "deleteObject:withCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "deleteObjects:withCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "deleteObjectsOfType:predicate:withCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "fitzpatrickSkinTypeWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getRequestStatusForAuthorizationToShareTypes:readTypes:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "handleAuthorizationForExtensionWithCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "requestAuthorizationToShareTypes:readTypes:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "requestPerObjectReadAuthorizationForType:predicate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "saveObject:withCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "saveObjects:withCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "splitTotalEnergy:startDate:endDate:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "wheelchairUseWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "addSamples:toWorkout:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "startWatchAppWithWorkoutConfiguration:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setWorkoutSessionMirroringStartHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enableBackgroundDeliveryForType:frequency:withCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "disableBackgroundDeliveryForType:withCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "disableAllBackgroundDeliveryWithCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "preferredUnitsForQuantityTypes:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "recalibrateEstimatesForSampleType:atDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "relateWorkoutEffortSample:withWorkout:activity:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "unrelateWorkoutEffortSample:fromWorkout:activity:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKHeartbeatSeriesBuilder",
+      "methods": [
+        {
+          "selector": "addHeartbeatWithTimeIntervalSinceSeriesStartDate:precededByGap:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addMetadata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "finishSeriesWithCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKHeartbeatSeriesQuery",
+      "methods": [
+        {
+          "selector": "initWithHeartbeatSeries:dataHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKLiveWorkoutBuilder",
+      "methods": [
+        {
+          "selector": "addMetadata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addSamples:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addWorkoutActivity:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addWorkoutEvents:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "beginCollectionWithStartDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "endCollectionWithEndDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "finishWorkoutWithCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "updateActivityWithUUID:addMedatata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "updateActivityWithUUID:endDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKObserverQuery",
+      "methods": [
+        {
+          "selector": "initWithQueryDescriptors:updateHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithSampleType:predicate:updateHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKQuantitySeriesSampleBuilder",
+      "methods": [
+        {
+          "selector": "finishSeriesWithMetadata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "finishSeriesWithMetadata:endDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "insertQuantity:date:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "insertQuantity:dateInterval:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKQuantitySeriesSampleQuery",
+      "methods": [
+        {
+          "selector": "initWithQuantityType:predicate:quantityHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithSample:quantityHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKSampleQuery",
+      "methods": [
+        {
+          "selector": "initWithQueryDescriptors:limit:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithQueryDescriptors:limit:sortDescriptors:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithSampleType:predicate:limit:sortDescriptors:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKSourceQuery",
+      "methods": [
+        {
+          "selector": "initWithSampleType:samplePredicate:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKStatisticsCollection",
+      "methods": [
+        {
+          "selector": "enumerateStatisticsFromDate:toDate:withBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKStatisticsCollectionQuery",
+      "methods": [
+        {
+          "selector": "setInitialResultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setStatisticsUpdateHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKStatisticsQuery",
+      "methods": [
+        {
+          "selector": "initWithQuantityType:quantitySamplePredicate:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKUserAnnotatedMedicationQuery",
+      "methods": [
+        {
+          "selector": "initWithPredicate:limit:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKVerifiableClinicalRecordQuery",
+      "methods": [
+        {
+          "selector": "initWithRecordTypes:predicate:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithRecordTypes:sourceTypes:predicate:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKWorkoutBuilder",
+      "methods": [
+        {
+          "selector": "addMetadata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addSamples:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addWorkoutActivity:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "addWorkoutEvents:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "beginCollectionWithStartDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "endCollectionWithEndDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "finishWorkoutWithCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "updateActivityWithUUID:addMedatata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "updateActivityWithUUID:endDate:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKWorkoutEffortRelationshipQuery",
+      "methods": [
+        {
+          "selector": "initWithPredicate:anchor:options:resultsHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKWorkoutRouteBuilder",
+      "methods": [
+        {
+          "selector": "addMetadata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "finishRouteWithWorkout:metadata:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "insertRouteData:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKWorkoutRouteQuery",
+      "methods": [
+        {
+          "selector": "initWithRoute:dataHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "initWithRoute:dateInterval:dataHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "HKWorkoutSession",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 1,
+    "block_async_copied": 64,
+    "block_stored": 16,
+    "parameter_ownership": 2,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 11
+  }
+}

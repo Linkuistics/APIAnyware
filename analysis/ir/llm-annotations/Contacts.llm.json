@@ -1,0 +1,207 @@
+{
+  "framework": "Contacts",
+  "classes": [
+    {
+      "class_name": "CNContact",
+      "methods": [
+        {
+          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "CNContactFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "CNContactStore",
+      "methods": [
+        {
+          "selector": "containersMatchingPredicate:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enumerateContactsWithFetchRequest:error:usingBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "synchronous"
+            }
+          ]
+        },
+        {
+          "selector": "enumeratorForChangeHistoryFetchRequest:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enumeratorForContactFetchRequest:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "executeSaveRequest:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "groupsMatchingPredicate:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "requestAccessForEntityType:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "unifiedContactWithIdentifier:keysToFetch:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "unifiedContactsMatchingPredicate:keysToFetch:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "unifiedMeContactWithKeysToFetch:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "CNContactVCardSerialization",
+      "methods": [
+        {
+          "selector": "contactsWithData:error:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "dataWithContacts:error:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "CNMutableContact",
+      "methods": [
+        {
+          "selector": "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "objectWithItemProviderData:typeIdentifier:error:",
+          "is_instance": false,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "CNPostalAddressFormatter",
+      "methods": [
+        {
+          "selector": "getObjectValue:forString:errorDescription:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "isPartialStringValid:newEditingString:errorDescription:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 1,
+    "block_async_copied": 3,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 10,
+    "error_pattern": 19
+  }
+}

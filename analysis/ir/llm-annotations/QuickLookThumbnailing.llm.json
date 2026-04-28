@@ -1,0 +1,85 @@
+{
+  "framework": "QuickLookThumbnailing",
+  "classes": [
+    {
+      "class_name": "QLThumbnailGenerator",
+      "methods": [
+        {
+          "selector": "generateBestRepresentationForRequest:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "generateRepresentationsForRequest:updateHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "saveBestRepresentationForRequest:toFileAtURL:asContentType:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "saveBestRepresentationForRequest:toFileAtURL:withContentType:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "QLThumbnailProvider",
+      "methods": [
+        {
+          "selector": "provideThumbnailForFileRequest:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "QLThumbnailReply",
+      "methods": [
+        {
+          "selector": "replyWithContextSize:currentContextDrawingBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "replyWithContextSize:drawingBlock:",
+          "is_instance": false,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 4,
+    "block_stored": 3,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

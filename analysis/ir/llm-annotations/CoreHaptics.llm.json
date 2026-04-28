@@ -1,0 +1,156 @@
+{
+  "framework": "CoreHaptics",
+  "classes": [
+    {
+      "class_name": "CHHapticEngine",
+      "methods": [
+        {
+          "selector": "createAdvancedPlayerWithPattern:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "createPlayerWithPattern:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithAudioSession:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "notifyWhenPlayersFinished:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "playPatternFromData:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "playPatternFromURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "registerAudioResource:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setResetHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setStoppedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "startWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "stopWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "unregisterAudioResource:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CHHapticPattern",
+      "methods": [
+        {
+          "selector": "exportDictionaryAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithDictionary:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithEvents:parameterCurves:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithEvents:parameters:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 3,
+    "block_stored": 2,
+    "parameter_ownership": 2,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 2,
+    "error_pattern": 14
+  }
+}

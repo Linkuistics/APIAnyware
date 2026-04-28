@@ -1,0 +1,237 @@
+{
+  "framework": "BackgroundAssets",
+  "classes": [
+    {
+      "class_name": "BAAssetPackManager",
+      "methods": [
+        {
+          "selector": "URLForPath:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "checkForUpdatesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "contentsAtPath:searchingInAssetPackWithIdentifier:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "ensureLocalAvailabilityOfAssetPack:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "ensureLocalAvailabilityOfAssetPack:requireLatestVersion:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "fileDescriptorForPath:searchingInAssetPackWithIdentifier:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "getAllAssetPacksWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getAssetPackWithIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getLocalStatusOfAssetPackWithIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getStatusOfAssetPackWithIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "getStatusRelativeToAssetPack:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "removeAssetPackWithIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "BAAssetPackManifest",
+      "methods": [
+        {
+          "selector": "initFromData:applicationGroupIdentifier:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithContentsOfURL:applicationGroupIdentifier:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "BADownloadManager",
+      "methods": [
+        {
+          "selector": "cancelDownload:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchCurrentDownloads:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchCurrentDownloadsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "performWithExclusiveControl:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "performWithExclusiveControlBeforeDate:performHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "scheduleDownload:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "startForegroundDownload:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 12,
+    "block_stored": 0,
+    "parameter_ownership": 2,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 9
+  }
+}

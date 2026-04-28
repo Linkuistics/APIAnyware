@@ -1,0 +1,134 @@
+{
+  "framework": "CoreMIDI",
+  "classes": [
+    {
+      "class_name": "MIDICIDiscoveryManager",
+      "methods": [
+        {
+          "selector": "discoverWithHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "MIDICISession",
+      "methods": [
+        {
+          "selector": "disableProfile:onChannel:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enableProfile:onChannel:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithDiscoveredNode:dataReadyHandler:disconnectHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"},
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "setProfileChangedCallback:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "setProfileSpecificDataHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "MIDIUMPCIProfile",
+      "methods": [
+        {
+          "selector": "setProfileState:enabledChannelCount:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "MIDIUMPMutableEndpoint",
+      "methods": [
+        {
+          "selector": "initWithName:deviceInfo:productInstanceID:MIDIProtocol:destinationCallback:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "registerFunctionBlocks:markAsStatic:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "setEnabled:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "setName:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "MIDIUMPMutableFunctionBlock",
+      "methods": [
+        {
+          "selector": "reconfigureWithFirstGroup:direction:MIDI1Info:UIHint:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "setEnabled:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "setName:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 3,
+    "block_stored": 3,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 9
+  }
+}

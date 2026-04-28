@@ -1,0 +1,69 @@
+{
+  "framework": "MediaExtension",
+  "classes": [
+    {
+      "class_name": "MEByteSource",
+      "methods": [
+        {
+          "selector": "readDataOfLength:fromOffset:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ]
+        },
+        {
+          "selector": "readDataOfLength:fromOffset:toDestination:bytesRead:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "readDataOfLength:fromOffset:toDestination:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "MERAWProcessorPixelBufferManager",
+      "methods": [
+        {
+          "selector": "createPixelBufferAndReturnError:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "MEVideoDecoderPixelBufferManager",
+      "methods": [
+        {
+          "selector": "createPixelBufferAndReturnError:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 2,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 3
+  }
+}

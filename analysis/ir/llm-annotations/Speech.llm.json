@@ -1,0 +1,138 @@
+{
+  "framework": "Speech",
+  "classes": [
+    {
+      "class_name": "SFSpeechLanguageModel",
+      "methods": [
+        {
+          "selector": "prepareCustomLanguageModelForUrl:clientIdentifier:configuration:completion:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "prepareCustomLanguageModelForUrl:clientIdentifier:configuration:ignoresCache:completion:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "prepareCustomLanguageModelForUrl:configuration:completion:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "prepareCustomLanguageModelForUrl:configuration:ignoresCache:completion:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SFSpeechRecognizer",
+      "methods": [
+        {
+          "selector": "recognitionTaskWithRequest:delegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 1, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "recognitionTaskWithRequest:resultHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "requestAuthorization:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SpeechAnalyzer",
+      "methods": [
+        {
+          "selector": "init(inputAudioFile:modules:options:analysisContext:finishAfterFile:volatileRangeChangedHandler:)",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 5, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "init(inputSequence:modules:options:analysisContext:volatileRangeChangedHandler:)",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "prepareToAnalyze(in:withProgressReadyHandler:)",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "setVolatileRangeChangedHandler(_:)",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SFCustomLanguageModelData",
+      "methods": [
+        {
+          "selector": "init(locale:identifier:version:builder:)",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "synchronous"}
+          ]
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 1,
+    "block_async_copied": 6,
+    "block_stored": 4,
+    "parameter_ownership": 2,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

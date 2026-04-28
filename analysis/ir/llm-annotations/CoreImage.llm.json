@@ -1,0 +1,293 @@
+{
+  "framework": "CoreImage",
+  "classes": [
+    {
+      "class_name": "CIBlendKernel",
+      "methods": [
+        {
+          "selector": "applyWithExtent:roiCallback:arguments:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "copy"
+            }
+          ],
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelsWithMetalString:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIColorKernel",
+      "methods": [
+        {
+          "selector": "applyWithExtent:roiCallback:arguments:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "copy"
+            }
+          ],
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelsWithMetalString:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIContext",
+      "methods": [
+        {
+          "selector": "startTaskToRender:fromRect:toDestination:atPoint:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "startTaskToRender:toDestination:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "prepareRender:fromRect:toDestination:atPoint:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "startTaskToClear:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIFilter",
+      "methods": [
+        {
+          "selector": "filterArrayFromSerializedXMP:inputImageExtent:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIImageProcessorKernel",
+      "methods": [
+        {
+          "selector": "applyWithExtent:inputs:arguments:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "processWithInputs:arguments:output:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "processWithInputs:arguments:outputs:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "applyWithExtents:inputs:arguments:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIKernel",
+      "methods": [
+        {
+          "selector": "applyWithExtent:roiCallback:arguments:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "copy"
+            }
+          ],
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelsWithMetalString:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIRenderDestination",
+      "methods": [
+        {
+          "selector": "initWithWidth:height:pixelFormat:commandBuffer:mtlTextureProvider:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 4,
+              "ownership": "copy"
+            }
+          ],
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIRenderTask",
+      "methods": [
+        {
+          "selector": "waitUntilCompletedAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CIWarpKernel",
+      "methods": [
+        {
+          "selector": "applyWithExtent:roiCallback:arguments:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "copy"
+            }
+          ],
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "applyWithExtent:roiCallback:inputImage:arguments:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "copy"
+            }
+          ],
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "kernelsWithMetalString:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 0,
+    "block_stored": 6,
+    "parameter_ownership": 6,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 22
+  }
+}

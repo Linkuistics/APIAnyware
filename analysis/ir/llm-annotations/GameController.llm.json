@@ -1,0 +1,643 @@
+{
+  "framework": "GameController",
+  "classes": [
+    {
+      "class_name": "GCController",
+      "methods": [
+        {
+          "selector": "setControllerPausedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "startWirelessControllerDiscoveryWithCompletionHandler:",
+          "is_instance": false,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCControllerAxisInput",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCControllerButtonInput",
+      "methods": [
+        {
+          "selector": "setPressedChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setTouchedChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCControllerDirectionPad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCControllerLiveInput",
+      "methods": [
+        {
+          "selector": "setElementValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setInputStateAvailableHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCControllerTouchpad",
+      "methods": [
+        {
+          "selector": "setTouchDown:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setTouchMoved:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setTouchUp:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCDeviceCursor",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCDirectionalGamepad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCDualSenseAdaptiveTrigger",
+      "methods": [
+        {
+          "selector": "setPressedChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setTouchedChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCDualSenseGamepad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCDualShockGamepad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCEventViewController",
+      "methods": [
+        {
+          "selector": "commitEditingAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCExtendedGamepad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCExtendedGamepadSnapshot",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCGamepad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCGamepadSnapshot",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCKeyboardInput",
+      "methods": [
+        {
+          "selector": "setKeyChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCMicroGamepad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCMicroGamepadSnapshot",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCMotion",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCMouseInput",
+      "methods": [
+        {
+          "selector": "setMouseMovedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCPhysicalInputProfile",
+      "methods": [
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCRacingWheel",
+      "methods": [
+        {
+          "selector": "acquireDeviceWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCRacingWheelInput",
+      "methods": [
+        {
+          "selector": "setElementValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setInputStateAvailableHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GCXboxGamepad",
+      "methods": [
+        {
+          "selector": "setValueChangedHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setValueDidChangeHandler:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 1,
+    "block_stored": 43,
+    "parameter_ownership": 45,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 2
+  }
+}

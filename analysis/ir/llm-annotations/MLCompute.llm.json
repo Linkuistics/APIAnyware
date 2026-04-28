@@ -1,0 +1,125 @@
+{
+  "framework": "MLCompute",
+  "classes": [
+    {
+      "class_name": "MLCInferenceGraph",
+      "methods": [
+        {
+          "selector": "executeWithInputsData:batchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithInputsData:lossLabelsData:lossLabelWeightsData:batchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 5, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithInputsData:lossLabelsData:lossLabelWeightsData:outputsData:batchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 6, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithInputsData:outputsData:batchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MLCTensorData",
+      "methods": [
+        {
+          "selector": "dataWithBytesNoCopy:length:deallocator:",
+          "is_instance": false,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "stored"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MLCTrainingGraph",
+      "methods": [
+        {
+          "selector": "executeForwardWithBatchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeForwardWithBatchSize:options:outputsData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeGradientWithBatchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeGradientWithBatchSize:options:outputsData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeOptimizerUpdateWithOptions:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithInputsData:lossLabelsData:lossLabelWeightsData:batchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 5, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "executeWithInputsData:lossLabelsData:lossLabelWeightsData:outputsData:batchSize:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 6, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 11,
+    "block_stored": 1,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

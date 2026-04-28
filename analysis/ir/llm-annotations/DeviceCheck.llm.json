@@ -1,0 +1,56 @@
+{
+  "framework": "DeviceCheck",
+  "classes": [
+    {
+      "class_name": "DCAppAttestService",
+      "methods": [
+        {
+          "selector": "attestKey:clientDataHash:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "generateAssertion:clientDataHash:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "generateKeyWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "DCDevice",
+      "methods": [
+        {
+          "selector": "generateTokenWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 4,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

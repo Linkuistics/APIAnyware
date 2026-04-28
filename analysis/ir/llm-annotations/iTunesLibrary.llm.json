@@ -1,0 +1,110 @@
+{
+  "framework": "iTunesLibrary",
+  "classes": [
+    {
+      "class_name": "ITLibMediaEntity",
+      "methods": [
+        {
+          "selector": "enumerateValuesExceptForProperties:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateValuesForProperties:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "ITLibMediaItem",
+      "methods": [
+        {
+          "selector": "enumerateValuesExceptForProperties:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateValuesForProperties:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "ITLibPlaylist",
+      "methods": [
+        {
+          "selector": "enumerateValuesExceptForProperties:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "enumerateValuesForProperties:usingBlock:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "ITLibrary",
+      "methods": [
+        {
+          "selector": "initWithAPIVersion:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithAPIVersion:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "libraryWithAPIVersion:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "libraryWithAPIVersion:options:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 6,
+    "block_async_copied": 0,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 4,
+    "error_pattern": 4
+  }
+}

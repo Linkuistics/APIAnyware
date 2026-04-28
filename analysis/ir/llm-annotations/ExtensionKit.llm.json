@@ -1,0 +1,66 @@
+{
+  "framework": "ExtensionKit",
+  "classes": [
+    {
+      "class_name": "EXAppExtensionBrowserViewController",
+      "methods": [
+        {
+          "selector": "commitEditingAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "EXHostViewController",
+      "methods": [
+        {
+          "selector": "commitEditingAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "makeXPCConnectionWithError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 0,
+    "block_stored": 0,
+    "parameter_ownership": 1,
+    "threading_main_thread_only": 6,
+    "threading_any_thread": 0,
+    "error_pattern": 3
+  }
+}

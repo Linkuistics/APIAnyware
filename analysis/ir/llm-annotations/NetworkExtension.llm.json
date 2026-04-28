@@ -1,0 +1,2836 @@
+{
+  "framework": "NetworkExtension",
+  "classes": [
+    {
+      "class_name": "NEAppProxyFlow",
+      "methods": [
+        {
+          "selector": "open(withLocalEndpoint:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "open(withLocalFlowEndpoint:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "openWithLocalEndpoint:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "openWithLocalFlowEndpoint:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEAppProxyProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startProxy(options:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startProxyWithOptions:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopProxy(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopProxyWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEAppProxyProviderManager",
+      "methods": [
+        {
+          "selector": "loadAllFromPreferences(completionHandler:)",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadAllFromPreferencesWithCompletionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEAppProxyTCPFlow",
+      "methods": [
+        {
+          "selector": "open(withLocalEndpoint:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "open(withLocalFlowEndpoint:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "openWithLocalEndpoint:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "openWithLocalFlowEndpoint:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readData(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readDataWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "write(_:withCompletionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeData:withCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEAppProxyUDPFlow",
+      "methods": [
+        {
+          "selector": "open(withLocalEndpoint:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "open(withLocalFlowEndpoint:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "openWithLocalEndpoint:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "openWithLocalFlowEndpoint:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readDatagrams(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readDatagramsAndFlowEndpointsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readDatagramsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeDatagrams(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeDatagrams(_:sentBy:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeDatagrams:sentByEndpoints:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeDatagrams:sentByFlowEndpoints:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEDNSProxyManager",
+      "methods": [
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEDNSProxyProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startProxy(options:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startProxyWithOptions:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopProxy(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopProxyWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEDNSSettingsManager",
+      "methods": [
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEEthernetTunnelProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionThroughTunnel(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionThroughTunnelToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startTunnel(options:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startTunnelWithOptions:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopTunnel(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopTunnelWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEFilterDataProvider",
+      "methods": [
+        {
+          "selector": "apply(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "applySettings:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startFilter(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startFilterWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopFilter(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopFilterWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEFilterManager",
+      "methods": [
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEFilterPacketProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setPacketHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startFilter(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startFilterWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopFilter(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopFilterWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEFilterProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startFilter(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startFilterWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopFilter(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopFilterWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEPacketTunnelFlow",
+      "methods": [
+        {
+          "selector": "readPacketObjects(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readPacketObjectsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readPackets(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readPacketsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEPacketTunnelProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionThroughTunnel(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionThroughTunnelToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startTunnel(options:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startTunnelWithOptions:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopTunnel(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopTunnelWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NERelayManager",
+      "methods": [
+        {
+          "selector": "getLastClientErrors(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "getLastClientErrors:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadAllManagersFromPreferences(completionHandler:)",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadAllManagersFromPreferencesWithCompletionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NETransparentProxyManager",
+      "methods": [
+        {
+          "selector": "loadAllFromPreferences(completionHandler:)",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadAllFromPreferencesWithCompletionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NETransparentProxyProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startProxy(options:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startProxyWithOptions:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopProxy(with:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "stopProxyWithReason:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NETunnelProvider",
+      "methods": [
+        {
+          "selector": "createTCPConnection(to:enableTLS:tlsParameters:delegate:)",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 3,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "displayMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "handleAppMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setTunnelNetworkSettings:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleep(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sleepWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NETunnelProviderManager",
+      "methods": [
+        {
+          "selector": "loadAllFromPreferences(completionHandler:)",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadAllFromPreferencesWithCompletionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NETunnelProviderSession",
+      "methods": [
+        {
+          "selector": "fetchLastDisconnectError(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchLastDisconnectErrorWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sendProviderMessage(_:responseHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "sendProviderMessage:returnError:responseHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startTunnelWithOptions:andReturnError:",
+          "is_instance": true,
+          "threading": "any_thread",
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "startVPNTunnelAndReturnError:",
+          "is_instance": true,
+          "threading": "any_thread",
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "startVPNTunnelWithOptions:andReturnError:",
+          "is_instance": true,
+          "threading": "any_thread",
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEURLFilter",
+      "methods": [
+        {
+          "selector": "verdictForURL:completionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEVPNConnection",
+      "methods": [
+        {
+          "selector": "fetchLastDisconnectError(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchLastDisconnectErrorWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "startVPNTunnelAndReturnError:",
+          "is_instance": true,
+          "threading": "any_thread",
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "startVPNTunnelWithOptions:andReturnError:",
+          "is_instance": true,
+          "threading": "any_thread",
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NEVPNManager",
+      "methods": [
+        {
+          "selector": "loadFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "loadFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "removeFromPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferences(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToPreferencesWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NWTCPConnection",
+      "methods": [
+        {
+          "selector": "readLength(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readLength:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readMinimumLength(_:maximumLength:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "readMinimumLength:maximumLength:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "write(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "write:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "NWUDPSession",
+      "methods": [
+        {
+          "selector": "setReadHandler(_:maxDatagrams:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "setReadHandler:maxDatagrams:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeDatagram(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeDatagram:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeMultipleDatagrams(_:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        },
+        {
+          "selector": "writeMultipleDatagrams:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 196,
+    "block_stored": 3,
+    "parameter_ownership": 24,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 204,
+    "error_pattern": 5
+  }
+}

@@ -1,0 +1,263 @@
+{
+  "framework": "ModelIO",
+  "classes": [
+    {
+      "class_name": "MDLAreaLight",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLAsset",
+      "methods": [
+        {
+          "selector": "exportAssetToURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithURL:vertexDescriptor:bufferAllocator:preserveTopology:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLCamera",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLLight",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLLightProbe",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLMaterialPropertyGraph",
+      "methods": [
+        {
+          "selector": "initWithInputs:outputs:evaluationFunction:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "stored"}
+          ],
+          "parameter_ownership": [
+            {"param_index": 2, "ownership": "copy"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setEvaluationFunction:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLMaterialPropertyNode",
+      "methods": [
+        {
+          "selector": "initWithInputs:outputs:evaluationFunction:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "stored"}
+          ],
+          "parameter_ownership": [
+            {"param_index": 2, "ownership": "copy"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setEvaluationFunction:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLMesh",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "makeVerticesUniqueAndReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLMeshBufferMap",
+      "methods": [
+        {
+          "selector": "initWithBytes:deallocator:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ],
+          "parameter_ownership": [
+            {"param_index": 1, "ownership": "copy"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLObject",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLPackedJointAnimation",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLPhotometricLight",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLPhysicallyPlausibleLight",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLSkeleton",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLStereoscopicCamera",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MDLVoxelArray",
+      "methods": [
+        {
+          "selector": "enumerateChildObjectsOfClass:root:usingBlock:stopPointer:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 12,
+    "block_async_copied": 0,
+    "block_stored": 5,
+    "parameter_ownership": 5,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 3
+  }
+}

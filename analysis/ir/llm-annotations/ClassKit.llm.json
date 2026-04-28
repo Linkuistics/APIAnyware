@@ -1,0 +1,80 @@
+{
+  "framework": "ClassKit",
+  "classes": [
+    {
+      "class_name": "CLSContext",
+      "methods": [
+        {
+          "selector": "descendantMatchingIdentifierPath:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "CLSDataStore",
+      "methods": [
+        {
+          "selector": "saveWithCompletion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "contextsMatchingPredicate:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "contextsMatchingIdentifierPath:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "fetchActivityForURL:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "checkIsAssignedDocument:completion:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ]
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 6,
+    "block_stored": 0,
+    "parameter_ownership": 1,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

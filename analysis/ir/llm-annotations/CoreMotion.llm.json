@@ -1,0 +1,77 @@
+{
+  "framework": "CoreMotion",
+  "classes": [
+    {
+      "class_name": "CMHeadphoneActivityManager",
+      "methods": [
+        {
+          "selector": "startActivityUpdatesToQueue:withHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "startStatusUpdatesToQueue:withHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "CMHeadphoneMotionManager",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "startDeviceMotionUpdatesToQueue:withHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "CMPedometer",
+      "methods": [
+        {
+          "selector": "queryPedometerDataFromDate:toDate:withHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ]
+        },
+        {
+          "selector": "startPedometerUpdatesFromDate:withHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "stored"}
+          ]
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 1,
+    "block_stored": 4,
+    "parameter_ownership": 1,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

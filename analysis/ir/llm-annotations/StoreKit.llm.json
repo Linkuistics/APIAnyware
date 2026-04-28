@@ -1,0 +1,232 @@
+{
+  "framework": "StoreKit",
+  "classes": [
+    {
+      "class_name": "SKArcadeService",
+      "methods": [
+        {
+          "selector": "arcadeSubscriptionStatusWithNonce:resultHandler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "registerArcadeAppWithRandomFromLib:randomFromLibLength:resultHandler:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        }
+      ]
+    },
+    {
+      "class_name": "SKCloudServiceController",
+      "methods": [
+        {
+          "selector": "requestAuthorization:",
+          "is_instance": false,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "requestCapabilitiesWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "requestStorefrontCountryCodeWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "requestStorefrontIdentifierWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "requestUserTokenForDeveloperToken:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        }
+      ]
+    },
+    {
+      "class_name": "SKPaymentQueue",
+      "methods": [
+        {
+          "selector": "addTransactionObserver:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "removeTransactionObserver:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKProductStorePromotionController",
+      "methods": [
+        {
+          "selector": "fetchStorePromotionOrderWithCompletionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "fetchStorePromotionVisibilityForProduct:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "updateStorePromotionOrder:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        },
+        {
+          "selector": "updateStorePromotionVisibility:forProduct:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "any_thread"
+        }
+      ]
+    },
+    {
+      "class_name": "SKProductsRequest",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKReceiptRefreshRequest",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKRequest",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ]
+        }
+      ]
+    },
+    {
+      "class_name": "SKStoreProductViewController",
+      "methods": [
+        {
+          "selector": "commitEditingAndReturnError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "main_thread_only",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "main_thread_only"
+        },
+        {
+          "selector": "loadProductWithParameters:completionBlock:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "source": "llm",
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "threading": "main_thread_only"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 12,
+    "block_stored": 0,
+    "parameter_ownership": 7,
+    "threading_main_thread_only": 4,
+    "threading_any_thread": 11,
+    "error_pattern": 1
+  }
+}

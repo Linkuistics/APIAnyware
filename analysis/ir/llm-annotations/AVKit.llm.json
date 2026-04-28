@@ -1,0 +1,137 @@
+{
+  "framework": "AVKit",
+  "classes": [
+    {
+      "class_name": "AVCaptureView",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "AVLegibleMediaOptionsMenuController",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "AVPictureInPictureController",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "AVPictureInPictureControllerContentSource",
+      "methods": [
+        {
+          "selector": "initWithSampleBufferDisplayLayer:playbackDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 1,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "AVPlayerView",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "beginTrimmingWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setPictureInPictureDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "AVRoutePickerView",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 1,
+    "block_stored": 0,
+    "parameter_ownership": 7,
+    "threading_main_thread_only": 5,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

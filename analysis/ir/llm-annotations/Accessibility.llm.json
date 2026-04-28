@@ -1,0 +1,59 @@
+{
+  "framework": "Accessibility",
+  "classes": [
+    {
+      "class_name": "AXNumericDataAxisDescriptor",
+      "methods": [
+        {
+          "selector": "init(attributedTitle:range:gridlinePositions:valueDescriptionProvider:)",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "init(title:range:gridlinePositions:valueDescriptionProvider:)",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 3, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "initWithAttributedTitle:lowerBound:upperBound:gridlinePositions:valueDescriptionProvider:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "initWithTitle:lowerBound:upperBound:gridlinePositions:valueDescriptionProvider:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 4, "invocation": "stored"}
+          ]
+        },
+        {
+          "selector": "setValueDescriptionProvider:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ]
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 0,
+    "block_stored": 5,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "framework": "ContactsUI",
+  "classes": [
+    {
+      "class_name": "CNContactPicker",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "CNContactViewController",
+      "methods": [
+        {
+          "selector": "commitEditingAndReturnError:",
+          "is_instance": true,
+          "threading": "main_thread_only",
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "commitEditingWithDelegate:didCommitSelector:contextInfo:",
+          "is_instance": true,
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 0,
+    "block_stored": 0,
+    "parameter_ownership": 1,
+    "threading_main_thread_only": 2,
+    "threading_any_thread": 0,
+    "error_pattern": 1
+  }
+}

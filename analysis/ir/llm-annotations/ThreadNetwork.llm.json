@@ -1,0 +1,91 @@
+{
+  "framework": "ThreadNetwork",
+  "classes": [
+    {
+      "class_name": "THClient",
+      "methods": [
+        {
+          "selector": "checkPreferredNetworkForActiveOperationalDataset:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "deleteCredentialsForBorderAgent:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "isPreferredNetworkAvailableWithCompletion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "retrieveAllActiveCredentials:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "retrieveAllCredentials:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "retrieveCredentialsForBorderAgent:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "retrieveCredentialsForExtendedPANID:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "retrievePreferredCredentials:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "storeCredentialsForBorderAgent:activeOperationalDataSet:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 9,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

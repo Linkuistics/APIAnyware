@@ -1,0 +1,1011 @@
+{
+  "framework": "IOUSBHost",
+  "classes": [
+    {
+      "class_name": "IOUSBHostCIControllerStateMachine",
+      "methods": [
+        {
+          "selector": "enqueueUpdatedFrame:timestamp:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithInterface:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "inspectCommand:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "respondToCommand:status:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "respondToCommand:status:frame:timestamp:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostCIDeviceStateMachine",
+      "methods": [
+        {
+          "selector": "initWithInterface:command:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "inspectCommand:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "respondToCommand:status:deviceAddress:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "respondToCommand:status:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostCIEndpointStateMachine",
+      "methods": [
+        {
+          "selector": "enqueueTransferCompletionForMessage:status:transferLength:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithInterface:command:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "inspectCommand:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "processDoorbell:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "respondToCommand:status:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostCIPortStateMachine",
+      "methods": [
+        {
+          "selector": "initWithInterface:portNumber:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "inspectCommand:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "respondToCommand:status:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "updateLinkState:speed:inhibitLinkStateChange:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostControllerInterface",
+      "methods": [
+        {
+          "selector": "enqueueInterrupt:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueInterrupt:expedite:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueInterrupts:count:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueInterrupts:count:expedite:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "getPortStateMachineForCommand:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "getPortStateMachineForPort:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithCapabilities:queue:interruptRateHz:error:commandHandler:doorbellHandler:interestHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 5,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostDevice",
+      "methods": [
+        {
+          "selector": "abortDeviceRequestsWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "abortDeviceRequestsWithOption:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configurationDescriptorWithConfigurationValue:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configurationDescriptorWithIndex:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configureWithValue:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configureWithValue:matchInterfaces:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "currentMicroframeWithTime:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:index:languageID:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:index:languageID:requestType:requestRecipient:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:data:completionTimeout:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:data:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithIOService:options:queue:error:interestHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithIOService:queue:error:interestHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "ioDataWithCapacity:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "referenceMicroframeWithTime:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "resetWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:data:bytesTransferred:completionTimeout:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:data:bytesTransferred:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "stringWithIndex:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "stringWithIndex:languageID:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostInterface",
+      "methods": [
+        {
+          "selector": "abortDeviceRequestsWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "abortDeviceRequestsWithOption:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configurationDescriptorWithConfigurationValue:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configurationDescriptorWithIndex:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "copyPipeWithAddress:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "currentMicroframeWithTime:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:index:languageID:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:index:languageID:requestType:requestRecipient:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:data:completionTimeout:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:data:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithIOService:options:queue:error:interestHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithIOService:queue:error:interestHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "ioDataWithCapacity:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "referenceMicroframeWithTime:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "selectAlternateSetting:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:data:bytesTransferred:completionTimeout:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:data:bytesTransferred:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "setIdleTimeout:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "stringWithIndex:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "stringWithIndex:languageID:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostObject",
+      "methods": [
+        {
+          "selector": "abortDeviceRequestsWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "abortDeviceRequestsWithOption:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configurationDescriptorWithConfigurationValue:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "configurationDescriptorWithIndex:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "currentMicroframeWithTime:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:index:languageID:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "descriptorWithType:length:index:languageID:requestType:requestRecipient:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:data:completionTimeout:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:data:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueDeviceRequest:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithIOService:options:queue:error:interestHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "initWithIOService:queue:error:interestHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "stored"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "ioDataWithCapacity:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "referenceMicroframeWithTime:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:data:bytesTransferred:completionTimeout:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:data:bytesTransferred:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendDeviceRequest:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "stringWithIndex:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "stringWithIndex:languageID:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostPipe",
+      "methods": [
+        {
+          "selector": "abortWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "abortWithOption:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "adjustPipeWithDescriptors:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "clearStallWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "copyStreamWithStreamID:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "disableStreamsWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enableStreamsWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueControlRequest:data:completionTimeout:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueControlRequest:data:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueControlRequest:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueIORequestWithData:completionTimeout:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 3,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueIORequestWithData:frameList:frameListCount:firstFrameNumber:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueIORequestWithData:transactionList:transactionListCount:firstFrameNumber:options:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 6,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendControlRequest:data:bytesTransferred:completionTimeout:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendControlRequest:data:bytesTransferred:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendControlRequest:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendIORequestWithData:bytesTransferred:completionTimeout:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendIORequestWithData:frameList:frameListCount:firstFrameNumber:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendIORequestWithData:transactionList:transactionListCount:firstFrameNumber:options:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "setIdleTimeout:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "IOUSBHostStream",
+      "methods": [
+        {
+          "selector": "abortWithError:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "abortWithOption:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "enqueueIORequestWithData:error:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "sendIORequestWithData:bytesTransferred:error:",
+          "is_instance": true,
+          "source": "llm",
+          "threading": "any_thread",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 16,
+    "block_stored": 8,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 115,
+    "error_pattern": 115
+  }
+}

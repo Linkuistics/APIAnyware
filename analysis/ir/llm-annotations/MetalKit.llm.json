@@ -1,0 +1,194 @@
+{
+  "framework": "MetalKit",
+  "classes": [
+    {
+      "class_name": "MTKMesh",
+      "methods": [
+        {
+          "selector": "initWithMesh:device:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newMeshesFromAsset:device:sourceMeshes:error:",
+          "is_instance": false,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MTKTextureLoader",
+      "methods": [
+        {
+          "selector": "newTextureWithCGImage:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithCGImage:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithContentsOfURL:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithContentsOfURL:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithData:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithData:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithMDLTexture:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithMDLTexture:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithName:scaleFactor:bundle:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithName:scaleFactor:bundle:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithName:scaleFactor:displayGamut:bundle:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTextureWithName:scaleFactor:displayGamut:bundle:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newTexturesWithContentsOfURLs:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 2,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTexturesWithContentsOfURLs:options:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "newTexturesWithNames:scaleFactor:bundle:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 4,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "newTexturesWithNames:scaleFactor:displayGamut:bundle:options:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {
+              "param_index": 5,
+              "invocation": "async_copied"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "MTKView",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 9,
+    "block_stored": 0,
+    "parameter_ownership": 1,
+    "threading_main_thread_only": 1,
+    "threading_any_thread": 0,
+    "error_pattern": 9
+  }
+}

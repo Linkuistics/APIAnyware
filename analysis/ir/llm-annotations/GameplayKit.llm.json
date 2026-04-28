@@ -1,0 +1,102 @@
+{
+  "framework": "GameplayKit",
+  "classes": [
+    {
+      "class_name": "GKAgent",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GKAgent2D",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GKAgent3D",
+      "methods": [
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {
+              "param_index": 0,
+              "ownership": "weak"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GKNSPredicateRule",
+      "methods": [
+        {
+          "selector": "ruleWithBlockPredicate:action:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "GKRule",
+      "methods": [
+        {
+          "selector": "ruleWithBlockPredicate:action:",
+          "is_instance": false,
+          "block_parameters": [
+            {
+              "param_index": 0,
+              "invocation": "stored"
+            },
+            {
+              "param_index": 1,
+              "invocation": "stored"
+            }
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 0,
+    "block_stored": 4,
+    "parameter_ownership": 3,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 0
+  }
+}

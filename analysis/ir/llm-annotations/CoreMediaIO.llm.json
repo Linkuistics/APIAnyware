@@ -1,0 +1,64 @@
+{
+  "framework": "CoreMediaIO",
+  "classes": [
+    {
+      "class_name": "CMIOExtensionDevice",
+      "methods": [
+        {
+          "selector": "addStream:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "removeStream:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "CMIOExtensionProvider",
+      "methods": [
+        {
+          "selector": "addDevice:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        },
+        {
+          "selector": "removeDevice:error:",
+          "is_instance": true,
+          "source": "llm",
+          "error_pattern": "error_out_param"
+        }
+      ]
+    },
+    {
+      "class_name": "CMIOExtensionStream",
+      "methods": [
+        {
+          "selector": "consumeSampleBufferFromClient:completionHandler:",
+          "is_instance": true,
+          "source": "llm",
+          "block_parameters": [
+            {
+              "param_index": 1,
+              "invocation": "async_copied"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 1,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 4
+  }
+}

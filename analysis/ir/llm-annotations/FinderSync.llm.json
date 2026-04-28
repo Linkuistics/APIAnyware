@@ -1,0 +1,70 @@
+{
+  "framework": "FinderSync",
+  "classes": [
+    {
+      "class_name": "FIFinderSync",
+      "methods": [
+        {
+          "selector": "makeListenerEndpointForServiceName:itemURL:andReturnError:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "valuesForAttributes:forItemWithURL:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "FIFinderSyncController",
+      "methods": [
+        {
+          "selector": "completeRequestReturningItems:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "openURL:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setLastUsedDate:forItemWithURL:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setTagData:forItemWithURL:completion:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ],
+  "subagent_report": {
+    "block_synchronous": 0,
+    "block_async_copied": 5,
+    "block_stored": 0,
+    "parameter_ownership": 0,
+    "threading_main_thread_only": 0,
+    "threading_any_thread": 0,
+    "error_pattern": 1
+  }
+}
