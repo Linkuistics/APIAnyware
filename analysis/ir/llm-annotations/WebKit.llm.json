@@ -1,0 +1,700 @@
+{
+  "framework": "WebKit",
+  "classes": [
+    {
+      "class_name": "WKContentRuleListStore",
+      "methods": [
+        {
+          "selector": "compileContentRuleListForIdentifier:encodedContentRuleList:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "getAvailableContentRuleListIdentifiers:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "lookUpContentRuleListForIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "removeContentRuleListForIdentifier:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKDownload",
+      "methods": [
+        {
+          "selector": "cancel:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKHTTPCookieStore",
+      "methods": [
+        {
+          "selector": "addObserver:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "deleteCookie:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "getAllCookies:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "getCookiePolicy:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "removeObserver:",
+          "is_instance": true,
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setCookie:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setCookiePolicy:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setCookies:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKWebExtension",
+      "methods": [
+        {
+          "selector": "extensionWithAppExtensionBundle:completionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "extensionWithResourceBaseURL:completionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKWebExtensionContext",
+      "methods": [
+        {
+          "selector": "loadBackgroundContentWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKWebExtensionController",
+      "methods": [
+        {
+          "selector": "fetchDataRecordOfTypes:forExtensionContext:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchDataRecordsOfTypes:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "loadExtensionContext:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "removeDataOfTypes:fromDataRecords:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "unloadExtensionContext:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKWebExtensionMatchPattern",
+      "methods": [
+        {
+          "selector": "initWithScheme:host:path:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "initWithString:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKWebExtensionMessagePort",
+      "methods": [
+        {
+          "selector": "sendMessage:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setDisconnectHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setMessageHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "stored"}
+          ],
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "copy"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKWebView",
+      "methods": [
+        {
+          "selector": "callAsyncJavaScript(_:arguments:in:in:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "callAsyncJavaScript:arguments:inFrame:inContentWorld:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 4, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "closeAllMediaPresentationsWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "createPDF(configuration:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "createPDFWithConfiguration:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "createWebArchiveData(completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "createWebArchiveDataWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "evaluateJavaScript(_:in:in:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "evaluateJavaScript:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "evaluateJavaScript:inFrame:inContentWorld:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 3, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchDataOfTypes:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "find(_:configuration:completionHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "findString:withConfiguration:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "pauseAllMediaPlayback:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "pauseAllMediaPlaybackWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestMediaPlaybackState:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "requestMediaPlaybackStateWithCompletionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "restoreData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "resumeAllMediaPlayback:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "resumeDownloadFromResumeData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setAllMediaPlaybackSuspended:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setCameraCaptureState:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setMicrophoneCaptureState:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setNavigationDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "setUIDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "startDownloadUsingRequest:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "suspendAllMediaPlayback:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "takeSnapshotWithConfiguration:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WKWebsiteDataStore",
+      "methods": [
+        {
+          "selector": "fetchAllDataStoreIdentifiers:",
+          "is_instance": false,
+          "block_parameters": [
+            {"param_index": 0, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchDataOfTypes:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "fetchDataRecordsOfTypes:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "removeDataOfTypes:forDataRecords:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "removeDataOfTypes:modifiedSince:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 2, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "removeDataStoreForIdentifier:completionHandler:",
+          "is_instance": false,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        },
+        {
+          "selector": "restoreData:completionHandler:",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "async_copied"}
+          ],
+          "threading": "main_thread_only",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WebHistory",
+      "methods": [
+        {
+          "selector": "loadFromURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        },
+        {
+          "selector": "saveToURL:error:",
+          "is_instance": true,
+          "error_pattern": "error_out_param",
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WebView",
+      "methods": [
+        {
+          "selector": "setDownloadDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setFrameLoadDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setPolicyDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setResourceLoadDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setUIDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        },
+        {
+          "selector": "setEditingDelegate:",
+          "is_instance": true,
+          "parameter_ownership": [
+            {"param_index": 0, "ownership": "weak"}
+          ],
+          "source": "llm"
+        }
+      ]
+    },
+    {
+      "class_name": "WebPage",
+      "methods": [
+        {
+          "selector": "withExportedFile(contentType:fileHandler:)",
+          "is_instance": true,
+          "block_parameters": [
+            {"param_index": 1, "invocation": "synchronous"}
+          ],
+          "source": "llm"
+        }
+      ]
+    }
+  ]
+}

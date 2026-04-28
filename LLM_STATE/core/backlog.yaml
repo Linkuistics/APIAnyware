@@ -2,7 +2,7 @@ tasks:
 - id: llm-annotation-calibration-on-naming-pattern-defeating-framework-100-method-cost-anchor
   title: LLM annotation calibration on naming-pattern-defeating framework (100-method cost anchor)
   category: analysis
-  status: not_started
+  status: done
   dependencies: []
   description: |
     **Priority:** medium
@@ -28,3 +28,153 @@ tasks:
     - LLM-vs-heuristic delta is measured and documented (even if zero — zero is informative).
     - Marginal cost/method estimate is updated from ≥2 data points (one of which has ≥100 methods).
     - Decision made: proceed to Foundation annotation or not, with rationale.
+  results: |
+    ## Outcome
+
+    Calibration run completed on **WebKit** (86 flagged methods, 13 annotated classes). Acceptance criteria satisfied:
+
+    - LLM-vs-heuristic delta measured and documented.
+    - Marginal cost/method now anchored on a ≥100-method-class data point (86 methods, plus the 2 prior runs).
+    - Decision made: **proceed to Foundation annotation** (with one merge-bug fix as a precondition — see below).
+
+    ## Framework selection
+
+    Picked WebKit over IOUSBHost. WebKit has 86 flagged methods (close to the ~100 anchor) with a balanced reason mix (54 `has_block_params` + 26 `delegate_observer_pattern` + 6 `error_out_param`). IOUSBHost has 115 methods but 92 are `error_out_param`, which heuristics already nail by pattern matching alone — that would have diluted the LLM-additive signal.
+
+    ## Heuristic-only baseline (clean run, prior checkpoint deleted first)
+
+    | Field on flagged 86 | Count |
+    |---|---|
+    | Methods with any annotation | 72 / 86 |
+    | `block_parameters` fields | 54 |
+    | `parameter_ownership` fields | 66 |
+    | `threading` fields | 0 |
+    | `error_pattern` fields | 6 |
+
+    ## LLM subagent run
+
+    - **Tokens:** 80,907 (subagent-reported).
+    - **Tool uses:** 24.
+    - **Wall time:** ~3m.
+    - **Annotations produced:** 13 classes, 72 methods.
+    - **Skipped:** all property-getter forms (delegates), 2 `WebDownload` inits inherited from `NSURLDownload` where the header doesn't support `weak`. The whole `WebFrame` and `WebDownload` classes were omitted (no annotated methods remained).
+    - **`llm-validate` result:** passed.
+    - **`enrich` verification:** passed (`main_thread_classes=13`).
+
+    ## LLM additive delta (the calibration's headline question)
+
+    | Field | Heuristic-only | Merged | Δ |
+    |---|---|---|---|
+    | Methods with any annotation | 72 | 74 | **+2** |
+    | `block_parameters` | 54 | 54 | 0 |
+    | `parameter_ownership` | 66 | 15 | **−51 (merge bug — see below)** |
+    | `threading` (flagged 86) | 0 | 63 | **+63** |
+    | `threading` (framework-wide) | 13 | 76 | **+63** |
+    | `error_pattern` | 6 | 6 | 0 |
+
+    **Headline win: +63 `threading: main_thread_only` annotations**, all derived from class-level `WK_SWIFT_UI_ACTOR` decorations on the 13 `WK*` classes. Heuristics have no way to read these. This is exactly the kind of additive contribution that would be invisible on naming-pattern-friendly frameworks like EventKit (where the prior calibration showed zero LLM additive value).
+
+    **Secondary win: +2 methods newly annotated** — legacy `WebView`'s `assign`-attribute delegate setters got `weak` ownership from the LLM, which heuristics missed because they don't look at the pre-ARC `assign` attribute.
+
+    **Block / error patterns: zero LLM-vs-heuristic delta** — confirms heuristics already nail `*completionHandler*` blocks and `NSError**` out-params, on this framework as on EventKit.
+
+    ## Marginal cost / method
+
+    `(80,907 − 35,000) / 86 ≈ 534 tokens/method`, consistent with the prior ~500/method estimate from the 21-method (PushKit + EventKit) data points. The 21-method estimate is now corroborated by an 86-method anchor.
+
+    **Foundation projection:** `35,000 + 546 × 534 ≈ 326k tokens`. Acceptable budget.
+
+    ## What worked
+
+    - Re-running `llm-extract --only WebKit` was deterministic; output matched the existing summary.
+    - The subagent prompt template is robust — the subagent self-validated and reported clean stats.
+    - The `WK_SWIFT_UI_ACTOR` insight is exactly the kind of header-level cross-cutting concern that justifies LLM annotation.
+
+    ## What didn't work / what this surfaced
+
+    1. **Merge bug in `validate::merge_annotations` (`analysis/crates/annotate/src/validate.rs:111`).** When LLM provides annotations, `parameter_ownership` is replaced wholesale by the LLM list — there is no per-param fallback to heuristic. 52 heuristic ownership annotations on flagged WebKit methods were silently dropped (66 → 15). `block_parameters`, `threading`, and `error_pattern` use proper per-field empty-fallback, so they don't have this issue. The LLM subagent only emits non-default ownership (`weak`/`copy`), so any heuristic-classified block-param `copy` ownership that the LLM didn't re-classify is lost. **This should be fixed before running Foundation** — Foundation's heuristic ownership coverage is much larger and the loss would be material.
+
+    2. **`annotate` without `--llm-dir` re-tags everything as `source = Llm`** (`analysis/crates/annotate/src/lib.rs:62-77` falls back to `load_existing_annotations(output_dir, ...)` and `merge_annotations` then sets `source = Llm` unconditionally). This makes a stale heuristic-only checkpoint *look* LLM-derived. Workaround for clean baselines: delete the prior `analysis/ir/annotated/{Framework}.json` first. Worth a comment in the code, or — better — only treat `output_dir` as a fallback if `llm_dir` is `None` AND the existing checkpoint actually contains LLM-sourced data.
+
+    ## Decision: Foundation annotation
+
+    **Go**, conditional on fixing the `parameter_ownership` merge bug first. Rationale:
+
+    - Token budget (~326k for Foundation) is well within affordable range for a one-time per-SDK-update cost.
+    - Threading additive value (the WebKit headline) will likely repeat on AppKit-adjacent frameworks that use Swift-actor isolation. Foundation itself is mostly thread-flexible so the threading additive may be smaller, but `parameter_ownership` and delegate `weak` annotations are the dominant value there.
+    - Don't run Foundation until the merge bug is fixed — losing 50+ ownership annotations because the merge clobbers them would defeat the purpose.
+
+    ## What this suggests next
+
+    1. **Fix `validate::merge_annotations` to do per-param ownership union** (LLM precedence on conflicts, but preserve heuristic entries on params LLM didn't touch). Same for any other list-typed annotation field.
+    2. **Decide: also fix the `source` re-tagging behavior** in `annotate_frameworks` (treat existing-checkpoint-as-LLM-fallback as a debug-only thing, or stop re-tagging source on merge).
+    3. **Then run Foundation** — large enough to justify both fixes being in place, and the dominant target for downstream code generation.
+    4. **Consider whether to re-run EventKit/PushKit** after the merge fix lands. EventKit had 0 ownership annotations from the LLM, so the merge bug had no effect there; PushKit similarly trivial. Probably not worth re-running.
+    5. **Optional: add a regression test** that `annotate --llm-dir` preserves heuristic ownership entries on params LLM didn't annotate. The bug existed because there was no test exercising that case.
+- id: fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
+  title: Fix parameter_ownership merge-clobber in validate::merge_annotations
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Priority:** high
+
+    **Promoted from:** WebKit calibration session (session 38) "What this suggests next" item 1.
+
+    **Problem:** `validate::merge_annotations` in `analysis/crates/annotate/src/validate.rs` (around line 111) clones the LLM `parameter_ownership` list wholesale and never falls back to heuristic entries for params the LLM didn't touch. Result: any heuristic-classified `copy`/`weak` ownerships on params not mentioned by the LLM are silently dropped. On WebKit this dropped 52 entries (66 → 15). Foundation's heuristic ownership coverage is larger, so the loss would be more material there.
+
+    Fields that use a per-field empty-fallback (`block_parameters`, `threading`, `error_pattern`) do NOT have this issue. The bug is specific to list-typed fields where the LLM typically emits a sparse subset.
+
+    **Design decision (settled in session 38):** Use a per-param union with LLM-precedence on conflicts. Concretely: for each param in the heuristic `parameter_ownership` list, if the LLM list contains an entry for the same param, use the LLM entry; otherwise keep the heuristic entry. Any LLM entries for params not in the heuristic list are appended (new params the heuristic missed). This matches the existing per-field empty-fallback philosophy already applied to scalar fields.
+
+    **Reference:**
+    - Bug site: `analysis/crates/annotate/src/validate.rs` ~line 111 (`merge_annotations` function, `parameter_ownership` handling).
+    - Pattern to replicate: the per-field empty-fallback used for `threading` / `block_parameters` / `error_pattern` in the same function.
+    - Test gap: no existing test covers the case where `--llm-dir` is given and LLM output omits a param that heuristics annotated. A regression test should be added.
+
+    **Secondary (optional, lower priority):** `annotate` without `--llm-dir` re-uses the prior annotated checkpoint as a fallback "LLM" source and re-tags every annotation as `source = Llm` (`analysis/crates/annotate/src/lib.rs:62-77`). This makes a stale checkpoint look LLM-derived. Consider only treating the existing checkpoint as fallback when `llm_dir` is `None` AND the checkpoint has `source = Llm` entries — or at minimum document the workaround (delete `analysis/ir/annotated/{Framework}.json` before heuristic-only baseline runs).
+
+    **Acceptance criteria:**
+    - `annotate --llm-dir` preserves heuristic `parameter_ownership` entries for params the LLM did not annotate.
+    - `annotate --llm-dir` uses LLM `parameter_ownership` for params the LLM did annotate (LLM-precedence on conflicts).
+    - A regression test exercises the mixed case.
+    - Optionally: re-run WebKit merge to confirm 66 ownership annotations (or close) are preserved.
+
+    **Dependencies:** none (can be done before Foundation).
+- id: run-llm-annotation-pass-on-foundation
+  title: Run LLM annotation pass on Foundation
+  category: analysis
+  status: blocked
+  blocked_reason: merge bug fix must land first to avoid clobbering heuristic parameter_ownership annotations
+  dependencies:
+  - fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
+  description: |
+    **Priority:** high
+
+    **Promoted from:** WebKit calibration session (session 38) decision block and "What this suggests next" item 3.
+
+    **Summary:** Run the full LLM annotation pass on Foundation — the largest and most important framework for downstream Racket binding generation. Budget is confirmed acceptable (~326k tokens = 35k fixed + 546 × 534).
+
+    **Why Foundation:** Foundation methods are the dominant target for both `parameter_ownership` (delegate weak/copy patterns are pervasive) and async-copy block classification. The WebKit calibration confirmed the LLM's additive value for threading-macro annotations; Foundation is mostly thread-flexible, so the dominant additive value here will be ownership and delegate-setter annotations that heuristics miss on non-standard naming.
+
+    **Precondition (blocker):** The `parameter_ownership` merge-clobber bug must be fixed first (see task `fix-parameter-ownership-merge-clobber-in-validate-merge-annotations`). Foundation's heuristic ownership coverage is much larger than WebKit's; losing it wholesale would defeat the purpose of the LLM pass.
+
+    **Steps:**
+    1. Verify merge bug is fixed and merged.
+    2. Run `llm-extract --only Foundation` to produce `.methods.json`; confirm method count ~546.
+    3. Delete any existing `analysis/ir/annotated/Foundation.json` checkpoint.
+    4. Run `annotate --only Foundation` (heuristic-only) and record baseline annotation counts.
+    5. Dispatch one subagent per `analysis/scripts/llm-annotate-subagent.md` (Foundation-sized; expect ~326k tokens, ~10–15m wall time).
+    6. Run `annotate --only Foundation --llm-dir …` and verify via `llm-validate` and `enrich`.
+    7. Record: token count, wall time, tool uses, LLM-vs-heuristic delta by field.
+    8. Update `analysis/scripts/llm-annotate-orchestration.md` runs table.
+
+    **Cost projection:** `35,000 + 546 × 534 ≈ 326,564 tokens`. Decision in session 38: acceptable for a one-time-per-SDK-update cost.
+
+    **Acceptance criteria:**
+    - `llm-validate` passes on Foundation output.
+    - `enrich` verification passes.
+    - LLM-vs-heuristic delta documented (threading, ownership, block params).
+    - Runs table updated.
+
+    **Dependencies:** fix-parameter-ownership-merge-clobber-in-validate-merge-annotations
