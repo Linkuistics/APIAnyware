@@ -544,3 +544,11 @@ entries:
   body: |
     `.llm.json` files become stale when an extraction fix changes the method set for affected frameworks — `llm-validate` reports methods referenced in the file that are absent from current IR.
     Remediation: delete stale `.llm.json` files, dispatch parallel subagents (see "LLM annotation parallel dispatch safe at 25-way fan-out"), validate with `llm-validate`. Unlike pipeline stages in "Downstream checkpoints can predate source fixes", LLM annotation staleness requires LLM subagent re-dispatch, not a pipeline rerun.
+- id: workspace-wide-enrich-pass-optional-follow-up-after-16-framework-annotation-cycle
+  title: 'Workspace-wide enrich pass: optional follow-up after 16-framework annotation cycle'
+  body: |
+    After the 16-framework LLM re-annotation cycle (2026-04-28), all 16 frameworks affected by the foreign-module type-decl extractor fix are consistent: `llm-validate` exits 0 with warnings=0, `annotate` and `enrich` complete with verification passed. The remaining 268 frameworks are unchanged.
+
+    A workspace-wide `enrich` pass is a low-risk optional next step if downstream emitters (racket-oo, future language targets) need fully-fresh derived relations across all frameworks. Not urgent: the 16 frameworks are now consistent with the rest of the pipeline. Run when preparing a release checkpoint or when emitter output quality issues surface that could stem from stale enrichment data.
+
+    Command: `cargo run -p apianyware-macos-analyze -- enrich` (without `--only`) or the equivalent `run-plan` step.

@@ -1,98 +1,48 @@
 tasks:
-- id: re-run-llm-annotation-for-16-frameworks-with-stale-llm-json-after-foreign-module-extractor-fix
-  title: Re-run LLM annotation for 16 frameworks with stale .llm.json after foreign-module extractor fix
+- id: add-llm-validate-drift-detection-guardrail-for-annotation-staleness-after-extraction-changes
+  title: Add llm-validate drift detection guardrail for annotation staleness after extraction changes
   category: analysis
-  status: done
+  status: not_started
   dependencies: []
   description: |
-    **Problem:** The foreign-module type-decl filter fix (`is_foreign_module_type_decl()` in
-    `collection/crates/extract-swift/src/declaration_mapping.rs`) removed ~20+ stale (class, selector)
-    pairs from `.methods.json` summaries across 16 frameworks. The versioned `.llm.json` files in
-    `analysis/ir/llm-annotations/` were generated against the pre-fix summaries and now reference
-    selectors that no longer exist. `llm-validate` correctly flags all 16 with errors.
+    **Problem:** When an extraction fix changes the method set (e.g. the foreign-module type-decl filter landed 2026-04-20, affecting 16 frameworks), stale `.llm.json` files pass `llm-validate` *until* the next manual annotation run discovers the mismatch — there is no automated gate between the fix commit and the next triage cycle.
 
-    **Affected frameworks (16):**
-    AppIntents, AppKit, Cinematic, CloudKit, DiscRecordingUI, Foundation, GroupActivities, IOBluetooth,
-    OSLog, Photos, QuickLookUI, RealityFoundation, RealityKit, SecurityInterface, SharedWithYou, SwiftUI
+    **Signal from cycle:** The 16-framework re-annotation cycle (completed 2026-04-28) noted: "A script that re-runs `llm-validate` on all 154 annotated frameworks would have caught this regression at the moment the foreign-module fix landed, rather than at the next manual triage."
 
-    **Steps:**
-    1. Re-run `llm-extract` to regenerate `.methods.json` summaries for all 16 frameworks.
-    2. Dispatch LLM annotation subagents for each framework per
-       `analysis/scripts/llm-annotate-subagent.md`. Use up to 25-way fan-out (calibrated safe).
-    3. Each subagent must run `llm-validate` before returning — exit 0 required.
-    4. Run `annotate --llm-dir analysis/ir/llm-annotations/` and `enrich` for all 16 frameworks.
-    5. Confirm `llm-validate` exits 0 for all 16 frameworks; commit updated `.llm.json` files.
+    **Proposed guardrail:**
+    Write `analysis/scripts/check-llm-annotation-drift.sh` (or a Makefile target) that:
+    1. Iterates `analysis/ir/llm-annotations/*.llm.json`.
+    2. For each file, runs `llm-validate --framework <name>` (or the equivalent invocation).
+    3. Exits non-zero on first failure and prints a summary of failed frameworks.
+    4. Can be called from `run-plan: triage` hooks or manual pre-commit verification.
 
-    **Fallback:** The jq mechanical cleanup approach (drop selector entries not in the updated summary)
-    was prototyped and produces semantically correct output, but causes significant whitespace churn
-    because `.llm.json` files use a custom inline-object format that jq expands differently. Use as
-    fallback only if subagent cost is prohibitive.
+    **Scope:** The validator already exists (`llm-validate` CLI); this is a thin shell loop. Should be ~20 LOC. Add a note to `analysis/scripts/llm-annotate-orchestration.md` pointing to it as a post-extraction-fix verification step.
 
-    **Reference:** Promoted from `fix-swift-extension-method-misattribution-in-methods-extractor`
-    Results section "Follow-up: stale `.llm.json` annotations". Original filter fix is at
-    `collection/crates/extract-swift/src/declaration_mapping.rs` lines 30–44 and 168–196.
+    **Why matters:** Catches annotation staleness immediately after extraction fixes rather than at the next triage cycle, preventing silent `.llm.json` drift from accumulating across multiple extraction changes.
+- id: improve-annotation-heuristics-mainactor-threading-propagation-and-block-setter-stored-signal
+  title: 'Improve annotation heuristics: MainActor threading propagation and block-setter stored signal'
+  category: analysis
+  status: not_started
+  dependencies: []
+  description: |
+    **Two concrete heuristic improvements identified from the 16-framework LLM re-annotation cycle (2026-04-28). Both reduce future LLM subagent token spend by covering patterns that heuristics can determine statically.**
 
-    **Dependencies:** None — `.methods.json` regeneration is the first step.
-  results: |
-    **Outcome:** All 16 frameworks re-annotated; `llm-validate` exits 0 with `warnings=0` for every framework; `annotate` and `enrich` complete with `verification passed` on all 16.
+    ## 1. Propagate `@MainActor`/`@_Concurrency.MainActor` into the threading heuristic
 
-    ## Steps executed
+    **Current state:** The heuristic threading pass propagates class-level `_SWIFT_UI_ACTOR` to methods (added in a prior cycle). However, Swift-native `@MainActor` and `@_Concurrency.MainActor` Swift interface attributes are NOT yet propagated by heuristics. The 16-framework cycle found 416 `main_thread_only` annotations where LLM was supplementing the heuristic gap (AppKit: 273, DiscRecordingUI: 33, RealityFoundation: 50, SecurityInterface: 41, QuickLookUI: 7, etc.).
 
-    1. Re-ran `llm-extract --only` on the 16 frameworks → 1583 methods across 119/140/15/29/5/1/2/10/1/17/2/15/1/6/2/3 classes (Foundation/AppKit/AppIntents/CloudKit/Cinematic/GroupActivities/QuickLookUI/IOBluetooth/RealityKit/Photos/SharedWithYou/RealityFoundation/OSLog/SecurityInterface/_/SwiftUI). Confirms the post-extractor-fix `.methods.json` is now stable.
-    2. Deleted the 16 stale `.llm.json` files and dispatched 16 subagents in a single parallel salvo. All returned `warnings=0` first run (no re-validation loops needed).
-    3. Independent re-validation: PASS=16, FAIL=0.
-    4. `annotate --llm-dir analysis/ir/llm-annotations --only <16>` → 16 frameworks merged.
-    5. `enrich --only <16>` → all 16 report `verification passed` with 0 violations.
+    **Fix:** In `analysis/crates/annotate/src/heuristics.rs`, add a pass that reads `threading` from the IR's class-level `swift_attributes` field (or equivalent) for `@MainActor`/`@_Concurrency.MainActor` and propagates `main_thread_only` to all instance methods of that class.
 
-    ## Per-framework subagent_report (block_synchronous / block_async_copied / block_stored / parameter_ownership / threading_main_thread_only / threading_any_thread / error_pattern)
+    **Blast radius:** ~416 methods across the 16 frameworks above, plus any other frameworks with `@MainActor` classes not yet re-annotated by LLM.
 
-    | Framework | sync | async | stored | weak/copy | mt_only | any_thr | error |
-    |---|---:|---:|---:|---:|---:|---:|---:|
-    | AppIntents | 2 | 1 | 102 | 0 | 0 | 0 | 0 |
-    | AppKit | 29 | 101 | 21 | 174 | 273 | 0 | 73 |
-    | Cinematic | 0 | 9 | 0 | 0 | 0 | 0 | 1 |
-    | CloudKit | 3 | 115 | 38 | 158 | 0 | 0 | 0 |
-    | DiscRecordingUI | 0 | 25 | 0 | 8 | 33 | 0 | 0 |
-    | Foundation | 88 | 85 | 41 | 29 | 0 | 0 | 204 |
-    | GroupActivities | 0 | 1 | 0 | 0 | 0 | 1 | 1 |
-    | IOBluetooth | 0 | 0 | 0 | 15 | 0 | 0 | 0 |
-    | OSLog | 0 | 0 | 0 | 0 | 0 | 0 | 5 |
-    | Photos | 7 | 21 | 8 | 0 | 0 | 0 | 4 |
-    | QuickLookUI | 0 | 5 | 3 | 2 | 7 | 3 | 0 |
-    | RealityFoundation | 28 | 11 | 66 | 0 | 50 | 7 | 0 |
-    | RealityKit | 0 | 1 | 0 | 0 | 1 | 0 | 0 |
-    | SecurityInterface | 0 | 27 | 0 | 14 | 41 | 0 | 0 |
-    | SharedWithYou | 0 | 4 | 0 | 4 | 4 | 5 | 1 |
-    | SwiftUI | 1 | 0 | 1 | 1 | 7 | 0 | 1 |
-    | **Total** | **158** | **406** | **280** | **405** | **416** | **16** | **290** |
+    ## 2. Recognize `@property (copy)` block setters as `stored` signal
 
-    ## Headline LLM-additive findings
+    **Current state:** Heuristics emit 0 `stored` block lifecycle annotations. The 16-framework cycle produced 280 `stored` annotations from LLM. A significant fraction come from Combine-style `@property (copy)` block setters (e.g., `NSOperation.completionBlock`, `NSTimer` blocks, per-result handlers on CKOperation subclasses, etc.).
 
-    - **AppIntents (102 stored / 105 block params):** ResolverSpecificationBuilder `resolvers:` closures, `EntityProperty.entityProvider`, comparator `mappingTransform` and `withResolvers:` closures are all retained on the parameter for repeated invocation during query evaluation — heuristics would mis-classify all of them as `async_copied`.
-    - **CloudKit (38 stored):** every CKOperation per-result handler family (`recordChangedBlock`, `recordWithIDWasDeletedBlock`, `recordZoneFetchCompletionBlock`, etc.) correctly marked stored vs the 115 one-shot operation completions.
-    - **Foundation (41 stored):** NSTimer block, NSOperation `completionBlock`, NSXPCConnection interruption/invalidation handlers, NSPredicate `predicateWithBlock:`, NSSortDescriptor comparator, NSItemProvider register-handlers, NSError `userInfoValueProvider`. Plus 29 weak-ownership annotations on KVO/NSNotificationCenter observer params (heuristics miss these because the methods aren't named `setDelegate:`/`setDataSource:`).
-    - **AppKit (273 main_thread_only):** NS_SWIFT_UI_ACTOR propagation across the 138-class AppKit hierarchy (sister of prior 142 figure; small variance from getter/setter pairing).
-    - **DiscRecordingUI / SecurityInterface / QuickLookUI:** all NSPanel-derived → main_thread_only across the board, consistent with AppKit conventions.
-    - **RealityFoundation (66 stored, 50 main_thread_only):** Combine `LoadRequest` operator chain closures (matches established Combine convention) + audio-render generators + per-step collision handlers; MainActor propagation across Entity hierarchy.
-    - **GroupActivities (1 any_thread):** `GroupSessionMessenger` is `@unchecked Sendable` per swiftinterface — first explicit `any_thread` claim where the headers document thread-safety.
+    **Fix:** In `analysis/crates/annotate/src/heuristics.rs`, add a rule: if a method sets a `@property (copy)` parameter that has a block type, classify the block parameter as `stored`. The ObjC IR property entries carry the `copy` attribute; cross-reference with matching setter selector names.
 
-    ## Notable subagent decisions
+    **Expected yield:** Reduces `stored`-block LLM annotation need on frameworks with clear `@property (copy)` setter patterns. Won't cover all 280 `stored` cases (some require semantic reasoning about retention lifetime), but covers the mechanically-detectable subset.
 
-    - **AppKit:** declined to assert weak on 9 legacy modal-callback selectors (`commitEditingWithDelegate:didCommitSelector:`, `runOperationModalForWindow:delegate:didRunSelector:contextInfo:`) — Apple headers carry no explicit retention attribute, leaving heuristics to fill the gap.
-    - **Foundation:** explicitly skipped 24 NSURLSession/NSURLConnection/URLSession `delegate:` parameters where the header documents `retain` ownership (NOT `weak`) — these are the canonical exceptions to the AppKit weak-delegate convention.
-    - **IOBluetooth:** dropped IOBluetoothL2CAPChannel entirely because the header explicitly documents `strong` retention of the delegate (the framework is split across `assign`/`weak` for some classes and `strong` for L2CAP).
-    - **Photos:** correctly distinguished `performChanges:completionHandler:` `changeBlock` as `synchronous` (executed inline within transaction) vs the trailing `completionHandler` as `async_copied`.
-    - **RealityKit (1 method):** `ARView.snapshot(saveToHDR:completion:)` correctly marked main_thread_only via `@_Concurrency.MainActor` on the class; trivial but correct.
+    ## Priority
 
-    ## Cost & wall-time summary
-
-    - 15 of 16 subagents completed in < 4m. AppKit (the largest, 524 methods) took ~12.5m and consumed ~108k tokens. Foundation (510 methods) took ~5.4m and ~92k tokens. Total subagent wall-clock for the parallel batch was bounded by AppKit at ~12.5m.
-    - Aggregate token spend across all 16: ~900k (AppKit 108k, CloudKit 155k, Foundation 92k, RealityFoundation 66k, AppIntents 58k, others ≤ 50k each).
-    - The 35k + N×~250 tokens-per-method budget rule continued to hold; Foundation came in 30% under the rule again, AppKit slightly over (16-class delegate-pattern thoroughness on AppKit matters).
-
-    ## What this suggests next
-
-    1. **Workspace-wide enrich pass** is now a low-risk follow-up if downstream emitters need fresh derived relations across all frameworks (the 16 affected here are now consistent; the other 268 are unchanged).
-    2. **Annotation drift detection** could become a CI-style guardrail: a script that re-runs `llm-validate` on all 154 annotated frameworks would have caught this regression at the moment the foreign-module fix landed, rather than at the next manual triage. Prototype: `for f in analysis/ir/llm-annotations/*.llm.json; do … done` with a fail-fast.
-    3. **Subagent self-report drift** was clean on this run (all 16 reported counts matched validator-observed counts) — no recurrence of the CoreData-batch self-report drift incident.
-    4. **Heuristic improvements that could reduce future LLM additive value:** propagate `@MainActor`/`@_Concurrency.MainActor` Swift decorations into the heuristic threading pass (would cover the 416 main_thread_only annotations here automatically); recognize `@property (copy)` on block setters as a `stored` signal (Combine-family heuristic). Both would cut subagent token budget on future re-runs.
+    Both improvements are incremental quality upgrades to the heuristic layer. Do (1) first as it is purely additive and has a larger known blast radius.
