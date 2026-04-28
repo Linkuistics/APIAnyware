@@ -1,202 +1,35 @@
 tasks:
-- id: fix-swift-extension-method-misattribution-in-methods-extractor
-  title: Fix Swift extension method misattribution in methods extractor
-  category: analysis
-  status: done
-  dependencies: []
-  description: |
-    **Priority:** medium
-
-    **Promoted from:** Session 47 hand-off — ScriptingBridge subagent discovery during LLM annotation.
-
-    **Problem:** During LLM annotation, the ScriptingBridge subagent flagged that `SBElementArray.mapAnnotations(_:)` and `SBElementArray.mapFeatures(_:)` do not exist in ScriptingBridge headers — they are `CreateMLComponents.Sequence` extension methods that were incorrectly attributed to `SBElementArray` in `analysis/ir/llm-summaries/ScriptingBridge.methods.json`. The subagent skipped them rather than emitting incorrect annotations, but the underlying extractor bug remains.
-
-    **Root cause hypothesis:** Swift extensions defined on a type from framework A, but declared in framework B's `.swiftinterface`, are being attributed to the base type's framework (A) rather than the declaring framework (B). The `Sequence` protocol extension in `CreateMLComponents` defines `mapAnnotations(_:)` and `mapFeatures(_:)` — these got pulled into `SBElementArray`'s method list because `SBElementArray` conforms to `Sequence`.
-
-    **What to investigate:**
-    1. Inspect `analysis/ir/llm-summaries/ScriptingBridge.methods.json` — confirm `mapAnnotations(_:)` and `mapFeatures(_:)` are listed there.
-    2. Inspect `analysis/ir/llm-summaries/CreateMLComponents.methods.json` — confirm the selectors appear there correctly.
-    3. Identify which extractor stage produces the per-framework `.methods.json` files and where conformance-inherited extensions are resolved.
-    4. Determine whether other frameworks are affected: look for selector names in framework X's `.methods.json` that do not appear in that framework's headers or `.swiftinterface`.
-
-    **Scope:** Fix the extractor so Swift protocol extension methods are attributed to the framework declaring the extension, not the framework of the conforming type. Re-extract affected frameworks. Re-run LLM annotation for any framework whose method list changes.
-
-    **Acceptance criteria:**
-    - `SBElementArray.mapAnnotations(_:)` and `SBElementArray.mapFeatures(_:)` absent from `ScriptingBridge.methods.json`.
-    - Audit confirms no other obvious misattributions (or documents them if found).
-    - Re-extracted frameworks pass `llm-validate` and `enrich` with 0 violations.
-
-    **Dependencies:** none (standalone extractor fix; does not block other pipeline stages)
-  results: |
-    ## Root cause
-
-    `swift-api-digester -dump-sdk -module X` re-emits any external type that
-    module X extends as a top-level declaration whose `moduleName` points at
-    the owning module (e.g. `Sequence` → `Swift`, `DataFrame` →
-    `TabularData`, `NSWindow` → `AppKit` when SwiftUI is dumped). The body
-    of that re-emitted node holds X's extension members, each tagged
-    `isFromExtension: true`. The pre-fix Swift extractor walked these
-    top-level decls indiscriminately, storing them in framework X's IR as
-    if X owned them.
-
-    The misattribution then bloomed at resolve-time:
-
-    1. `Sequence` (a Swift stdlib protocol) appeared in CreateMLComponents'
-       IR with `mapAnnotations(_:)` and `mapFeatures(_:)` as
-       `optional_methods`.
-    2. `analysis/crates/resolve/src/fact_loader.rs` loaded those into the
-       `protocol_method` Datalog relation keyed by `Sequence`.
-    3. The `effective_method` rule that propagates protocol methods into
-       conforming classes (`analysis/crates/resolve/src/program.rs:132`)
-       added `mapAnnotations(_:)` / `mapFeatures(_:)` to **every** SDK
-       class conforming to `Sequence` — `SBElementArray` in
-       ScriptingBridge, plus `NSArray`, `NSData`, `NSDictionary`,
-       `NSEnumerator`, etc. in Foundation, CloudKit, IOBluetooth, OSLog,
-       Photos.
-
-    The same shape caused SwiftUI extension methods like
-    `beginSheet(content:completionHandler:)` and
-    `animate(_:changes:completion:)` to leak into AppKit's NSWindow,
-    NSAnimationContext, etc. — every framework that SwiftUI extends had
-    the same blast radius via duplicate `class_decl` rows that the resolve
-    program merged.
-
-    ## Fix
-
-    Added `is_foreign_module_type_decl()` filter to
-    `collection/crates/extract-swift/src/declaration_mapping.rs`. In
-    `map_abi_to_framework`, top-level `Class`/`Protocol`/`Struct`/`Enum`
-    decls whose `moduleName` is set to a value other than the framework
-    root name are dropped before mapping. Functions and Vars are not
-    gated — they always carry the owning module's name and don't have
-    this issue.
-
-    This drops three categories of nodes per CreateMLComponents dump
-    (Swift's `Sequence` + `LazySequence`, TabularData's `DataFrame`)
-    and similar nodes from every framework that extends external types.
-    The extension methods themselves are not preserved as top-level
-    functions; they're Swift-generic and can't be C-linked into target
-    language bindings, so they have no useful representation in the
-    downstream pipeline.
-
-    ## Tests added
-
-    Four synthetic tests in
-    `collection/crates/extract-swift/tests/declaration_mapping.rs`:
-
-    - `foreign_module_protocol_with_extension_methods_is_skipped` — the
-      exact CreateMLComponents/Sequence/SBElementArray scenario from the
-      bug report, reproduced with synthetic ABI nodes.
-    - `foreign_module_struct_with_extension_methods_is_skipped` —
-      CreateMLComponents extending `TabularData.DataFrame`.
-    - `own_protocol_with_matching_module_is_kept` — sanity guard that
-      module-owned protocols pass through.
-    - `decl_without_module_name_is_kept` — defensive: missing
-      `moduleName` is not evidence of foreign ownership.
-
-    ## Verification
-
-    - `cargo test --workspace` — all tests pass (no regressions).
-    - `cargo clippy --workspace --all-targets` — clean.
-    - Re-ran full pipeline (collect → resolve → annotate → enrich) on
-      all 284 frameworks. Enrichment global totals show
-      `flag_mismatches=0`, `unclassified_blocks=0`, all 568 framework
-      verifications pass, 0 failures.
-    - `mapAnnotations(_:)` and `mapFeatures(_:)` no longer appear in any
-      `analysis/ir/llm-summaries/*.methods.json`. `SBElementArray`'s
-      entry in `ScriptingBridge.methods.json` is gone entirely (its only
-      contents were the two bogus selectors).
-    - Audit of remaining Swift-style selectors (e.g. `filter(_:)`,
-      `map(_:)` on Combine `PassthroughSubject`/`Future`) confirms they
-      are real `Publisher` extension methods declared *inside* Combine —
-      legitimate API, correctly attributed.
-
-    ## Acceptance criteria
-
-    | Criterion | Status |
-    |---|---|
-    | `SBElementArray.mapAnnotations(_:)` / `mapFeatures(_:)` absent from `ScriptingBridge.methods.json` | done |
-    | Audit confirms no other obvious misattributions | done — all remaining Swift-style selectors are in-framework protocol extension methods |
-    | Re-extracted frameworks pass `llm-validate` and `enrich` with 0 violations | partial — enrich passes (0 violations); `llm-validate` fails for 16 frameworks because the existing `.llm.json` files contain references to selectors my fix removed (see follow-up below) |
-
-    ## Follow-up: stale `.llm.json` annotations
-
-    The fix removed roughly 20+ stale (class, selector) pairs from the
-    authoritative `.methods.json` files. The 93 tracked
-    `analysis/ir/llm-annotations/*.llm.json` files were generated against
-    the pre-fix (buggy) summaries and now contain references to selectors
-    that no longer exist. `llm-validate` correctly flags 16 frameworks:
-    AppIntents, AppKit, Cinematic, CloudKit, DiscRecordingUI, Foundation,
-    GroupActivities, IOBluetooth, OSLog, Photos, QuickLookUI,
-    RealityFoundation, RealityKit, SecurityInterface, SharedWithYou,
-    SwiftUI.
-
-    I considered two cleanup paths during this phase:
-
-    1. **Mechanical cleanup** — drop selector entries not in the
-       updated summary. I prototyped a jq filter and confirmed it
-       produces semantically correct output (Foundation went from 121→115
-       classes, 483→447 methods; only bug-related entries were removed).
-       But running it across all 93 files caused massive whitespace churn
-       (the `.llm.json` files use a custom inline-object format that jq's
-       default expand doesn't preserve), so I reverted.
-
-    2. **LLM re-annotation** — per `analysis/scripts/llm-annotate-subagent.md`
-       and the persisted memory "LLM annotation must run within Claude
-       Code", this is the canonical path. Re-annotating the 16 affected
-       frameworks via subagents is the proper fix. It is a substantive
-       separate task that triage should pick up.
-
-    Recommend triage promote a successor task: "Re-run LLM annotation for
-    16 frameworks affected by the foreign-module extractor fix" with the
-    explicit framework list above. The cleanup-via-jq approach can be the
-    fallback if subagent dispatch is too expensive.
-
-    ## What this suggests next
-
-    - The `is_from_extension` field on `AbiNode` is still unused in
-      production code (only set as `false` in test fixtures). The
-      module-name filter handles the immediate bug, but emitting
-      extension methods as top-level functions of the extending framework
-      (when they're C-linkable) would recover any genuinely useful API
-      surface that the filter currently drops. Worth a follow-up if any
-      such methods turn out to be needed by an emitter.
-    - The resolve pass's `effective_method` propagation rule
-      (`program.rs:132`) is permissive: any class conforming to a
-      protocol picks up all of that protocol's `optional_methods`. This
-      was always the intended behavior but interacted poorly with the
-      bug. Worth flagging in memory: future protocol-method bugs at the
-      extractor level cascade through this rule with very wide blast
-      radius across the SDK.
-
-    ## Files changed
-
-    - `collection/crates/extract-swift/src/declaration_mapping.rs` —
-      added `is_foreign_module_type_decl()` and the gate at the top of
-      `map_abi_to_framework`'s loop.
-    - `collection/crates/extract-swift/tests/declaration_mapping.rs` —
-      4 synthetic tests for the new filter.
-
-    Pipeline regenerable artifacts (gitignored): `collection/ir/collected/*`,
-    `analysis/ir/{resolved,annotated,enriched,llm-summaries}/*` were all
-    regenerated as part of verification but won't appear in the commit.
-- id: re-run-pipeline-for-frameworks-affected-by-foreign-module-type-decl-filter-fix
-  title: Re-run pipeline for frameworks affected by foreign-module type-decl filter fix
+- id: re-run-llm-annotation-for-16-frameworks-with-stale-llm-json-after-foreign-module-extractor-fix
+  title: Re-run LLM annotation for 16 frameworks with stale .llm.json after foreign-module extractor fix
   category: analysis
   status: not_started
   dependencies: []
   description: |
-    **Problem:** The Swift extension method misattribution fix (dropping foreign-module top-level type decls in `declaration_mapping.rs`) changes what IR is emitted for every framework that extends external types — primarily CreateMLComponents, SwiftUI, and any framework using Swift generics over stdlib types.
+    **Problem:** The foreign-module type-decl filter fix (`is_foreign_module_type_decl()` in
+    `collection/crates/extract-swift/src/declaration_mapping.rs`) removed ~20+ stale (class, selector)
+    pairs from `.methods.json` summaries across 16 frameworks. The versioned `.llm.json` files in
+    `analysis/ir/llm-annotations/` were generated against the pre-fix summaries and now reference
+    selectors that no longer exist. `llm-validate` correctly flags all 16 with errors.
 
-    **Decision:** After landing the extractor fix, the full pipeline must be re-run for affected frameworks so that resolve, enrich, and LLM annotation see clean IR.
+    **Affected frameworks (16):**
+    AppIntents, AppKit, Cinematic, CloudKit, DiscRecordingUI, Foundation, GroupActivities, IOBluetooth,
+    OSLog, Photos, QuickLookUI, RealityFoundation, RealityKit, SecurityInterface, SharedWithYou, SwiftUI
 
-    **Steps to execute:**
-    1. Re-extract affected frameworks: at minimum CreateMLComponents, SwiftUI. A broader audit can identify others by scanning for `moduleName` in raw digester dumps that don't match the root framework name.
-    2. Re-run `analysis/crates/resolve` to rebuild Datalog facts from the updated IR.
-    3. Re-run `enrich` to regenerate `.methods.json` files.
-    4. Re-run LLM annotation for affected frameworks.
-    5. Spot-check: `SBElementArray.mapAnnotations(_:)` and `mapFeatures(_:)` must be absent from `analysis/ir/llm-summaries/ScriptingBridge.methods.json`. AppKit `NSWindow.beginSheet(content:completionHandler:)` (if it was a SwiftUI extension) must also be absent from AppKit summaries.
+    **Steps:**
+    1. Re-run `llm-extract` to regenerate `.methods.json` summaries for all 16 frameworks.
+    2. Dispatch LLM annotation subagents for each framework per
+       `analysis/scripts/llm-annotate-subagent.md`. Use up to 25-way fan-out (calibrated safe).
+    3. Each subagent must run `llm-validate` before returning — exit 0 required.
+    4. Run `annotate --llm-dir analysis/ir/llm-annotations/` and `enrich` for all 16 frameworks.
+    5. Confirm `llm-validate` exits 0 for all 16 frameworks; commit updated `.llm.json` files.
 
-    **Reference:** Fix is in `collection/crates/extract-swift/src/declaration_mapping.rs` lines 30–44 (filter call) and 168–196 (`is_foreign_module_type_decl` function). Original misattribution was discovered in `analysis/ir/llm-summaries/ScriptingBridge.methods.json` during Session 47 LLM annotation.
+    **Fallback:** The jq mechanical cleanup approach (drop selector entries not in the updated summary)
+    was prototyped and produces semantically correct output, but causes significant whitespace churn
+    because `.llm.json` files use a custom inline-object format that jq expands differently. Use as
+    fallback only if subagent cost is prohibitive.
 
-    **Dependencies:** Requires the extraction pipeline to be runnable (no other blockers identified).
+    **Reference:** Promoted from `fix-swift-extension-method-misattribution-in-methods-extractor`
+    Results section "Follow-up: stale `.llm.json` annotations". Original filter fix is at
+    `collection/crates/extract-swift/src/declaration_mapping.rs` lines 30–44 and 168–196.
+
+    **Dependencies:** None — `.methods.json` regeneration is the first step.

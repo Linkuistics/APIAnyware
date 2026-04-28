@@ -525,3 +525,21 @@ entries:
   title: swift-api-digester re-emits foreign extension targets as type decls
   body: |
     swift-api-digester re-emits extension targets as foreign top-level type decls with `moduleName` pointing at the owning module (not the framework under extraction). Without a filter, `map_abi_to_framework` in `declaration_mapping.rs` attributes those extension members to the wrong framework; Datalog's `effective_method` rule then propagates the spurious methods to every conforming class. Fix: `is_foreign_module_type_decl()` drops top-level `Class`/`Protocol`/`Struct`/`Enum` nodes whose `moduleName` differs from the framework root name. `Func` and `Var` nodes always carry the correct owning module name and are unaffected. Canonical symptoms: CreateMLComponents methods leaking into ScriptingBridge; SwiftUI extension methods (`beginSheet`, `animate`) leaking into AppKit.
+- id: effective-method-blast-radius-extractor-bugs-cascade-widely-via-protocol-propagation
+  title: 'effective_method blast-radius: extractor bugs cascade widely via protocol propagation'
+  body: |
+    The resolve pass's `effective_method` Datalog rule (`analysis/crates/resolve/src/program.rs:132`)
+    is intentionally permissive: any class conforming to a protocol picks up all of that protocol's
+    `optional_methods`. This interacted badly with the foreign-module type-decl misattribution bug:
+    a single misattributed extension (CreateMLComponents extending `Sequence`) cascaded into every
+    SDK class conforming to `Sequence` — NSArray, NSData, NSDictionary, NSEnumerator in Foundation,
+    CloudKit, IOBluetooth, OSLog, Photos, plus SBElementArray in ScriptingBridge.
+
+    Implication for future extractor bugs: any spurious protocol method introduced at the extractor
+    layer will propagate to *all* conforming classes via `effective_method`. Before assuming a bug is
+    narrow in scope, check whether the affected type is a commonly-conformed protocol (Sequence,
+    Collection, Hashable, Comparable, etc.). The blast radius may span many frameworks even if the
+    extraction symptom manifests in only one framework.
+
+    Fix must target the extractor filter (upstream), not the Datalog propagation rule — the
+    propagation semantics are correct for legitimate protocol methods.
