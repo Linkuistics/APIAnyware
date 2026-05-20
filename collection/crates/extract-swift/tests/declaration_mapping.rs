@@ -845,7 +845,11 @@ fn own_protocol_with_matching_module_is_kept() {
 
     let framework = map_abi_to_framework(&doc, "15.4");
 
-    let names: Vec<&str> = framework.protocols.iter().map(|p| p.name.as_str()).collect();
+    let names: Vec<&str> = framework
+        .protocols
+        .iter()
+        .map(|p| p.name.as_str())
+        .collect();
     assert_eq!(names, vec!["MyProtocol"]);
 }
 

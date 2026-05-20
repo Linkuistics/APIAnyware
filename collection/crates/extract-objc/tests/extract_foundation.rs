@@ -289,10 +289,7 @@ fn foundation_nsstring_has_no_swift_ui_actor_attribute() {
     let fw = foundation();
     let nsstring = fw.classes.iter().find(|c| c.name == "NSString").unwrap();
     assert!(
-        !nsstring
-            .swift_attributes
-            .iter()
-            .any(|a| a == "MainActor"),
+        !nsstring.swift_attributes.iter().any(|a| a == "MainActor"),
         "NSString should not carry MainActor swift_attribute"
     );
 }
