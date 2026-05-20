@@ -283,36 +283,11 @@ fn derive_threading(
         return Some(ThreadingConstraint::MainThreadOnly);
     }
 
-    // UI classes are main-thread-only
+    // UIKit classes are main-thread-only. AppKit classes are not listed
+    // here: every NS_SWIFT_UI_ACTOR / @MainActor-decorated AppKit class
+    // reaches this heuristic via `class_swift_attributes` above, so a
+    // hardcoded AppKit list would be dead code.
     let main_thread_classes = [
-        "NSView",
-        "NSWindow",
-        "NSButton",
-        "NSTextField",
-        "NSTextView",
-        "NSTableView",
-        "NSOutlineView",
-        "NSCollectionView",
-        "NSStackView",
-        "NSScrollView",
-        "NSClipView",
-        "NSSplitView",
-        "NSTabView",
-        "NSMenuItem",
-        "NSMenu",
-        "NSToolbar",
-        "NSToolbarItem",
-        "NSAlert",
-        "NSPanel",
-        "NSSavePanel",
-        "NSOpenPanel",
-        "NSColorPanel",
-        "NSFontPanel",
-        "NSApplication",
-        "NSWorkspace",
-        "NSImage",
-        "NSBitmapImageRep",
-        // UIKit equivalents (future-proofing)
         "UIView",
         "UIWindow",
         "UIButton",
@@ -600,24 +575,26 @@ mod tests {
     }
 
     #[test]
-    fn test_threading_ui_class() {
-        let method = make_method(
-            "setTitle:",
-            false,
-            vec![Param {
-                name: "title".to_string(),
-                param_type: make_type_id(),
-            }],
-            TypeRef {
-                nullable: false,
-                kind: TypeRefKind::Primitive {
-                    name: "void".to_string(),
-                },
-            },
-        );
+    fn appkit_class_not_main_thread_without_swift_attributes() {
+        // AppKit classes no longer appear in the hardcoded list — they reach
+        // the heuristic via swift_attributes (NS_SWIFT_UI_ACTOR / @MainActor).
+        assert_eq!(derive_threading("NSWindow", "someMethod", &[]), None);
+    }
 
-        let ann = annotate_method_heuristic(&make_class("NSWindow"), &method);
-        assert_eq!(ann.threading, Some(ThreadingConstraint::MainThreadOnly));
+    #[test]
+    fn appkit_class_main_thread_via_swift_attributes() {
+        assert_eq!(
+            derive_threading("NSWindow", "someMethod", &["MainActor".to_string()]),
+            Some(ThreadingConstraint::MainThreadOnly)
+        );
+    }
+
+    #[test]
+    fn uikit_class_still_main_thread_from_hardcoded_list() {
+        assert_eq!(
+            derive_threading("UIView", "someMethod", &[]),
+            Some(ThreadingConstraint::MainThreadOnly)
+        );
     }
 
     #[test]
@@ -1084,10 +1061,7 @@ mod tests {
             .properties
             .push(make_property("callback", make_type_block(), false));
 
-        let ann = annotate_method_heuristic(
-            &class,
-            &make_block_property_setter_method("callback"),
-        );
+        let ann = annotate_method_heuristic(&class, &make_block_property_setter_method("callback"));
         assert_eq!(ann.block_parameters.len(), 1);
         assert_ne!(
             ann.block_parameters[0].invocation,
@@ -1103,14 +1077,9 @@ mod tests {
         // the `stored` category.
         let mut class = make_class("MyClass");
         let id_type = make_type_id();
-        class
-            .properties
-            .push(make_property("title", id_type, true));
+        class.properties.push(make_property("title", id_type, true));
 
-        let ann = annotate_method_heuristic(
-            &class,
-            &make_block_property_setter_method("block"),
-        );
+        let ann = annotate_method_heuristic(&class, &make_block_property_setter_method("block"));
         // setBlock: doesn't match a `(copy) block` property → falls through
         // to the selector heuristic (default async_copied).
         assert_ne!(
