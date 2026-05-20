@@ -4,15 +4,17 @@ At-a-glance view of the project. Updated at session boundaries.
 
 ## Plans
 
+The **core pipeline** is tracked by `docs/specs/2026-05-20-core-pipeline-hardening-design.md`
+(design) and `docs/superpowers/plans/2026-05-20-core-pipeline-hardening.md` (plan).
+Its prior Ravel-Lite phase-cycle state is archived under `LLM_STATE/core/archive/`.
+
 | Plan | Location | Run |
 |------|----------|-----|
-| Core Pipeline | `LLM_STATE/core/` | `./LLM_STATE/core/run.sh` |
 | Racket OO Target | `LLM_STATE/targets/racket-oo/` | `./LLM_STATE/targets/racket-oo/run.sh` |
 
-Each plan directory contains `backlog.md` (task backlog), `session-log.md` (history),
-`memory.md` (distilled learnings), `phase.md` (current phase), `prompt-{work,reflect,triage}.md`
-(phase prompts), and `run.sh` (generic cycle driver).
-See `../Ravel-Lite/README.md` for the phase cycle spec.
+The Racket OO target plan still uses the Ravel-Lite phase cycle — its directory
+contains `backlog.md`, `session-log.md`, `memory.md`, `phase.md`,
+`prompt-{work,reflect,triage}.md`, and `run.sh`.
 
 ## Core Pipeline
 

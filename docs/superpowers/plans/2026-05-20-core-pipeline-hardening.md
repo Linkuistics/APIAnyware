@@ -67,6 +67,13 @@ No commit — nothing changed.
 
 ### Task 2: Retire the Ravel-Lite phase-cycle machinery
 
+> **COMPLETED 2026-05-20**, ahead of plan execution. `LLM_STATE/core/memory.yaml`
+> and `session-log.yaml` were archived to `LLM_STATE/core/archive/` (with a
+> `README.md`); the phase scripts (`phase.md`, `pre-work.sh`, `prompt-work.md`,
+> `*-baseline`, `dream-*`, `latest-session.yaml`, `backlog.yaml`) were deleted;
+> `LLM_STATE/overview.md` and `project-workflow.md` were updated. **Skip this
+> task** — verify the above is present and move to Task 3.
+
 **Files:**
 - Create: `LLM_STATE/core/archive/` (directory)
 - Modify (move into archive): `LLM_STATE/core/memory.yaml`, `LLM_STATE/core/session-log.yaml`

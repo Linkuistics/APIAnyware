@@ -14,17 +14,15 @@ Modaliser as the capstone proving a target's bindings are production-ready.
 
 ## Plans and Progress
 
-Plans use the backlog format described in `../Ravel-Lite/README.md`. Each plan
-has a continuation prompt you copy to start a session.
-
 - `LLM_STATE/overview.md` — at-a-glance status dashboard
-- `LLM_STATE/core/backlog.md` — core pipeline (collection, analysis, enrichment)
-- `LLM_STATE/targets/{target}/backlog.md` — per-target backlogs
+- `docs/specs/2026-05-20-core-pipeline-hardening-design.md` and
+  `docs/superpowers/plans/2026-05-20-core-pipeline-hardening.md` — the core
+  pipeline (collection, analysis, generation)
+- `LLM_STATE/targets/{target}/backlog.md` — per-target backlogs (still on the
+  Ravel-Lite phase cycle)
 
-Core pipeline and target plans are independent. If a target needs a pipeline feature,
-it marks a task as `blocked` with a dependency on the core plan.
-
-To create a new plan, follow `../Ravel-Lite/defaults/create-plan.md`.
+Core pipeline and target plans are independent. If a target needs a pipeline
+feature, file it against the core pipeline plan.
 
 ## The Knowledge System
 
@@ -80,14 +78,14 @@ Always `pkill -9 -f racket` (or equivalent) before relaunching apps.
 
 When app/generation work reveals pipeline bugs:
 1. Note the issue in the target plan (mark task blocked if necessary)
-2. Add a task to `LLM_STATE/core/backlog.md`
+2. File a task against the core pipeline plan (`docs/superpowers/plans/`)
 3. Fix in a core pipeline session
 4. Re-generate affected targets
 5. Capture the learning in `knowledge/pipeline/{area}.md`
 
 ## Coding Standards
 
-See `../Ravel-Lite/defaults/fixed-memory/coding-style.md` and `../Ravel-Lite/defaults/fixed-memory/coding-style-rust.md`.
+See `README.md`'s Coding Conventions section.
 
 Key points: TDD, descriptive names, small files, `thiserror`/`anyhow`, `tracing`,
 bounded channels, no `unwrap`/`expect`, `cargo +nightly fmt`.
