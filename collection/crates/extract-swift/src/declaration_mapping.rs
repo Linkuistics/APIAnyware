@@ -24,6 +24,8 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
     let mut constants = Vec::new();
     let mut skipped_symbols = Vec::new();
 
+    let is_overlay = is_cross_import_overlay(&root.name);
+
     for child in &root.children {
         let decl_kind = child.decl_kind.as_deref().unwrap_or("");
 
@@ -38,7 +40,11 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
         // every conforming class in the SDK — `SBElementArray` included.
         // Functions and Vars do not have this problem (they always carry the
         // owning module's name) so the filter only gates type decls.
-        if is_foreign_module_type_decl(child, &root.name) {
+        //
+        // Exception: cross-import overlays (`_<A>_<B>` naming convention,
+        // e.g. `_RealityKit_SwiftUI`) have their entire API surface as
+        // foreign type decls — these are kept when `is_overlay` is true.
+        if is_foreign_module_type_decl(child, &root.name, is_overlay) {
             continue;
         }
 
@@ -168,17 +174,33 @@ fn non_c_linkable_skip_reason(node: &AbiNode) -> Option<&'static str> {
     }
 }
 
+/// True iff `framework_name` follows Apple's cross-import overlay convention
+/// `_<ModuleA>_<ModuleB>[...]`: leading underscore, then ≥2 non-empty
+/// underscore-free tokens. Excludes plain underscore-prefixed private
+/// modules such as `_LocationEssentials` (no internal underscore).
+fn is_cross_import_overlay(framework_name: &str) -> bool {
+    let Some(body) = framework_name.strip_prefix('_') else {
+        return false;
+    };
+    let parts: Vec<&str> = body.split('_').collect();
+    parts.len() >= 2 && parts.iter().all(|p| !p.is_empty())
+}
+
 /// Detect a top-level type declaration that the digester re-emitted from an
 /// imported module purely as a container for the current framework's
 /// extension members.
 ///
 /// Returns true when `node` is a `Class`/`Protocol`/`Struct`/`Enum` whose
-/// `moduleName` is set to a value other than `framework_name`. Such nodes
-/// must be dropped: their identity belongs to the foreign module, and their
-/// children are extension members the current framework adds via
-/// `extension ForeignType { ... }` — keeping the node would cause downstream
-/// resolution to attribute those extension members to the foreign type.
-fn is_foreign_module_type_decl(node: &AbiNode, framework_name: &str) -> bool {
+/// `moduleName` is set to a value other than `framework_name` AND the
+/// framework is not a cross-import overlay.
+///
+/// For cross-import overlays (`_<A>_<B>` naming convention, e.g.
+/// `_RealityKit_SwiftUI`, `_AppIntents_SwiftUI`), foreign type decls ARE
+/// the overlay's entire API surface — the bridged types carrying the
+/// overlay's extension members — so they must be kept. For normal
+/// frameworks, foreign type decls are spurious extension containers whose
+/// children would be mis-attributed to the foreign type if kept.
+fn is_foreign_module_type_decl(node: &AbiNode, framework_name: &str, is_overlay: bool) -> bool {
     let is_type_decl = matches!(
         node.decl_kind.as_deref(),
         Some("Class") | Some("Protocol") | Some("Struct") | Some("Enum")
@@ -187,8 +209,153 @@ fn is_foreign_module_type_decl(node: &AbiNode, framework_name: &str) -> bool {
         return false;
     }
     match node.module_name.as_deref() {
-        Some(module) => module != framework_name,
-        None => false,
+        None => false,                           // missing data: keep
+        Some(m) if m == framework_name => false, // native: keep
+        Some(_) => !is_overlay,                  // foreign: drop unless overlay
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::abi_types::AbiDocument;
+    use serde_json::json;
+
+    // ------------------------------------------------------------------
+    // is_cross_import_overlay boundary tests
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn is_cross_import_overlay_boundary_table() {
+        assert!(
+            is_cross_import_overlay("_RealityKit_SwiftUI"),
+            "_RealityKit_SwiftUI should be an overlay"
+        );
+        assert!(
+            is_cross_import_overlay("_AppIntents_SwiftUI"),
+            "_AppIntents_SwiftUI should be an overlay"
+        );
+        assert!(
+            is_cross_import_overlay("_SwiftData_CoreData"),
+            "_SwiftData_CoreData should be an overlay"
+        );
+        assert!(
+            is_cross_import_overlay("_WebKit_SwiftUI"),
+            "_WebKit_SwiftUI should be an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("_LocationEssentials"),
+            "_LocationEssentials has no internal underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("CreateMLComponents"),
+            "CreateMLComponents has no leading underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("CoreTransferable"),
+            "CoreTransferable has no leading underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("Foundation"),
+            "Foundation has no leading underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("_"),
+            "bare underscore — empty body, not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("_Foo_"),
+            "_Foo_ has a trailing empty token — not an overlay"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Keep fixture A — overlay with a foreign Class (must be retained)
+    // ------------------------------------------------------------------
+
+    fn make_overlay_doc_with_foreign_class(
+        framework: &str,
+        class_name: &str,
+        foreign_module: &str,
+    ) -> AbiDocument {
+        let value = json!({
+            "ABIRoot": {
+                "kind": "Root",
+                "name": framework,
+                "printedName": framework,
+                "children": [
+                    {
+                        "kind": "TypeDecl",
+                        "name": class_name,
+                        "printedName": class_name,
+                        "declKind": "Class",
+                        "moduleName": foreign_module,
+                        "usr": format!("s:{}{}C", foreign_module, class_name),
+                        "isExternal": true,
+                        "children": [
+                            {
+                                "kind": "Function",
+                                "name": "components",
+                                "printedName": "components()",
+                                "declKind": "Func",
+                                "moduleName": framework,
+                                "isFromExtension": true,
+                                "usr": format!("s:{}10componentsyyF", framework),
+                                "children": [
+                                    { "kind": "TypeNominal", "name": "Void", "printedName": "Swift.Void", "children": [] }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        });
+        serde_json::from_value(value).expect("build AbiDocument")
+    }
+
+    #[test]
+    fn overlay_foreign_class_entity_is_kept() {
+        // Keep fixture A: _RealityKit_SwiftUI with foreign Class `Entity`
+        // (module_name: "RealityFoundation"). Must survive the filter.
+        let doc = make_overlay_doc_with_foreign_class(
+            "_RealityKit_SwiftUI",
+            "Entity",
+            "RealityFoundation",
+        );
+        let framework = map_abi_to_framework(&doc, "26.5");
+
+        let class_names: Vec<&str> = framework.classes.iter().map(|c| c.name.as_str()).collect();
+        assert!(
+            class_names.contains(&"Entity"),
+            "_RealityKit_SwiftUI overlay must retain foreign Class `Entity`; got {class_names:?}"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Keep fixture B — zero-native overlay (must be retained)
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn overlay_zero_native_foreign_class_intent_parameter_is_kept() {
+        // Keep fixture B: _AppIntents_SwiftUI has ZERO native type decls;
+        // all nodes are foreign. `IntentParameter` (module: AppIntents)
+        // must survive the filter.
+        let doc = make_overlay_doc_with_foreign_class(
+            "_AppIntents_SwiftUI",
+            "IntentParameter",
+            "AppIntents",
+        );
+        let framework = map_abi_to_framework(&doc, "26.5");
+
+        let class_names: Vec<&str> = framework.classes.iter().map(|c| c.name.as_str()).collect();
+        assert!(
+            class_names.contains(&"IntentParameter"),
+            "_AppIntents_SwiftUI overlay must retain foreign Class `IntentParameter`; got {class_names:?}"
+        );
     }
 }
 
