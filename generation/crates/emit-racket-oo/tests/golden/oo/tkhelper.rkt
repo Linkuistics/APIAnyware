@@ -15,11 +15,12 @@
 
 ;; --- Class predicates ---
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (tkhelper? v) (objc-instance-of? v "TKHelper"))
 (provide TKHelper)
 (provide/contract
   [make-tkhelper (c-> any/c)]
-  [tkhelper-dealloc (c-> objc-object? void?)]
-  [tkhelper-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [tkhelper-dealloc (c-> tkhelper? void?)]
+  [tkhelper-description (c-> tkhelper? (or/c nsstring? objc-nil?))]
   )
 
 ;; --- Class reference ---

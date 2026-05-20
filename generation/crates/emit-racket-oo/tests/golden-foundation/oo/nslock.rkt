@@ -14,16 +14,17 @@
 
 
 ;; --- Class predicates ---
+(define (nslock? v) (objc-instance-of? v "NSLock"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (provide NSLock)
 (provide/contract
   [make-nslock (c-> any/c)]
-  [nslock-name (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nslock-set-name! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nslock-lock (c-> objc-object? void?)]
-  [nslock-lock-before-date (c-> objc-object? (or/c string? objc-object? #f) boolean?)]
-  [nslock-try-lock (c-> objc-object? boolean?)]
-  [nslock-unlock (c-> objc-object? void?)]
+  [nslock-name (c-> nslock? (or/c nsstring? objc-nil?))]
+  [nslock-set-name! (c-> nslock? (or/c string? objc-object? #f) void?)]
+  [nslock-lock (c-> nslock? void?)]
+  [nslock-lock-before-date (c-> nslock? (or/c string? objc-object? #f) boolean?)]
+  [nslock-try-lock (c-> nslock? boolean?)]
+  [nslock-unlock (c-> nslock? void?)]
   )
 
 ;; --- Class reference ---

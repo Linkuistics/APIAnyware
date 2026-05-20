@@ -15,11 +15,12 @@
 
 ;; --- Class predicates ---
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (tkmanager? v) (objc-instance-of? v "TKManager"))
 (provide TKManager)
 (provide/contract
   [make-tkmanager (c-> any/c)]
-  [tkmanager-dealloc (c-> objc-object? void?)]
-  [tkmanager-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [tkmanager-dealloc (c-> tkmanager? void?)]
+  [tkmanager-description (c-> tkmanager? (or/c nsstring? objc-nil?))]
   )
 
 ;; --- Class reference ---

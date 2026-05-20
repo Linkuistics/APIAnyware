@@ -15,20 +15,21 @@
 
 ;; --- Class predicates ---
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
+(define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (range? v) (objc-instance-of? v "Range"))
 (provide NSData)
 (provide/contract
   [make-nsdata-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
-  [nsdata-bytes (c-> objc-object? (or/c cpointer? #f))]
-  [nsdata-description (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nsdata-end-index (c-> objc-object? exact-integer?)]
-  [nsdata-length (c-> objc-object? exact-nonnegative-integer?)]
-  [nsdata-regions (c-> objc-object? (or/c nsarray? objc-nil?))]
-  [nsdata-start-index (c-> objc-object? exact-integer?)]
-  [nsdata-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
-  [nsdata-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nsdata-mutable-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
+  [nsdata-bytes (c-> nsdata? (or/c cpointer? #f))]
+  [nsdata-description (c-> nsdata? (or/c nsstring? objc-nil?))]
+  [nsdata-end-index (c-> nsdata? exact-integer?)]
+  [nsdata-length (c-> nsdata? exact-nonnegative-integer?)]
+  [nsdata-regions (c-> nsdata? (or/c nsarray? objc-nil?))]
+  [nsdata-start-index (c-> nsdata? exact-integer?)]
+  [nsdata-copy-with-zone (c-> nsdata? (or/c cpointer? #f) any/c)]
+  [nsdata-encode-with-coder (c-> nsdata? (or/c string? objc-object? #f) void?)]
+  [nsdata-mutable-copy-with-zone (c-> nsdata? (or/c cpointer? #f) any/c)]
   [nsdata-supports-secure-coding (c-> boolean?)]
   )
 

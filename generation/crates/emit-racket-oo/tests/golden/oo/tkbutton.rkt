@@ -17,20 +17,21 @@
 ;; --- Class predicates ---
 (define (nsrect? v) (objc-instance-of? v "NSRect"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (tkbutton? v) (objc-instance-of? v "TKButton"))
 (provide TKButton)
 (provide/contract
   [make-tkbutton (c-> any/c)]
-  [tkbutton-title (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [tkbutton-set-title! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [tkbutton-hidden (c-> objc-object? boolean?)]
-  [tkbutton-set-hidden! (c-> objc-object? boolean? void?)]
-  [tkbutton-tag (c-> objc-object? any/c)]
-  [tkbutton-set-tag! (c-> objc-object? any/c void?)]
-  [tkbutton-frame (c-> objc-object? (or/c nsrect? objc-nil?))]
-  [tkbutton-dealloc (c-> objc-object? void?)]
-  [tkbutton-description (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [tkbutton-set-needs-display! (c-> objc-object? void?)]
-  [tkbutton-animate-with-duration-animations (c-> objc-object? real? (or/c procedure? #f) void?)]
+  [tkbutton-title (c-> tkbutton? (or/c nsstring? objc-nil?))]
+  [tkbutton-set-title! (c-> tkbutton? (or/c string? objc-object? #f) void?)]
+  [tkbutton-hidden (c-> tkbutton? boolean?)]
+  [tkbutton-set-hidden! (c-> tkbutton? boolean? void?)]
+  [tkbutton-tag (c-> tkbutton? any/c)]
+  [tkbutton-set-tag! (c-> tkbutton? any/c void?)]
+  [tkbutton-frame (c-> tkbutton? (or/c nsrect? objc-nil?))]
+  [tkbutton-dealloc (c-> tkbutton? void?)]
+  [tkbutton-description (c-> tkbutton? (or/c nsstring? objc-nil?))]
+  [tkbutton-set-needs-display! (c-> tkbutton? void?)]
+  [tkbutton-animate-with-duration-animations (c-> tkbutton? real? (or/c procedure? #f) void?)]
   )
 
 ;; --- Class reference ---

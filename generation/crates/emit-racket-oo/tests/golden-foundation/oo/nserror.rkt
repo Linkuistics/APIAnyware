@@ -15,23 +15,24 @@
 
 
 ;; --- Class predicates ---
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (provide NSError)
 (provide/contract
   [make-nserror-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
   [make-nserror-init-with-domain-code-user-info (c-> (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) any/c)]
-  [nserror-code (c-> objc-object? exact-integer?)]
-  [nserror-domain (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nserror-help-anchor (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nserror-localized-description (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nserror-localized-failure-reason (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nserror-localized-recovery-options (c-> objc-object? any/c)]
-  [nserror-localized-recovery-suggestion (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [nserror-recovery-attempter (c-> objc-object? any/c)]
-  [nserror-underlying-errors (c-> objc-object? any/c)]
-  [nserror-user-info (c-> objc-object? any/c)]
-  [nserror-copy-with-zone (c-> objc-object? (or/c cpointer? #f) any/c)]
-  [nserror-encode-with-coder (c-> objc-object? (or/c string? objc-object? #f) void?)]
+  [nserror-code (c-> nserror? exact-integer?)]
+  [nserror-domain (c-> nserror? (or/c nsstring? objc-nil?))]
+  [nserror-help-anchor (c-> nserror? (or/c nsstring? objc-nil?))]
+  [nserror-localized-description (c-> nserror? (or/c nsstring? objc-nil?))]
+  [nserror-localized-failure-reason (c-> nserror? (or/c nsstring? objc-nil?))]
+  [nserror-localized-recovery-options (c-> nserror? any/c)]
+  [nserror-localized-recovery-suggestion (c-> nserror? (or/c nsstring? objc-nil?))]
+  [nserror-recovery-attempter (c-> nserror? any/c)]
+  [nserror-underlying-errors (c-> nserror? any/c)]
+  [nserror-user-info (c-> nserror? any/c)]
+  [nserror-copy-with-zone (c-> nserror? (or/c cpointer? #f) any/c)]
+  [nserror-encode-with-coder (c-> nserror? (or/c string? objc-object? #f) void?)]
   [nserror-error-with-domain-code-user-info (c-> (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) any/c)]
   [nserror-set-user-info-value-provider-for-domain-provider! (c-> (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
   [nserror-supports-secure-coding (c-> boolean?)]

@@ -16,18 +16,19 @@
 ;; --- Class predicates ---
 (define (nsrect? v) (objc-instance-of? v "NSRect"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (tkview? v) (objc-instance-of? v "TKView"))
 (provide TKView)
 (provide/contract
   [make-tkview (c-> any/c)]
-  [tkview-title (c-> objc-object? (or/c nsstring? objc-nil?))]
-  [tkview-set-title! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [tkview-hidden (c-> objc-object? boolean?)]
-  [tkview-set-hidden! (c-> objc-object? boolean? void?)]
-  [tkview-tag (c-> objc-object? any/c)]
-  [tkview-set-tag! (c-> objc-object? any/c void?)]
-  [tkview-frame (c-> objc-object? (or/c nsrect? objc-nil?))]
-  [tkview-dealloc (c-> objc-object? void?)]
-  [tkview-description (c-> objc-object? (or/c nsstring? objc-nil?))]
+  [tkview-title (c-> tkview? (or/c nsstring? objc-nil?))]
+  [tkview-set-title! (c-> tkview? (or/c string? objc-object? #f) void?)]
+  [tkview-hidden (c-> tkview? boolean?)]
+  [tkview-set-hidden! (c-> tkview? boolean? void?)]
+  [tkview-tag (c-> tkview? any/c)]
+  [tkview-set-tag! (c-> tkview? any/c void?)]
+  [tkview-frame (c-> tkview? (or/c nsrect? objc-nil?))]
+  [tkview-dealloc (c-> tkview? void?)]
+  [tkview-description (c-> tkview? (or/c nsstring? objc-nil?))]
   )
 
 ;; --- Class reference ---

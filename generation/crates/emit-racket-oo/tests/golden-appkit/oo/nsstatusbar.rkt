@@ -20,11 +20,11 @@
 (provide/contract
   [make-nsstatusbar (c-> any/c)]
   [nsstatusbar-system-status-bar (c-> (or/c nsstatusbar? objc-nil?))]
-  [nsstatusbar-thickness (c-> objc-object? real?)]
-  [nsstatusbar-vertical (c-> objc-object? boolean?)]
-  [nsstatusbar-is-vertical (c-> objc-object? boolean?)]
-  [nsstatusbar-remove-status-item! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nsstatusbar-status-item-with-length (c-> objc-object? real? (or/c nsstatusitem? objc-nil?))]
+  [nsstatusbar-thickness (c-> nsstatusbar? real?)]
+  [nsstatusbar-vertical (c-> nsstatusbar? boolean?)]
+  [nsstatusbar-is-vertical (c-> nsstatusbar? boolean?)]
+  [nsstatusbar-remove-status-item! (c-> nsstatusbar? (or/c string? objc-object? #f) void?)]
+  [nsstatusbar-status-item-with-length (c-> nsstatusbar? real? (or/c nsstatusitem? objc-nil?))]
   )
 
 ;; --- Class reference ---

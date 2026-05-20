@@ -20,13 +20,13 @@
 (provide/contract
   [make-nsnotificationcenter (c-> any/c)]
   [nsnotificationcenter-default-center (c-> (or/c nsnotificationcenter? objc-nil?))]
-  [nsnotificationcenter-add-observer-selector-name-object! (c-> objc-object? (or/c string? objc-object? #f) string? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
-  [nsnotificationcenter-add-observer-for-name-object-queue-using-block! (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c procedure? #f) any/c)]
-  [nsnotificationcenter-post-notification (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nsnotificationcenter-post-notification-name-object (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
-  [nsnotificationcenter-post-notification-name-object-user-info (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
-  [nsnotificationcenter-remove-observer! (c-> objc-object? (or/c string? objc-object? #f) void?)]
-  [nsnotificationcenter-remove-observer-name-object! (c-> objc-object? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsnotificationcenter-add-observer-selector-name-object! (c-> nsnotificationcenter? (or/c string? objc-object? #f) string? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsnotificationcenter-add-observer-for-name-object-queue-using-block! (c-> nsnotificationcenter? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c procedure? #f) any/c)]
+  [nsnotificationcenter-post-notification (c-> nsnotificationcenter? (or/c string? objc-object? #f) void?)]
+  [nsnotificationcenter-post-notification-name-object (c-> nsnotificationcenter? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsnotificationcenter-post-notification-name-object-user-info (c-> nsnotificationcenter? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsnotificationcenter-remove-observer! (c-> nsnotificationcenter? (or/c string? objc-object? #f) void?)]
+  [nsnotificationcenter-remove-observer-name-object! (c-> nsnotificationcenter? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   )
 
 ;; --- Class reference ---

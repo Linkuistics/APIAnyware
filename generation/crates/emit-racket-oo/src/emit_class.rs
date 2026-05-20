@@ -135,9 +135,11 @@ pub fn generate_class_file(cls: &Class, framework: &str) -> String {
         &class_property_disambig,
     );
 
-    // Collect class names for return-type predicates (must be defined before
-    // provide/contract references them)
-    let return_class_names = collect_return_type_class_names(
+    // Collect class names for predicates (must be defined before
+    // provide/contract references them). Includes the class's own name so
+    // the class-specific receiver predicate is always in scope.
+    let predicate_class_names = collect_predicate_class_names(
+        &cls.name,
         &properties,
         &init_methods,
         &instance_methods,
@@ -147,8 +149,8 @@ pub fn generate_class_file(cls: &Class, framework: &str) -> String {
     // Header
     emit_header(&mut w, &cls.name, framework, needs_blocks, needs_structs);
 
-    // Class-specific return predicates (must precede provide/contract)
-    emit_class_predicates(&mut w, &return_class_names);
+    // Class-specific predicates (must precede provide/contract)
+    emit_class_predicates(&mut w, &predicate_class_names);
 
     // Provide with contracts
     emit_provide(&mut w, &cls.name, &exports);
@@ -303,19 +305,17 @@ fn method_collides_with_property(
 
 // --- Contracts ---
 
-/// Contract for the `self` parameter of instance-method wrappers, instance
-/// property getters, and instance property setters.
-///
-/// `objc-object?` is the runtime's struct wrapping an ObjC `_id` pointer
-/// with release-finalizer GC plumbing; it is what every constructor
-/// returns via `wrap-objc-object`, so normal user code always has the
-/// right shape. Tightening from `any/c` catches "you passed a number /
-/// string / cpointer you got from somewhere else" at the wrapper's
-/// contract boundary rather than deep inside `coerce-arg`'s cond dispatch.
-/// `objc-object?` is in scope in every generated class wrapper because
-/// the wrapper requires `coerce.rkt`, which re-exports everything from
-/// `objc-base.rkt`.
-const SELF_CONTRACT: &str = "objc-object?";
+// The receiver (`self`) contract for instance-method wrappers, instance
+// property getters, and instance property setters is the class-specific
+// predicate produced by `make_class_predicate_name` (e.g. `tkbutton?` for
+// class `TKButton`). Using the class-specific predicate instead of the
+// generic `objc-object?` catches "you passed the wrong object class" at
+// the contract boundary, giving precise blame attribution. The predicate
+// is always defined before the `provide/contract` block because
+// `collect_predicate_class_names` unconditionally inserts the class's own
+// name into the set fed to `emit_class_predicates` (which is emitted
+// before `emit_provide`). Every generated file has `objc-instance-of?` in
+// scope via `objc-base.rkt` (re-exported by `coerce.rkt`).
 
 /// Map a TypeRef to a contract for class wrapper parameter position.
 ///
@@ -371,16 +371,24 @@ fn make_class_predicate_name(class_name: &str) -> String {
     format!("{}?", class_name_to_lowercase(class_name))
 }
 
-/// Collect class names referenced in return types of properties and methods.
-/// Returns a sorted, deduplicated set of ObjC class names that need
-/// predicate definitions in the generated file.
-fn collect_return_type_class_names(
+/// Collect class names that need predicate definitions in the generated file.
+///
+/// Includes:
+/// - The class's own name, so the class-specific receiver contract (`<class>?`)
+///   is always defined before the `provide/contract` block references it.
+/// - Names referenced in return types of properties and methods, so return
+///   contracts like `(or/c nsview? objc-nil?)` resolve correctly.
+///
+/// Returns a sorted, deduplicated `Vec` (BTreeSet dedup is automatic).
+fn collect_predicate_class_names(
+    own_class_name: &str,
     properties: &[&Property],
     init_methods: &[&Method],
     instance_methods: &[&Method],
     class_methods: &[&Method],
 ) -> Vec<String> {
     let mut names = std::collections::BTreeSet::new();
+    names.insert(own_class_name.to_string());
     for p in properties {
         if let TypeRefKind::Class { name, .. } = &p.property_type.kind {
             names.insert(name.clone());
@@ -443,6 +451,7 @@ fn build_export_contracts(
     class_property_disambig: &std::collections::HashSet<String>,
 ) -> Vec<ExportContract> {
     let mut exports = Vec::new();
+    let self_predicate = make_class_predicate_name(&cls.name);
 
     // Constructors: (-> param-contracts... cpointer?)
     for m in init_methods {
@@ -482,7 +491,7 @@ fn build_export_contracts(
         let contract = if p.class_property {
             format_arrow_contract(&[], &return_contract)
         } else {
-            format_arrow_contract(&[SELF_CONTRACT.to_string()], &return_contract)
+            format_arrow_contract(std::slice::from_ref(&self_predicate), &return_contract)
         };
         exports.push(ExportContract {
             name: getter,
@@ -500,7 +509,7 @@ fn build_export_contracts(
             let self_arg = if p.class_property {
                 vec![]
             } else {
-                vec![SELF_CONTRACT.to_string()]
+                vec![self_predicate.clone()]
             };
             let mut params = self_arg;
             params.push(value_contract);
@@ -512,13 +521,13 @@ fn build_export_contracts(
         }
     }
 
-    // Instance methods: (-> objc-object? param-contracts... return-contract)
+    // Instance methods: (-> <class>? param-contracts... return-contract)
     for m in instance_methods {
         if !is_supported_method(m) {
             continue;
         }
         let name = make_method_name(&cls.name, &m.selector);
-        let mut param_contracts = vec![SELF_CONTRACT.to_string()];
+        let mut param_contracts = vec![self_predicate.clone()];
         param_contracts.extend(m.params.iter().map(|p| map_param_contract(&p.param_type)));
         let return_contract = map_return_contract(&m.return_type);
         let contract = format_arrow_contract(&param_contracts, &return_contract);
@@ -1436,10 +1445,10 @@ mod tests {
             all_properties: vec![],
         };
         let output = generate_class_file(&cls, "Foundation");
-        // Instance method: (-> objc-object? return-contract)
+        // Instance method: receiver uses the class-specific predicate, not the generic objc-object?
         assert!(
-            output.contains("[nsobject-description (c-> objc-object? any/c)]"),
-            "Instance method should have tightened self + return contract. Output:\n{output}"
+            output.contains("[nsobject-description (c-> nsobject? any/c)]"),
+            "Instance method should use class-specific receiver predicate. Output:\n{output}"
         );
     }
 
@@ -1467,14 +1476,14 @@ mod tests {
             all_properties: vec![],
         };
         let output = generate_class_file(&cls, "TestKit");
-        // Object getter: (-> objc-object? any/c)
+        // Object getter: receiver uses class-specific predicate
         assert!(
-            output.contains("[tkview-title (c-> objc-object? any/c)]"),
+            output.contains("[tkview-title (c-> tkview? any/c)]"),
             "Object property getter contract. Output:\n{output}"
         );
-        // Bool getter: (-> objc-object? boolean?)
+        // Bool getter: receiver uses class-specific predicate
         assert!(
-            output.contains("[tkview-hidden (c-> objc-object? boolean?)]"),
+            output.contains("[tkview-hidden (c-> tkview? boolean?)]"),
             "Bool property getter contract. Output:\n{output}"
         );
     }
@@ -1595,16 +1604,15 @@ mod tests {
             all_properties: vec![],
         };
         let output = generate_class_file(&cls, "TestKit");
-        // Object setter: self + coerce-arg-matched union for the value.
+        // Object setter: receiver uses class-specific predicate; value union stays as-is.
         assert!(
-            output.contains(
-                "[tkview-set-title! (c-> objc-object? (or/c string? objc-object? #f) void?)]"
-            ),
+            output
+                .contains("[tkview-set-title! (c-> tkview? (or/c string? objc-object? #f) void?)]"),
             "Object property setter contract. Output:\n{output}"
         );
-        // Typed setter: (-> objc-object? exact-integer? void?)
+        // Typed setter: receiver uses class-specific predicate.
         assert!(
-            output.contains("[tkview-set-tag! (c-> objc-object? exact-integer? void?)]"),
+            output.contains("[tkview-set-tag! (c-> tkview? exact-integer? void?)]"),
             "Typed property setter contract. Output:\n{output}"
         );
     }
@@ -1777,9 +1785,9 @@ mod tests {
             all_properties: vec![],
         };
         let output = generate_class_file(&cls, "TestKit");
-        // (-> objc-object? exact-integer? void?)
+        // Receiver uses class-specific predicate; typed param unchanged.
         assert!(
-            output.contains("[tkview-set-tag! (c-> objc-object? exact-integer? void?)]"),
+            output.contains("[tkview-set-tag! (c-> tkview? exact-integer? void?)]"),
             "Typed param method contract. Output:\n{output}"
         );
     }
@@ -1820,9 +1828,9 @@ mod tests {
             all_properties: vec![],
         };
         let output = generate_class_file(&cls, "TestKit");
-        // Block param → (or/c procedure? #f); self is objc-object?
+        // Block param → (or/c procedure? #f); receiver uses class-specific predicate.
         assert!(
-            output.contains("(c-> objc-object? real? (or/c procedure? #f) void?)"),
+            output.contains("(c-> tkview? real? (or/c procedure? #f) void?)"),
             "Block param contract. Output:\n{output}"
         );
     }
