@@ -31,6 +31,27 @@ contains `backlog.md`, `session-log.md`, `memory.md`, `phase.md`,
 | Enrichment | done | per-framework verification fix applied, isolation tests added |
 | Stub launcher | done | `apianyware-macos-stub-launcher` — per-app Swift stubs for TCC |
 
+**Core Pipeline Hardening — complete 2026-05-21.** The four hardening items in
+`docs/specs/2026-05-20-core-pipeline-hardening-design.md` are closed:
+
+- **Item 1 — orphaned Swift-only frameworks:** `extract-swift`'s foreign-module
+  filter keeps cross-import overlays' bridged type decls, so the six `_*_SwiftUI`
+  / `_SwiftData_*` modules regained their classes.
+- **Item 2 — annotation guardrails:** `make lint-annotations` gates annotation
+  staleness; `derive_threading`'s hardcoded UI class list pruned to UIKit-only.
+- **Item 3 — emitter contract tightening:** generated Racket contracts use a
+  class-specific receiver predicate, and integer / enum-typedef contracts
+  respect signedness.
+- **Item 4 — stable codesigning identity:** `bundle-racket-oo` signs bundled
+  apps with the persistent `APIAnyware Local Signing` identity — verified to
+  give a stable CDHash so macOS TCC grants survive rebuilds.
+
+Two annotation-staleness follow-ups remain open, out of hardening scope:
+FU-1 (`annotate` walks only `framework.classes`) and FU-2 (stale
+`SharedWithYouCore.llm.json`), tracked in
+`docs/specs/2026-05-20-coretransferable-followup.md`. `make lint-annotations`
+correctly flags both until they are addressed.
+
 ## Targets
 
 | Target | Status | Styles | Apps Done | Notes |
