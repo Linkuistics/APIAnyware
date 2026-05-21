@@ -72,7 +72,7 @@
   [nsurl-init-file-url-with-path-relative-to-url (c-> nsurl? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nsurl-is-file-reference-url (c-> nsurl? boolean?)]
   [nsurl-is-file-url (c-> nsurl? boolean?)]
-  [nsurl-item-provider-visibility-for-representation-with-type-identifier (c-> nsurl? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsurl-item-provider-visibility-for-representation-with-type-identifier (c-> nsurl? (or/c string? objc-object? #f) exact-integer?)]
   [nsurl-load-data-with-type-identifier-for-item-provider-completion-handler (c-> nsurl? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
   [nsurl-remove-all-cached-resource-values! (c-> nsurl? void?)]
   [nsurl-remove-cached-resource-value-for-key! (c-> nsurl? (or/c string? objc-object? #f) void?)]

@@ -120,11 +120,17 @@ pub fn is_generic_type_param(name: &str) -> bool {
 /// Maps IR types to Racket FFI type expressions (`_id`, `_uint64`, `_NSRect`, etc.).
 pub struct RacketFfiTypeMapper;
 
-/// Translate a canonical primitive name (as produced by the ObjC
-/// extractor's `map_primitive_name`) into the Racket FFI type. Returns
-/// `None` for names we don't have a fixed-width mapping for — callers
-/// decide the appropriate fallback (`_pointer` for primitive slots,
-/// `_uint64` for enum-alias slots).
+/// Translate a primitive name into the Racket FFI type string. Handles:
+/// - Canonical names produced by the ObjC extractor's `map_primitive_name`
+///   (`"int8"`, `"uint32"`, `"int64"`, etc.).
+/// - Lowercased `NSInteger`/`NSUInteger` as `"nsinteger"`/`"nsuinteger"`.
+///   The ObjC extractor maps these to `"int64"`/`"uint64"` at extraction
+///   time, so these arms are defence-in-depth, kept in lockstep with
+///   `map_contract`'s primitive arm in emit_functions.rs.
+///
+/// Returns `None` for names with no fixed-width mapping — callers decide
+/// the appropriate fallback (`_pointer` for primitive slots, `_uint64`
+/// for enum-alias slots).
 fn racket_ffi_type_for_primitive(name: Option<&String>) -> Option<&'static str> {
     match name?.as_str() {
         "bool" => Some("_bool"),
@@ -134,8 +140,8 @@ fn racket_ffi_type_for_primitive(name: Option<&String>) -> Option<&'static str> 
         "uint16" => Some("_uint16"),
         "int32" => Some("_int32"),
         "uint32" => Some("_uint32"),
-        "int64" => Some("_int64"),
-        "uint64" => Some("_uint64"),
+        "int64" | "nsinteger" => Some("_int64"),
+        "uint64" | "nsuinteger" => Some("_uint64"),
         "float" => Some("_float"),
         "double" => Some("_double"),
         _ => None,
@@ -210,6 +216,32 @@ mod tests {
             nullable: false,
             kind,
         }
+    }
+
+    #[test]
+    fn test_racket_nsinteger_nsuinteger_primitives() {
+        // Defence-in-depth: NSInteger/NSUInteger as raw Primitive names should
+        // map to the same FFI types as their canonical int64/uint64 equivalents.
+        // NSInteger is 64-bit on macOS arm64.
+        let m = RacketFfiTypeMapper;
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Primitive {
+                    name: "NSInteger".into()
+                }),
+                false
+            ),
+            "_int64"
+        );
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Primitive {
+                    name: "NSUInteger".into()
+                }),
+                false
+            ),
+            "_uint64"
+        );
     }
 
     #[test]

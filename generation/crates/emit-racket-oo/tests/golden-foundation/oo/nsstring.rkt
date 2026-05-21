@@ -62,7 +62,7 @@
   [nsstring-character-at-index (c-> nsstring? exact-nonnegative-integer? exact-nonnegative-integer?)]
   [nsstring-copy-with-zone (c-> nsstring? (or/c cpointer? #f) any/c)]
   [nsstring-encode-with-coder (c-> nsstring? (or/c string? objc-object? #f) void?)]
-  [nsstring-item-provider-visibility-for-representation-with-type-identifier (c-> nsstring? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsstring-item-provider-visibility-for-representation-with-type-identifier (c-> nsstring? (or/c string? objc-object? #f) exact-integer?)]
   [nsstring-load-data-with-type-identifier-for-item-provider-completion-handler (c-> nsstring? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
   [nsstring-mutable-copy-with-zone (c-> nsstring? (or/c cpointer? #f) any/c)]
   [nsstring-writable-type-identifiers-for-item-provider (c-> nsstring? any/c)]

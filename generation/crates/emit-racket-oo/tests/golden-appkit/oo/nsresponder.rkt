@@ -80,8 +80,8 @@
   [nsresponder-touches-moved-with-event (c-> nsresponder? (or/c string? objc-object? #f) void?)]
   [nsresponder-try-to-perform-with (c-> nsresponder? string? (or/c string? objc-object? #f) boolean?)]
   [nsresponder-valid-requestor-for-send-type-return-type (c-> nsresponder? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
-  [nsresponder-wants-forwarded-scroll-events-for-axis (c-> nsresponder? exact-nonnegative-integer? boolean?)]
-  [nsresponder-wants-scroll-events-for-swipe-tracking-on-axis (c-> nsresponder? exact-nonnegative-integer? boolean?)]
+  [nsresponder-wants-forwarded-scroll-events-for-axis (c-> nsresponder? exact-integer? boolean?)]
+  [nsresponder-wants-scroll-events-for-swipe-tracking-on-axis (c-> nsresponder? exact-integer? boolean?)]
   )
 
 ;; --- Class reference ---

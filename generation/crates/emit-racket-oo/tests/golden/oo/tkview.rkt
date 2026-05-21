@@ -24,8 +24,8 @@
   [tkview-set-title! (c-> tkview? (or/c string? objc-object? #f) void?)]
   [tkview-hidden (c-> tkview? boolean?)]
   [tkview-set-hidden! (c-> tkview? boolean? void?)]
-  [tkview-tag (c-> tkview? any/c)]
-  [tkview-set-tag! (c-> tkview? any/c void?)]
+  [tkview-tag (c-> tkview? exact-integer?)]
+  [tkview-set-tag! (c-> tkview? exact-integer? void?)]
   [tkview-frame (c-> tkview? (or/c nsrect? objc-nil?))]
   [tkview-dealloc (c-> tkview? void?)]
   [tkview-description (c-> tkview? (or/c nsstring? objc-nil?))]
@@ -37,8 +37,8 @@
 ;; --- Shared typed objc_msgSend bindings ---
 (define _msg-0  ; (_fun _pointer _pointer _bool -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool -> _void)))
-(define _msg-1  ; (_fun _pointer _pointer _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _void)))
+(define _msg-1  ; (_fun _pointer _pointer _int64 -> _void)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _void)))
 
 ;; --- Constructors ---
 (define (make-tkview)
@@ -58,7 +58,7 @@
 (define (tkview-set-hidden! self value)
   (_msg-0 (coerce-arg self) (sel_registerName "setHidden:") value))
 (define (tkview-tag self)
-  (tell #:type _pointer (coerce-arg self) tag))
+  (tell #:type _int64 (coerce-arg self) tag))
 (define (tkview-set-tag! self value)
   (_msg-1 (coerce-arg self) (sel_registerName "setTag:") value))
 (define (tkview-frame self)

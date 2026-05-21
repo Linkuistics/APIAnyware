@@ -40,8 +40,8 @@ pub fn map_contract(type_ref: &TypeRef, is_return_type: bool) -> String {
                 "void" => "any/c".to_string(),
                 "bool" => "boolean?".to_string(),
                 "float" | "double" => "real?".to_string(),
-                "int8" | "int16" | "int32" | "int64" => "exact-integer?".to_string(),
-                "uint8" | "uint16" | "uint32" | "uint64" => {
+                "int8" | "int16" | "int32" | "int64" | "nsinteger" => "exact-integer?".to_string(),
+                "uint8" | "uint16" | "uint32" | "uint64" | "nsuinteger" => {
                     "exact-nonnegative-integer?".to_string()
                 }
                 "pointer" => "(or/c cpointer? #f)".to_string(),
@@ -70,15 +70,26 @@ pub fn map_contract(type_ref: &TypeRef, is_return_type: bool) -> String {
             "(or/c cpointer? #f)".to_string()
         }
         TypeRefKind::Struct { .. } => "any/c".to_string(),
-        TypeRefKind::Alias { name, .. } => {
+        TypeRefKind::Alias {
+            name,
+            underlying_primitive,
+            ..
+        } => {
             if is_known_geometry_struct(name) {
                 "any/c".to_string()
             } else if name.ends_with("Type") && is_generic_type_param(name) {
                 // Generic type params (ObjectType, KeyType) → object
                 "cpointer?".to_string()
             } else {
-                // Framework-prefixed aliases (NSBezelType, AXValueType) → integer
-                "exact-nonnegative-integer?".to_string()
+                // Framework-prefixed aliases (NSBezelType, NSComparisonResult, …) are
+                // enum typedefs → integer. Honor the extracted underlying width's
+                // signedness: a signed NS_ENUM(NSInteger, …) carries negative cases
+                // (NSComparisonResult.orderedAscending = -1) and must accept them.
+                // Unsigned, non-integer-typed, or unknown widths keep the historical non-negative default.
+                match underlying_primitive.as_deref() {
+                    Some(p) if p.starts_with("int") => "exact-integer?".to_string(),
+                    _ => "exact-nonnegative-integer?".to_string(),
+                }
             }
         }
     }
@@ -420,6 +431,90 @@ mod tests {
             },
         };
         assert_eq!(map_contract(&alias, false), "exact-nonnegative-integer?");
+    }
+
+    #[test]
+    fn test_contract_alias_signed_underlying_yields_exact_integer() {
+        // NS_ENUM(NSInteger, NSComparisonResult) → underlying_primitive = "int64"
+        // orderedAscending = -1, so the contract must accept negative values.
+        let signed_alias = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Alias {
+                name: "NSComparisonResult".into(),
+                framework: None,
+                underlying_primitive: Some("int64".into()),
+            },
+        };
+        assert_eq!(map_contract(&signed_alias, false), "exact-integer?");
+
+        // Also test int32-backed alias
+        let signed32_alias = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Alias {
+                name: "NSTextAlignment".into(),
+                framework: None,
+                underlying_primitive: Some("int32".into()),
+            },
+        };
+        assert_eq!(map_contract(&signed32_alias, false), "exact-integer?");
+    }
+
+    #[test]
+    fn test_contract_alias_unsigned_underlying_keeps_nonnegative() {
+        // CF_ENUM(uint32_t, …) → underlying_primitive = "uint32" → non-negative
+        let unsigned_alias = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Alias {
+                name: "AXValueType".into(),
+                framework: None,
+                underlying_primitive: Some("uint32".into()),
+            },
+        };
+        assert_eq!(
+            map_contract(&unsigned_alias, false),
+            "exact-nonnegative-integer?"
+        );
+
+        // NS_OPTIONS(NSUInteger, …) → underlying_primitive = "uint64" — the most
+        // common unsigned backing for Apple bitmask types. Documents that the
+        // `starts_with("int")` discriminator correctly leaves uint64 in the
+        // non-negative branch.
+        let uint64_alias = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Alias {
+                name: "NSWindowStyleMask".into(),
+                framework: None,
+                underlying_primitive: Some("uint64".into()),
+            },
+        };
+        assert_eq!(
+            map_contract(&uint64_alias, false),
+            "exact-nonnegative-integer?"
+        );
+    }
+
+    #[test]
+    fn test_contract_primitive_nsinteger_nsuinteger() {
+        // Defence-in-depth: NSInteger/NSUInteger as raw Primitive names should
+        // map to the same contracts as their canonical int64/uint64 equivalents.
+        let nsinteger_t = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Primitive {
+                name: "NSInteger".into(),
+            },
+        };
+        assert_eq!(map_contract(&nsinteger_t, false), "exact-integer?");
+
+        let nsuinteger_t = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Primitive {
+                name: "NSUInteger".into(),
+            },
+        };
+        assert_eq!(
+            map_contract(&nsuinteger_t, false),
+            "exact-nonnegative-integer?"
+        );
     }
 
     #[test]

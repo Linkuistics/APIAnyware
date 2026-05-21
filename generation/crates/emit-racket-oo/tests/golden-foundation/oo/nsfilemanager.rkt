@@ -77,7 +77,7 @@
   [nsfilemanager-remove-item-at-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
   [nsfilemanager-remove-item-at-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
   [nsfilemanager-replace-item-at-url-with-item-at-url-backup-item-name-options-resulting-item-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c cpointer? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-resume-sync-for-ubiquitous-item-at-url-with-behavior-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c procedure? #f) void?)]
+  [nsfilemanager-resume-sync-for-ubiquitous-item-at-url-with-behavior-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-integer? (or/c procedure? #f) void?)]
   [nsfilemanager-set-attributes-of-item-at-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
   [nsfilemanager-set-ubiquitous-item-at-url-destination-url-error! (c-> nsfilemanager? boolean? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
   [nsfilemanager-start-downloading-ubiquitous-item-at-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
@@ -86,7 +86,7 @@
   [nsfilemanager-subpaths-of-directory-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
   [nsfilemanager-trash-item-at-url-resulting-item-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c cpointer? #f) boolean?)]
   [nsfilemanager-unmount-volume-at-url-options-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c procedure? #f) void?)]
-  [nsfilemanager-upload-local-version-of-ubiquitous-item-at-url-with-conflict-resolution-policy-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c procedure? #f) void?)]
+  [nsfilemanager-upload-local-version-of-ubiquitous-item-at-url-with-conflict-resolution-policy-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-integer? (or/c procedure? #f) void?)]
   )
 
 ;; --- Class reference ---

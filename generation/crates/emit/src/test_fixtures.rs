@@ -116,7 +116,7 @@ fn type_int() -> TypeRef {
     TypeRef {
         nullable: false,
         kind: TypeRefKind::Primitive {
-            name: "NSInteger".to_string(),
+            name: "int64".to_string(),
         },
     }
 }

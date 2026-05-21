@@ -25,8 +25,8 @@
   [tkbutton-set-title! (c-> tkbutton? (or/c string? objc-object? #f) void?)]
   [tkbutton-hidden (c-> tkbutton? boolean?)]
   [tkbutton-set-hidden! (c-> tkbutton? boolean? void?)]
-  [tkbutton-tag (c-> tkbutton? any/c)]
-  [tkbutton-set-tag! (c-> tkbutton? any/c void?)]
+  [tkbutton-tag (c-> tkbutton? exact-integer?)]
+  [tkbutton-set-tag! (c-> tkbutton? exact-integer? void?)]
   [tkbutton-frame (c-> tkbutton? (or/c nsrect? objc-nil?))]
   [tkbutton-dealloc (c-> tkbutton? void?)]
   [tkbutton-description (c-> tkbutton? (or/c nsstring? objc-nil?))]
@@ -42,8 +42,8 @@
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool -> _void)))
 (define _msg-1  ; (_fun _pointer _pointer _double _pointer -> _void)
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double _pointer -> _void)))
-(define _msg-2  ; (_fun _pointer _pointer _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _void)))
+(define _msg-2  ; (_fun _pointer _pointer _int64 -> _void)
+  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _void)))
 
 ;; --- Constructors ---
 (define (make-tkbutton)
@@ -63,7 +63,7 @@
 (define (tkbutton-set-hidden! self value)
   (_msg-0 (coerce-arg self) (sel_registerName "setHidden:") value))
 (define (tkbutton-tag self)
-  (tell #:type _pointer (coerce-arg self) tag))
+  (tell #:type _int64 (coerce-arg self) tag))
 (define (tkbutton-set-tag! self value)
   (_msg-2 (coerce-arg self) (sel_registerName "setTag:") value))
 (define (tkbutton-frame self)
