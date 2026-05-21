@@ -65,9 +65,20 @@ fn minimal_project(project_root: &Path, display: &str) -> (PathBuf, AppSpec) {
 }
 
 #[test]
-fn default_app_spec_has_no_signing_identity() {
+fn from_script_name_resolves_signing_identity_or_none() {
+    // Task 11 wired from_script_name to resolve the persistent local
+    // identity from the keychain. The result depends on host keychain
+    // state, so assert only the contract: it is either the convention
+    // identity or None — never an arbitrary value. The deterministic
+    // resolution logic is unit-tested in bundle.rs via the injectable
+    // resolve_signing_identity(...).
     let spec = AppSpec::from_script_name("modaliser");
-    assert!(spec.signing_identity.is_none());
+    assert!(
+        spec.signing_identity.is_none()
+            || spec.signing_identity.as_deref() == Some("APIAnyware Local Signing"),
+        "from_script_name signing_identity must be the convention identity or None, got {:?}",
+        spec.signing_identity
+    );
 }
 
 #[test]

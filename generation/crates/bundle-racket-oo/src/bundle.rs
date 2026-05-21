@@ -15,6 +15,35 @@ use crate::deps::{absolutize, collect_dependencies};
 /// apps, runtime-load harness, knowledge docs).
 pub const DEFAULT_RACKET_PATH: &str = "/opt/homebrew/bin/racket";
 
+/// The persistent self-signed identity documented in docs/codesigning-identity.md.
+pub const LOCAL_SIGNING_IDENTITY: &str = "APIAnyware Local Signing";
+
+/// Resolve the signing identity to bake into bundled apps. Uses the
+/// persistent local identity when the keychain has it (stable CDHash
+/// across rebuilds), otherwise `None` (link-time ad-hoc — bundling still
+/// works, but TCC grants reset on rebuild).
+pub fn resolve_signing_identity(is_available: impl Fn(&str) -> bool) -> Option<String> {
+    if is_available(LOCAL_SIGNING_IDENTITY) {
+        Some(LOCAL_SIGNING_IDENTITY.to_string())
+    } else {
+        tracing::warn!(
+            identity = LOCAL_SIGNING_IDENTITY,
+            "code-signing identity not found; bundling with ad-hoc signature \
+             (TCC grants will reset on rebuild — see docs/codesigning-identity.md)"
+        );
+        None
+    }
+}
+
+/// Query the keychain for a code-signing identity by name.
+fn keychain_has_identity(name: &str) -> bool {
+    std::process::Command::new("security")
+        .args(["find-identity", "-p", "codesigning", "-v"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).contains(name))
+        .unwrap_or(false)
+}
+
 /// What to bundle.
 ///
 /// `script_name` is the kebab-case identifier used for both the source
@@ -40,11 +69,12 @@ pub struct AppSpec {
     /// the base template untouched.
     pub info_plist_overrides: HashMap<String, PlistValue>,
     /// Codesign identity applied to the stub binary (and to the full
-    /// bundle once Resources are populated). `None` keeps the default
-    /// ad-hoc signature the linker attaches automatically, which
-    /// produces a fresh CDHash on every rebuild — use `Some("-")` for
-    /// explicit ad-hoc or `Some("My Self-Signed Cert")` for a stable
-    /// identity that makes macOS TCC grants persist across rebuilds.
+    /// bundle once Resources are populated). [`AppSpec::from_script_name`]
+    /// resolves this automatically: it uses [`LOCAL_SIGNING_IDENTITY`] when
+    /// the keychain has it (stable CDHash across rebuilds, TCC grants
+    /// persist), falling back to `None` (ad-hoc) when the certificate is
+    /// absent. Override with `Some("-")` for explicit ad-hoc or
+    /// `Some("My Self-Signed Cert")` for any other identity.
     pub signing_identity: Option<String>,
 }
 
@@ -65,7 +95,7 @@ impl AppSpec {
             script_name,
             runtime_path: DEFAULT_RACKET_PATH.to_string(),
             info_plist_overrides: HashMap::new(),
-            signing_identity: None,
+            signing_identity: resolve_signing_identity(keychain_has_identity),
         }
     }
 }
@@ -474,5 +504,18 @@ mod tests {
         let dir =
             derive_script_resource_dir(Path::new("/root/src/cli/tool.rkt"), Path::new("/root"));
         assert_eq!(dir, "racket-app/src/cli");
+    }
+
+    #[test]
+    fn resolves_convention_identity_when_present() {
+        assert_eq!(
+            resolve_signing_identity(|_name| true),
+            Some("APIAnyware Local Signing".to_string())
+        );
+    }
+
+    #[test]
+    fn falls_back_to_none_when_identity_absent() {
+        assert_eq!(resolve_signing_identity(|_name| false), None);
     }
 }

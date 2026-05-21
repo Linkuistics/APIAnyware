@@ -36,6 +36,9 @@ mod bundle;
 mod deps;
 mod spec;
 
-pub use bundle::{bundle_app, bundle_app_with_entry, AppSpec, BundleError, DEFAULT_RACKET_PATH};
+pub use bundle::{
+    bundle_app, bundle_app_with_entry, resolve_signing_identity, AppSpec, BundleError,
+    DEFAULT_RACKET_PATH, LOCAL_SIGNING_IDENTITY,
+};
 pub use deps::collect_dependencies;
 pub use spec::read_display_name_from_spec;
