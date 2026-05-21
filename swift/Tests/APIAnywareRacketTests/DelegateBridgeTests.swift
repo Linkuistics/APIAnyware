@@ -51,8 +51,12 @@ private let longCallback1: @convention(c) (UnsafeMutableRawPointer?) -> Int64 = 
     return 0x1_0000_0000 + 7  // 4294967303 — explicitly above Int32 range
 }
 
-// Serialized to avoid races on shared delegateCallLog and dispatchTable
-@Suite("DelegateBridge", .serialized)
+// Nested under RacketBridgeSuites so the whole Racket-bridge group runs
+// serially — see RacketBridgeSuites.swift. This avoids races on the shared
+// delegateCallLog / dispatchTable and the process-global GC-prevention count.
+extension RacketBridgeSuites {
+
+@Suite("DelegateBridge")
 struct DelegateBridgeTests {
 
     @Test("Register a delegate class with void method")
@@ -221,6 +225,8 @@ struct DelegateBridgeTests {
         sendMsg0(instance, "testFreeAction")
         #expect(delegateCallLog.isEmpty, "Handler should not be called after free")
     }
+}
+
 }
 
 // MARK: - Test helpers

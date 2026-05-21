@@ -23,6 +23,11 @@ private let idBlockInvoke: @convention(c) (UnsafeMutableRawPointer) -> UnsafeMut
     return blockSelf
 }
 
+// Nested under RacketBridgeSuites so the whole Racket-bridge group runs
+// serially — see RacketBridgeSuites.swift. Without it, `invokeBlock` and
+// `multipleBlocks` race on the file-global `voidBlockCallCount`.
+extension RacketBridgeSuites {
+
 @Suite("BlockBridge")
 struct BlockBridgeTests {
 
@@ -144,4 +149,6 @@ struct BlockBridgeTests {
         releaseBlock(block1)
         releaseBlock(block2)
     }
+}
+
 }

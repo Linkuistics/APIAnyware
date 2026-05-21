@@ -2,7 +2,12 @@ import Testing
 import Foundation
 @testable import APIAnywareRacket
 
-@Suite("GCPrevention", .serialized)
+// Nested under RacketBridgeSuites so the whole Racket-bridge group runs
+// serially — see RacketBridgeSuites.swift. `activeCount` asserts on the
+// process-global GC-prevention count, which other suites also mutate.
+extension RacketBridgeSuites {
+
+@Suite("GCPrevention")
 struct GCPreventionTests {
 
     @Test("Prevent and allow GC returns valid handles")
@@ -54,9 +59,10 @@ struct GCPreventionTests {
         let str = ("gc-count-test" as NSString)
         let ptr = Unmanaged.passUnretained(str).toOpaque()
 
-        // Note: other suites (BlockBridge, DelegateBridge) may run concurrently
-        // and call preventGC/allowGC internally, so we track relative changes
-        // using snapshots taken immediately before/after our operations.
+        // The RacketBridgeSuites parent runs all three Racket-bridge suites
+        // serially, so no other test mutates the registry concurrently. The
+        // snapshots below are still taken immediately before/after each
+        // operation to keep the assertions self-contained and robust.
 
         let beforeAdd1 = gcPreventionCount()
         let h1 = preventGC(ptr)
@@ -84,4 +90,6 @@ struct GCPreventionTests {
         // Should not crash or have side effects
         allowGC(999_999)
     }
+}
+
 }
