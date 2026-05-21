@@ -76,7 +76,8 @@ pub struct Framework {
     pub constants: Vec<Constant>,
 
     // --- Annotated phase additions ---
-    /// Per-class method annotations (populated by annotate step).
+    /// Per-class and per-protocol method annotations (populated by annotate
+    /// step). Each entry is keyed by a class or protocol name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub class_annotations: Vec<ClassAnnotations>,
 

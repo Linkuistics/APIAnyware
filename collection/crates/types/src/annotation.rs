@@ -7,12 +7,13 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Annotations for an entire framework, keyed by class name and selector.
+/// Annotations for an entire framework, keyed by class/protocol name and selector.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrameworkAnnotations {
     /// Framework name (e.g., `"Foundation"`, `"AppKit"`).
     pub framework: String,
-    /// Per-class method annotations.
+    /// Per-class and per-protocol method annotations. Despite the field name,
+    /// each entry may describe a protocol's methods as well as a class's.
     pub classes: Vec<ClassAnnotations>,
     /// Subagent's self-reported aggregate counts. Optional. When present,
     /// `llm-validate` cross-checks these against the actual content of this
@@ -51,10 +52,13 @@ pub struct SubagentReport {
     pub error_pattern: Option<usize>,
 }
 
-/// Annotations for all methods/properties of a single class.
+/// Annotations for all methods of a single class or protocol.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassAnnotations {
-    /// Class name (e.g., `"NSString"`).
+    /// Class or protocol name (e.g., `"NSString"`, `"NSCopying"`). The field
+    /// is named `class_name` for checkpoint-format backward compatibility; it
+    /// also carries protocol names since the annotate step extends to
+    /// protocol methods.
     pub class_name: String,
     /// Per-method annotations.
     pub methods: Vec<MethodAnnotation>,

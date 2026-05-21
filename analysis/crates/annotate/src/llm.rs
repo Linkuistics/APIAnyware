@@ -82,51 +82,11 @@ pub fn extract_interesting_methods(framework: &Framework) -> FrameworkSummary {
             &class.all_methods
         };
 
-        for method in method_list {
-            let reasons = classify_interest(method);
-            if reasons.is_empty() {
-                continue;
-            }
-
-            methods.push(MethodSummary {
-                selector: method.selector.clone(),
-                is_instance: !method.class_method,
-                params: method
-                    .params
-                    .iter()
-                    .map(|p| ParamSummary {
-                        name: p.name.clone(),
-                        type_kind: describe_type_kind(&p.param_type.kind),
-                    })
-                    .collect(),
-                return_type: describe_type_kind(&method.return_type.kind),
-                reasons,
-            });
-        }
+        collect_interesting(method_list, &mut methods);
 
         // Also check category methods
         for category_group in &class.category_methods {
-            for method in &category_group.methods {
-                let reasons = classify_interest(method);
-                if reasons.is_empty() {
-                    continue;
-                }
-
-                methods.push(MethodSummary {
-                    selector: method.selector.clone(),
-                    is_instance: !method.class_method,
-                    params: method
-                        .params
-                        .iter()
-                        .map(|p| ParamSummary {
-                            name: p.name.clone(),
-                            type_kind: describe_type_kind(&p.param_type.kind),
-                        })
-                        .collect(),
-                    return_type: describe_type_kind(&method.return_type.kind),
-                    reasons,
-                });
-            }
+            collect_interesting(&category_group.methods, &mut methods);
         }
 
         if !methods.is_empty() {
@@ -138,10 +98,58 @@ pub fn extract_interesting_methods(framework: &Framework) -> FrameworkSummary {
         }
     }
 
+    // Protocol methods (required + optional). A protocol-only framework such
+    // as CoreTransferable has zero classes, so without this loop `llm-extract`
+    // emits no `.methods.json` for it and the annotation-drift gate flags any
+    // checked-in `.llm.json` as orphaned (FU-1). Structs and enums carry no
+    // methods in the IR, so there is nothing to extract from them.
+    for protocol in &framework.protocols {
+        let mut methods = Vec::new();
+        collect_interesting(&protocol.required_methods, &mut methods);
+        collect_interesting(&protocol.optional_methods, &mut methods);
+
+        if !methods.is_empty() {
+            total_methods += methods.len();
+            classes.push(ClassSummary {
+                class_name: protocol.name.clone(),
+                methods,
+            });
+        }
+    }
+
     FrameworkSummary {
         framework: framework.name.clone(),
         classes,
         method_count: total_methods,
+    }
+}
+
+/// Append a [`MethodSummary`] to `out` for every "interesting" method in
+/// `source` (see [`classify_interest`]).
+fn collect_interesting(
+    source: &[apianyware_macos_types::ir::Method],
+    out: &mut Vec<MethodSummary>,
+) {
+    for method in source {
+        let reasons = classify_interest(method);
+        if reasons.is_empty() {
+            continue;
+        }
+
+        out.push(MethodSummary {
+            selector: method.selector.clone(),
+            is_instance: !method.class_method,
+            params: method
+                .params
+                .iter()
+                .map(|p| ParamSummary {
+                    name: p.name.clone(),
+                    type_kind: describe_type_kind(&p.param_type.kind),
+                })
+                .collect(),
+            return_type: describe_type_kind(&method.return_type.kind),
+            reasons,
+        });
     }
 }
 
@@ -1698,5 +1706,59 @@ mod tests {
         assert_eq!(loaded.classes[0].methods[0].selector, "doBlock:");
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn extracts_interesting_protocol_methods() {
+        // FU-1: protocol requirements/optionals must be scanned too, so a
+        // protocol-only framework still produces a method summary.
+        use apianyware_macos_types::ir::Protocol;
+
+        let required = make_method(
+            "loadWithCompletion:",
+            vec![Param {
+                name: "handler".to_string(),
+                param_type: block_type(),
+            }],
+            void_type(),
+        );
+        let optional = make_method(
+            "validate:error:",
+            vec![
+                Param {
+                    name: "value".to_string(),
+                    param_type: id_type(),
+                },
+                Param {
+                    name: "error".to_string(),
+                    param_type: pointer_type(),
+                },
+            ],
+            id_type(),
+        );
+        let protocol = Protocol {
+            name: "TKLoadable".to_string(),
+            inherits: vec![],
+            required_methods: vec![required],
+            optional_methods: vec![optional],
+            properties: vec![],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+        };
+        let mut fw = make_framework("TestKit", vec![]);
+        fw.protocols = vec![protocol];
+
+        let summary = extract_interesting_methods(&fw);
+
+        assert_eq!(summary.method_count, 2);
+        let proto = summary
+            .classes
+            .iter()
+            .find(|c| c.class_name == "TKLoadable")
+            .expect("protocol must appear in the method summary");
+        let selectors: Vec<&str> = proto.methods.iter().map(|m| m.selector.as_str()).collect();
+        assert!(selectors.contains(&"loadWithCompletion:"));
+        assert!(selectors.contains(&"validate:error:"));
     }
 }

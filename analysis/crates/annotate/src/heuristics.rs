@@ -8,24 +8,30 @@ use apianyware_macos_types::annotation::{
     AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ErrorPattern, MethodAnnotation,
     OwnershipKind, ParamOwnership, ThreadingConstraint,
 };
-use apianyware_macos_types::ir::{Class, Method, Property};
+use apianyware_macos_types::ir::{Class, Method, Property, Protocol};
 use apianyware_macos_types::type_ref::TypeRefKind;
 
-/// Derive heuristic annotations for a single method, given its owning class.
+/// Derive heuristic annotations for a single method, given the name,
+/// properties, and Swift attributes of the class or protocol that declares it.
 ///
-/// The class context provides class-level Swift attributes (used for
-/// `@MainActor` threading propagation) and the property list (used to
-/// classify block-typed setters of `@property (copy)` properties as
-/// `stored`). Methods on synthetic classes that lack richer context can
-/// pass an empty `Class { name, .. }` shell — only `name`, `properties`,
-/// and `swift_attributes` are consulted here.
-pub fn annotate_method_heuristic(class: &Class, method: &Method) -> MethodAnnotation {
+/// These are the only pieces of receiver context the heuristics consult:
+/// the name (hardcoded UIKit threading list), the properties (a `@property
+/// (copy)` block setter classifies as `stored`), and the Swift attributes
+/// (`@MainActor` threading propagation). A caller annotating a protocol method
+/// passes an empty `swift_attributes` slice — the IR does not record Swift
+/// attributes on protocols.
+pub fn annotate_method_heuristic_for(
+    receiver_name: &str,
+    receiver_properties: &[Property],
+    receiver_swift_attributes: &[String],
+    method: &Method,
+) -> MethodAnnotation {
     let selector = &method.selector;
     let is_instance = !method.class_method;
 
-    let parameter_ownership = derive_parameter_ownership(&class.name, selector, method);
-    let block_parameters = derive_block_parameters(selector, method, &class.properties);
-    let threading = derive_threading(&class.name, selector, &class.swift_attributes);
+    let parameter_ownership = derive_parameter_ownership(receiver_name, selector, method);
+    let block_parameters = derive_block_parameters(selector, method, receiver_properties);
+    let threading = derive_threading(receiver_name, selector, receiver_swift_attributes);
     let error_pattern = derive_error_pattern(method);
 
     MethodAnnotation {
@@ -37,6 +43,28 @@ pub fn annotate_method_heuristic(class: &Class, method: &Method) -> MethodAnnota
         error_pattern,
         source: AnnotationSource::Heuristic,
     }
+}
+
+/// Derive heuristic annotations for a single method on a class.
+pub fn annotate_method_heuristic(class: &Class, method: &Method) -> MethodAnnotation {
+    annotate_method_heuristic_for(
+        &class.name,
+        &class.properties,
+        &class.swift_attributes,
+        method,
+    )
+}
+
+/// Derive heuristic annotations for a single method on a protocol.
+///
+/// Protocols carry `properties` (a protocol may declare a `@property (copy)`
+/// block property) but no Swift attributes in the IR, so class-level
+/// `@MainActor` threading propagation does not apply.
+pub fn annotate_protocol_method_heuristic(
+    protocol: &Protocol,
+    method: &Method,
+) -> MethodAnnotation {
+    annotate_method_heuristic_for(&protocol.name, &protocol.properties, &[], method)
 }
 
 /// Derive parameter ownership from selector naming conventions.
@@ -1129,5 +1157,74 @@ mod tests {
             .find(|b| b.param_index == 0)
             .expect("first param is a block");
         assert_ne!(first_block.invocation, BlockInvocationStyle::Stored);
+    }
+
+    // -----------------------------------------------------------------
+    // Protocol method heuristics (FU-1)
+    // -----------------------------------------------------------------
+
+    fn make_protocol(name: &str, required: Vec<Method>, optional: Vec<Method>) -> Protocol {
+        Protocol {
+            name: name.to_string(),
+            inherits: vec![],
+            required_methods: required,
+            optional_methods: optional,
+            properties: vec![],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+        }
+    }
+
+    #[test]
+    fn protocol_method_heuristic_classifies_block_param() {
+        // A protocol requirement carrying a block param is annotated by the
+        // same heuristics as a class method — the receiver is just a protocol.
+        let method = make_method(
+            "enumerateItemsUsingBlock:",
+            false,
+            vec![Param {
+                name: "block".to_string(),
+                param_type: make_type_block(),
+            }],
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "void".to_string(),
+                },
+            },
+        );
+        let protocol = make_protocol("MyIterating", vec![method.clone()], vec![]);
+
+        let ann = annotate_protocol_method_heuristic(&protocol, &method);
+        assert_eq!(ann.block_parameters.len(), 1);
+        assert_eq!(
+            ann.block_parameters[0].invocation,
+            BlockInvocationStyle::Synchronous
+        );
+        assert_eq!(ann.parameter_ownership[0].ownership, OwnershipKind::Copy);
+    }
+
+    #[test]
+    fn protocol_method_heuristic_detects_error_outparam() {
+        let method = make_method(
+            "validateValue:error:",
+            false,
+            vec![
+                Param {
+                    name: "value".to_string(),
+                    param_type: make_type_id(),
+                },
+                Param {
+                    name: "error".to_string(),
+                    param_type: make_type_pointer(),
+                },
+            ],
+            make_type_id(),
+        );
+        let protocol = make_protocol("MyValidating", vec![], vec![method.clone()]);
+
+        let ann = annotate_protocol_method_heuristic(&protocol, &method);
+        assert_eq!(ann.error_pattern, Some(ErrorPattern::ErrorOutParam));
     }
 }

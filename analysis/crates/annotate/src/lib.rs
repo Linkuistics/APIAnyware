@@ -126,6 +126,35 @@ pub fn annotate_framework(
         }
     }
 
+    // Annotate protocol methods (required + optional). Protocol-only
+    // frameworks such as CoreTransferable — and the protocol API surface of
+    // every other framework — would otherwise receive zero annotations
+    // (FU-1). Protocol annotations share the `class_annotations` list, keyed
+    // by protocol name. Structs and enums carry no methods in the IR, so
+    // there is nothing to annotate on them.
+    for protocol in &framework.protocols {
+        let mut method_annotations = Vec::new();
+        for method in protocol
+            .required_methods
+            .iter()
+            .chain(&protocol.optional_methods)
+        {
+            annotate_protocol_method_and_push(
+                protocol,
+                method,
+                &llm_index,
+                &mut method_annotations,
+            );
+        }
+
+        if !method_annotations.is_empty() {
+            class_annotations.push(ClassAnnotations {
+                class_name: protocol.name.clone(),
+                methods: method_annotations,
+            });
+        }
+    }
+
     // Detect heuristic patterns
     let heuristic_patterns = pattern_detection::detect_patterns(framework);
 
@@ -136,7 +165,8 @@ pub fn annotate_framework(
     annotated
 }
 
-/// Run heuristics on a method, merge with LLM annotation if available, and push to results.
+/// Run heuristics on a class method, merge with its LLM annotation if
+/// available, and push to results.
 fn annotate_and_push(
     class: &apianyware_macos_types::ir::Class,
     method: &apianyware_macos_types::ir::Method,
@@ -144,9 +174,33 @@ fn annotate_and_push(
     results: &mut Vec<MethodAnnotation>,
 ) {
     let heuristic = heuristics::annotate_method_heuristic(class, method);
+    merge_and_push(&class.name, method, heuristic, llm_index, results);
+}
 
+/// Run heuristics on a protocol method, merge with its LLM annotation if
+/// available, and push to results.
+fn annotate_protocol_method_and_push(
+    protocol: &apianyware_macos_types::ir::Protocol,
+    method: &apianyware_macos_types::ir::Method,
+    llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
+    results: &mut Vec<MethodAnnotation>,
+) {
+    let heuristic = heuristics::annotate_protocol_method_heuristic(protocol, method);
+    merge_and_push(&protocol.name, method, heuristic, llm_index, results);
+}
+
+/// Merge a method's heuristic annotation with its LLM annotation — looked up
+/// by `(receiver_name, selector)`, where `receiver_name` is the class or
+/// protocol name — and push the merged result.
+fn merge_and_push(
+    receiver_name: &str,
+    method: &apianyware_macos_types::ir::Method,
+    heuristic: MethodAnnotation,
+    llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
+    results: &mut Vec<MethodAnnotation>,
+) {
     let llm_ann = llm_index
-        .get(&(class.name.as_str(), method.selector.as_str()))
+        .get(&(receiver_name, method.selector.as_str()))
         .copied();
 
     let overrides = AnnotationOverrides::default();
@@ -430,5 +484,89 @@ mod tests {
         assert_eq!(fa.classes.len(), 1);
         assert_eq!(fa.classes[0].methods.len(), 1);
         assert_eq!(fa.classes[0].methods[0].selector, "fromLlm");
+    }
+
+    /// Build a framework whose only API is one protocol with one block method —
+    /// the CoreTransferable shape (zero classes, protocol-only surface).
+    fn protocol_only_framework() -> Framework {
+        use apianyware_macos_types::ir::{Method as IrMethod, Param, Protocol};
+        use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+
+        let block_method = IrMethod {
+            selector: "enumerateItemsUsingBlock:".to_string(),
+            class_method: false,
+            init_method: false,
+            params: vec![Param {
+                name: "block".to_string(),
+                param_type: TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Block {
+                        params: vec![],
+                        return_type: Box::new(TypeRef::void()),
+                    },
+                },
+            }],
+            return_type: TypeRef::void(),
+            deprecated: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+            category: None,
+            overrides: None,
+            returns_retained: None,
+            satisfies_protocol: None,
+        };
+
+        Framework {
+            format_version: "1.0".to_string(),
+            checkpoint: "resolved".to_string(),
+            name: "TestTransferable".to_string(),
+            sdk_version: None,
+            collected_at: None,
+            depends_on: vec![],
+            skipped_symbols: vec![],
+            classes: vec![],
+            protocols: vec![Protocol {
+                name: "ItemIterating".to_string(),
+                inherits: vec![],
+                required_methods: vec![block_method],
+                optional_methods: vec![],
+                properties: vec![],
+                source: None,
+                provenance: None,
+                doc_refs: None,
+            }],
+            enums: vec![],
+            structs: vec![],
+            functions: vec![],
+            constants: vec![],
+            class_annotations: vec![],
+            api_patterns: vec![],
+            enrichment: None,
+            verification: None,
+        }
+    }
+
+    #[test]
+    fn annotate_framework_annotates_protocol_methods() {
+        // FU-1: a protocol-only framework must still receive annotations.
+        // Before the fix, `annotate_framework` iterated only `classes`, so a
+        // zero-class framework produced an empty `class_annotations`.
+        let result = annotate_framework(&protocol_only_framework(), None);
+
+        let proto = result
+            .class_annotations
+            .iter()
+            .find(|c| c.class_name == "ItemIterating")
+            .expect("protocol methods must appear in class_annotations");
+        assert_eq!(proto.methods.len(), 1);
+        assert_eq!(proto.methods[0].selector, "enumerateItemsUsingBlock:");
+        assert_eq!(
+            proto.methods[0].block_parameters.len(),
+            1,
+            "the protocol method's block parameter must be classified"
+        );
     }
 }
