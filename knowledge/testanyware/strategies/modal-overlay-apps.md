@@ -9,4 +9,4 @@ and multi-app interaction. Significantly harder than standard windowed apps.
 - Multi-app interaction requires launching and managing multiple processes
 
 ## Strategy
-_To be defined during Modaliser implementation._
+_To be defined when a modal-overlay sample app is implemented._

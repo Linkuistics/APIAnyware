@@ -41,8 +41,7 @@ Cocoa event handling and CoreGraphics drawing into Racket-level state.
 ## Novel patterns
 
 - **Dynamic ObjC subclass as primary pattern** — four overrides on one
-  class (Modaliser uses the same mechanism but for a single `canBecomeKey`
-  override). Type encodings for overrides are pulled from the parent class
+  class. Type encodings for overrides are pulled from the parent class
   via `method-type-encoding` rather than hand-written.
 - **CoreGraphics drawing inside `drawRect:`** — first app using
   `CGContext*` functions end-to-end.
