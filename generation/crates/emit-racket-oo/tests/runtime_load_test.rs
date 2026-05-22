@@ -730,6 +730,74 @@ fn runtime_objc_subclass_struct_encoding() {
     eprintln!("{}", String::from_utf8_lossy(&output.stdout).trim_end());
 }
 
+#[test]
+fn runtime_default_constructors() {
+    if skip_unless_enabled("runtime_default_constructors") {
+        return;
+    }
+
+    let frameworks = match load_required_frameworks() {
+        Ok(fws) => fws,
+        Err(missing) => {
+            eprintln!(
+                "SKIPPED: enriched IR not found for {missing}. \
+                 Run the analysis pipeline first."
+            );
+            return;
+        }
+    };
+
+    let temp = tempfile::tempdir().expect("tempdir");
+    build_harness_tree(temp.path(), &frameworks);
+
+    let t = temp.path().to_string_lossy();
+    let script = format!(
+        "\
+#lang racket/base
+(require ffi/unsafe
+         (file \"{t}/runtime/type-mapping.rkt\")
+         (file \"{t}/generated/oo/appkit/nsalert.rkt\")
+         (file \"{t}/generated/oo/appkit/nscolorpanel.rkt\")
+         (file \"{t}/generated/oo/appkit/nsstackview.rkt\")
+         (file \"{t}/generated/oo/appkit/nssavepanel.rkt\")
+         (file \"{t}/generated/oo/appkit/nsopenpanel.rkt\"))
+
+(define (check name v)
+  (unless v (eprintf \"FAIL: ~a returned #f/nil~n\" name) (exit 1)))
+
+;; NSAlert — genuine synthesized zero-arg default constructor.
+(check \"make-nsalert\" (make-nsalert))
+;; NSStackView — explicit init selector.
+(check \"make-nsstackview-init-with-frame\"
+       (make-nsstackview-init-with-frame (make-nsrect 0 0 100 100)))
+;; NSColorPanel / NSSavePanel / NSOpenPanel — class-factory accessors.
+(check \"nscolorpanel-shared-color-panel\" (nscolorpanel-shared-color-panel))
+(check \"nssavepanel-save-panel\"          (nssavepanel-save-panel))
+(check \"nsopenpanel-open-panel\"          (nsopenpanel-open-panel))
+
+(printf \"OK: default/factory constructors — 5 checks passed~n\")
+"
+    );
+
+    let script_path = temp.path().join("__default_constructors_test.rkt");
+    std::fs::write(&script_path, &script).expect("write default-constructors test script");
+
+    let output = Command::new("racket")
+        .arg(&script_path)
+        .output()
+        .expect("invoke racket");
+
+    if !output.status.success() {
+        panic!(
+            "default-constructors test failed.\n--- stdout ---\n{}\n--- stderr ---\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+    }
+
+    eprintln!("{}", String::from_utf8_lossy(&output.stdout).trim_end());
+}
+
 /// Encode a Rust string as a Racket string literal, escaping `"` and `\`.
 fn racket_string_literal(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 2);
