@@ -7,17 +7,13 @@
 ;;
 ;; Exercises: SceneKit framework end-to-end, chained object construction
 ;; (scene → node → geometry → material), NSColorPanel continuous
-;; target-action, and two protocol-inherited methods reached via typed
-;; objc_msgSend aliases (runAction: on SCNActionable, setAutoenables-
-;; DefaultLighting: on SCNSceneRenderer — neither is emitted on the
-;; class binding because the generator does not currently emit
-;; protocol-inherited methods).
+;; target-action, and protocol-inherited methods (runAction: on
+;; SCNActionable, setAutoenablesDefaultLighting: on SCNSceneRenderer)
+;; now generated as proper bindings by the protocol-inherited-methods fix.
 ;;
 ;; Run with: racket scenekit-viewer.rkt
 
-(require ffi/unsafe
-         ffi/unsafe/objc
-         "../../generated/oo/appkit/nsapplication.rkt"
+(require "../../generated/oo/appkit/nsapplication.rkt"
          "../../generated/oo/appkit/nswindow.rkt"
          "../../generated/oo/appkit/nsview.rkt"
          "../../generated/oo/appkit/nsbutton.rkt"
@@ -61,32 +57,6 @@
 (define NSUserInterfaceLayoutOrientationHorizontal 0)
 ;; NSLayoutAttribute
 (define NSLayoutAttributeFirstBaseline 12)
-
-;; --- Typed objc_msgSend aliases for protocol-inherited methods ---
-;;
-;; Two selectors reach protocol methods the generator does not emit on
-;; the class binding:
-;;   -[SCNNode runAction:]                (SCNActionable protocol)
-;;   -[SCNView setAutoenablesDefaultLighting:]  (SCNSceneRenderer protocol)
-;; Typed objc_msgSend aliases bypass `tell` the same way app-menu.rkt
-;; does for SEL-taking menu selectors — no special-cased args in `tell`
-;; are required.
-(define _objc-lib (ffi-lib "libobjc"))
-(define _msg-run-action
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _void)))
-(define _msg-set-autoenables-default-lighting
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool -> _void)))
-(define sel-run-action (sel_registerName "runAction:"))
-(define sel-set-autoenables-default-lighting
-  (sel_registerName "setAutoenablesDefaultLighting:"))
-
-(define (node-run-action! node action)
-  (_msg-run-action (coerce-arg node) sel-run-action (coerce-arg action)))
-
-(define (scn-view-set-autoenables-default-lighting! scn-view enabled?)
-  (_msg-set-autoenables-default-lighting (coerce-arg scn-view)
-                                         sel-set-autoenables-default-lighting
-                                         enabled?))
 
 ;; --- Application setup ---
 (define app (nsapplication-shared-application))
@@ -144,7 +114,7 @@
 (nsview-set-autoresizing-mask! scn-view
   (bitwise-ior NSViewWidthSizable NSViewHeightSizable))
 (scnview-set-allows-camera-control! scn-view #t)
-(scn-view-set-autoenables-default-lighting! scn-view #t)
+(scnview-set-autoenables-default-lighting! scn-view #t)
 (scnview-set-background-color! scn-view (nscolor-dark-gray-color))
 (nsview-add-subview! content-view scn-view)
 
@@ -187,14 +157,14 @@
 ;;
 ;; rotateByX:y:z:duration: is a single finite rotate; wrapping it in
 ;; repeatActionForever: yields a continuous spin. The action is
-;; installed once via the typed runAction: alias above and runs
-;; independently of geometry swaps — swapping `node.geometry` does not
-;; cancel actions on the node, so the spin survives across picker
-;; changes without any extra bookkeeping.
+;; installed once via scnnode-run-action and runs independently of
+;; geometry swaps — swapping `node.geometry` does not cancel actions on
+;; the node, so the spin survives across picker changes without any
+;; extra bookkeeping.
 (define spin-action
   (scnaction-repeat-action-forever
    (scnaction-rotate-by-x-y-z-duration 0.0 1.5 0.0 4.0)))
-(node-run-action! geometry-node spin-action)
+(scnnode-run-action geometry-node spin-action)
 
 ;; --- Target-action wiring ---
 (define toolbar-target
