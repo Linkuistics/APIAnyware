@@ -614,10 +614,21 @@ cross-referencing FFI dispatch types against the IR `return_type` catches it
 (this is the rationale for the `tell #:type` matching rule, §2.3).
 
 **The runtime-load harness.** It lives at
-`generation/crates/emit-racket-oo/tests/runtime_load_test.rs` and has two tests:
+`generation/crates/emit-racket-oo/tests/runtime_load_test.rs`. Two tests are
+broad load checks:
 - `runtime_load_libraries_via_dynamic_require` — loads each library file via a
   single Racket script that collects all failures.
 - `runtime_load_apps_via_raco_make` — runs `raco make` over all sample apps.
+
+The rest are targeted behavioral checks: `runtime_block_nil_guard` (the
+`make-objc-block` nil guard, §7.6); `runtime_objc_subclass_macro` and
+`runtime_objc_subclass_struct_encoding` (the `define-objc-subclass` macro —
+primitive encodings, and the nested balanced-delimiter `{...}` encoding parser
+plus `#:arg-types`/`#:ret-type` overrides, §7.3); `runtime_default_constructors`
+(synthesized and factory class constructors actually construct, §2.3); and
+`runtime_framework_deep_checks` (CoreGraphics/AVFoundation/MapKit functions
+called with asserted results). Add a behavioral test here whenever a runtime or
+emitter mechanism gains a failure mode the load checks would not catch.
 
 The harness is gated on `RUNTIME_LOAD_TEST=1` and auto-skips when `racket`/`raco`
 are missing or the enriched IR is absent. It builds a hermetic tempdir matching
@@ -626,8 +637,7 @@ the canonical target tree so it does not race the `compiled/` cache. It uses
 contract violation; the `(file ...)` quasi-form wraps absolute paths. It probes
 for tooling via `binary_on_path("racket", "--version")` and
 `binary_on_path("raco", "help")` — `raco --version` exits non-zero, so `raco help`
-is the reliable probe. It also runs `runtime_block_nil_guard` (the
-`make-objc-block` nil guard, §7.6).
+is the reliable probe.
 
 Three arrays drive the harness:
 - `RUNTIME_FILES` — the 18 runtime files.

@@ -58,9 +58,9 @@
 ;;     class with the requested name without re-allocating.
 ;;
 ;; Reference consumer:
-;;   - apps/modaliser/ui/panel-manager.rkt subclasses NSPanel to
-;;     override canBecomeKeyWindow / canBecomeMainWindow so a borderless
-;;     NSPanel can accept keyboard input via an embedded WKWebView.
+;;   - apps/drawing-canvas/drawing-canvas.rkt subclasses NSView via
+;;     make-dynamic-subclass, overriding drawRect: and the mouse-event
+;;     methods to bridge Cocoa event handling into Racket-level state.
 
 (require ffi/unsafe)
 

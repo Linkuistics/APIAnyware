@@ -1,7 +1,7 @@
 #lang racket/base
 ;; objc-interop.rkt — Curated re-export of ObjC interop primitives.
 ;;
-;; Lets consumer modules (apps, downstream binding consumers like Modaliser)
+;; Lets consumer modules (apps and downstream binding consumers)
 ;; write `(require ".../runtime/objc-interop.rkt")` instead of pulling in
 ;; `ffi/unsafe` and `ffi/unsafe/objc` directly. A grep for `ffi/unsafe` in
 ;; consumer code then flags genuine escape-hatch usage rather than benign
