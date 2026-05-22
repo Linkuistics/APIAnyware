@@ -75,9 +75,7 @@ const REQUIRED_FRAMEWORKS: &[&str] = &[
 
 const APPS: &[&str] = &[
     "hello-window",
-    "counter",
     "ui-controls-gallery",
-    "file-lister",
     "drawing-canvas",
     "pdfkit-viewer",
     "scenekit-viewer",
