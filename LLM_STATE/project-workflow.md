@@ -9,8 +9,8 @@ A **target** is a language+paradigm combination — a top-level directory with i
 emitter crate, runtime, apps, tests, and generated output. `racket-oo` and
 `racket-functional` are independent targets, just like `racket-oo` and `haskell-monadic`.
 
-Apps progress from simple (hello-window) to complex (menu-bar-tool), culminating in
-Modaliser as the capstone proving a target's bindings are production-ready.
+Apps progress from simple (hello-window) to complex, culminating in a capstone app
+proving a target's bindings are production-ready.
 
 ## Plans and Progress
 
@@ -18,8 +18,10 @@ Modaliser as the capstone proving a target's bindings are production-ready.
 - `docs/specs/2026-05-20-core-pipeline-hardening-design.md` and
   `docs/superpowers/plans/2026-05-20-core-pipeline-hardening.md` — the core
   pipeline (collection, analysis, generation)
-- `LLM_STATE/targets/{target}/backlog.md` — per-target backlogs (still on the
-  Ravel-Lite phase cycle)
+- `docs/specs/2026-05-22-racket-oo-completion-design.md` and
+  `docs/superpowers/plans/2026-05-22-racket-oo-completion.md` — the racket-oo
+  target (prior Ravel-Lite phase-cycle state archived under
+  `LLM_STATE/targets/racket-oo/archive/`)
 
 Core pipeline and target plans are independent. If a target needs a pipeline
 feature, file it against the core pipeline plan.
@@ -92,5 +94,5 @@ bounded channels, no `unwrap`/`expect`, `cargo +nightly fmt`.
 
 ## App Progression
 
-See `knowledge/apps/_index.md` for the full catalogue. Simple -> complex -> Modaliser capstone.
+See `knowledge/apps/_index.md` for the full catalogue. Simple -> complex -> capstone app.
 Each app exercises specific macOS/binding capabilities.

@@ -8,13 +8,11 @@ The **core pipeline** is tracked by `docs/specs/2026-05-20-core-pipeline-hardeni
 (design) and `docs/superpowers/plans/2026-05-20-core-pipeline-hardening.md` (plan).
 Its prior Ravel-Lite phase-cycle state is archived under `LLM_STATE/core/archive/`.
 
-| Plan | Location | Run |
-|------|----------|-----|
-| Racket OO Target | `LLM_STATE/targets/racket-oo/` | `./LLM_STATE/targets/racket-oo/run.sh` |
-
-The Racket OO target plan still uses the Ravel-Lite phase cycle — its directory
-contains `backlog.md`, `session-log.md`, `memory.md`, `phase.md`,
-`prompt-{work,reflect,triage}.md`, and `run.sh`.
+The **racket-oo target** is tracked by
+`docs/specs/2026-05-22-racket-oo-completion-design.md` (design) and
+`docs/superpowers/plans/2026-05-22-racket-oo-completion.md` (plan). Its prior
+Ravel-Lite phase-cycle state is archived under
+`LLM_STATE/targets/racket-oo/archive/`.
 
 ## Core Pipeline
 
@@ -56,7 +54,7 @@ correctly flags both until they are addressed.
 
 | Target | Status | Styles | Apps Done | Notes |
 |--------|--------|--------|-----------|--------|
-| racket-oo | active | oo (done), c-api (done), functional (not started) | 3/7 | Next: remaining apps |
+| racket-oo | active | oo (done), c-api (done), functional (not started) | 7/7 | Next: remaining apps |
 | racket-functional | not started | functional | 0/7 | Needs functional emitter |
 
 ## Cross-Cutting Blockers
