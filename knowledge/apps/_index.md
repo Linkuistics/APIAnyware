@@ -11,6 +11,5 @@ Sample apps progress from simple to complex. Each exercises specific macOS/bindi
 | 5 | drawing-canvas | Dynamic ObjC subclass with `drawRect:` + mouse events, CoreGraphics drawing, NSColorPanel |
 | 6 | scenekit-viewer | SceneKit 3D rendering, SCNAction animation, scene graph construction |
 | 7 | pdfkit-viewer | PDFView, PDFDocument, framework-specific notifications (blocked on Quartz collection fix) |
-| 8 | modaliser | Keyboard capture (CGEvent tap), window management, overlays (WKWebView), NSStatusBar/NSMenu, config system (capstone exerciser) |
 
 Retired: `counter/`, `file-lister/`, `menu-bar-tool/`, and `text-editor/` removed (2026-04-27). `hello-window` is now the canonical demo app for the bundler integration test, the top-level `README.md` bundle-layout example, the racket-oo developer guide, and the VM-testing walkthrough. NSTableView/NSStackView learnings originally surfaced via file-lister are retained as historical attribution in `knowledge/targets/racket-oo.md`.
