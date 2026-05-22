@@ -170,16 +170,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-emit-racket-functional"
-version = "0.1.0"
-dependencies = [
- "apianyware-macos-emit",
- "apianyware-macos-types",
- "serde_json",
- "tempfile",
-]
-
-[[package]]
 name = "apianyware-macos-emit-racket-oo"
 version = "0.1.0"
 dependencies = [
@@ -234,7 +224,6 @@ dependencies = [
  "anyhow",
  "apianyware-macos-datalog",
  "apianyware-macos-emit",
- "apianyware-macos-emit-racket-functional",
  "apianyware-macos-emit-racket-oo",
  "apianyware-macos-types",
  "clap",

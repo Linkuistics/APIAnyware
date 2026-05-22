@@ -374,13 +374,11 @@ APIAnyware-MacOS/
     crates/
       emit/                # apianyware-macos-emit              — shared emitter framework
       emit-racket-oo/      # apianyware-macos-emit-racket-oo    — Racket OO emitter
-      emit-racket-functional/  # (stub)                         — Racket functional emitter
       cli/                 # apianyware-macos-generate          — generation CLI
       stub-launcher/       # apianyware-macos-stub-launcher     — Swift stub + Info.plist + .app skeleton (language-agnostic)
       bundle-racket-oo/    # apianyware-macos-bundle-racket-oo  — racket-oo bundling: require walker + resource layout
     targets/
       racket-oo/           # Racket OO: runtime, generated bindings, sample apps, tests
-      racket-functional/   # Racket functional: placeholder
 
   swift/                   # Swift helper dylibs (C-callable ObjC runtime interface)
     Sources/
@@ -395,7 +393,6 @@ APIAnyware-MacOS/
 | Language | Style(s) | Status |
 |---|---|---|
 | Racket OO | OO (classes) | Emitter complete, 283 frameworks generated, 8/8 sample apps, snapshot tests, app bundling |
-| Racket Functional | Functional (procedures) | Crate registered, stub emitter |
 | Chez Scheme | Functional | Planned (Swift dylib stub exists) |
 | Gerbil Scheme | OO + functional | Planned (Swift dylib stub exists) |
 | Common Lisp (SBCL, CCL) | CLOS + functional | Planned |

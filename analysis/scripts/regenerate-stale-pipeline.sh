@@ -128,7 +128,6 @@ fi
 GENERATE_SRC_INPUTS=(
     generation/crates/emit/src
     generation/crates/emit-racket-oo/src
-    generation/crates/emit-racket-functional/src
     generation/crates/cli/src
 )
 GENERATE_SRC_PATHS=()
@@ -163,9 +162,9 @@ fi
 # A target is stale if any of its source-controlled inputs is newer than
 # the oldest file under its generated/ tree. Targets without an existing
 # generated/ tree are skipped: the freshness hook is a drift guardrail,
-# not a first-time setup tool, and a stub emitter (e.g., racket-functional)
-# never produces a generated/ dir at all and would otherwise look stale
-# on every run.
+# not a first-time setup tool, and a not-yet-implemented target never
+# produces a generated/ dir at all and would otherwise look stale on
+# every run.
 STALE_TARGETS=()
 for tgt in "${TARGETS[@]}"; do
     out="generation/targets/${tgt}/generated"

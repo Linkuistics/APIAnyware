@@ -12,10 +12,8 @@ pub struct EmitterRegistry {
 impl EmitterRegistry {
     /// Create a registry with all built-in emitters.
     pub fn new() -> Self {
-        let emitters: Vec<Box<dyn LanguageEmitter>> = vec![
-            Box::new(apianyware_macos_emit_racket_oo::RacketEmitter),
-            Box::new(apianyware_macos_emit_racket_functional::RacketFunctionalEmitter),
-        ];
+        let emitters: Vec<Box<dyn LanguageEmitter>> =
+            vec![Box::new(apianyware_macos_emit_racket_oo::RacketEmitter)];
         Self { emitters }
     }
 
@@ -106,19 +104,5 @@ mod tests {
         assert!(list.contains("racket-oo"));
         assert!(list.contains("Racket OO"));
         assert!(list.contains("oo"));
-    }
-
-    #[test]
-    fn registry_contains_racket_functional() {
-        let registry = EmitterRegistry::new();
-        let emitter = registry.get("racket-functional");
-        assert!(
-            emitter.is_some(),
-            "registry should contain racket-functional emitter"
-        );
-        let info = emitter.unwrap().language_info();
-        assert_eq!(info.id, "racket-functional");
-        assert_eq!(info.display_name, "Racket Functional");
-        assert_eq!(info.supported_styles.len(), 1);
     }
 }

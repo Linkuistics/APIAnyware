@@ -445,8 +445,8 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Both registered emitters should produce results without error
-        assert_eq!(summaries.len(), 2, "should run all registered emitters");
+        // Every registered emitter should produce results without error
+        assert_eq!(summaries.len(), 1, "should run all registered emitters");
 
         let racket_oo = summaries
             .iter()
@@ -457,16 +457,6 @@ mod tests {
             "racket-oo should produce files"
         );
         assert_eq!(racket_oo.style_results[0].total_classes, 5);
-
-        let racket_fn = summaries
-            .iter()
-            .find(|s| s.language_id == "racket-functional")
-            .expect("racket-functional should be in results");
-        // Stub emitter produces zero output without erroring
-        assert_eq!(
-            racket_fn.style_results[0].total_files_written, 0,
-            "stub emitter should produce no files"
-        );
     }
 
     #[test]

@@ -16,7 +16,6 @@ members = [
     # Generation phase
     "generation/crates/emit",
     "generation/crates/emit-racket-oo",
-    "generation/crates/emit-racket-functional",
     "generation/crates/cli",
     # "generation/crates/emit-chez",
     # "generation/crates/emit-gerbil",
@@ -53,7 +52,6 @@ apianyware-macos-annotate = { path = "analysis/crates/annotate" }
 apianyware-macos-enrich = { path = "analysis/crates/enrich" }
 apianyware-macos-emit = { path = "generation/crates/emit" }
 apianyware-macos-emit-racket-oo = { path = "generation/crates/emit-racket-oo" }
-apianyware-macos-emit-racket-functional = { path = "generation/crates/emit-racket-functional" }
 apianyware-macos-stub-launcher = { path = "generation/crates/stub-launcher" }
 apianyware-macos-bundle-racket-oo = { path = "generation/crates/bundle-racket-oo" }
 

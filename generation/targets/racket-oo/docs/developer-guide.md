@@ -31,7 +31,7 @@ description of the emitted code. Generated bindings use
 Every class is emitted as a flat module of free functions named
 `<class>-<method>` operating on an opaque `objc-object?` struct.
 
-The difference from a hypothetical `racket-functional` target would be
+The difference from a hypothetical functional Racket target would be
 conventional: racket-oo emits `(nsview-set-frame! view frame)` — method
 receiver is the first argument — whereas a functional target might emit
 `(ns-view-set-frame! frame view)` or reorder by currying. Neither is
