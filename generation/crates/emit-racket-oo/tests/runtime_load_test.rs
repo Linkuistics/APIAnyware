@@ -611,6 +611,125 @@ fn runtime_objc_subclass_macro() {
     eprintln!("{}", String::from_utf8_lossy(&output.stdout).trim_end());
 }
 
+#[test]
+fn runtime_objc_subclass_struct_encoding() {
+    if skip_unless_enabled("runtime_objc_subclass_struct_encoding") {
+        return;
+    }
+
+    let temp = tempfile::tempdir().expect("tempdir");
+    copy_runtime(&temp.path().join("runtime")).expect("copy runtime");
+    copy_lib(&temp.path().join("lib")).expect("copy lib");
+
+    // Exercises two paths in define-objc-subclass that the sibling test
+    // (`runtime_objc_subclass_macro`) does not reach:
+    //
+    // 1. Nested balanced-delimiter struct encoding. NSView's drawRect: has
+    //    encoding "v48@0:8{CGRect={CGPoint=dd}{CGSize=dd}}16". Parsing the
+    //    outer `{CGRect=...}` token requires `read-balanced` to track depth
+    //    across the two nested `{...}` fields inside. The result is a known
+    //    struct (`_NSRect`) so inference succeeds end-to-end.
+    //
+    // 2. Explicit `#:arg-types` / `#:ret-type` keyword overrides. NSView
+    //    inherits `tag` from NSResponder via NSView with encoding "q16@0:8" (returns
+    //    NSInteger/_int64); supplying `#:arg-types () #:ret-type _long`
+    //    bypasses inference entirely, verifying the keyword-override path.
+    //
+    // NSView is only registered with the ObjC runtime after AppKit is
+    // loaded; the script loads it via ffi-lib before using NSView as the
+    // superclass.
+    let script = "\
+#lang racket/base
+(require ffi/unsafe
+         \"runtime/dynamic-class.rkt\"
+         \"runtime/objc-subclass.rkt\"
+         \"runtime/type-mapping.rkt\")
+
+;; NSView is only registered after AppKit is loaded.
+(void (ffi-lib \"/System/Library/Frameworks/AppKit.framework/AppKit\"))
+
+;; --- Path 1: nested-struct encoding (exercises read-balanced recursion) ---
+;; drawRect: encoding: v48@0:8{CGRect={CGPoint=dd}{CGSize=dd}}16
+;; The outer {CGRect=...} token contains two nested {..} tokens; depth
+;; reaches 3 inside read-balanced. CGRect is in known-structs as _NSRect.
+(define drew (box #f))
+(define-objc-subclass D2InferView NSView
+  [(drawRect:) (lambda (self dirty-rect) (set-box! drew #t))])
+(unless D2InferView
+  (eprintf \"FAIL: D2InferView not registered~n\")
+  (exit 1))
+
+;; --- Path 2: explicit #:arg-types / #:ret-type bypass inference -----------
+;; tag is inherited from NSResponder via NSView with encoding \"q16@0:8\".
+(define-objc-subclass D2ExplicitView NSView
+  [(tag) #:arg-types () #:ret-type _long (lambda (self) 7)])
+(unless D2ExplicitView
+  (eprintf \"FAIL: D2ExplicitView not registered~n\")
+  (exit 1))
+
+;; --- Smoke-test that the D2ExplicitView tag method is callable ------------
+(define objc-lib (ffi-lib \"libobjc\"))
+(define msg->ptr
+  (get-ffi-obj \"objc_msgSend\" objc-lib
+               (_fun _pointer _pointer -> _pointer)))
+(define msg->long
+  (get-ffi-obj \"objc_msgSend\" objc-lib
+               (_fun _pointer _pointer -> _long)))
+(define msg-draw
+  (get-ffi-obj \"objc_msgSend\" objc-lib
+               (_fun _pointer _pointer _NSRect -> _void)))
+(define sel-reg
+  (get-ffi-obj \"sel_registerName\" objc-lib
+               (_fun _string -> _pointer)))
+
+(define inst
+  (msg->ptr (msg->ptr D2ExplicitView (sel-reg \"alloc\")) (sel-reg \"init\")))
+(unless inst
+  (eprintf \"FAIL: D2ExplicitView alloc+init returned NULL~n\")
+  (exit 1))
+
+(define tag-val (msg->long inst (sel-reg \"tag\")))
+(unless (= tag-val 7)
+  (eprintf \"FAIL: expected tag=7, got ~a~n\" tag-val)
+  (exit 1))
+
+;; --- Verify the D2InferView drawRect: IMP is actually wired ---------------
+;; Allocate an instance and call drawRect: with a by-value NSRect struct.
+;; If the nested-struct encoding was parsed correctly, the IMP lambda fires
+;; and sets `drew`. A wrong encoding would produce a bad _cprocedure
+;; signature, causing a crash or silent non-invocation.
+(define inst2
+  (msg->ptr (msg->ptr D2InferView (sel-reg \"alloc\")) (sel-reg \"init\")))
+(unless inst2
+  (eprintf \"FAIL: D2InferView alloc+init returned NULL~n\")
+  (exit 1))
+(msg-draw inst2 (sel-reg \"drawRect:\") (make-nsrect 0 0 10 10))
+(unless (unbox drew)
+  (eprintf \"FAIL: drawRect: override not invoked — IMP not wired correctly~n\")
+  (exit 1))
+
+(printf \"OK: define-objc-subclass struct-encoding — 6 checks passed~n\")
+";
+
+    let script_path = temp.path().join("__objc_subclass_struct_test.rkt");
+    std::fs::write(&script_path, script).expect("write struct-encoding test script");
+
+    let output = Command::new("racket")
+        .arg(&script_path)
+        .output()
+        .expect("invoke racket");
+
+    if !output.status.success() {
+        panic!(
+            "objc-subclass struct-encoding test failed.\n--- stdout ---\n{}\n--- stderr ---\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+    }
+
+    eprintln!("{}", String::from_utf8_lossy(&output.stdout).trim_end());
+}
+
 /// Encode a Rust string as a Racket string literal, escaping `"` and `\`.
 fn racket_string_literal(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 2);
