@@ -293,9 +293,9 @@ workflows, `generate_info_plist()` for standalone plist generation.
 ### GUI Testing with TestAnyware
 
 Sample apps are tested in a macOS VM via `{{DEV_ROOT}}/TestAnyware/`
-(the unified successor to GUIVisionVMDriver, GUIVisionPipeline, Redraw,
-and TestAnywareRedux). Never run GUI apps directly from the CLI -- always
-use the VM for visual verification. Two channels per VM:
+(the unified successor to Redraw and TestAnywareRedux). Never run GUI
+apps directly from the CLI -- always use the VM for visual verification.
+Two channels per VM:
 
 - **Agent** (HTTP on port 8648): exec, file upload/download, accessibility
   snapshot/inspect, UI actions

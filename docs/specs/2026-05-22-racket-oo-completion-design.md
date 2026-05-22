@@ -205,7 +205,7 @@ them. Correct the sample-app count to 7.
 - The racket runtime-load harness green; `make lint-annotations` exits 0.
 - For Item D items that change emitter source or sample apps: regenerate the
   pipeline and confirm 0 enrichment violations.
-- D1's viewer render is verified in a VM with `GUIVisionVMDriver` (never run GUI
+- D1's viewer render is verified in a VM with TestAnyware (never run GUI
   apps directly from the CLI); D3/D4 are covered by the harness.
 - SDK-touching commands (collect, extract tests, `swift test`,
   `swift-api-digester`) must be run with `SDKROOT` exported — the host `xcrun`
