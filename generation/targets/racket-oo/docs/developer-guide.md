@@ -817,8 +817,6 @@ Real-world details discovered while building the sample apps:
   design rationale for `define-objc-subclass`.
 - `docs/specs/2026-04-16-sample-app-portfolio-design.md` — the app
   portfolio shape and what each app exercises.
-- `LLM_STATE/targets/racket-oo/memory.md` — the running distilled
-  learnings from emitter development (dense; skim as needed).
 - `analysis/docs/memory-architecture.md` — the upstream ObjC ownership
   model that shapes the annotations the emitter consumes.
 - Sample apps (`apps/<name>/<name>.rkt`) — the best working references

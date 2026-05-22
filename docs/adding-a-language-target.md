@@ -3,40 +3,40 @@
 Step-by-step guide for adding a language target to APIAnyware-MacOS.
 
 > **Note:** A *target* is a language+paradigm combination (e.g., `racket-oo`,
-> `racket-functional`, `haskell-monadic`). Each target is independent with its own
-> emitter crate, runtime, generated output, and apps.
+> `haskell-monadic`). Each target is independent with its own emitter crate,
+> runtime, generated output, and apps.
 
 > **Knowledge system:** After creating a target, populate `knowledge/targets/{target}.md`
-> with learnings. Run `./LLM_STATE/targets/{target}/run.sh` to start the three-phase
-> work cycle (see `../Ravel-Lite/README.md`).
+> with target-wide learnings (FFI patterns, runtime quirks). See `knowledge/README.md`.
 
 ## Prerequisites
 
-- Milestone 8 (Test Infrastructure & Workflow) is complete
 - The shared emitter framework (`generation/crates/emit/`) is available
 - At least one language target (Racket) has been completed as a reference
 - The target language has a working FFI mechanism for calling C functions
 
 ## Step 1: Plan the target
 
-Create the plan directory `LLM_STATE/targets/{target}/` with four files by following
-`../Ravel-Lite/defaults/create-plan.md`. Start with `backlog.md` by instantiating
-`LLM_STATE/targets/template.md`:
+Brainstorm the target's design, then capture it as a design spec and an
+implementation plan (the standard project workflow — see `knowledge/README.md`):
 
-1. Copy the template structure into `backlog.md`
-2. Fill in the header fields:
+1. **Brainstorm** the design — FFI mechanism, naming conventions, dispatch
+   strategy, memory model, block bridging, error handling, and which binding
+   styles to emit.
+2. **Write a design spec** to `docs/specs/YYYY-MM-DD-<target>-design.md`
+   recording, at minimum:
    - **Language** — display name
    - **Paradigm** — the binding style variant (e.g., "OO", "Functional", "Monadic")
    - **Target** — `{lang}-{paradigm}` slug (e.g., `haskell-monadic`)
    - **Implementations** — which compilers/runtimes (e.g., "GHC" for Haskell, "SBCL, CCL" for Common Lisp)
    - **Binding styles** — what paradigm variants to generate (e.g., "Monadic, Lens-based")
    - **Swift dylib** — `libAPIAnyware{Lang}.dylib`
-   - **Status** — initial status (usually "not started")
    - **Emitter crate** — `emit-{target}`
    - **Runtime location** — `generation/targets/{target}/runtime/`
-3. Each step uses Do/Verify/Observe structure: what to do, how to verify it worked, and what to note as learnings
-4. Rename the style-specific steps (X.7, X.8) to match the binding styles
-5. Add any language-specific notes
+3. **Write an implementation plan** to `docs/superpowers/plans/` breaking the
+   steps below into bite-sized tasks.
+
+Then work the plan task by task.
 
 ## Step 2: Create the emitter crate
 
@@ -124,7 +124,7 @@ pub const {LANG}_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
 - **Block bridging** — how closures/lambdas become ObjC blocks
 - **Error handling** — how error-out parameters map to the language's error model
 
-Use the Racket emitter (`generation/crates/emit-racket/`) as a reference implementation.
+Use the Racket emitter (`generation/crates/emit-racket-oo/`) as a reference implementation.
 
 ## Step 3: Create the runtime library
 
@@ -220,12 +220,12 @@ Create non-GUI tests in the target language that verify basic binding functional
 
 ## Step 8: Build sample apps
 
-Implement the 7 standard sample apps (one set per binding style):
+Implement the standard sample apps (one set per binding style):
 
-1. Read the spec in `generation/apps/specs/{app}.md`
+1. Read the spec in `knowledge/apps/{app}/spec.md` (catalogue: `knowledge/apps/_index.md`)
 2. Implement in `generation/targets/{target}/apps/{style}/{app}/`
 3. Verify it builds and runs
-4. Run TestAnyware validation against it
+4. Run TestAnyware validation against it (see `knowledge/testanyware/general.md`)
 
 ### App bundling for TCC permissions
 
@@ -263,14 +263,14 @@ compiled stub has a unique CDHash, giving per-app permission isolation.
 
 ## Reference implementations
 
-- **Racket** — `generation/crates/emit-racket/` and `generation/targets/racket-oo/` — the most complete reference
+- **Racket** — `generation/crates/emit-racket-oo/` and `generation/targets/racket-oo/` — the most complete reference
 - **Shared framework** — `generation/crates/emit/` — common utilities available to all emitters
 - **Swift helpers** — `swift/Sources/APIAnywareCommon/` — shared C-callable ObjC runtime interface
 
 ## Checklist
 
 ```
-[ ] LLM_STATE/targets/{target}/ directory created (backlog.md, session-log.md, memory.md, phase.md, prompt-*.md, run.sh)
+[ ] Design spec + implementation plan written (docs/specs/, docs/superpowers/plans/)
 [ ] emit-{target} crate created, compiles, tests pass
 [ ] Runtime library written, loads in target language
 [ ] Swift dylib builds and FFI verified
@@ -284,5 +284,5 @@ compiled stub has a unique CDHash, giving per-app permission isolation.
 [ ] Per-framework exercisers pass
 [ ] knowledge/targets/{target}.md populated with learnings
 [ ] Review gate passed
-[ ] LLM_STATE/overview.md updated with target status
+[ ] README.md Current Status updated with target status
 ```

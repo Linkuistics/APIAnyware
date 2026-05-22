@@ -26,9 +26,6 @@ generation/targets/*/apps/*/compiled/
 # Built sample-app .app bundles (regenerable via bundle-racket-oo)
 generation/targets/*/apps/*/build/
 
-# Run-phase scratch baseline files maintained by the Ravel-Lite runner
-LLM_STATE/**/compact-baseline
-
 # AppSpec runner artifacts captured per-app (regenerable from runner output)
 knowledge/apps/*/artifacts/
 

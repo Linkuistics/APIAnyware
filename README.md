@@ -12,8 +12,8 @@ The full three-phase pipeline (Collection, Analysis, Generation) is implemented 
 
 - **Collection** extracts 218 ObjC frameworks and 151 Swift modules from the macOS SDK, merging ObjC and Swift declarations into a unified IR. Cross-import overlay frameworks (`_RealityKit_SwiftUI`, `_AppIntents_SwiftUI`, …) correctly retain the bridged classes that form their API surface.
 - **Analysis** runs Datalog-based inheritance resolution, heuristic + LLM semantic annotation (block lifecycle, ownership, threading, error patterns), API pattern recognition (10 stereotype categories, 36+ pattern instances in Foundation alone), and enrichment with verification.
-- **Generation** produces Racket OO bindings for all 284 discovered frameworks (~6,979 files total), with a 7-file Racket runtime library and a Swift helper dylib providing C-callable ObjC runtime access.
-- **All 8 active sample apps** in the portfolio (per `knowledge/apps/_index.md` and `docs/specs/2026-04-16-sample-app-portfolio-design.md`) are implemented for Racket OO. Sample apps can be packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via `apianyware-macos-bundle-racket-oo`.
+- **Generation** produces Racket OO bindings for all 284 discovered frameworks (~6,979 files total), with an 18-file Racket runtime library and a Swift helper dylib providing C-callable ObjC runtime access.
+- **All 7 active sample apps** in the portfolio (per `knowledge/apps/_index.md`) are implemented for Racket OO. Sample apps can be packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via `apianyware-macos-bundle-racket-oo`.
 - **Racket Functional** emitter crate exists as a registered stub; not yet implemented.
 - **Snapshot tests** use a synthetic TestKit framework plus a curated Foundation subset for regression testing.
 - **634 Rust tests** and **67 Swift tests** cover the pipeline.

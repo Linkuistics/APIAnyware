@@ -9,5 +9,3 @@ target.
 ## Before working here
 
 1. Read `{{PROJECT}}/knowledge/targets/racket-functional.md` for target-wide learnings
-2. Check `{{PROJECT}}/LLM_STATE/targets/racket-functional/backlog.md` for current progress
-   (if it exists)

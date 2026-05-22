@@ -6,7 +6,9 @@ Racket object-oriented interaction with macOS APIs.
 ## Before working here
 
 1. Read `{{PROJECT}}/knowledge/targets/racket-oo.md` for target-wide learnings
-2. Check `{{PROJECT}}/LLM_STATE/targets/racket-oo/backlog.md` for current progress
+2. Check `{{PROJECT}}/docs/specs/2026-05-22-racket-oo-completion-design.md` and
+   `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-oo-completion.md` for the
+   target's design and implementation plan
 
 ## For developers using the bindings
 
