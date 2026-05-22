@@ -177,12 +177,12 @@ licensing is a first-class concern, not an afterthought.
 - **`grove`'s own parts** — the loop, the `BRIEF.md` / `TASK-FORMAT`
   conventions — are original work, licensed under whatever licence
   `Linkuistics/skills` adopts (below).
-- **`Linkuistics/skills` needs a licence.** The current `Linkuistics/`
-  `coding-standards` repo has none — "all rights reserved" by default, which
-  blocks others from using the skills. `Linkuistics/skills` must adopt an
-  explicit licence; a permissive one (MIT, matching the ecosystem, or
-  Apache-2.0, matching APIAnyware-MacOS) is recommended so `grove` can be
-  materialised freely. The exact choice is the owner's — see D9.
+- **`Linkuistics/skills` is licensed Apache-2.0.** The current `Linkuistics/`
+  `coding-standards` repo has no licence — "all rights reserved" by default,
+  which blocks others from using the skills; the restructured repo adds
+  Apache-2.0, matching all Linkuistics open-source projects (and
+  APIAnyware-MacOS). Apache-2.0 is permissive and composes cleanly with the
+  bundled MIT files — see D9.
 - **Compatibility downstream.** MIT (the bundled files) and a permissive
   `Linkuistics/skills` licence are both compatible with materialisation into an
   Apache-2.0 project such as APIAnyware-MacOS, or any other — permissive
@@ -383,10 +383,10 @@ become the first ADRs (`docs/adr/0001`…) once `docs/adr/` is established.
 - **D7 — One task per session.** Predictability over throughput.
 - **D8 — Bounded contexts (domain) and task-tree nodes (process) are
   orthogonal.** The glossary is per-bounded-context; `BRIEF.md` is per-node.
-- **D9 — `Linkuistics/skills` adopts an explicit permissive licence** so `grove`
-  can be redistributed and materialised freely. The current `coding-standards`
-  repo has none. MIT (ecosystem-matching) or Apache-2.0 (APIAnyware-matching);
-  the choice is the owner's — see *Open questions*.
+- **D9 — `Linkuistics/skills` is licensed Apache-2.0**, matching all Linkuistics
+  open-source projects. The current `coding-standards` repo has no licence; the
+  restructured repo adds one. Apache-2.0 is permissive and composes cleanly with
+  the bundled MIT files and with materialisation into any project.
 
 ## First customer: the `chez-functional` target
 
@@ -466,8 +466,8 @@ input so it is not lost:
 - Materialisation works: one command copies `grove` into a target repo's
   `.claude/skills/grove/` and writes a `VERSION.md` that legibly answers *which
   version, what it bundles, when materialised, how to update*.
-- `Linkuistics/skills` exists with the `linkuistics` plugin and namespace, an
-  explicit licence (D9), and `coding-style` et al. resolving as `linkuistics:*`.
+- `Linkuistics/skills` exists with the `linkuistics` plugin and namespace, the
+  Apache-2.0 licence (D9), and `coding-style` et al. resolving as `linkuistics:*`.
 - A dry run holds: a fresh `groves/<name>/` with a root `BRIEF.md` and one leaf
   task can be picked, bootstrapped, and executed *by reading alone*.
 - Full validation follows from `grove`'s first real use — the `chez-functional`
@@ -477,8 +477,6 @@ input so it is not lost:
 
 Deferred to the build or the first grilling task; none blocks the plan:
 
-- Which licence `Linkuistics/skills` adopts — MIT (ecosystem-matching) vs.
-  Apache-2.0 (APIAnyware-matching). Owner's call (D9).
 - PRD identifier scheme — sequential `NNNN-` vs. dated.
 - `grove` version identifiers — git SHAs only, or human-friendly tags
   (`grove vX`) in `Linkuistics/skills` plus the SHA.
