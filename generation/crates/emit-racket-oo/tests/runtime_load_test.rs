@@ -61,11 +61,13 @@ const REQUIRED_FRAMEWORKS: &[&str] = &[
     "Foundation",
     "AppKit",
     "AudioToolbox",
+    "AVFoundation",
     "CoreGraphics",
     "CoreSpotlight",
     "CoreText",
     "ApplicationServices",
     "libdispatch",
+    "MapKit",
     "Network",
     "NetworkExtension",
     "PDFKit",
@@ -790,6 +792,118 @@ fn runtime_default_constructors() {
     if !output.status.success() {
         panic!(
             "default-constructors test failed.\n--- stdout ---\n{}\n--- stderr ---\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+    }
+
+    eprintln!("{}", String::from_utf8_lossy(&output.stdout).trim_end());
+}
+
+#[test]
+fn runtime_framework_deep_checks() {
+    if skip_unless_enabled("runtime_framework_deep_checks") {
+        return;
+    }
+
+    let frameworks = match load_required_frameworks() {
+        Ok(fws) => fws,
+        Err(missing) => {
+            eprintln!(
+                "SKIPPED: enriched IR not found for {missing}. \
+                 Run the analysis pipeline first."
+            );
+            return;
+        }
+    };
+
+    let temp = tempfile::tempdir().expect("tempdir");
+    build_harness_tree(temp.path(), &frameworks);
+
+    // Beyond the shallow `dynamic-require` load checks: construct values,
+    // call deterministic C functions across three frameworks, and assert on
+    // the *results*. All chosen entry points are pure geometry/utility
+    // functions — no GUI, no main-thread constraint, no I/O.
+    //
+    //  - CoreGraphics: CGAffineTransform predicates. The identity transform
+    //    constant must report as identity; a 2x scale must not.
+    //  - MapKit: MKMapPointsPerMeterAtLatitude — a monotone scalar function,
+    //    strictly positive at the equator and strictly larger toward the
+    //    poles (Mercator projection stretches map points per meter as
+    //    |latitude| grows).
+    //  - AVFoundation: AVMakeRectWithAspectRatioInsideRect — fits a square
+    //    (1x1 aspect) inside a 100x50 rect; the result is the largest
+    //    centered square, i.e. 50x50 at origin (25, 0). Exact arithmetic on
+    //    a by-value _NSSize / _NSRect cstruct round-trip.
+    let t = temp.path().to_string_lossy();
+    let script = format!(
+        "\
+#lang racket/base
+(require ffi/unsafe
+         (file \"{t}/runtime/type-mapping.rkt\")
+         (file \"{t}/generated/oo/coregraphics/functions.rkt\")
+         (file \"{t}/generated/oo/coregraphics/constants.rkt\")
+         (file \"{t}/generated/oo/mapkit/functions.rkt\")
+         (file \"{t}/generated/oo/avfoundation/functions.rkt\"))
+
+(define (expect name actual expected)
+  (unless (equal? actual expected)
+    (eprintf \"FAIL: ~a = ~s, expected ~s~n\" name actual expected) (exit 1)))
+(define (expect-true name v)
+  (unless v (eprintf \"FAIL: ~a was false~n\" name) (exit 1)))
+
+;; --- CoreGraphics — affine-transform predicates (deterministic) ----------
+;; CGAffineTransformIdentity is exported from constants.rkt as a raw,
+;; untagged cpointer (an ffi-obj-ref to the C global). CGAffineTransformIsIdentity
+;; takes a by-value _CGAffineTransform, so the raw pointer must first be
+;; dereferenced into a tagged struct value via ptr-ref.
+(define identity-xform (ptr-ref CGAffineTransformIdentity _CGAffineTransform))
+(expect \"CGAffineTransformIsIdentity(identity)\"
+        (CGAffineTransformIsIdentity identity-xform) #t)
+;; A 2x scale is not the identity. CGAffineTransformMakeScale returns a
+;; by-value _CGAffineTransform struct, fed straight back into the predicate.
+(expect \"CGAffineTransformIsIdentity(scale 2)\"
+        (CGAffineTransformIsIdentity (CGAffineTransformMakeScale 2.0 2.0)) #f)
+
+;; --- MapKit — scalar geometry (deterministic, no struct round-trip) ------
+;; MKMapPointsPerMeterAtLatitude is (_fun _double -> _double): strictly
+;; positive everywhere, and strictly larger toward the poles than at the
+;; equator (Mercator scale factor grows with |latitude|).
+(define mpm-equator (MKMapPointsPerMeterAtLatitude 0.0))
+(define mpm-mid     (MKMapPointsPerMeterAtLatitude 60.0))
+(expect-true \"MKMapPointsPerMeterAtLatitude(0) > 0\" (> mpm-equator 0.0))
+(expect-true \"MKMapPointsPerMeterAtLatitude(60) > MKMapPointsPerMeterAtLatitude(0)\"
+             (> mpm-mid mpm-equator))
+
+;; --- AVFoundation — by-value struct geometry -----------------------------
+;; AVMakeRectWithAspectRatioInsideRect is (_fun _NSSize _NSRect -> _NSRect).
+;; A 1x1 aspect fitted inside (0,0,100,50) yields the largest centered
+;; square: 50x50 at origin (25, 0).
+(define av-rect
+  (AVMakeRectWithAspectRatioInsideRect (make-nssize 1.0 1.0)
+                                       (make-nsrect 0.0 0.0 100.0 50.0)))
+(define av-size (NSRect-size av-rect))
+(define av-origin (NSRect-origin av-rect))
+(expect \"AVMakeRect width\"  (NSSize-width av-size)  50.0)
+(expect \"AVMakeRect height\" (NSSize-height av-size) 50.0)
+(expect \"AVMakeRect origin.x\" (NSPoint-x av-origin) 25.0)
+(expect \"AVMakeRect origin.y\" (NSPoint-y av-origin) 0.0)
+
+(printf \"OK: framework deep checks passed~n\")
+"
+    );
+
+    let script_path = temp.path().join("__framework_deep_test.rkt");
+    std::fs::write(&script_path, &script).expect("write framework-deep test script");
+
+    let output = Command::new("racket")
+        .arg(&script_path)
+        .output()
+        .expect("invoke racket");
+
+    if !output.status.success() {
+        panic!(
+            "framework deep-check test failed.\n--- stdout ---\n{}\n--- stderr ---\n{}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
         );
