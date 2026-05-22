@@ -263,6 +263,7 @@
    (tell (coerce-arg self) user)))
 
 ;; --- Instance methods ---
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error self options keys relative-url error)
   (wrap-objc-object
    (_msg-16 (coerce-arg self) (sel_registerName "bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error:") options (coerce-arg keys) (coerce-arg relative-url) error)
@@ -278,12 +279,14 @@
    (tell (coerce-arg self) fileReferenceURL)))
 (define (nsurl-get-file-system-representation-max-length self buffer max-buffer-length)
   (_msg-14 (coerce-arg self) (sel_registerName "getFileSystemRepresentation:maxLength:") buffer max-buffer-length))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-get-resource-value-for-key-error self value key error)
   (_msg-13 (coerce-arg self) (sel_registerName "getResourceValue:forKey:error:") value (coerce-arg key) error))
 (define (nsurl-init-absolute-url-with-data-representation-relative-to-url self data base-url)
   (wrap-objc-object
    (tell (coerce-arg self) initAbsoluteURLWithDataRepresentation: (coerce-arg data) relativeToURL: (coerce-arg base-url))
    #:retained #t))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-init-by-resolving-bookmark-data-options-relative-to-url-bookmark-data-is-stale-error self bookmark-data options relative-url is-stale error)
   (wrap-objc-object
    (_msg-10 (coerce-arg self) (sel_registerName "initByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:") (coerce-arg bookmark-data) options (coerce-arg relative-url) is-stale error)
@@ -314,6 +317,7 @@
   (_msg-0 (coerce-arg self) (sel_registerName "isFileURL")))
 (define (nsurl-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
   (_msg-2 (coerce-arg self) (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:") (coerce-arg type-identifier)))
+;; block param 1: async-copied (runtime-managed)
 (define (nsurl-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id _id) _void))
@@ -324,12 +328,15 @@
   (tell #:type _void (coerce-arg self) removeAllCachedResourceValues))
 (define (nsurl-remove-cached-resource-value-for-key! self key)
   (tell #:type _void (coerce-arg self) removeCachedResourceValueForKey: (coerce-arg key)))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-resource-values-for-keys-error self keys error)
   (wrap-objc-object
    (_msg-9 (coerce-arg self) (sel_registerName "resourceValuesForKeys:error:") (coerce-arg keys) error)
    ))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-set-resource-value-for-key-error! self value key error)
   (_msg-5 (coerce-arg self) (sel_registerName "setResourceValue:forKey:error:") (coerce-arg value) (coerce-arg key) error))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-set-resource-values-error! self keyed-values error)
   (_msg-8 (coerce-arg self) (sel_registerName "setResourceValues:error:") (coerce-arg keyed-values) error))
 (define (nsurl-set-temporary-resource-value-for-key! self value key)
@@ -343,10 +350,12 @@
    (tell (coerce-arg self) writableTypeIdentifiersForItemProvider)))
 
 ;; --- Class methods ---
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-url-by-resolving-alias-file-at-url-options-error url options error)
   (wrap-objc-object
    (_msg-11 NSURL (sel_registerName "URLByResolvingAliasFileAtURL:options:error:") (coerce-arg url) options error)
    ))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-url-by-resolving-bookmark-data-options-relative-to-url-bookmark-data-is-stale-error bookmark-data options relative-url is-stale error)
   (wrap-objc-object
    (_msg-10 NSURL (sel_registerName "URLByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error:") (coerce-arg bookmark-data) options (coerce-arg relative-url) is-stale error)
@@ -367,6 +376,7 @@
 (define (nsurl-absolute-url-with-data-representation-relative-to-url data base-url)
   (wrap-objc-object
    (tell NSURL absoluteURLWithDataRepresentation: (coerce-arg data) relativeToURL: (coerce-arg base-url))))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-bookmark-data-with-contents-of-url-error bookmark-file-url error)
   (wrap-objc-object
    (_msg-9 NSURL (sel_registerName "bookmarkDataWithContentsOfURL:error:") (coerce-arg bookmark-file-url) error)
@@ -389,6 +399,7 @@
 (define (nsurl-file-url-with-path-relative-to-url path base-url)
   (wrap-objc-object
    (tell NSURL fileURLWithPath: (coerce-arg path) relativeToURL: (coerce-arg base-url))))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-object-with-item-provider-data-type-identifier-error data type-identifier out-error)
   (wrap-objc-object
    (_msg-6 NSURL (sel_registerName "objectWithItemProviderData:typeIdentifier:error:") (coerce-arg data) (coerce-arg type-identifier) out-error)
@@ -401,5 +412,6 @@
    (tell NSURL resourceValuesForKeys: (coerce-arg keys) fromBookmarkData: (coerce-arg bookmark-data))))
 (define (nsurl-supports-secure-coding)
   (_msg-0 NSURL (sel_registerName "supportsSecureCoding")))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-write-bookmark-data-to-url-options-error bookmark-data bookmark-file-url options error)
   (_msg-7 NSURL (sel_registerName "writeBookmarkData:toURL:options:error:") (coerce-arg bookmark-data) (coerce-arg bookmark-file-url) options error))

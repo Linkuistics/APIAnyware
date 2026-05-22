@@ -51,8 +51,10 @@
    (tell NSNotificationCenter defaultCenter)))
 
 ;; --- Instance methods ---
+;; param 0: weak reference
 (define (nsnotificationcenter-add-observer-selector-name-object! self observer a-selector a-name an-object)
   (_msg-1 (coerce-arg self) (sel_registerName "addObserver:selector:name:object:") (coerce-arg observer) (sel_registerName a-selector) (coerce-arg a-name) (coerce-arg an-object)))
+;; block param 3: stored (retained across calls)
 (define (nsnotificationcenter-add-observer-for-name-object-queue-using-block! self name obj queue block)
   (define-values (_blk3 _blk3-id)
     (make-objc-block block (list _id) _void))

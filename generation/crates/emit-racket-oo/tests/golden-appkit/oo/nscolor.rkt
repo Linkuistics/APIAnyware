@@ -717,6 +717,7 @@
   (wrap-objc-object
    (_msg-9 NSColor (sel_registerName "colorWithHue:saturation:brightness:alpha:") hue saturation brightness alpha)
    ))
+;; block param 1: stored (retained across calls)
 (define (nscolor-color-with-name-dynamic-provider color-name dynamic-provider)
   (define-values (_blk1 _blk1-id)
     (make-objc-block dynamic-provider (list _id) _id))

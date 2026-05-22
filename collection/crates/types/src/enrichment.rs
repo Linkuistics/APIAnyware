@@ -11,6 +11,11 @@ use serde::{Deserialize, Serialize};
 /// Contains all annotation-derived and pattern-derived relations that emitters
 /// need beyond the raw annotations — block lifecycle classification, delegate
 /// detection, collection iterability, scoped resources, and thread affinity.
+///
+/// In addition to the class-keyed relations, this struct also carries
+/// protocol-keyed relations (block classification, error patterns, thread
+/// affinity, weak parameters for protocol methods) and weak-parameter
+/// ownership for both classes and protocols.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct EnrichmentData {
     /// Methods with synchronous block parameters (no `Block_copy`, caller frees).
@@ -44,12 +49,41 @@ pub struct EnrichmentData {
     /// Classes where all methods must be called from the main thread.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub main_thread_classes: Vec<String>,
+
+    /// Methods with weak-reference parameters (class-keyed).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub weak_param_methods: Vec<WeakParamEntry>,
+
+    /// Protocol methods with synchronous block parameters (protocol-keyed:
+    /// the `class` field of each entry holds a protocol name).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protocol_sync_block_methods: Vec<BlockMethodEntry>,
+
+    /// Protocol methods with asynchronous (copied) block parameters.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protocol_async_block_methods: Vec<BlockMethodEntry>,
+
+    /// Protocol methods with stored block parameters.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protocol_stored_block_methods: Vec<BlockMethodEntry>,
+
+    /// Protocol methods with an NSError** out-param.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protocol_convenience_error_methods: Vec<ClassSelectorEntry>,
+
+    /// Protocol methods with weak-reference parameters.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protocol_weak_param_methods: Vec<WeakParamEntry>,
+
+    /// Protocols all of whose methods must be called from the main thread.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protocol_main_thread_protocols: Vec<String>,
 }
 
 /// A method with a block parameter at a specific index.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlockMethodEntry {
-    /// Class name.
+    /// Class or protocol name.
     pub class: String,
     /// Selector name.
     pub selector: String,
@@ -57,10 +91,25 @@ pub struct BlockMethodEntry {
     pub param_index: usize,
 }
 
+/// A method parameter that is a weak reference (e.g. a delegate/dataSource).
+///
+/// The `class` field holds a class name when the entry comes from the
+/// class-keyed `weak_param_methods`, or a protocol name when it comes from
+/// `protocol_weak_param_methods`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeakParamEntry {
+    /// Class or protocol name.
+    pub class: String,
+    /// Selector name.
+    pub selector: String,
+    /// Zero-based parameter index of the weak parameter.
+    pub param_index: usize,
+}
+
 /// A (class, selector) pair identifying a method.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassSelectorEntry {
-    /// Class name.
+    /// Class or protocol name.
     pub class: String,
     /// Selector name.
     pub selector: String,

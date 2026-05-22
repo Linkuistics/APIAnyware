@@ -14,6 +14,7 @@
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/AppKit.framework/AppKit"))
 (define _objc-lib (ffi-lib "libobjc"))
 
+;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -1701,12 +1702,14 @@
   (tell #:type _void (coerce-arg self) becomeKeyWindow))
 (define (nswindow-become-main-window self)
   (tell #:type _void (coerce-arg self) becomeMainWindow))
+;; block param 1: async-copied (runtime-managed)
 (define (nswindow-begin-critical-sheet-completion-handler! self sheet-window handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block handler (list _int64) _void))
   (_msg-39 (coerce-arg self) (sel_registerName "beginCriticalSheet:completionHandler:") (coerce-arg sheet-window) _blk1))
 (define (nswindow-begin-gesture-with-event! self event)
   (tell #:type _void (coerce-arg self) beginGestureWithEvent: (coerce-arg event)))
+;; block param 1: async-copied (runtime-managed)
 (define (nswindow-begin-sheet-completion-handler! self sheet-window handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block handler (list _int64) _void))
@@ -1935,10 +1938,12 @@
   (tell #:type _void (coerce-arg self) removeChildWindow: (coerce-arg child-win)))
 (define (nswindow-remove-titlebar-accessory-view-controller-at-index! self index)
   (_msg-45 (coerce-arg self) (sel_registerName "removeTitlebarAccessoryViewControllerAtIndex:") index))
+;; block param 1: async-copied (runtime-managed)
 (define (nswindow-request-sharing-of-window-completion-handler self window completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id) _void))
   (_msg-39 (coerce-arg self) (sel_registerName "requestSharingOfWindow:completionHandler:") (coerce-arg window) _blk1))
+;; block param 2: async-copied (runtime-managed)
 (define (nswindow-request-sharing-of-window-using-preview-title-completion-handler self image title completion-handler)
   (define-values (_blk2 _blk2-id)
     (make-objc-block completion-handler (list _id) _void))
@@ -2291,6 +2296,7 @@
   (tell #:type _void (coerce-arg self) touchesEndedWithEvent: (coerce-arg event)))
 (define (nswindow-touches-moved-with-event self event)
   (tell #:type _void (coerce-arg self) touchesMovedWithEvent: (coerce-arg event)))
+;; block param 1: async-copied (runtime-managed)
 (define (nswindow-transfer-window-sharing-to-window-completion-handler self window completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id) _void))

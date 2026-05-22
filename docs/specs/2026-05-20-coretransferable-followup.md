@@ -135,3 +135,97 @@ SDK, so the stale file was removed.
 After removing both `SharedWithYouCore.llm.json` and the FU-1 `CoreTransferable.llm.json`,
 `check-llm-annotation-drift.sh --skip-regen` reports `ok: all 152 .llm.json
 files validate` and `make lint-annotations` exits 0.
+
+---
+
+# Follow-up FU-3 — wire protocol annotations through to generated bindings
+
+**Filed:** 2026-05-21, from the FU-1 Resolution above.
+**Status:** DONE (2026-05-22) — see Resolution below.
+
+## Problem
+
+FU-1 made `annotate` / `llm-extract` produce protocol-method annotations (stored in
+`framework.class_annotations`, keyed by protocol name), but the FU-1 Resolution
+deliberately left them disconnected from generation:
+
+- `enrich/src/fact_loader.rs::load_annotation_facts` loads the protocol-keyed
+  annotation facts into the Datalog program's base relations, and the derived
+  relations (`sync_block_method`, etc.) lift them without a class join — so the
+  program already produces protocol-keyed derived tuples.
+- but `enrich/src/checkpoint.rs::filter_results_for_framework` filtered every
+  derived relation by the framework's real *class* names, dropping every
+  protocol-keyed fact before it reached `EnrichmentData`.
+- and `emit-racket-oo` consulted no annotations or enrichment at all.
+
+Net: a generated protocol binding carried no block-invocation / ownership /
+threading metadata even though the annotation existed upstream.
+
+## Premise correction
+
+FU-3 was framed as "make `emit_protocol.rs` consume enrichment the way
+`emit_class.rs` consumes class enrichment." Investigation found that premise
+false: **no emitter consumed `EnrichmentData`.** `generate_class_file` receives
+only a `&Class` and the framework name — never the `Framework`, its
+`enrichment`, or its `class_annotations`. `emit-racket-oo`'s block handling was
+entirely IR-type-driven (`TypeRefKind::Block`); repo-wide, the `enrichment`
+field was read only by log-line counters. There was no class path to mirror.
+
+Given that, the work was scoped (with the requester) to wire `EnrichmentData`
+consumption into the emitter for **both** classes and protocols, so the emitter
+stays internally consistent.
+
+## Resolution (2026-05-22)
+
+**Data layer.** `EnrichmentData` (`collection/crates/types/src/enrichment.rs`)
+gained a `WeakParamEntry` type and seven fields: `weak_param_methods`
+(class-keyed) and `protocol_{sync,async,stored}_block_methods`,
+`protocol_convenience_error_methods`, `protocol_weak_param_methods`,
+`protocol_main_thread_protocols`. `filter_results_for_framework` was extended to
+surface protocol-keyed derived facts (filtered by the framework's protocol
+names) and weak-parameter ownership. Weak-param ownership was loaded into the
+Datalog program but had never reached `EnrichmentData` for *any* decl kind —
+it is now surfaced for both classes and protocols. The Datalog program
+(`program.rs`) needed no change.
+
+**Emitter.** A new `emit-racket-oo/src/enrichment_comments.rs` module projects
+the framework-wide `EnrichmentData` onto one class or protocol
+(`EnrichmentNotes::for_class` / `for_protocol`). `emit_framework.rs` threads
+`fw.enrichment.as_ref()` into `generate_class_file` and `generate_protocol_file`.
+Both emitters surface the metadata as `;;` comment lines — per-method block /
+ownership notes (class files: above each `(define …)`; protocol files: appended
+to the header method listing) and a decl-level main-thread threading note. The
+metadata is recorded as comments only; FFI codegen is unchanged.
+
+**Goldens.** The emit-racket-oo snapshot goldens churned (comment lines added,
+never removed). `NSApplicationDelegate` (AppKit) and `NSURLSessionTaskDelegate`
+(Foundation) were added to the curated golden subsets so a protocol golden
+exercises the new path. Pipeline regenerated with 0 enrichment violations.
+
+---
+
+# Follow-up FU-4 — NSItemProvider block annotations under Foundation
+
+**Filed:** 2026-05-21, from the FU-1 Resolution above.
+**Status:** DONE (2026-05-22) — already satisfied; see Resolution.
+
+## Problem
+
+FU-1 removed `CoreTransferable.llm.json` because it annotated `NSItemProvider` —
+a Foundation class the Task 6 collection filter correctly drops from
+CoreTransferable. That file carried 15 curated block-invocation annotations.
+FU-4 asked whether those should be re-established under `Foundation.llm.json`.
+
+## Resolution (2026-05-22)
+
+**No action needed.** `Foundation.llm.json` already annotates `NSItemProvider`
+comprehensively — 13 methods (a superset of the 11 recovered CoreTransferable
+methods that exist in Foundation's IR, plus `loadPreviewImageWithOptions:…` and
+`setPreviewImageHandler:`). Those annotations were added in commit `4a047af`
+("Run Foundation LLM annotation pass"), which pre-dates FU-1; the FU-1
+Resolution's note that they "could be re-annotated under Foundation in future"
+simply did not check that Foundation already carried them. The four
+CoreTransferable-only Swift selectors (`loadTransferable`, `register(_:)`,
+`registerCKShare`, `registerGroupActivity`) are correctly absent — they do not
+exist in Foundation's resolved IR. `check-llm-annotation-drift.sh` reports
+`ok: all 152 .llm.json files validate` and `make lint-annotations` exits 0.

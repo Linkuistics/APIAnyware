@@ -117,6 +117,7 @@
   (wrap-objc-object
    (_msg-3 NSError (sel_registerName "errorWithDomain:code:userInfo:") (coerce-arg domain) code (coerce-arg dict))
    ))
+;; block param 1: stored (retained across calls)
 (define (nserror-set-user-info-value-provider-for-domain-provider! error-domain provider)
   (define-values (_blk1 _blk1-id)
     (make-objc-block provider (list _id _id) _id))

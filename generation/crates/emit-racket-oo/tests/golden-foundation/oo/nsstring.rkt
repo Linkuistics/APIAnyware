@@ -207,6 +207,7 @@
   (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
 (define (nsstring-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
   (_msg-2 (coerce-arg self) (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:") (coerce-arg type-identifier)))
+;; block param 1: async-copied (runtime-managed)
 (define (nsstring-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id _id) _void))
@@ -222,6 +223,7 @@
    (tell (coerce-arg self) writableTypeIdentifiersForItemProvider)))
 
 ;; --- Class methods ---
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsstring-object-with-item-provider-data-type-identifier-error data type-identifier out-error)
   (wrap-objc-object
    (_msg-3 NSString (sel_registerName "objectWithItemProviderData:typeIdentifier:error:") (coerce-arg data) (coerce-arg type-identifier) out-error)

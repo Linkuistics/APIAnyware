@@ -14,6 +14,7 @@
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/AppKit.framework/AppKit"))
 (define _objc-lib (ffi-lib "libobjc"))
 
+;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -1194,6 +1195,7 @@
   (tell #:type _void (coerce-arg self) endGestureWithEvent: (coerce-arg event)))
 (define (nsapplication-end-modal-session! self session)
   (_msg-29 (coerce-arg self) (sel_registerName "endModalSession:") session))
+;; block param 1: synchronous (caller frees)
 (define (nsapplication-enumerate-windows-with-options-using-block self options block)
   (define-values (_blk1 _blk1-id)
     (make-objc-block block (list _id _pointer) _void))

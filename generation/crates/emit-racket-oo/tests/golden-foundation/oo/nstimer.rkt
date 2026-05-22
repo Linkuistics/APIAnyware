@@ -61,6 +61,7 @@
   (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _double _id _pointer _id _bool -> _id)))
 
 ;; --- Constructors ---
+;; block param 3: stored (retained across calls)
 (define (make-nstimer-init-with-fire-date-interval-repeats-block date interval repeats block)
   (define-values (_blk3 _blk3-id)
     (make-objc-block block (list _id) _void))
@@ -117,6 +118,7 @@
   (wrap-objc-object
    (_msg-4 NSTimer (sel_registerName "scheduledTimerWithTimeInterval:invocation:repeats:") ti (coerce-arg invocation) yes-or-no)
    ))
+;; block param 2: stored (retained across calls)
 (define (nstimer-scheduled-timer-with-time-interval-repeats-block interval repeats block)
   (define-values (_blk2 _blk2-id)
     (make-objc-block block (list _id) _void))
@@ -131,6 +133,7 @@
   (wrap-objc-object
    (_msg-4 NSTimer (sel_registerName "timerWithTimeInterval:invocation:repeats:") ti (coerce-arg invocation) yes-or-no)
    ))
+;; block param 2: stored (retained across calls)
 (define (nstimer-timer-with-time-interval-repeats-block interval repeats block)
   (define-values (_blk2 _blk2-id)
     (make-objc-block block (list _id) _void))

@@ -11,10 +11,12 @@ use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::ffi_type_mapping::{FfiTypeMapper, RacketFfiTypeMapper};
 use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
 use apianyware_macos_emit::write_line;
+use apianyware_macos_types::enrichment::EnrichmentData;
 use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::emit_functions::map_contract;
+use crate::enrichment_comments::EnrichmentNotes;
 use crate::method_filter::{
     all_params_are_object_type, dispatch_strategy, is_supported_method, returns_object_type,
     returns_void, DispatchStrategy,
@@ -30,9 +32,14 @@ use crate::shared_signatures::{
 };
 
 /// Generate a complete Racket class binding file.
-pub fn generate_class_file(cls: &Class, framework: &str) -> String {
+pub fn generate_class_file(
+    cls: &Class,
+    framework: &str,
+    enrichment: Option<&EnrichmentData>,
+) -> String {
     let mapper = RacketFfiTypeMapper;
     let mut w = CodeWriter::new();
+    let notes = EnrichmentNotes::for_class(enrichment, &cls.name);
 
     let methods = effective_methods(cls);
     let mut properties = effective_properties(cls);
@@ -149,6 +156,11 @@ pub fn generate_class_file(cls: &Class, framework: &str) -> String {
     // Header
     emit_header(&mut w, &cls.name, framework, needs_blocks, needs_structs);
 
+    // Threading note: surface main-thread affinity from enrichment data.
+    if notes.is_main_thread() {
+        w.line(";; Threading: this class has main-thread-only methods.");
+    }
+
     // Class-specific predicates (must precede provide/contract)
     emit_class_predicates(&mut w, &predicate_class_names);
 
@@ -167,7 +179,7 @@ pub fn generate_class_file(cls: &Class, framework: &str) -> String {
     if !init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
         for m in &init_methods {
-            emit_constructor(&mut w, &cls.name, m, &sig_map, &mapper);
+            emit_constructor(&mut w, &cls.name, m, &notes, &sig_map, &mapper);
         }
         if needs_default_constructor {
             emit_default_constructor(&mut w, &cls.name);
@@ -189,7 +201,9 @@ pub fn generate_class_file(cls: &Class, framework: &str) -> String {
     if !instance_methods.is_empty() {
         w.line(";; --- Instance methods ---");
         for m in &instance_methods {
-            emit_method(&mut w, &cls.name, m, false, false, &sig_map, &mapper);
+            emit_method(
+                &mut w, &cls.name, m, false, false, &notes, &sig_map, &mapper,
+            );
         }
     }
 
@@ -199,7 +213,9 @@ pub fn generate_class_file(cls: &Class, framework: &str) -> String {
         w.line(";; --- Class methods ---");
         for m in &class_methods {
             let disambig = class_method_disambig.contains(&m.selector);
-            emit_method(&mut w, &cls.name, m, true, disambig, &sig_map, &mapper);
+            emit_method(
+                &mut w, &cls.name, m, true, disambig, &notes, &sig_map, &mapper,
+            );
         }
     }
 
@@ -684,12 +700,15 @@ fn emit_constructor(
     w: &mut CodeWriter,
     class_name: &str,
     method: &Method,
+    notes: &EnrichmentNotes,
     sig_map: &SignatureMap,
     mapper: &dyn FfiTypeMapper,
 ) {
     if !is_supported_method(method) || method.selector == "init" {
         return;
     }
+
+    emit_enrichment_notes(w, notes, &method.selector);
 
     let param_names: Vec<String> = method
         .params
@@ -913,18 +932,22 @@ fn emit_property(
 
 // --- Methods ---
 
+#[allow(clippy::too_many_arguments)]
 fn emit_method(
     w: &mut CodeWriter,
     class_name: &str,
     method: &Method,
     is_class_method: bool,
     disambiguate: bool,
+    notes: &EnrichmentNotes,
     sig_map: &SignatureMap,
     mapper: &dyn FfiTypeMapper,
 ) {
     if !is_supported_method(method) {
         return;
     }
+
+    emit_enrichment_notes(w, notes, &method.selector);
 
     let param_names: Vec<String> = method
         .params
@@ -1074,6 +1097,16 @@ fn emit_method(
 }
 
 // --- Helpers ---
+
+/// Emit one `;; {note}` comment line per enrichment note for `selector`.
+///
+/// Methods with no notes produce no output, so unannotated methods stay
+/// golden-stable. Call this immediately before the method's `(define ...)`.
+fn emit_enrichment_notes(w: &mut CodeWriter, notes: &EnrichmentNotes, selector: &str) {
+    for note in notes.notes_for(selector) {
+        write_line!(w, ";; {}", note);
+    }
+}
 
 /// Format tell arguments: "selector: (coerce-arg arg1) keyword: (coerce-arg arg2) ..."
 fn format_tell_args(selector: &str, param_names: &[String], params: &[Param]) -> String {
@@ -1288,7 +1321,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "Foundation");
+        let output = generate_class_file(&cls, "Foundation", None);
         assert!(output.contains("#lang racket/base"));
         assert!(output.contains("(import-class NSObject)"));
         assert!(output.contains("(define (nsobject-description self)"));
@@ -1413,7 +1446,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "Foundation");
+        let output = generate_class_file(&cls, "Foundation", None);
         assert!(
             output.contains("(provide/contract"),
             "Should use provide/contract"
@@ -1444,7 +1477,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "Foundation");
+        let output = generate_class_file(&cls, "Foundation", None);
         // Instance method: receiver uses the class-specific predicate, not the generic objc-object?
         assert!(
             output.contains("[nsobject-description (c-> nsobject? any/c)]"),
@@ -1475,7 +1508,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         // Object getter: receiver uses class-specific predicate
         assert!(
             output.contains("[tkview-title (c-> tkview? any/c)]"),
@@ -1507,7 +1540,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             output
                 .contains("  (tell #:type _void (coerce-arg self) setTitle: (coerce-arg value)))"),
@@ -1542,7 +1575,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             output.contains("  (tell #:type _void (coerce-arg self) addObject: (coerce-arg obj)))"),
             "Void Tell-dispatch method body must use `tell #:type _void`. Output:\n{output}"
@@ -1573,7 +1606,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             output.contains("  (tell #:type _void (coerce-arg self) dealloc))"),
             "Zero-arg void Tell-dispatch body must use `tell #:type _void`. Output:\n{output}"
@@ -1603,7 +1636,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         // Object setter: receiver uses class-specific predicate; value union stays as-is.
         assert!(
             output
@@ -1647,7 +1680,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
 
         // Contract: no receiver slot (class methods have no `self`).
         assert!(
@@ -1709,7 +1742,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
 
         assert!(
             output.contains("[tkwindow-allows-automatic-window-tabbing (c-> boolean?)]"),
@@ -1749,7 +1782,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             !output.contains("set-hidden!"),
             "Readonly property should not have setter contract"
@@ -1784,7 +1817,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         // Receiver uses class-specific predicate; typed param unchanged.
         assert!(
             output.contains("[tkview-set-tag! (c-> tkview? exact-integer? void?)]"),
@@ -1827,7 +1860,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         // Block param → (or/c procedure? #f); receiver uses class-specific predicate.
         assert!(
             output.contains("(c-> tkview? real? (or/c procedure? #f) void?)"),
@@ -1865,7 +1898,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         // Constructor: (-> param-contracts... any/c) — returns wrapped object
         assert!(
             output.contains("[make-tkview-init-with-frame (c-> any/c any/c)]"),
@@ -1896,7 +1929,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             output.contains("(define (make-tkalert)"),
             "Default constructor definition. Output:\n{output}"
@@ -1928,7 +1961,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             output.contains("(define (make-tkbareinit)"),
             "Default constructor synthesized for bare-init-only class. Output:\n{output}"
@@ -1972,7 +2005,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             !output.contains("(define (make-tkview)"),
             "Default constructor must NOT be emitted alongside explicit init. Output:\n{output}"
@@ -2006,7 +2039,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
         assert!(
             output.contains("(provide TKEmpty)"),
             "Empty class should export class name. Output:\n{output}"
@@ -2159,7 +2192,7 @@ mod tests {
             )],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "TestKit");
+        let output = generate_class_file(&cls, "TestKit", None);
 
         // Contract: SEL param accepts string
         assert!(
@@ -2244,7 +2277,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "AppKit");
+        let output = generate_class_file(&cls, "AppKit", None);
         let count = output
             .matches("(define (nsscreen-cg-direct-display-id")
             .count();
@@ -2305,7 +2338,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "AppKit");
+        let output = generate_class_file(&cls, "AppKit", None);
 
         // The class method +separatorItem should be emitted (returns an object)
         assert!(
@@ -2362,11 +2395,148 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
         };
-        let output = generate_class_file(&cls, "AppKit");
+        let output = generate_class_file(&cls, "AppKit", None);
         let count = output.matches("(define (nsfont-system-font-size").count();
         assert_eq!(
             count, 1,
             "Class property and class method with same name should produce only one define, got {count}"
+        );
+    }
+
+    // --- Enrichment metadata comments ---
+
+    fn type_block() -> TypeRef {
+        TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Block {
+                params: vec![],
+                return_type: Box::new(type_void()),
+            },
+        }
+    }
+
+    #[test]
+    fn test_enrichment_async_block_note_precedes_define() {
+        use apianyware_macos_types::enrichment::{BlockMethodEntry, EnrichmentData};
+
+        let cls = Class {
+            name: "TKLoader".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "loadWithHandler:",
+                false,
+                false,
+                vec![Param {
+                    name: "handler".to_string(),
+                    param_type: type_block(),
+                }],
+                type_void(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let enrichment = EnrichmentData {
+            async_block_methods: vec![BlockMethodEntry {
+                class: "TKLoader".to_string(),
+                selector: "loadWithHandler:".to_string(),
+                param_index: 0,
+            }],
+            ..EnrichmentData::default()
+        };
+        let output = generate_class_file(&cls, "TestKit", Some(&enrichment));
+
+        let note = ";; block param 0: async-copied (runtime-managed)";
+        assert!(
+            output.contains(note),
+            "expected enrichment note in output, got:\n{output}"
+        );
+        // The note line must appear immediately before the method's `(define ...)`.
+        let note_pos = output.find(note).expect("note present");
+        let define_pos = output
+            .find("(define (tkloader-load-with-handler self")
+            .expect("method define present");
+        assert!(
+            note_pos < define_pos,
+            "note must precede the method define, got:\n{output}"
+        );
+        let between = &output[note_pos + note.len()..define_pos];
+        assert!(
+            between.trim().is_empty(),
+            "note must directly precede the define, found `{between}` between them"
+        );
+    }
+
+    #[test]
+    fn test_enrichment_unannotated_method_gets_no_note() {
+        use apianyware_macos_types::enrichment::EnrichmentData;
+
+        let cls = Class {
+            name: "TKLoader".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "description",
+                false,
+                false,
+                vec![],
+                type_id(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let output = generate_class_file(&cls, "TestKit", Some(&EnrichmentData::default()));
+        assert!(
+            !output.contains(";; block param"),
+            "unannotated method must get no metadata comment, got:\n{output}"
+        );
+    }
+
+    #[test]
+    fn test_enrichment_main_thread_header_comment() {
+        use apianyware_macos_types::enrichment::EnrichmentData;
+
+        let cls = Class {
+            name: "TKView".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "description",
+                false,
+                false,
+                vec![],
+                type_id(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let enrichment = EnrichmentData {
+            main_thread_classes: vec!["TKView".to_string()],
+            ..EnrichmentData::default()
+        };
+        let output = generate_class_file(&cls, "TestKit", Some(&enrichment));
+        assert!(
+            output.contains(";; Threading: this class has main-thread-only methods."),
+            "expected main-thread header comment, got:\n{output}"
+        );
+
+        // A class not in the main-thread set gets no threading comment.
+        let plain = generate_class_file(&cls, "TestKit", Some(&EnrichmentData::default()));
+        assert!(
+            !plain.contains(";; Threading:"),
+            "non-main-thread class must get no threading comment, got:\n{plain}"
         );
     }
 }

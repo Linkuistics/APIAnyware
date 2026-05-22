@@ -13,6 +13,7 @@
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/AppKit.framework/AppKit"))
 (define _objc-lib (ffi-lib "libobjc"))
 
+;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
 (define (calayer? v) (objc-instance-of? v "CALayer"))

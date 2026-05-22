@@ -63,7 +63,7 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
     let mut class_files: Vec<(String, String)> = Vec::new();
     for cls in &fw.classes {
         let filename = format!("{}.rkt", class_name_to_lowercase(&cls.name));
-        let content = generate_class_file(cls, &fw.name);
+        let content = generate_class_file(cls, &fw.name, fw.enrichment.as_ref());
         emitter.write_file(&filename, &content)?;
         class_files.push((cls.name.clone(), filename));
         files_written += 1;
@@ -107,7 +107,7 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
 
     for proto in &delegate_protocols {
         let filename = format!("{}.rkt", class_name_to_lowercase(&proto.name));
-        let content = generate_protocol_file(proto, &fw.name);
+        let content = generate_protocol_file(proto, &fw.name, fw.enrichment.as_ref());
         emitter.write_subdir_file("protocols", &filename, &content)?;
         protocol_files.push((proto.name.clone(), filename));
         files_written += 1;

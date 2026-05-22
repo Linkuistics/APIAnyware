@@ -14,6 +14,7 @@
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/AppKit.framework/AppKit"))
 (define _objc-lib (ffi-lib "libobjc"))
 
+;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
 (define (calayer? v) (objc-instance-of? v "CALayer"))
@@ -2434,6 +2435,7 @@
   (tell #:type _void (coerce-arg self) endGestureWithEvent: (coerce-arg event)))
 (define (nstableview-end-updates! self)
   (tell #:type _void (coerce-arg self) endUpdates))
+;; block param 0: synchronous (caller frees)
 (define (nstableview-enumerate-available-row-views-using-block self handler)
   (define-values (_blk0 _blk0-id)
     (make-objc-block handler (list _id _int64) _void))

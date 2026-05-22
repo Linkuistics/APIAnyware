@@ -336,14 +336,18 @@
    (tell (coerce-arg self) editingStringForObjectValue: (coerce-arg obj))))
 (define (nsdateformatter-encode-with-coder self coder)
   (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsdateformatter-get-object-value-for-string-error-description self obj string error)
   (_msg-9 (coerce-arg self) (sel_registerName "getObjectValue:forString:errorDescription:") obj (coerce-arg string) error))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsdateformatter-get-object-value-for-string-range-error self obj string rangep error)
   (_msg-10 (coerce-arg self) (sel_registerName "getObjectValue:forString:range:error:") obj (coerce-arg string) rangep error))
 (define (nsdateformatter-is-lenient self)
   (_msg-0 (coerce-arg self) (sel_registerName "isLenient")))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsdateformatter-is-partial-string-valid-new-editing-string-error-description self partial-string new-string error)
   (_msg-4 (coerce-arg self) (sel_registerName "isPartialStringValid:newEditingString:errorDescription:") (coerce-arg partial-string) new-string error))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsdateformatter-is-partial-string-valid-proposed-selected-range-original-string-original-selected-range-error-description self partial-string-ptr proposed-sel-range-ptr orig-string orig-sel-range error)
   (_msg-11 (coerce-arg self) (sel_registerName "isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription:") partial-string-ptr proposed-sel-range-ptr (coerce-arg orig-string) orig-sel-range error))
 (define (nsdateformatter-set-localized-date-format-from-template! self date-format-template)

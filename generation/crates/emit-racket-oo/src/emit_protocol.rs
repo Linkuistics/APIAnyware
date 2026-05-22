@@ -6,8 +6,11 @@
 use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::naming::camel_to_kebab;
 use apianyware_macos_emit::write_line;
+use apianyware_macos_types::enrichment::EnrichmentData;
 use apianyware_macos_types::ir::{Method, Protocol};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+
+use crate::enrichment_comments::EnrichmentNotes;
 
 /// Contract for the protocol constructor (`make-<proto>`).
 ///
@@ -20,10 +23,15 @@ const MAKE_DELEGATE_CONTRACT: &str = "(->* () () #:rest (listof (or/c string? pr
 const SELECTOR_LIST_CONTRACT: &str = "(listof string?)";
 
 /// Generate a Racket protocol definition file.
-pub fn generate_protocol_file(proto: &Protocol, framework: &str) -> String {
+pub fn generate_protocol_file(
+    proto: &Protocol,
+    framework: &str,
+    enrichment: Option<&EnrichmentData>,
+) -> String {
     let mut w = CodeWriter::new();
     let name = &proto.name;
     let lower_name = name.to_ascii_lowercase();
+    let notes = EnrichmentNotes::for_protocol(enrichment, name);
 
     let req = &proto.required_methods;
     let opt = &proto.optional_methods;
@@ -64,34 +72,39 @@ pub fn generate_protocol_file(proto: &Protocol, framework: &str) -> String {
     w.line(";;");
     write_line!(w, ";; {} defines {} methods:", name, all_methods.len());
 
+    // Threading note: surface main-thread affinity from enrichment data.
+    if notes.is_main_thread() {
+        w.line(";; Threading: this protocol has main-thread-only methods.");
+    }
+
     if !void_methods.is_empty() {
         write_line!(w, ";;   void-returning ({}):", void_methods.len());
         for m in &void_methods {
-            write_line!(w, ";;     {}  ({})", m.selector, format_method_params(m));
+            w.line(&method_listing_line(m, &notes));
         }
     }
     if !bool_methods.is_empty() {
         write_line!(w, ";;   bool-returning ({}):", bool_methods.len());
         for m in &bool_methods {
-            write_line!(w, ";;     {}  ({})", m.selector, format_method_params(m));
+            w.line(&method_listing_line(m, &notes));
         }
     }
     if !id_methods.is_empty() {
         write_line!(w, ";;   id-returning ({}):", id_methods.len());
         for m in &id_methods {
-            write_line!(w, ";;     {}  ({})", m.selector, format_method_params(m));
+            w.line(&method_listing_line(m, &notes));
         }
     }
     if !int_methods.is_empty() {
         write_line!(w, ";;   int-returning ({}):", int_methods.len());
         for m in &int_methods {
-            write_line!(w, ";;     {}  ({})", m.selector, format_method_params(m));
+            w.line(&method_listing_line(m, &notes));
         }
     }
     if !long_methods.is_empty() {
         write_line!(w, ";;   long-returning ({}):", long_methods.len());
         for m in &long_methods {
-            write_line!(w, ";;     {}  ({})", m.selector, format_method_params(m));
+            w.line(&method_listing_line(m, &notes));
         }
     }
 
@@ -237,6 +250,25 @@ fn any_method_has_object_param(methods: &[&Method]) -> bool {
             .iter()
             .any(|p| param_type_symbol(&p.param_type) == "object")
     })
+}
+
+/// Build one header-listing comment line for a protocol method.
+///
+/// The base form is `;;     {selector}  ({params})`. When enrichment data
+/// carries notes for the method's selector, they are appended after an em-dash
+/// separator, joined by `; `.
+fn method_listing_line(method: &Method, notes: &EnrichmentNotes) -> String {
+    let base = format!(
+        ";;     {}  ({})",
+        method.selector,
+        format_method_params(method)
+    );
+    let method_notes = notes.notes_for(&method.selector);
+    if method_notes.is_empty() {
+        base
+    } else {
+        format!("{base}  — {}", method_notes.join("; "))
+    }
 }
 
 fn format_method_params(method: &Method) -> String {
@@ -388,7 +420,7 @@ mod tests {
     #[test]
     fn test_protocol_emits_provide_contract() {
         let proto = protocol("TKCopying", vec![id_method("copyWithZone:")], vec![]);
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains("(require racket/contract"),
@@ -414,7 +446,7 @@ mod tests {
             )],
             vec![],
         );
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains(
@@ -431,7 +463,7 @@ mod tests {
             vec![void_method("foo:", vec![obj_param("x", "NSObject")])],
             vec![],
         );
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains("[tkdelegate-selectors (listof string?)])"),
@@ -450,7 +482,7 @@ mod tests {
             ],
             vec![],
         );
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(output.contains("(provide/contract"));
         assert!(output.contains("[make-tkmixed"));
@@ -462,7 +494,7 @@ mod tests {
     #[test]
     fn test_protocol_empty_methods_still_contracted() {
         let proto = protocol("TKEmpty", vec![], vec![]);
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(output.contains("(provide/contract"));
         assert!(output.contains("[make-tkempty"));
@@ -509,7 +541,7 @@ mod tests {
             ],
             vec![],
         );
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains("\"numberOfRowsInTableView:\" 'long"),
@@ -524,7 +556,7 @@ mod tests {
     #[test]
     fn test_protocol_int32_return_emits_int_kind() {
         let proto = protocol("TKStatus", vec![int32_method("statusCode", vec![])], vec![]);
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains("\"statusCode\" 'int"),
@@ -574,7 +606,7 @@ mod tests {
             )],
             vec![],
         );
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains("#:param-types"),
@@ -596,7 +628,7 @@ mod tests {
             )],
             vec![],
         );
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains("\"tableView:didSelectRow:\" '(object long)"),
@@ -607,7 +639,7 @@ mod tests {
     #[test]
     fn test_protocol_no_param_types_when_no_object_params() {
         let proto = protocol("TKPrimitive", vec![void_method("tick", vec![])], vec![]);
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             !output.contains("#:param-types"),
@@ -626,7 +658,7 @@ mod tests {
             ],
             vec![],
         );
-        let output = generate_protocol_file(&proto, "TestKit");
+        let output = generate_protocol_file(&proto, "TestKit", None);
 
         assert!(
             output.contains("int-returning"),
@@ -635,6 +667,82 @@ mod tests {
         assert!(
             output.contains("long-returning"),
             "expected long-returning group in header, got:\n{output}"
+        );
+    }
+
+    // --- Enrichment metadata comments ---
+
+    #[test]
+    fn test_enrichment_augments_header_listing_line() {
+        use apianyware_macos_types::enrichment::{BlockMethodEntry, EnrichmentData};
+
+        let proto = protocol(
+            "TKDelegate",
+            vec![void_method(
+                "application:didFinish:",
+                vec![
+                    obj_param("application", "NSApplication"),
+                    obj_param("handler", "NSObject"),
+                ],
+            )],
+            vec![],
+        );
+        let enrichment = EnrichmentData {
+            protocol_async_block_methods: vec![BlockMethodEntry {
+                class: "TKDelegate".to_string(),
+                selector: "application:didFinish:".to_string(),
+                param_index: 1,
+            }],
+            ..EnrichmentData::default()
+        };
+        let output = generate_protocol_file(&proto, "TestKit", Some(&enrichment));
+
+        assert!(
+            output.contains("  — block param 1: async-copied (runtime-managed)"),
+            "expected augmented header listing line, got:\n{output}"
+        );
+        // The augmentation rides on the same line as the selector listing.
+        let listing = output
+            .lines()
+            .find(|l| l.contains(";;     application:didFinish:"))
+            .expect("listing line present");
+        assert!(
+            listing.ends_with("— block param 1: async-copied (runtime-managed)"),
+            "note must be appended to the listing line, got: `{listing}`"
+        );
+    }
+
+    #[test]
+    fn test_enrichment_unannotated_protocol_method_listing_unchanged() {
+        use apianyware_macos_types::enrichment::EnrichmentData;
+
+        let proto = protocol("TKDelegate", vec![bool_method("shouldContinue")], vec![]);
+        let output = generate_protocol_file(&proto, "TestKit", Some(&EnrichmentData::default()));
+        assert!(
+            !output.contains("  — "),
+            "unannotated method listing must not be augmented, got:\n{output}"
+        );
+    }
+
+    #[test]
+    fn test_enrichment_protocol_main_thread_header_comment() {
+        use apianyware_macos_types::enrichment::EnrichmentData;
+
+        let proto = protocol("TKDelegate", vec![bool_method("shouldContinue")], vec![]);
+        let enrichment = EnrichmentData {
+            protocol_main_thread_protocols: vec!["TKDelegate".to_string()],
+            ..EnrichmentData::default()
+        };
+        let output = generate_protocol_file(&proto, "TestKit", Some(&enrichment));
+        assert!(
+            output.contains(";; Threading: this protocol has main-thread-only methods."),
+            "expected main-thread header comment, got:\n{output}"
+        );
+
+        let plain = generate_protocol_file(&proto, "TestKit", Some(&EnrichmentData::default()));
+        assert!(
+            !plain.contains(";; Threading:"),
+            "non-main-thread protocol must get no threading comment, got:\n{plain}"
         );
     }
 }

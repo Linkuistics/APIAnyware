@@ -39,7 +39,8 @@ fn golden_appkit_dir() -> PathBuf {
 /// Covers: base class, string-heavy class, collection, data, URL,
 /// notification center, error domain, file operations, user defaults,
 /// formatter/builder, locking, timer, enums, constants, main re-export,
-/// and representative protocols (NSCopying, NSCoding, NSLocking).
+/// and representative protocols (NSCopying, NSCoding, NSLocking, plus
+/// NSURLSessionTaskDelegate which carries enrichment-derived block metadata).
 ///
 /// `nsobject.rkt` is intentionally not listed: NSObject lives in
 /// `objc/runtime`, not Foundation, so the foreign-module type-decl filter
@@ -62,6 +63,7 @@ const FOUNDATION_GOLDEN_FILES: &[&str] = &[
     "protocols/nscopying.rkt",
     "protocols/nscoding.rkt",
     "protocols/nslocking.rkt",
+    "protocols/nsurlsessiontaskdelegate.rkt",
 ];
 
 /// Curated subset of AppKit files for golden comparison.
@@ -69,6 +71,8 @@ const FOUNDATION_GOLDEN_FILES: &[&str] = &[
 /// window management, table view with data source/delegate protocols,
 /// text input, menus, application lifecycle, layout, images, colors,
 /// status bar (for Menu Bar Tool app pattern), and split views.
+/// NSApplicationDelegate is included so a protocol golden exercises the
+/// enrichment-derived block/ownership metadata comments.
 const APPKIT_GOLDEN_FILES: &[&str] = &[
     "main.rkt",
     "constants.rkt",
@@ -93,6 +97,7 @@ const APPKIT_GOLDEN_FILES: &[&str] = &[
     "protocols/nstableviewdelegate.rkt",
     "protocols/nstableviewdatasource.rkt",
     "protocols/nswindowdelegate.rkt",
+    "protocols/nsapplicationdelegate.rkt",
 ];
 
 #[test]

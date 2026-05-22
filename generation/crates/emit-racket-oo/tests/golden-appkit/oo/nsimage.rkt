@@ -390,6 +390,7 @@
   (wrap-objc-object
    (_msg-18 (coerce-arg self) (sel_registerName "layerContentsForContentsScale:") layer-contents-scale)
    ))
+;; block param 1: async-copied (runtime-managed)
 (define (nsimage-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id _id) _void))
@@ -425,6 +426,7 @@
 (define (nsimage-image-named name)
   (wrap-objc-object
    (tell NSImage imageNamed: (coerce-arg name))))
+;; block param 2: stored (retained across calls)
 (define (nsimage-image-with-size-flipped-drawing-handler size drawing-handler-should-be-called-with-flipped-context drawing-handler)
   (define-values (_blk2 _blk2-id)
     (make-objc-block drawing-handler (list _NSRect) _bool))
@@ -446,6 +448,7 @@
   (wrap-objc-object
    (_msg-23 NSImage (sel_registerName "imageWithSystemSymbolName:variableValue:accessibilityDescription:") (coerce-arg name) value (coerce-arg description))
    ))
+;; NSError out-param: result-or-error wrapper candidate
 (define (nsimage-object-with-item-provider-data-type-identifier-error data type-identifier out-error)
   (wrap-objc-object
    (_msg-26 NSImage (sel_registerName "objectWithItemProviderData:typeIdentifier:error:") (coerce-arg data) (coerce-arg type-identifier) out-error)

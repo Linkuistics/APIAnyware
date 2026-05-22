@@ -10,6 +10,7 @@ pub mod emit_enums;
 pub mod emit_framework;
 pub mod emit_functions;
 pub mod emit_protocol;
+pub mod enrichment_comments;
 pub mod method_filter;
 pub mod naming;
 pub mod shared_signatures;
