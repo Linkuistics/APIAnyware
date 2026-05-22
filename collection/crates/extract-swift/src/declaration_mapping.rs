@@ -216,150 +216,6 @@ fn is_foreign_module_type_decl(node: &AbiNode, framework_name: &str, is_overlay:
 }
 
 // ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::abi_types::AbiDocument;
-    use serde_json::json;
-
-    // ------------------------------------------------------------------
-    // is_cross_import_overlay boundary tests
-    // ------------------------------------------------------------------
-
-    #[test]
-    fn is_cross_import_overlay_boundary_table() {
-        assert!(
-            is_cross_import_overlay("_RealityKit_SwiftUI"),
-            "_RealityKit_SwiftUI should be an overlay"
-        );
-        assert!(
-            is_cross_import_overlay("_AppIntents_SwiftUI"),
-            "_AppIntents_SwiftUI should be an overlay"
-        );
-        assert!(
-            is_cross_import_overlay("_SwiftData_CoreData"),
-            "_SwiftData_CoreData should be an overlay"
-        );
-        assert!(
-            is_cross_import_overlay("_WebKit_SwiftUI"),
-            "_WebKit_SwiftUI should be an overlay"
-        );
-        assert!(
-            !is_cross_import_overlay("_LocationEssentials"),
-            "_LocationEssentials has no internal underscore — not an overlay"
-        );
-        assert!(
-            !is_cross_import_overlay("CreateMLComponents"),
-            "CreateMLComponents has no leading underscore — not an overlay"
-        );
-        assert!(
-            !is_cross_import_overlay("CoreTransferable"),
-            "CoreTransferable has no leading underscore — not an overlay"
-        );
-        assert!(
-            !is_cross_import_overlay("Foundation"),
-            "Foundation has no leading underscore — not an overlay"
-        );
-        assert!(
-            !is_cross_import_overlay("_"),
-            "bare underscore — empty body, not an overlay"
-        );
-        assert!(
-            !is_cross_import_overlay("_Foo_"),
-            "_Foo_ has a trailing empty token — not an overlay"
-        );
-    }
-
-    // ------------------------------------------------------------------
-    // Keep fixture A — overlay with a foreign Class (must be retained)
-    // ------------------------------------------------------------------
-
-    fn make_overlay_doc_with_foreign_class(
-        framework: &str,
-        class_name: &str,
-        foreign_module: &str,
-    ) -> AbiDocument {
-        let value = json!({
-            "ABIRoot": {
-                "kind": "Root",
-                "name": framework,
-                "printedName": framework,
-                "children": [
-                    {
-                        "kind": "TypeDecl",
-                        "name": class_name,
-                        "printedName": class_name,
-                        "declKind": "Class",
-                        "moduleName": foreign_module,
-                        "usr": format!("s:{}{}C", foreign_module, class_name),
-                        "isExternal": true,
-                        "children": [
-                            {
-                                "kind": "Function",
-                                "name": "components",
-                                "printedName": "components()",
-                                "declKind": "Func",
-                                "moduleName": framework,
-                                "isFromExtension": true,
-                                "usr": format!("s:{}10componentsyyF", framework),
-                                "children": [
-                                    { "kind": "TypeNominal", "name": "Void", "printedName": "Swift.Void", "children": [] }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
-        serde_json::from_value(value).expect("build AbiDocument")
-    }
-
-    #[test]
-    fn overlay_foreign_class_entity_is_kept() {
-        // Keep fixture A: _RealityKit_SwiftUI with foreign Class `Entity`
-        // (module_name: "RealityFoundation"). Must survive the filter.
-        let doc = make_overlay_doc_with_foreign_class(
-            "_RealityKit_SwiftUI",
-            "Entity",
-            "RealityFoundation",
-        );
-        let framework = map_abi_to_framework(&doc, "26.5");
-
-        let class_names: Vec<&str> = framework.classes.iter().map(|c| c.name.as_str()).collect();
-        assert!(
-            class_names.contains(&"Entity"),
-            "_RealityKit_SwiftUI overlay must retain foreign Class `Entity`; got {class_names:?}"
-        );
-    }
-
-    // ------------------------------------------------------------------
-    // Keep fixture B — zero-native overlay (must be retained)
-    // ------------------------------------------------------------------
-
-    #[test]
-    fn overlay_zero_native_foreign_class_intent_parameter_is_kept() {
-        // Keep fixture B: _AppIntents_SwiftUI has ZERO native type decls;
-        // all nodes are foreign. `IntentParameter` (module: AppIntents)
-        // must survive the filter.
-        let doc = make_overlay_doc_with_foreign_class(
-            "_AppIntents_SwiftUI",
-            "IntentParameter",
-            "AppIntents",
-        );
-        let framework = map_abi_to_framework(&doc, "26.5");
-
-        let class_names: Vec<&str> = framework.classes.iter().map(|c| c.name.as_str()).collect();
-        assert!(
-            class_names.contains(&"IntentParameter"),
-            "_AppIntents_SwiftUI overlay must retain foreign Class `IntentParameter`; got {class_names:?}"
-        );
-    }
-}
-
-// ---------------------------------------------------------------------------
 // Class mapping
 // ---------------------------------------------------------------------------
 
@@ -826,4 +682,148 @@ fn is_stdlib_conformance(name: &str) -> bool {
         name,
         "Copyable" | "Escapable" | "Sendable" | "SendableMetatype" | "BitwiseCopyable"
     )
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::abi_types::AbiDocument;
+    use serde_json::json;
+
+    // ------------------------------------------------------------------
+    // is_cross_import_overlay boundary tests
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn is_cross_import_overlay_boundary_table() {
+        assert!(
+            is_cross_import_overlay("_RealityKit_SwiftUI"),
+            "_RealityKit_SwiftUI should be an overlay"
+        );
+        assert!(
+            is_cross_import_overlay("_AppIntents_SwiftUI"),
+            "_AppIntents_SwiftUI should be an overlay"
+        );
+        assert!(
+            is_cross_import_overlay("_SwiftData_CoreData"),
+            "_SwiftData_CoreData should be an overlay"
+        );
+        assert!(
+            is_cross_import_overlay("_WebKit_SwiftUI"),
+            "_WebKit_SwiftUI should be an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("_LocationEssentials"),
+            "_LocationEssentials has no internal underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("CreateMLComponents"),
+            "CreateMLComponents has no leading underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("CoreTransferable"),
+            "CoreTransferable has no leading underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("Foundation"),
+            "Foundation has no leading underscore — not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("_"),
+            "bare underscore — empty body, not an overlay"
+        );
+        assert!(
+            !is_cross_import_overlay("_Foo_"),
+            "_Foo_ has a trailing empty token — not an overlay"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Keep fixture A — overlay with a foreign Class (must be retained)
+    // ------------------------------------------------------------------
+
+    fn make_overlay_doc_with_foreign_class(
+        framework: &str,
+        class_name: &str,
+        foreign_module: &str,
+    ) -> AbiDocument {
+        let value = json!({
+            "ABIRoot": {
+                "kind": "Root",
+                "name": framework,
+                "printedName": framework,
+                "children": [
+                    {
+                        "kind": "TypeDecl",
+                        "name": class_name,
+                        "printedName": class_name,
+                        "declKind": "Class",
+                        "moduleName": foreign_module,
+                        "usr": format!("s:{}{}C", foreign_module, class_name),
+                        "isExternal": true,
+                        "children": [
+                            {
+                                "kind": "Function",
+                                "name": "components",
+                                "printedName": "components()",
+                                "declKind": "Func",
+                                "moduleName": framework,
+                                "isFromExtension": true,
+                                "usr": format!("s:{}10componentsyyF", framework),
+                                "children": [
+                                    { "kind": "TypeNominal", "name": "Void", "printedName": "Swift.Void", "children": [] }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        });
+        serde_json::from_value(value).expect("build AbiDocument")
+    }
+
+    #[test]
+    fn overlay_foreign_class_entity_is_kept() {
+        // Keep fixture A: _RealityKit_SwiftUI with foreign Class `Entity`
+        // (module_name: "RealityFoundation"). Must survive the filter.
+        let doc = make_overlay_doc_with_foreign_class(
+            "_RealityKit_SwiftUI",
+            "Entity",
+            "RealityFoundation",
+        );
+        let framework = map_abi_to_framework(&doc, "26.5");
+
+        let class_names: Vec<&str> = framework.classes.iter().map(|c| c.name.as_str()).collect();
+        assert!(
+            class_names.contains(&"Entity"),
+            "_RealityKit_SwiftUI overlay must retain foreign Class `Entity`; got {class_names:?}"
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Keep fixture B — zero-native overlay (must be retained)
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn overlay_zero_native_foreign_class_intent_parameter_is_kept() {
+        // Keep fixture B: _AppIntents_SwiftUI has ZERO native type decls;
+        // all nodes are foreign. `IntentParameter` (module: AppIntents)
+        // must survive the filter.
+        let doc = make_overlay_doc_with_foreign_class(
+            "_AppIntents_SwiftUI",
+            "IntentParameter",
+            "AppIntents",
+        );
+        let framework = map_abi_to_framework(&doc, "26.5");
+
+        let class_names: Vec<&str> = framework.classes.iter().map(|c| c.name.as_str()).collect();
+        assert!(
+            class_names.contains(&"IntentParameter"),
+            "_AppIntents_SwiftUI overlay must retain foreign Class `IntentParameter`; got {class_names:?}"
+        );
+    }
 }
