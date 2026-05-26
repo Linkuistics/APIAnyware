@@ -1,51 +1,65 @@
 # remove-paradigms — brief
 
 ## Goal
-Retire the **paradigm / binding-style dimension** from the APIAnyware
-codebase: one language target = one binding style. Eliminate the data,
-flags, layered apps, and conditional code that exist only to support
-multiple paradigms per target.
+Retire the **paradigm / binding-style dimension** from APIAnyware: one
+target = one binding style, implicit in the target and not reified as data.
+Delete the `BindingStyle` enum and the speculative variants that have never
+produced output, and rename the lone surviving target `racket-oo` → `racket`.
 
 The driving principle: each target's idioms are best expressed in *one*
-binding style. The "paradigm" abstraction was speculative scaffolding that
-never paid for its complexity; collapsing it makes adding the next target
-(Chez, …) materially simpler and clarifies the existing `racket-oo`
-target's identity as simply **`racket`**.
+binding style. The dimension was YAGNI made concrete — only
+`BindingStyle::ObjectOriented` has ever been emitted. Collapsing it
+sharpens the existing target's identity and makes adding the next target
+(Chez, …) materially simpler. The escape hatch — should some future target
+genuinely want two flavours — is to register two targets, not to
+reintroduce the dimension.
 
 ## Done when
-- A repo-wide ADR records the retirement and the rationale.
-- The `racket-oo` target has been renamed to `racket` everywhere
-  (directories, slugs, generated artifacts, docs).
-- The `BindingStyle` enum, the `--style` CLI flag, and the `apps/oo/`
-  layer (or whatever the analogous splits turn out to be) are gone or
-  reduced to the single remaining style per target.
-- The pipeline (collect → analyse → generate) and snapshot/smoke/sample
-  tests pass on `main` with the dimension removed.
-- Docs (`docs/adding-a-language-target.md`, READMEs, design specs) reflect
-  one-target-one-style.
+- ADR `0004-retire-paradigm-dimension.md` is on `main`, recording the
+  decision, the rationale, and the two-targets escape hatch.
+- `BindingStyle`, `LanguageInfo::supported_styles` / `default_style`, the
+  `style: BindingStyle` parameter on `LanguageEmitter::emit_framework`,
+  and the misleading multi-paradigm docstring at the head of
+  `generation/crates/emit/src/binding_style.rs` are gone.
+- The nested `generated/oo/<framework>/` output directory has been
+  flattened to `generated/<framework>/`.
+- The `racket-oo` identity slug is renamed to `racket` everywhere it is
+  an identity: target directory, emit/bundle crate names, Cargo workspace
+  members, CLI `--lang`, knowledge target/matrix files, READMEs, website,
+  docs. Mechanism names that are not identity (e.g.
+  `runtime/objc-subclass.rkt`) are left alone.
+- The pipeline (collect → analyse → generate) and the snapshot / smoke /
+  sample-app tests pass with the dimension removed; snapshot fixtures are
+  regenerated for the new output layout.
 
 ## Decomposition
-Deliberately under-decomposed at the root. The first child is a planning
-task whose job is to *grill the scope* — establish the true extent of
-"paradigm-coded" code, decide what survives the collapse, raise the
-governing ADR, and grow this tree into the actual work nodes (rename,
-removals, doc updates, validation).
+Two leaves seeded now — lazy decomposition per the grove spine. The
+remaining work (the rename, the doc sweep, the validation gate) becomes
+subsequent leaves grown by a later planning task that can look at the
+real post-purge diff.
+
+- `010-adr-paradigm-retirement` — write ADR-0004 and link it from
+  `BRIEF.md` and `CONTEXT.md`. Small, no code change.
+- `020-purge-binding-style-machinery` — delete the enum, drop the `style`
+  parameter, drop `supported_styles` / `default_style`, flatten
+  `generated/oo/`. **Does not** rename `racket-oo` → `racket` — that lands
+  as a later leaf so each diff stays mechanically reviewable.
 
 ## Pointers
-- ADRs a session here must read: *(none yet — the planning task will raise
-  the governing ADR; subsequent leaves will cite it)*
-- Glossary terms in play: paradigm, binding style, target, racket-oo
-  *(none yet in `CONTEXT.md` — to be seeded inline by the planning task)*
-- Design specs: *(none yet — write only if the increment earns a PRD)*
+- ADRs a session here must read: `docs/adr/0004-retire-paradigm-dimension.md`
+  (raised by leaf 010; cited from leaf 020 onward).
+- Glossary terms in play: **target**, **binding style**, **paradigm**
+  (retired). See `CONTEXT.md`.
+- Design specs: none — this is internal cleanup, no PRD warranted.
 
 ## Notes
-- This grove was originally a prerequisite node *inside* a `chez` grove
-  (see the prior project memory). It is lifted to its own grove because
-  the retirement is repo-wide and stands alone; downstream groves (Chez,
-  future targets) will depend on it.
-- No `CONTEXT.md` exists at the repo root yet. The first planning task
-  should seed it with the terms it resolves (paradigm, binding-style,
-  target, OO layer) per `CONTEXT-FORMAT.md`.
-- Sample apps and GUI verification: see the standing guidance about
-  TestAnyware-driven verification in user memory — *no* GUI runs from
-  the CLI in any work task this grove spawns.
+- The Rust trait names `LanguageEmitter` / `LanguageInfo` and the CLI
+  flag `--lang` are intentionally **out of scope** despite reading as
+  "language" rather than "target". See the flagged ambiguity in
+  `CONTEXT.md`. That cleanup earns its own grove if it earns anything.
+- Sample apps live under `generation/targets/racket-oo/apps/`; the
+  rename cascades the path. Per standing user guidance, any GUI
+  verification happens in a macOS VM via TestAnyware, never from the CLI.
+- This grove was originally floated as a prerequisite of a `chez` grove;
+  it stands alone because the retirement is repo-wide and downstream
+  groves (Chez, future targets) will depend on it.
