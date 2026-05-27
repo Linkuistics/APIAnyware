@@ -17,9 +17,9 @@ use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_emit::naming::class_name_to_lowercase;
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::{Class, Method, Param, Property};
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
-use crate::ffi_type_mapping::ChezFfiTypeMapper;
+use crate::ffi_type_mapping::{is_known_geometry_alias, ChezFfiTypeMapper};
 use crate::method_filter::{is_supported_method, returns_object_type, returns_void};
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
@@ -118,11 +118,13 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
     let mut properties_owned: Vec<Property> = effective_properties(cls)
         .into_iter()
         .filter(|p| {
-            // Block and struct-by-value property bodies are deferred (the
-            // emitter has no code for them yet — see `emit_property`).
-            // Without filtering them here, their names land in the export
-            // list with no matching `define` and chez rejects the library.
-            !mapper.is_struct_type(&p.property_type)
+            // Block-typed and unsupported-struct property bodies are
+            // deferred (the emitter has no code for them yet — see
+            // `emit_property`). Geometry-aliased structs are supported
+            // via `(& <ftype>)`. Without filtering deferred ones here,
+            // their names land in the export list with no matching
+            // `define` and chez rejects the library.
+            !is_unsupported_struct_property(&p.property_type, mapper)
                 && !matches!(p.property_type.kind, TypeRefKind::Block { .. })
         })
         .cloned()
@@ -661,8 +663,10 @@ fn emit_property(
     prop: &Property,
     mapper: &dyn FfiTypeMapper,
 ) {
-    // Defer property bodies that need geometry struct-by-value handling.
-    if mapper.is_struct_type(&prop.property_type)
+    // Defer property bodies the emitter can't honour: non-geometry
+    // struct-by-value (no ftype in `runtime/types.sls`) and block-typed
+    // properties (need `make-objc-block`).
+    if is_unsupported_struct_property(&prop.property_type, mapper)
         || matches!(prop.property_type.kind, TypeRefKind::Block { .. })
     {
         return;
@@ -755,6 +759,21 @@ fn emit_property(
         );
     }
     w.blank_line();
+}
+
+/// A property's value type is an unsupported struct-by-value: it is a
+/// struct kind the IR mapper recognises, but it isn't one of the curated
+/// geometry aliases the chez runtime defines as an ftype.
+fn is_unsupported_struct_property(t: &TypeRef, mapper: &dyn FfiTypeMapper) -> bool {
+    if !mapper.is_struct_type(t) {
+        return false;
+    }
+    let name = match &t.kind {
+        TypeRefKind::Struct { name } => name,
+        TypeRefKind::Alias { name, .. } => name,
+        _ => return true,
+    };
+    !is_known_geometry_alias(name)
 }
 
 fn setter_selector_for(prop_name: &str) -> String {
