@@ -110,7 +110,7 @@ pub fn generate_protocol_file(
 
     w.blank_line();
     w.line("(require racket/contract");
-    w.line("         \"../../../../runtime/delegate.rkt\")");
+    w.line("         \"../../../runtime/delegate.rkt\")");
     w.blank_line();
     w.line("(provide/contract");
     write_line!(w, "  [{} {}]", helper_name, MAKE_DELEGATE_CONTRACT);

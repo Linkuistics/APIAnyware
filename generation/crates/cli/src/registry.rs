@@ -2,7 +2,7 @@
 //!
 //! New languages are added by inserting their emitter into [`EmitterRegistry::new`].
 
-use apianyware_macos_emit::binding_style::{BindingStyle, LanguageEmitter};
+use apianyware_macos_emit::binding_style::LanguageEmitter;
 
 /// Registry of all available language emitters.
 pub struct EmitterRegistry {
@@ -17,7 +17,7 @@ impl EmitterRegistry {
         Self { emitters }
     }
 
-    /// Look up an emitter by language ID (e.g., "racket").
+    /// Look up an emitter by language ID (e.g., "racket-oo").
     pub fn get(&self, language_id: &str) -> Option<&dyn LanguageEmitter> {
         self.emitters
             .iter()
@@ -30,35 +30,12 @@ impl EmitterRegistry {
         self.emitters.iter().map(|e| e.as_ref())
     }
 
-    /// Format a human-readable listing of all languages and their binding styles.
+    /// Format a human-readable listing of all registered languages.
     pub fn format_language_list(&self) -> String {
         let mut lines = Vec::new();
         for emitter in self.all() {
             let info = emitter.language_info();
-            let styles: Vec<String> = info
-                .supported_styles
-                .iter()
-                .map(|s| s.to_string())
-                .collect();
-            let default_marker = |s: &BindingStyle| {
-                if *s == info.default_style {
-                    " (default)"
-                } else {
-                    ""
-                }
-            };
-            let style_list: Vec<String> = info
-                .supported_styles
-                .iter()
-                .map(|s| format!("{}{}", s, default_marker(s)))
-                .collect();
-            lines.push(format!(
-                "  {:<16} {} [{}]",
-                info.id,
-                info.display_name,
-                style_list.join(", ")
-            ));
-            let _ = styles;
+            lines.push(format!("  {:<16} {}", info.id, info.display_name));
         }
         lines.sort();
         lines.join("\n")
@@ -80,7 +57,6 @@ mod tests {
         let info = racket.unwrap().language_info();
         assert_eq!(info.id, "racket-oo");
         assert_eq!(info.display_name, "Racket OO");
-        assert_eq!(info.supported_styles.len(), 1);
     }
 
     #[test]
@@ -103,6 +79,5 @@ mod tests {
         let list = registry.format_language_list();
         assert!(list.contains("racket-oo"));
         assert!(list.contains("Racket OO"));
-        assert!(list.contains("oo"));
     }
 }

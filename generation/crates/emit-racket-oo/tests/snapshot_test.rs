@@ -10,7 +10,7 @@
 
 use std::path::PathBuf;
 
-use apianyware_macos_emit::binding_style::{BindingStyle, LanguageEmitter};
+use apianyware_macos_emit::binding_style::LanguageEmitter;
 use apianyware_macos_emit::snapshot_testing::GoldenTest;
 use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
 use apianyware_macos_emit_racket_oo::emit_framework::RacketEmitter;
@@ -108,7 +108,7 @@ fn snapshot_racket_oo_testkit() {
     let temp_dir = tempfile::tempdir().unwrap();
     let emitter = RacketEmitter;
     let result = emitter
-        .emit_framework(&framework, temp_dir.path(), BindingStyle::ObjectOriented)
+        .emit_framework(&framework, temp_dir.path())
         .expect("Racket emitter should succeed");
 
     assert!(
@@ -129,7 +129,7 @@ fn snapshot_racket_oo_testkit() {
     );
 
     // Compare against golden files
-    let golden_test = GoldenTest::new(&golden_dir(), "racket-oo", BindingStyle::ObjectOriented);
+    let golden_test = GoldenTest::new(&golden_dir(), "racket-oo");
     if let Err(mismatch) = golden_test.assert_matches(&generated_framework_dir) {
         panic!(
             "Racket OO snapshot mismatch.\n\
@@ -174,7 +174,7 @@ fn snapshot_racket_oo_foundation_subset() {
     let temp_dir = tempfile::tempdir().unwrap();
     let emitter = RacketEmitter;
     let result = emitter
-        .emit_framework(&framework, temp_dir.path(), BindingStyle::ObjectOriented)
+        .emit_framework(&framework, temp_dir.path())
         .expect("Foundation emission should succeed");
 
     assert!(
@@ -190,11 +190,7 @@ fn snapshot_racket_oo_foundation_subset() {
     let generated_dir = temp_dir.path().join("foundation");
     assert!(generated_dir.exists(), "Expected foundation/ directory");
 
-    let golden_test = GoldenTest::new(
-        &golden_foundation_dir(),
-        "racket-oo",
-        BindingStyle::ObjectOriented,
-    );
+    let golden_test = GoldenTest::new(&golden_foundation_dir(), "racket-oo");
     if let Err(mismatch) =
         golden_test.assert_subset_matches(&generated_dir, FOUNDATION_GOLDEN_FILES)
     {
@@ -224,7 +220,7 @@ fn snapshot_racket_oo_appkit_subset() {
     let temp_dir = tempfile::tempdir().unwrap();
     let emitter = RacketEmitter;
     let result = emitter
-        .emit_framework(&framework, temp_dir.path(), BindingStyle::ObjectOriented)
+        .emit_framework(&framework, temp_dir.path())
         .expect("AppKit emission should succeed");
 
     assert!(
@@ -247,11 +243,7 @@ fn snapshot_racket_oo_appkit_subset() {
     let generated_dir = temp_dir.path().join("appkit");
     assert!(generated_dir.exists(), "Expected appkit/ directory");
 
-    let golden_test = GoldenTest::new(
-        &golden_appkit_dir(),
-        "racket-oo",
-        BindingStyle::ObjectOriented,
-    );
+    let golden_test = GoldenTest::new(&golden_appkit_dir(), "racket-oo");
     if let Err(mismatch) = golden_test.assert_subset_matches(&generated_dir, APPKIT_GOLDEN_FILES) {
         panic!(
             "Racket OO AppKit snapshot mismatch.\n\

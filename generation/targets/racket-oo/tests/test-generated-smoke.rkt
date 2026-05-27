@@ -17,14 +17,14 @@
          "../runtime/type-mapping.rkt"
          "../runtime/block.rkt"
          ;; Generated bindings (individual modules, not main.rkt — too slow to load all 300+)
-         "../generated/oo/foundation/nsobject.rkt"
-         "../generated/oo/foundation/nsstring.rkt"
-         "../generated/oo/foundation/nsarray.rkt"
-         "../generated/oo/foundation/nsmutablearray.rkt"
-         "../generated/oo/foundation/nsnumber.rkt"
-         "../generated/oo/foundation/nsdata.rkt"
-         "../generated/oo/foundation/nserror.rkt"
-         "../generated/oo/foundation/nslock.rkt")
+         "../generated/foundation/nsobject.rkt"
+         "../generated/foundation/nsstring.rkt"
+         "../generated/foundation/nsarray.rkt"
+         "../generated/foundation/nsmutablearray.rkt"
+         "../generated/foundation/nsnumber.rkt"
+         "../generated/foundation/nsdata.rkt"
+         "../generated/foundation/nserror.rkt"
+         "../generated/foundation/nslock.rkt")
 
 (define smoke-tests
   (test-suite

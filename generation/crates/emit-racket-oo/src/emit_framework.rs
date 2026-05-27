@@ -6,9 +6,7 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::binding_style::{
-    BindingStyle, EmitResult, LanguageEmitter, LanguageInfo,
-};
+use apianyware_macos_emit::binding_style::{EmitResult, LanguageEmitter, LanguageInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
 use apianyware_macos_emit::write_line;
@@ -24,8 +22,6 @@ use crate::emit_protocol::generate_protocol_file;
 pub const RACKET_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
     id: "racket-oo",
     display_name: "Racket OO",
-    supported_styles: &[BindingStyle::ObjectOriented],
-    default_style: BindingStyle::ObjectOriented,
 };
 
 /// Racket language emitter implementing the shared [`LanguageEmitter`] trait.
@@ -36,12 +32,7 @@ impl LanguageEmitter for RacketEmitter {
         &RACKET_LANGUAGE_INFO
     }
 
-    fn emit_framework(
-        &self,
-        framework: &Framework,
-        output_dir: &Path,
-        _style: BindingStyle,
-    ) -> io::Result<EmitResult> {
+    fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult> {
         emit_framework(framework, output_dir)
     }
 }
@@ -410,10 +401,5 @@ mod tests {
     fn test_racket_language_info() {
         assert_eq!(RACKET_LANGUAGE_INFO.id, "racket-oo");
         assert_eq!(RACKET_LANGUAGE_INFO.display_name, "Racket OO");
-        assert_eq!(RACKET_LANGUAGE_INFO.supported_styles.len(), 1);
-        assert_eq!(
-            RACKET_LANGUAGE_INFO.default_style,
-            BindingStyle::ObjectOriented
-        );
     }
 }

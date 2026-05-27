@@ -52,7 +52,7 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     // collision is at require-time regardless.
     if needs_structs {
         w.line("         (rename-in racket/contract [-> c->])");
-        w.line("         \"../../../runtime/type-mapping.rkt\")");
+        w.line("         \"../../runtime/type-mapping.rkt\")");
     } else {
         w.line("         (rename-in racket/contract [-> c->]))");
     }
@@ -338,7 +338,7 @@ mod tests {
         )];
         let output = generate_constants_file(&constants, "Foundation");
         assert!(
-            output.contains("\"../../../runtime/type-mapping.rkt\""),
+            output.contains("\"../../runtime/type-mapping.rkt\""),
             "Expected type-mapping.rkt require for struct-typed constant. \
              Output was:\n{output}"
         );

@@ -1,9 +1,9 @@
 //! CLI for the generation pipeline: emit language bindings from enriched IR.
 //!
 //! Usage:
-//!   apianyware-macos-generate                              # generate all languages, all styles
-//!   apianyware-macos-generate --lang racket                # generate Racket only
-//!   apianyware-macos-generate --list-languages              # show available emitters
+//!   apianyware-macos-generate                              # generate all languages
+//!   apianyware-macos-generate --lang racket-oo             # generate Racket OO only
+//!   apianyware-macos-generate --list-languages             # show available emitters
 
 mod generate;
 mod registry;
@@ -27,11 +27,11 @@ struct Cli {
     input_dir: PathBuf,
 
     /// Base output directory for generated targets.
-    /// Output goes to `{output-dir}/{lang}/generated/{style}/`.
+    /// Output goes to `{output-dir}/{lang}/generated/`.
     #[arg(long, default_value = "generation/targets")]
     output_dir: PathBuf,
 
-    /// List available language emitters and their binding styles.
+    /// List available language emitters.
     #[arg(long)]
     list_languages: bool,
 }
@@ -64,18 +64,15 @@ fn main() -> Result<()> {
 
     // Print final summary
     for summary in &summaries {
-        for style_result in &summary.style_results {
-            tracing::info!(
-                language = %summary.language_id,
-                style = %style_result.style,
-                frameworks = style_result.frameworks_generated,
-                files = style_result.total_files_written,
-                classes = style_result.total_classes,
-                protocols = style_result.total_protocols,
-                enums = style_result.total_enums,
-                "generation complete"
-            );
-        }
+        tracing::info!(
+            language = %summary.language_id,
+            frameworks = summary.frameworks_generated,
+            files = summary.total_files_written,
+            classes = summary.total_classes,
+            protocols = summary.total_protocols,
+            enums = summary.total_enums,
+            "generation complete"
+        );
     }
 
     Ok(())

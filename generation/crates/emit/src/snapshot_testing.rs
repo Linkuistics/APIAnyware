@@ -8,14 +8,9 @@
 //!
 //! ```no_run
 //! use apianyware_macos_emit::snapshot_testing::GoldenTest;
-//! use apianyware_macos_emit::binding_style::BindingStyle;
 //! # use std::path::Path;
 //!
-//! let golden_test = GoldenTest::new(
-//!     Path::new("tests/golden"),
-//!     "racket",
-//!     BindingStyle::ObjectOriented,
-//! );
+//! let golden_test = GoldenTest::new(Path::new("tests/golden"), "racket-oo");
 //! golden_test.assert_matches(Path::new("/tmp/generated")).unwrap();
 //! ```
 
@@ -24,8 +19,6 @@ use std::fmt::Write as FmtWrite;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
-use crate::binding_style::BindingStyle;
-
 /// Golden-file test runner.
 ///
 /// Compares a directory of generated files against a directory of golden
@@ -33,21 +26,18 @@ use crate::binding_style::BindingStyle;
 pub struct GoldenTest {
     /// Root directory containing golden files (e.g., `tests/golden/`).
     golden_dir: PathBuf,
-    /// Language identifier (e.g., `"racket"`).
+    /// Language identifier (e.g., `"racket-oo"`).
     language: String,
-    /// Binding style being tested.
-    style: BindingStyle,
 }
 
 impl GoldenTest {
     /// Create a new golden test runner.
     ///
-    /// Golden files are expected at `{golden_root}/{style}/`.
-    pub fn new(golden_root: &Path, language: &str, style: BindingStyle) -> Self {
+    /// Golden files are expected directly under `golden_dir`.
+    pub fn new(golden_dir: &Path, language: &str) -> Self {
         Self {
-            golden_dir: golden_root.join(style.to_string()),
+            golden_dir: golden_dir.to_path_buf(),
             language: language.to_string(),
-            style,
         }
     }
 
@@ -63,15 +53,14 @@ impl GoldenTest {
         if env::var("UPDATE_GOLDEN").as_deref() == Ok("1") {
             update_golden_directory(generated_dir, &self.golden_dir)?;
             eprintln!(
-                "Updated golden files for {} ({}) at {}",
+                "Updated golden files for {} at {}",
                 self.language,
-                self.style,
                 self.golden_dir.display()
             );
             return Ok(());
         }
 
-        compare_directories(generated_dir, &self.golden_dir, &self.language, self.style)
+        compare_directories(generated_dir, &self.golden_dir, &self.language)
     }
 
     /// Compare a subset of generated output against golden files.
@@ -91,10 +80,9 @@ impl GoldenTest {
         if env::var("UPDATE_GOLDEN").as_deref() == Ok("1") {
             update_golden_subset(generated_dir, &self.golden_dir, golden_file_list)?;
             eprintln!(
-                "Updated {} golden subset files for {} ({}) at {}",
+                "Updated {} golden subset files for {} at {}",
                 golden_file_list.len(),
                 self.language,
-                self.style,
                 self.golden_dir.display()
             );
             return Ok(());
@@ -105,7 +93,6 @@ impl GoldenTest {
             &self.golden_dir,
             golden_file_list,
             &self.language,
-            self.style,
         )
     }
 }
@@ -167,7 +154,6 @@ fn compare_directories(
     generated_dir: &Path,
     golden_dir: &Path,
     language: &str,
-    style: BindingStyle,
 ) -> Result<(), GoldenMismatch> {
     let generated_files = collect_relative_paths(generated_dir)?;
     let golden_files = collect_relative_paths(golden_dir)?;
@@ -216,7 +202,7 @@ fn compare_directories(
 
     if has_diff {
         let header = format!(
-            "Golden file mismatch for {language} ({style}).\n\
+            "Golden file mismatch for {language}.\n\
              Golden dir: {}\n\
              Generated dir: {}\n\
              Run with UPDATE_GOLDEN=1 to accept the new output.\n\n",
@@ -317,7 +303,6 @@ fn compare_subset(
     golden_dir: &Path,
     file_list: &[&str],
     language: &str,
-    style: BindingStyle,
 ) -> Result<(), GoldenMismatch> {
     let mut report = String::new();
     let mut has_diff = false;
@@ -361,7 +346,7 @@ fn compare_subset(
 
     if has_diff {
         let header = format!(
-            "Golden subset mismatch for {language} ({style}).\n\
+            "Golden subset mismatch for {language}.\n\
              Golden dir: {}\n\
              Generated dir: {}\n\
              Checked {} files.\n\
@@ -434,12 +419,7 @@ mod tests {
         fs::write(gen_dir.path().join("file.rkt"), "(define x 1)\n").unwrap();
         fs::write(golden_dir.path().join("file.rkt"), "(define x 1)\n").unwrap();
 
-        let result = compare_directories(
-            gen_dir.path(),
-            golden_dir.path(),
-            "racket",
-            BindingStyle::ObjectOriented,
-        );
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
         assert!(result.is_ok());
     }
 
@@ -450,12 +430,7 @@ mod tests {
 
         fs::write(golden_dir.path().join("expected.rkt"), "content").unwrap();
 
-        let result = compare_directories(
-            gen_dir.path(),
-            golden_dir.path(),
-            "racket",
-            BindingStyle::ObjectOriented,
-        );
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
         match result {
             Err(GoldenMismatch::Diff(report)) => {
                 assert!(report.contains("MISSING"));
@@ -472,12 +447,7 @@ mod tests {
 
         fs::write(gen_dir.path().join("extra.rkt"), "content").unwrap();
 
-        let result = compare_directories(
-            gen_dir.path(),
-            golden_dir.path(),
-            "racket",
-            BindingStyle::ObjectOriented,
-        );
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
         match result {
             Err(GoldenMismatch::Diff(report)) => {
                 assert!(report.contains("EXTRA"));
@@ -495,12 +465,7 @@ mod tests {
         fs::write(gen_dir.path().join("file.rkt"), "(define x 2)\n").unwrap();
         fs::write(golden_dir.path().join("file.rkt"), "(define x 1)\n").unwrap();
 
-        let result = compare_directories(
-            gen_dir.path(),
-            golden_dir.path(),
-            "racket",
-            BindingStyle::ObjectOriented,
-        );
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
         match result {
             Err(GoldenMismatch::Diff(report)) => {
                 assert!(report.contains("DIFFERS"));
@@ -525,12 +490,7 @@ mod tests {
         fs::write(gen_dir.path().join("protocols/nscopying.rkt"), "proto").unwrap();
         fs::write(golden_dir.path().join("protocols/nscopying.rkt"), "proto").unwrap();
 
-        let result = compare_directories(
-            gen_dir.path(),
-            golden_dir.path(),
-            "racket",
-            BindingStyle::ObjectOriented,
-        );
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
         assert!(result.is_ok());
     }
 
@@ -573,12 +533,12 @@ mod tests {
         // Temporarily set UPDATE_GOLDEN
         // SAFETY: test runs single-threaded; no other thread reads this env var concurrently.
         unsafe { env::set_var("UPDATE_GOLDEN", "1") };
-        let test = GoldenTest::new(golden_root.path(), "racket", BindingStyle::ObjectOriented);
+        let test = GoldenTest::new(golden_root.path(), "racket-oo");
         let result = test.assert_matches(gen_dir.path());
         // SAFETY: same as above.
         unsafe { env::remove_var("UPDATE_GOLDEN") };
 
         assert!(result.is_ok());
-        assert!(golden_root.path().join("oo/file.rkt").exists());
+        assert!(golden_root.path().join("file.rkt").exists());
     }
 }

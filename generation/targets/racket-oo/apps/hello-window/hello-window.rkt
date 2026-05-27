@@ -7,11 +7,11 @@
 ;;
 ;; Run with: racket hello-window.rkt
 
-(require "../../generated/oo/appkit/nsapplication.rkt"
-         "../../generated/oo/appkit/nswindow.rkt"
-         "../../generated/oo/appkit/nstextfield.rkt"
-         "../../generated/oo/appkit/nsview.rkt"
-         "../../generated/oo/appkit/nsfont.rkt"
+(require "../../generated/appkit/nsapplication.rkt"
+         "../../generated/appkit/nswindow.rkt"
+         "../../generated/appkit/nstextfield.rkt"
+         "../../generated/appkit/nsview.rkt"
+         "../../generated/appkit/nsfont.rkt"
          "../../runtime/objc-base.rkt"
          "../../runtime/type-mapping.rkt"
          "../../runtime/app-menu.rkt")

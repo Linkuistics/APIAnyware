@@ -113,21 +113,24 @@ fn bundles_hello_window_into_app_directory() {
     // Generated bindings statically required by hello-window. Five
     // appkit classes (NSApplication setup, NSWindow creation,
     // NSTextField label, NSView base class, NSFont label styling).
-    let oo = racket_app.join("generated").join("oo");
-    assert!(oo.join("appkit").join("nsapplication.rkt").is_file());
-    assert!(oo.join("appkit").join("nswindow.rkt").is_file());
-    assert!(oo.join("appkit").join("nstextfield.rkt").is_file());
-    assert!(oo.join("appkit").join("nsview.rkt").is_file());
-    assert!(oo.join("appkit").join("nsfont.rkt").is_file());
+    let generated = racket_app.join("generated");
+    assert!(generated.join("appkit").join("nsapplication.rkt").is_file());
+    assert!(generated.join("appkit").join("nswindow.rkt").is_file());
+    assert!(generated.join("appkit").join("nstextfield.rkt").is_file());
+    assert!(generated.join("appkit").join("nsview.rkt").is_file());
+    assert!(generated.join("appkit").join("nsfont.rkt").is_file());
 
     // Unrelated frameworks should NOT have been pulled in. CoreText /
     // WebKit are unreachable from hello-window's require tree and must
     // stay out of the bundle.
     assert!(
-        !oo.join("coretext").exists(),
+        !generated.join("coretext").exists(),
         "coretext leaked into the bundle"
     );
-    assert!(!oo.join("webkit").exists(), "webkit leaked into the bundle");
+    assert!(
+        !generated.join("webkit").exists(),
+        "webkit leaked into the bundle"
+    );
 
     // Files NOT statically required (sanity check on tree pruning).
     // NSString conversions go through type-mapping.rkt which calls
@@ -137,23 +140,23 @@ fn bundles_hello_window_into_app_directory() {
     // openpanel / filemanager / array / url bindings have no consumer
     // in this simple app.
     assert!(
-        !oo.join("foundation").join("nsstring.rkt").exists(),
+        !generated.join("foundation").join("nsstring.rkt").exists(),
         "nsstring.rkt leaked: it isn't a static require of hello-window"
     );
     assert!(
-        !oo.join("appkit").join("nsmenu.rkt").exists(),
+        !generated.join("appkit").join("nsmenu.rkt").exists(),
         "nsmenu.rkt leaked: hello-window gets its menu via runtime/app-menu.rkt"
     );
     assert!(
-        !oo.join("appkit").join("nstableview.rkt").exists(),
+        !generated.join("appkit").join("nstableview.rkt").exists(),
         "nstableview.rkt leaked: hello-window has no table"
     );
     assert!(
-        !oo.join("appkit").join("nsopenpanel.rkt").exists(),
+        !generated.join("appkit").join("nsopenpanel.rkt").exists(),
         "nsopenpanel.rkt leaked: hello-window has no open dialog"
     );
     assert!(
-        !oo.join("foundation").join("nsfilemanager.rkt").exists(),
+        !generated.join("foundation").join("nsfilemanager.rkt").exists(),
         "nsfilemanager.rkt leaked: hello-window doesn't touch the filesystem"
     );
 

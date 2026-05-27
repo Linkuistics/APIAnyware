@@ -54,8 +54,8 @@ A minimal window that runs until you quit:
 
 ```racket
 #lang racket/base
-(require "../../generated/oo/appkit/nsapplication.rkt"
-         "../../generated/oo/appkit/nswindow.rkt"
+(require "../../generated/appkit/nsapplication.rkt"
+         "../../generated/appkit/nswindow.rkt"
          "../../runtime/type-mapping.rkt"
          "../../runtime/coerce.rkt"
          "../../runtime/app-menu.rkt")
@@ -95,36 +95,36 @@ Points worth calling out:
   full "Quit", "Hide", etc. menu has to be built manually — Cocoa does
   not install it automatically.
 - The `apps/<name>/<name>.rkt` path is `../../runtime/` and
-  `../../generated/oo/` from the script. Apps carry these relative
+  `../../generated/` from the script. Apps carry these relative
   paths indefinitely — the emitter never touches them.
 
 
 ## Requiring generated bindings
 
 Each framework is a per-class file under
-`generated/oo/<framework>/<class>.rkt`. Import the class files you
+`generated/<framework>/<class>.rkt`. Import the class files you
 actually need:
 
 ```racket
-(require "../../generated/oo/appkit/nsbutton.rkt"
-         "../../generated/oo/appkit/nsstackview.rkt"
-         "../../generated/oo/foundation/nsstring.rkt")
+(require "../../generated/appkit/nsbutton.rkt"
+         "../../generated/appkit/nsstackview.rkt"
+         "../../generated/foundation/nsstring.rkt")
 ```
 
 For **functions** and **constants** at the framework level — the output
-of `generated/oo/<framework>/functions.rkt` and `constants.rkt` — prefer
+of `generated/<framework>/functions.rkt` and `constants.rkt` — prefer
 `only-in` so the consumer declares exactly which names it uses. This
 also prevents the file's private `racket/contract` re-exports from
 leaking through into your module:
 
 ```racket
-(require (only-in "../../generated/oo/coregraphics/functions.rkt"
+(require (only-in "../../generated/coregraphics/functions.rkt"
                   CGContextMoveToPoint
                   CGContextAddLineToPoint
                   CGContextStrokePath)
-         (only-in "../../generated/oo/corefoundation/functions.rkt"
+         (only-in "../../generated/corefoundation/functions.rkt"
                   CFRelease)
-         (only-in "../../generated/oo/corefoundation/constants.rkt"
+         (only-in "../../generated/corefoundation/constants.rkt"
                   kCFRunLoopCommonModes))
 ```
 
@@ -261,14 +261,14 @@ if `define-objc-subclass` can't express what you need — its API is
 
 ## Delegates and protocols
 
-Generated protocol files (`generated/oo/<fw>/protocols/<proto>.rkt`)
+Generated protocol files (`generated/<fw>/protocols/<proto>.rkt`)
 export two bindings: `make-<proto>` (a delegate factory) and
 `<proto>-selectors` (the selector list).
 
 ### Basic pattern
 
 ```racket
-(require "../../generated/oo/appkit/protocols/nstextfielddelegate.rkt"
+(require "../../generated/appkit/protocols/nstextfielddelegate.rkt"
          "../../runtime/delegate.rkt")
 
 (define delegate

@@ -32,7 +32,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_emit::binding_style::{BindingStyle, LanguageEmitter};
+use apianyware_macos_emit::binding_style::LanguageEmitter;
 use apianyware_macos_emit_racket_oo::emit_framework::RacketEmitter;
 use apianyware_macos_types::ir::Framework;
 
@@ -124,23 +124,23 @@ const APPS: &[&str] = &[
 ///     (CoreSpotlightAPIVersion canary), confirmed clean against fresh IR
 ///     2026-04-13.
 const LIBRARY_LOAD_CHECKS: &[&str] = &[
-    "generated/oo/foundation/nsstring.rkt",
-    "generated/oo/foundation/protocols/nscopying.rkt",
-    "generated/oo/foundation/constants.rkt",
-    "generated/oo/foundation/functions.rkt",
-    "generated/oo/coregraphics/functions.rkt",
-    "generated/oo/coretext/constants.rkt",
-    "generated/oo/appkit/nsmenuitem.rkt",
-    "generated/oo/appkit/nsevent.rkt",
-    "generated/oo/appkit/nsscreen.rkt",
-    "generated/oo/webkit/wkwebview.rkt",
-    "generated/oo/applicationservices/functions.rkt",
-    "generated/oo/libdispatch/functions.rkt",
-    "generated/oo/libdispatch/constants.rkt",
-    "generated/oo/audiotoolbox/constants.rkt",
-    "generated/oo/networkextension/constants.rkt",
-    "generated/oo/network/constants.rkt",
-    "generated/oo/corespotlight/constants.rkt",
+    "generated/foundation/nsstring.rkt",
+    "generated/foundation/protocols/nscopying.rkt",
+    "generated/foundation/constants.rkt",
+    "generated/foundation/functions.rkt",
+    "generated/coregraphics/functions.rkt",
+    "generated/coretext/constants.rkt",
+    "generated/appkit/nsmenuitem.rkt",
+    "generated/appkit/nsevent.rkt",
+    "generated/appkit/nsscreen.rkt",
+    "generated/webkit/wkwebview.rkt",
+    "generated/applicationservices/functions.rkt",
+    "generated/libdispatch/functions.rkt",
+    "generated/libdispatch/constants.rkt",
+    "generated/audiotoolbox/constants.rkt",
+    "generated/networkextension/constants.rkt",
+    "generated/network/constants.rkt",
+    "generated/corespotlight/constants.rkt",
     "runtime/dynamic-class.rkt",
     "runtime/nsevent-helpers.rkt",
     "runtime/nsview-helpers.rkt",
@@ -230,9 +230,9 @@ fn copy_app(dest_apps: &Path, name: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-fn emit_framework(emitter: &RacketEmitter, fw: &Framework, oo_dir: &Path) {
+fn emit_framework(emitter: &RacketEmitter, fw: &Framework, generated_dir: &Path) {
     emitter
-        .emit_framework(fw, oo_dir, BindingStyle::ObjectOriented)
+        .emit_framework(fw, generated_dir)
         .unwrap_or_else(|e| panic!("emit {} failed: {e}", fw.name));
 }
 
@@ -242,11 +242,11 @@ fn build_harness_tree(root: &Path, frameworks: &[Framework]) {
     copy_runtime(&root.join("runtime")).expect("copy runtime");
     copy_lib(&root.join("lib")).expect("copy lib");
 
-    let oo_dir = root.join("generated").join("oo");
-    std::fs::create_dir_all(&oo_dir).expect("create oo dir");
+    let generated_dir = root.join("generated");
+    std::fs::create_dir_all(&generated_dir).expect("create generated dir");
     let emitter = RacketEmitter;
     for fw in frameworks {
-        emit_framework(&emitter, fw, &oo_dir);
+        emit_framework(&emitter, fw, &generated_dir);
     }
 
     let apps_dir = root.join("apps");
@@ -369,7 +369,7 @@ fn runtime_load_apps_via_raco_make() {
     build_harness_tree(temp.path(), &frameworks);
 
     // Single raco make invocation for all apps — amortises racket startup
-    // and exercises the full require graph (runtime/, generated/oo/, plus
+    // and exercises the full require graph (runtime/, generated/, plus
     // any additional cross-framework imports the apps pull in).
     let mut cmd = Command::new("raco");
     cmd.arg("make");
@@ -758,11 +758,11 @@ fn runtime_default_constructors() {
 #lang racket/base
 (require ffi/unsafe
          (file \"{t}/runtime/type-mapping.rkt\")
-         (file \"{t}/generated/oo/appkit/nsalert.rkt\")
-         (file \"{t}/generated/oo/appkit/nscolorpanel.rkt\")
-         (file \"{t}/generated/oo/appkit/nsstackview.rkt\")
-         (file \"{t}/generated/oo/appkit/nssavepanel.rkt\")
-         (file \"{t}/generated/oo/appkit/nsopenpanel.rkt\"))
+         (file \"{t}/generated/appkit/nsalert.rkt\")
+         (file \"{t}/generated/appkit/nscolorpanel.rkt\")
+         (file \"{t}/generated/appkit/nsstackview.rkt\")
+         (file \"{t}/generated/appkit/nssavepanel.rkt\")
+         (file \"{t}/generated/appkit/nsopenpanel.rkt\"))
 
 (define (check name v)
   (unless v (eprintf \"FAIL: ~a returned #f/nil~n\" name) (exit 1)))
@@ -841,10 +841,10 @@ fn runtime_framework_deep_checks() {
 #lang racket/base
 (require ffi/unsafe
          (file \"{t}/runtime/type-mapping.rkt\")
-         (file \"{t}/generated/oo/coregraphics/functions.rkt\")
-         (file \"{t}/generated/oo/coregraphics/constants.rkt\")
-         (file \"{t}/generated/oo/mapkit/functions.rkt\")
-         (file \"{t}/generated/oo/avfoundation/functions.rkt\"))
+         (file \"{t}/generated/coregraphics/functions.rkt\")
+         (file \"{t}/generated/coregraphics/constants.rkt\")
+         (file \"{t}/generated/mapkit/functions.rkt\")
+         (file \"{t}/generated/avfoundation/functions.rkt\"))
 
 (define (expect name actual expected)
   (unless (equal? actual expected)

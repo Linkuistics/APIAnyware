@@ -592,13 +592,13 @@ fn emit_header(
     // semantics (contract arrow vs `_fun` type arrow). Rename the contract
     // arrow to `c->` so both are usable in the same module.
     w.raw("         (rename-in racket/contract [-> c->])\n");
-    w.raw("         \"../../../runtime/objc-base.rkt\"\n");
-    w.raw("         \"../../../runtime/coerce.rkt\"");
+    w.raw("         \"../../runtime/objc-base.rkt\"\n");
+    w.raw("         \"../../runtime/coerce.rkt\"");
     if needs_blocks {
-        w.raw("\n         \"../../../runtime/block.rkt\"");
+        w.raw("\n         \"../../runtime/block.rkt\"");
     }
     if needs_structs {
-        w.raw("\n         \"../../../runtime/type-mapping.rkt\"");
+        w.raw("\n         \"../../runtime/type-mapping.rkt\"");
     }
     w.raw_line(")");
     w.blank_line();

@@ -21,16 +21,16 @@
          ;; collide with dynamic-class.rkt; except-in prefers the
          ;; runtime's versions.
          (except-in ffi/unsafe/objc _SEL objc-get-class)
-         "../../generated/oo/appkit/nsapplication.rkt"
-         "../../generated/oo/appkit/nswindow.rkt"
-         "../../generated/oo/appkit/nsview.rkt"
-         "../../generated/oo/appkit/nsbutton.rkt"
-         "../../generated/oo/appkit/nsslider.rkt"
-         "../../generated/oo/appkit/nscolor.rkt"
-         "../../generated/oo/appkit/nscolorpanel.rkt"
-         "../../generated/oo/appkit/nscolorspace.rkt"
-         "../../generated/oo/appkit/nsgraphicscontext.rkt"
-         (only-in "../../generated/oo/coregraphics/functions.rkt"
+         "../../generated/appkit/nsapplication.rkt"
+         "../../generated/appkit/nswindow.rkt"
+         "../../generated/appkit/nsview.rkt"
+         "../../generated/appkit/nsbutton.rkt"
+         "../../generated/appkit/nsslider.rkt"
+         "../../generated/appkit/nscolor.rkt"
+         "../../generated/appkit/nscolorpanel.rkt"
+         "../../generated/appkit/nscolorspace.rkt"
+         "../../generated/appkit/nsgraphicscontext.rkt"
+         (only-in "../../generated/coregraphics/functions.rkt"
                   CGContextMoveToPoint
                   CGContextAddLineToPoint
                   CGContextBeginPath

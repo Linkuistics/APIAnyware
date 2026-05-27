@@ -148,7 +148,7 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
     // `ffi/unsafe`'s `->` (used as a literal in `(_fun ... -> ...)` below).
     if needs_structs {
         w.line("         (rename-in racket/contract [-> c->])");
-        w.line("         \"../../../runtime/type-mapping.rkt\")");
+        w.line("         \"../../runtime/type-mapping.rkt\")");
     } else {
         w.line("         (rename-in racket/contract [-> c->]))");
     }
@@ -831,7 +831,7 @@ mod tests {
         )];
         let output = generate_functions_file(&functions, "CoreGraphics");
         assert!(
-            output.contains("\"../../../runtime/type-mapping.rkt\""),
+            output.contains("\"../../runtime/type-mapping.rkt\""),
             "Expected type-mapping.rkt require when a function uses a \
              geometry struct. Output was:\n{output}"
         );
@@ -900,7 +900,7 @@ mod tests {
             false,
         )];
         let output = generate_functions_file(&functions, "Foundation");
-        assert!(output.contains("\"../../../runtime/type-mapping.rkt\""));
+        assert!(output.contains("\"../../runtime/type-mapping.rkt\""));
     }
 
     #[test]

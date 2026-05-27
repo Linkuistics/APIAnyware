@@ -28,7 +28,7 @@
 //!     Resources/racket-app/
 //!       apps/<script>/<script>.rkt         <- entry script
 //!       runtime/*.rkt                      <- traversed deps
-//!       generated/oo/<fw>/*.rkt            <- traversed deps
+//!       generated/<fw>/*.rkt            <- traversed deps
 //!       lib/libAPIAnywareRacket.dylib      <- if present in source tree
 //! ```
 
