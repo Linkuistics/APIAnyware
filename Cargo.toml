@@ -22,6 +22,7 @@ members = [
     # Tooling
     "generation/crates/stub-launcher",
     "generation/crates/bundle-racket",
+    "generation/crates/bundle-chez",
 ]
 
 [workspace.package]
@@ -55,6 +56,7 @@ apianyware-macos-emit-racket = { path = "generation/crates/emit-racket" }
 apianyware-macos-emit-chez = { path = "generation/crates/emit-chez" }
 apianyware-macos-stub-launcher = { path = "generation/crates/stub-launcher" }
 apianyware-macos-bundle-racket = { path = "generation/crates/bundle-racket" }
+apianyware-macos-bundle-chez = { path = "generation/crates/bundle-chez" }
 
 [workspace.lints.rust]
 unsafe_code = "warn"
