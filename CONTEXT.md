@@ -34,6 +34,27 @@ layout) and at the IR-decision level (what gets emitted), not at the
 source-form level (how it's spelled).
 _Avoid_: portable, dialect-neutral.
 
+**`objc-object`**:
+The single Scheme record type wrapping an ObjC `id` pointer. Used uniformly by
+**both** targets (`racket` and `chez`) — no per-class record subtype exists;
+generated class files are namespaces of procedures keyed by class, not record
+hierarchies that mirror the ObjC class graph. For chez specifically, the
+record's lifetime is managed by a Chez guardian rather than per-instance
+finalizers — see `docs/adr/0007-chez-lifetime-model.md`.
+_Avoid_: `objc-handle`, `objc-ref`, `nsobject` (the last clashes with the
+class).
+
+**Entry-point autoreleasepool**:
+The convention that every **outer entry into Scheme-driven ObjC code** — the
+app `main`, every event handler dispatched from `NSRunLoop`, every callback
+invoked from the ObjC side (delegate methods, blocks, `foreign-callable`
+trampolines) — wraps its body in an `@autoreleasepool`. Transient
+autoreleased objects produced during the entry's lifetime drain at the pool
+boundary and never reach the guardian. Specific to the chez lifetime model;
+the racket runtime relies on per-thread autorelease pools instead. See
+`docs/adr/0007-chez-lifetime-model.md`.
+_Avoid_: "main pool" (ambiguous with NSRunLoop's autorelease pool).
+
 **Paradigm** _(retired)_:
 Formerly a dimension reified by the `BindingStyle` enum
 (`ObjectOriented | Functional | Procedural`), allowing one target to emit
