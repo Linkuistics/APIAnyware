@@ -9,8 +9,11 @@ This is the **runtime build-out**. Scaffold landed in
 `.grove/done/050-chez-target/030-runtime-ffi-objc.md` (mandatory dylib
 load, libobjc surface, guardian + autoreleasepool lifetime model,
 `nserror` record, `(values result error)` shape per ADR-0006).
-`dispatch.sls`, `types.sls`, and `cocoa.sls` still have stub bodies; the
-follow-on leaves wire them up.
+`dispatch.sls` shipped its block / delegate / dynamic-class bridges in
+`.grove/done/050-chez-target/040-runtime-dispatch.md` (eval-built
+`foreign-callable`s, autoreleasepool wrap per ADR-0007, idempotent
+free-* paths). `types.sls` and `cocoa.sls` still have stub bodies; the
+follow-on leaf wires them up.
 
 During the chez bring-up (030..060) the dylib loader points at
 `generation/targets/racket/lib/libAPIAnywareRacket.dylib` because its
@@ -63,6 +66,13 @@ chez --script generation/targets/chez/runtime/tests/smoke-objc.sls
 #   [smoke] 3. define-entry-point OK
 #   [smoke] 4. (values result nserror) shape OK
 #   [smoke] all tests passed
+
+# 3. dispatch.sls block/delegate/dynamic-class bridges round-trip.
+chez --script generation/targets/chez/runtime/tests/smoke-dispatch.sls
+# → [smoke-dispatch] 1. Block create+free OK
+#   [smoke-dispatch] 2. Delegate invocation OK
+#   [smoke-dispatch] 3. Dynamic subclass override OK
+#   [smoke-dispatch] all tests passed
 ```
 
 Both scripts pre-`load` the cluster files in dependency order so that
@@ -73,9 +83,6 @@ boot becomes unnecessary.
 
 ## What's not here yet
 
-- **`make-objc-block` / `make-delegate` / `make-dynamic-subclass`.**
-  Stubs. Real bodies (foreign-callable, Block_layout ftype) land in
-  `.grove/050-chez-target/040-runtime-dispatch.md`.
 - **NSPoint et al. constructor wrappers.** ftypes are real; the
   constructor helpers are stubs. Real bodies land in
   `.grove/050-chez-target/050-runtime-types-cocoa.md`.
