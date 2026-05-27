@@ -1,4 +1,4 @@
-# 100-port-hello-window
+# 030-port-hello-window-app
 
 **Kind:** work
 
@@ -8,12 +8,23 @@ validation: a sample app's source compiles, bundles, launches, draws
 its window, and passes TestAnyware. The simplest app, picked first per
 the feature ladder.
 
+## Inputs
+- Leaf `010` has lifted the emit-chez struct-by-value restriction —
+  `make-nswindow-init-with-content-rect-style-mask-backing-defer` and
+  `make-nstextfield-init-with-frame` are emitted.
+- Leaf `020` has settled how chez resolves `(import (apianyware …))`
+  for unbundled and bundled runs. Whatever the chosen scheme, this
+  leaf takes it as given — do not re-grill loading here.
+
 ## Context
 - `generation/targets/racket/apps/hello-window/hello-window.rkt` —
   reference logic only; the chez version uses
   `(import (apianyware appkit) (apianyware foundation)
    (apianyware runtime cocoa))` instead of relative `(require …)`.
 - Design spec §7 (feature ladder).
+- `knowledge/apps/hello-window/spec.md` — the cross-target spec
+  (title "Hello from {Language}", label "Hello, macOS!", 400×200
+  centred window, 24pt system font, centred alignment).
 - [[feedback-use-testanyware]] — UI verification runs in the macOS VM
   driver, not from the CLI.
 - [[feedback-sample-apps-perfect]] — visual perfection bar; budget
@@ -34,7 +45,10 @@ the feature ladder.
   racket app's README (one paragraph: what it exercises).
 
 ## Notes
-- First app: expect runtime / emitter bugs to surface. Fix them in the
-  appropriate leaf's location, regenerate, retest.
-- Use exactly the same window size, title, font, and label text as the
-  racket version — symmetry is a checkable property.
+- First app: leaves 010 and 020 absorb the structural blockers
+  surfaced during the original attempt. Any further runtime/emitter
+  bugs that come up still get fixed at their source per the parent
+  brief's guidance — regenerate, retest.
+- Use exactly the same window size, font, and label text as the
+  racket version. The title follows the cross-target convention
+  "Hello from {Language}" — for chez that's "Hello from Chez".
