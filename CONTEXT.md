@@ -21,6 +21,19 @@ per target — implicit in the target, never reified as data or selected at
 the CLI.
 _Avoid_: paradigm, style (alone), flavour.
 
+**Target idiom**:
+The *style* of source a target's emitter writes. Each target commits to
+**maximum idiom compliance for its specific implementation** — not to a
+portable subset shared across implementations of the same language family.
+For chez this means `(import (chezscheme))`, `foreign-procedure`, guardians,
+and any Chez extension that makes the generated code read like code a Chez
+programmer would actually write; it explicitly does **not** mean "portable
+R6RS that any Scheme can load". Cross-target symmetry lives at the on-disk
+layout level (per-class files, `main` re-export, runtime/ + generated/
+layout) and at the IR-decision level (what gets emitted), not at the
+source-form level (how it's spelled).
+_Avoid_: portable, dialect-neutral.
+
 **Paradigm** _(retired)_:
 Formerly a dimension reified by the `BindingStyle` enum
 (`ObjectOriented | Functional | Procedural`), allowing one target to emit
