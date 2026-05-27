@@ -29,111 +29,273 @@ use crate::naming::{
 
 /// Generate the full `.sls` library text for one class.
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
+    let (content, _exports) = generate_class_file_with_exports(cls, framework);
+    content
+}
+
+/// Compute the exported names for one class, in sorted order, without
+/// generating the file body. Used by `emit_framework` to assemble the
+/// per-framework `main.sls` re-export list — Chez `library` forms need
+/// explicit export names, no `all-from-out` shortcut.
+pub fn class_exports(cls: &Class) -> Vec<String> {
+    let mapper = ChezFfiTypeMapper;
+    compute_class_exports(cls, &mapper)
+}
+
+/// Compute exports + render the class file in a single pass.
+pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String, Vec<String>) {
     let mapper = ChezFfiTypeMapper;
     let mut w = CodeWriter::new();
 
-    let methods = effective_methods(cls);
-    let mut properties = effective_properties(cls);
+    let plan = build_class_plan(cls, &mapper);
 
-    // Names produced by each method category, so we can suppress whichever
-    // side loses a collision. Mirrors the racket emitter's resolution:
-    //   - class methods win over instance properties that share their name
-    //   - instance/class properties win over instance/class methods that
-    //     share their name (NSString.length is the canonical case: both a
-    //     property and a method exist with that selector).
-    let class_method_names: std::collections::HashSet<String> = methods
+    emit_header(&mut w, cls, framework, &plan.exports);
+
+    let needs_default_constructor = !has_explicit_constructor(
+        &plan.init_methods.iter().collect::<Vec<&Method>>(),
+        &mapper,
+    );
+
+    if !plan.init_methods.is_empty() || needs_default_constructor {
+        w.line(";; --- Constructors ---");
+        if needs_default_constructor {
+            emit_default_constructor(&mut w, &cls.name);
+        }
+        for m in &plan.init_methods {
+            emit_constructor(&mut w, &cls.name, m, &mapper);
+        }
+        w.blank_line();
+    }
+
+    if !plan.properties.is_empty() {
+        w.line(";; --- Properties ---");
+        for p in &plan.properties {
+            emit_property(&mut w, &cls.name, p, &mapper);
+        }
+        w.blank_line();
+    }
+
+    if !plan.instance_methods.is_empty() {
+        w.line(";; --- Instance methods ---");
+        for m in &plan.instance_methods {
+            emit_method(&mut w, &cls.name, m, false, &mapper);
+        }
+        w.blank_line();
+    }
+
+    if !plan.class_methods.is_empty() {
+        w.line(";; --- Class methods ---");
+        for m in &plan.class_methods {
+            emit_method(&mut w, &cls.name, m, true, &mapper);
+        }
+        w.blank_line();
+    }
+    let exports = plan.exports;
+
+    // Close the (library ...) form.
+    w.line(")");
+
+    (w.finish(), exports)
+}
+
+fn compute_class_exports(cls: &Class, mapper: &dyn FfiTypeMapper) -> Vec<String> {
+    build_class_plan(cls, mapper).exports
+}
+
+/// Cleaned-up emission plan for one class. Owns clones of the methods and
+/// properties so both `generate_class_file_with_exports` and
+/// `compute_class_exports` can drive emission from the same data.
+struct ClassPlan {
+    properties: Vec<Property>,
+    init_methods: Vec<Method>,
+    instance_methods: Vec<Method>,
+    class_methods: Vec<Method>,
+    exports: Vec<String>,
+}
+
+fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
+    let methods_owned: Vec<Method> = effective_methods(cls).into_iter().cloned().collect();
+    let mut properties_owned: Vec<Property> = effective_properties(cls)
+        .into_iter()
+        .filter(|p| {
+            // Block and struct-by-value property bodies are deferred (the
+            // emitter has no code for them yet — see `emit_property`).
+            // Without filtering them here, their names land in the export
+            // list with no matching `define` and chez rejects the library.
+            !mapper.is_struct_type(&p.property_type)
+                && !matches!(p.property_type.kind, TypeRefKind::Block { .. })
+        })
+        .cloned()
+        .collect();
+
+    // Pre-compute every Scheme name a class method would produce, so we
+    // can suppress instance-property collisions (e.g. NSMenuItem's
+    // class method `separatorItem` wins over a same-named instance
+    // property).
+    let class_method_names: std::collections::HashSet<String> = methods_owned
         .iter()
         .filter(|m| m.class_method && !m.init_method)
         .map(|m| make_method_name(&cls.name, &m.selector))
         .collect();
 
-    // Drop instance properties whose getter name collides with a class
-    // method — the factory method wins (e.g. +[NSMenuItem separatorItem]).
-    properties.retain(|p| {
+    properties_owned.retain(|p| {
         if p.class_property {
             return true;
         }
         !class_method_names.contains(&make_property_getter_name(&cls.name, &p.name))
     });
 
-    let instance_property_names: std::collections::HashSet<String> = properties
+    // The four "blocked" name sets cover both getter and setter sides of
+    // each property kind. Without setter coverage, NSTask's `setArguments:`
+    // method and `arguments` property both yield `nstask-set-arguments!`
+    // and chez rejects the duplicate define.
+    let instance_property_getter_names: std::collections::HashSet<String> = properties_owned
         .iter()
         .filter(|p| !p.class_property)
         .map(|p| make_property_getter_name(&cls.name, &p.name))
         .collect();
-    let class_property_names: std::collections::HashSet<String> = properties
+    let instance_property_setter_names: std::collections::HashSet<String> = properties_owned
+        .iter()
+        .filter(|p| !p.class_property && !p.readonly)
+        .map(|p| make_property_setter_name(&cls.name, &p.name))
+        .collect();
+    let class_property_getter_names: std::collections::HashSet<String> = properties_owned
         .iter()
         .filter(|p| p.class_property)
         .map(|p| make_property_getter_name(&cls.name, &p.name))
         .collect();
-
-    let init_methods: Vec<&Method> = methods.iter().filter(|m| m.init_method).copied().collect();
-    let class_methods: Vec<&Method> = methods
+    let class_property_setter_names: std::collections::HashSet<String> = properties_owned
         .iter()
-        .filter(|m| {
-            m.class_method
-                && !m.init_method
-                && !class_property_names.contains(&make_method_name(&cls.name, &m.selector))
-        })
-        .copied()
-        .collect();
-    let instance_methods: Vec<&Method> = methods
-        .iter()
-        .filter(|m| {
-            !m.class_method
-                && !m.init_method
-                && !instance_property_names.contains(&make_method_name(&cls.name, &m.selector))
-        })
-        .copied()
+        .filter(|p| p.class_property && !p.readonly)
+        .map(|p| make_class_property_setter_name(&cls.name, &p.name, false))
         .collect();
 
-    let exports = collect_exports(
+    let init_methods: Vec<Method> = methods_owned
+        .iter()
+        .filter(|m| m.init_method)
+        .cloned()
+        .collect();
+
+    let class_methods: Vec<Method> = methods_owned
+        .iter()
+        .filter(|m| {
+            if !m.class_method || m.init_method {
+                return false;
+            }
+            let n = make_method_name(&cls.name, &m.selector);
+            !class_property_getter_names.contains(&n) && !class_property_setter_names.contains(&n)
+        })
+        .cloned()
+        .collect();
+
+    let instance_methods: Vec<Method> = methods_owned
+        .iter()
+        .filter(|m| {
+            if m.class_method || m.init_method {
+                return false;
+            }
+            let n = make_method_name(&cls.name, &m.selector);
+            !instance_property_getter_names.contains(&n)
+                && !instance_property_setter_names.contains(&n)
+        })
+        .cloned()
+        .collect();
+
+    // Safety-net dedup: if any name still appears twice across the four
+    // emission categories (rare — e.g. two different selectors collapsing
+    // to the same kebab name), keep the first occurrence per precedence
+    // order constructor > property > instance method > class method.
+    let init_refs: Vec<&Method> = init_methods.iter().collect();
+    let instance_refs: Vec<&Method> = instance_methods.iter().collect();
+    let class_refs: Vec<&Method> = class_methods.iter().collect();
+    let property_refs: Vec<&Property> = properties_owned.iter().collect();
+
+    let raw_exports = collect_exports(
         &cls.name,
-        &properties,
-        &init_methods,
-        &instance_methods,
-        &class_methods,
-        &mapper,
+        &property_refs,
+        &init_refs,
+        &instance_refs,
+        &class_refs,
+        mapper,
     );
 
-    emit_header(&mut w, cls, framework, &exports);
+    let (filtered_props, filtered_inst, filtered_class, exports) =
+        dedupe_across_categories(cls, properties_owned, instance_methods, class_methods, raw_exports);
 
-    if !init_methods.is_empty() {
-        w.line(";; --- Constructors ---");
-        for m in &init_methods {
-            emit_constructor(&mut w, &cls.name, m, &mapper);
+    ClassPlan {
+        properties: filtered_props,
+        init_methods,
+        instance_methods: filtered_inst,
+        class_methods: filtered_class,
+        exports,
+    }
+}
+
+/// Final dedup pass: walk the emitted name set in precedence order and
+/// drop any later occurrence of a name already taken by an earlier
+/// category. The pre-pass collision logic eliminates the common cases;
+/// this is the safety net for `setX:` selectors that don't pattern-match
+/// the property-setter convention but still kebab to the same name.
+fn dedupe_across_categories(
+    cls: &Class,
+    properties: Vec<Property>,
+    instance_methods: Vec<Method>,
+    class_methods: Vec<Method>,
+    raw_exports: Vec<String>,
+) -> (Vec<Property>, Vec<Method>, Vec<Method>, Vec<String>) {
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    // Property getters (and setters) are first in precedence.
+    let mut kept_props = Vec::new();
+    for p in properties {
+        let getter = if p.class_property {
+            make_class_property_getter_name(&cls.name, &p.name, false)
+        } else {
+            make_property_getter_name(&cls.name, &p.name)
+        };
+        if seen.contains(&getter) {
+            continue;
         }
-        w.blank_line();
+        seen.insert(getter.clone());
+        if !p.readonly {
+            let setter = if p.class_property {
+                make_class_property_setter_name(&cls.name, &p.name, false)
+            } else {
+                make_property_setter_name(&cls.name, &p.name)
+            };
+            seen.insert(setter);
+        }
+        kept_props.push(p);
     }
 
-    if !properties.is_empty() {
-        w.line(";; --- Properties ---");
-        for p in &properties {
-            emit_property(&mut w, &cls.name, p, &mapper);
+    let mut kept_inst = Vec::new();
+    for m in instance_methods {
+        let n = make_method_name(&cls.name, &m.selector);
+        if seen.insert(n) {
+            kept_inst.push(m);
         }
-        w.blank_line();
     }
 
-    if !instance_methods.is_empty() {
-        w.line(";; --- Instance methods ---");
-        for m in &instance_methods {
-            emit_method(&mut w, &cls.name, m, false, &mapper);
+    let mut kept_class = Vec::new();
+    for m in class_methods {
+        let n = make_method_name(&cls.name, &m.selector);
+        if seen.insert(n) {
+            kept_class.push(m);
         }
-        w.blank_line();
     }
 
-    if !class_methods.is_empty() {
-        w.line(";; --- Class methods ---");
-        for m in &class_methods {
-            emit_method(&mut w, &cls.name, m, true, &mapper);
-        }
-        w.blank_line();
-    }
+    // Keep only export names that landed in `seen`. Constructor names go
+    // through unconditionally (they're emitted before the dedup walk
+    // touches anything else).
+    let exports: Vec<String> = raw_exports
+        .into_iter()
+        .filter(|n| {
+            n.starts_with("make-")
+                || seen.contains(n)
+        })
+        .collect();
 
-    // Close the (library ...) form.
-    w.line(")");
-
-    w.finish()
+    (kept_props, kept_inst, kept_class, exports)
 }
 
 fn effective_methods(cls: &Class) -> Vec<&Method> {
@@ -253,9 +415,20 @@ fn emit_header(w: &mut CodeWriter, cls: &Class, framework: &str, exports: &[Stri
         w.line("    )");
     }
 
+    // `(apianyware runtime objc)` exports a Scheme `nserror` record
+    // (the error half of `(values result error)`) whose accessor names
+    // overlap with NSError's instance properties (`nserror-domain`,
+    // `nserror-code`, …). Excepting them from the import lets every
+    // generated class library freely define those names; the runtime
+    // accessors are still reachable from sample-app code via direct
+    // `(apianyware runtime objc)` import.
     w.line("  (import (chezscheme)");
     w.line("          (apianyware runtime ffi)");
-    w.line("          (apianyware runtime objc)");
+    w.line(
+        "          (except (apianyware runtime objc) \
+make-nserror nserror? nserror-domain nserror-code \
+nserror-localised-description nserror-userinfo)",
+    );
     w.line("          (apianyware runtime types))");
     w.blank_line();
 }
@@ -386,6 +559,36 @@ fn emit_method(
     } else {
         write_line!(w, "    {})", call);
     }
+    w.blank_line();
+}
+
+/// Synthesize the default `make-<class>` constructor when the class has
+/// no explicit `initX:` initializer. Mirrors what emit-racket synthesizes
+/// via `(tell (tell <Class> alloc) init)`, but expressed against the chez
+/// runtime's fixed-arity (id, SEL) `objc_msgSend` form.
+fn emit_default_constructor(w: &mut CodeWriter, class_name: &str) {
+    let fn_name = format!("make-{}", class_name_to_lowercase(class_name));
+    write_line!(w, "  (define ({})", fn_name);
+    write_line!(
+        w,
+        "    (let ([alloc-sel (sel-register \"alloc\")]"
+    );
+    w.line("          [init-sel  (sel-register \"init\")])");
+    write_line!(
+        w,
+        "      (wrap-objc-object",
+    );
+    write_line!(
+        w,
+        "        (objc_msgSend",
+    );
+    write_line!(
+        w,
+        "          (objc_msgSend (objc_getClass \"{}\") alloc-sel)",
+        class_name
+    );
+    w.line("          init-sel)");
+    w.line("        #t)))");
     w.blank_line();
 }
 
