@@ -408,18 +408,21 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Every registered emitter should produce results without error
-        assert_eq!(summaries.len(), 1, "should run all registered emitters");
-
-        let racket = summaries
-            .iter()
-            .find(|s| s.language_id == "racket")
-            .expect("racket should be in results");
-        assert!(
-            racket.total_files_written > 0,
-            "racket should produce files"
+        // Every registered emitter should produce results without error.
+        assert_eq!(
+            summaries.len(),
+            2,
+            "should run racket + chez emitters"
         );
-        assert_eq!(racket.total_classes, 5);
+
+        for s in &summaries {
+            assert!(
+                s.total_files_written > 0,
+                "{} should produce files",
+                s.language_id
+            );
+            assert_eq!(s.total_classes, 5, "{} class count", s.language_id);
+        }
     }
 
     #[test]

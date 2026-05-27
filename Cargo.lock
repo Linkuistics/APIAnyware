@@ -170,6 +170,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-macos-emit-chez"
+version = "0.1.0"
+dependencies = [
+ "apianyware-macos-emit",
+ "apianyware-macos-types",
+ "tempfile",
+]
+
+[[package]]
 name = "apianyware-macos-emit-racket"
 version = "0.1.0"
 dependencies = [
@@ -224,6 +233,7 @@ dependencies = [
  "anyhow",
  "apianyware-macos-datalog",
  "apianyware-macos-emit",
+ "apianyware-macos-emit-chez",
  "apianyware-macos-emit-racket",
  "apianyware-macos-types",
  "clap",

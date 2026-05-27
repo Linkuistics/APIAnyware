@@ -12,8 +12,10 @@ pub struct EmitterRegistry {
 impl EmitterRegistry {
     /// Create a registry with all built-in emitters.
     pub fn new() -> Self {
-        let emitters: Vec<Box<dyn LanguageEmitter>> =
-            vec![Box::new(apianyware_macos_emit_racket::RacketEmitter)];
+        let emitters: Vec<Box<dyn LanguageEmitter>> = vec![
+            Box::new(apianyware_macos_emit_racket::RacketEmitter),
+            Box::new(apianyware_macos_emit_chez::ChezEmitter),
+        ];
         Self { emitters }
     }
 
@@ -70,14 +72,28 @@ mod tests {
         let registry = EmitterRegistry::new();
         let all: Vec<_> = registry.all().collect();
         assert!(!all.is_empty());
-        assert_eq!(all[0].language_info().id, "racket");
+        let ids: Vec<&str> = all.iter().map(|e| e.language_info().id).collect();
+        assert!(ids.contains(&"racket"));
+        assert!(ids.contains(&"chez"));
     }
 
     #[test]
-    fn format_language_list_includes_racket() {
+    fn registry_contains_chez() {
+        let registry = EmitterRegistry::new();
+        let chez = registry.get("chez");
+        assert!(chez.is_some(), "registry should contain chez emitter");
+        let info = chez.unwrap().language_info();
+        assert_eq!(info.id, "chez");
+        assert_eq!(info.display_name, "Chez Scheme");
+    }
+
+    #[test]
+    fn format_language_list_includes_both() {
         let registry = EmitterRegistry::new();
         let list = registry.format_language_list();
         assert!(list.contains("racket"));
         assert!(list.contains("Racket"));
+        assert!(list.contains("chez"));
+        assert!(list.contains("Chez Scheme"));
     }
 }

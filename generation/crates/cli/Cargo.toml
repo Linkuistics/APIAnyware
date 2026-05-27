@@ -10,6 +10,7 @@ apianyware-macos-types.workspace = true
 apianyware-macos-datalog.workspace = true
 apianyware-macos-emit.workspace = true
 apianyware-macos-emit-racket.workspace = true
+apianyware-macos-emit-chez.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 tracing.workspace = true
