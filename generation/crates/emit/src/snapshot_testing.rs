@@ -10,7 +10,7 @@
 //! use apianyware_macos_emit::snapshot_testing::GoldenTest;
 //! # use std::path::Path;
 //!
-//! let golden_test = GoldenTest::new(Path::new("tests/golden"), "racket-oo");
+//! let golden_test = GoldenTest::new(Path::new("tests/golden"), "racket");
 //! golden_test.assert_matches(Path::new("/tmp/generated")).unwrap();
 //! ```
 
@@ -26,7 +26,7 @@ use std::{env, fs, io};
 pub struct GoldenTest {
     /// Root directory containing golden files (e.g., `tests/golden/`).
     golden_dir: PathBuf,
-    /// Language identifier (e.g., `"racket-oo"`).
+    /// Language identifier (e.g., `"racket"`).
     language: String,
 }
 
@@ -419,7 +419,7 @@ mod tests {
         fs::write(gen_dir.path().join("file.rkt"), "(define x 1)\n").unwrap();
         fs::write(golden_dir.path().join("file.rkt"), "(define x 1)\n").unwrap();
 
-        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket");
         assert!(result.is_ok());
     }
 
@@ -430,7 +430,7 @@ mod tests {
 
         fs::write(golden_dir.path().join("expected.rkt"), "content").unwrap();
 
-        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket");
         match result {
             Err(GoldenMismatch::Diff(report)) => {
                 assert!(report.contains("MISSING"));
@@ -447,7 +447,7 @@ mod tests {
 
         fs::write(gen_dir.path().join("extra.rkt"), "content").unwrap();
 
-        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket");
         match result {
             Err(GoldenMismatch::Diff(report)) => {
                 assert!(report.contains("EXTRA"));
@@ -465,7 +465,7 @@ mod tests {
         fs::write(gen_dir.path().join("file.rkt"), "(define x 2)\n").unwrap();
         fs::write(golden_dir.path().join("file.rkt"), "(define x 1)\n").unwrap();
 
-        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket");
         match result {
             Err(GoldenMismatch::Diff(report)) => {
                 assert!(report.contains("DIFFERS"));
@@ -490,7 +490,7 @@ mod tests {
         fs::write(gen_dir.path().join("protocols/nscopying.rkt"), "proto").unwrap();
         fs::write(golden_dir.path().join("protocols/nscopying.rkt"), "proto").unwrap();
 
-        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket-oo");
+        let result = compare_directories(gen_dir.path(), golden_dir.path(), "racket");
         assert!(result.is_ok());
     }
 
@@ -533,7 +533,7 @@ mod tests {
         // Temporarily set UPDATE_GOLDEN
         // SAFETY: test runs single-threaded; no other thread reads this env var concurrently.
         unsafe { env::set_var("UPDATE_GOLDEN", "1") };
-        let test = GoldenTest::new(golden_root.path(), "racket-oo");
+        let test = GoldenTest::new(golden_root.path(), "racket");
         let result = test.assert_matches(gen_dir.path());
         // SAFETY: same as above.
         unsafe { env::remove_var("UPDATE_GOLDEN") };

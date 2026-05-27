@@ -13,11 +13,11 @@ impl EmitterRegistry {
     /// Create a registry with all built-in emitters.
     pub fn new() -> Self {
         let emitters: Vec<Box<dyn LanguageEmitter>> =
-            vec![Box::new(apianyware_macos_emit_racket_oo::RacketEmitter)];
+            vec![Box::new(apianyware_macos_emit_racket::RacketEmitter)];
         Self { emitters }
     }
 
-    /// Look up an emitter by language ID (e.g., "racket-oo").
+    /// Look up an emitter by language ID (e.g., "racket").
     pub fn get(&self, language_id: &str) -> Option<&dyn LanguageEmitter> {
         self.emitters
             .iter()
@@ -47,16 +47,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn registry_contains_racket_oo() {
+    fn registry_contains_racket() {
         let registry = EmitterRegistry::new();
-        let racket = registry.get("racket-oo");
+        let racket = registry.get("racket");
         assert!(
             racket.is_some(),
-            "registry should contain racket-oo emitter"
+            "registry should contain racket emitter"
         );
         let info = racket.unwrap().language_info();
-        assert_eq!(info.id, "racket-oo");
-        assert_eq!(info.display_name, "Racket OO");
+        assert_eq!(info.id, "racket");
+        assert_eq!(info.display_name, "Racket");
     }
 
     #[test]
@@ -70,14 +70,14 @@ mod tests {
         let registry = EmitterRegistry::new();
         let all: Vec<_> = registry.all().collect();
         assert!(!all.is_empty());
-        assert_eq!(all[0].language_info().id, "racket-oo");
+        assert_eq!(all[0].language_info().id, "racket");
     }
 
     #[test]
-    fn format_language_list_includes_racket_oo() {
+    fn format_language_list_includes_racket() {
         let registry = EmitterRegistry::new();
         let list = registry.format_language_list();
-        assert!(list.contains("racket-oo"));
-        assert!(list.contains("Racket OO"));
+        assert!(list.contains("racket"));
+        assert!(list.contains("Racket"));
     }
 }

@@ -122,7 +122,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-bundle-racket-oo"
+name = "apianyware-macos-bundle-racket"
 version = "0.1.0"
 dependencies = [
  "apianyware-macos-stub-launcher",
@@ -170,7 +170,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-emit-racket-oo"
+name = "apianyware-macos-emit-racket"
 version = "0.1.0"
 dependencies = [
  "apianyware-macos-emit",
@@ -224,7 +224,7 @@ dependencies = [
  "anyhow",
  "apianyware-macos-datalog",
  "apianyware-macos-emit",
- "apianyware-macos-emit-racket-oo",
+ "apianyware-macos-emit-racket",
  "apianyware-macos-types",
  "clap",
  "serde_json",

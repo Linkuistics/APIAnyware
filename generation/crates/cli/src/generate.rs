@@ -194,8 +194,8 @@ mod tests {
     #[test]
     fn output_dir_for_language_builds_correct_path() {
         let base = Path::new("/out/targets");
-        let path = output_dir_for_language(base, "racket-oo");
-        assert_eq!(path, PathBuf::from("/out/targets/racket-oo/generated"));
+        let path = output_dir_for_language(base, "racket");
+        assert_eq!(path, PathBuf::from("/out/targets/racket/generated"));
     }
 
     #[test]
@@ -208,16 +208,16 @@ mod tests {
         write_test_framework(&input_dir, &fw);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
         assert_eq!(summaries.len(), 1);
-        assert_eq!(summaries[0].language_id, "racket-oo");
+        assert_eq!(summaries[0].language_id, "racket");
         assert!(summaries[0].total_files_written > 0);
 
         // Verify output structure
         assert!(output_dir
-            .join("racket-oo/generated/testkit/main.rkt")
+            .join("racket/generated/testkit/main.rkt")
             .exists());
     }
 
@@ -231,15 +231,15 @@ mod tests {
         write_test_framework(&input_dir, &make_test_framework("AppKit"));
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
         // Both frameworks generated
         assert_eq!(summaries[0].frameworks_generated, 2);
         assert!(output_dir
-            .join("racket-oo/generated/foundation")
+            .join("racket/generated/foundation")
             .exists());
-        assert!(output_dir.join("racket-oo/generated/appkit").exists());
+        assert!(output_dir.join("racket/generated/appkit").exists());
     }
 
     #[test]
@@ -253,9 +253,9 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Should generate for all registered languages (currently just racket-oo)
+        // Should generate for all registered languages (currently just racket)
         assert!(!summaries.is_empty());
-        assert_eq!(summaries[0].language_id, "racket-oo");
+        assert_eq!(summaries[0].language_id, "racket");
     }
 
     #[test]
@@ -303,7 +303,7 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
         let summary = &summaries[0];
@@ -322,10 +322,10 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        let testkit_dir = output_dir.join("racket-oo/generated/testkit");
+        let testkit_dir = output_dir.join("racket/generated/testkit");
 
         // Per-class files
         for name in &["tkobject", "tkview", "tkbutton", "tkmanager", "tkhelper"] {
@@ -359,10 +359,10 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        let testkit_dir = output_dir.join("racket-oo/generated/testkit");
+        let testkit_dir = output_dir.join("racket/generated/testkit");
 
         // main.rkt re-exports submodules
         let main = std::fs::read_to_string(testkit_dir.join("main.rkt")).unwrap();
@@ -411,15 +411,15 @@ mod tests {
         // Every registered emitter should produce results without error
         assert_eq!(summaries.len(), 1, "should run all registered emitters");
 
-        let racket_oo = summaries
+        let racket = summaries
             .iter()
-            .find(|s| s.language_id == "racket-oo")
-            .expect("racket-oo should be in results");
+            .find(|s| s.language_id == "racket")
+            .expect("racket should be in results");
         assert!(
-            racket_oo.total_files_written > 0,
-            "racket-oo should produce files"
+            racket.total_files_written > 0,
+            "racket should produce files"
         );
-        assert_eq!(racket_oo.total_classes, 5);
+        assert_eq!(racket.total_classes, 5);
     }
 
     #[test]
@@ -438,13 +438,13 @@ mod tests {
         write_test_framework(&input_dir, &appkit);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
         assert_eq!(summaries[0].frameworks_generated, 2);
 
         // Both output directories should exist with correct content
-        let generated_dir = output_dir.join("racket-oo/generated");
+        let generated_dir = output_dir.join("racket/generated");
         assert!(
             generated_dir.join("foundation/main.rkt").exists(),
             "Foundation output should exist"
@@ -471,7 +471,7 @@ mod tests {
         write_test_framework(&input_dir, &fw2);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
         let summary = &summaries[0];

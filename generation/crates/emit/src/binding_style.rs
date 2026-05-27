@@ -11,9 +11,9 @@ use apianyware_macos_types::Framework;
 
 /// Metadata about a target language emitter.
 pub struct LanguageInfo {
-    /// Short identifier used in CLI (e.g., `"racket-oo"`).
+    /// Short identifier used in CLI (e.g., `"racket"`).
     pub id: &'static str,
-    /// Human-readable name (e.g., `"Racket OO"`).
+    /// Human-readable name (e.g., `"Racket"`).
     pub display_name: &'static str,
 }
 
@@ -45,7 +45,7 @@ pub trait LanguageEmitter {
     /// Emit bindings for a single framework.
     ///
     /// `output_dir` is the target's generated-bindings root (e.g.,
-    /// `generation/targets/racket-oo/generated/`). The emitter creates a
+    /// `generation/targets/racket/generated/`). The emitter creates a
     /// framework subdirectory within it.
     fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult>;
 }
@@ -57,10 +57,10 @@ mod tests {
     #[test]
     fn test_language_info() {
         let racket = LanguageInfo {
-            id: "racket-oo",
-            display_name: "Racket OO",
+            id: "racket",
+            display_name: "Racket",
         };
-        assert_eq!(racket.id, "racket-oo");
-        assert_eq!(racket.display_name, "Racket OO");
+        assert_eq!(racket.id, "racket");
+        assert_eq!(racket.display_name, "Racket");
     }
 }

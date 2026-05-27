@@ -2,7 +2,7 @@
 //!
 //! Usage:
 //!   apianyware-macos-generate                              # generate all languages
-//!   apianyware-macos-generate --lang racket-oo             # generate Racket OO only
+//!   apianyware-macos-generate --lang racket             # generate Racket only
 //!   apianyware-macos-generate --list-languages             # show available emitters
 
 mod generate;

@@ -1,10 +1,10 @@
 # APIAnyware-MacOS Workspace Design
 
 **Date:** 2026-03-26
-**Status:** Implemented (Collection, Analysis, and Generation phases all working; Racket OO is the first completed emitter)
+**Status:** Implemented (Collection, Analysis, and Generation phases all working; Racket is the first completed emitter)
 **Supersedes:** 2026-03-23-project-restructure-design.md (which covered a single monorepo approach)
 
-> **Implementation note (2026-04-01):** The workspace structure described here is largely realized. Key divergences from the original plan: (1) Racket emitter was split into `emit-racket-oo/` and `emit-racket-functional/` (separate crates per binding style, rather than one `emit-racket/` crate); (2) pattern-derived Datalog relations (`pattern_instance`, `pattern_participant`, `pattern_constraint`) were not materialized as flat tuples -- patterns are carried as structured JSON directly in the enriched checkpoint; (3) the `violation_unwrapped` verification rule was deferred to the emitter stage; (4) the Generation CLI uses `--lang racket-oo` (not `--lang racket`) since each binding style is a separate emitter.
+> **Implementation note (2026-04-01):** The workspace structure described here is largely realized. Key divergences from the original plan: (1) Racket emitter was split into `emit-racket/` and `emit-racket-functional/` (separate crates per binding style, rather than one `emit-racket/` crate); (2) pattern-derived Datalog relations (`pattern_instance`, `pattern_participant`, `pattern_constraint`) were not materialized as flat tuples -- patterns are carried as structured JSON directly in the enriched checkpoint; (3) the `violation_unwrapped` verification rule was deferred to the emitter stage; (4) the Generation CLI uses `--lang racket` (not `--lang racket`) since each binding style is a separate emitter.
 
 ## Purpose
 
@@ -78,7 +78,7 @@ APIAnyware-MacOS/
   generation/
     crates/
       emit/                               # apianyware-macos-emit (shared emitter framework)
-      emit-racket-oo/                     # apianyware-macos-emit-racket-oo (complete)
+      emit-racket/                     # apianyware-macos-emit-racket (complete)
       emit-racket-functional/             # apianyware-macos-emit-racket-functional (stub)
       emit-chez/                          # planned
       emit-gerbil/                        # planned
@@ -342,7 +342,7 @@ These relations enable emitters to query "give me all resource-lifecycle pattern
 
 ## Phase 3: Generation
 
-**Status:** The Racket OO emitter is complete and generates bindings for all 283 frameworks. The shared emitter framework, Swift helper dylibs, and generation CLI are working. Other emitters are planned.
+**Status:** The Racket emitter is complete and generates bindings for all 283 frameworks. The shared emitter framework, Swift helper dylibs, and generation CLI are working. Other emitters are planned.
 
 **Core principle: idiomatic, not mechanical.** Each emitter produces bindings shaped to its target language's conventions. A Haskell emitter produces monadic APIs with lens-based property access. A Smalltalk emitter produces message-passing objects. A Zig emitter produces explicit allocation with errdefer patterns. The enriched IR carries enough semantic information for emitters to make these decisions automatically.
 
@@ -351,7 +351,7 @@ These relations enable emitters to query "give me all resource-lifecycle pattern
 **Architecture:**
 - Reads `analysis/ir/enriched/{Framework}.json`
 - Shared emitter framework (`emit` crate) provides common utilities: name mapping, type resolution, documentation rendering, framework dependency ordering, snapshot testing, pattern dispatch
-- Per-language emitter crates (`emit-racket-oo`, `emit-racket-functional`, etc.) implement language-specific code generation
+- Per-language emitter crates (`emit-racket`, `emit-racket-functional`, etc.) implement language-specific code generation
 - Each emitter uses enrichment relations (ownership, threading, block lifecycle, error patterns) and API pattern instances to decide wrapping strategies
 - API pattern stereotypes drive high-level idiomatic constructs: resource lifecycles -> `with-*` / bracket / RAII; builder sequences -> DSLs or `let`-chains; observer pairs -> scoped auto-unregister; transaction brackets -> `atomically` / `with-transaction`
 - Runtime support libraries (per-language) provide ObjC object lifecycle management, block/delegate bridging, memory safety guarantees appropriate to the target language

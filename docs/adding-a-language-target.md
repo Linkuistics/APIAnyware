@@ -2,7 +2,7 @@
 
 Step-by-step guide for adding a language target to APIAnyware-MacOS.
 
-> **Note:** A *target* is a language+paradigm combination (e.g., `racket-oo`,
+> **Note:** A *target* is a language+paradigm combination (e.g., `racket`,
 > `haskell-monadic`). Each target is independent with its own emitter crate,
 > runtime, generated output, and apps.
 
@@ -124,7 +124,7 @@ pub const {LANG}_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
 - **Block bridging** — how closures/lambdas become ObjC blocks
 - **Error handling** — how error-out parameters map to the language's error model
 
-Use the Racket emitter (`generation/crates/emit-racket-oo/`) as a reference implementation.
+Use the Racket emitter (`generation/crates/emit-racket/`) as a reference implementation.
 
 ## Step 3: Create the runtime library
 
@@ -263,7 +263,7 @@ compiled stub has a unique CDHash, giving per-app permission isolation.
 
 ## Reference implementations
 
-- **Racket** — `generation/crates/emit-racket-oo/` and `generation/targets/racket-oo/` — the most complete reference
+- **Racket** — `generation/crates/emit-racket/` and `generation/targets/racket/` — the most complete reference
 - **Shared framework** — `generation/crates/emit/` — common utilities available to all emitters
 - **Swift helpers** — `swift/Sources/APIAnywareCommon/` — shared C-callable ObjC runtime interface
 

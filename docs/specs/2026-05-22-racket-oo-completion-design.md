@@ -1,8 +1,8 @@
 # Racket-OO Target — Phase-Cycle Retirement & Completion
 
 Retire the Ravel-Lite phase-cycle machinery from the last two workstreams still
-using it — `LLM_STATE/apps/modaliser-racket/` and `LLM_STATE/targets/racket-oo/` —
-and leave the `racket-oo` target tracked by a superpowers spec/plan with an
+using it — `LLM_STATE/apps/modaliser-racket/` and `LLM_STATE/targets/racket/` —
+and leave the `racket` target tracked by a superpowers spec/plan with an
 honest, verified completion backlog.
 
 ## Context
@@ -28,8 +28,8 @@ This spec is that separate workstream. Two workstreams remain on the phase cycle
   Modaliser will be restarted later from the current `~/Development/Modaliser`
   implementation, so the existing attempt and all its tracking carry no forward
   value.
-- **`LLM_STATE/targets/racket-oo/`** — the Racket-OO language target. This
-  workstream is **past build-out**: the `emit-racket-oo` emitter, the 18-file
+- **`LLM_STATE/targets/racket/`** — the Racket-OO language target. This
+  workstream is **past build-out**: the `emit-racket` emitter, the 18-file
   runtime, C-API emission, snapshot/runtime test harnesses, 7 sample apps, and
   an 833-line developer guide are all done. What remains is a modest completion
   backlog.
@@ -38,16 +38,16 @@ This spec is that separate workstream. Two workstreams remain on the phase cycle
 
 - Delete the abandoned `modaliser-racket` workstream and its implementation
   outright — a clean slate for the eventual restart.
-- Retire the Ravel-Lite machinery from `racket-oo`: archive its history, distil
+- Retire the Ravel-Lite machinery from `racket`: archive its history, distil
   its learnings, delete the phase files.
-- Leave `racket-oo` tracked by this design spec plus a superpowers
+- Leave `racket` tracked by this design spec plus a superpowers
   implementation plan, with a completion backlog that has been **verified
   against the current tree** rather than copied from a stale `backlog.yaml`.
 - Leave `LLM_STATE/` containing no live phase machinery.
 
 ## Verified backlog state
 
-The `racket-oo` `backlog.yaml` was checked item-by-item against the current
+The `racket` `backlog.yaml` was checked item-by-item against the current
 repository (the full pipeline was regenerated 2026-05-22, so generated output is
 current). Three candidate items were found **already done** and are excluded:
 
@@ -67,9 +67,9 @@ has **7** (`hello-window`, `ui-controls-gallery`, `drawing-canvas`,
 ### In scope
 
 - Item A — Delete the `modaliser-racket` workstream and implementation.
-- Item B — Retire the `racket-oo` phase machinery (archive + delete).
-- Item C — Distil `racket-oo` learnings into `knowledge/targets/racket-oo.md`.
-- Item D — The verified `racket-oo` completion backlog (four items).
+- Item B — Retire the `racket` phase machinery (archive + delete).
+- Item C — Distil `racket` learnings into `knowledge/targets/racket.md`.
+- Item D — The verified `racket` completion backlog (four items).
 - Item E — Update `LLM_STATE/overview.md` / `project-workflow.md`.
 
 ### Out of scope
@@ -92,32 +92,32 @@ The Racket Modaliser attempt is abandoned; it will be restarted from
 - `LLM_STATE/apps/modaliser-racket/` — the phase-cycle plan, `memory.yaml`,
   `session-log.yaml`, and `artifacts/`. After deletion `LLM_STATE/apps/` is
   empty; remove that directory too.
-- `generation/targets/racket-oo/apps/modaliser/` — the Racket implementation
+- `generation/targets/racket/apps/modaliser/` — the Racket implementation
   (`modaliser-impl.rkt`).
 - `knowledge/apps/modaliser/` — the six distilled knowledge files.
 
 Then clean every reference to the deleted workstream:
 
 - `knowledge/apps/_index.md` — drop the modaliser entry.
-- `generation/targets/racket-oo/apps/README.md` — drop modaliser from the app
+- `generation/targets/racket/apps/README.md` — drop modaliser from the app
   list.
 - `LLM_STATE/overview.md` — drop any modaliser/apps mention.
 - Grep the tree (`docs/`, `knowledge/`, `LLM_STATE/`, `README.md`) for remaining
   `modaliser` references and resolve each.
 
 **Done when.** No `modaliser` path or reference remains outside the historical
-`LLM_STATE/targets/racket-oo/archive/` record (see Item B); `cargo test`,
+`LLM_STATE/targets/racket/archive/` record (see Item B); `cargo test`,
 `cargo clippy`, and the racket runtime-load harness still pass (the deleted app
 must not be referenced by any test or build target).
 
-### Item B — Retire the `racket-oo` phase machinery
+### Item B — Retire the `racket` phase machinery
 
-Mirror the `core` migration. In `LLM_STATE/targets/racket-oo/`:
+Mirror the `core` migration. In `LLM_STATE/targets/racket/`:
 
 - **Archive** `memory.yaml` and `session-log.yaml` to
-  `LLM_STATE/targets/racket-oo/archive/`, with an `archive/README.md` modelled on
+  `LLM_STATE/targets/racket/archive/`, with an `archive/README.md` modelled on
   `LLM_STATE/core/archive/README.md`: state that the phase cycle is retired for
-  `racket-oo`, that the two files are a read-only historical record, and that the
+  `racket`, that the two files are a read-only historical record, and that the
   workstream is now tracked by this design and its plan.
 - **Delete** the Ravel-Lite machinery: `phase.md`, `pre-work.sh`,
   `prompt-work.md`, `prompt-triage.md`, `work-baseline`, `dream-baseline`,
@@ -125,12 +125,12 @@ Mirror the `core` migration. In `LLM_STATE/targets/racket-oo/`:
 - `pre-work.sh` only delegates to `analysis/scripts/regenerate-stale-pipeline.sh`;
   that script is repo-local and stays.
 
-**Done when.** `LLM_STATE/targets/racket-oo/` contains only `archive/`; no
+**Done when.** `LLM_STATE/targets/racket/` contains only `archive/`; no
 phase-cycle file remains.
 
-### Item C — Distil `racket-oo` learnings into knowledge
+### Item C — Distil `racket` learnings into knowledge
 
-`knowledge/targets/racket-oo.md` already exists. Before `memory.yaml` is archived
+`knowledge/targets/racket.md` already exists. Before `memory.yaml` is archived
 out of easy reach, audit that file against the ~62k `memory.yaml` and extend it
 so every durable, still-true learning survives — emitter/runtime invariants, FFI
 type-coercion rules, the non-linkable-symbol filters, dylib-path conventions,
@@ -139,10 +139,10 @@ verification layers, and so on. Drop anything `memory.yaml` recorded that later
 commits made false (verify before copying — the `core` distillation found stale
 entries).
 
-**Done when.** `knowledge/targets/racket-oo.md` is a self-contained reference for
-the `racket-oo` target that does not depend on the archived `memory.yaml`.
+**Done when.** `knowledge/targets/racket.md` is a self-contained reference for
+the `racket` target that does not depend on the archived `memory.yaml`.
 
-### Item D — `racket-oo` completion backlog
+### Item D — `racket` completion backlog
 
 Four verified-open items. Each is independently shippable.
 
@@ -150,7 +150,7 @@ Four verified-open items. Each is independently shippable.
 (protocol-inherited methods) has propagated: `scnnode-run-action` and
 `scnview-set-autoenables-default-lighting!` now generate as proper bindings. The
 two obsolete typed `objc_msgSend` aliases in
-`generation/targets/racket-oo/apps/scenekit-viewer/scenekit-viewer.rkt`
+`generation/targets/racket/apps/scenekit-viewer/scenekit-viewer.rkt`
 (lines ~75–89) and their call sites (~147, ~197) are now dead workarounds.
 Remove the aliases, repoint the call sites at the generated bindings, and verify
 the viewer still renders (VM visual check — see Verification).
@@ -162,7 +162,7 @@ including the nested balanced-delimiter (`{...}`) case.
 
 **D3 — Default-constructor harness checks.** `make-<class>` is synthesized for
 most classes, but the runtime-load harness
-(`generation/crates/emit-racket-oo/tests/runtime_load_test.rs`) has no explicit
+(`generation/crates/emit-racket/tests/runtime_load_test.rs`) has no explicit
 check that the synthesized constructors actually construct. Add harness checks
 for a representative set: `NSAlert`, `NSColorPanel`, `NSStackView`,
 `NSSavePanel`, `NSOpenPanel`.
@@ -178,7 +178,7 @@ the viewer renders. D2–D4: the new tests are added and green.
 ### Item E — Update `LLM_STATE` cross-cutting docs
 
 Update `LLM_STATE/overview.md` and `LLM_STATE/project-workflow.md` to drop the
-"`racket-oo` still uses the Ravel-Lite phase cycle" framing and point at this
+"`racket` still uses the Ravel-Lite phase cycle" framing and point at this
 design and its implementation plan, exactly as the `core` migration re-pointed
 them. Correct the sample-app count to 7.
 
@@ -190,13 +190,13 @@ them. Correct the sample-app count to 7.
 |---|---|
 | `LLM_STATE/apps/modaliser-racket/` (all) | **Deleted** — workstream abandoned |
 | `LLM_STATE/apps/` (now empty) | **Deleted** |
-| `generation/targets/racket-oo/apps/modaliser/` | **Deleted** — implementation abandoned |
+| `generation/targets/racket/apps/modaliser/` | **Deleted** — implementation abandoned |
 | `knowledge/apps/modaliser/` (all) | **Deleted** — clean slate for the restart |
-| `LLM_STATE/targets/racket-oo/memory.yaml`, `session-log.yaml` | **Archived** to `archive/` (read-only history) |
-| `LLM_STATE/targets/racket-oo/{phase.md, pre-work.sh, prompt-work.md, prompt-triage.md, work-baseline, dream-baseline, latest-session.yaml, backlog.yaml, related-plans.md}` | **Deleted** — Ravel-Lite machinery |
+| `LLM_STATE/targets/racket/memory.yaml`, `session-log.yaml` | **Archived** to `archive/` (read-only history) |
+| `LLM_STATE/targets/racket/{phase.md, pre-work.sh, prompt-work.md, prompt-triage.md, work-baseline, dream-baseline, latest-session.yaml, backlog.yaml, related-plans.md}` | **Deleted** — Ravel-Lite machinery |
 | `analysis/scripts/regenerate-stale-pipeline.sh` | **Kept** — repo-local, still useful |
 | `LLM_STATE/targets/template.md` | **Kept** — stale but out of scope (see Scope) |
-| `knowledge/targets/racket-oo.md` | **Kept and extended** (Item C) |
+| `knowledge/targets/racket.md` | **Kept and extended** (Item C) |
 
 ## Verification
 
@@ -214,9 +214,9 @@ them. Correct the sample-app count to 7.
 ## Success Criteria
 
 - `LLM_STATE/` contains no live phase-cycle machinery; only
-  `LLM_STATE/targets/racket-oo/archive/` retains historical record.
+  `LLM_STATE/targets/racket/archive/` retains historical record.
 - No `modaliser` path or reference survives outside that archive.
-- `knowledge/targets/racket-oo.md` is a self-contained `racket-oo` reference.
+- `knowledge/targets/racket.md` is a self-contained `racket` reference.
 - The four Item D backlog items are complete and verified, or any genuinely
   separable remainder is filed as a scoped follow-up.
 - `LLM_STATE/overview.md` and `project-workflow.md` describe no workstream as

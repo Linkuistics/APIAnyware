@@ -26,7 +26,7 @@ single source of truth for discoveries made during implementation.
 ## Project workflow
 
 APIAnyware-MacOS is a matrix project: N language *targets* × M sample *apps*.
-A target is a language+paradigm combination (e.g. `racket-oo`) with its own
+A target is a language+paradigm combination (e.g. `racket`) with its own
 emitter crate, runtime, generated output, and apps.
 
 - **Adding a target** — see `docs/adding-a-language-target.md`.

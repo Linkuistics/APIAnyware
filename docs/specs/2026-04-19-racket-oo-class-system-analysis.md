@@ -1,21 +1,21 @@
-# racket-oo Class System Analysis
+# racket Class System Analysis
 
 **Date:** 2026-04-19
 **Status:** Analysis — no code change yet
-**Audience:** APIAnyware-MacOS maintainers deciding the racket-oo target's next direction
+**Audience:** APIAnyware-MacOS maintainers deciding the racket target's next direction
 
 ## Executive summary
 
-The target called **racket-oo** does **not** use Racket's class system
+The target called **racket** does **not** use Racket's class system
 (`racket/class`). Generated bindings are flat modules of free functions
 named `<class>-<method>` over opaque `objc-object?` structs. The "OO" label
 is currently a labelling convention, not a technical reality; the only
-thing that would distinguish racket-oo from a future racket-functional
+thing that would distinguish racket from a future racket-functional
 target is "receiver is the first argument" vs "no implicit receiver".
 
 The nine sample apps (2,632 lines, all working and VM-validated) cope
 with the flat API without obvious friction. The pain points recorded in
-`LLM_STATE/targets/racket-oo/memory.md` are about FFI boundary
+`LLM_STATE/targets/racket/memory.md` are about FFI boundary
 plumbing — `borrow-objc-object`, nullable returns, class/instance name
 collisions, CS `malloc`/`free` semantics — none of which `racket/class`
 would address.
@@ -37,7 +37,7 @@ reflect what it actually is.
 ### 1. Zero use of `racket/class` anywhere
 
 Verified by `grep -r "racket/class"` across the entire
-`generation/targets/racket-oo/` tree: no matches. Every generated file
+`generation/targets/racket/` tree: no matches. Every generated file
 begins with `#lang racket/base`, which does not even transitively import
 `racket/class`. The runtime helpers (`objc-base.rkt`, `dynamic-class.rkt`,
 `delegate.rkt`) do not use `class`, `class*`, `define/public`, `send`,
@@ -124,7 +124,7 @@ or duplicated; `tell`-dispatch and TypedMsgSend paths must re-integrate
 with class-level method tables. Risk of subtle performance regressions
 at method-dispatch hot paths.
 
-**Benefit:** racket-oo finally justifies its name. Static polymorphism
+**Benefit:** racket finally justifies its name. Static polymorphism
 becomes expressible. `send` and `is-a?` work uniformly. None of the nine
 current apps need this.
 
@@ -181,7 +181,7 @@ could be called `racket-class` or similar.
 
 **Cost:** rename across directory paths, emitter registry, CLI flags,
 tests, docs, bundle crate naming. ~1 day of mechanical churn.
-**Benefit:** identity clarity. Users who pick "racket-oo" expecting
+**Benefit:** identity clarity. Users who pick "racket" expecting
 `racket/class` no longer get a surprise.
 
 ### E. Accept the status quo
@@ -204,7 +204,7 @@ when nine production apps already demonstrate the flat API works.
 
 1. **Do you want to proceed with option B** (targeted `racket/class`
    layer for dynamic subclassing), and if so when?
-2. **Is the "racket-oo" name worth renaming** (option D) before writing
+2. **Is the "racket" name worth renaming** (option D) before writing
    developer documentation (task #3), or should we document what's
    there and move on?
 3. **Should the Future Work entry remain open** as a tracking item for

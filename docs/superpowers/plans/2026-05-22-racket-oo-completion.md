@@ -2,19 +2,19 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Retire the Ravel-Lite phase-cycle machinery from the last two workstreams that still use it (`modaliser-racket`, `racket-oo`), and leave the `racket-oo` target tracked by a superpowers spec + plan with a verified, completed backlog.
+**Goal:** Retire the Ravel-Lite phase-cycle machinery from the last two workstreams that still use it (`modaliser-racket`, `racket`), and leave the `racket` target tracked by a superpowers spec + plan with a verified, completed backlog.
 
-**Architecture:** Five work items from `docs/specs/2026-05-22-racket-oo-completion-design.md`. Items A/B/C/E are file/doc operations (deletions, archival, distillation, doc updates). Item D is the real code work — four independent backlog tasks (D1–D4). The orchestrator owns pipeline regeneration and the verification gate; implementation subagents return source diffs only.
+**Architecture:** Five work items from `docs/specs/2026-05-22-racket-completion-design.md`. Items A/B/C/E are file/doc operations (deletions, archival, distillation, doc updates). Item D is the real code work — four independent backlog tasks (D1–D4). The orchestrator owns pipeline regeneration and the verification gate; implementation subagents return source diffs only.
 
-**Tech Stack:** Rust (the pipeline crates), Racket (`racket-oo` runtime + generated bindings + sample apps), Markdown/YAML (`LLM_STATE`, `knowledge`, `docs`).
+**Tech Stack:** Rust (the pipeline crates), Racket (`racket` runtime + generated bindings + sample apps), Markdown/YAML (`LLM_STATE`, `knowledge`, `docs`).
 
 ---
 
 ## Execution context
 
-**Authoritative spec:** `docs/specs/2026-05-22-racket-oo-completion-design.md`. Read it before starting. This plan implements it; on any conflict the spec wins.
+**Authoritative spec:** `docs/specs/2026-05-22-racket-completion-design.md`. Read it before starting. This plan implements it; on any conflict the spec wins.
 
-**Worktree.** All work happens in the git worktree on branch `worktree-racket-oo-completion`. Run every command from the worktree root. Repo-relative paths in this plan are relative to that root.
+**Worktree.** All work happens in the git worktree on branch `worktree-racket-completion`. Run every command from the worktree root. Repo-relative paths in this plan are relative to that root.
 
 **The host `xcrun` is broken.** Prefix every SDK-touching command (collect, extract tests, `swift test`, `swift-api-digester`) with:
 
@@ -22,15 +22,15 @@
 export SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
 ```
 
-**Build artifacts are gitignored.** `collection/ir/collected/`, `analysis/ir/*`, and `generation/targets/racket-oo/generated/` are not in git. Task 0 materializes them. They may already be present (stale) in this worktree — Task 0 regenerates regardless; never trust a stale checkpoint as evidence.
+**Build artifacts are gitignored.** `collection/ir/collected/`, `analysis/ir/*`, and `generation/targets/racket/generated/` are not in git. Task 0 materializes them. They may already be present (stale) in this worktree — Task 0 regenerates regardless; never trust a stale checkpoint as evidence.
 
 **Pipeline regeneration is orchestrator-owned.** `analysis/ir/*` and `generated/` are shared mutable state. Implementation subagents return *source diffs only*. The orchestrator serializes `collect → resolve → annotate → enrich → generate` and owns the 0-enrichment-violations gate. Do **not** delegate regeneration.
 
 **Note on the `analyze` invocation.** The bare `cargo run -p apianyware-macos-analyze` (no subcommand) uses `llm_dir=None` and does **not** load the checked-in `.llm.json` files. Always run the stages explicitly (see Task 0) so LLM annotations are included.
 
-**Two-stage review.** For every returned diff: (1) spec-compliance review against `docs/specs/2026-05-22-racket-oo-completion-design.md`, then (2) code-quality review. Run the verification gate (Task F's gate) before each commit.
+**Two-stage review.** For every returned diff: (1) spec-compliance review against `docs/specs/2026-05-22-racket-completion-design.md`, then (2) code-quality review. Run the verification gate (Task F's gate) before each commit.
 
-**Shared-file caution.** Tasks D2, D3, and D4 all add tests to the *same* file — `generation/crates/emit-racket-oo/tests/runtime_load_test.rs`. They must be executed and committed **sequentially**, not in parallel, to avoid edit conflicts.
+**Shared-file caution.** Tasks D2, D3, and D4 all add tests to the *same* file — `generation/crates/emit-racket/tests/runtime_load_test.rs`. They must be executed and committed **sequentially**, not in parallel, to avoid edit conflicts.
 
 **Terminology.** GUI verification uses **TestAnyware** (`{{DEV_ROOT}}/TestAnyware/`) — never run GUI apps directly from the CLI. Do not use the retired "guivision"/GUIVisionVMDriver name.
 
@@ -43,7 +43,7 @@ export SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platf
 - [ ] **Step 1: Confirm the branch**
 
 Run: `git branch --show-current`
-Expected: `worktree-racket-oo-completion`
+Expected: `worktree-racket-completion`
 
 - [ ] **Step 2: Export `SDKROOT` and regenerate the pipeline from scratch**
 
@@ -56,7 +56,7 @@ cargo run -p apianyware-macos-analyze -- enrich
 cargo run -p apianyware-macos-generate
 ```
 
-Expected: `enrich` reports **0 enrichment violations**; `generate` completes without error and populates `generation/targets/racket-oo/generated/`.
+Expected: `enrich` reports **0 enrichment violations**; `generate` completes without error and populates `generation/targets/racket/generated/`.
 
 - [ ] **Step 3: Confirm the workspace is green**
 
@@ -68,15 +68,15 @@ make lint-annotations
 
 Expected: tests pass, clippy clean, `make lint-annotations` exits 0. If anything fails here, stop — the baseline must be green before any task begins. (`make lint-annotations` may flag the pre-existing FU-1/FU-2 follow-ups; confirm the failure set matches what `LLM_STATE/overview.md` already documents as known-open, and exits 0 only if those are resolved — if it exits non-zero on the documented follow-ups, record that as the known baseline and proceed.)
 
-- [ ] **Step 4: Confirm the emit-racket-oo package name**
+- [ ] **Step 4: Confirm the emit-racket package name**
 
-Run: `grep '^name' generation/crates/emit-racket-oo/Cargo.toml`
-Record the package name (expected `apianyware-macos-emit-racket-oo`). Use it wherever this plan writes `-p apianyware-macos-emit-racket-oo`.
+Run: `grep '^name' generation/crates/emit-racket/Cargo.toml`
+Record the package name (expected `apianyware-macos-emit-racket`). Use it wherever this plan writes `-p apianyware-macos-emit-racket`.
 
 - [ ] **Step 5: Confirm the runtime-load harness is green**
 
 ```bash
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test -- --nocapture
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test -- --nocapture
 ```
 
 Expected: all `runtime_*` tests pass (the harness requires `racket` and `raco` on `PATH`; if absent, install them — the harness self-skips otherwise and that is not a green baseline).
@@ -90,18 +90,18 @@ Expected: all `runtime_*` tests pass (the harness requires `racket` and `raco` o
 **Files:**
 - Delete: `LLM_STATE/apps/modaliser-racket/` (whole directory)
 - Delete: `LLM_STATE/apps/` (now empty)
-- Delete: `generation/targets/racket-oo/apps/modaliser/` (whole directory, including `build/`)
+- Delete: `generation/targets/racket/apps/modaliser/` (whole directory, including `build/`)
 - Delete: `knowledge/apps/modaliser/` (whole directory)
 - Modify: `knowledge/apps/_index.md`
-- Modify: `generation/targets/racket-oo/apps/README.md`
+- Modify: `generation/targets/racket/apps/README.md`
 
-> **Investigation note.** `bundle-racket-oo`'s `bundles_every_sample_app` test discovers apps by `apps/<name>/<name>.rkt`. The modaliser directory has no `modaliser.rkt` entry (only `main.rkt`/`modaliser-impl.rkt`), so it was never bundled by that test — deletion is build-safe. Every other code reference to "modaliser" is a comment or a unit-test string fixture (`title_case_kebab("modaliser")`, `AppSpec::from_script_name("modaliser")`), none of which touch the deleted directory. Step 4 verifies this.
+> **Investigation note.** `bundle-racket`'s `bundles_every_sample_app` test discovers apps by `apps/<name>/<name>.rkt`. The modaliser directory has no `modaliser.rkt` entry (only `main.rkt`/`modaliser-impl.rkt`), so it was never bundled by that test — deletion is build-safe. Every other code reference to "modaliser" is a comment or a unit-test string fixture (`title_case_kebab("modaliser")`, `AppSpec::from_script_name("modaliser")`), none of which touch the deleted directory. Step 4 verifies this.
 
 - [ ] **Step 1: Delete the three directories and the emptied `apps/`**
 
 ```bash
 git rm -r LLM_STATE/apps/modaliser-racket
-git rm -r generation/targets/racket-oo/apps/modaliser
+git rm -r generation/targets/racket/apps/modaliser
 git rm -r knowledge/apps/modaliser
 ```
 
@@ -115,13 +115,13 @@ rmdir LLM_STATE/apps 2>/dev/null || true
 
 Delete the table row for app #8 (`modaliser`). The catalogue table then lists 7 apps. Leave the other rows and the "Retired:" note as-is. (Row numbers 1–7 already correspond to the surviving apps; do not renumber unless the modaliser row was not last — verify it is the last row before deleting.)
 
-- [ ] **Step 3: Clean `generation/targets/racket-oo/apps/README.md`**
+- [ ] **Step 3: Clean `generation/targets/racket/apps/README.md`**
 
-Remove the "culminating in Modaliser as the capstone" phrasing (the file currently ends its intro with that). Replace the stale step 5 reference (`Check the target plan: {{PROJECT}}/LLM_STATE/targets/racket-oo/backlog.md`) — `backlog.md` is being deleted by Task B — with a pointer to this design + plan:
+Remove the "culminating in Modaliser as the capstone" phrasing (the file currently ends its intro with that). Replace the stale step 5 reference (`Check the target plan: {{PROJECT}}/LLM_STATE/targets/racket/backlog.md`) — `backlog.md` is being deleted by Task B — with a pointer to this design + plan:
 
 ```
-5. Check the target plan: `{{PROJECT}}/docs/specs/2026-05-22-racket-oo-completion-design.md`
-   and `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-oo-completion.md`
+5. Check the target plan: `{{PROJECT}}/docs/specs/2026-05-22-racket-completion-design.md`
+   and `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-completion.md`
 ```
 
 Leave the "All GUI testing uses TestAnyware" section unchanged.
@@ -133,10 +133,10 @@ grep -rIn --exclude-dir=.git --exclude-dir=generated --exclude-dir=ir -i modalis
 ```
 
 Expected remaining hits, and their disposition:
-- `docs/specs/2026-04-16-...`, `docs/specs/2026-04-19-...`, `docs/specs/2026-05-20-...`, `docs/superpowers/plans/2026-05-20-...`, `docs/specs/2026-05-22-racket-oo-completion-design.md` — **leave**: historical design records / this workstream's own spec, which deliberately names modaliser.
-- `generation/crates/bundle-racket-oo/src/{bundle,deps,spec}.rs`, `tests/{bundle_apps,info_plist_overrides,signing_identity}.rs` — **leave**: comments and unit-test string fixtures, no path dependency.
-- `generation/crates/emit-racket-oo/tests/runtime_load_test.rs` — **leave**: a single comment ("the platform-unavailable extern leak surfaced by Modaliser-Racket").
-- `generation/targets/racket-oo/runtime/dynamic-class.rkt`, `runtime/objc-interop.rkt` — **leave**: design-note comments naming Modaliser as an example consumer.
+- `docs/specs/2026-04-16-...`, `docs/specs/2026-04-19-...`, `docs/specs/2026-05-20-...`, `docs/superpowers/plans/2026-05-20-...`, `docs/specs/2026-05-22-racket-completion-design.md` — **leave**: historical design records / this workstream's own spec, which deliberately names modaliser.
+- `generation/crates/bundle-racket/src/{bundle,deps,spec}.rs`, `tests/{bundle_apps,info_plist_overrides,signing_identity}.rs` — **leave**: comments and unit-test string fixtures, no path dependency.
+- `generation/crates/emit-racket/tests/runtime_load_test.rs` — **leave**: a single comment ("the platform-unavailable extern leak surfaced by Modaliser-Racket").
+- `generation/targets/racket/runtime/dynamic-class.rkt`, `runtime/objc-interop.rkt` — **leave**: design-note comments naming Modaliser as an example consumer.
 - `knowledge/apps/drawing-canvas/spec.md` — **leave**: architectural cross-reference ("Modaliser uses the same mechanism").
 - `knowledge/testanyware/strategies/modal-overlay-apps.md` — **leave**: a placeholder stub.
 - `LLM_STATE/project-workflow.md`, `LLM_STATE/overview.md` — **handled by Task E** (do not edit here, to avoid two tasks touching the same files).
@@ -148,7 +148,7 @@ If the grep surfaces a *code or build* reference not in the "leave" list above, 
 ```bash
 cargo test --workspace
 cargo clippy --workspace --all-targets
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test
 ```
 
 Expected: all green — no test or build target referenced the deleted directories.
@@ -158,11 +158,11 @@ Expected: all green — no test or build target referenced the deleted directori
 ```bash
 git add -A
 git commit -m "$(cat <<'EOF'
-chore(racket-oo): delete the abandoned modaliser-racket workstream
+chore(racket): delete the abandoned modaliser-racket workstream
 
-Item A of the racket-oo phase-cycle retirement. The Racket Modaliser
+Item A of the racket phase-cycle retirement. The Racket Modaliser
 attempt is abandoned; it will be restarted later from ~/Development/Modaliser.
-Removes LLM_STATE/apps/modaliser-racket/, generation/targets/racket-oo/apps/modaliser/,
+Removes LLM_STATE/apps/modaliser-racket/, generation/targets/racket/apps/modaliser/,
 and knowledge/apps/modaliser/, plus references in the app catalogue and apps README.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
@@ -172,19 +172,19 @@ EOF
 
 ---
 
-## Task C: Distil `racket-oo` learnings into `knowledge/targets/racket-oo.md`
+## Task C: Distil `racket` learnings into `knowledge/targets/racket.md`
 
 Runs **before Task B** so `memory.yaml` is still at its original path. A subagent rewrites the knowledge doc; the orchestrator reviews it.
 
 **Files:**
-- Modify (rewrite): `knowledge/targets/racket-oo.md`
-- Read-only source: `LLM_STATE/targets/racket-oo/memory.yaml`
+- Modify (rewrite): `knowledge/targets/racket.md`
+- Read-only source: `LLM_STATE/targets/racket/memory.yaml`
 
-**Done when:** `knowledge/targets/racket-oo.md` is a self-contained reference for the `racket-oo` target that does not depend on the archived `memory.yaml`.
+**Done when:** `knowledge/targets/racket.md` is a self-contained reference for the `racket` target that does not depend on the archived `memory.yaml`.
 
 - [ ] **Step 1: Audit `memory.yaml` against the current doc**
 
-The subagent reads `LLM_STATE/targets/racket-oo/memory.yaml` (563 lines) in full and the current `knowledge/targets/racket-oo.md` (105 lines). Every durable, still-true learning in `memory.yaml` must survive into the knowledge doc; anything later commits made false must be dropped (verify against the tree before copying).
+The subagent reads `LLM_STATE/targets/racket/memory.yaml` (563 lines) in full and the current `knowledge/targets/racket.md` (105 lines). Every durable, still-true learning in `memory.yaml` must survive into the knowledge doc; anything later commits made false must be dropped (verify against the tree before copying).
 
 - [ ] **Step 2: Exclude the verified-stale entries**
 
@@ -199,10 +199,10 @@ Do **not** copy these — they were made false by later work, or are point-in-ti
 | `default-constructor` "~73% / 5,304 classes" census | Mechanism is durable; the percentages drift on every re-collect. Keep the mechanism + `has_explicit_constructor` trigger; drop the numbers. |
 | All `TestAnyware`-operational entries (`vm-start.sh`, per-VM connection specs, etc.) | Out of scope for a language-target reference doc; reference the VM workflow only generically. |
 
-- [ ] **Step 3: Rewrite `knowledge/targets/racket-oo.md` to this section structure**
+- [ ] **Step 3: Rewrite `knowledge/targets/racket.md` to this section structure**
 
 ```
-# racket-oo — Target Reference
+# racket — Target Reference
 
 ## 1. Overview
    - "OO" is a target name only — generated files are #lang racket/base, zero
@@ -257,17 +257,17 @@ Preserve the still-true prose from the current doc (the "Sample app bundling" an
 
 - [ ] **Step 4: Verify self-containment**
 
-Read the rewritten `knowledge/targets/racket-oo.md`. Confirm it references no information that exists only in `memory.yaml`. Confirm it does not say "guivision".
+Read the rewritten `knowledge/targets/racket.md`. Confirm it references no information that exists only in `memory.yaml`. Confirm it does not say "guivision".
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add knowledge/targets/racket-oo.md
+git add knowledge/targets/racket.md
 git commit -m "$(cat <<'EOF'
-docs(racket-oo): distil memory.yaml learnings into the target reference
+docs(racket): distil memory.yaml learnings into the target reference
 
-Item C of the racket-oo phase-cycle retirement. Rewrites
-knowledge/targets/racket-oo.md as a self-contained racket-oo reference so the
+Item C of the racket phase-cycle retirement. Rewrites
+knowledge/targets/racket.md as a self-contained racket reference so the
 Ravel-Lite memory.yaml can be archived. Drops entries later commits made false
 (delegate 'int/'long returns, NSEdgeInsets fix) and point-in-time censuses.
 
@@ -278,42 +278,42 @@ EOF
 
 ---
 
-## Task B: Retire the `racket-oo` phase machinery
+## Task B: Retire the `racket` phase machinery
 
 Mirror the `core` migration (`LLM_STATE/core/archive/`).
 
 **Files:**
-- Create: `LLM_STATE/targets/racket-oo/archive/README.md`
-- Move: `LLM_STATE/targets/racket-oo/memory.yaml` → `archive/memory.yaml`
-- Move: `LLM_STATE/targets/racket-oo/session-log.yaml` → `archive/session-log.yaml`
-- Delete: `LLM_STATE/targets/racket-oo/{phase.md, pre-work.sh, prompt-work.md, prompt-triage.md, work-baseline, dream-baseline, compact-baseline, latest-session.yaml, backlog.yaml, related-plans.md}`
+- Create: `LLM_STATE/targets/racket/archive/README.md`
+- Move: `LLM_STATE/targets/racket/memory.yaml` → `archive/memory.yaml`
+- Move: `LLM_STATE/targets/racket/session-log.yaml` → `archive/session-log.yaml`
+- Delete: `LLM_STATE/targets/racket/{phase.md, pre-work.sh, prompt-work.md, prompt-triage.md, work-baseline, dream-baseline, compact-baseline, latest-session.yaml, backlog.yaml, related-plans.md}`
 
-> **Note.** The design spec's explicit delete list omits `compact-baseline`, but Item B's done-criterion is "`racket-oo/` contains only `archive/`". `compact-baseline` is plainly Ravel-Lite machinery (the `core` migration deleted its `compact-baseline`), so it is deleted here too.
+> **Note.** The design spec's explicit delete list omits `compact-baseline`, but Item B's done-criterion is "`racket/` contains only `archive/`". `compact-baseline` is plainly Ravel-Lite machinery (the `core` migration deleted its `compact-baseline`), so it is deleted here too.
 
 - [ ] **Step 1: Create the archive directory and move the two history files**
 
 ```bash
-mkdir -p LLM_STATE/targets/racket-oo/archive
-git mv LLM_STATE/targets/racket-oo/memory.yaml LLM_STATE/targets/racket-oo/archive/memory.yaml
-git mv LLM_STATE/targets/racket-oo/session-log.yaml LLM_STATE/targets/racket-oo/archive/session-log.yaml
+mkdir -p LLM_STATE/targets/racket/archive
+git mv LLM_STATE/targets/racket/memory.yaml LLM_STATE/targets/racket/archive/memory.yaml
+git mv LLM_STATE/targets/racket/session-log.yaml LLM_STATE/targets/racket/archive/session-log.yaml
 ```
 
-- [ ] **Step 2: Write `LLM_STATE/targets/racket-oo/archive/README.md`**
+- [ ] **Step 2: Write `LLM_STATE/targets/racket/archive/README.md`**
 
 ```markdown
-# Archived racket-oo-workstream state
+# Archived racket-workstream state
 
 `memory.yaml` and `session-log.yaml` are the read-only record of the
-Ravel-Lite-driven `racket-oo` target sessions.
+Ravel-Lite-driven `racket` target sessions.
 
 The Ravel-Lite work→reflect→triage phase cycle has been retired for the
-`racket-oo` workstream. The `racket-oo` target is now tracked by:
+`racket` workstream. The `racket` target is now tracked by:
 
-- `docs/specs/2026-05-22-racket-oo-completion-design.md` — design
-- `docs/superpowers/plans/2026-05-22-racket-oo-completion.md` — implementation plan
+- `docs/specs/2026-05-22-racket-completion-design.md` — design
+- `docs/superpowers/plans/2026-05-22-racket-completion.md` — implementation plan
 
 The durable learnings from `memory.yaml` are distilled into
-`knowledge/targets/racket-oo.md`, which is the self-contained `racket-oo`
+`knowledge/targets/racket.md`, which is the self-contained `racket`
 reference. These two files are kept only as historical record.
 
 With this migration `LLM_STATE/` contains no live phase-cycle machinery.
@@ -322,28 +322,28 @@ With this migration `LLM_STATE/` contains no live phase-cycle machinery.
 - [ ] **Step 3: Delete the Ravel-Lite machinery**
 
 ```bash
-git rm LLM_STATE/targets/racket-oo/phase.md \
-       LLM_STATE/targets/racket-oo/pre-work.sh \
-       LLM_STATE/targets/racket-oo/prompt-work.md \
-       LLM_STATE/targets/racket-oo/prompt-triage.md \
-       LLM_STATE/targets/racket-oo/work-baseline \
-       LLM_STATE/targets/racket-oo/dream-baseline \
-       LLM_STATE/targets/racket-oo/compact-baseline \
-       LLM_STATE/targets/racket-oo/latest-session.yaml \
-       LLM_STATE/targets/racket-oo/backlog.yaml \
-       LLM_STATE/targets/racket-oo/related-plans.md
+git rm LLM_STATE/targets/racket/phase.md \
+       LLM_STATE/targets/racket/pre-work.sh \
+       LLM_STATE/targets/racket/prompt-work.md \
+       LLM_STATE/targets/racket/prompt-triage.md \
+       LLM_STATE/targets/racket/work-baseline \
+       LLM_STATE/targets/racket/dream-baseline \
+       LLM_STATE/targets/racket/compact-baseline \
+       LLM_STATE/targets/racket/latest-session.yaml \
+       LLM_STATE/targets/racket/backlog.yaml \
+       LLM_STATE/targets/racket/related-plans.md
 ```
 
 (`pre-work.sh` only delegated to `analysis/scripts/regenerate-stale-pipeline.sh`; that script is repo-local and stays.)
 
 - [ ] **Step 4: Verify the directory contains only `archive/`**
 
-Run: `find LLM_STATE/targets/racket-oo -type f | sort`
+Run: `find LLM_STATE/targets/racket -type f | sort`
 Expected exactly:
 ```
-LLM_STATE/targets/racket-oo/archive/README.md
-LLM_STATE/targets/racket-oo/archive/memory.yaml
-LLM_STATE/targets/racket-oo/archive/session-log.yaml
+LLM_STATE/targets/racket/archive/README.md
+LLM_STATE/targets/racket/archive/memory.yaml
+LLM_STATE/targets/racket/archive/session-log.yaml
 ```
 
 - [ ] **Step 5: Commit**
@@ -351,10 +351,10 @@ LLM_STATE/targets/racket-oo/archive/session-log.yaml
 ```bash
 git add -A
 git commit -m "$(cat <<'EOF'
-chore(racket-oo): retire the Ravel-Lite phase-cycle machinery
+chore(racket): retire the Ravel-Lite phase-cycle machinery
 
-Item B of the racket-oo phase-cycle retirement. Archives memory.yaml and
-session-log.yaml under LLM_STATE/targets/racket-oo/archive/ as read-only
+Item B of the racket phase-cycle retirement. Archives memory.yaml and
+session-log.yaml under LLM_STATE/targets/racket/archive/ as read-only
 history, and deletes the phase-cycle files. LLM_STATE now holds no live
 phase machinery.
 
@@ -368,11 +368,11 @@ EOF
 ## Task D1: SceneKit Viewer msgSend-alias cleanup
 
 **Files:**
-- Modify: `generation/targets/racket-oo/apps/scenekit-viewer/scenekit-viewer.rkt`
+- Modify: `generation/targets/racket/apps/scenekit-viewer/scenekit-viewer.rkt`
 
 The protocol-inherited-methods fix (commit `0901f23`) has propagated: `scnnode-run-action` and `scnview-set-autoenables-default-lighting!` now generate as proper bindings, already imported by the app via `require` lines 29 and 31. The app-local typed `objc_msgSend` aliases are dead workarounds.
 
-> **Verified replacements** (in `generation/targets/racket-oo/generated/oo/scenekit/`):
+> **Verified replacements** (in `generation/targets/racket/generated/oo/scenekit/`):
 > - `scnview-set-autoenables-default-lighting!` — `(scnview? boolean?) -> void?`, in `scnview.rkt`.
 > - `scnnode-run-action` — `(scnnode? (or/c string? objc-object? #f)) -> void?`, in `scnnode.rkt`. Note: **no trailing `!`**.
 
@@ -391,24 +391,24 @@ The header docstring (lines ~8–14) describes the two protocol-inherited method
 
 - [ ] **Step 4: Confirm no `objc_msgSend` alias remains**
 
-Run: `grep -n -i 'objc_msgsend\|_objc-lib\|sel_registerName' generation/targets/racket-oo/apps/scenekit-viewer/scenekit-viewer.rkt`
+Run: `grep -n -i 'objc_msgsend\|_objc-lib\|sel_registerName' generation/targets/racket/apps/scenekit-viewer/scenekit-viewer.rkt`
 Expected: no matches.
 
 - [ ] **Step 5: Verify the app loads (raco make)**
 
 ```bash
-raco make generation/targets/racket-oo/apps/scenekit-viewer/scenekit-viewer.rkt
+raco make generation/targets/racket/apps/scenekit-viewer/scenekit-viewer.rkt
 ```
 
-Expected: compiles with no error (the replacement bindings resolve from the existing `require`s). This needs `generation/targets/racket-oo/generated/` present from Task 0.
+Expected: compiles with no error (the replacement bindings resolve from the existing `require`s). This needs `generation/targets/racket/generated/` present from Task 0.
 
 - [ ] **Step 6: Verify the viewer renders in a VM (TestAnyware)**
 
 Build the `scenekit-viewer` bundle and render it in a macOS VM with TestAnyware — **never run the GUI app directly from the CLI**. Follow `knowledge/testanyware/general.md`:
 
 ```bash
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- scenekit-viewer
-# TestAnyware: start VM, share ./generation/targets/racket-oo, launch the .app, screenshot
+cargo run --example bundle_app -p apianyware-macos-bundle-racket -- scenekit-viewer
+# TestAnyware: start VM, share ./generation/targets/racket, launch the .app, screenshot
 ```
 
 Expected: the SceneKit viewer window renders the 3D scene (a shaded geometry node) and the spin animation runs — i.e. `scnnode-run-action` and `scnview-set-autoenables-default-lighting!` behave as the aliases did. Capture a screenshot as evidence.
@@ -416,7 +416,7 @@ Expected: the SceneKit viewer window renders the 3D scene (a shaded geometry nod
 - [ ] **Step 7: Commit**
 
 ```bash
-git add generation/targets/racket-oo/apps/scenekit-viewer/scenekit-viewer.rkt
+git add generation/targets/racket/apps/scenekit-viewer/scenekit-viewer.rkt
 git commit -m "$(cat <<'EOF'
 refactor(scenekit-viewer): drop obsolete objc_msgSend aliases (D1)
 
@@ -435,7 +435,7 @@ EOF
 ## Task D2: `define-objc-subclass` struct-encoding test coverage
 
 **Files:**
-- Modify: `generation/crates/emit-racket-oo/tests/runtime_load_test.rs` (add one `#[test]` fn)
+- Modify: `generation/crates/emit-racket/tests/runtime_load_test.rs` (add one `#[test]` fn)
 
 The existing test `runtime_objc_subclass_macro` exercises only plain-primitive method encodings (`hash`, `isEqual:`). It does not exercise `#:arg-types`, nor a struct-typed encoding, nor the nested balanced-delimiter (`{...}`) parser in `runtime/objc-subclass.rkt` (`read-balanced`). D2 adds that coverage.
 
@@ -474,7 +474,7 @@ The Rust side substitutes `<TEMP>` with the absolute tempdir path (use the same 
 - [ ] **Step 2: Run the test**
 
 ```bash
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test runtime_objc_subclass_struct_encoding -- --nocapture
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test runtime_objc_subclass_struct_encoding -- --nocapture
 ```
 
 Expected: PASS. If it FAILS, the failure is real — investigate (systematic-debugging) whether the encoding parser or `define-objc-subclass` is genuinely broken before adjusting the test. Adjust selector/encoding choices only if the chosen selector turns out not to carry a nested-struct encoding; the nested-`{...}` path must remain exercised.
@@ -482,7 +482,7 @@ Expected: PASS. If it FAILS, the failure is real — investigate (systematic-deb
 - [ ] **Step 3: Run the full harness to confirm no regression**
 
 ```bash
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test
 cargo clippy --workspace --all-targets
 ```
 
@@ -491,9 +491,9 @@ Expected: all green, clippy clean.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add generation/crates/emit-racket-oo/tests/runtime_load_test.rs
+git add generation/crates/emit-racket/tests/runtime_load_test.rs
 git commit -m "$(cat <<'EOF'
-test(racket-oo): cover define-objc-subclass struct encodings (D2)
+test(racket): cover define-objc-subclass struct encodings (D2)
 
 Adds runtime_objc_subclass_struct_encoding to the runtime-load harness:
 exercises the nested balanced-delimiter ({...}) encoding parser via an
@@ -510,7 +510,7 @@ EOF
 ## Task D3: Default-constructor harness checks
 
 **Files:**
-- Modify: `generation/crates/emit-racket-oo/tests/runtime_load_test.rs` (add one `#[test]` fn)
+- Modify: `generation/crates/emit-racket/tests/runtime_load_test.rs` (add one `#[test]` fn)
 
 The runtime-load harness has no explicit check that synthesized constructors actually construct. D3 adds checks for `NSAlert`, `NSColorPanel`, `NSStackView`, `NSSavePanel`, `NSOpenPanel`.
 
@@ -548,12 +548,12 @@ Add `runtime_default_constructors` to `runtime_load_test.rs`. Scaffold it like `
 (printf "OK: default/factory constructors — 5 checks passed~n")
 ```
 
-The Rust side substitutes `<TEMP>` with the absolute tempdir path. Before writing the script, **confirm the exact binding names** against the freshly generated `generation/targets/racket-oo/generated/oo/appkit/{nsalert,nscolorpanel,nsstackview,nssavepanel,nsopenpanel}.rkt` (`grep '(define (make-' …` and `grep 'shared-color-panel\|save-panel\|open-panel' …`) — adjust any name that differs. `make-nsrect` is provided by `runtime/type-mapping.rkt`.
+The Rust side substitutes `<TEMP>` with the absolute tempdir path. Before writing the script, **confirm the exact binding names** against the freshly generated `generation/targets/racket/generated/oo/appkit/{nsalert,nscolorpanel,nsstackview,nssavepanel,nsopenpanel}.rkt` (`grep '(define (make-' …` and `grep 'shared-color-panel\|save-panel\|open-panel' …`) — adjust any name that differs. `make-nsrect` is provided by `runtime/type-mapping.rkt`.
 
 - [ ] **Step 2: Run the test**
 
 ```bash
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test runtime_default_constructors -- --nocapture
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test runtime_default_constructors -- --nocapture
 ```
 
 Expected: PASS (5 checks). If a constructor returns `#f`/nil, investigate whether that class genuinely fails to construct (systematic-debugging) before changing the test.
@@ -561,7 +561,7 @@ Expected: PASS (5 checks). If a constructor returns `#f`/nil, investigate whethe
 - [ ] **Step 3: Run the full harness + clippy**
 
 ```bash
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test
 cargo clippy --workspace --all-targets
 ```
 
@@ -570,9 +570,9 @@ Expected: all green.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add generation/crates/emit-racket-oo/tests/runtime_load_test.rs
+git add generation/crates/emit-racket/tests/runtime_load_test.rs
 git commit -m "$(cat <<'EOF'
-test(racket-oo): harness checks for class constructors (D3)
+test(racket): harness checks for class constructors (D3)
 
 Adds runtime_default_constructors: verifies NSAlert (synthesized make-nsalert),
 NSStackView (explicit init), and NSColorPanel/NSSavePanel/NSOpenPanel (class
@@ -590,7 +590,7 @@ EOF
 ## Task D4: Framework-coverage deepening
 
 **Files:**
-- Modify: `generation/crates/emit-racket-oo/tests/runtime_load_test.rs` (extend `REQUIRED_FRAMEWORKS`; add one `#[test]` fn)
+- Modify: `generation/crates/emit-racket/tests/runtime_load_test.rs` (extend `REQUIRED_FRAMEWORKS`; add one `#[test]` fn)
 
 Current framework coverage is shallow load checks; `CoreGraphics` is in `REQUIRED_FRAMEWORKS` with one `dynamic-require` of `functions.rkt`, and `AVFoundation`/`MapKit` are absent entirely. D4 adds deeper tests that construct values, call functions, and assert results.
 
@@ -641,7 +641,7 @@ If a CG/MK/AV function takes or returns a C struct type that `runtime/type-mappi
 - [ ] **Step 3: Run the test**
 
 ```bash
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test runtime_framework_deep_checks -- --nocapture
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test runtime_framework_deep_checks -- --nocapture
 ```
 
 Expected: PASS. If a `dynamic-require` fails for a missing transitive framework, add it to `REQUIRED_FRAMEWORKS` and retry. If an assertion fails, investigate whether the binding is genuinely wrong before adjusting the expectation.
@@ -649,7 +649,7 @@ Expected: PASS. If a `dynamic-require` fails for a missing transitive framework,
 - [ ] **Step 4: Run the full harness + clippy**
 
 ```bash
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test
 cargo clippy --workspace --all-targets
 ```
 
@@ -658,9 +658,9 @@ Expected: all green.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add generation/crates/emit-racket-oo/tests/runtime_load_test.rs
+git add generation/crates/emit-racket/tests/runtime_load_test.rs
 git commit -m "$(cat <<'EOF'
-test(racket-oo): deeper framework coverage for CG/AVF/MapKit (D4)
+test(racket): deeper framework coverage for CG/AVF/MapKit (D4)
 
 Adds AVFoundation and MapKit to REQUIRED_FRAMEWORKS and a new
 runtime_framework_deep_checks test that constructs values, calls functions,
@@ -685,21 +685,21 @@ EOF
 
 - [ ] **Step 1: Update `LLM_STATE/overview.md`**
 
-- In the **Plans** section: replace the "Racket OO Target" table row and the paragraph "The Racket OO target plan still uses the Ravel-Lite phase cycle … `run.sh`" with a pointer to the new design + plan, mirroring how the `core` paragraph above it reads:
+- In the **Plans** section: replace the "Racket Target" table row and the paragraph "The Racket target plan still uses the Ravel-Lite phase cycle … `run.sh`" with a pointer to the new design + plan, mirroring how the `core` paragraph above it reads:
 
   ```
-  The **racket-oo target** is tracked by
-  `docs/specs/2026-05-22-racket-oo-completion-design.md` (design) and
-  `docs/superpowers/plans/2026-05-22-racket-oo-completion.md` (plan). Its prior
+  The **racket target** is tracked by
+  `docs/specs/2026-05-22-racket-completion-design.md` (design) and
+  `docs/superpowers/plans/2026-05-22-racket-completion.md` (plan). Its prior
   Ravel-Lite phase-cycle state is archived under
-  `LLM_STATE/targets/racket-oo/archive/`.
+  `LLM_STATE/targets/racket/archive/`.
   ```
 
-- In the **Targets** table: change the `racket-oo` row's "Apps Done" cell from `3/7` to `7/7` (all seven surviving sample apps are built — `modaliser` was deleted in Task A). Leave the `racket-functional` row.
+- In the **Targets** table: change the `racket` row's "Apps Done" cell from `3/7` to `7/7` (all seven surviving sample apps are built — `modaliser` was deleted in Task A). Leave the `racket-functional` row.
 
 - [ ] **Step 2: Update `LLM_STATE/project-workflow.md`**
 
-- Remove the phase-cycle framing: the bullet "`LLM_STATE/targets/{target}/backlog.md` — per-target backlogs (still on the Ravel-Lite phase cycle)" should be replaced with a pointer to the racket-oo design + plan (and note that core is likewise plan-tracked).
+- Remove the phase-cycle framing: the bullet "`LLM_STATE/targets/{target}/backlog.md` — per-target backlogs (still on the Ravel-Lite phase cycle)" should be replaced with a pointer to the racket design + plan (and note that core is likewise plan-tracked).
 - Drop the two "Modaliser as the capstone" references (the intro paragraph "culminating in Modaliser as the capstone proving a target's bindings are production-ready", and the "App Progression" line "Simple -> complex -> Modaliser capstone"). Reword to describe the app progression as simple→complex without naming the abandoned Modaliser app (e.g. "culminating in a capstone app").
 - Leave the "GUI Testing With TestAnyware" section as-is (TestAnyware terminology is already correct). Leave `template.md` / `new-language-guide.md` references as-is — out of scope per the design spec.
 
@@ -719,11 +719,11 @@ Expected: no "phase cycle"/"Ravel-Lite" framing describing a live workstream; no
 ```bash
 git add LLM_STATE/overview.md LLM_STATE/project-workflow.md
 git commit -m "$(cat <<'EOF'
-docs(racket-oo): retire phase-cycle framing in LLM_STATE (Item E)
+docs(racket): retire phase-cycle framing in LLM_STATE (Item E)
 
-Item E of the racket-oo phase-cycle retirement. overview.md and
+Item E of the racket phase-cycle retirement. overview.md and
 project-workflow.md no longer describe any workstream as phase-cycle-driven
-and now point at the racket-oo design + plan; sample-app count corrected to 7.
+and now point at the racket design + plan; sample-app count corrected to 7.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 EOF
@@ -754,7 +754,7 @@ Expected: **0 enrichment violations**; `generate` completes cleanly.
 ```bash
 cargo test --workspace
 cargo clippy --workspace --all-targets
-RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket-oo --test runtime_load_test
+RUNTIME_LOAD_TEST=1 cargo test -p apianyware-macos-emit-racket --test runtime_load_test
 make lint-annotations
 (cd swift && swift test)            # SDKROOT already exported
 ```
@@ -764,10 +764,10 @@ Expected: Rust tests pass; clippy clean; runtime-load harness green (including t
 - [ ] **Step 3: Confirm the Success Criteria**
 
 Verify each against the tree:
-- `LLM_STATE/` contains no live phase-cycle machinery — only `LLM_STATE/targets/racket-oo/archive/` retains historical record. (`find LLM_STATE -name phase.md -o -name '*-baseline' -o -name 'backlog.yaml'` → empty.)
+- `LLM_STATE/` contains no live phase-cycle machinery — only `LLM_STATE/targets/racket/archive/` retains historical record. (`find LLM_STATE -name phase.md -o -name '*-baseline' -o -name 'backlog.yaml'` → empty.)
 - No `modaliser` path or reference survives outside that archive and historical specs (re-run the Task A Step 4 grep).
 - No `guivision` reference survives outside the read-only archives (`grep -rIl -i guivision --exclude-dir=.git .` → only `LLM_STATE/*/archive/*` and the deleted-by-now `backlog.yaml` absent).
-- `knowledge/targets/racket-oo.md` is self-contained.
+- `knowledge/targets/racket.md` is self-contained.
 - D1–D4 complete and verified (D1 by VM render, D2–D4 by the harness).
 - `LLM_STATE/overview.md` and `project-workflow.md` describe no workstream as phase-cycle-driven and point at this design + plan.
 

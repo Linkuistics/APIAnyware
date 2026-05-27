@@ -56,7 +56,7 @@ SceneKit end-to-end and the first to exercise a protocol-inherited method
   class binding. Similarly, `SCNView.setAutoenablesDefaultLighting:` lives
   on SCNSceneRenderer. Both are invoked via raw `tell` — same pattern as
   Drawing Canvas used for NSEvent, but the root cause is protocol
-  inheritance, not class/instance name collision. A scoped-to-racket-oo
+  inheritance, not class/instance name collision. A scoped-to-racket
   core-backlog entry already exists for superclass-inherited methods
   ("Emit inherited methods from NSView/NSControl superclasses…"); the
   protocol-inheritance gap has the same shape.

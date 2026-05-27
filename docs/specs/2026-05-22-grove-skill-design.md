@@ -17,7 +17,7 @@ The project's pipeline work was historically driven by the **Ravel-Lite**
 work→reflect→triage phase cycle, with per-workstream state under
 `LLM_STATE/<name>/`. That machinery was fully retired on 2026-05-22 and
 `LLM_STATE/` deleted; workstreams are now tracked by `docs/specs/*-design.md`
-plus `docs/superpowers/plans/*`. The racket-oo completion design explicitly left
+plus `docs/superpowers/plans/*`. The racket completion design explicitly left
 one decision open: *"choosing the replacement new-target methodology is a
 separate decision."* **This spec is that decision.**
 
@@ -398,7 +398,7 @@ process is needed (Part 2 of the originating task). Chez is delivered *through*
 
 Its first planning task will (a) seed `CONTEXT.md` by harvesting the dense
 latent vocabulary already in `knowledge/` — especially
-`knowledge/targets/racket-oo.md` — and (b) expand the Chez design seed below
+`knowledge/targets/racket.md` — and (b) expand the Chez design seed below
 into `docs/specs/2026-05-22-chez-functional-design.md`.
 
 **Chez design seed** — the technical thinking already established, preserved as
@@ -410,7 +410,7 @@ input so it is not lost:
   `petite`, arm64-native, threaded, with a full FFI.
 - **FFI:** Chez's native FFI — `load-shared-object`, `foreign-procedure`,
   `foreign-callable`, `ftype`. No `tell`-macro equivalent: every method call is a
-  typed `foreign-procedure` over `objc_msgSend`. This collapses racket-oo's
+  typed `foreign-procedure` over `objc_msgSend`. This collapses racket's
   Tell-vs-TypedMsgSend dispatch duality to a single mechanism.
 - **Module system:** R6RS `library` forms, one per generated class/protocol file.
 - **Memory model:** wrap ObjC pointers in records; use a Chez **`guardian`** for
@@ -418,10 +418,10 @@ input so it is not lost:
   so the compacting GC cannot move a pointer handed to C.
 - **Dispatch & naming:** receiver-first flat free functions; kebab-case
   identifiers; `make-<class>`, `<class>-<method>`, `<class>?` predicates, `!`
-  setters — structurally like racket-oo's generated code.
+  setters — structurally like racket's generated code.
 - **Blocks / delegates / subclassing:** via libobjc plus an `APIAnywareChez`
   Swift dylib (a stub exists at `swift/Sources/APIAnywareChez/`).
-- **Error handling:** match racket-oo — emit `NSError**` methods normally with
+- **Error handling:** match racket — emit `NSError**` methods normally with
   an enrichment comment; no automatic result-or-error wrapper.
 - **Scope — Milestone 1 (confirmed with the user):** the first grove covers the
   `emit-chez` crate, the Chez runtime library, the `APIAnywareChez` dylib, CLI
@@ -429,7 +429,7 @@ input so it is not lost:
   working, test-verified target with **no sample apps**. Sample apps, bundling,
   and TestAnyware validation are a later grove.
 - **Reuse:** the shared `emit` crate wholesale; a new `ChezFfiTypeMapper`
-  implementing `FfiTypeMapper`; Chez emit modules mirroring `emit-racket-oo`.
+  implementing `FfiTypeMapper`; Chez emit modules mirroring `emit-racket`.
 
 ## Scope
 
@@ -448,7 +448,7 @@ input so it is not lost:
 
 - The `chez-functional` target's implementation — run through `grove` once it
   exists.
-- Migrating the existing `racket-oo` workstream onto `grove` — a separate,
+- Migrating the existing `racket` workstream onto `grove` — a separate,
   optional decision.
 
 ## Success criteria
