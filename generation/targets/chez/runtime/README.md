@@ -3,12 +3,21 @@
 Five-library cluster layout that supports the chez target. Reference:
 `docs/specs/2026-05-27-chez-target-design.md` §2.
 
-This is the **runtime scaffold** delivered by
-`.grove/done/050-chez-target/020-runtime-scaffold.md`. All FFI-touching
-bodies are stubs (`(error 'name "not yet implemented")`) until the
-follow-on leaves wire them up. Pure-Scheme machinery (record types, the
-`objc-guardian`, the `with-autorelease-pool` / `define-entry-point`
-macros, geometry ftypes) is real.
+This is the **runtime build-out**. Scaffold landed in
+`.grove/done/050-chez-target/020-runtime-scaffold.md`; `ffi.sls` and
+`objc.sls` were filled in end-to-end by
+`.grove/done/050-chez-target/030-runtime-ffi-objc.md` (mandatory dylib
+load, libobjc surface, guardian + autoreleasepool lifetime model,
+`nserror` record, `(values result error)` shape per ADR-0006).
+`dispatch.sls`, `types.sls`, and `cocoa.sls` still have stub bodies; the
+follow-on leaves wire them up.
+
+During the chez bring-up (030..060) the dylib loader points at
+`generation/targets/racket/lib/libAPIAnywareRacket.dylib` because its
+`aw_common_*` surface is target-agnostic. Leaf 060 builds the
+chez-specific `libAPIAnywareChez.dylib` and the loader's candidate
+order flips. This is the only point of cross-target borrowing in the
+chez build; it disappears with 060.
 
 ## Cluster map
 
@@ -38,39 +47,44 @@ flowchart TD
   types --> cocoa
 ```
 
-## Verifying the scaffold loads
+## Verifying the runtime
 
 From the repository root:
 
 ```bash
+# 1. All five clusters load cleanly.
 chez --script generation/targets/chez/runtime/verify.ss
+# → [runtime scaffold] loaded
+
+# 2. ffi.sls + objc.sls round-trip through libobjc and the dylib.
+chez --script generation/targets/chez/runtime/tests/smoke-objc.sls
+# → [smoke] 1. NSObject alloc/init/wrap/drain OK
+#   [smoke] 2. NSString autoreleasepool roundtrip OK
+#   [smoke] 3. define-entry-point OK
+#   [smoke] 4. (values result nserror) shape OK
+#   [smoke] all tests passed
 ```
 
-Expected output:
-
-```
-[runtime scaffold] loaded
-```
-
-`verify.ss` pre-`load`s the five `.sls` files in dependency order so
-that `(import (apianyware runtime cocoa))` resolves against the library
+Both scripts pre-`load` the cluster files in dependency order so that
+`(import (apianyware runtime …))` resolves against the library
 registry. Once a proper `library-directories` layout (or a bundler-
 emitted `main.sls` aggregator) lands in a later leaf, this hand-rolled
 boot becomes unnecessary.
 
-## What's deliberately not here
+## What's not here yet
 
-- **Swift dylib load.** `libapianyware-chez-path` is a parameter today;
-  the actual `load-shared-object` call lands in
-  `.grove/050-chez-target/030-runtime-ffi-objc.md`.
-- **Real `wrap-objc-object` / `objc_release`.** Stubs. Real bodies land
-  in 030.
 - **`make-objc-block` / `make-delegate` / `make-dynamic-subclass`.**
   Stubs. Real bodies (foreign-callable, Block_layout ftype) land in
   `.grove/050-chez-target/040-runtime-dispatch.md`.
 - **NSPoint et al. constructor wrappers.** ftypes are real; the
   constructor helpers are stubs. Real bodies land in
   `.grove/050-chez-target/050-runtime-types-cocoa.md`.
+- **`runtime/cocoa.sls` helpers.** App-menu install, main-thread
+  dispatch, AppKit/AX/SPI bridges — all stubs. Real bodies land in
+  `.grove/050-chez-target/050-runtime-types-cocoa.md`.
+- **`libAPIAnywareChez.dylib`.** The chez-specific dylib lands in
+  `.grove/050-chez-target/060-swift-dylib.md`. Until then, the loader
+  borrows `libAPIAnywareRacket.dylib`'s common surface.
 - **`generated/` framework libraries.** Not part of the runtime; they
   arrive once `emit-chez` is built
   (`.grove/050-chez-target/070-emit-chez-scaffold-and-foundation.md`).

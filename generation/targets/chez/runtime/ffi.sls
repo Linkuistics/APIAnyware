@@ -1,14 +1,19 @@
 ;; runtime/ffi.sls — chez target FFI primitives.
 ;;
-;; Scaffold: bodies are `(error ... "not yet implemented")` stubs. Real
-;; FFI lands in `.grove/050-chez-target/030-runtime-ffi-objc.md`.
+;; Holds:
+;;   - mandatory load of the chez runtime dylib (per ADR-0005 / decision 7).
+;;     During the chez bring-up (`.grove/050-chez-target/030`..060) the
+;;     loader points at the existing `libAPIAnywareRacket.dylib` because its
+;;     `aw_common_*` surface is target-agnostic. Leaf 060 builds the
+;;     chez-specific dylib (`libAPIAnywareChez.dylib`) and the default
+;;     candidate list flips order.
+;;   - libobjc class/sel/msgSend/retain/release surface
+;;   - autorelease pool primitives via the dylib's `aw_common_*` wrappers
+;;   - NSString round-trip helpers used by `(apianyware runtime types)`
 ;;
-;; Eventually holds:
-;;   - mandatory load of libAPIAnywareChez.dylib (per ADR-0005)
-;;   - libobjc / libdispatch `foreign-procedure` declarations
-;;   - curated `objc_*` runtime bindings
-;;
-;; Absorbs from the racket runtime: swift-helpers.rkt (full rewrite).
+;; Absorbs from the racket runtime: swift-helpers.rkt (full rewrite,
+;; with the `swift-available?` fallback removed — chez requires the
+;; dylib, fails hard otherwise).
 
 (library (apianyware runtime ffi)
   (export
@@ -26,48 +31,122 @@
     objc_autoreleasePoolPush
     objc_autoreleasePoolPop
     objc_retain
-    objc_release)
+    objc_release
+    string->nsstring-ptr
+    nsstring-ptr->string)
   (import (chezscheme))
+
+  ;; --- Dylib discovery and load ---------------------------------------
 
   (define libapianyware-chez-path (make-parameter #f))
 
-  (define libobjc-loaded? (make-parameter #f))
+  ;; Candidate paths checked relative to (current-directory). Order: the
+  ;; chez-specific dylib first (preferred once 060 ships), then the
+  ;; racket dylib whose `aw_common_*` surface we borrow during bring-up.
+  (define default-dylib-candidates
+    '("generation/targets/chez/lib/libAPIAnywareChez.dylib"
+      "generation/targets/racket/lib/libAPIAnywareRacket.dylib"
+      "../lib/libAPIAnywareChez.dylib"
+      "../../racket/lib/libAPIAnywareRacket.dylib"))
 
-  (define (objc_getClass name)
-    (error 'objc_getClass "not yet implemented"))
+  (define (resolve-dylib-path)
+    (let ([explicit (libapianyware-chez-path)])
+      (or explicit
+          (let loop ([cs default-dylib-candidates])
+            (cond
+              [(null? cs)
+               (error 'apianyware-runtime-ffi
+                      "could not locate libAPIAnywareChez.dylib; searched"
+                      default-dylib-candidates)]
+              [(file-exists? (car cs)) (car cs)]
+              [else (loop (cdr cs))])))))
 
-  (define (objc_msgSend . args)
-    (error 'objc_msgSend "not yet implemented"))
+  ;; Load happens at library instantiation. `load-shared-object` raises
+  ;; on failure — that is the hard error ADR-0005 calls for. The loads
+  ;; are bundled inside a dummy `define` RHS to satisfy Chez's
+  ;; library-body rule that all definitions precede all expressions.
+  (define %dylib-loaded
+    (begin
+      (load-shared-object (resolve-dylib-path))
+      (load-shared-object "libobjc.dylib")
+      #t))
 
-  (define (objc_allocateClassPair . args)
-    (error 'objc_allocateClassPair "not yet implemented"))
+  (define libobjc-loaded? (make-parameter %dylib-loaded))
 
-  (define (objc_registerClassPair cls)
-    (error 'objc_registerClassPair "not yet implemented"))
+  ;; --- Dylib `aw_common_*` surface ------------------------------------
 
-  (define (class_addMethod cls sel imp type-encoding)
-    (error 'class_addMethod "not yet implemented"))
+  (define aw-common-get-class
+    (foreign-procedure "aw_common_get_class" (string) void*))
 
-  (define (sel_registerName name)
-    (error 'sel_registerName "not yet implemented"))
+  (define aw-common-sel-register
+    (foreign-procedure "aw_common_sel_register" (string) void*))
+
+  (define aw-common-retain
+    (foreign-procedure "aw_common_retain" (void*) void*))
+
+  (define aw-common-release
+    (foreign-procedure "aw_common_release" (void*) void))
+
+  (define aw-common-autorelease-push
+    (foreign-procedure "aw_common_autorelease_push" () void*))
+
+  (define aw-common-autorelease-pop
+    (foreign-procedure "aw_common_autorelease_pop" (void*) void))
+
+  (define aw-common-string-to-nsstring
+    (foreign-procedure "aw_common_string_to_nsstring" (string) void*))
+
+  (define aw-common-nsstring-to-string
+    (foreign-procedure "aw_common_nsstring_to_string" (void*) string))
+
+  ;; --- libobjc raw surface --------------------------------------------
+
+  ;; objc_msgSend's variadic signature is realised per-call-site: this
+  ;; module exposes the simplest (id, SEL) -> id form that covers
+  ;; alloc/init/release-style messages. Emitted class libraries declare
+  ;; additional foreign-procedure variants for their specific selector
+  ;; signatures — that is the chez idiom and is one of the reasons
+  ;; ADR-0005 keeps the target out of portable R6RS.
+  (define objc_msgSend
+    (foreign-procedure "objc_msgSend" (void* void*) void*))
+
+  (define objc_allocateClassPair
+    (foreign-procedure "objc_allocateClassPair"
+                       (void* string unsigned-64) void*))
+
+  (define objc_registerClassPair
+    (foreign-procedure "objc_registerClassPair" (void*) void))
+
+  (define class_addMethod
+    (foreign-procedure "class_addMethod"
+                       (void* void* void* string) boolean))
+
+  (define class_getInstanceMethod
+    (foreign-procedure "class_getInstanceMethod" (void* void*) void*))
+
+  (define method_getTypeEncoding
+    (foreign-procedure "method_getTypeEncoding" (void*) string))
+
+  ;; --- Public surface -------------------------------------------------
+
+  (define objc_getClass aw-common-get-class)
+  (define sel_registerName aw-common-sel-register)
+
+  ;; sel_registerName is idempotent but each call still crosses the FFI
+  ;; boundary; cache results to keep emitted call sites cheap.
+  (define sel-cache (make-hashtable string-hash string=?))
 
   (define (sel-register name)
-    (error 'sel-register "not yet implemented"))
+    (or (hashtable-ref sel-cache name #f)
+        (let ([sel (aw-common-sel-register name)])
+          (hashtable-set! sel-cache name sel)
+          sel)))
 
-  (define (class_getInstanceMethod cls sel)
-    (error 'class_getInstanceMethod "not yet implemented"))
+  (define objc_autoreleasePoolPush aw-common-autorelease-push)
+  (define objc_autoreleasePoolPop  aw-common-autorelease-pop)
 
-  (define (method_getTypeEncoding method)
-    (error 'method_getTypeEncoding "not yet implemented"))
+  (define objc_retain  aw-common-retain)
+  (define objc_release aw-common-release)
 
-  (define (objc_autoreleasePoolPush)
-    (error 'objc_autoreleasePoolPush "not yet implemented"))
-
-  (define (objc_autoreleasePoolPop pool)
-    (error 'objc_autoreleasePoolPop "not yet implemented"))
-
-  (define (objc_retain ptr)
-    (error 'objc_retain "not yet implemented"))
-
-  (define (objc_release ptr)
-    (error 'objc_release "not yet implemented")))
+  (define string->nsstring-ptr aw-common-string-to-nsstring)
+  (define nsstring-ptr->string aw-common-nsstring-to-string))
