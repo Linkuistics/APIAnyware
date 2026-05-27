@@ -1,12 +1,9 @@
 ;; runtime/ffi.sls — chez target FFI primitives.
 ;;
 ;; Holds:
-;;   - mandatory load of the chez runtime dylib (per ADR-0005 / decision 7).
-;;     During the chez bring-up (`.grove/050-chez-target/030`..060) the
-;;     loader points at the existing `libAPIAnywareRacket.dylib` because its
-;;     `aw_common_*` surface is target-agnostic. Leaf 060 builds the
-;;     chez-specific dylib (`libAPIAnywareChez.dylib`) and the default
-;;     candidate list flips order.
+;;   - mandatory load of `libAPIAnywareChez.dylib` (per ADR-0005 /
+;;     decision 7). The dylib statically embeds APIAnywareCommon, so the
+;;     `aw_common_*` surface ships in the same file as `aw_chez_*`.
 ;;   - libobjc class/sel/msgSend/retain/release surface
 ;;   - autorelease pool primitives via the dylib's `aw_common_*` wrappers
 ;;   - NSString round-trip helpers used by `(apianyware runtime types)`
@@ -40,14 +37,12 @@
 
   (define libapianyware-chez-path (make-parameter #f))
 
-  ;; Candidate paths checked relative to (current-directory). Order: the
-  ;; chez-specific dylib first (preferred once 060 ships), then the
-  ;; racket dylib whose `aw_common_*` surface we borrow during bring-up.
+  ;; Candidate paths checked relative to (current-directory). First wins.
+  ;; Run from the repository root resolves the first entry; run from
+  ;; inside a built `.app` bundle resolves the second.
   (define default-dylib-candidates
     '("generation/targets/chez/lib/libAPIAnywareChez.dylib"
-      "generation/targets/racket/lib/libAPIAnywareRacket.dylib"
-      "../lib/libAPIAnywareChez.dylib"
-      "../../racket/lib/libAPIAnywareRacket.dylib"))
+      "../lib/libAPIAnywareChez.dylib"))
 
   (define (resolve-dylib-path)
     (let ([explicit (libapianyware-chez-path)])

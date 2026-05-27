@@ -56,7 +56,7 @@
 ;;
 ;; Build a 1-method delegate, send it a message via
 ;; NSObject's performSelector:withObject:, and verify our Scheme
-;; callback fired. The Swift trampoline (in libAPIAnywareRacket)
+;; callback fired. The Swift trampoline (in libAPIAnywareChez)
 ;; strips self/_cmd, so the handler receives just the single arg.
 ;;
 ;; Selector arg is delivered to us as a void* — we don't dereference

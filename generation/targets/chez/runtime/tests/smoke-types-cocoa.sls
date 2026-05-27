@@ -59,9 +59,9 @@
 ;; allocations and msgSends. We don't run the run-loop — we just confirm
 ;; the menu install completes without crashing.
 ;;
-;; The runtime dylib (libAPIAnywareRacket borrowed during bring-up) links
-;; Foundation but not AppKit; load AppKit explicitly so NSApplication and
-;; NSMenu register with the objc runtime.
+;; The runtime dylib (libAPIAnywareChez) links Foundation but not AppKit;
+;; load AppKit explicitly so NSApplication and NSMenu register with the
+;; objc runtime.
 (load-shared-object "/System/Library/Frameworks/AppKit.framework/AppKit")
 
 (with-autorelease-pool

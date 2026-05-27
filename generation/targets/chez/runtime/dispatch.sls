@@ -13,16 +13,8 @@
 ;;      with `_NSConcreteGlobalBlock` isa and `BLOCK_HAS_COPY_DISPOSE`,
 ;;      and (on arm64e) PAC-signs the invoke pointer.
 ;;
-;;      During the 030..060 bring-up the loader borrows
-;;      `libAPIAnywareRacket.dylib` (see runtime/ffi.sls), so we call the
-;;      racket-flavoured entry points by their as-shipped names —
-;;      `aw_racket_create_block` and friends. The block ABI does not
-;;      depend on the callable's source language; only the symbol names
-;;      flip when leaf 060 produces `libAPIAnywareChez.dylib` with
-;;      `aw_chez_*` aliases.
-;;
 ;;   2. Delegate bridge — `make-delegate` / `set-delegate-method` /
-;;      `free-delegate`. The Swift dylib's `aw_racket_register_delegate`
+;;      `free-delegate`. The Swift dylib's `aw_chez_register_delegate`
 ;;      builds a per-instance dispatch table behind a generic IMP
 ;;      trampoline that strips self/_cmd and forwards to our callback.
 ;;      Our `foreign-callable` therefore takes ONLY the method args, not
@@ -63,29 +55,29 @@
 
   ;; --- Dylib surface ---------------------------------------------------
   ;;
-  ;; These are exposed as `aw_racket_*` in `libAPIAnywareRacket.dylib`
-  ;; today. Leaf 060 ships `libAPIAnywareChez.dylib` with `aw_chez_*`
-  ;; aliases pointing at the same symbols; until then, the racket names
-  ;; are the only ones the loader resolves.
+  ;; All Chez-side block/delegate plumbing resolves through
+  ;; `libAPIAnywareChez.dylib`'s `aw_chez_*` entry points (built by
+  ;; leaf 060). The Block ABI itself is target-agnostic — the symbol
+  ;; names are the only thing that differs from the racket sibling.
 
   (define aw-create-block
-    (foreign-procedure "aw_racket_create_block" (void*) void*))
+    (foreign-procedure "aw_chez_create_block" (void*) void*))
 
   (define aw-release-block
-    (foreign-procedure "aw_racket_release_block" (void*) void))
+    (foreign-procedure "aw_chez_release_block" (void*) void))
 
   (define aw-register-delegate
     ;; (selectors[], return-types[], count) -> instance
-    (foreign-procedure "aw_racket_register_delegate"
+    (foreign-procedure "aw_chez_register_delegate"
                        (void* void* int) void*))
 
   (define aw-set-method
     ;; (instance, selector-cstring, callback-fp-or-null) -> void
-    (foreign-procedure "aw_racket_set_method"
+    (foreign-procedure "aw_chez_set_method"
                        (void* string void*) void))
 
   (define aw-free-delegate
-    (foreign-procedure "aw_racket_free_delegate" (void*) void))
+    (foreign-procedure "aw_chez_free_delegate" (void*) void))
 
   ;; --- foreign-callable construction -----------------------------------
   ;;
@@ -212,7 +204,7 @@
 
   (define-record-type (objc-block %make-objc-block objc-block?)
     (fields
-      ptr        ; block-literal pointer (uptr from aw_*_create_block)
+      ptr        ; block-literal pointer (uptr from aw_chez_create_block)
       handle     ; callable-handle for the invoke trampoline (or #f)
       freed?-box ; mutable box: #t once free-objc-block has run
       ))
@@ -259,7 +251,7 @@
               [blk   (aw-create-block entry)])
          (when (or (not blk) (zero? blk))
            (release-callable! h)
-           (error 'make-objc-block "aw_*_create_block returned NULL"))
+           (error 'make-objc-block "aw_chez_create_block returned NULL"))
          (%make-objc-block blk h (box #f)))]))
 
   ;; Release a block's chez-side code object and (if the dispose helper
@@ -292,7 +284,7 @@
 
   (define-record-type (delegate %make-delegate delegate?)
     (fields
-      ptr           ; instance pointer from aw_*_register_delegate
+      ptr           ; instance pointer from aw_chez_register_delegate
       method-table  ; hashtable: selector-string → callable-handle
       freed?-box))
 
@@ -379,7 +371,7 @@ defines void/bool/id/int/long)" sym)]))
           (free-cstring-array rets-arr rets-bufs)
           (when (or (not inst) (zero? inst))
             (error 'make-delegate
-                   "aw_*_register_delegate returned NULL"))
+                   "aw_chez_register_delegate returned NULL"))
           (let ([table (make-hashtable string-hash string=?)])
             (let loop ([sels selectors]
                        [ps procs]
