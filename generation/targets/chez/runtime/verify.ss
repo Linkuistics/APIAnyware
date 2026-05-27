@@ -18,7 +18,9 @@
 (load (string-append here "/dispatch.sls"))
 (load (string-append here "/types.sls"))
 (load (string-append here "/cocoa.sls"))
+(load (string-append here "/cocoa-helpers.sls"))
 
-(import (apianyware runtime cocoa))
+(import (apianyware runtime cocoa)
+        (apianyware runtime cocoa-helpers))
 
 (display "[runtime scaffold] loaded\n")
