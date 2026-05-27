@@ -2,21 +2,14 @@
 ;; `types`, `cocoa`, and `cocoa-helpers` runtime clusters.
 ;;
 ;; Run from the repository root:
-;;   chez --script generation/targets/chez/runtime/tests/smoke-types-cocoa.sls
+;;   chez --libdirs generation/targets/chez \
+;;        --script generation/targets/chez/apianyware/runtime/tests/smoke-types-cocoa.sls
 ;;
 ;; Covers the "Done when" set of .grove/050-chez-target/050:
 ;;   - libraries load
 ;;   - NSString round-trip
 ;;   - geometry ftype construction + nested-accessor round-trip
 ;;   - install-standard-app-menu! installs a menu without crashing
-
-(define here "generation/targets/chez/runtime")
-(load (string-append here "/ffi.sls"))
-(load (string-append here "/objc.sls"))
-(load (string-append here "/dispatch.sls"))
-(load (string-append here "/types.sls"))
-(load (string-append here "/cocoa.sls"))
-(load (string-append here "/cocoa-helpers.sls"))
 
 (import (apianyware runtime ffi)
         (apianyware runtime objc)

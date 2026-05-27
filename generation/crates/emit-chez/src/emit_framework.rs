@@ -27,6 +27,7 @@ use crate::emit_protocol::{generate_protocol_file, protocol_exports};
 pub const CHEZ_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
     id: "chez",
     display_name: "Chez Scheme",
+    generated_subdir: "apianyware",
 };
 
 pub struct ChezEmitter;

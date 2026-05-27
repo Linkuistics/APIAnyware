@@ -52,15 +52,21 @@ flowchart TD
 
 ## Verifying the runtime
 
-From the repository root:
+From the repository root, with `--libdirs` pointing at the target root
+so Chez's library-name resolution finds the `apianyware/` namespace
+(see `docs/specs/2026-05-27-chez-target-design.md` §8):
 
 ```bash
+LIBDIRS=generation/targets/chez
+
 # 1. All five clusters load cleanly.
-chez --script generation/targets/chez/runtime/verify.ss
+chez --libdirs $LIBDIRS \
+     --script generation/targets/chez/apianyware/runtime/verify.ss
 # → [runtime scaffold] loaded
 
 # 2. ffi.sls + objc.sls round-trip through libobjc and the dylib.
-chez --script generation/targets/chez/runtime/tests/smoke-objc.sls
+chez --libdirs $LIBDIRS \
+     --script generation/targets/chez/apianyware/runtime/tests/smoke-objc.sls
 # → [smoke] 1. NSObject alloc/init/wrap/drain OK
 #   [smoke] 2. NSString autoreleasepool roundtrip OK
 #   [smoke] 3. define-entry-point OK
@@ -68,18 +74,13 @@ chez --script generation/targets/chez/runtime/tests/smoke-objc.sls
 #   [smoke] all tests passed
 
 # 3. dispatch.sls block/delegate/dynamic-class bridges round-trip.
-chez --script generation/targets/chez/runtime/tests/smoke-dispatch.sls
+chez --libdirs $LIBDIRS \
+     --script generation/targets/chez/apianyware/runtime/tests/smoke-dispatch.sls
 # → [smoke-dispatch] 1. Block create+free OK
 #   [smoke-dispatch] 2. Delegate invocation OK
 #   [smoke-dispatch] 3. Dynamic subclass override OK
 #   [smoke-dispatch] all tests passed
 ```
-
-Both scripts pre-`load` the cluster files in dependency order so that
-`(import (apianyware runtime …))` resolves against the library
-registry. Once a proper `library-directories` layout (or a bundler-
-emitted `main.sls` aggregator) lands in a later leaf, this hand-rolled
-boot becomes unnecessary.
 
 ## What's not here yet
 
@@ -92,18 +93,20 @@ boot becomes unnecessary.
 - **`libAPIAnywareChez.dylib`.** The chez-specific dylib lands in
   `.grove/050-chez-target/060-swift-dylib.md`. Until then, the loader
   borrows `libAPIAnywareRacket.dylib`'s common surface.
-- **`generated/` framework libraries.** Not part of the runtime; they
-  arrive once `emit-chez` is built
-  (`.grove/050-chez-target/070-emit-chez-scaffold-and-foundation.md`).
+- **Sibling `apianyware/<framework>/` libraries.** Not part of the
+  runtime; they're produced by `emit-chez` and live alongside this
+  `runtime/` directory under `generation/targets/chez/apianyware/` so
+  that Chez's default library-name resolution finds both with one
+  `--libdirs` flag. The gitignore keeps every sibling except this
+  `runtime/` tree out of source control (they regenerate from the
+  enriched IR).
 
 ## Notes on library naming and on-disk paths
 
-The library names use the `(apianyware runtime …)` prefix per the design
-spec §3. The file paths under this directory are unprefixed
-(`ffi.sls`, not `apianyware/runtime/ffi.sls`) — the scaffold relies on
-the pre-load technique in `verify.ss` so that imports resolve from the
-already-populated library registry. The bundler / sample-app launcher
-landing in later leaves will choose between (a) restructuring the
-on-disk tree to mirror library names, or (b) emitting an explicit
-`main.sls`-style aggregator that `load`s the cluster files in order.
-The decision earns its place when those leaves run, not here.
+Library names use the `(apianyware runtime …)` prefix per the design
+spec §3, and the on-disk tree mirrors the name path:
+`generation/targets/chez/apianyware/runtime/<cluster>.sls` resolves
+`(apianyware runtime <cluster>)` directly with
+`--libdirs generation/targets/chez`. Sample apps and tests no longer
+hand-roll `(load …)` chains; they `(import …)` and let Chez follow the
+dependency graph.

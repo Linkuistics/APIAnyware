@@ -4,21 +4,11 @@
 ;; emitted surface.
 ;;
 ;; Run from the repository root:
-;;   chez --script generation/targets/chez/runtime/tests/smoke-emit-foundation.ss
+;;   chez --libdirs generation/targets/chez \
+;;        --script generation/targets/chez/apianyware/runtime/tests/smoke-emit-foundation.ss
 ;;
 ;; Exits 0 on success, raises on failure. Each step prints as it passes
 ;; so a regression localises to the last-printed line.
-
-(define runtime "generation/targets/chez/runtime")
-(define foundation "generation/targets/chez/generated/foundation")
-
-(load (string-append runtime "/ffi.sls"))
-(load (string-append runtime "/objc.sls"))
-(load (string-append runtime "/dispatch.sls"))
-(load (string-append runtime "/types.sls"))
-
-(load (string-append foundation "/nsstring.sls"))
-(load (string-append foundation "/nsarray.sls"))
 
 (import (apianyware runtime ffi)
         (apianyware runtime objc)

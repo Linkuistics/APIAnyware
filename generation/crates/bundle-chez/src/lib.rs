@@ -28,8 +28,8 @@
 //!     Info.plist                           <- CFBundleName = "<App>"
 //!     Resources/chez-app/
 //!       apps/<script>/<script>.sls         <- entry script
-//!       runtime/*.sls                      <- traversed deps
-//!       generated/<fw>/*.sls               <- traversed deps
+//!       apianyware/runtime/*.sls           <- traversed deps
+//!       apianyware/<fw>/*.sls              <- traversed deps
 //!       lib/libAPIAnywareChez.dylib        <- always present (mandatory)
 //! ```
 //!
@@ -45,8 +45,11 @@
 //!   bundle-racket treats the dylib as optional (a runtime-load
 //!   fallback exists on the racket side).
 //! - **Stub runtime args.** The stub invokes
-//!   `chez --script <entry>`; bundle-racket invokes `racket <entry>`
-//!   with no flag.
+//!   `chez --libdirs <Resources/chez-app> --script <entry>`; the
+//!   `--libdirs` flag points at the bundle's resource subdir so Chez
+//!   resolves `(apianyware ...)` library names against
+//!   `apianyware/runtime/` and `apianyware/<fw>/`. bundle-racket
+//!   invokes `racket <entry>` with no flag.
 
 mod bundle;
 mod deps;

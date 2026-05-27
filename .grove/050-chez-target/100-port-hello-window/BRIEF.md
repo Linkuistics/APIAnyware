@@ -62,7 +62,7 @@ both prior decisions as inputs.
 - Parent: `.grove/050-chez-target/BRIEF.md` (10 inherited decisions).
 - Design spec: `docs/specs/2026-05-27-chez-target-design.md` (§3 emitted
   class form, §7 feature ladder, §8 bundle layout).
-- Runtime: `generation/targets/chez/runtime/types.sls` already exports
+- Runtime: `generation/targets/chez/apianyware/runtime/types.sls` already exports
   `make-nsrect` / `make-nspoint` / etc. as ftype-pointers; no runtime
   work needed for the struct-by-value leaf.
 - Reference: `generation/targets/racket/apps/hello-window/hello-window.rkt`

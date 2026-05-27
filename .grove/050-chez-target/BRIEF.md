@@ -46,7 +46,7 @@ under this node. Do **not** re-grill them.
    Scheme procedure is wrapped via `foreign-callable` to yield a C
    function pointer; the `Block_layout` and `Block_descriptor_1` structs
    are constructed via `ftype-pointer`. Implementation lives in
-   `generation/targets/chez/runtime/block.sls`.
+   `generation/targets/chez/apianyware/runtime/block.sls`.
 
 7. **Chez implementation — Chez Scheme ≥ 10** (10.4.1 is installed on the
    dev host as of seeding). The ADR-0005 idiom posture explicitly allows

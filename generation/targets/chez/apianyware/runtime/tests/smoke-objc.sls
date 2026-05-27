@@ -2,14 +2,11 @@
 ;; `objc` runtime clusters.
 ;;
 ;; Run from the repository root:
-;;   chez --script generation/targets/chez/runtime/tests/smoke-objc.sls
+;;   chez --libdirs generation/targets/chez \
+;;        --script generation/targets/chez/apianyware/runtime/tests/smoke-objc.sls
 ;;
 ;; Exits 0 on success, raises on failure. Output names each test as it
 ;; passes so a regression localises to the most-recently-printed line.
-
-(define here "generation/targets/chez/runtime")
-(load (string-append here "/ffi.sls"))
-(load (string-append here "/objc.sls"))
 
 (import (apianyware runtime ffi)
         (apianyware runtime objc))

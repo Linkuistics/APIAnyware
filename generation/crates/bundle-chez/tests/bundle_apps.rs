@@ -47,7 +47,11 @@ fn chez_available() -> bool {
 }
 
 fn chez_runtime_present() -> bool {
-    chez_root().join("runtime").join("ffi.sls").is_file()
+    chez_root()
+        .join("apianyware")
+        .join("runtime")
+        .join("ffi.sls")
+        .is_file()
 }
 
 fn chez_dylib_present() -> bool {
@@ -148,17 +152,24 @@ fn bundles_minimal_chez_project_into_app_directory() {
         !bindings.is_symlink(),
         "bindings/ must be a real directory, not a symlink — bundle is not distributable otherwise"
     );
-    let runtime_objc = bindings.join("runtime").join("objc.sls");
+    let runtime_objc = bindings
+        .join("apianyware")
+        .join("runtime")
+        .join("objc.sls");
     assert!(
         runtime_objc.is_file() && !runtime_objc.is_symlink(),
-        "bindings/runtime/objc.sls must be a regular file"
+        "bindings/apianyware/runtime/objc.sls must be a regular file"
     );
 
     // ffi.sls is a transitive dep of objc.sls — should also have been
     // pulled in by the registry walk.
     assert!(
-        bindings.join("runtime").join("ffi.sls").is_file(),
-        "transitive dep ffi.sls missing — registry walk did not follow imports"
+        bindings
+            .join("apianyware")
+            .join("runtime")
+            .join("ffi.sls")
+            .is_file(),
+        "transitive dep apianyware/runtime/ffi.sls missing — registry walk did not follow imports"
     );
 
     // Mandatory dylib landed in the bundle.

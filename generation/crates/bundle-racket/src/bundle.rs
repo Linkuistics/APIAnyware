@@ -254,6 +254,7 @@ pub fn bundle_app_with_entry(
         script_resource_dir,
         bundle_identifier: spec.bundle_id.clone(),
         signing_identity: spec.signing_identity.clone(),
+        libdirs_resource_subdir: None,
     };
 
     fs::create_dir_all(output_dir)?;

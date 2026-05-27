@@ -22,6 +22,7 @@ use crate::emit_protocol::generate_protocol_file;
 pub const RACKET_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
     id: "racket",
     display_name: "Racket",
+    generated_subdir: "generated",
 };
 
 /// Racket language emitter implementing the shared [`LanguageEmitter`] trait.

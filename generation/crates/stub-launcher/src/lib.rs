@@ -19,6 +19,7 @@
 //!     script_resource_dir: "racket-app".into(),
 //!     bundle_identifier: "com.example.HelloWindow".into(),
 //!     signing_identity: None,
+//!     libdirs_resource_subdir: None,
 //! };
 //!
 //! let app_path = create_app_bundle(&config, Path::new("/tmp/output")).unwrap();
@@ -69,6 +70,14 @@ pub struct StubConfig {
     /// stabilizing the binary's CDHash for macOS TCC grants across
     /// rebuilds. See `codesign_path` for the underlying primitive.
     pub signing_identity: Option<String>,
+
+    /// If set, the stub computes a libdirs path at runtime as
+    /// `Bundle.main.resourcePath! + "/<subdir>"` and prepends
+    /// `["--libdirs", that]` to argv before any `runtime_args`. Used by
+    /// the chez bundler so Chez's library-name resolution finds
+    /// `(apianyware ...)` libraries under
+    /// `Resources/<subdir>/apianyware/`. `None` leaves argv unchanged.
+    pub libdirs_resource_subdir: Option<String>,
 }
 
 /// Errors from stub launcher operations.

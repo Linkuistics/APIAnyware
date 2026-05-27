@@ -4,7 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use apianyware_macos_emit::binding_style::{EmitResult, LanguageEmitter};
+use apianyware_macos_emit::binding_style::{EmitResult, LanguageEmitter, LanguageInfo};
 use apianyware_macos_emit::framework_ordering::topological_sort;
 
 use crate::registry::EmitterRegistry;
@@ -32,9 +32,12 @@ impl GenerationSummary {
 
 /// Build the output directory path for a language.
 ///
-/// Pattern: `{base_output_dir}/{lang}/generated/`
-pub fn output_dir_for_language(base_output_dir: &Path, lang: &str) -> PathBuf {
-    base_output_dir.join(lang).join("generated")
+/// Pattern: `{base_output_dir}/{info.id}/{info.generated_subdir}/`.
+/// Most targets use the conventional `generated` subdir; the chez target
+/// uses `apianyware` so Chez's default library-name resolution finds the
+/// emitted files with `--libdirs generation/targets/chez`.
+pub fn output_dir_for_language(base_output_dir: &Path, info: &LanguageInfo) -> PathBuf {
+    base_output_dir.join(info.id).join(info.generated_subdir)
 }
 
 /// Generate bindings for the specified languages (or all if none specified).
@@ -84,7 +87,7 @@ pub fn run_generation(
 
     for emitter in &emitters {
         let info = emitter.language_info();
-        let out_dir = output_dir_for_language(base_output_dir, info.id);
+        let out_dir = output_dir_for_language(base_output_dir, info);
 
         tracing::info!(
             language = info.id,
@@ -194,8 +197,25 @@ mod tests {
     #[test]
     fn output_dir_for_language_builds_correct_path() {
         let base = Path::new("/out/targets");
-        let path = output_dir_for_language(base, "racket");
-        assert_eq!(path, PathBuf::from("/out/targets/racket/generated"));
+        let racket = LanguageInfo {
+            id: "racket",
+            display_name: "Racket",
+            generated_subdir: "generated",
+        };
+        assert_eq!(
+            output_dir_for_language(base, &racket),
+            PathBuf::from("/out/targets/racket/generated")
+        );
+
+        let chez = LanguageInfo {
+            id: "chez",
+            display_name: "Chez Scheme",
+            generated_subdir: "apianyware",
+        };
+        assert_eq!(
+            output_dir_for_language(base, &chez),
+            PathBuf::from("/out/targets/chez/apianyware")
+        );
     }
 
     #[test]

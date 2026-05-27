@@ -2,19 +2,15 @@
 ;; `dispatch` cluster (block / delegate / dynamic-class bridges).
 ;;
 ;; Run from the repository root:
-;;   chez --script generation/targets/chez/runtime/tests/smoke-dispatch.sls
+;;   chez --libdirs generation/targets/chez \
+;;        --script generation/targets/chez/apianyware/runtime/tests/smoke-dispatch.sls
 ;;
 ;; Exits 0 on success, raises on failure. Each test prints when it
 ;; passes so regression localises to the most-recently-printed line.
 ;;
 ;; All three demos run inside `define-entry-point` so the autoreleasepool
-;; wrap from runtime/objc.sls is active during the ObjC callbacks
+;; wrap from apianyware/runtime/objc.sls is active during the ObjC callbacks
 ;; (ADR-0007).
-
-(define here "generation/targets/chez/runtime")
-(load (string-append here "/ffi.sls"))
-(load (string-append here "/objc.sls"))
-(load (string-append here "/dispatch.sls"))
 
 (import (apianyware runtime ffi)
         (apianyware runtime objc)

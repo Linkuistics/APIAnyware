@@ -289,6 +289,34 @@ generation/crates/bundle-chez/
     spec.rs          — AppSpec::from_script_name(name)
 ```
 
+### Source tree and bundle layout — `apianyware/` namespace root
+
+Settled in `.grove/done/050-chez-target/100-port-hello-window/020-chez-library-loading.md`:
+Chez's library-name resolution maps `(apianyware <category> <name>)` to
+`<libdir>/apianyware/<category>/<name>.sls` with no per-library
+configuration available. Rather than installing a
+`library-search-handler` to layer a different convention, the chez
+target **honours the convention on disk** — the runtime cluster and
+every emit-chez output live under one `apianyware/` namespace root.
+
+Source tree (`generation/targets/chez/`):
+
+```text
+generation/targets/chez/
+  apianyware/
+    runtime/*.sls         ← (apianyware runtime <cluster>)  ← tracked
+    <fw>/*.sls            ← (apianyware <fw> <cls>)         ← gitignored
+    <fw>/protocols/*.sls  ← (apianyware <fw> protocols <p>) ← gitignored
+  apps/<script>/<script>.sls  ← entry scripts (top-level, no library form)
+  lib/libAPIAnywareChez.dylib
+```
+
+The gitignore allows `apianyware/runtime/` through and drops every
+sibling — the framework libraries regenerate from the enriched IR.
+emit-chez writes to `apianyware/<fw>/` because `LanguageInfo` declares
+`generated_subdir: "apianyware"`; racket keeps its conventional
+`generated/` subdir.
+
 Bundle layout:
 
 ```text
@@ -298,13 +326,19 @@ Bundle layout:
     Info.plist                          ← CFBundleName = "<App>"
     Resources/chez-app/
       apps/<script>/<script>.sls        ← entry script
-      runtime/*.sls                     ← traversed deps
-      generated/<fw>/*.sls              ← traversed deps
+      apianyware/runtime/*.sls          ← traversed deps
+      apianyware/<fw>/*.sls             ← traversed deps
       lib/libAPIAnywareChez.dylib       ← always present (mandatory dylib)
 ```
 
-`stub-launcher` already handles the `MacOS/<App>` stub; bundle-chez
-points it at `chez --script Resources/chez-app/apps/<script>/<script>.sls`.
+`stub-launcher` runs `chez --libdirs <chez-app-root> --script
+<entry>` — the libdirs path is computed at runtime via
+`Bundle.main.resourcePath! + "/chez-app"` (the stub's
+`libdirs_resource_subdir` config — set by bundle-chez to
+`"chez-app"`). Unbundled invocations pass `--libdirs
+generation/targets/chez` explicitly. Both cases let Chez's default
+library-name resolution find every imported library without any
+bootstrap code.
 
 **Precompile-as-follow-up note.** A future grove can add a
 `compile-program`-based path to ship `.so` outputs alongside the source.

@@ -236,6 +236,11 @@ pub fn bundle_app_with_entry(
         script_resource_dir,
         bundle_identifier: spec.bundle_id.clone(),
         signing_identity: spec.signing_identity.clone(),
+        // Chez resolves `(apianyware ...)` library names against
+        // <libdir>/apianyware/...; the bundle stages the apianyware
+        // tree under Resources/chez-app/apianyware/ so the libdir is
+        // the resource subdir itself.
+        libdirs_resource_subdir: Some("chez-app".to_string()),
     };
 
     fs::create_dir_all(output_dir)?;
