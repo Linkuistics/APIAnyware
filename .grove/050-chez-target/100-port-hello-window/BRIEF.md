@@ -55,8 +55,15 @@ both prior decisions as inputs.
   resolves `(apianyware ...)` imports unbundled and bundled. May
   produce an ADR. May land code/source-tree changes itself or seed a
   further work leaf — that's the planner's call.
-- `030-port-hello-window-app.md` — work. Write the app, bundle it,
-  verify in TestAnyware.
+- `030-port-hello-window-app.md` — work. Write the app, bundle it.
+  Two emit-chez bugs surfaced and were fixed-at-source during this
+  leaf (framework facade location, framework dylib loading at class
+  instantiation); regenerated at scale.
+- `040-testanyware-verify.md` — work. VM verification via TestAnyware
+  is its own leaf per the project-wide policy
+  [[feedback-vm-verify-every-app]]. The 030 leaf can demonstrate the
+  app reaches `[NSApp run]`; only this leaf can demonstrate the window
+  draws correctly.
 
 ## Pointers
 - Parent: `.grove/050-chez-target/BRIEF.md` (10 inherited decisions).
