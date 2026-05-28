@@ -8,7 +8,8 @@ use std::process::Command;
 use apianyware_macos_stub_launcher::{codesign_path, create_app_bundle, StubConfig, StubError};
 use plist::Value as PlistValue;
 
-use crate::deps::{absolutize, collect_dependencies};
+use crate::deps::{absolutize, collect_dependencies, DEFAULT_CHEZ_BIN};
+use crate::precompile::precompile_bundled_libraries;
 
 /// Default Chez runtime path baked into stub binaries. Matches the
 /// homebrew install location used by the chez runtime tests and
@@ -68,6 +69,13 @@ pub struct AppSpec {
     /// Codesign identity applied to the stub binary and to the full
     /// bundle once Resources are populated. `None` selects ad-hoc.
     pub signing_identity: Option<String>,
+    /// Skip the post-stage pre-compile pass that turns staged `.sls`
+    /// libraries into sibling `.so` files. The default (`false`) pays
+    /// the bundle-time compile cost so cold-launch is fast; setting
+    /// this to `true` produces a smaller, source-only bundle whose
+    /// cold launch will pay the ~75s on-import compile cost. Tests
+    /// and quick debug iterations are the main users of `true`.
+    pub skip_precompile: bool,
 }
 
 impl AppSpec {
@@ -87,6 +95,7 @@ impl AppSpec {
             runtime_path: DEFAULT_CHEZ_PATH.to_string(),
             info_plist_overrides: HashMap::new(),
             signing_identity: resolve_signing_identity(keychain_has_identity),
+            skip_precompile: false,
         }
     }
 }
@@ -120,6 +129,9 @@ pub enum BundleError {
 
     #[error("chez deps walker failed:\n{stderr}")]
     DepsExtractFailed { stderr: String },
+
+    #[error("chez library precompile failed:\n{stderr}")]
+    PrecompileFailed { stderr: String },
 
     #[error(
         "dependency walker reported file {target} outside source root {root} \
@@ -265,6 +277,15 @@ pub fn bundle_app_with_entry(
     let lib_dst = chez_app.join("lib");
     copy_dir_recursive(&lib_src, &lib_dst)?;
     normalize_dylib_install_names(&lib_dst)?;
+
+    // Pre-compile every staged `.sls` library to a sibling `.so` so the
+    // bundled `chez --script` invocation picks up cached objects and
+    // skips the on-import compile pass (~75s for the AppKit facade).
+    // Runs before codesigning because `.so` files are bundle resources
+    // and must be signed as part of the bundle.
+    if !spec.skip_precompile {
+        precompile_bundled_libraries(&chez_app, DEFAULT_CHEZ_BIN)?;
+    }
 
     if let Some(identity) = &spec.signing_identity {
         codesign_path(&app_path, identity)?;

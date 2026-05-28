@@ -77,15 +77,17 @@ fn discover_app_scripts() -> Vec<String> {
     scripts
 }
 
-/// Build a minimal chez project tree that symlinks the real chez target
-/// into `bindings/` and `lib/`, plus a root-level `main.sls` entry
-/// importing one known framework class. Same pattern as bundle-racket's
-/// `minimal_project`. Returns the entry path and a default AppSpec.
+/// Build a minimal chez project tree that symlinks the real chez
+/// target's `apianyware/` and `lib/` subdirectories, plus a root-level
+/// `main.sls` entry importing one known runtime library. The layout
+/// matches the production source tree exactly so library-name
+/// resolution works the same here as in a real bundle (and so the
+/// post-stage precompile pass can resolve imports). Same pattern as
+/// bundle-racket's `minimal_project`. Returns the entry path and a
+/// default AppSpec.
 fn minimal_project(project_root: &Path, display: &str, entry_import: &str) -> (PathBuf, AppSpec) {
-    // bindings/ stands in for the real chez source tree — runtime,
-    // generated/, etc all reachable from here.
-    std::os::unix::fs::symlink(chez_root(), project_root.join("bindings"))
-        .expect("symlink bindings/ into chez root");
+    std::os::unix::fs::symlink(chez_root().join("apianyware"), project_root.join("apianyware"))
+        .expect("symlink apianyware/ into chez root apianyware/");
     // lib/ needs to exist and contain libAPIAnywareChez.dylib — the
     // bundle's mandatory-dylib precheck looks here.
     std::os::unix::fs::symlink(chez_root().join("lib"), project_root.join("lib"))
@@ -118,15 +120,8 @@ fn bundles_minimal_chez_project_into_app_directory() {
     let (entry, spec) = minimal_project(
         project.path(),
         "Minimal Chez",
-        "(bindings/apianyware runtime objc)",
+        "(apianyware runtime objc)",
     );
-    // Use logical import path that the registry recognises — main.sls
-    // is a script, so import works the same as in a library body.
-    fs::write(
-        &entry,
-        "(import (apianyware runtime objc))\n(display 'ok)\n",
-    )
-    .unwrap();
 
     let out = tempfile::tempdir().expect("out tempdir");
     let app_path =
@@ -145,30 +140,23 @@ fn bundles_minimal_chez_project_into_app_directory() {
         "entry not at chez-app/main.sls"
     );
 
-    // Bindings landed at the logical in-tree location as real copies,
-    // not as a symlink to the chez source tree.
-    let bindings = chez_app.join("bindings");
+    // apianyware/ landed at the logical in-tree location as real
+    // copies, not as a symlink to the chez source tree.
+    let apianyware = chez_app.join("apianyware");
     assert!(
-        !bindings.is_symlink(),
-        "bindings/ must be a real directory, not a symlink — bundle is not distributable otherwise"
+        !apianyware.is_symlink(),
+        "apianyware/ must be a real directory, not a symlink — bundle is not distributable otherwise"
     );
-    let runtime_objc = bindings
-        .join("apianyware")
-        .join("runtime")
-        .join("objc.sls");
+    let runtime_objc = apianyware.join("runtime").join("objc.sls");
     assert!(
         runtime_objc.is_file() && !runtime_objc.is_symlink(),
-        "bindings/apianyware/runtime/objc.sls must be a regular file"
+        "apianyware/runtime/objc.sls must be a regular file"
     );
 
     // ffi.sls is a transitive dep of objc.sls — should also have been
     // pulled in by the registry walk.
     assert!(
-        bindings
-            .join("apianyware")
-            .join("runtime")
-            .join("ffi.sls")
-            .is_file(),
+        apianyware.join("runtime").join("ffi.sls").is_file(),
         "transitive dep apianyware/runtime/ffi.sls missing — registry walk did not follow imports"
     );
 
@@ -176,6 +164,23 @@ fn bundles_minimal_chez_project_into_app_directory() {
     assert!(
         chez_app.join("lib").join("libAPIAnywareChez.dylib").exists(),
         "libAPIAnywareChez.dylib missing — mandatory-dylib invariant broken"
+    );
+
+    // Precompile pass produced `.so` siblings next to every staged
+    // `.sls` library so cold launch doesn't pay the on-import compile
+    // cost. The script-style entry (main.sls) is intentionally not
+    // precompiled — `--script` is exact-path in the stub launcher.
+    assert!(
+        apianyware.join("runtime").join("objc.so").is_file(),
+        "precompile pass did not produce apianyware/runtime/objc.so"
+    );
+    assert!(
+        apianyware.join("runtime").join("ffi.so").is_file(),
+        "precompile pass did not produce apianyware/runtime/ffi.so"
+    );
+    assert!(
+        !chez_app.join("main.so").exists(),
+        "main.sls is a script, not a library — should not have been precompiled"
     );
 
     // Info.plist carries the derived bundle metadata.
@@ -232,6 +237,13 @@ fn rejects_missing_app() {
 /// apps (they land in grove leaves 100+); this test discovers zero and
 /// skips harmlessly. Once apps appear, coverage lights up automatically
 /// without test edits.
+///
+/// Precompile is skipped via `spec.skip_precompile` so the bundle
+/// assembly stays fast (every real sample app pulls in the 70k-line
+/// AppKit facade — compiling that into `.so` takes ~75s per app).
+/// The end-to-end precompile path is covered by
+/// `bundles_minimal_chez_project_into_app_directory` against a
+/// hand-rolled minimal tree.
 #[test]
 fn bundles_every_sample_app() {
     if !swiftc_available() || !chez_available() {
@@ -252,6 +264,7 @@ fn bundles_every_sample_app() {
         let temp = tempfile::tempdir().expect("tempdir");
 
         let mut spec = AppSpec::from_script_name(script);
+        spec.skip_precompile = true;
         let spec_md = knowledge_apps_dir().join(script).join("spec.md");
         if let Some(display) = read_display_name_from_spec(&spec_md) {
             spec.bundle_id = format!("com.linkuistics.{}", display.replace(' ', ""));

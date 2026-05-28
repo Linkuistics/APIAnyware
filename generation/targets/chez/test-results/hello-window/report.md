@@ -53,6 +53,18 @@
   every cold launch pays this cost. Pre-compiling the bundled
   `.sls` files into `.so`s during bundling would eliminate it —
   candidate follow-up for the bundler.
+- **Update 2026-05-28 (leaf `105-precompile-bundled-libraries`).**
+  The bundler now pre-compiles every staged library `.sls` to a
+  sibling `.so`. Re-running this app's import set against the
+  precompiled bundle (`chez --libdirs … --script /tmp/imports-only`
+  covering `(apianyware appkit)`, `(apianyware foundation)`, and the
+  three runtime libs the entry uses) on the dev host:
+  **~70s → ~1.85s** — a 38× speedup, well under the leaf's 5s
+  bar. Bundle size grew from 38 MB to 102 MB to carry the 838 `.so`
+  files. VM verification of the launched bundle (re-take
+  screenshot-001-launch.png, confirm "feels instant") is a separate
+  leaf — CLI re-verification covered only that imports load fast,
+  not that the GUI still draws correctly.
 - VM provisioning: the macOS golden image does not ship Chez Scheme,
   so the test run had to `brew install chezscheme` once before launching.
   A future improvement is to pre-install the runtime in the golden

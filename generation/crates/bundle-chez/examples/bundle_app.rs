@@ -80,6 +80,14 @@ fn bundle_one(
         spec.bundle_id = format!("com.linkuistics.{}", display.replace(' ', ""));
         spec.app_name = display;
     }
+    // Convenience for ad-hoc debugging: skip the post-stage `.sls` →
+    // `.so` pass when this env var is set. Cold-launch will be slow
+    // but the bundle ships with raw source only, which is easier to
+    // diff against and survives a host Chez upgrade unchanged.
+    if env_skip_precompile() {
+        eprintln!("APIANYWARE_BUNDLE_CHEZ_SKIP_PRECOMPILE set — skipping precompile");
+        spec.skip_precompile = true;
+    }
 
     let app_path = bundle_app(&spec, source_root, &output_dir)?;
     eprintln!("built: {} ({})", app_path.display(), spec.bundle_id);
@@ -102,6 +110,12 @@ fn discover_app_scripts(source_root: &Path) -> std::io::Result<Vec<String>> {
     }
     scripts.sort();
     Ok(scripts)
+}
+
+fn env_skip_precompile() -> bool {
+    std::env::var("APIANYWARE_BUNDLE_CHEZ_SKIP_PRECOMPILE")
+        .map(|v| !v.is_empty())
+        .unwrap_or(false)
 }
 
 fn workspace_root() -> PathBuf {

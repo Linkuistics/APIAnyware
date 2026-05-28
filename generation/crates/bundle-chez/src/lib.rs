@@ -53,6 +53,7 @@
 
 mod bundle;
 mod deps;
+mod precompile;
 mod spec;
 
 pub use bundle::{

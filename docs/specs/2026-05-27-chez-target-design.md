@@ -347,11 +347,21 @@ generation/targets/chez` explicitly. Both cases let Chez's default
 library-name resolution find every imported library without any
 bootstrap code.
 
-**Precompile-as-follow-up note.** A future grove can add a
-`compile-program`-based path to ship `.so` outputs alongside the source.
-The bundle layout would gain a `Resources/chez-app/compiled/` directory;
-the launcher would prefer `.so` if present. Not built now — recorded
-here so the future grove has a starting point.
+**Precompile pass (added 2026-05-28, leaf
+`105-precompile-bundled-libraries`).** After staging every `.sls`
+under `Resources/chez-app/`, the bundler runs
+`chez --script scripts/precompile.ss <chez-app>` which calls
+`compile-library` on each *root* library — framework facades
+(`apianyware/<fw>.sls`) and runtime libraries
+(`apianyware/runtime/<cluster>.sls`) — with
+`(compile-imported-libraries #t)` set. Chez writes `.so` files next
+to the source via the default `library-extensions`, and the existing
+`chez --libdirs <chez-app> --script <entry>` invocation picks them up
+without any stub-launcher change. Cold-launch dropped from ~75s to
+~1.85s on the dev host; bundle size grew ~2.7× (hello-window: 38 MB
+→ 102 MB). See `generation/crates/bundle-chez/README.md` for the
+caveats (Chez-version coupling, why the entry script is not
+precompiled, how to opt out via `AppSpec::skip_precompile`).
 
 ## 9. Knowledge file — `knowledge/targets/chez.md`
 
