@@ -141,3 +141,47 @@ Initial leaves (more grow as planning surfaces them):
 - Regenerate the pipeline aggressively after any source change in
   emit-chez or the chez runtime — see
   [[feedback-regenerate-pipeline-aggressively]].
+- VM provisioning: the TestAnyware macOS golden image does not ship
+  Chez Scheme. Sample-app VM-verify leaves must `brew install
+  chezscheme` once per VM clone before launching the bundle. Candidate
+  follow-up: pre-install in the golden image.
+
+## Known emitter / runtime state (post 100-port-hello-window retirement)
+Surviving notes from the retired `100-port-hello-window/` node that
+later port leaves (`110-130`, `140`) and any new sample-app port need
+to know. Promoted here at node retirement; the retired BRIEFs remain
+in `.grove/done/` for the full history.
+
+- **Emit-chez method filter — geometry-only struct-by-value.** After
+  leaf `010` the filter allows `NSPoint`, `NSSize`, `NSRect`, `NSRange`,
+  `NSEdgeInsets` and their `CG…` twins as by-value params/returns.
+  **Arbitrary structs are still blocked**, and **block-typed params
+  remain blocked** — un-blocking blocks is `130-port-note-editor`'s
+  problem (delegate trio at `110` is the first place blocks would
+  cross the boundary, depending on what NSText delegate expects).
+- **Library loading — single root + `--libdirs`.** Source tree was
+  rearranged so every chez library lives under `apianyware/…` and the
+  emitter / bundler pass `--libdirs <root>` (`generation/targets/chez/`
+  unbundled, `Resources/chez-app/` bundled). New sample-app ports
+  inherit this layout; do not invent per-app library-search hacks.
+- **Bundled-dylib lookup.** `runtime/ffi.sls`'s `resolve-dylib-path`
+  walks `(library-directories)` and probes
+  `<libdir>/lib/libAPIAnywareChez.dylib`. The previous CWD-relative
+  search was a false-positive on CLI smoke; only VM verification
+  caught it. Mirror this resolver style for any future runtime asset
+  whose load path differs between CLI and bundled use.
+- **Window close ≠ app quit.** Neither racket nor chez `hello-window`
+  implements `applicationShouldTerminateAfterLastWindowClosed`. Close
+  hides the window; Cmd+Q quits cleanly. Parity baseline; later ports
+  can carry the same shape or revisit at the runtime level.
+- **First-launch compile cost (~75s).** Chez does not cache `.so` for
+  `--script`; every cold launch recompiles the imported `.sls`
+  libraries (most of the time is `apianyware/appkit.sls`, 70k lines).
+  Idle RSS sits at ~1.2 GB. Candidate follow-up at the bundler level:
+  pre-compile bundled `.sls` → `.so` during `cargo run --example
+  bundle_app`.
+- **Bundled menu-bar app name reads as `chez`, not `Hello Window`.**
+  Because the stub-launcher `execv`s into `/opt/homebrew/bin/chez`,
+  macOS uses the runtime process's name in the menu bar. Identical
+  behaviour in the racket port. Fix candidate is in
+  `stub-launcher` / runtime, not per-app — outside this node's scope.
