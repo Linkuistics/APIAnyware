@@ -37,24 +37,30 @@
 
   (define libapianyware-chez-path (make-parameter #f))
 
-  ;; Candidate paths checked relative to (current-directory). First wins.
-  ;; Run from the repository root resolves the first entry; run from
-  ;; inside a built `.app` bundle resolves the second.
-  (define default-dylib-candidates
-    '("generation/targets/chez/lib/libAPIAnywareChez.dylib"
-      "../lib/libAPIAnywareChez.dylib"))
+  ;; Probe `<libdir>/lib/libAPIAnywareChez.dylib` for every directory in
+  ;; (library-directories). Subsumes both layouts: unbundled CLI use
+  ;; (`--libdirs generation/targets/chez/` → repo dylib) and bundled
+  ;; .app launch (`--libdirs <Resources>/chez-app/` → bundled dylib).
+  ;; The chez stub-launcher always passes --libdirs, so this is the
+  ;; one mechanism that covers both call sites without environment
+  ;; injection.
+  (define (libdir->path d)
+    (if (pair? d) (car d) d))
 
   (define (resolve-dylib-path)
-    (let ([explicit (libapianyware-chez-path)])
-      (or explicit
-          (let loop ([cs default-dylib-candidates])
-            (cond
-              [(null? cs)
-               (error 'apianyware-runtime-ffi
-                      "could not locate libAPIAnywareChez.dylib; searched"
-                      default-dylib-candidates)]
-              [(file-exists? (car cs)) (car cs)]
-              [else (loop (cdr cs))])))))
+    (or (libapianyware-chez-path)
+        (let loop ([dirs (library-directories)])
+          (cond
+            [(null? dirs)
+             (error 'apianyware-runtime-ffi
+                    "could not locate libAPIAnywareChez.dylib; probed lib/libAPIAnywareChez.dylib under each (library-directories) entry"
+                    (map libdir->path (library-directories)))]
+            [else
+             (let ([candidate (string-append (libdir->path (car dirs))
+                                             "/lib/libAPIAnywareChez.dylib")])
+               (if (file-exists? candidate)
+                   candidate
+                   (loop (cdr dirs))))]))))
 
   ;; Load happens at library instantiation. `load-shared-object` raises
   ;; on failure — that is the hard error ADR-0005 calls for. The loads
