@@ -35,14 +35,24 @@
 ;; which matches the bundle semantics: the logical path lives under
 ;; source_root even when the underlying file is reached through a
 ;; symlinked directory.
+;;
+;; Directories named `build` are skipped: that's where bundle-chez
+;; writes per-app `.app` bundles under `apps/<name>/build/`, and those
+;; bundles contain a re-copied `apianyware/*.sls` tree whose `(library
+;; ...)` declarations would shadow the canonical sources in the
+;; registry. Skipping `build/` keeps the registry pointing at the one
+;; true source per library, regardless of which sibling apps have
+;; already been bundled.
 (define (find-sls-files root)
   (let loop ((dir root) (acc '()))
     (fold-left
      (lambda (acc name)
        (let ((path (string-append dir "/" name)))
          (cond
-           ((file-directory? path) (loop path acc))
-           ((ends-with? name ".sls") (cons path acc))
+           ((and (file-directory? path) (not (string=? name "build")))
+            (loop path acc))
+           ((and (not (file-directory? path)) (ends-with? name ".sls"))
+            (cons path acc))
            (else acc))))
      acc
      (directory-list dir))))
