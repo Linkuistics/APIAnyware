@@ -19,7 +19,9 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
-use crate::ffi_type_mapping::{is_known_geometry_alias, ChezFfiTypeMapper};
+use crate::ffi_type_mapping::{
+    is_known_geometry_alias, return_needs_indirect_result, ChezFfiTypeMapper,
+};
 use crate::method_filter::{is_supported_method, returns_object_type, returns_void};
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
@@ -554,26 +556,47 @@ fn emit_method(
         .map(|(p, v)| coerce_arg_expr(p, v))
         .collect();
 
+    let indirect_ftype = return_needs_indirect_result(&method.return_type);
+    let leading_arg = if indirect_ftype.is_some() { "%result-buf " } else { "" };
+
     let call = format!(
-        "({} {} {}{}{})",
+        "({} {}{} {}{}{})",
         binding,
+        leading_arg,
         receiver_expr,
         sel_var,
         if coerced_args.is_empty() { "" } else { " " },
         coerced_args.join(" ")
     );
 
-    if returns_void(method, mapper) {
-        write_line!(w, "    {})", call);
+    let wrapped = if returns_void(method, mapper) {
+        call
     } else if returns_object_type(method, mapper) {
         let retained = method_returns_retained(method);
         if retained {
-            write_line!(w, "    (wrap-objc-object {} #t))", call);
+            format!("(wrap-objc-object {} #t)", call)
         } else {
-            write_line!(w, "    (wrap-objc-object {}))", call);
+            format!("(wrap-objc-object {})", call)
         }
     } else {
-        write_line!(w, "    {})", call);
+        call
+    };
+
+    if let Some(ftype) = indirect_ftype {
+        // Chez's `(& ftype)` return convention: caller supplies the
+        // result buffer as a hidden leading arg; the foreign-procedure's
+        // direct return value is unspecified, so the wrapper must yield
+        // `%result-buf` itself as the result.
+        write_line!(
+            w,
+            "    (let ([%result-buf (make-ftype-pointer {} (foreign-alloc (ftype-sizeof {})))])",
+            ftype,
+            ftype
+        );
+        write_line!(w, "      {}", wrapped);
+        write_line!(w, "      %result-buf))");
+    } else {
+        write_line!(w, "    {})", wrapped);
     }
     w.blank_line();
 }
@@ -703,6 +726,7 @@ fn emit_property(
     );
 
     let ret_ty = mapper.map_type(&prop.property_type, true);
+    let indirect_ftype = return_needs_indirect_result(&prop.property_type);
     write_line!(
         w,
         "  (define {} (foreign-procedure \"objc_msgSend\" (void* void*) {}))",
@@ -718,13 +742,27 @@ fn emit_property(
     };
     let getter_arglist = if prop.class_property { String::new() } else { " self".into() };
     write_line!(w, "  (define ({}{})", getter_name, getter_arglist);
-    let call = format!("({} {} {})", getter_binding, receiver_expr, getter_sel);
-    if mapper.is_object_type(&prop.property_type) {
-        write_line!(w, "    (wrap-objc-object {}))", call);
-    } else if mapper.is_void(&prop.property_type) {
-        write_line!(w, "    {})", call);
+    let leading_arg = if indirect_ftype.is_some() { "%result-buf " } else { "" };
+    let call = format!(
+        "({} {}{} {})",
+        getter_binding, leading_arg, receiver_expr, getter_sel
+    );
+    let wrapped = if mapper.is_object_type(&prop.property_type) {
+        format!("(wrap-objc-object {})", call)
     } else {
-        write_line!(w, "    {})", call);
+        call
+    };
+    if let Some(ftype) = indirect_ftype {
+        write_line!(
+            w,
+            "    (let ([%result-buf (make-ftype-pointer {} (foreign-alloc (ftype-sizeof {})))])",
+            ftype,
+            ftype
+        );
+        write_line!(w, "      {}", wrapped);
+        write_line!(w, "      %result-buf))");
+    } else {
+        write_line!(w, "    {})", wrapped);
     }
 
     if !prop.readonly {
@@ -893,6 +931,92 @@ mod tests {
         assert!(output.contains(
             "(load-shared-object \"/System/Library/Frameworks/Foundation.framework/Foundation\")"
         ));
+    }
+
+    #[test]
+    fn large_struct_method_return_emits_indirect_result_buffer() {
+        // NSRect > 16 bytes: the foreign-procedure declaration must
+        // prepend `(& NSRect)` and the wrapper must allocate the buffer.
+        let cls = Class {
+            name: "NSView".into(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_method(
+                "centerOfMassRect",
+                false,
+                false,
+                ty(TypeRefKind::Alias {
+                    name: "NSRect".into(),
+                    framework: None,
+                    underlying_primitive: None,
+                }),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let output = generate_class_file(&cls, "AppKit");
+        // Per Chez `foreign-procedure` docs (`(& ftype)` return), the
+        // declared `param-types` list stays `(void* void*)` — the extra
+        // `(* ftype)` buffer arg is *implicit*: callers pass it as a
+        // leading actual before all declared params. Only the wrapper
+        // body changes.
+        assert!(
+            output.contains("(foreign-procedure \"objc_msgSend\" (void* void*) (& NSRect))"),
+            "foreign-procedure decl must keep `(void* void*)` even for large-struct returns\n{}",
+            output
+        );
+        assert!(
+            output.contains("(make-ftype-pointer NSRect (foreign-alloc (ftype-sizeof NSRect)))"),
+            "expected wrapper to allocate result buffer\n{}",
+            output
+        );
+        assert!(
+            output.contains("%result-buf"),
+            "expected wrapper to pass `%result-buf` as the implicit leading arg\n{}",
+            output
+        );
+    }
+
+    #[test]
+    fn small_struct_method_return_keeps_two_arg_decl() {
+        // NSPoint = 16 bytes: fits in return registers on arm64, so no
+        // indirect-result hidden arg. The wrapper stays the simple shape.
+        let cls = Class {
+            name: "NSEvent".into(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_method(
+                "locationInWindow",
+                false,
+                false,
+                ty(TypeRefKind::Alias {
+                    name: "NSPoint".into(),
+                    framework: None,
+                    underlying_primitive: None,
+                }),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let output = generate_class_file(&cls, "AppKit");
+        assert!(
+            output.contains("(foreign-procedure \"objc_msgSend\" (void* void*) (& NSPoint))"),
+            "expected no hidden arg for ≤16-byte struct return\n{}",
+            output
+        );
+        assert!(
+            !output.contains("%result-buf"),
+            "small-struct return must not allocate an explicit result buffer\n{}",
+            output
+        );
     }
 
     #[test]

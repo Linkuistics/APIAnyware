@@ -142,6 +142,61 @@ convention of a trailing `!` (`nswindow-set-title!`). Naming reuses
 `emit/src/naming.rs::class_name_to_lowercase` and the selector-to-dashes
 conversion already used by emit-racket.
 
+## 3a. Struct-by-value returns and the 16-byte indirect-result threshold
+
+Geometry typedefs return by value on the ObjC side. The chez emitter
+declares them in the `foreign-procedure` form as `(& <ftype>)` — Chez's
+notation for pass-by-reference of an ftype. The non-obvious half is how
+the *return* shape works:
+
+- **≤ 16 bytes (NSPoint, NSSize, NSRange, CGVector).** The arm64 / x86_64
+  ABIs return the aggregate in two registers (`x0/x1` or `xmm0/xmm1`).
+  Chez allocates the result buffer internally and hands a fresh
+  ftype-pointer back as the foreign-procedure's value. The wrapper is the
+  shape you'd naively write:
+
+  ```scheme
+  (define %msg-point (foreign-procedure "objc_msgSend" (void* void*) (& NSPoint)))
+  (define (nsevent-location-in-window self)
+    (%msg-point (coerce-arg self) %sel-location-in-window))
+  ```
+
+- **> 16 bytes (NSRect, NSEdgeInsets, NSDirectionalEdgeInsets,
+  NSAffineTransformStruct, CGAffineTransform).** The arm64 ABI uses the
+  indirect-result register (`x8`) — the caller pre-allocates storage and
+  passes its address as a hidden leading argument. Chez exposes this
+  faithfully: per the csug `(& ftype)` return convention, the caller
+  *must* supply an extra `(* ftype)` argument before all declared
+  parameters, and the foreign-procedure's directly returned value is
+  unspecified. The declared `param-types` list stays the same as for the
+  small case — the buffer arg is implicit. The wrapper allocates, calls,
+  and returns the buffer:
+
+  ```scheme
+  (define %msg-nsview-frame-getter
+    (foreign-procedure "objc_msgSend" (void* void*) (& NSRect)))
+  (define (nsview-frame self)
+    (let ([%result-buf (make-ftype-pointer NSRect
+                                           (foreign-alloc (ftype-sizeof NSRect)))])
+      (%msg-nsview-frame-getter %result-buf (coerce-arg self) %sel-nsview-frame-getter)
+      %result-buf))
+  ```
+
+Threshold classification is mechanical, encoded once in
+`emit-chez/src/ffi_type_mapping.rs::large_struct_return_ftype`. The
+emitter uses the same code path for method returns and property getters;
+setters take `(& T)` as a regular parameter and need no special handling.
+
+There is no `objc_msgSend_stret` to consider — Apple's arm64 ABI
+unified the calling convention and removed the `_stret` variant. The
+hidden-buffer arg via Chez's foreign-procedure is the only way to land
+large-struct returns correctly.
+
+Lifetime: the buffer is allocated via `foreign-alloc` and leaks per
+call. Acceptable for now — geometry returns are typically short-lived
+(one rect per layout pass). A future runtime leaf may add a drain hook
+or switch to Scheme-allocated storage.
+
 ## 4. Emitter file layout — `generation/crates/emit-chez/`
 
 Mirrors `emit-racket/` structurally (per ADR-0008, structural mirroring at

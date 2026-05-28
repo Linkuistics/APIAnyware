@@ -58,6 +58,39 @@ pub fn is_known_geometry_alias(name: &str) -> bool {
     map_geometry_alias(name).is_some()
 }
 
+/// Geometry struct that exceeds the arm64 "fits in two return registers"
+/// threshold (16 bytes). When such a struct is the return value of an
+/// `objc_msgSend` call, the arm64 ABI uses `x8` for an indirect-result
+/// pointer — Chez's `foreign-procedure` exposes that as an explicit leading
+/// argument of type `(& <ftype>)`. Returns the ftype name (e.g. `"NSRect"`)
+/// so the emitter can spell the hidden-arg type and the allocation site.
+///
+/// Sizes (from `runtime/types.sls`, all CGFloat = 8 bytes):
+///   - 16 bytes (fits): NSPoint, NSSize, NSRange, CGVector
+///   - 32 bytes (does not fit): NSRect, NSEdgeInsets, NSDirectionalEdgeInsets
+///   - 48 bytes (does not fit): NSAffineTransformStruct, CGAffineTransform
+pub fn large_struct_return_ftype(name: &str) -> Option<&'static str> {
+    match name {
+        "NSRect" | "CGRect" => Some("NSRect"),
+        "NSEdgeInsets" => Some("NSEdgeInsets"),
+        "NSDirectionalEdgeInsets" => Some("NSDirectionalEdgeInsets"),
+        "NSAffineTransformStruct" => Some("NSAffineTransformStruct"),
+        "CGAffineTransform" => Some("CGAffineTransform"),
+        _ => None,
+    }
+}
+
+/// True when a return [`TypeRef`] is a struct-by-value that exceeds the
+/// 16-byte threshold described in [`large_struct_return_ftype`].
+pub fn return_needs_indirect_result(t: &TypeRef) -> Option<&'static str> {
+    let name = match &t.kind {
+        TypeRefKind::Struct { name } => name.as_str(),
+        TypeRefKind::Alias { name, .. } => name.as_str(),
+        _ => return None,
+    };
+    large_struct_return_ftype(name)
+}
+
 impl FfiTypeMapper for ChezFfiTypeMapper {
     fn map_type(&self, type_ref: &TypeRef, is_return_type: bool) -> String {
         match &type_ref.kind {
