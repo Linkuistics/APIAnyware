@@ -305,11 +305,18 @@ Source tree (`generation/targets/chez/`):
 generation/targets/chez/
   apianyware/
     runtime/*.sls         ← (apianyware runtime <cluster>)  ← tracked
+    <fw>.sls              ← (apianyware <fw>) facade        ← gitignored
     <fw>/*.sls            ← (apianyware <fw> <cls>)         ← gitignored
     <fw>/protocols/*.sls  ← (apianyware <fw> protocols <p>) ← gitignored
   apps/<script>/<script>.sls  ← entry scripts (top-level, no library form)
   lib/libAPIAnywareChez.dylib
 ```
+
+The per-framework facade lives at `apianyware/<fw>.sls` — one level
+**above** the framework directory — because Chez's library-name resolver
+maps `(apianyware <fw>)` to `<libdir>/apianyware/<fw>.sls` (no
+`<dir>/main.sls` convention). The file and the directory of the same
+stem coexist on disk; Chez's reader handles that without ceremony.
 
 The gitignore allows `apianyware/runtime/` through and drops every
 sibling — the framework libraries regenerate from the enriched IR.

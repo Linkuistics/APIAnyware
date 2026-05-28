@@ -3,7 +3,9 @@
 //! Produces idiomatic Chez bindings per framework: per-class `.sls`
 //! libraries with `foreign-procedure` `objc_msgSend` call sites, plus
 //! companion `enums.sls`, `constants.sls`, `functions.sls`,
-//! `protocols/<proto>.sls`, and a `main.sls` re-export. Chez's
+//! `protocols/<proto>.sls`, and a sibling `<framework>.sls` re-export
+//! (one level up, alongside the framework dir) so Chez's library-name
+//! resolver finds it for `(import (apianyware <framework>))`. Chez's
 //! `library` forms need explicit export names, so the main file's
 //! re-export list is materialised from each sub-file's emitter helper.
 

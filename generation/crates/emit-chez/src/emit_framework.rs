@@ -2,9 +2,14 @@
 //!
 //! Produces one Chez library per class, plus four companion libraries
 //! (`enums.sls`, `constants.sls`, `functions.sls`,
-//! `protocols/<proto>.sls`), and a `main.sls` re-export that imports
-//! every sibling library and re-exports the union of their exports.
-//! Chez `library` requires an explicit `(export …)` list, so each
+//! `protocols/<proto>.sls`), and a `<framework>.sls` re-export *next to*
+//! the framework directory (e.g. `apianyware/appkit.sls` alongside
+//! `apianyware/appkit/`) that imports every sibling library and
+//! re-exports the union of their exports. Chez's default library-name
+//! resolution maps `(apianyware <framework>)` to
+//! `<libdir>/apianyware/<framework>.sls`, so the facade must sit at the
+//! parent level — not inside the framework dir as a `main.sls`. Chez
+//! `library` requires an explicit `(export …)` list, so each
 //! sub-emitter exposes a helper returning the names it exports.
 
 use std::io;
@@ -138,9 +143,12 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
         });
     }
 
-    // Per-framework `main.sls` re-export.
+    // Per-framework re-export: written one level up as `<framework>.sls`
+    // so Chez's library-name resolver finds it for `(import (apianyware
+    // <framework>))`. See design spec §8.
     let main_content = generate_main_file(&fw.name, &sublibraries);
-    emitter.write_file("main.sls", &main_content)?;
+    let facade_path = output_dir.join(format!("{}.sls", fw_low));
+    std::fs::write(&facade_path, main_content)?;
     files_written += 1;
 
     Ok(EmitResult {
@@ -279,8 +287,8 @@ mod tests {
         let fw = make_minimal_framework("TestKit");
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.files_written, 1);
-        assert!(tmp.path().join("testkit/main.sls").exists());
-        let main = std::fs::read_to_string(tmp.path().join("testkit/main.sls")).unwrap();
+        assert!(tmp.path().join("testkit.sls").exists());
+        let main = std::fs::read_to_string(tmp.path().join("testkit.sls")).unwrap();
         assert!(main.contains("(library (apianyware testkit)"));
         assert!(main.contains("  (export)"));
     }
@@ -323,7 +331,7 @@ mod tests {
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.classes_emitted, 1);
         assert!(tmp.path().join("foundation/nsobject.sls").exists());
-        let main = std::fs::read_to_string(tmp.path().join("foundation/main.sls")).unwrap();
+        let main = std::fs::read_to_string(tmp.path().join("foundation.sls")).unwrap();
         assert!(main.contains("(apianyware foundation nsobject)"));
         // NSObject.description goes through the per-class file's exports.
         assert!(main.contains("nsobject-description"));
@@ -352,7 +360,7 @@ mod tests {
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.enums_emitted, 1);
         assert!(tmp.path().join("foundation/enums.sls").exists());
-        let main = std::fs::read_to_string(tmp.path().join("foundation/main.sls")).unwrap();
+        let main = std::fs::read_to_string(tmp.path().join("foundation.sls")).unwrap();
         assert!(main.contains("(apianyware foundation enums)"));
         assert!(main.contains("NSOrderedSame"));
     }
@@ -379,7 +387,7 @@ mod tests {
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.constants_emitted, 1);
         assert!(tmp.path().join("pdfkit/constants.sls").exists());
-        let main = std::fs::read_to_string(tmp.path().join("pdfkit/main.sls")).unwrap();
+        let main = std::fs::read_to_string(tmp.path().join("pdfkit.sls")).unwrap();
         assert!(main.contains("(apianyware pdfkit constants)"));
         assert!(main.contains("PDFViewPageChangedNotification"));
     }
@@ -414,7 +422,7 @@ mod tests {
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.functions_emitted, 1);
         assert!(tmp.path().join("testkit/functions.sls").exists());
-        let main = std::fs::read_to_string(tmp.path().join("testkit/main.sls")).unwrap();
+        let main = std::fs::read_to_string(tmp.path().join("testkit.sls")).unwrap();
         assert!(main.contains("(apianyware testkit functions)"));
         assert!(main.contains("TKCompute"));
     }
@@ -484,7 +492,7 @@ mod tests {
             .path()
             .join("appkit/protocols/nswindowdelegate.sls")
             .exists());
-        let main = std::fs::read_to_string(tmp.path().join("appkit/main.sls")).unwrap();
+        let main = std::fs::read_to_string(tmp.path().join("appkit.sls")).unwrap();
         assert!(main.contains("(apianyware appkit protocols nswindowdelegate)"));
         assert!(main.contains("make-nswindowdelegate"));
     }

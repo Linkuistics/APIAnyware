@@ -26,6 +26,7 @@ use crate::naming::{
     make_method_name, make_msgsend_binding_name, make_property_getter_name,
     make_property_setter_name, make_selector_binding_name, make_unique_constructor_name,
 };
+use crate::shared_signatures::framework_shared_object_arg;
 
 /// Generate the full `.sls` library text for one class.
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
@@ -432,6 +433,19 @@ make-nserror nserror? nserror-domain nserror-code \
 nserror-localised-description nserror-userinfo)",
     );
     w.line("          (apianyware runtime types))");
+    w.blank_line();
+
+    // Load the framework dylib at library instantiation. Without this,
+    // `objc_getClass` for any class declared in this framework returns
+    // a null pointer until something else in the process maps the dylib
+    // in. Mirrors emit-racket's `_fw-lib` binding; the chez version
+    // hides it in a dummy `define` because R6RS library bodies require
+    // definitions before expressions.
+    write_line!(
+        w,
+        "  (define %fw-lib-loaded (begin (load-shared-object \"{}\") #t))",
+        framework_shared_object_arg(framework)
+    );
     w.blank_line();
 }
 
@@ -859,6 +873,26 @@ mod tests {
         assert!(output.contains("(define (nsstring-length self)"));
         assert!(output.contains("foreign-procedure \"objc_msgSend\""));
         assert!(output.contains("sel-register \"length\""));
+    }
+
+    #[test]
+    fn class_file_loads_framework_dylib_at_instantiation() {
+        let cls = Class {
+            name: "NSString".into(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_method("length", false, false, ty(TypeRefKind::Primitive { name: "uint64".into() }))],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let output = generate_class_file(&cls, "Foundation");
+        assert!(output.contains(
+            "(load-shared-object \"/System/Library/Frameworks/Foundation.framework/Foundation\")"
+        ));
     }
 
     #[test]
