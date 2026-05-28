@@ -185,3 +185,45 @@ in `.grove/done/` for the full history.
   macOS uses the runtime process's name in the menu bar. Identical
   behaviour in the racket port. Fix candidate is in
   `stub-launcher` / runtime, not per-app — outside this node's scope.
+
+## Known emitter / runtime state (post 110-port-delegate-trio retirement)
+Promoted from the retired `110-port-delegate-trio/` node at retirement.
+The retired BRIEF stays in `.grove/done/` for full history.
+
+- **Sync-delegate runtime piece is solid through rung 4.** The
+  `runtime/dispatch.sls` `make-delegate` list-of-specs shape
+  `((selector proc param-types return-type) ...)` drives every
+  pattern the racket bar covers — target-action (rung 2:
+  ui-controls-gallery's radio/slider/stepper), single delegate +
+  framework reach (rung 3: scenekit-viewer's geometry/color/colorPanel),
+  and multi-selector with NSNotificationCenter observer (rung 4:
+  pdfkit-viewer's open/prev/next/pageChanged). No runtime fixes
+  needed across the trio. Any new sample-app port that stays inside
+  this envelope can assume the runtime piece works; if a port wants
+  **async / one-shot delegate callbacks**, that's a new pattern —
+  belongs to `130-port-note-editor` (blocks) or its own work leaf.
+- **GUI-side cold launch with precompile: 1-3 s.** Trio bundles
+  cold-launched via `open -n` to first visible window in 1-3 s
+  (ui-controls-gallery ~3 s, scenekit and pdfkit ~1 s). Confirms
+  leaf-105's CLI win (~70s → ~1.85s) carries through the bundled
+  path. Take this as the GUI-side baseline; any future port that
+  cold-launches in ≥10 s is a regression and earns its own leaf.
+- **Bundle sizes after precompile: ~100-110 MB per app.** The 838
+  precompiled `.so` set dominates bundle size; the per-app delta is
+  noise. Don't budget bundle-size optimization at this node level —
+  it'd be a target-wide concern under `050-chez-target/`.
+- **RSS baselines climb with framework reach, all flat at idle.**
+  AppKit-only ≈ 525 MB (ui-controls-gallery), +SceneKit ≈ 577 MB
+  (scenekit-viewer), +PDFKit ≈ 747 MB (pdfkit-viewer). All flat
+  over 25-30 s of idle in the VM — no leak from the delegate
+  records held alive past their first callback.
+- **`NSModalResponseOK = 1` is a per-app local define** in
+  pdfkit-viewer (parity with racket). The NSModalResponse* enum is
+  not in `apianyware/appkit/enums.sls`. Candidate follow-up at the
+  collection/modaliser level — earns its own leaf when picked up,
+  not blocking on this node.
+- **Auto-scroll-to-bottom on launch in NSScrollView+NSStackView.**
+  The ui-controls-gallery initial scroll position lands at the
+  bottom of the doc view, not the top — parity with racket's
+  flipped-doc side-effect. One-line fix in app or `cocoa.sls`
+  helper if polish is wanted; not blocking the trio.
