@@ -153,6 +153,9 @@ pub enum BundleError {
     )]
     WrapperNoTrailingMain,
 
+    #[error("boot prelude compile failed (chez):\n{stderr}")]
+    PreludeCompileFailed { stderr: String },
+
     #[error("whole-program compile failed (chez):\n{stderr}")]
     WholeProgramCompileFailed { stderr: String },
 

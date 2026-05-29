@@ -21,21 +21,26 @@
 //! 2. **Whole-program compile** the wrapper + its import closure to one
 //!    tree-shaken object (`compile-program` + `compile-whole-program`).
 //! 3. **`make-boot-file`** with an empty base list, concatenating
-//!    `petite.boot` + `scheme.boot` (open-world: compiler present) + the
-//!    whole-program object into one self-contained boot.
+//!    `petite.boot` + `scheme.boot` (open-world: compiler present) + a
+//!    `prelude.so` (the dylib-search seed, §4) + the whole-program object
+//!    into one self-contained boot.
 //! 4. **`cc`-link** the embedding host (`embed_main.c`) with
 //!    `libkernel.a` (+ `liblz4.a`/`libz.a`; **not** `main.o`, F9).
 //! 5. **Assemble + sign** the `.app`: boot + dylib under
 //!    `Contents/Resources/` (F4); sign nested dylib then bundle (F5).
 //!
-//! # Leaf 020 scope (node 060/030)
+//! # Leaf 030 scope (node 060/030)
 //!
-//! This leaf generalises the wrapper. Leaf 010 hand-coded the
-//! `hello-window` 4-`except` set; the collision set is now **computed for
-//! any app** by [`compute_collisions`] (the `environment-symbols` probe).
-//! The dylib-search root is still seeded by the `embed_main.c` `chdir`
-//! expedient; leaf 030 replaces that with a Scheme prelude. Source-exec
-//! (`bundle_app`) is untouched — its retirement is node-leaf 040.
+//! This leaf replaces leaf 010's `embed_main.c` `chdir` expedient with the
+//! spec §4 **prelude object** ([`PRELUDE_SS`]): a tiny Scheme object linked
+//! into the boot ahead of the app that sets `(library-directories)` from an
+//! exe-relative `../Resources` path, so `ffi.sls`'s `resolve-dylib-path`
+//! finds `lib/libAPIAnywareChez.dylib` during boot load without touching the
+//! process cwd. The host hands the resource dir to the prelude via the
+//! `AW_RESOURCE_DIR` env var (set before `Sbuild_heap`); the prelude reads it
+//! with `getenv`. The prelude also suppresses the kernel startup banner via
+//! `(suppress-greeting #t)` (F6). The wrapper generator (leaf 020) and the
+//! source-exec path (`bundle_app`, node-leaf 040) are untouched.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -50,6 +55,12 @@ use crate::deps::{absolutize, collect_dependencies, DEFAULT_CHEZ_BIN};
 
 /// The embedding host, compiled and linked into every standalone binary.
 const EMBED_MAIN_C: &str = include_str!("resources/embed_main.c");
+
+/// The boot prelude (spec §4): sets `(library-directories)` from
+/// `AW_RESOURCE_DIR` and suppresses the startup banner. Compiled to an
+/// object file and concatenated into the boot ahead of the app object so it
+/// runs before the apianyware libraries instantiate.
+const PRELUDE_SS: &str = include_str!("resources/prelude.ss");
 
 /// The per-app collision probe (computes each facade's `except` list).
 const STANDALONE_COLLISIONS_SS: &str = include_str!("../scripts/standalone-collisions.ss");
@@ -150,16 +161,37 @@ pub fn bundle_app_standalone(
         |stderr| BundleError::WholeProgramCompileFailed { stderr },
     )?;
 
-    // 3. make-boot-file: empty base + petite + scheme (open-world) + app.
+    // 2b. Compile the boot prelude (spec §4) to an object file. It seeds
+    //     (library-directories) from AW_RESOURCE_DIR and suppresses the
+    //     banner; concatenated ahead of the app object, it runs before the
+    //     apianyware libraries instantiate. Cheap (a handful of forms), so a
+    //     separate step rather than folding it into the ~160 s whole-program
+    //     compile.
+    let prelude_ss = build.join("prelude.ss");
+    fs::write(&prelude_ss, PRELUDE_SS)?;
+    let prelude_so = build.join("prelude.so");
+    run_chez_script(
+        build,
+        &format!(
+            "(compile-file {src} {obj})\n",
+            src = scheme_string(&prelude_ss.to_string_lossy()),
+            obj = scheme_string(&prelude_so.to_string_lossy()),
+        ),
+        |stderr| BundleError::PreludeCompileFailed { stderr },
+    )?;
+
+    // 3. make-boot-file: empty base + petite + scheme (open-world) +
+    //    prelude (dylib-search seed, §4) + app.
     let boot_name = format!("{}.boot", spec.script_name);
     let boot = build.join(&boot_name);
     run_chez_script(
         build,
         &format!(
-            "(make-boot-file {boot} '() {petite} {scheme} {whole})\n",
+            "(make-boot-file {boot} '() {petite} {scheme} {prelude} {whole})\n",
             boot = scheme_string(&boot.to_string_lossy()),
             petite = scheme_string(&kernel.join("petite.boot").to_string_lossy()),
             scheme = scheme_string(&kernel.join("scheme.boot").to_string_lossy()),
+            prelude = scheme_string(&prelude_so.to_string_lossy()),
             whole = scheme_string(&whole_so.to_string_lossy()),
         ),
         |stderr| BundleError::MakeBootFailed { stderr },

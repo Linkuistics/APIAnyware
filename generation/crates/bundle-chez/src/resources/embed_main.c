@@ -1,16 +1,18 @@
 /* embed_main.c — minimal Chez Scheme kernel-embedding host for the
  * self-contained chez `.app`. Compiled and linked by bundle-chez's
- * standalone.rs (ported verbatim from the 060/010 spike evidence).
+ * standalone.rs.
  *
- * INTERIM (grove add-chez-target, node 060/030, leaf 010): this host seeds
- * the runtime dylib-search root by `chdir`-ing to the resource dir — the
- * spike-proven expedient. Node-leaf 030 replaces the chdir with a Scheme
- * prelude object that sets (library-directories) from an exe-relative path
- * and keeps the process cwd untouched. Until then, chdir is the green path.
+ * The runtime dylib-search root is seeded by a Scheme *prelude* object
+ * (resources/prelude.ss) linked into the boot ahead of the app, which sets
+ * (library-directories) from an exe-relative path (spec §4, spike F3). This
+ * host's only part in that is to hand the prelude the resource dir via the
+ * AW_RESOURCE_DIR environment variable, set before Sbuild_heap — so the
+ * process cwd is left untouched (no chdir).
  *
  * Boots an embedded Chez heap from a single self-contained boot file
- * (made via make-boot-file with petite.boot + [scheme.boot] + app objects
- * concatenated) and hands control to the heap's (scheme-start) thunk.
+ * (made via make-boot-file with petite.boot + scheme.boot + prelude.so +
+ * app objects concatenated) and hands control to the heap's (scheme-start)
+ * thunk.
  *
  * The boot file is located relative to the executable: we expect it at
  * <dir-of-argv0>/<BOOTNAME>.  This keeps the binary host-Chez-independent:
@@ -69,18 +71,17 @@ int main(int argc, const char *argv[]) {
         snprintf(boot, sizeof(boot), "%s/%s", resdir, BOOTNAME);
     }
 
-    /* Seed the runtime's dylib search root before the heap is built.  The
-     * apianyware libraries instantiate during boot load (Sbuild_heap) — well
-     * before any Scheme hook we control — and resolve-dylib-path probes each
-     * (library-directories) entry for `lib/libAPIAnywareChez.dylib`.  The
-     * embedded kernel's library-directories defaults to "." and does NOT read
-     * CHEZSCHEMELIBDIRS, so we chdir to the executable's own directory: "."
-     * then resolves to <exe-dir>/lib/libAPIAnywareChez.dylib.  (Production
-     * bundler note: a cleaner shape is a prelude object linked into the boot
-     * ahead of the app that sets (library-directories) from an exe-relative
-     * path — see spike report.) */
-    if (chdir(resdir) != 0) {
-        fprintf(stderr, "embed_main: chdir(%s) failed\n", resdir);
+    /* Hand the resource dir to the boot prelude (resources/prelude.ss),
+     * which sets (library-directories) from it before the apianyware
+     * libraries instantiate.  Those libraries instantiate during boot load
+     * (Sbuild_heap) — before any Scheme hook the app controls — and
+     * resolve-dylib-path probes each (library-directories) entry for
+     * `lib/libAPIAnywareChez.dylib`.  The embedded kernel's
+     * library-directories defaults to "." and does NOT read CHEZSCHEMELIBDIRS,
+     * so the prelude seeds it from AW_RESOURCE_DIR instead.  setenv (not
+     * chdir) keeps the process cwd untouched. */
+    if (setenv("AW_RESOURCE_DIR", resdir, 1) != 0) {
+        fprintf(stderr, "embed_main: setenv(AW_RESOURCE_DIR, %s) failed\n", resdir);
     }
 
     Sscheme_init(NULL);
