@@ -65,6 +65,24 @@ two targets** (e.g. `chez-class`, `chez-functional`) rather than
 reintroducing this dimension.
 _Avoid_: do not reuse this word in the new design.
 
+**Open-world build** _(chez standalone mode)_:
+A self-contained chez `.app` whose binary embeds the full `scheme` boot —
+compiler, `eval`, and `load` all live at runtime. The app can compile and load
+arbitrary Scheme after launch; the dispatch substrate keeps its runtime-`eval`
+backend, synthesizing `foreign-callable` trampolines on demand. Larger (it
+carries the compiler), and the universal fallback — any app can ship this way.
+Contrast **Closed-world build**.
+_Avoid_: "dynamic build", "full build".
+
+**Closed-world build** _(chez standalone mode)_:
+A self-contained chez `.app` sealed via `compile-whole-program`; the binary uses
+no runtime compiler. Every `foreign-callable` trampoline the app needs is
+enumerated from the app's **static** usage and emitted as a literal form at build
+time (a distinct dispatch backend from open-world's `eval`-synthesized one).
+Smaller, faster cold start, reduced surface; **cannot** load new Scheme at
+runtime. Chosen per-app when the app does not need runtime Scheme loading.
+_Avoid_: "static build", "sealed build" (alone), "stripped build".
+
 ## Flagged ambiguities
 
 - **Target vs. Language.** The Rust trait is `LanguageEmitter` /
