@@ -58,20 +58,31 @@ pub fn is_known_geometry_alias(name: &str) -> bool {
     map_geometry_alias(name).is_some()
 }
 
-/// Geometry struct that exceeds the arm64 "fits in two return registers"
-/// threshold (16 bytes). When such a struct is the return value of an
-/// `objc_msgSend` call, the arm64 ABI uses `x8` for an indirect-result
-/// pointer — Chez's `foreign-procedure` exposes that as an explicit leading
-/// argument of type `(& <ftype>)`. Returns the ftype name (e.g. `"NSRect"`)
-/// so the emitter can spell the hidden-arg type and the allocation site.
+/// Geometry struct returned by value from an `objc_msgSend` call. Chez's
+/// `foreign-procedure` exposes a `(& <ftype>)` *result* type as an explicit
+/// leading argument — the caller passes a freshly-allocated result buffer
+/// and the foreign call writes the struct into it. This holds for **every**
+/// by-value struct return, irrespective of the C ABI's
+/// register-vs-indirect choice: even a 16-byte aggregate that the arm64 ABI
+/// returns in `x0:x1` must be declared and *called* through Chez's hidden
+/// leading-buffer convention. (Calling a `(& NSPoint)`-returning
+/// foreign-procedure without the buffer fails at runtime with "incorrect
+/// number of arguments" — see the `drawing-canvas` port, the first app to
+/// invoke `locationInWindow` / `convertPoint:fromView:` under live
+/// dispatch.) Returns the ftype name (e.g. `"NSPoint"`) so the emitter can
+/// spell the hidden-arg type and the allocation site.
 ///
-/// Sizes (from `runtime/types.sls`, all CGFloat = 8 bytes):
-///   - 16 bytes (fits): NSPoint, NSSize, NSRange, CGVector
-///   - 32 bytes (does not fit): NSRect, NSEdgeInsets, NSDirectionalEdgeInsets
-///   - 48 bytes (does not fit): NSAffineTransformStruct, CGAffineTransform
-pub fn large_struct_return_ftype(name: &str) -> Option<&'static str> {
+/// Sizes (from `runtime/types.sls`, all CGFloat = 8 bytes), for reference:
+///   - 16 bytes: NSPoint, NSSize, NSRange, CGVector
+///   - 32 bytes: NSRect, NSEdgeInsets, NSDirectionalEdgeInsets
+///   - 48 bytes: NSAffineTransformStruct, CGAffineTransform
+pub fn struct_return_ftype(name: &str) -> Option<&'static str> {
     match name {
         "NSRect" | "CGRect" => Some("NSRect"),
+        "NSPoint" | "CGPoint" => Some("NSPoint"),
+        "NSSize" | "CGSize" => Some("NSSize"),
+        "NSRange" => Some("NSRange"),
+        "CGVector" => Some("CGVector"),
         "NSEdgeInsets" => Some("NSEdgeInsets"),
         "NSDirectionalEdgeInsets" => Some("NSDirectionalEdgeInsets"),
         "NSAffineTransformStruct" => Some("NSAffineTransformStruct"),
@@ -80,15 +91,16 @@ pub fn large_struct_return_ftype(name: &str) -> Option<&'static str> {
     }
 }
 
-/// True when a return [`TypeRef`] is a struct-by-value that exceeds the
-/// 16-byte threshold described in [`large_struct_return_ftype`].
+/// True when a return [`TypeRef`] is a by-value geometry struct, which Chez
+/// returns through the hidden leading-buffer convention described in
+/// [`struct_return_ftype`].
 pub fn return_needs_indirect_result(t: &TypeRef) -> Option<&'static str> {
     let name = match &t.kind {
         TypeRefKind::Struct { name } => name.as_str(),
         TypeRefKind::Alias { name, .. } => name.as_str(),
         _ => return None,
     };
-    large_struct_return_ftype(name)
+    struct_return_ftype(name)
 }
 
 impl FfiTypeMapper for ChezFfiTypeMapper {

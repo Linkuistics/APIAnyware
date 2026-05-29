@@ -1023,9 +1023,14 @@ mod tests {
     }
 
     #[test]
-    fn small_struct_method_return_keeps_two_arg_decl() {
-        // NSPoint = 16 bytes: fits in return registers on arm64, so no
-        // indirect-result hidden arg. The wrapper stays the simple shape.
+    fn small_struct_method_return_emits_indirect_result_buffer() {
+        // NSPoint = 16 bytes. Even though the arm64 C ABI returns it in
+        // registers, Chez's `(& ftype)` *result* convention is uniform: the
+        // foreign-procedure always takes the result buffer as a hidden
+        // leading arg. Calling a `(& NSPoint)`-returning foreign-procedure
+        // without the buffer fails at runtime ("incorrect number of
+        // arguments"), which is what broke `drawing-canvas`'s
+        // `locationInWindow` call before this fix.
         let cls = Class {
             name: "NSEvent".into(),
             superclass: String::new(),
@@ -1048,14 +1053,21 @@ mod tests {
             all_properties: vec![],
         };
         let output = generate_class_file(&cls, "AppKit");
+        // The declared `param-types` list stays `(void* void*)`; the buffer
+        // arg is implicit in the `(& NSPoint)` result type.
         assert!(
             output.contains("(foreign-procedure \"objc_msgSend\" (void* void*) (& NSPoint))"),
-            "expected no hidden arg for ≤16-byte struct return\n{}",
+            "foreign-procedure decl must keep `(void* void*)` for small-struct returns too\n{}",
             output
         );
         assert!(
-            !output.contains("%result-buf"),
-            "small-struct return must not allocate an explicit result buffer\n{}",
+            output.contains("(make-ftype-pointer NSPoint (foreign-alloc (ftype-sizeof NSPoint)))"),
+            "expected wrapper to allocate an NSPoint result buffer\n{}",
+            output
+        );
+        assert!(
+            output.contains("%result-buf"),
+            "expected wrapper to pass `%result-buf` as the implicit leading arg\n{}",
             output
         );
     }

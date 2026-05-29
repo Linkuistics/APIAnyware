@@ -40,10 +40,13 @@
   (define %msg-set-uint64
     (foreign-procedure "objc_msgSend" (void* void* unsigned-64) void))
 
-  ;; objc_msgSend returning NSPoint by value. On arm64 / x86_64 a 16-byte
-  ;; aggregate fits in two return registers, so plain objc_msgSend is the
-  ;; correct entry — no _stret variant required. Chez allocates the result
-  ;; buffer and hands back an ftype-pointer.
+  ;; objc_msgSend returning NSPoint by value. No `_stret` variant is needed
+  ;; (a 16-byte aggregate is register-returned by the C ABI), but Chez's
+  ;; `(& NSPoint)` *result* convention is uniform regardless of size: the
+  ;; foreign-procedure takes the result buffer as a hidden leading arg and
+  ;; writes the struct into it. The caller (see `nsevent-location-in-window`)
+  ;; must allocate that buffer and pass it first; calling with just
+  ;; `(self sel)` fails at runtime with "incorrect number of arguments".
   (define %msg-point
     (foreign-procedure "objc_msgSend" (void* void*) (& NSPoint)))
 
@@ -249,4 +252,6 @@
     (sel-register "locationInWindow"))
 
   (define (nsevent-location-in-window evt)
-    (%msg-point (coerce-arg evt) sel-location-in-window)))
+    (let ([buf (make-ftype-pointer NSPoint (foreign-alloc (ftype-sizeof NSPoint)))])
+      (%msg-point buf (coerce-arg evt) sel-location-in-window)
+      buf)))
