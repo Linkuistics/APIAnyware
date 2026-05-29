@@ -66,21 +66,51 @@ orchestration (`compile-whole-program` → `make-boot-file` → `cc`-link
 module (`standalone.rs`), reusing the existing deps walker, `spec`, codesign, and
 install-name machinery. Promote to a sibling crate only if it later grows
 unwieldy. Racket's stub-launcher path is untouched.
+*Amended by D6: no enum — single mode.*
+
+**D6 — Closed-world dropped; source-exec retired; single open-world standalone
+mode (2026-05-29, user steer on the spike numbers).** With the spike returning
+GO, the user decided: (a) **retire source-exec entirely** — standalone-only
+distribution, no system-Chez dependency; (b) **drop closed-world** — open-world
+already delivers full self-containment (4.5 MB / 0.29 s), closed-world's ~1 MB /
+~60 ms gain does not justify building the eval-free dispatch backend its
+dispatch-using apps would require (spike F1). This **supersedes D2/D3** (no
+two-dispatch-backend split; the `eval`-synthesised `dispatch.sls` is the sole
+backend; requirement 1 reverts to universal) and **amends D5** (no `AppSpec`
+build-mode enum — one bundle shape). Durable record: **ADR-0009** +
+`docs/specs/2026-05-29-chez-standalone-distribution-design.md`. This is the
+planning output of `020`.
 
 ## Children
-- **`010-spike-dual-mode-standalone.md`** (work/spike) — the gate (D1). Prove
-  open-world AND closed-world standalone for `hello-window` (D3), capture the
-  three-way numbers (D4), confirm it launches in a VM with Chez uninstalled.
-  Outputs a spike report with a go/no-go and the measurements.
-- **`020-decide-spec-and-grow.md`** (planning) — runs *after* the spike. Reads
-  the numbers, makes the D4 source-exec-retirement call, writes the design-spec
-  section (chosen approach, bundle layout, build pipeline, what's obsoleted),
-  raises ADRs (standalone build modes; the D2 two-dispatch-backend / requirement-1
-  amendment), then grows the implementation work leaves — including the
-  closed-world eval-free dispatch backend, the open/closed builder modes, the
-  toolchain docs (original requirement 2), and a per-app VM-verify leaf
-  ([[feedback-use-testanyware]]). Grown lazily once the spike's reality is known,
-  so the tree isn't speculated ahead of evidence.
+- **`010-spike-dual-mode-standalone.md`** (work/spike) — *done.* The gate (D1).
+  Returned **GO**: native standalone proven for `hello-window` in both modes,
+  launches in a no-Chez VM. Report: `docs/research/2026-05-29-chez-standalone-spike.md`.
+- **`020-decide-spec-and-grow.md`** (planning) — *this leaf.* Read the numbers,
+  made the calls (D6: source-exec retired, closed-world dropped, single
+  open-world mode). Wrote ADR-0009 +
+  `docs/specs/2026-05-29-chez-standalone-distribution-design.md`, updated the
+  glossary, and grew the implementation leaves below.
+
+Grown by `020` (open-world single-mode tree — the closed-world / eval-free
+dispatch children the original brief anticipated are **not** built, per D6):
+
+- **`030-standalone-build-pipeline.md`** (work) — productionise the spike into
+  `bundle-chez/standalone.rs`: whole-program compile → boot → cc-link → assemble
+  + sign, the top-level-program wrapper (spike F2), the dylib-search prelude (F3),
+  the `Resources/` boot+dylib layout (F4), banner suppression (F6).
+  `hello-window` builds & launches as a self-contained `.app` via `bundle_app`.
+  Source-exec stays in place (green path).
+- **`040-retire-source-exec.md`** (work) — delete `launch.rs`/`precompile.rs`,
+  `launch.ss`, the version-coupling, `DEFAULT_CHEZ_PATH`, and the
+  `skip_precompile`/`runtime_path` `AppSpec` fields; record the obsoleted
+  follow-ups (leaf-160, menu-bar gotcha, golden-image note).
+- **`050-standalone-app-portfolio.md`** (work) — convert all 7 sample apps to
+  standalone and VM-verify each in a no-Chez VM ([[feedback-use-testanyware]],
+  [[feedback-vm-verify-every-app]]); the parity bar from the grove-root brief.
+  May decompose into per-app leaves when picked.
+- **`060-standalone-toolchain-docs.md`** (work) — original requirement 2: the
+  required Chez kernel artifacts, where they come from, the exact build pipeline,
+  the dev-repro recipe. Feeds `070-rewrite-adding-language-target`.
 
 ## Original requirements (from the user, 2026-05-29 — requirement 1 amended by D2)
 

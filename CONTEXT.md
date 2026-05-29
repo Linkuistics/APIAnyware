@@ -65,23 +65,28 @@ two targets** (e.g. `chez-class`, `chez-functional`) rather than
 reintroducing this dimension.
 _Avoid_: do not reuse this word in the new design.
 
-**Open-world build** _(chez standalone mode)_:
-A self-contained chez `.app` whose binary embeds the full `scheme` boot —
-compiler, `eval`, and `load` all live at runtime. The app can compile and load
-arbitrary Scheme after launch; the dispatch substrate keeps its runtime-`eval`
-backend, synthesizing `foreign-callable` trampolines on demand. Larger (it
-carries the compiler), and the universal fallback — any app can ship this way.
-Contrast **Closed-world build**.
-_Avoid_: "dynamic build", "full build".
+**Open-world build** _(the chez standalone bundle shape)_:
+A self-contained chez `.app` whose binary **embeds the full `scheme` boot** —
+compiler, `eval`, and `load` all live at runtime — plus a whole-program boot
+image of the app and its dependencies. No system Chez is needed to run it. The
+app can compile and load arbitrary Scheme after launch; the dispatch substrate
+keeps its runtime-`eval` backend, synthesizing `foreign-callable` trampolines on
+demand. This is the **single** chez bundle shape — it replaced the source-exec
+model entirely (ADR-0009). The contrasting **Closed-world build** was evaluated
+and dropped, so "open-world" no longer names one pole of a live contrast; it
+names the artifact (full boot, runtime `eval` available).
+_Avoid_: "dynamic build", "full build", "source-exec" (the retired prior model).
 
-**Closed-world build** _(chez standalone mode)_:
-A self-contained chez `.app` sealed via `compile-whole-program`; the binary uses
-no runtime compiler. Every `foreign-callable` trampoline the app needs is
-enumerated from the app's **static** usage and emitted as a literal form at build
-time (a distinct dispatch backend from open-world's `eval`-synthesized one).
-Smaller, faster cold start, reduced surface; **cannot** load new Scheme at
-runtime. Chosen per-app when the app does not need runtime Scheme loading.
-_Avoid_: "static build", "sealed build" (alone), "stripped build".
+**Closed-world build** _(retired)_:
+Formerly the second proposed chez standalone mode — a `.app` sealed via
+`compile-whole-program` against a `petite`-only boot, with no runtime compiler.
+Retired (ADR-0009): the spike showed its gain over open-world was marginal
+(~1 MB / ~60 ms) while closed-world for any dispatch-using app is *physically
+impossible* without a separate eval-free dispatch backend (a `petite` boot
+"cannot compile foreign-callable"). The cost did not justify the gain. **If a
+future app genuinely needs a sealed, no-runtime-compiler build, add it back as a
+variant then** (ADR-0004's lazy-extension hatch).
+_Avoid_: do not reintroduce as a live mode without re-opening ADR-0009.
 
 ## Flagged ambiguities
 
