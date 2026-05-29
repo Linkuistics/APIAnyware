@@ -132,6 +132,24 @@ pub enum BundleError {
     PrecompileFailed { stderr: String },
 
     #[error(
+        "Chez kernel artifacts (libkernel.a, petite.boot, scheme.boot, scheme.h) \
+         not found. Searched: {searched}. Set AW_CHEZ_KERNEL_DIR to override."
+    )]
+    KernelArtifactsNotFound { searched: String },
+
+    #[error("whole-program compile failed (chez):\n{stderr}")]
+    WholeProgramCompileFailed { stderr: String },
+
+    #[error("make-boot-file failed (chez):\n{stderr}")]
+    MakeBootFailed { stderr: String },
+
+    #[error("cc link of the embedding host failed:\n{stderr}")]
+    CcLinkFailed { stderr: String },
+
+    #[error("`cc` not available: {0}")]
+    CcNotAvailable(#[source] std::io::Error),
+
+    #[error(
         "dependency walker reported file {target} outside source root {root} \
          (chez resolved a library to a path outside the bundle tree)"
     )]

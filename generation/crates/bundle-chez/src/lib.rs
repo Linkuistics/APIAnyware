@@ -56,6 +56,7 @@ mod deps;
 mod launch;
 mod precompile;
 mod spec;
+mod standalone;
 
 pub use bundle::{
     bundle_app, bundle_app_with_entry, resolve_signing_identity, AppSpec, BundleError,
@@ -63,3 +64,4 @@ pub use bundle::{
 };
 pub use deps::{collect_dependencies, collect_dependencies_with_chez, DEFAULT_CHEZ_BIN};
 pub use spec::read_display_name_from_spec;
+pub use standalone::bundle_app_standalone;
