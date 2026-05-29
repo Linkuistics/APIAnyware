@@ -53,6 +53,7 @@
 
 mod bundle;
 mod deps;
+mod launch;
 mod precompile;
 mod spec;
 

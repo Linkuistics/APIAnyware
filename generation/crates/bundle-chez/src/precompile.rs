@@ -29,13 +29,16 @@
 //! ## Chez-version coupling
 //!
 //! `.so` files are tied to the exact Chez version that wrote them.
-//! If the host's Chez upgrades after a bundle is built, the
-//! bundle's `.so` files become incompatible and `--script` startup
-//! errors out. Rebuilding the bundle is the only fix. Document this
-//! caveat in the per-target README; for development convenience,
-//! [`AppSpec::skip_precompile`](crate::AppSpec::skip_precompile)
-//! lets callers ship `.sls`-only bundles that tolerate Chez upgrades
-//! at the cost of cold-launch time.
+//! If the Chez running a bundle differs from the one that precompiled
+//! it, loading the `.so` is a hard error — not a fall-through to
+//! source. The bundle is no longer *crash*-coupled to that version,
+//! though: the generated `launch.ss` bootstrap (see [`crate::launch`])
+//! stamps the precompiling version and, when the running Chez differs,
+//! drops the object extension from `library-extensions` so Chez loads
+//! source instead (slower cold start, no objects written, signature
+//! intact). The fast `.so` path still runs whenever the versions match.
+//! [`AppSpec::skip_precompile`](crate::AppSpec::skip_precompile) remains
+//! available to ship `.sls`-only bundles outright.
 
 use std::fs;
 use std::path::{Path, PathBuf};

@@ -9,6 +9,7 @@ use apianyware_macos_stub_launcher::{codesign_path, create_app_bundle, StubConfi
 use plist::Value as PlistValue;
 
 use crate::deps::{absolutize, collect_dependencies, DEFAULT_CHEZ_BIN};
+use crate::launch::{chez_version, generate_launch_bootstrap};
 use crate::precompile::precompile_bundled_libraries;
 
 /// Default Chez runtime path baked into stub binaries. Matches the
@@ -114,18 +115,15 @@ pub enum BundleError {
     #[error("entry script {entry} not found")]
     EntryMissing { entry: PathBuf },
 
-    #[error("entry script {0} has no file stem — stub launcher needs a base name")]
-    EntryHasNoStem(PathBuf),
-
-    #[error("entry script {0} has no file extension — stub launcher needs a resource type")]
-    EntryHasNoExtension(PathBuf),
-
     #[error("chez binary {chez_bin:?} not available: {source}")]
     ChezNotAvailable {
         chez_bin: String,
         #[source]
         source: std::io::Error,
     },
+
+    #[error("could not determine Chez version from `{chez_bin} --version`: {detail}")]
+    ChezVersion { chez_bin: String, detail: String },
 
     #[error("chez deps walker failed:\n{stderr}")]
     DepsExtractFailed { stderr: String },
@@ -224,28 +222,31 @@ pub fn bundle_app_with_entry(
         });
     }
 
-    let script_resource_name = abs_entry
-        .file_stem()
-        .ok_or_else(|| BundleError::EntryHasNoStem(abs_entry.clone()))?
+    // Entry path relative to the source root. The staging loop below copies
+    // it to `chez-app/<entry_rel>`, and the generated `launch.ss` bootstrap
+    // loads it back via this same relative path under the bundle's libdir.
+    let entry_rel = abs_entry
+        .strip_prefix(&abs_root)
+        .expect("entry was validated to be under source root")
         .to_string_lossy()
         .into_owned();
-    let script_resource_type = abs_entry
-        .extension()
-        .ok_or_else(|| BundleError::EntryHasNoExtension(abs_entry.clone()))?
-        .to_string_lossy()
-        .into_owned();
-
-    let script_resource_dir = derive_script_resource_dir(&abs_entry, &abs_root);
 
     let dependencies = collect_dependencies(&abs_entry, &abs_root)?;
 
+    // The stub launches `chez --libdirs <chez-app> --script <chez-app>/launch.ss`.
+    // `launch.ss` (written after the tree is staged) version-gates the
+    // precompiled `.so` objects, then loads the real entry. Routing through
+    // the bootstrap — rather than `--script`'ing the entry directly — is what
+    // lets the bundle survive a Chez version mismatch on the target machine
+    // (see `crate::launch`). No app reads `(command-line)`, so loading the
+    // entry via `load` rather than `--script` is behaviourally equivalent.
     let stub_config = StubConfig {
         app_name: spec.app_name.clone(),
         runtime_path: spec.runtime_path.clone(),
         runtime_args: vec!["--script".to_string()],
-        script_resource_name,
-        script_resource_type,
-        script_resource_dir,
+        script_resource_name: "launch".to_string(),
+        script_resource_type: "ss".to_string(),
+        script_resource_dir: "chez-app".to_string(),
         bundle_identifier: spec.bundle_id.clone(),
         signing_identity: spec.signing_identity.clone(),
         // Chez resolves `(apianyware ...)` library names against
@@ -278,6 +279,23 @@ pub fn bundle_app_with_entry(
     copy_dir_recursive(&lib_src, &lib_dst)?;
     normalize_dylib_install_names(&lib_dst)?;
 
+    // Write the version-resilient bootstrap as the bundle's `--script`
+    // target. When precompiling, stamp it with the precompiling Chez's
+    // version so a mismatched runtime Chez falls back to loading source
+    // instead of crashing on the cross-version `.so` objects. A source-only
+    // bundle (skip_precompile) ships no objects, so it carries no stamp.
+    // Written before precompile/codesign so it is a signed bundle resource;
+    // its `.ss` extension keeps it out of the precompile walk.
+    let stamp = if spec.skip_precompile {
+        None
+    } else {
+        Some(chez_version(DEFAULT_CHEZ_BIN)?)
+    };
+    fs::write(
+        chez_app.join("launch.ss"),
+        generate_launch_bootstrap(&entry_rel, stamp),
+    )?;
+
     // Pre-compile every staged `.sls` library to a sibling `.so` so the
     // bundled `chez --script` invocation picks up cached objects and
     // skips the on-import compile pass (~75s for the AppKit facade).
@@ -299,22 +317,6 @@ pub fn bundle_app_with_entry(
     );
 
     Ok(app_path)
-}
-
-/// `chez-app/` is always the top of the bundle's chez tree. Append the
-/// entry's parent dir relative to `abs_root` so the stub's
-/// `Bundle.main.path(forResource:ofType:inDirectory:)` lookup finds
-/// the script.
-fn derive_script_resource_dir(abs_entry: &Path, abs_root: &Path) -> String {
-    let parent_rel = abs_entry
-        .parent()
-        .and_then(|p| p.strip_prefix(abs_root).ok())
-        .unwrap_or_else(|| Path::new(""));
-    if parent_rel.as_os_str().is_empty() {
-        "chez-app".to_string()
-    } else {
-        format!("chez-app/{}", parent_rel.to_string_lossy())
-    }
 }
 
 fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
@@ -424,21 +426,6 @@ mod tests {
         assert_eq!(spec.bundle_id, "com.linkuistics.HelloWindow");
         assert_eq!(spec.script_name, "hello-window");
         assert_eq!(spec.runtime_path, DEFAULT_CHEZ_PATH);
-    }
-
-    #[test]
-    fn script_resource_dir_root_level_entry_is_chez_app() {
-        let dir = derive_script_resource_dir(Path::new("/root/main.sls"), Path::new("/root"));
-        assert_eq!(dir, "chez-app");
-    }
-
-    #[test]
-    fn script_resource_dir_apps_sample_layout_appends_path() {
-        let dir = derive_script_resource_dir(
-            Path::new("/root/apps/hello-window/hello-window.sls"),
-            Path::new("/root"),
-        );
-        assert_eq!(dir, "chez-app/apps/hello-window");
     }
 
     #[test]

@@ -183,6 +183,21 @@ fn bundles_minimal_chez_project_into_app_directory() {
         "main.sls is a script, not a library — should not have been precompiled"
     );
 
+    // Version-resilient bootstrap is the bundle's `--script` target. It
+    // loads the real entry and, on a Chez version mismatch, drops the
+    // object extension so the stale `.so` set is bypassed (loads source
+    // instead of crashing). Stamped because this bundle was precompiled.
+    let launch = chez_app.join("launch.ss");
+    let launch_src = std::fs::read_to_string(&launch).expect("launch.ss present at chez-app root");
+    assert!(
+        launch_src.contains(r#"(define entry-rel "main.sls")"#),
+        "launch.ss must load the real entry by its libdir-relative path"
+    );
+    assert!(
+        launch_src.contains("(scheme-version-number)") && launch_src.contains("-disabled"),
+        "stamped launch.ss must version-gate and mangle the object extension on mismatch"
+    );
+
     // Info.plist carries the derived bundle metadata.
     let plist = std::fs::read_to_string(contents.join("Info.plist")).unwrap();
     assert!(plist.contains("<string>Minimal Chez</string>"));

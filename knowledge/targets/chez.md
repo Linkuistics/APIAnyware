@@ -244,8 +244,31 @@ AppKit alone is 70k lines). `bundle-chez` runs a post-stage precompile over
 `(compile-imported-libraries #t)` — iterating *every* `.sls` individually breaks
 caching, because each later `compile-library` invalidates earlier libraries'
 dependency stamp and Chez reloads from source. Result: ~70s → ~1.85s cold,
-bundle ~2.7× larger. The `.so` set is **Chez-version-coupled** — rebuild after
-`brew upgrade chezscheme`. Opt out via `AppSpec::skip_precompile`.
+bundle ~2.7× larger. Opt out via `AppSpec::skip_precompile`.
+
+🟢 **2026-05-29 — bundle is version-resilient, not version-coupled (the
+`launch.ss` bootstrap).** A `.so` is loadable only by the exact Chez version
+that wrote it, and a cross-version `.so` load is a **hard error**, not a
+fall-through to source. So a bundle precompiled by the dev host's Chez (10.4.1)
+used to crash on a freshly-provisioned VM whose `brew install chezscheme` poured
+a different bottle (10.3.0 ⇄ 10.4.1 over a single day) — the run had to copy the
+host's Cellar in by hand (leaf 130's report, Issue 1). Fixed by making the
+bundle's stub `--script` a generated **`launch.ss`** (one per bundle, at the
+`chez-app` root) instead of the app entry directly. `launch.ss` stamps the
+precompiling Chez version, compares it to `(scheme-version-number)` at launch,
+and **on mismatch rewrites the object half of every `library-extensions` pair**
+(`(".sls" . ".so")` → `(".sls" . ".so-disabled")`) so object lookups miss and
+Chez compiles source in memory — the ~75s cold start a non-precompiled bundle
+already pays, but it **launches anywhere** and **writes no objects** (the bundle
+signature stays valid). When versions match it is a no-op and the fast `.so`
+path runs unchanged. Mechanism (chosen shape: *version-stamp + graceful
+fallback*) lives in `bundle-chez/src/launch.rs`; the entry is `load`ed (no app
+reads `(command-line)`, so it is equivalent to `--script`). `skip_precompile`
+bundles ship no objects and carry no stamp. **Implication for VM-verify:** a
+vanilla provisioned VM no longer needs the manual host-Chez swap — a mismatched
+Chez just triggers the slow source path. The remaining provisioning follow-up
+(pre-install a pinned Chez in the golden image, 050 brief note) is now a *speed*
+optimisation, not a *correctness* requirement.
 
 🟢 **2026-05-28 — `bundle-chez`'s deps walker skips `build/`.** A sibling app's
 `build/<App>.app/…/chez-app/apianyware/*.sls` tree under the same source root
