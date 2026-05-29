@@ -11,7 +11,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use apianyware_macos_bundle_chez::{
-    bundle_app, bundle_app_with_entry, read_display_name_from_spec, AppSpec, BundleError,
+    bundle_app, bundle_app_with_entry, compute_collisions, read_display_name_from_spec, AppSpec,
+    BundleError, Collisions,
 };
 
 fn workspace_root() -> PathBuf {
@@ -202,6 +203,46 @@ fn bundles_minimal_chez_project_into_app_directory() {
     let plist = std::fs::read_to_string(contents.join("Info.plist")).unwrap();
     assert!(plist.contains("<string>Minimal Chez</string>"));
     assert!(plist.contains("<string>com.linkuistics.MinimalChez</string>"));
+}
+
+/// The standalone wrapper's collision set for `hello-window` must be
+/// exactly the spike's 4 names, mapped to the right facades (spec §3, the
+/// regression anchor for leaf 020). Heavy: the probe expands the whole
+/// AppKit facade closure (~75s), so it is `#[ignore]`d — run with
+/// `cargo test -p apianyware-macos-bundle-chez -- --ignored
+/// computes_hello_window_collision_set`. The probe is pure (no `.so`
+/// writes), so running it against the source tree leaves it untouched.
+#[test]
+#[ignore = "heavy: expands the AppKit facade (~75s); run explicitly with --ignored"]
+fn computes_hello_window_collision_set() {
+    if !chez_available() {
+        eprintln!("SKIPPED: chez not available");
+        return;
+    }
+    if !chez_runtime_present() {
+        eprintln!("SKIPPED: chez runtime tree not present");
+        return;
+    }
+    let root = chez_root();
+    let entry = root.join("apps").join("hello-window").join("hello-window.sls");
+
+    let collisions = compute_collisions(&entry, &root).expect("collision probe");
+
+    let expected = Collisions::from([
+        (
+            "(apianyware appkit)".to_string(),
+            vec!["nsevent-location-in-window".to_string()],
+        ),
+        (
+            "(apianyware foundation)".to_string(),
+            vec![
+                "nserror-code".to_string(),
+                "nserror-domain".to_string(),
+                "reverse".to_string(),
+            ],
+        ),
+    ]);
+    assert_eq!(collisions, expected, "hello-window collision set drifted");
 }
 
 #[test]

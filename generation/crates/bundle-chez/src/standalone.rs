@@ -11,9 +11,13 @@
 //!    `--script` entry is not a valid R6RS top-level program — names
 //!    exported by two imported libraries are a hard duplicate-import
 //!    error under `compile-program`/`compile-whole-program` (spike F2).
-//!    The wrapper has the framework facades **yield** (`(except <facade>
-//!    <names>…)`) to `runtime/objc` + `(chezscheme)`, and installs a
-//!    `(scheme-start …)` thunk instead of calling `(main)` at top level.
+//!    The collision set is **computed per app** by a chez probe
+//!    (`scripts/standalone-collisions.ss`, via [`compute_collisions`]):
+//!    it classifies each imported library as a framework *facade* or a
+//!    *curated* library and, for every name a facade shares with the
+//!    curated union, has the facade **yield** (`(except <facade>
+//!    <names>…)`). The wrapper then installs a `(scheme-start …)` thunk
+//!    instead of calling `(main)` at top level.
 //! 2. **Whole-program compile** the wrapper + its import closure to one
 //!    tree-shaken object (`compile-program` + `compile-whole-program`).
 //! 3. **`make-boot-file`** with an empty base list, concatenating
@@ -24,16 +28,16 @@
 //! 5. **Assemble + sign** the `.app`: boot + dylib under
 //!    `Contents/Resources/` (F4); sign nested dylib then bundle (F5).
 //!
-//! # Leaf 010 scope (node 060/030)
+//! # Leaf 020 scope (node 060/030)
 //!
-//! This leaf ports the spike's **mechanics**. The wrapper's collision set
-//! is **hand-coded for `hello-window`** here (the spike's 4-`except` set);
-//! leaf 020 replaces it with an automatic `environment-symbols` probe that
-//! computes the set for any app. The dylib-search root is seeded by the
-//! `embed_main.c` `chdir` expedient; leaf 030 replaces that with a Scheme
-//! prelude. Source-exec (`bundle_app`) is untouched — its retirement is
-//! node-leaf 040.
+//! This leaf generalises the wrapper. Leaf 010 hand-coded the
+//! `hello-window` 4-`except` set; the collision set is now **computed for
+//! any app** by [`compute_collisions`] (the `environment-symbols` probe).
+//! The dylib-search root is still seeded by the `embed_main.c` `chdir`
+//! expedient; leaf 030 replaces that with a Scheme prelude. Source-exec
+//! (`bundle_app`) is untouched — its retirement is node-leaf 040.
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -46,6 +50,9 @@ use crate::deps::{absolutize, collect_dependencies, DEFAULT_CHEZ_BIN};
 
 /// The embedding host, compiled and linked into every standalone binary.
 const EMBED_MAIN_C: &str = include_str!("resources/embed_main.c");
+
+/// The per-app collision probe (computes each facade's `except` list).
+const STANDALONE_COLLISIONS_SS: &str = include_str!("../scripts/standalone-collisions.ss");
 
 /// Build a self-contained open-world `.app` for the chez sample app at
 /// `source_root/apps/<script_name>/<script_name>.sls` into
@@ -107,11 +114,20 @@ pub fn bundle_app_standalone(
     fs::create_dir_all(&tree_lib)?;
     fs::copy(&dylib_src, tree_lib.join("libAPIAnywareChez.dylib"))?;
 
-    // 1b. Generate the top-level-program wrapper (hand-coded collisions —
-    //     leaf 010). The wrapper is the compile entry; it imports the
-    //     facades (now yielding) and ends in (scheme-start …).
+    // 1b. Compute the duplicate-import collision set for this app from its
+    //     import closure (the chez environment-symbols probe — leaf 020),
+    //     then generate the top-level-program wrapper. The wrapper is the
+    //     compile entry; it imports the facades (now yielding) and ends in
+    //     (scheme-start …). The probe runs against the staged tree so the
+    //     facade libraries resolve.
+    let tree_entry = tree.join(
+        entry
+            .strip_prefix(&abs_root)
+            .expect("entry validated under source root"),
+    );
+    let collisions = compute_collisions(&tree_entry, &tree)?;
     let app_source = fs::read_to_string(&entry)?;
-    let wrapper_src = generate_wrapper_hello_window(&app_source);
+    let wrapper_src = generate_wrapper(&app_source, &collisions)?;
     let wrapper = build.join("app-entry.ss");
     fs::write(&wrapper, &wrapper_src)?;
 
@@ -216,43 +232,106 @@ pub fn bundle_app_standalone(
     Ok(app_path)
 }
 
-/// Generate the strict top-level-program wrapper for `hello-window` from
-/// its `--script` source (leaf 010 — **hand-coded** collision set).
+/// The per-facade duplicate-import collision set for an app: each facade
+/// library (as written in the entry's import form, e.g.
+/// `"(apianyware appkit)"`) mapped to the sorted list of names it must
+/// `except` to yield to the curated runtime API + `(chezscheme)`. Facades
+/// with no collisions are absent. A `BTreeMap` so iteration (and the
+/// resulting wrapper) is deterministic.
+pub type Collisions = BTreeMap<String, Vec<String>>;
+
+/// Compute the collision set for the app at `entry` by running the
+/// `environment-symbols` probe (`scripts/standalone-collisions.ss`) with
+/// `source_root` as the library-directories root.
 ///
-/// Two transforms (spec §3):
-/// 1. The framework facades yield to the curated runtime + `(chezscheme)`
-///    for the 4 names that collide in hello-window's import closure
-///    (`nserror-code`, `nserror-domain`, `reverse`,
-///    `nsevent-location-in-window` — spike F2).
+/// The probe is **pure** — it expands the import closure to read each
+/// library's bound names but writes no `.so`/`.wpo`, so it is safe to run
+/// against a source tree directly. It pays the one-time AppKit-facade
+/// expansion (~75 s for a full AppKit app); leaf 020 keeps it a separate
+/// step rather than warming the whole-program cache, to avoid scattering
+/// compile artifacts into the (possibly source) tree.
+pub fn compute_collisions(entry: &Path, source_root: &Path) -> Result<Collisions, BundleError> {
+    let dir = tempfile::tempdir()?;
+    let script = dir.path().join("standalone-collisions.ss");
+    fs::write(&script, STANDALONE_COLLISIONS_SS)?;
+
+    let out = Command::new(DEFAULT_CHEZ_BIN)
+        .arg("--script")
+        .arg(&script)
+        .arg(source_root)
+        .arg(entry)
+        .output()
+        .map_err(|e| BundleError::ChezNotAvailable {
+            chez_bin: DEFAULT_CHEZ_BIN.to_string(),
+            source: e,
+        })?;
+    if !out.status.success() {
+        return Err(BundleError::CollisionProbeFailed {
+            stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
+        });
+    }
+    Ok(parse_collisions(&String::from_utf8_lossy(&out.stdout)))
+}
+
+/// Parse the probe's stdout — one `(<facade>)\t<name> <name> …` line per
+/// colliding facade — into a [`Collisions`] map.
+fn parse_collisions(stdout: &str) -> Collisions {
+    let mut map = Collisions::new();
+    for line in stdout.lines() {
+        let line = line.trim_end();
+        if line.is_empty() {
+            continue;
+        }
+        if let Some((facade, names)) = line.split_once('\t') {
+            let names: Vec<String> = names.split_whitespace().map(str::to_owned).collect();
+            if !names.is_empty() {
+                map.insert(facade.to_string(), names);
+            }
+        }
+    }
+    map
+}
+
+/// Generate the strict top-level-program wrapper from the app's
+/// `--script` source and its computed collision set (spec §3).
+///
+/// Two transforms:
+/// 1. Each colliding facade's import spec `(apianyware <fw>)` is rewritten
+///    to `(except (apianyware <fw>) <names>…)` so the facade yields to the
+///    curated runtime + `(chezscheme)`. The facade spec is matched
+///    verbatim (the probe prints it in the same canonical
+///    single-space form the generated apps are authored in); a facade the
+///    probe named but that is absent from the source is a hard error
+///    rather than a silent no-op.
 /// 2. The trailing top-level `(main)` call becomes a `(scheme-start …)`
 ///    thunk so the embedding host drives the entry (the run loop must not
-///    fire during boot load).
-///
-/// Leaf 020 replaces this hand-coded function with a generator that
-/// computes the collision set for any app via `environment-symbols`.
-fn generate_wrapper_hello_window(app_source: &str) -> String {
-    // 1. Facade yields (hand-coded for hello-window).
-    let body = app_source
-        .replace(
-            "(apianyware appkit)",
-            "(except (apianyware appkit) nsevent-location-in-window)",
-        )
-        .replace(
-            "(apianyware foundation)",
-            "(except (apianyware foundation) nserror-code nserror-domain reverse)",
-        );
+///    fire during boot load). Robust to trailing whitespace/newlines; the
+///    earlier `(define-entry-point (main) …)` head is untouched.
+pub fn generate_wrapper(app_source: &str, collisions: &Collisions) -> Result<String, BundleError> {
+    // 1. Facade yields. Deterministic order (BTreeMap); each facade spec
+    //    appears once in the import form. The closing paren in the matched
+    //    spec keeps `(apianyware foundation)` from matching a longer name.
+    let mut body = app_source.to_string();
+    for (facade, names) in collisions {
+        let except = format!("(except {} {})", facade, names.join(" "));
+        if !body.contains(facade.as_str()) {
+            return Err(BundleError::FacadeNotInSource {
+                facade: facade.clone(),
+            });
+        }
+        body = body.replacen(facade.as_str(), &except, 1);
+    }
 
-    // 2. Drop the trailing top-level `(main)` (the only `(main)` token at
-    //    the tail — `(define-entry-point (main) …)` earlier is untouched)
-    //    and install a scheme-start thunk in its place.
+    // 2. Drop the trailing top-level `(main)` call and install a
+    //    scheme-start thunk in its place.
     let trimmed = body.trim_end();
     let head = trimmed
         .strip_suffix("(main)")
-        .expect("app entry must end in a top-level (main) call");
-    format!(
+        .ok_or(BundleError::WrapperNoTrailingMain)?;
+    Ok(format!(
         "{}\n(scheme-start (lambda args (main) 0))\n",
         head.trim_end()
-    )
+    ))
 }
 
 /// Locate the Chez kernel artifact directory on the build host. Honours
@@ -383,9 +462,46 @@ mod tests {
 (main)
 ";
 
+    /// The collision set the probe computes for `hello-window` (spike F2);
+    /// the regression anchor leaf 020 must reproduce exactly.
+    fn hello_window_collisions() -> Collisions {
+        Collisions::from([
+            (
+                "(apianyware appkit)".to_string(),
+                vec!["nsevent-location-in-window".to_string()],
+            ),
+            (
+                "(apianyware foundation)".to_string(),
+                vec![
+                    "nserror-code".to_string(),
+                    "nserror-domain".to_string(),
+                    "reverse".to_string(),
+                ],
+            ),
+        ])
+    }
+
     #[test]
-    fn wrapper_makes_facades_yield() {
-        let w = generate_wrapper_hello_window(HELLO_SOURCE);
+    fn parse_collisions_reads_tab_delimited_lines() {
+        let stdout = "(apianyware appkit)\tnsevent-location-in-window\n\
+                      (apianyware foundation)\tnserror-code nserror-domain reverse\n";
+        assert_eq!(parse_collisions(stdout), hello_window_collisions());
+    }
+
+    #[test]
+    fn parse_collisions_ignores_blank_and_malformed_lines() {
+        // No tab → not a collision line; blank lines skipped.
+        let stdout = "\n(apianyware appkit)\tnsevent-location-in-window\nno-tab-here\n\n";
+        let m = parse_collisions(stdout);
+        assert_eq!(m.len(), 1);
+        assert!(m.contains_key("(apianyware appkit)"));
+    }
+
+    #[test]
+    fn wrapper_reproduces_hand_coded_010_result() {
+        // The exact strings leaf 010 hand-coded for hello-window, now
+        // produced from the computed collision set.
+        let w = generate_wrapper(HELLO_SOURCE, &hello_window_collisions()).unwrap();
         assert!(w.contains("(except (apianyware appkit) nsevent-location-in-window)"));
         assert!(w.contains("(except (apianyware foundation) nserror-code nserror-domain reverse)"));
         // The bare facade imports must be gone.
@@ -395,7 +511,7 @@ mod tests {
 
     #[test]
     fn wrapper_installs_scheme_start_and_drops_trailing_main() {
-        let w = generate_wrapper_hello_window(HELLO_SOURCE);
+        let w = generate_wrapper(HELLO_SOURCE, &hello_window_collisions()).unwrap();
         assert!(w
             .trim_end()
             .ends_with("(scheme-start (lambda args (main) 0))"));
@@ -404,6 +520,40 @@ mod tests {
         assert!(w.contains("(define-entry-point (main)"));
         // No leftover top-level (main) call.
         assert!(!w.trim_end().ends_with("(main)\n(main)"));
+    }
+
+    #[test]
+    fn wrapper_handles_no_collisions() {
+        // An app importing only curated libraries needs no except clauses;
+        // the wrapper is the body with just the scheme-start rewrite.
+        let src = "(import (chezscheme) (apianyware runtime objc))\n(main)\n";
+        let w = generate_wrapper(src, &Collisions::new()).unwrap();
+        assert!(w.contains("(import (chezscheme) (apianyware runtime objc))"));
+        assert!(w.trim_end().ends_with("(scheme-start (lambda args (main) 0))"));
+    }
+
+    #[test]
+    fn wrapper_tolerates_trailing_whitespace_before_main() {
+        let src = "(import (chezscheme))\n(main)\n\n  \n";
+        let w = generate_wrapper(src, &Collisions::new()).unwrap();
+        assert!(w.trim_end().ends_with("(scheme-start (lambda args (main) 0))"));
+    }
+
+    #[test]
+    fn wrapper_errs_when_facade_absent_from_source() {
+        let collisions = Collisions::from([(
+            "(apianyware webkit)".to_string(),
+            vec!["foo".to_string()],
+        )]);
+        let err = generate_wrapper(HELLO_SOURCE, &collisions).unwrap_err();
+        assert!(matches!(err, BundleError::FacadeNotInSource { .. }));
+    }
+
+    #[test]
+    fn wrapper_errs_when_no_trailing_main() {
+        let src = "(import (chezscheme))\n(display 'x)\n";
+        let err = generate_wrapper(src, &Collisions::new()).unwrap_err();
+        assert!(matches!(err, BundleError::WrapperNoTrailingMain));
     }
 
     #[test]

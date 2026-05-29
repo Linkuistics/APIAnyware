@@ -137,6 +137,22 @@ pub enum BundleError {
     )]
     KernelArtifactsNotFound { searched: String },
 
+    #[error("standalone collision probe failed (chez):\n{stderr}")]
+    CollisionProbeFailed { stderr: String },
+
+    #[error(
+        "collision probe reported facade {facade} but it does not appear \
+         verbatim in the app entry's import form — cannot rewrite it to an \
+         (except ...) clause"
+    )]
+    FacadeNotInSource { facade: String },
+
+    #[error(
+        "app entry does not end in a top-level `(main)` call — the wrapper \
+         generator cannot install its `(scheme-start ...)` thunk"
+    )]
+    WrapperNoTrailingMain,
+
     #[error("whole-program compile failed (chez):\n{stderr}")]
     WholeProgramCompileFailed { stderr: String },
 

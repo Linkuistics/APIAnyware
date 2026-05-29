@@ -64,4 +64,4 @@ pub use bundle::{
 };
 pub use deps::{collect_dependencies, collect_dependencies_with_chez, DEFAULT_CHEZ_BIN};
 pub use spec::read_display_name_from_spec;
-pub use standalone::bundle_app_standalone;
+pub use standalone::{bundle_app_standalone, compute_collisions, generate_wrapper, Collisions};
