@@ -20,7 +20,7 @@ use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::{
-    is_known_geometry_alias, return_needs_indirect_result, ChezFfiTypeMapper,
+    block_make_expr, is_known_geometry_alias, return_needs_indirect_result, ChezFfiTypeMapper,
 };
 use crate::method_filter::{is_supported_method, returns_object_type, returns_void};
 use crate::naming::{
@@ -52,7 +52,8 @@ pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String
 
     let plan = build_class_plan(cls, &mapper);
 
-    emit_header(&mut w, cls, framework, &plan.exports);
+    let needs_dispatch = plan_uses_block_bridge(&plan, &mapper);
+    emit_header(&mut w, cls, framework, &plan.exports, needs_dispatch);
 
     let needs_default_constructor = !has_explicit_constructor(
         &plan.init_methods.iter().collect::<Vec<&Method>>(),
@@ -103,6 +104,22 @@ pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String
 
 fn compute_class_exports(cls: &Class, mapper: &dyn FfiTypeMapper) -> Vec<String> {
     build_class_plan(cls, mapper).exports
+}
+
+/// True when any *supported, emitted* method in the plan takes a block
+/// parameter — meaning its wrapper body calls `make-objc-block` /
+/// `objc-block-ptr` and the class library must import
+/// `(apianyware runtime dispatch)`.
+fn plan_uses_block_bridge(plan: &ClassPlan, mapper: &dyn FfiTypeMapper) -> bool {
+    let any_block = |m: &Method| {
+        is_supported_method(m, mapper)
+            && m.params
+                .iter()
+                .any(|p| matches!(p.param_type.kind, TypeRefKind::Block { .. }))
+    };
+    plan.init_methods.iter().any(any_block)
+        || plan.instance_methods.iter().any(any_block)
+        || plan.class_methods.iter().any(any_block)
 }
 
 /// Cleaned-up emission plan for one class. Owns clones of the methods and
@@ -400,7 +417,13 @@ fn library_path_components(class_name: &str, framework: &str) -> (String, String
     (fw, cls)
 }
 
-fn emit_header(w: &mut CodeWriter, cls: &Class, framework: &str, exports: &[String]) {
+fn emit_header(
+    w: &mut CodeWriter,
+    cls: &Class,
+    framework: &str,
+    exports: &[String],
+    needs_dispatch: bool,
+) {
     let (fw, cls_low) = library_path_components(&cls.name, framework);
     write_line!(
         w,
@@ -434,7 +457,15 @@ fn emit_header(w: &mut CodeWriter, cls: &Class, framework: &str, exports: &[Stri
 make-nserror nserror? nserror-domain nserror-code \
 nserror-localised-description nserror-userinfo)",
     );
-    w.line("          (apianyware runtime types))");
+    // Methods with block parameters box the user's Scheme procedure via
+    // `make-objc-block` / `objc-block-ptr` from the dispatch runtime;
+    // import it only for classes that emit such a wrapper.
+    if needs_dispatch {
+        w.line("          (apianyware runtime types)");
+        w.line("          (apianyware runtime dispatch))");
+    } else {
+        w.line("          (apianyware runtime types))");
+    }
     w.blank_line();
 
     // Load the framework dylib at library instantiation. Without this,
@@ -487,12 +518,22 @@ fn emit_selector_cache(w: &mut CodeWriter, class_name: &str, selector: &str) -> 
     sel_var
 }
 
-fn coerce_arg_expr(param: &Param, var: &str) -> String {
+fn coerce_arg_expr(param: &Param, var: &str, mapper: &dyn FfiTypeMapper) -> String {
     match &param.param_type.kind {
         TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
             format!("(coerce-arg {})", var)
         }
         TypeRefKind::Selector => format!("(sel-register {})", var),
+        // A bridgeable block param: the user passes a bare Scheme procedure;
+        // the wrapper boxes it into an ObjC block via `make-objc-block` and
+        // passes the block pointer. `is_supported_method` has already
+        // rejected un-bridgeable blocks, so this always succeeds. The block
+        // record itself is discarded — async APIs (Block_copy/dispose) own
+        // its lifetime; the chez-side code object's bounded retention
+        // mirrors emit-racket (see runtime/dispatch.sls).
+        TypeRefKind::Block { params, return_type } => {
+            block_make_expr(var, params, return_type, mapper)
+        }
         _ => var.to_string(),
     }
 }
@@ -553,7 +594,7 @@ fn emit_method(
         .params
         .iter()
         .zip(param_vars.iter())
-        .map(|(p, v)| coerce_arg_expr(p, v))
+        .map(|(p, v)| coerce_arg_expr(p, v, mapper))
         .collect();
 
     let indirect_ftype = return_needs_indirect_result(&method.return_type);
@@ -673,7 +714,7 @@ fn emit_constructor(
         .params
         .iter()
         .zip(param_vars.iter())
-        .map(|(p, v)| coerce_arg_expr(p, v))
+        .map(|(p, v)| coerce_arg_expr(p, v, mapper))
         .collect();
 
     let alloc_call = format!(
@@ -1015,6 +1056,119 @@ mod tests {
         assert!(
             !output.contains("%result-buf"),
             "small-struct return must not allocate an explicit result buffer\n{}",
+            output
+        );
+    }
+
+    fn block(params: Vec<TypeRef>, ret: TypeRef) -> TypeRef {
+        ty(TypeRefKind::Block {
+            params,
+            return_type: Box::new(ret),
+        })
+    }
+
+    fn method_with_params(sel: &str, params: Vec<Param>, ret: TypeRef) -> Method {
+        let mut m = make_method(sel, false, false, ret);
+        m.params = params;
+        m
+    }
+
+    #[test]
+    fn bridgeable_block_param_boxes_via_make_objc_block() {
+        // Mirrors NSSavePanel -beginSheetModalForWindow:completionHandler:
+        // whose handler is `void (^)(NSModalResponse)` (NSInteger arg).
+        let cls = Class {
+            name: "NSSavePanel".into(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![method_with_params(
+                "beginSheetModalForWindow:completionHandler:",
+                vec![
+                    Param { name: "window".into(), param_type: ty(TypeRefKind::Id) },
+                    Param {
+                        name: "handler".into(),
+                        param_type: block(
+                            vec![ty(TypeRefKind::Primitive { name: "int64".into() })],
+                            ty(TypeRefKind::Primitive { name: "void".into() }),
+                        ),
+                    },
+                ],
+                ty(TypeRefKind::Primitive { name: "void".into() }),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let output = generate_class_file(&cls, "AppKit");
+        // The method binds (not deferred) and its wrapper boxes the handler.
+        assert!(
+            output.contains(
+                "(define (nssavepanel-begin-sheet-modal-for-window-completion-handler! self window handler)"
+            ),
+            "bridgeable block method must emit a wrapper\n{}",
+            output
+        );
+        assert!(
+            output.contains("(objc-block-ptr (make-objc-block handler (list 'integer-64) 'void))"),
+            "block param must box the proc via make-objc-block\n{}",
+            output
+        );
+        // The msgSend foreign-procedure declares the block arg as void*.
+        assert!(
+            output.contains("(foreign-procedure \"objc_msgSend\" (void* void* void* void*) void)"),
+            "block param's FFI type must be void*\n{}",
+            output
+        );
+        // The dispatch runtime import is pulled in.
+        assert!(
+            output.contains("(apianyware runtime dispatch))"),
+            "block-bridging class must import the dispatch runtime\n{}",
+            output
+        );
+    }
+
+    #[test]
+    fn unbridgeable_block_param_defers_method() {
+        // A block taking a by-value NSRect can't be bridged → method deferred,
+        // and no dispatch import is pulled in.
+        let cls = Class {
+            name: "NSView".into(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![method_with_params(
+                "drawWithRectHandler:",
+                vec![Param {
+                    name: "handler".into(),
+                    param_type: block(
+                        vec![ty(TypeRefKind::Alias {
+                            name: "NSRect".into(),
+                            framework: None,
+                            underlying_primitive: None,
+                        })],
+                        ty(TypeRefKind::Primitive { name: "void".into() }),
+                    ),
+                }],
+                ty(TypeRefKind::Primitive { name: "void".into() }),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let output = generate_class_file(&cls, "AppKit");
+        assert!(
+            !output.contains("draw-with-rect-handler"),
+            "un-bridgeable block method must be deferred\n{}",
+            output
+        );
+        assert!(
+            !output.contains("(apianyware runtime dispatch))"),
+            "class with no bridgeable block must not import dispatch\n{}",
             output
         );
     }

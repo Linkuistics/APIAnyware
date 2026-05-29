@@ -2,25 +2,33 @@
 //!
 //! Stricter than the racket filter: in addition to skipping variadic /
 //! deprecated / Swift-paren selectors, this scaffold also defers methods
-//! that take **block** parameters or that pass / return **non-geometry**
-//! structs by value. Block bridging needs `make-objc-block` from
-//! `runtime/dispatch.sls`; arbitrary struct-by-value would need an
-//! ftype definition the runtime doesn't carry. Known-geometry aliases
-//! (NSRect, NSPoint, NSSize, NSRange, NSEdgeInsets, …) are supported:
-//! the mapper emits `(& <ftype>)` and `runtime/types.sls` provides the
-//! ftype constructors callers pass through.
+//! that pass / return **non-geometry** structs by value, and methods whose
+//! **block** parameters carry an un-bridgeable signature. Arbitrary
+//! struct-by-value would need an ftype definition the runtime doesn't
+//! carry; known-geometry aliases (NSRect, NSPoint, NSSize, NSRange,
+//! NSEdgeInsets, …) are supported via `(& <ftype>)` against
+//! `runtime/types.sls`.
+//!
+//! Block parameters are bridged through `make-objc-block`
+//! (`runtime/dispatch.sls`): a method with a block param binds **iff** every
+//! such block reduces to scalar / `void*` `foreign-callable` tokens (see
+//! [`is_bridgeable_block`]). Blocks with by-value geometry, string, or
+//! nested-block inner types stay deferred — the trampoline can't build a
+//! `foreign-callable` for them. Methods that *return* a block stay deferred
+//! unconditionally (the reverse C-block → Scheme-proc direction is not
+//! modelled).
 
 use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_types::ir::{Method, Param};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
-use crate::ffi_type_mapping::is_known_geometry_alias;
+use crate::ffi_type_mapping::{is_bridgeable_block, is_known_geometry_alias};
 
 pub fn is_supported_method(method: &Method, mapper: &dyn FfiTypeMapper) -> bool {
     if method.variadic || method.deprecated || method.selector.contains('(') {
         return false;
     }
-    if has_block_params(&method.params) || returns_block(&method.return_type) {
+    if has_unbridgeable_block_param(&method.params, mapper) || returns_block(&method.return_type) {
         return false;
     }
     if has_unsupported_struct_param(&method.params, mapper)
@@ -46,6 +54,18 @@ pub fn returns_void(method: &Method, mapper: &dyn FfiTypeMapper) -> bool {
 
 pub fn has_block_params(params: &[Param]) -> bool {
     params.iter().any(|p| matches!(p.param_type.kind, TypeRefKind::Block { .. }))
+}
+
+/// True when the method takes a block parameter the trampoline cannot
+/// bridge (by-value geometry / string / nested-block inner types). A method
+/// whose block params are all bridgeable is *supported*.
+fn has_unbridgeable_block_param(params: &[Param], mapper: &dyn FfiTypeMapper) -> bool {
+    params.iter().any(|p| match &p.param_type.kind {
+        TypeRefKind::Block { params, return_type } => {
+            !is_bridgeable_block(params, return_type, mapper)
+        }
+        _ => false,
+    })
 }
 
 fn returns_block(t: &TypeRef) -> bool {

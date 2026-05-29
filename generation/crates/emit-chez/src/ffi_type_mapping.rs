@@ -143,6 +143,79 @@ impl FfiTypeMapper for ChezFfiTypeMapper {
     }
 }
 
+/// The `foreign-callable` type token a block's inner parameter / return
+/// type must reduce to for `make-objc-block` (`runtime/dispatch.sls`) to
+/// bridge it. `make-objc-block` builds a `foreign-callable` whose type
+/// specifiers are these tokens *literally*, so only the fixed-width scalar
+/// and `void*` tokens qualify — geometry `(& <ftype>)` by-value, `string`,
+/// and nested blocks do not (they would need ftype/marshalling the block
+/// trampoline does not carry).
+///
+/// `void` is only valid as a return token; a `void` *parameter* maps to
+/// `void*` via [`ChezFfiTypeMapper::map_type`] and is rejected here as a
+/// param to keep the bridge honest.
+fn block_callable_token(
+    t: &TypeRef,
+    is_return: bool,
+    mapper: &dyn FfiTypeMapper,
+) -> Option<String> {
+    let tok = mapper.map_type(t, is_return);
+    match tok.as_str() {
+        "void" if is_return => Some(tok),
+        "void*" | "boolean" | "float" | "double-float" | "integer-8" | "unsigned-8"
+        | "integer-16" | "unsigned-16" | "integer-32" | "unsigned-32" | "integer-64"
+        | "unsigned-64" => Some(tok),
+        _ => None,
+    }
+}
+
+/// True when a block typedef `void (^)(params…) → return_type` can be
+/// bridged by `make-objc-block`: every inner param and the return reduce
+/// to a scalar / `void*` `foreign-callable` token (see
+/// [`block_callable_token`]). A block the emitter cannot bridge keeps its
+/// enclosing method deferred in [`method_filter`](crate::method_filter).
+pub fn is_bridgeable_block(
+    params: &[TypeRef],
+    return_type: &TypeRef,
+    mapper: &dyn FfiTypeMapper,
+) -> bool {
+    block_callable_token(return_type, true, mapper).is_some()
+        && params
+            .iter()
+            .all(|p| block_callable_token(p, false, mapper).is_some())
+}
+
+/// The Scheme `(objc-block-ptr (make-objc-block <var> (list 'tok …) 'ret))`
+/// expression a generated method wrapper substitutes for a block-typed
+/// argument. `var` is the Scheme identifier the user passes (the bare
+/// procedure, mirroring emit-racket's wrapper). Caller must have verified
+/// the block is bridgeable via [`is_bridgeable_block`].
+pub fn block_make_expr(
+    var: &str,
+    params: &[TypeRef],
+    return_type: &TypeRef,
+    mapper: &dyn FfiTypeMapper,
+) -> String {
+    let param_toks: Vec<String> = params
+        .iter()
+        .map(|p| {
+            format!(
+                "'{}",
+                block_callable_token(p, false, mapper)
+                    .expect("block param verified bridgeable")
+            )
+        })
+        .collect();
+    let ret_tok = block_callable_token(return_type, true, mapper)
+        .expect("block return verified bridgeable");
+    format!(
+        "(objc-block-ptr (make-objc-block {} (list {}) '{}))",
+        var,
+        param_toks.join(" "),
+        ret_tok
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
