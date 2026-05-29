@@ -86,37 +86,29 @@ two targets** (e.g. `chez-class`, `chez-functional`) rather than
 reintroducing this dimension.
 _Avoid_: do not reuse this word in the new design.
 
-**Open-world build** _(the chez standalone bundle shape)_:
-A self-contained chez `.app` whose binary **embeds the full `scheme` boot** —
-compiler, `eval`, and `load` all live at runtime — plus a whole-program boot
-image of the app and its dependencies. No system Chez is needed to run it. The
-app can compile and load arbitrary Scheme after launch; the dispatch substrate
-keeps its runtime-`eval` backend, synthesizing `foreign-callable` trampolines on
-demand. This is the **single** chez bundle shape — it replaced the source-exec
-model entirely (ADR-0009). The contrasting **Closed-world build** was evaluated
-and dropped, so "open-world" no longer names one pole of a live contrast; it
-names the artifact (full boot, runtime `eval` available).
-_Avoid_: "dynamic build", "full build", "source-exec" (the retired prior model).
+## Racket target toolchain
 
-**Closed-world build** _(retired)_:
-Formerly the second proposed chez standalone mode — a `.app` sealed via
-`compile-whole-program` against a `petite`-only boot, with no runtime compiler.
-Retired (ADR-0009): the spike showed its gain over open-world was marginal
-(~1 MB / ~60 ms) while closed-world for any dispatch-using app is *physically
-impossible* without a separate eval-free dispatch backend (a `petite` boot
-"cannot compile foreign-callable"). The cost did not justify the gain. **If a
-future app genuinely needs a sealed, no-runtime-compiler build, add it back as a
-variant then** (ADR-0004's lazy-extension hatch).
-_Avoid_: do not reintroduce as a live mode without re-opening ADR-0009.
+**Racket 9.2**:
+The upstream Racket release the `racket` target is built and run against.
+Introduces **ffi2**. Replaces the previously-unpinned, pre-9 toolchain.
+_Avoid_: "latest Racket" (the target is pinned, not floating).
+
+**ffi2**:
+Racket 9.2's "more static alternative to `ffi/unsafe`" for binding C APIs
+(require path `ffi2`, package `ffi2-lib`). The `racket` target's FFI layer —
+both the Rust emitter's generated output and the hand-written runtime — targets
+ffi2, with `ffi/unsafe`/`ffi/unsafe/objc` retained only where ffi2 has no
+equivalent (notably ObjC message dispatch — exact boundary TBD by research).
+_Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
+class-system work.
 
 ## Flagged ambiguities
 
-- **Target vs. Language.** The Rust trait is `LanguageEmitter` /
-  `LanguageInfo` and the CLI flag is `--lang`, but the on-disk unit is
-  `generation/targets/<name>/` and includes more than an emitter (runtime,
-  sample apps, bundler). Canonical term: **target**. Renaming the trait /
-  flag is in-scope for the paradigm-retirement grove only if it falls out
-  naturally from other edits; otherwise follow-up work.
+- **Target vs. Language** _(resolved → being executed)_. The Rust trait is
+  `LanguageEmitter` / `LanguageInfo` and the CLI flag is `--lang`, but the
+  on-disk unit is a **target**. Decision: rename the trait/flag to `Target*` /
+  `--target` — executed by the `update-racket-to-9.2-and-use-ffi2` grove
+  (leaf 010), alongside `racket-oo` → `racket`. Remove this note once 010 lands.
 
 ## Example dialogue
 
