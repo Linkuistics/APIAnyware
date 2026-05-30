@@ -34,9 +34,28 @@ pub fn generate_stub_source(config: &StubConfig) -> String {
     source.push_str("    exit(1)\n");
     source.push_str("}\n\n");
 
-    // Build argv: [runtime, ...runtime_args, script]
+    // Optional libdirs prelude: chez needs --libdirs pointing at the
+    // resource subdir so its library-name resolution finds the bundled
+    // libraries (see `StubConfig::libdirs_resource_subdir`).
+    let libdirs_prelude: &str = if let Some(subdir) = &config.libdirs_resource_subdir {
+        source.push_str(&format!(
+            "guard let libdirs = Bundle.main.resourcePath.map({{ $0 + \"/{}\" }}) else {{\n",
+            escape_swift_string(subdir),
+        ));
+        source.push_str(&format!(
+            "    fputs(\"{}: Bundle.main.resourcePath unavailable\\n\", stderr)\n",
+            escape_swift_string(&config.app_name),
+        ));
+        source.push_str("    exit(1)\n");
+        source.push_str("}\n\n");
+        "\"--libdirs\", libdirs, "
+    } else {
+        ""
+    };
+
+    // Build argv: [runtime, (libdirs prelude,)? ...runtime_args, script]
     if config.runtime_args.is_empty() {
-        source.push_str("let argv = [runtime, script]\n");
+        source.push_str(&format!("let argv = [runtime, {libdirs_prelude}script]\n"));
     } else {
         let args_literal = config
             .runtime_args
@@ -44,7 +63,9 @@ pub fn generate_stub_source(config: &StubConfig) -> String {
             .map(|a| format!("\"{}\"", escape_swift_string(a)))
             .collect::<Vec<_>>()
             .join(", ");
-        source.push_str(&format!("let argv = [runtime, {args_literal}, script]\n"));
+        source.push_str(&format!(
+            "let argv = [runtime, {libdirs_prelude}{args_literal}, script]\n"
+        ));
     }
 
     // execv with null-terminated C argv
@@ -128,6 +149,7 @@ mod tests {
             script_resource_dir: "racket-app".to_string(),
             bundle_identifier: "com.example.HelloWindow".to_string(),
             signing_identity: None,
+            libdirs_resource_subdir: None,
         }
     }
 
@@ -212,6 +234,46 @@ mod tests {
             "all runtime args should appear in argv"
         );
         assert!(source.contains("script"), "script should still be in argv");
+    }
+
+    #[test]
+    fn stub_source_without_libdirs_subdir_omits_libdirs_prelude() {
+        let source = generate_stub_source(&test_config());
+        assert!(
+            !source.contains("--libdirs"),
+            "no libdirs prelude unless the field is set"
+        );
+        assert!(
+            !source.contains("Bundle.main.resourcePath"),
+            "no resourcePath lookup unless the field is set"
+        );
+    }
+
+    #[test]
+    fn stub_source_with_libdirs_subdir_prepends_libdirs_to_argv() {
+        let mut config = test_config();
+        config.libdirs_resource_subdir = Some("chez-app".to_string());
+        let source = generate_stub_source(&config);
+        assert!(
+            source.contains(r#"Bundle.main.resourcePath.map({ $0 + "/chez-app" })"#),
+            "stub should compute libdirs from Bundle.main.resourcePath"
+        );
+        assert!(
+            source.contains(r#"let argv = [runtime, "--libdirs", libdirs, script]"#),
+            "argv must place [\"--libdirs\", libdirs] before script when no runtime_args"
+        );
+    }
+
+    #[test]
+    fn stub_source_libdirs_subdir_composes_with_runtime_args() {
+        let mut config = test_config();
+        config.libdirs_resource_subdir = Some("chez-app".to_string());
+        config.runtime_args = vec!["--script".to_string()];
+        let source = generate_stub_source(&config);
+        assert!(
+            source.contains(r#"let argv = [runtime, "--libdirs", libdirs, "--script", script]"#),
+            "libdirs prelude must precede runtime_args, which precede script"
+        );
     }
 
     #[test]

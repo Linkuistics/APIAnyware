@@ -1,6 +1,6 @@
 # Sample App Portfolio Design
 
-Redesign of the Racket OO sample app portfolio to maximize API coverage and
+Redesign of the Racket sample app portfolio to maximize API coverage and
 novel pattern exercise, informed by Modaliser-Racket's real-world coverage
 and the availability of LLM-assisted replication + TestAnyware for
 automated VM interaction testing.

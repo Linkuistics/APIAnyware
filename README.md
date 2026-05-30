@@ -8,12 +8,12 @@ Part of the [APIAnyware](https://linkuistics.com) family by [Linkuistics](https:
 
 ## Current Status
 
-The full three-phase pipeline (Collection, Analysis, Generation) is implemented and working end-to-end. The first language target, **Racket OO**, is substantially complete:
+The full three-phase pipeline (Collection, Analysis, Generation) is implemented and working end-to-end. The first language target, **Racket**, is substantially complete:
 
 - **Collection** extracts 218 ObjC frameworks and 151 Swift modules from the macOS SDK, merging ObjC and Swift declarations into a unified IR. Cross-import overlay frameworks (`_RealityKit_SwiftUI`, `_AppIntents_SwiftUI`, …) correctly retain the bridged classes that form their API surface.
 - **Analysis** runs Datalog-based inheritance resolution, heuristic + LLM semantic annotation (block lifecycle, ownership, threading, error patterns), API pattern recognition (10 stereotype categories, 36+ pattern instances in Foundation alone), and enrichment with verification.
-- **Generation** produces Racket OO bindings for all 284 discovered frameworks (~6,979 files total), with an 18-file Racket runtime library and a Swift helper dylib providing C-callable ObjC runtime access.
-- **All 7 active sample apps** in the portfolio (per `knowledge/apps/_index.md`) are implemented for Racket OO. Sample apps can be packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via `apianyware-macos-bundle-racket-oo`.
+- **Generation** produces Racket bindings for all 284 discovered frameworks (~6,979 files total), with an 18-file Racket runtime library and a Swift helper dylib providing C-callable ObjC runtime access.
+- **All 7 active sample apps** in the portfolio (per `knowledge/apps/_index.md`) are implemented for Racket. Sample apps can be packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via `apianyware-macos-bundle-racket`.
 - **Racket Functional** emitter crate exists as a registered stub; not yet implemented.
 - **Snapshot tests** use a synthetic TestKit framework plus a curated Foundation subset for regression testing.
 - **634 Rust tests** and **67 Swift tests** cover the pipeline.
@@ -40,7 +40,7 @@ Collection ──► Analysis ──► Generation
 
 **Analysis** resolves inheritance via Datalog (ascent crate), adds semantic annotations (block invocation style, parameter ownership, threading constraints, error patterns, API usage patterns) via heuristics and LLM analysis, then enriches with Datalog-derived relations for generation. API pattern recognition identifies stereotypical multi-method contracts (builder sequences, resource lifecycles, observer pairs) by analyzing Apple's guides and tutorials in addition to API reference documentation. Includes verification rules that flag annotation inconsistencies.
 
-**Generation** emits per-language bindings with runtime support libraries and Swift helper dylibs. Each emitter reads the same enriched IR but produces output shaped to the target language's idioms and conventions. Currently produces Racket OO bindings for all 283 frameworks.
+**Generation** emits per-language bindings with runtime support libraries and Swift helper dylibs. Each emitter reads the same enriched IR but produces output shaped to the target language's idioms and conventions. Currently produces Racket bindings for all 283 frameworks.
 
 ## Pipeline & Checkpoints
 
@@ -92,7 +92,7 @@ cargo run -p apianyware-macos-generate
 Generates bindings for all registered languages and all binding styles from the enriched IR. To generate for a specific language:
 
 ```sh
-cargo run -p apianyware-macos-generate -- --lang racket-oo
+cargo run -p apianyware-macos-generate -- --lang racket
 cargo run -p apianyware-macos-generate -- --list-languages    # show available emitters
 ```
 
@@ -122,7 +122,7 @@ Alternatively, use any OpenAI-compatible API:
 # Rust workspace
 cargo build                                    # Build all crates
 cargo test --workspace                         # Run all tests (~248 tests)
-cargo test -p apianyware-macos-emit-racket-oo  # Single crate
+cargo test -p apianyware-macos-emit-racket  # Single crate
 cargo +nightly fmt                             # Format (requires nightly)
 cargo clippy --workspace                       # Lint
 
@@ -165,7 +165,7 @@ verification), `cli/`.
 
 **Generation** -- `generation/crates/emit/` (shared framework: `FfiTypeMapper`
 trait, `CodeWriter`, naming utils, snapshot testing, pattern dispatch),
-`emit-racket-oo/` (Racket OO emission), `cli/` (emitter registry,
+`emit-racket/` (Racket emission), `cli/` (emitter registry,
 orchestration).
 
 **Tooling** -- `generation/crates/stub-launcher/`
@@ -184,7 +184,7 @@ GC prevention).
 - **`effective_methods()`/`effective_properties()`** in emitters: choose
   between direct and inherited method lists, with deduplication by
   selector/name.
-- **`DispatchStrategy`** in emit-racket-oo: methods dispatch via either
+- **`DispatchStrategy`** in emit-racket: methods dispatch via either
   `tell` (Racket's ObjC FFI macro) or typed `_msg-N` bindings depending on
   parameter/return types.
 - **`coerce-arg`** in Racket runtime: auto-converts strings -> NSString,
@@ -213,11 +213,11 @@ reasons:
 
 The bundling story is layered: a language-agnostic primitive
 (`stub-launcher`) plus a per-language convention crate
-(`bundle-racket-oo` for Racket OO).
+(`bundle-racket` for Racket).
 
-#### Per-language convention: `apianyware-macos-bundle-racket-oo`
+#### Per-language convention: `apianyware-macos-bundle-racket`
 
-For racket-oo sample apps, use `apianyware-macos-bundle-racket-oo`. It
+For racket sample apps, use `apianyware-macos-bundle-racket`. It
 walks the entry script's transitive `(require ...)` tree to discover
 exactly which runtime modules and generated bindings are needed, and
 copies that subset into the bundle's `Resources/` preserving the source
@@ -225,8 +225,8 @@ layout so the script's relative `../../runtime` and `../../generated/oo/...`
 paths still resolve at runtime.
 
 ```sh
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
-# → generation/targets/racket-oo/apps/hello-window/build/Hello Window.app
+cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window
+# → generation/targets/racket/apps/hello-window/build/Hello Window.app
 ```
 
 The `hello-window` argument is the script name (the `apps/<name>/<name>.rkt`
@@ -235,11 +235,11 @@ identifier). Display name (`Hello Window`) and bundle id
 API:
 
 ```rust
-use apianyware_macos_bundle_racket_oo::{bundle_app, AppSpec};
+use apianyware_macos_bundle_racket::{bundle_app, AppSpec};
 
 let spec = AppSpec::from_script_name("hello-window");
-let source_root = Path::new("generation/targets/racket-oo");
-let output_dir = Path::new("generation/targets/racket-oo/apps/hello-window/build");
+let source_root = Path::new("generation/targets/racket");
+let output_dir = Path::new("generation/targets/racket/apps/hello-window/build");
 let app_path = bundle_app(&spec, source_root, output_dir)?;
 ```
 
@@ -284,7 +284,7 @@ let config = StubConfig {
 };
 let app_path = create_app_bundle(&config, Path::new("output/"))?;
 // Caller populates: output/Hello Window.app/Contents/Resources/racket-app/
-// (Use bundle-racket-oo to do this automatically for Racket OO apps.)
+// (Use bundle-racket to do this automatically for Racket apps.)
 ```
 
 Lower-level API: `generate_stub_source()` and `compile_stub()` for custom
@@ -319,8 +319,8 @@ vmid=$($TA/provisioner/scripts/vm-start.sh --viewer)
 $TA_BIN exec --vm "$vmid" "/opt/homebrew/bin/brew install minimal-racket"
 
 # Build and ship a sample app as a .app bundle
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
-APP="generation/targets/racket-oo/apps/hello-window/build/Hello Window.app"
+cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window
+APP="generation/targets/racket/apps/hello-window/build/Hello Window.app"
 tar -C "$(dirname "$APP")" -czf /tmp/app.tgz "$(basename "$APP")"
 $TA_BIN upload --vm "$vmid" /tmp/app.tgz /Users/admin/app.tgz
 $TA_BIN exec --vm "$vmid" "tar -xzf /Users/admin/app.tgz -C /Users/admin/ && open '/Users/admin/Hello Window.app'"
@@ -373,12 +373,12 @@ APIAnyware-MacOS/
   generation/
     crates/
       emit/                # apianyware-macos-emit              — shared emitter framework
-      emit-racket-oo/      # apianyware-macos-emit-racket-oo    — Racket OO emitter
+      emit-racket/      # apianyware-macos-emit-racket    — Racket emitter
       cli/                 # apianyware-macos-generate          — generation CLI
       stub-launcher/       # apianyware-macos-stub-launcher     — Swift stub + Info.plist + .app skeleton (language-agnostic)
-      bundle-racket-oo/    # apianyware-macos-bundle-racket-oo  — racket-oo bundling: require walker + resource layout
+      bundle-racket/    # apianyware-macos-bundle-racket  — racket bundling: require walker + resource layout
     targets/
-      racket-oo/           # Racket OO: runtime, generated bindings, sample apps, tests
+      racket/           # Racket: runtime, generated bindings, sample apps, tests
 
   swift/                   # Swift helper dylibs (C-callable ObjC runtime interface)
     Sources/
@@ -392,7 +392,7 @@ APIAnyware-MacOS/
 
 | Language | Style(s) | Status |
 |---|---|---|
-| Racket OO | OO (classes) | Emitter complete, 283 frameworks generated, 8/8 sample apps, snapshot tests, app bundling |
+| Racket | OO (classes) | Emitter complete, 283 frameworks generated, 8/8 sample apps, snapshot tests, app bundling |
 | Chez Scheme | Functional | Planned (Swift dylib stub exists) |
 | Gerbil Scheme | OO + functional | Planned (Swift dylib stub exists) |
 | Common Lisp (SBCL, CCL) | CLOS + functional | Planned |

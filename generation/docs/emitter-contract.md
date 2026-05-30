@@ -6,7 +6,7 @@ type itself and would otherwise be re-discovered by each new target.
 
 If you are starting a new target language emitter (Haskell, OCaml, Idris2,
 Zig, Common Lisp, etc.), read this document first. Each section describes a
-real-world surprise that the racket-oo emitter already handles and that
+real-world surprise that the racket emitter already handles and that
 your emitter must also handle.
 
 ## Table of contents
@@ -57,7 +57,7 @@ The same library exposes the well-known `_dispatch_main_q` *struct global*:
 So the global lives as `TypeRefKind::Struct` (correct — it is a struct
 allocated in the dylib's data segment, and consumers need its *address*
 via the `is_struct_data_symbol` path; see
-[`emit_constants.rs`](../crates/emit-racket-oo/src/emit_constants.rs) and
+[`emit_constants.rs`](../crates/emit-racket/src/emit_constants.rs) and
 the "Struct globals need address-of; pointer globals need dereference"
 project memory).
 
@@ -71,10 +71,10 @@ to type-check or will require an explicit cast at every call site.
 ### Two acceptable resolutions
 
 **(A) Substitute pointer-equivalent at FFI emission for the libdispatch
-framework.** This is what `emit-racket-oo` does today:
+framework.** This is what `emit-racket` does today:
 
 ```rust
-// generation/crates/emit-racket-oo/src/emit_functions.rs
+// generation/crates/emit-racket/src/emit_functions.rs
 let t = mapper.map_type(&p.param_type, false);
 // libdispatch OS-object types (dispatch_queue_t etc.) resolve to _id via
 // OS_OBJECT_USE_OBJC, but no wrapper classes exist. Emit _pointer so
@@ -91,7 +91,7 @@ A new emitter should add the equivalent override gated on
 `framework == "libdispatch"`, picking whatever the target language's
 "raw native pointer" type is (Haskell `Ptr ()`, OCaml `Ctypes.ptr void`,
 Zig `*anyopaque`, Idris2 `AnyPtr`, etc.). Regression tests:
-[`test_libdispatch_id_params_emit_pointer`](../crates/emit-racket-oo/src/emit_functions.rs)
+[`test_libdispatch_id_params_emit_pointer`](../crates/emit-racket/src/emit_functions.rs)
 and `test_libdispatch_id_return_emits_pointer`.
 
 **(B) Emit an explicit cast at every call site.** Acceptable when the

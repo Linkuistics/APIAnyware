@@ -10,7 +10,7 @@
 
 Design Item 3 Gap B stated that `NSInteger`/`NSUInteger` integer-typed parameters
 and returns "fall through to `any/c`" in `map_contract`'s **primitive** arm
-(`generation/crates/emit-racket-oo/src/emit_functions.rs:34-49`), citing the
+(`generation/crates/emit-racket/src/emit_functions.rs:34-49`), citing the
 golden `[tkbutton-tag (c-> objc-object? any/c)]` as evidence.
 
 The investigation **refutes that premise** and finds a different, larger real

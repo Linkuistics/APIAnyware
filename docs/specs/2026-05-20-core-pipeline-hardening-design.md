@@ -8,7 +8,7 @@ Generation pipeline regenerated, verified, and self-documenting.
 
 The core pipeline reached a clean, verified checkpoint at session 51
 (2026-04-28): 284 frameworks collected, annotated, and enriched with 0
-verification violations, and Racket OO bindings generated for all 283
+verification violations, and Racket bindings generated for all 283
 discovered frameworks. The workstream is not mid-crisis — it sits at a stable
 checkpoint with a small cleanup backlog.
 
@@ -45,7 +45,7 @@ and leave:
 ## Working Environment
 
 The pipeline's IR checkpoints (`collection/ir/collected/`, `analysis/ir/*`) and
-generated output (`generation/targets/racket-oo/generated/`) are **gitignored
+generated output (`generation/targets/racket/generated/`) are **gitignored
 build artifacts**. A fresh git worktree therefore contains none of them. Before
 any session that inspects or regenerates the pipeline, the executor must
 materialize the collected IR — either by running
@@ -176,13 +176,13 @@ drift; the UI class list contains only the 8 UIKit names; `cargo test
 
 ### Item 3 — Emitter contract tightening
 
-The Racket OO emitter's generated `provide/contract` forms are partly tightened
+The Racket emitter's generated `provide/contract` forms are partly tightened
 already: the receiver uses `objc-object?` (not `any/c`), concrete `Class`-typed
 parameters and returns use class-specific predicates, selectors use `string?`.
 Two gaps remain.
 
 **Gap A — generic receiver.** Every instance-method contract uses the generic
-`SELF_CONTRACT = "objc-object?"` (`emit-racket-oo/src/emit_class.rs:318`).
+`SELF_CONTRACT = "objc-object?"` (`emit-racket/src/emit_class.rs:318`).
 Because generated method names are class-scoped (`tkbutton-hidden`), the
 receiver can be tightened to the class-specific predicate (`tkbutton?`), which
 catches passing the wrong object class at the contract boundary. The class
@@ -195,7 +195,7 @@ through to `any/c` (`map_contract` in `emit_functions.rs`; visible in goldens as
 `[tkbutton-tag (c-> objc-object? any/c)]`). Tighten recognized integer types to
 `exact-integer?`.
 
-**Fix.** Implement both gaps in `emit-racket-oo`. Expect **large golden-snapshot
+**Fix.** Implement both gaps in `emit-racket`. Expect **large golden-snapshot
 churn** — the receiver change touches the contract line of every generated
 method in every framework. Update goldens with `UPDATE_GOLDEN=1` and review the
 diff for correctness (the change should be uniform: `objc-object?` →
@@ -204,7 +204,7 @@ diff for correctness (the change should be uniform: `objc-object?` →
 **Done when.** Instance-method contracts use the class-specific receiver
 predicate; `NSInteger`/`NSUInteger` contracts emit `exact-integer?`; golden
 snapshots updated and the diff reviewed; `cargo test --workspace` green;
-racket-oo regenerated.
+racket regenerated.
 
 ### Item 4 — Stable codesigning identity
 
@@ -221,12 +221,12 @@ What is missing is a *persistent identity* and the wiring to use it by default.
   documented `security`/`certtool` recipe the user runs once on their machine;
   no Apple Developer account required).
 - Wire that identity as the default `signing_identity` in
-  `apianyware-macos-bundle-racket-oo` so every bundled racket-oo app is signed
+  `apianyware-macos-bundle-racket` so every bundled racket app is signed
   with the stable identity, giving a CDHash that is constant across rebuilds.
 - Verify in a TestAnyware VM that a TCC grant (e.g. Accessibility for the
   Modaliser app) survives a rebuild-and-relaunch cycle.
 
-**Done when.** `bundle-racket-oo` signs bundled apps with the persistent
+**Done when.** `bundle-racket` signs bundled apps with the persistent
 identity; the same app rebuilt twice produces an identical CDHash (verified with
 `codesign -dvvv`); a TCC grant survives a rebuild in-VM; the certificate-
 creation recipe is documented.
@@ -240,7 +240,7 @@ regeneration or the verification gate.
 
 ### Why serial, orchestrator-owned regeneration
 
-`analysis/ir/*` checkpoints and `generation/targets/racket-oo/generated/` are
+`analysis/ir/*` checkpoints and `generation/targets/racket/generated/` are
 shared mutable state. `regenerate-stale-pipeline.sh` decides freshness by
 comparing newest-input-mtime to newest-output-mtime; two agents regenerating
 concurrently would race that comparison and mask each other's staleness.
@@ -281,10 +281,10 @@ class count. The `CoreTransferable` sub-case is resolved or filed as a follow-up
 
 **Session 2 — Emitter contract tightening (Item 3).** Implement the
 class-specific receiver predicate and the `NSInteger`/`NSUInteger` tightening;
-regenerate racket-oo; update and review golden snapshots; verify.
+regenerate racket; update and review golden snapshots; verify.
 
 **Session 3 — Stable codesigning identity (Item 4).** Document the self-signed
-certificate recipe; wire the identity as the `bundle-racket-oo` default; verify
+certificate recipe; wire the identity as the `bundle-racket` default; verify
 CDHash stability and TCC-grant survival in a TestAnyware VM.
 
 **Session 4 — Final integration.** Full pipeline regenerate from scratch; full

@@ -1,0 +1,13 @@
+[package]
+name = "apianyware-macos-bundle-chez"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Bundle chez sample apps into macOS .app bundles via stub-launcher"
+
+[dependencies]
+apianyware-macos-stub-launcher.workspace = true
+plist.workspace = true
+tempfile = "3"
+thiserror.workspace = true
+tracing.workspace = true

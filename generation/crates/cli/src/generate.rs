@@ -1,25 +1,18 @@
 //! Core generation orchestration — loads enriched IR, invokes emitters,
-//! writes output to `generation/targets/{lang}/generated/{style}/`.
+//! writes output to `generation/targets/{lang}/generated/`.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use apianyware_macos_emit::binding_style::{BindingStyle, EmitResult, LanguageEmitter};
+use apianyware_macos_emit::language_emitter::{EmitResult, LanguageEmitter, LanguageInfo};
 use apianyware_macos_emit::framework_ordering::topological_sort;
 
 use crate::registry::EmitterRegistry;
 
-/// Result of generating bindings for one language across all frameworks and styles.
+/// Result of generating bindings for one language across all frameworks.
 #[derive(Debug, Default)]
 pub struct GenerationSummary {
     pub language_id: String,
-    pub style_results: Vec<StyleSummary>,
-}
-
-/// Result of generating all frameworks in one binding style.
-#[derive(Debug, Default)]
-pub struct StyleSummary {
-    pub style: String,
     pub frameworks_generated: usize,
     pub total_files_written: usize,
     pub total_classes: usize,
@@ -27,7 +20,7 @@ pub struct StyleSummary {
     pub total_enums: usize,
 }
 
-impl StyleSummary {
+impl GenerationSummary {
     fn accumulate(&mut self, result: &EmitResult) {
         self.frameworks_generated += 1;
         self.total_files_written += result.files_written;
@@ -37,21 +30,20 @@ impl StyleSummary {
     }
 }
 
-/// Build the output directory path for a language and style.
+/// Build the output directory path for a language.
 ///
-/// Pattern: `{base_output_dir}/{lang}/generated/{style}/`
-pub fn output_dir_for_style(base_output_dir: &Path, lang: &str, style: &BindingStyle) -> PathBuf {
-    base_output_dir
-        .join(lang)
-        .join("generated")
-        .join(style.to_string())
+/// Pattern: `{base_output_dir}/{info.id}/{info.generated_subdir}/`.
+/// Most targets use the conventional `generated` subdir; the chez target
+/// uses `apianyware` so Chez's default library-name resolution finds the
+/// emitted files with `--libdirs generation/targets/chez`.
+pub fn output_dir_for_language(base_output_dir: &Path, info: &LanguageInfo) -> PathBuf {
+    base_output_dir.join(info.id).join(info.generated_subdir)
 }
 
 /// Generate bindings for the specified languages (or all if none specified).
 ///
-/// For each language, generates all supported binding styles across all
-/// enriched frameworks. Reads enriched IR from `input_dir`, writes to
-/// `{base_output_dir}/{lang}/generated/{style}/`.
+/// For each language, generates all enriched frameworks. Reads enriched IR
+/// from `input_dir`, writes to `{base_output_dir}/{lang}/generated/`.
 pub fn run_generation(
     registry: &EmitterRegistry,
     input_dir: &Path,
@@ -95,55 +87,40 @@ pub fn run_generation(
 
     for emitter in &emitters {
         let info = emitter.language_info();
-        let styles = info.supported_styles;
+        let out_dir = output_dir_for_language(base_output_dir, info);
+
+        tracing::info!(
+            language = info.id,
+            output = %out_dir.display(),
+            "generating bindings"
+        );
 
         let mut summary = GenerationSummary {
             language_id: info.id.to_string(),
             ..Default::default()
         };
 
-        for style in styles {
-            let out_dir = output_dir_for_style(base_output_dir, info.id, style);
+        for fw in &ordered_frameworks {
+            let result = emitter
+                .emit_framework(fw, &out_dir)
+                .with_context(|| format!("failed to emit {} for {}", fw.name, info.id))?;
 
             tracing::info!(
-                language = info.id,
-                style = %style,
-                output = %out_dir.display(),
-                "generating bindings"
+                framework = %fw.name,
+                files = result.files_written,
+                classes = result.classes_emitted,
+                "emitted"
             );
 
-            let mut style_summary = StyleSummary {
-                style: style.to_string(),
-                ..Default::default()
-            };
-
-            for fw in &ordered_frameworks {
-                let result = emitter
-                    .emit_framework(fw, &out_dir, *style)
-                    .with_context(|| {
-                        format!("failed to emit {} for {} ({})", fw.name, info.id, style)
-                    })?;
-
-                tracing::info!(
-                    framework = %fw.name,
-                    files = result.files_written,
-                    classes = result.classes_emitted,
-                    "emitted"
-                );
-
-                style_summary.accumulate(&result);
-            }
-
-            tracing::info!(
-                language = info.id,
-                style = %style,
-                frameworks = style_summary.frameworks_generated,
-                files = style_summary.total_files_written,
-                "style complete"
-            );
-
-            summary.style_results.push(style_summary);
+            summary.accumulate(&result);
         }
+
+        tracing::info!(
+            language = info.id,
+            frameworks = summary.frameworks_generated,
+            files = summary.total_files_written,
+            "language complete"
+        );
 
         summaries.push(summary);
     }
@@ -218,19 +195,26 @@ mod tests {
     }
 
     #[test]
-    fn output_dir_for_style_builds_correct_path() {
+    fn output_dir_for_language_builds_correct_path() {
         let base = Path::new("/out/targets");
-        let path = output_dir_for_style(base, "racket-oo", &BindingStyle::ObjectOriented);
-        assert_eq!(path, PathBuf::from("/out/targets/racket-oo/generated/oo"));
-    }
-
-    #[test]
-    fn output_dir_for_functional_style() {
-        let base = Path::new("/out/targets");
-        let path = output_dir_for_style(base, "racket-oo", &BindingStyle::Functional);
+        let racket = LanguageInfo {
+            id: "racket",
+            display_name: "Racket",
+            generated_subdir: "generated",
+        };
         assert_eq!(
-            path,
-            PathBuf::from("/out/targets/racket-oo/generated/functional")
+            output_dir_for_language(base, &racket),
+            PathBuf::from("/out/targets/racket/generated")
+        );
+
+        let chez = LanguageInfo {
+            id: "chez",
+            display_name: "Chez Scheme",
+            generated_subdir: "apianyware",
+        };
+        assert_eq!(
+            output_dir_for_language(base, &chez),
+            PathBuf::from("/out/targets/chez/apianyware")
         );
     }
 
@@ -244,17 +228,16 @@ mod tests {
         write_test_framework(&input_dir, &fw);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
         assert_eq!(summaries.len(), 1);
-        assert_eq!(summaries[0].language_id, "racket-oo");
-        assert_eq!(summaries[0].style_results.len(), 1);
-        assert!(summaries[0].style_results[0].total_files_written > 0);
+        assert_eq!(summaries[0].language_id, "racket");
+        assert!(summaries[0].total_files_written > 0);
 
         // Verify output structure
         assert!(output_dir
-            .join("racket-oo/generated/oo/testkit/main.rkt")
+            .join("racket/generated/testkit/main.rkt")
             .exists());
     }
 
@@ -268,15 +251,15 @@ mod tests {
         write_test_framework(&input_dir, &make_test_framework("AppKit"));
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        // Both frameworks generated in each style
-        assert_eq!(summaries[0].style_results[0].frameworks_generated, 2);
+        // Both frameworks generated
+        assert_eq!(summaries[0].frameworks_generated, 2);
         assert!(output_dir
-            .join("racket-oo/generated/oo/foundation")
+            .join("racket/generated/foundation")
             .exists());
-        assert!(output_dir.join("racket-oo/generated/oo/appkit").exists());
+        assert!(output_dir.join("racket/generated/appkit").exists());
     }
 
     #[test]
@@ -290,9 +273,9 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Should generate for all registered languages (currently just racket-oo)
+        // Should generate for all registered languages (currently just racket)
         assert!(!summaries.is_empty());
-        assert_eq!(summaries[0].language_id, "racket-oo");
+        assert_eq!(summaries[0].language_id, "racket");
     }
 
     #[test]
@@ -340,14 +323,14 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        let style = &summaries[0].style_results[0];
-        assert_eq!(style.frameworks_generated, 1);
-        assert_eq!(style.total_classes, 5, "TestKit has 5 classes");
-        assert_eq!(style.total_protocols, 2, "TestKit has 2 protocols");
-        assert_eq!(style.total_enums, 1, "TestKit has 1 enum");
+        let summary = &summaries[0];
+        assert_eq!(summary.frameworks_generated, 1);
+        assert_eq!(summary.total_classes, 5, "TestKit has 5 classes");
+        assert_eq!(summary.total_protocols, 2, "TestKit has 2 protocols");
+        assert_eq!(summary.total_enums, 1, "TestKit has 1 enum");
     }
 
     #[test]
@@ -359,10 +342,10 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        let testkit_dir = output_dir.join("racket-oo/generated/oo/testkit");
+        let testkit_dir = output_dir.join("racket/generated/testkit");
 
         // Per-class files
         for name in &["tkobject", "tkview", "tkbutton", "tkmanager", "tkhelper"] {
@@ -396,10 +379,10 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        let testkit_dir = output_dir.join("racket-oo/generated/oo/testkit");
+        let testkit_dir = output_dir.join("racket/generated/testkit");
 
         // main.rkt re-exports submodules
         let main = std::fs::read_to_string(testkit_dir.join("main.rkt")).unwrap();
@@ -445,18 +428,21 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Every registered emitter should produce results without error
-        assert_eq!(summaries.len(), 1, "should run all registered emitters");
-
-        let racket_oo = summaries
-            .iter()
-            .find(|s| s.language_id == "racket-oo")
-            .expect("racket-oo should be in results");
-        assert!(
-            racket_oo.style_results[0].total_files_written > 0,
-            "racket-oo should produce files"
+        // Every registered emitter should produce results without error.
+        assert_eq!(
+            summaries.len(),
+            2,
+            "should run racket + chez emitters"
         );
-        assert_eq!(racket_oo.style_results[0].total_classes, 5);
+
+        for s in &summaries {
+            assert!(
+                s.total_files_written > 0,
+                "{} should produce files",
+                s.language_id
+            );
+            assert_eq!(s.total_classes, 5, "{} class count", s.language_id);
+        }
     }
 
     #[test]
@@ -475,19 +461,19 @@ mod tests {
         write_test_framework(&input_dir, &appkit);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        assert_eq!(summaries[0].style_results[0].frameworks_generated, 2);
+        assert_eq!(summaries[0].frameworks_generated, 2);
 
         // Both output directories should exist with correct content
-        let oo_dir = output_dir.join("racket-oo/generated/oo");
+        let generated_dir = output_dir.join("racket/generated");
         assert!(
-            oo_dir.join("foundation/main.rkt").exists(),
+            generated_dir.join("foundation/main.rkt").exists(),
             "Foundation output should exist"
         );
         assert!(
-            oo_dir.join("appkit/main.rkt").exists(),
+            generated_dir.join("appkit/main.rkt").exists(),
             "AppKit output should exist"
         );
     }
@@ -508,13 +494,13 @@ mod tests {
         write_test_framework(&input_dir, &fw2);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket-oo".to_string()];
+        let langs = vec!["racket".to_string()];
         let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
 
-        let style = &summaries[0].style_results[0];
-        assert_eq!(style.frameworks_generated, 2);
-        assert_eq!(style.total_classes, 10, "5 classes x 2 frameworks");
-        assert_eq!(style.total_protocols, 4, "2 protocols x 2 frameworks");
-        assert_eq!(style.total_enums, 2, "1 enum x 2 frameworks");
+        let summary = &summaries[0];
+        assert_eq!(summary.frameworks_generated, 2);
+        assert_eq!(summary.total_classes, 10, "5 classes x 2 frameworks");
+        assert_eq!(summary.total_protocols, 4, "2 protocols x 2 frameworks");
+        assert_eq!(summary.total_enums, 2, "1 enum x 2 frameworks");
     }
 }

@@ -20,7 +20,7 @@ Leave it in the **login** keychain.
     security find-identity -p codesigning -v
 
 `APIAnyware Local Signing` must appear in the list. The bundler
-(`apianyware-macos-bundle-racket-oo`) uses it automatically when present and
+(`apianyware-macos-bundle-racket`) uses it automatically when present and
 falls back to ad-hoc signing (with a warning) when it is absent.
 
 ## Verification
@@ -28,7 +28,7 @@ falls back to ad-hoc signing (with a warning) when it is absent.
 Verified 2026-05-21 (Core Pipeline Hardening Task 12).
 
 **CDHash stability.** `Hello Window.app` was bundled twice in succession via
-`cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window`.
+`cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window`.
 Both builds produced an identical `CDHash=3015696cbd6e6d4a73f172dbc56f369914fa4183`
 with `Authority=APIAnyware Local Signing` — the persistent identity makes the
 signed code identity stable across rebuilds.

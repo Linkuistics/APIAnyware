@@ -551,7 +551,7 @@ fn anonymous_enum_member_top_level_vars_are_skipped_while_c_var_is_kept() {
 fn nw_browse_result_change_regression_is_filtered() {
     // Regression guard: the seven members of Network's
     // `nw_browse_result_change_*` anonymous enum were observed leaking into
-    // the Network collected IR via extract-swift after the racket-oo
+    // the Network collected IR via extract-swift after the racket
     // runtime load harness extension attempt failed at `dlsym` on
     // `nw_browse_result_change_identical`. Their USRs (captured verbatim
     // from a real `swift-api-digester -dump-sdk -module Network` run on

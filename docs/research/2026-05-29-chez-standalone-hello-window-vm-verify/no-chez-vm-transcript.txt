@@ -1,0 +1,13 @@
+# hello-window standalone — no-Chez VM verification transcript
+# VM: testanyware-e24175e6 (golden testanyware-golden-macos-tahoe), 2026-05-29T13:19:00Z
+
+## Precondition: no Chez in VM
+$ which chez scheme petite ; ls /opt/homebrew/bin/chez ; ls /opt/homebrew/Cellar/chezscheme
+ls: /opt/homebrew/bin/chez: No such file or directory
+ls: /opt/homebrew/Cellar/chezscheme: No such file or directory
+
+## Launch log (open -n --stderr/--stdout) — note: no 'Chez Scheme Version' banner
+Hello Window opened. Close the window or press Ctrl+C to exit.
+
+## Process running
+683 /Users/admin/Hello Window.app/Contents/MacOS/hello-window

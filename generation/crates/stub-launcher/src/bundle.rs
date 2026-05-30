@@ -102,6 +102,7 @@ mod tests {
             script_resource_dir: "racket-app".to_string(),
             bundle_identifier: "com.test.TestApp".to_string(),
             signing_identity: None,
+            libdirs_resource_subdir: None,
         }
     }
 

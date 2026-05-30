@@ -6,7 +6,7 @@
 
 **Architecture:** Five sequential sessions, each ending with a review checkpoint and commit. The orchestrating session dispatches subagents for investigation and TDD implementation but never delegates pipeline regeneration or the verification gate — `analysis/ir/*` and `generation/targets/*/generated/` are shared mutable state and concurrent regeneration would race the mtime-based freshness check in `regenerate-stale-pipeline.sh`.
 
-**Tech Stack:** Rust workspace (collection/analysis/generation crates), Swift dylibs, Racket OO runtime, libclang + swift-api-digester for extraction, `make` for the new annotation gate.
+**Tech Stack:** Rust workspace (collection/analysis/generation crates), Swift dylibs, Racket runtime, libclang + swift-api-digester for extraction, `make` for the new annotation gate.
 
 **Source spec:** `docs/specs/2026-05-20-core-pipeline-hardening-design.md`
 
@@ -14,7 +14,7 @@
 
 ## Working Environment
 
-The pipeline's IR checkpoints (`collection/ir/collected/`, `analysis/ir/*`) and generated output (`generation/targets/racket-oo/generated/`) are **gitignored build artifacts** — a fresh worktree has none of them. Task 1 materializes them. Every later session assumes Task 1 has run in the current checkout.
+The pipeline's IR checkpoints (`collection/ir/collected/`, `analysis/ir/*`) and generated output (`generation/targets/racket/generated/`) are **gitignored build artifacts** — a fresh worktree has none of them. Task 1 materializes them. Every later session assumes Task 1 has run in the current checkout.
 
 Investigation-gated tasks are marked **[INVESTIGATION-GATED]**: their implementation code is determined by a preceding investigation step, so those steps describe the procedure and decision rather than pre-written code. This is deliberate, not a placeholder.
 
@@ -431,9 +431,9 @@ git add docs/specs/ 2>/dev/null && git commit -m "docs: file CoreTransferable an
 ### Task 8: Class-specific receiver predicate (Gap A)
 
 **Files:**
-- Modify: `generation/crates/emit-racket-oo/src/emit_class.rs` — the receiver contract (`SELF_CONTRACT` at line 318, used at the instance-method loop line 521 and the property-accessor `self_arg`).
-- Test: `generation/crates/emit-racket-oo/src/emit_class.rs` (in-file tests `test_instance_method_contract`, `test_class_file_has_provide_contract`).
-- Golden: `generation/crates/emit-racket-oo/tests/golden/oo/`, `golden-foundation/oo/`, `golden-appkit/oo/`.
+- Modify: `generation/crates/emit-racket/src/emit_class.rs` — the receiver contract (`SELF_CONTRACT` at line 318, used at the instance-method loop line 521 and the property-accessor `self_arg`).
+- Test: `generation/crates/emit-racket/src/emit_class.rs` (in-file tests `test_instance_method_contract`, `test_class_file_has_provide_contract`).
+- Golden: `generation/crates/emit-racket/tests/golden/oo/`, `golden-foundation/oo/`, `golden-appkit/oo/`.
 
 - [ ] **Step 1: Confirm the class's own predicate is in scope**
 
@@ -455,7 +455,7 @@ fn instance_method_contract_uses_class_specific_receiver() {
 - [ ] **Step 3: Run the test to verify it fails**
 
 ```bash
-cargo test -p apianyware-macos-emit-racket-oo instance_method_contract_uses_class_specific_receiver
+cargo test -p apianyware-macos-emit-racket instance_method_contract_uses_class_specific_receiver
 ```
 
 Expected: FAIL — the receiver is currently `objc-object?`.
@@ -467,7 +467,7 @@ In `emit_class.rs`: replace the use of the `SELF_CONTRACT` constant in the insta
 - [ ] **Step 5: Run unit tests**
 
 ```bash
-cargo test -p apianyware-macos-emit-racket-oo --lib
+cargo test -p apianyware-macos-emit-racket --lib
 ```
 
 Expected: PASS for the unit tests. The golden snapshot tests will still fail — that is expected and handled next.
@@ -475,9 +475,9 @@ Expected: PASS for the unit tests. The golden snapshot tests will still fail —
 - [ ] **Step 6: Update and review the golden snapshots**
 
 ```bash
-UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket-oo
-git diff --stat generation/crates/emit-racket-oo/tests/golden*
-git diff generation/crates/emit-racket-oo/tests/golden/oo/tkbutton.rkt
+UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket
+git diff --stat generation/crates/emit-racket/tests/golden*
+git diff generation/crates/emit-racket/tests/golden/oo/tkbutton.rkt
 ```
 
 Review the diff: the change must be uniform — every method/accessor contract's first argument changes from `objc-object?` to the class predicate, and each class file gains its own predicate definition. Nothing else should move. If anything else changed, investigate before accepting.
@@ -485,17 +485,17 @@ Review the diff: the change must be uniform — every method/accessor contract's
 - [ ] **Step 7: Run the full suite and commit**
 
 ```bash
-cargo test -p apianyware-macos-emit-racket-oo
+cargo test -p apianyware-macos-emit-racket
 cargo +nightly fmt
-git add generation/crates/emit-racket-oo/
-git commit -m "feat(emit-racket-oo): class-specific receiver predicate in generated contracts"
+git add generation/crates/emit-racket/
+git commit -m "feat(emit-racket): class-specific receiver predicate in generated contracts"
 ```
 
 ### Task 9: [INVESTIGATION-GATED] Tighten integer contracts (Gap B)
 
 **Files:**
-- Modify: `generation/crates/emit-racket-oo/src/emit_functions.rs:34-49` (`map_contract` primitive arm) and possibly `normalize_primitive`.
-- Test: `generation/crates/emit-racket-oo/src/emit_functions.rs` (in-file tests near lines 305-342).
+- Modify: `generation/crates/emit-racket/src/emit_functions.rs:34-49` (`map_contract` primitive arm) and possibly `normalize_primitive`.
+- Test: `generation/crates/emit-racket/src/emit_functions.rs` (in-file tests near lines 305-342).
 - Golden: as Task 8.
 
 - [ ] **Step 1: Identify what actually falls through to `any/c`**
@@ -503,7 +503,7 @@ git commit -m "feat(emit-racket-oo): class-specific receiver predicate in genera
 `map_contract` (`emit_functions.rs:34`) already maps `int8/16/32/64` → `exact-integer?` and `uint8/16/32/64` → `exact-nonnegative-integer?`; line 48 sends every *unrecognized* primitive name to `any/c`. Find which integer-typed primitives reach line 48 in real output:
 
 ```bash
-grep -rhoE '\(c-> [^)]*any/c[^)]*\)' generation/targets/racket-oo/generated/ | sort -u | head -40
+grep -rhoE '\(c-> [^)]*any/c[^)]*\)' generation/targets/racket/generated/ | sort -u | head -40
 ```
 
 Then trace, for a sampled method, the primitive `name` reaching `map_contract` and what `normalize_primitive` does with it. Determine whether the gap is unrecognized canonical names (e.g. `int`, `long`, `nsinteger`) or a `normalize_primitive` that fails to canonicalize them.
@@ -523,7 +523,7 @@ fn integer_primitive_maps_to_exact_integer() {
 - [ ] **Step 3: Run the test to verify it fails**
 
 ```bash
-cargo test -p apianyware-macos-emit-racket-oo integer_primitive_maps_to_exact_integer
+cargo test -p apianyware-macos-emit-racket integer_primitive_maps_to_exact_integer
 ```
 
 Expected: FAIL — the name currently falls through to `any/c`.
@@ -535,9 +535,9 @@ Per Step 1: either add the missing integer names to the recognized arms of `map_
 - [ ] **Step 5: Run unit tests and update goldens**
 
 ```bash
-cargo test -p apianyware-macos-emit-racket-oo --lib
-UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket-oo
-git diff generation/crates/emit-racket-oo/tests/golden/oo/tkbutton.rkt
+cargo test -p apianyware-macos-emit-racket --lib
+UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket
+git diff generation/crates/emit-racket/tests/golden/oo/tkbutton.rkt
 ```
 
 Expected unit tests PASS; golden diff shows integer contracts changing `any/c` → `exact-integer?`/`exact-nonnegative-integer?` and nothing else.
@@ -545,10 +545,10 @@ Expected unit tests PASS; golden diff shows integer contracts changing `any/c` �
 - [ ] **Step 6: Run the full suite and commit**
 
 ```bash
-cargo test -p apianyware-macos-emit-racket-oo
+cargo test -p apianyware-macos-emit-racket
 cargo +nightly fmt
-git add generation/crates/emit-racket-oo/
-git commit -m "feat(emit-racket-oo): tighten integer contracts from any/c to exact-integer?"
+git add generation/crates/emit-racket/
+git commit -m "feat(emit-racket): tighten integer contracts from any/c to exact-integer?"
 ```
 
 **Session 2 checkpoint:** Generated contracts use class-specific receivers and tightened integer types; goldens updated and reviewed. Review before proceeding.
@@ -588,7 +588,7 @@ Leave it in the **login** keychain.
     security find-identity -p codesigning -v
 
 `APIAnyware Local Signing` must appear in the list. The bundler
-(`apianyware-macos-bundle-racket-oo`) uses it automatically when present and
+(`apianyware-macos-bundle-racket`) uses it automatically when present and
 falls back to ad-hoc signing (with a warning) when it is absent.
 ```
 
@@ -609,11 +609,11 @@ git add docs/codesigning-identity.md
 git commit -m "docs: document the local self-signed code-signing identity"
 ```
 
-### Task 11: Wire the identity into bundle-racket-oo
+### Task 11: Wire the identity into bundle-racket
 
 **Files:**
-- Modify: `generation/crates/bundle-racket-oo/src/bundle.rs` (`AppSpec::from_script_name` at lines 58-70; add an identity-resolution helper)
-- Test: `generation/crates/bundle-racket-oo/src/bundle.rs` (in-file `#[cfg(test)]` module)
+- Modify: `generation/crates/bundle-racket/src/bundle.rs` (`AppSpec::from_script_name` at lines 58-70; add an identity-resolution helper)
+- Test: `generation/crates/bundle-racket/src/bundle.rs` (in-file `#[cfg(test)]` module)
 
 - [ ] **Step 1: Write the failing test**
 
@@ -637,7 +637,7 @@ fn falls_back_to_none_when_identity_absent() {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-cargo test -p apianyware-macos-bundle-racket-oo resolves_convention_identity_when_present
+cargo test -p apianyware-macos-bundle-racket resolves_convention_identity_when_present
 ```
 
 Expected: FAIL — `resolve_signing_identity` does not exist.
@@ -682,7 +682,7 @@ Change `AppSpec::from_script_name` (line 68) so `signing_identity` is `resolve_s
 - [ ] **Step 4: Run the tests to verify they pass**
 
 ```bash
-cargo test -p apianyware-macos-bundle-racket-oo
+cargo test -p apianyware-macos-bundle-racket
 ```
 
 Expected: PASS — both resolver tests pass; existing bundle tests unaffected.
@@ -691,8 +691,8 @@ Expected: PASS — both resolver tests pass; existing bundle tests unaffected.
 
 ```bash
 cargo +nightly fmt
-git add generation/crates/bundle-racket-oo/src/bundle.rs
-git commit -m "feat(bundle-racket-oo): sign bundled apps with the persistent local identity"
+git add generation/crates/bundle-racket/src/bundle.rs
+git commit -m "feat(bundle-racket): sign bundled apps with the persistent local identity"
 ```
 
 ### Task 12: Verify CDHash stability and TCC survival in-VM
@@ -703,10 +703,10 @@ git commit -m "feat(bundle-racket-oo): sign bundled apps with the persistent loc
 - [ ] **Step 1: Bundle a sample app twice and compare CDHash**
 
 ```bash
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
-codesign -dvvv "generation/targets/racket-oo/apps/hello-window/build/Hello Window.app" 2>&1 | grep CDHash
-cargo run --example bundle_app -p apianyware-macos-bundle-racket-oo -- hello-window
-codesign -dvvv "generation/targets/racket-oo/apps/hello-window/build/Hello Window.app" 2>&1 | grep CDHash
+cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window
+codesign -dvvv "generation/targets/racket/apps/hello-window/build/Hello Window.app" 2>&1 | grep CDHash
+cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window
+codesign -dvvv "generation/targets/racket/apps/hello-window/build/Hello Window.app" 2>&1 | grep CDHash
 ```
 
 Expected: the two `CDHash` values are identical. If they differ, the identity is not being applied — return to Task 11.

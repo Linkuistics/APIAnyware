@@ -15,13 +15,14 @@ members = [
     "analysis/crates/cli",
     # Generation phase
     "generation/crates/emit",
-    "generation/crates/emit-racket-oo",
+    "generation/crates/emit-racket",
+    "generation/crates/emit-chez",
     "generation/crates/cli",
-    # "generation/crates/emit-chez",
     # "generation/crates/emit-gerbil",
     # Tooling
     "generation/crates/stub-launcher",
-    "generation/crates/bundle-racket-oo",
+    "generation/crates/bundle-racket",
+    "generation/crates/bundle-chez",
 ]
 
 [workspace.package]
@@ -51,9 +52,11 @@ apianyware-macos-resolve = { path = "analysis/crates/resolve" }
 apianyware-macos-annotate = { path = "analysis/crates/annotate" }
 apianyware-macos-enrich = { path = "analysis/crates/enrich" }
 apianyware-macos-emit = { path = "generation/crates/emit" }
-apianyware-macos-emit-racket-oo = { path = "generation/crates/emit-racket-oo" }
+apianyware-macos-emit-racket = { path = "generation/crates/emit-racket" }
+apianyware-macos-emit-chez = { path = "generation/crates/emit-chez" }
 apianyware-macos-stub-launcher = { path = "generation/crates/stub-launcher" }
-apianyware-macos-bundle-racket-oo = { path = "generation/crates/bundle-racket-oo" }
+apianyware-macos-bundle-racket = { path = "generation/crates/bundle-racket" }
+apianyware-macos-bundle-chez = { path = "generation/crates/bundle-chez" }
 
 [workspace.lints.rust]
 unsafe_code = "warn"

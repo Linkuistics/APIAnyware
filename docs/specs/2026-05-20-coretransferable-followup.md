@@ -71,7 +71,7 @@ code comment records why structs/enums are skipped.
 `enrich/checkpoint.rs::filter_results_for_framework` already filters every
 Datalog result by the framework's real class names, so protocol-keyed
 annotation facts are inert. The pipeline regenerated with 0 enrichment
-violations and the emit-racket-oo golden snapshots were unchanged (the
+violations and the emit-racket golden snapshots were unchanged (the
 golden-churn anticipated in the hardening plan did not materialise — annotations
 reach generation only through `enrichment`, which is class-keyed). Wiring
 protocol annotations through to generated protocol bindings remains a possible
@@ -156,7 +156,7 @@ deliberately left them disconnected from generation:
 - but `enrich/src/checkpoint.rs::filter_results_for_framework` filtered every
   derived relation by the framework's real *class* names, dropping every
   protocol-keyed fact before it reached `EnrichmentData`.
-- and `emit-racket-oo` consulted no annotations or enrichment at all.
+- and `emit-racket` consulted no annotations or enrichment at all.
 
 Net: a generated protocol binding carried no block-invocation / ownership /
 threading metadata even though the annotation existed upstream.
@@ -167,7 +167,7 @@ FU-3 was framed as "make `emit_protocol.rs` consume enrichment the way
 `emit_class.rs` consumes class enrichment." Investigation found that premise
 false: **no emitter consumed `EnrichmentData`.** `generate_class_file` receives
 only a `&Class` and the framework name — never the `Framework`, its
-`enrichment`, or its `class_annotations`. `emit-racket-oo`'s block handling was
+`enrichment`, or its `class_annotations`. `emit-racket`'s block handling was
 entirely IR-type-driven (`TypeRefKind::Block`); repo-wide, the `enrichment`
 field was read only by log-line counters. There was no class path to mirror.
 
@@ -188,7 +188,7 @@ Datalog program but had never reached `EnrichmentData` for *any* decl kind —
 it is now surfaced for both classes and protocols. The Datalog program
 (`program.rs`) needed no change.
 
-**Emitter.** A new `emit-racket-oo/src/enrichment_comments.rs` module projects
+**Emitter.** A new `emit-racket/src/enrichment_comments.rs` module projects
 the framework-wide `EnrichmentData` onto one class or protocol
 (`EnrichmentNotes::for_class` / `for_protocol`). `emit_framework.rs` threads
 `fw.enrichment.as_ref()` into `generate_class_file` and `generate_protocol_file`.
@@ -197,7 +197,7 @@ ownership notes (class files: above each `(define …)`; protocol files: appende
 to the header method listing) and a decl-level main-thread threading note. The
 metadata is recorded as comments only; FFI codegen is unchanged.
 
-**Goldens.** The emit-racket-oo snapshot goldens churned (comment lines added,
+**Goldens.** The emit-racket snapshot goldens churned (comment lines added,
 never removed). `NSApplicationDelegate` (AppKit) and `NSURLSessionTaskDelegate`
 (Foundation) were added to the curated golden subsets so a protocol golden
 exercises the new path. Pipeline regenerated with 0 enrichment violations.
