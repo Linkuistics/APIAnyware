@@ -3,6 +3,12 @@
 **Date:** 2026-05-29
 **Status:** Pass
 
+> **Superseded by the standalone re-verification (2026-05-30) below.** The body
+> describes the retired source-exec / precompile bundle. Under ADR-0009 chez apps
+> ship as a self-contained open-world standalone binary; source-exec-era caveats
+> (menu-bar "chez", `brew install chezscheme`) are obsolete — see the dated
+> section at the end.
+
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --release --example bundle_app -p
@@ -104,3 +110,49 @@ massaging.
   workaround for AppKit/enums.sls not carrying NSModalResponse* values.
   Candidate follow-up at the emitter level if NSModalResponse is part
   of any modaliser drop we already process.
+
+---
+
+## Standalone re-verification (2026-05-30, leaf `060/050/040`)
+
+**Status: PASS.** Fourth portfolio app. New axis: **multi-delegate** — one
+`make-delegate` record with four selectors, including a notification-center
+observer path distinct from button target-action.
+
+**Build.** `cargo run --release --example bundle_app -p
+apianyware-macos-bundle-chez -- pdfkit-viewer`. Output: `PDFKit Viewer.app`,
+**5.0 MB**, bundle id `com.linkuistics.PDFKitViewer`, signed; no Chez/Scheme
+linkage. No new wrapper collisions.
+
+**VM verify (no-Chez bar).** Golden macOS 26.3 arm64, no Chez present. A 3-page
+`sample.pdf` was generated in-guest (`cupsfilter`). Uploaded (md5-verified),
+unpacked, quarantine-stripped, `open -n`.
+- [x] Empty state correct: toolbar `[Open…] [◀] [▶]` with ◀/▶ **disabled** (no
+      doc) and "No PDF loaded" (`screenshot-standalone-001-empty.png`).
+- [x] **`openDocument:` trampoline fires** — clicking "Open…" opens NSOpenPanel
+      (880×448 dialog); selecting `sample.pdf` (via Cmd+Shift+G go-to-folder)
+      loads + renders "Page one content."
+      (`screenshot-standalone-002-loaded-page1.png`).
+- [x] **`pageChanged:` trampoline fires (notification observer)** — on load the
+      label updates "No PDF loaded" → **"Page 1 of 3"** and `refresh-ui!` sets
+      ◀ disabled / ▶ enabled. A distinct invocation path from target-action.
+- [x] **`goNext:` trampoline fires** — page 1 → **"Page 2 of 3"** ("Page two
+      content."), both ◀/▶ now enabled (`screenshot-standalone-003-page2.png`).
+- [x] **`goPrev:` trampoline fires** — page 2 → page 1, ◀ disabled again.
+- [x] **RSS ~226 MB** with the document loaded (PDFKit caches rendered page
+      bitmaps — expected for a viewer; loaded-doc baseline, not a leak).
+
+Four distinct trampoline paths (two button target-actions, the modal
+NSOpenPanel-driven open, and the NSNotificationCenter observer) all fire in the
+no-Chez standalone — consistent with the dispatch-substrate proof from leaf `020`.
+
+**VM-interaction note.** The tahoe golden image's "click wallpaper → reveal
+desktop widgets" behaviour stole focus on near-miss clicks. **Disabled it for the
+session** with `defaults write com.apple.WindowManager
+EnableStandardClickToShowDesktop -bool false; killall WindowManager`. Also note:
+`screenshot --window` returns *window-relative* pixel coordinates, but `input
+click` takes *screen-absolute* coordinates — click at the accessibility
+snapshot's `positionX/Y` (screen-absolute) and ensure the window is key first.
+
+**Obsoleted source-exec caveats (resolved by standalone):** menu bar reads
+"PDFKit Viewer"; no `brew install chezscheme`; 5.0 MB bundle. No app code changes.
