@@ -3,6 +3,12 @@
 **Date:** 2026-05-29
 **Status:** Pass
 
+> **Superseded by the standalone re-verification (2026-05-30) below.** The body
+> describes the retired source-exec / precompile bundle. Under ADR-0009 chez apps
+> ship as a self-contained open-world standalone binary; source-exec-era caveats
+> (menu-bar "chez", `brew install chezscheme`) are obsolete — see the dated
+> section at the end.
+
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --example bundle_app -p
@@ -134,3 +140,55 @@ None.
   concern as the rest of the chez portfolio, out of scope.
 - Bundle transfer via 4 MB chunks is a TestAnyware-agent upload-size
   workaround, not an app concern.
+
+---
+
+## Standalone re-verification (2026-05-30, leaf `060/050/050`)
+
+**Status: PASS.** Fifth portfolio app. New axis: **async multi-callback delegate**
+(WKNavigationDelegate) — callbacks fire asynchronously off WebKit's run loop,
+stressing the entry-point autoreleasepool + guardian lifetime under the embedded
+boot.
+
+**Build.** `cargo run --release --example bundle_app -p
+apianyware-macos-bundle-chez -- mini-browser`. Output: `Mini Browser.app`,
+**4.9 MB**, bundle id `com.linkuistics.MiniBrowser`, signed; no Chez/Scheme
+linkage. No new wrapper collisions.
+
+**VM verify (no-Chez bar).** Golden macOS 26.3 arm64, no Chez present, **network
+reachable** (apple.com → HTTP/2 200). Uploaded (md5-verified), unpacked,
+quarantine-stripped, `open -n`.
+- [x] **WKWebView renders live web pages** in the standalone — default
+      `https://www.apple.com` loads the full "iPhone 17 Pro" page; window title
+      becomes "Apple — Mini Browser" (`screenshot-standalone-001-apple-loaded.png`).
+      WebKit loads at runtime in the no-Chez VM.
+- [x] **Async `didStartProvisionalNavigation:` → `didFinishNavigation:` fire** —
+      status field transitions "Loading…" → **"Done"**; `refresh-chrome!` updates
+      the window title and address field. These fire from WebKit's run loop, not
+      synchronously — the core async-callback proof.
+- [x] **`go:` fires** — typing `https://example.com` + Enter navigates; the
+      "Example Domain" page renders, address → `https://example.com/`, status
+      "Done" (`screenshot-standalone-002-example-navigated.png`). A second full
+      async navigation cycle.
+- [x] **`back:` fires** — back button enabled after history accrues; clicking it
+      navigates to the prior entry, address refreshed via the back navigation's
+      async finish callback.
+- [~] **Error-path selectors** (`didFailNavigation:` / `didFailProvisionalNavigation:`):
+      **covered by construction, not live-triggered.** A TestAnyware quirk on this
+      NSTextField (Cmd+A select-all / `agent set-value` didn't clear/resolve the
+      field, so a clean bad-host URL couldn't be entered; concatenated text
+      resolved to served 4xx pages, which correctly take the *success* path —
+      `didFinish`, status "Done"). The two failure selectors are wired identically
+      to the proven `didFinish` selector in the same `make-delegate` record. Not a
+      blocker; the async substrate is proven by the successful navigations + back.
+- [x] **RSS stable ~142–144 MB** across ~6 navigations (many async callback
+      re-entries); process never crashed. The key async-lifetime result: repeated
+      async callbacks entering Scheme from WebKit's run loop don't leak or collect
+      mid-flight — the entry-point autoreleasepool + guardian interaction holds
+      under the embedded boot.
+
+Consistent with the leaf-020 dispatch-substrate proof: the `eval`-synthesised
+trampolines fire correctly on the async path too.
+
+**Obsoleted source-exec caveats (resolved by standalone):** menu bar reads "Mini
+Browser"; no `brew install chezscheme`; 4.9 MB bundle. No app code changes.
