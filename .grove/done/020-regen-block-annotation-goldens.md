@@ -37,3 +37,32 @@ the urgent regression deferred from `add-chez-target`. Single concern: emitter
 ## Notes
 - Must run under `SDKROOT=macosx` (this host's xcrun is broken — see
   `project_sdkroot_workaround`).
+
+## Resolution (corrected) — no golden regen; goldens are already correct
+The plan's premise was wrong twice over and the urgent regression does not
+exist. Evidence-based finding:
+
+1. **The enriched IR is gitignored, not committed** (`.gitignore` excludes
+   `analysis/ir/enriched/`; Foundation 16 MB, AppKit 90 MB; present only in the
+   main checkout). In a clean worktree it is absent, so
+   `load_enriched_framework` returns `None` and the Foundation/AppKit snapshot
+   tests **silently skip and report `ok`** — they test nothing. (My first commit
+   `c2c4745` concluded "no regen needed" from these skipped tests: right
+   conclusion, wrong reasoning.)
+2. With the main-repo IR (21 May) copied in, the two tests **fail** — but
+   `UPDATE_GOLDEN` would *strip* annotations, not fix drift: it removes
+   protocol-level `— block param N: async-copied (runtime-managed)` (×6) and
+   `weak reference` (×2) notes the committed goldens already carry.
+3. Root cause: the 21-May IR's enrichment is **under-enriched** vs the IR that
+   produced the goldens — `weak_param_methods`, `protocol_async_block_methods`,
+   `protocol_stored_block_methods`, `protocol_weak_param_methods` are all
+   **null**. The goldens were generated from a later analysis pipeline that
+   computes those fields. So the goldens are the *richest, most correct*
+   artifact; the "failure" is a stale local IR lagging the goldens, the reverse
+   of the plan's "stale goldens lagging the emitter."
+
+**Action: none on the goldens.** Per the grove's goldens-as-truth decision
+(2026-05-30), the committed block-annotation goldens are kept as-is. The
+block-annotation drift the plan predicted (stored→async, dropped threading
+comment) does not occur — it was misattributed to commit `c6e8b95`, which was a
+pure directory rename. Issue #1 requires no code or golden change.
