@@ -237,38 +237,20 @@ only VM verification caught — the bundle aborted mid-compile. Mirror this
 resolver for any future runtime asset whose load path differs between unbundled
 CLI and bundled `.app` use.
 
-🟡 **2026-05-28 — Chez doesn't cache `.so` for `--script`; the bundler
-precompiles.** Cold launch otherwise recompiles every imported `.sls` (~75s,
-AppKit alone is 70k lines). `bundle-chez` runs a post-stage precompile over
-**root** libraries only (framework facades + runtime clusters) with
-`(compile-imported-libraries #t)` — iterating *every* `.sls` individually breaks
-caching, because each later `compile-library` invalidates earlier libraries'
-dependency stamp and Chez reloads from source. Result: ~70s → ~1.85s cold,
-bundle ~2.7× larger. Opt out via `AppSpec::skip_precompile`.
-
-🟢 **2026-05-29 — bundle is version-resilient, not version-coupled (the
-`launch.ss` bootstrap).** A `.so` is loadable only by the exact Chez version
-that wrote it, and a cross-version `.so` load is a **hard error**, not a
-fall-through to source. So a bundle precompiled by the dev host's Chez (10.4.1)
-used to crash on a freshly-provisioned VM whose `brew install chezscheme` poured
-a different bottle (10.3.0 ⇄ 10.4.1 over a single day) — the run had to copy the
-host's Cellar in by hand (leaf 130's report, Issue 1). Fixed by making the
-bundle's stub `--script` a generated **`launch.ss`** (one per bundle, at the
-`chez-app` root) instead of the app entry directly. `launch.ss` stamps the
-precompiling Chez version, compares it to `(scheme-version-number)` at launch,
-and **on mismatch rewrites the object half of every `library-extensions` pair**
-(`(".sls" . ".so")` → `(".sls" . ".so-disabled")`) so object lookups miss and
-Chez compiles source in memory — the ~75s cold start a non-precompiled bundle
-already pays, but it **launches anywhere** and **writes no objects** (the bundle
-signature stays valid). When versions match it is a no-op and the fast `.so`
-path runs unchanged. Mechanism (chosen shape: *version-stamp + graceful
-fallback*) lives in `bundle-chez/src/launch.rs`; the entry is `load`ed (no app
-reads `(command-line)`, so it is equivalent to `--script`). `skip_precompile`
-bundles ship no objects and carry no stamp. **Implication for VM-verify:** a
-vanilla provisioned VM no longer needs the manual host-Chez swap — a mismatched
-Chez just triggers the slow source path. The remaining provisioning follow-up
-(pre-install a pinned Chez in the golden image, 050 brief note) is now a *speed*
-optimisation, not a *correctness* requirement.
+🟢 **2026-05-30 — SUPERSEDED by ADR-0009: no precompile pass, no `.so`
+objects, no version coupling.** The two entries below (the bundle-time `.sls`
+→ `.so` precompile, and the `launch.ss` version-resilience bootstrap that
+guarded against cross-version `.so` loads) described the **retired source-exec
+bundle**. chez `.app`s now ship as self-contained binaries that embed the Chez
+kernel and a whole-program boot image (design spec
+`docs/specs/2026-05-29-chez-standalone-distribution-design.md`): the app's
+entire import closure is `compile-whole-program`-baked into the boot at build
+time, so there are no per-bundle `.so` siblings, no `--script`/`launch.ss`
+indirection, no `skip_precompile` knob, and no runtime Chez whose version could
+mismatch. The version-coupling follow-up (leaf-160) and the golden-image
+pre-install note (050 brief) **evaporate** with the system-Chez dependency. The
+original bodies survive in git history (this file, pre-2026-05-30) for the
+source-exec rationale; do not act on them for a shipped bundle.
 
 🟢 **2026-05-28 — `bundle-chez`'s deps walker skips `build/`.** A sibling app's
 `build/<App>.app/…/chez-app/apianyware/*.sls` tree under the same source root
@@ -282,10 +264,14 @@ destination.** `racket/base`'s regexp is gone, so URL normalisation
 (trim + scheme-scan, byte-equivalent to the racket renderers). And `format`
 requires the destination arg: `(format #f "Value: ~a" n)`.
 
-🟢 **2026-05-26 — unbundled menu-bar name reads "chez".** The stub-launcher
-`execv`s into `/opt/homebrew/bin/chez`, so macOS shows the runtime process name
-unless launched as a `.app` (where `CFBundleName` supplies the name). Identical
-to the racket port; fix candidate is in `stub-launcher`/runtime, not per-app.
+🟢 **2026-05-26 — unbundled menu-bar name reads "chez" (bundle case moot
+since 2026-05-30, ADR-0009).** The *dev-run* `chez --script` path still shows
+the runtime process name in the menu bar — that is a property of running the
+unbundled interpreter and is unchanged. But a shipped `.app` no longer execs a
+`chez` process at all: the standalone binary *is* the executable, so macOS reads
+`CFBundleName` directly and the menu-bar-name gotcha for bundles is gone (it was
+a stub-launcher `execv` artifact, and the stub-launcher is no longer on the chez
+bundle path). No per-app or runtime fix is owed.
 
 ## 7. Verification
 
@@ -311,7 +297,9 @@ block create/free.
 - **chez** — fast steady-state execution and a small, predictable runtime;
   `foreign-procedure`/`foreign-callable`/`ftype` give a clean, explicit FFI with
   no `tell`-macro indirection. Lifetime is under explicit control (guardian
-  drain timing) rather than GC-finalizer order. The cost is fewer batteries
-  (hand-rolled parsing) and a Chez-version-coupled precompile step for fast
-  launch. Best when you want a tight, transparent native bridge and are willing
-  to write the glue.
+  drain timing) rather than GC-finalizer order. Apps ship as a **self-contained
+  binary** that embeds the Chez kernel — no runtime interpreter to install, a
+  ~0.29 s cold launch, and a ~4.5 MB `.app` (ADR-0009). The cost is fewer
+  batteries (hand-rolled parsing) and a slow one-time whole-program compile at
+  *build* time. Best when you want a tight, transparent native bridge with a
+  dependency-free `.app` and are willing to write the glue.

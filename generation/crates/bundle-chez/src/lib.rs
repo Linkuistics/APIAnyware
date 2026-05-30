@@ -1,10 +1,11 @@
-//! Bundle chez sample apps into macOS `.app` bundles.
+//! Bundle chez sample apps into self-contained macOS `.app` bundles.
 //!
-//! Wraps `apianyware-macos-stub-launcher` with the chez–specific
-//! conventions: where source files live, how `(import ...)` forms
-//! resolve to file paths via library-name registry, and how to lay out
-//! the bundle's `Resources` directory so the bundled `chez --script`
-//! invocation finds the entry and its dependencies.
+//! A chez `.app` is a **standalone open-world** binary that embeds the
+//! Chez kernel and a whole-program boot image — it launches on a machine
+//! with no Chez Scheme installed (ADR-0009; design spec
+//! `docs/specs/2026-05-29-chez-standalone-distribution-design.md`). The
+//! host Chez is a *build-time* dependency only (the kernel artifacts are
+//! discovered from it). There is no source-exec / system-Chez path.
 //!
 //! # Example
 //!
@@ -19,18 +20,16 @@
 //! println!("built: {}", app_path.display());
 //! ```
 //!
-//! Bundle layout per design spec §8:
+//! Bundle layout per design spec §5:
 //!
 //! ```text
 //! <App>.app/
 //!   Contents/
-//!     MacOS/<App>                          <- Swift stub, execvs into chez --script
+//!     MacOS/<App>                          <- native binary: embed_main + libkernel + app boot
 //!     Info.plist                           <- CFBundleName = "<App>"
-//!     Resources/chez-app/
-//!       apps/<script>/<script>.sls         <- entry script
-//!       apianyware/runtime/*.sls           <- traversed deps
-//!       apianyware/<fw>/*.sls              <- traversed deps
-//!       lib/libAPIAnywareChez.dylib        <- always present (mandatory)
+//!     Resources/
+//!       <App>.boot                         <- petite+scheme+app whole-program boot
+//!       lib/libAPIAnywareChez.dylib        <- loaded at runtime by ffi.sls (mandatory)
 //! ```
 //!
 //! ## Difference from bundle-racket
@@ -44,24 +43,17 @@
 //!   `<source_root>/lib/`; bundling fails fast if it's missing.
 //!   bundle-racket treats the dylib as optional (a runtime-load
 //!   fallback exists on the racket side).
-//! - **Stub runtime args.** The stub invokes
-//!   `chez --libdirs <Resources/chez-app> --script <entry>`; the
-//!   `--libdirs` flag points at the bundle's resource subdir so Chez
-//!   resolves `(apianyware ...)` library names against
-//!   `apianyware/runtime/` and `apianyware/<fw>/`. bundle-racket
-//!   invokes `racket <entry>` with no flag.
+//! - **Self-contained binary.** Where bundle-racket ships a Swift stub
+//!   that execs the system `racket`, the chez bundle embeds the Chez
+//!   kernel directly (`standalone.rs`): no runtime interpreter, no
+//!   `--libdirs` indirection.
 
 mod bundle;
 mod deps;
-mod launch;
-mod precompile;
 mod spec;
 mod standalone;
 
-pub use bundle::{
-    bundle_app, bundle_app_with_entry, resolve_signing_identity, AppSpec, BundleError,
-    DEFAULT_CHEZ_PATH, LOCAL_SIGNING_IDENTITY,
-};
+pub use bundle::{resolve_signing_identity, AppSpec, BundleError, LOCAL_SIGNING_IDENTITY};
 pub use deps::{collect_dependencies, collect_dependencies_with_chez, DEFAULT_CHEZ_BIN};
 pub use spec::read_display_name_from_spec;
-pub use standalone::{bundle_app_standalone, compute_collisions, generate_wrapper, Collisions};
+pub use standalone::{bundle_app, compute_collisions, generate_wrapper, Collisions};

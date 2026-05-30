@@ -29,18 +29,16 @@
 //! 5. **Assemble + sign** the `.app`: boot + dylib under
 //!    `Contents/Resources/` (F4); sign nested dylib then bundle (F5).
 //!
-//! # Leaf 030 scope (node 060/030)
+//! # The dylib-search prelude (spec §4)
 //!
-//! This leaf replaces leaf 010's `embed_main.c` `chdir` expedient with the
-//! spec §4 **prelude object** ([`PRELUDE_SS`]): a tiny Scheme object linked
-//! into the boot ahead of the app that sets `(library-directories)` from an
-//! exe-relative `../Resources` path, so `ffi.sls`'s `resolve-dylib-path`
-//! finds `lib/libAPIAnywareChez.dylib` during boot load without touching the
-//! process cwd. The host hands the resource dir to the prelude via the
-//! `AW_RESOURCE_DIR` env var (set before `Sbuild_heap`); the prelude reads it
-//! with `getenv`. The prelude also suppresses the kernel startup banner via
-//! `(suppress-greeting #t)` (F6). The wrapper generator (leaf 020) and the
-//! source-exec path (`bundle_app`, node-leaf 040) are untouched.
+//! The spec §4 **prelude object** ([`PRELUDE_SS`]) is a tiny Scheme object
+//! linked into the boot ahead of the app that sets `(library-directories)`
+//! from an exe-relative `../Resources` path, so `ffi.sls`'s
+//! `resolve-dylib-path` finds `lib/libAPIAnywareChez.dylib` during boot load
+//! without touching the process cwd. The host hands the resource dir to the
+//! prelude via the `AW_RESOURCE_DIR` env var (set before `Sbuild_heap`); the
+//! prelude reads it with `getenv`. The prelude also suppresses the kernel
+//! startup banner via `(suppress-greeting #t)` (F6).
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -69,12 +67,11 @@ const STANDALONE_COLLISIONS_SS: &str = include_str!("../scripts/standalone-colli
 /// `source_root/apps/<script_name>/<script_name>.sls` into
 /// `output_dir/<App Name>.app`. Returns the path to the new bundle.
 ///
-/// Unlike [`crate::bundle_app`] (source-exec, retained until node-leaf
-/// 040), the produced `.app` has **no runtime dependency on a system
-/// Chez**: the kernel and a whole-program boot are baked into the binary.
-/// The host Chez install is a **build-time** dependency only (the kernel
-/// artifacts are discovered from it).
-pub fn bundle_app_standalone(
+/// The produced `.app` has **no runtime dependency on a system Chez**: the
+/// kernel and a whole-program boot are baked into the binary. The host Chez
+/// install is a **build-time** dependency only (the kernel artifacts are
+/// discovered from it).
+pub fn bundle_app(
     spec: &AppSpec,
     source_root: &Path,
     output_dir: &Path,
@@ -468,7 +465,7 @@ fn write_info_plist(path: &Path, spec: &AppSpec) -> Result<(), BundleError> {
         "NSHighResolutionCapable".to_string(),
         PlistValue::Boolean(true),
     );
-    // Caller overrides win (matches bundle_app's merge semantics).
+    // Caller overrides win.
     for (k, v) in &spec.info_plist_overrides {
         dict.insert(k.clone(), v.clone());
     }
