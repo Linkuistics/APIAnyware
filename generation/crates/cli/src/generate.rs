@@ -4,7 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use apianyware_macos_emit::binding_style::{EmitResult, LanguageEmitter, LanguageInfo};
+use apianyware_macos_emit::language_emitter::{EmitResult, LanguageEmitter, LanguageInfo};
 use apianyware_macos_emit::framework_ordering::topological_sort;
 
 use crate::registry::EmitterRegistry;

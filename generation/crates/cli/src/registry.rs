@@ -2,7 +2,7 @@
 //!
 //! New languages are added by inserting their emitter into [`EmitterRegistry::new`].
 
-use apianyware_macos_emit::binding_style::LanguageEmitter;
+use apianyware_macos_emit::language_emitter::LanguageEmitter;
 
 /// Registry of all available language emitters.
 pub struct EmitterRegistry {

@@ -134,7 +134,7 @@ In `emit_framework.rs`. `LanguageInfo` is **three fields** — there is no
 `supported_styles` / `default_style`:
 
 ```rust
-use apianyware_macos_emit::binding_style::{LanguageInfo, LanguageEmitter, EmitResult};
+use apianyware_macos_emit::language_emitter::{LanguageInfo, LanguageEmitter, EmitResult};
 use apianyware_macos_types::framework::Framework;
 use std::io;
 use std::path::Path;
@@ -163,8 +163,8 @@ impl LanguageEmitter for {Lang}Emitter {
 }
 ```
 
-(The trait/struct live in `emit/src/binding_style.rs` — the filename is legacy;
-the `BindingStyle` enum it once held is gone.)
+(The trait and types live in `emit/src/language_emitter.rs`. It was once
+`binding_style.rs`, but the `BindingStyle` enum is gone — ADR-0004.)
 
 ### Key design decisions per language
 
@@ -233,7 +233,7 @@ deterministic golden tests against the 5-class `TestKit` fixture
 use apianyware_macos_emit::snapshot_testing::GoldenTest;
 use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
 use apianyware_macos_emit_{id}::emit_framework::{Lang}Emitter;
-use apianyware_macos_emit::binding_style::LanguageEmitter;
+use apianyware_macos_emit::language_emitter::LanguageEmitter;
 
 #[test]
 fn snapshot_{id}_testkit() {

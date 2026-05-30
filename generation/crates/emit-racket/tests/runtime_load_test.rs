@@ -32,7 +32,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_emit::binding_style::LanguageEmitter;
+use apianyware_macos_emit::language_emitter::LanguageEmitter;
 use apianyware_macos_emit_racket::emit_framework::RacketEmitter;
 use apianyware_macos_types::ir::Framework;
 

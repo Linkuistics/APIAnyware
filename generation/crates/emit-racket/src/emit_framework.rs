@@ -6,7 +6,7 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::binding_style::{EmitResult, LanguageEmitter, LanguageInfo};
+use apianyware_macos_emit::language_emitter::{EmitResult, LanguageEmitter, LanguageInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
 use apianyware_macos_emit::write_line;
