@@ -3,6 +3,14 @@
 **Date:** 2026-05-29
 **Status:** Pass-with-fixes
 
+> **Superseded by the standalone re-verification (2026-05-30) below.** The body
+> describes the retired source-exec / precompile bundle. Under ADR-0009 chez apps
+> ship as a self-contained open-world standalone binary. The standalone run found
+> and fixed a **new whole-program-only bug** (the `(& NSRect)` IMP ftype was
+> invisible in the sealed binary's interaction-environment) — see the dated
+> section at the end. Source-exec-era caveats (menu-bar "chez", `brew install
+> chezscheme`) are obsolete.
+
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --release --example bundle_app -p
@@ -128,3 +136,71 @@ than hello-window's `chez` note, same as note-editor — bundler sets
   matching racket's effective bar.
 - Two macOS "Software Update" / "What's New" notification banners appeared
   during testing — VM noise, unrelated to the app; visible in some screenshots.
+
+---
+
+## Standalone re-verification (2026-05-30, leaf `060/050/070`)
+
+**Status: PASS (with a whole-program-only bug found + fixed).** Seventh and final
+portfolio app — the **capstone**: a dynamic NSView subclass (`DrawingCanvasView`)
+created at runtime via `make-dynamic-subclass`, with four Scheme-implemented IMPs
+(`drawRect:`, `mouseDown:`, `mouseDragged:`, `mouseUp:`). The hardest test of the
+embedded-`scheme`-boot compiler, since the IMPs are `foreign-callable`
+trampolines `eval`'d into existence at runtime.
+
+### Bug found + fixed: `(& NSRect)` IMP ftype invisible under whole-program seal
+
+**Symptom.** First standalone launch threw `unrecognized foreign-callable
+argument ftype name NSRect` (and then, after a first fix attempt, `attempt to
+import invisible library (apianyware runtime types)`) — no window appeared.
+
+**Root cause.** `drawRect:`'s IMP signature is `(list '(& NSRect)) 'void`.
+`runtime/dispatch.sls` eval's the `foreign-callable` form in
+`(interaction-environment)`, so the `NSRect` ftype identifier must resolve there.
+In a `--script` (source-exec) run the app's own top-level `(import (apianyware
+runtime types))` populated the interaction-environment, so it worked. The
+standalone **top-level-program wrapper** (`compile-whole-program`, spike F2)
+imports into the program's lexical scope instead and **seals the program**,
+de-registering its libraries — so the interaction-environment lacked `NSRect`,
+*and* a runtime `(import (apianyware runtime types))` is impossible ("invisible
+library"). A standalone-only regression that only the struct-by-value IMP
+triggers (every other portfolio app's trampolines use scalar/`void*` tokens,
+always present in the base interaction-environment).
+
+**Fix (runtime, `runtime/dispatch.sls`).** Re-`define-ftype` the geometry structs
+(`NSPoint`, `NSSize`, `NSRect`, `NSRange`) **directly into the
+interaction-environment**, lazily on the first `build-callable` (guarded once).
+ftypes are structural (layout-only) declarations depending on nothing but
+`(chezscheme)`'s `define-ftype`, so re-declaring them is sound and immune to
+library sealing — unlike a runtime `import`. Kept byte-for-byte in sync with
+`(apianyware runtime types)`. Verified locally that the delegate and block paths
+are unregressed and the full app loads in source-exec mode.
+
+### VM verify (no-Chez bar) — after the fix
+
+Golden macOS 26.3 arm64, no Chez present. Uploaded (md5-verified), unpacked,
+quarantine-stripped, `open -n`. Bundle: `Drawing Canvas.app`, 4.8 MB, signed, no
+Chez/Scheme linkage.
+- [x] **Window launches** (640×512) — the dynamic subclass registered and
+      `drawRect:` ran on the empty canvas (`screenshot-standalone-001-empty.png`).
+      Toolbar: Color… / line-width slider / Clear.
+- [x] **`mouseDown:`/`mouseDragged:`/`mouseUp:` IMPs fire** — three mouse drags
+      draw two diagonal strokes (an X) + a horizontal line; each drag ran
+      `start-stroke!`/`extend-stroke!`/`end-stroke!`
+      (`screenshot-standalone-002-strokes-drawn.png`).
+- [x] **`drawRect:` with `(& NSRect)` renders** — the strokes are drawn via
+      CoreGraphics from the IMP that receives the dirty rect by value. This is
+      the fixed path; it now works in the sealed standalone, exercising the
+      all-sizes struct-return ABI (leaf-140) under the embedded boot.
+- [x] **`clearCanvas:` toolbar delegate** — Clear empties the strokes and
+      re-renders blank (`screenshot-standalone-003-cleared.png`).
+- [x] **RSS ~108 MB**, stable.
+
+**Significance.** The capstone claim holds: a dynamically-registered ObjC class
+with Scheme IMPs `eval`'d at runtime works in a whole-program-compiled, no-Chez
+standalone binary — the strongest proof of the embedded-`scheme`-boot compiler.
+The one whole-program-only defect was in the runtime's ftype visibility (now
+fixed), not in the dynamic-subclass machinery itself.
+
+**Obsoleted source-exec caveats (resolved by standalone):** menu bar reads
+"Drawing Canvas"; no `brew install chezscheme`; 4.8 MB bundle.

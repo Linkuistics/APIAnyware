@@ -152,6 +152,41 @@
       (set-top-level-value! '%aw-chez-callable-invoke %callable-invoke)
       #t))
 
+  ;; Make the geometry ftype names (NSRect, NSPoint, …) visible in the
+  ;; interaction-environment. A `foreign-callable` form for a struct-by-value
+  ;; IMP — e.g. drawing-canvas's `drawRect:` with `(& NSRect)` — eval's in
+  ;; the interaction-environment (above), so the ftype identifiers in its
+  ;; type tokens must resolve there. In a `--script` run the app's own
+  ;; top-level `(import (apianyware runtime types))` populated that
+  ;; environment; the standalone top-level-program wrapper
+  ;; (compile-whole-program, spike F2) imports into the program's lexical
+  ;; scope instead, leaving the interaction-environment without them — so
+  ;; `(& NSRect)` raised "unrecognized foreign-callable argument ftype name
+  ;; NSRect" only in the standalone bundle.
+  ;;
+  ;; We **re-`define-ftype` the geometry structs directly** into the
+  ;; interaction-environment rather than `(import (apianyware runtime
+  ;; types))`: `compile-whole-program` seals the program and de-registers
+  ;; its libraries, so a runtime `import` of `(apianyware runtime types)`
+  ;; fails with "attempt to import invisible library". ftypes are structural
+  ;; (layout-only) declarations, so re-declaring them in the interaction-
+  ;; environment is sound and self-contained — it depends on nothing but
+  ;; `(chezscheme)`'s `define-ftype`, always present there. Kept byte-for-byte
+  ;; in sync with `(apianyware runtime types)`; forms are in dependency order
+  ;; (NSRect references NSPoint/NSSize). Done lazily on first `build-callable`
+  ;; (guarded once); idempotent and harmless in source-exec mode.
+  (define %geometry-ftype-forms
+    '((define-ftype NSPoint (struct [x double-float] [y double-float]))
+      (define-ftype NSSize  (struct [width double-float] [height double-float]))
+      (define-ftype NSRect  (struct [origin NSPoint] [size NSSize]))
+      (define-ftype NSRange (struct [location unsigned-64] [length unsigned-64]))))
+  (define %types-installed? #f)
+  (define (ensure-ftypes-visible!)
+    (unless %types-installed?
+      (let ([env (interaction-environment)])
+        (for-each (lambda (form) (eval form env)) %geometry-ftype-forms))
+      (set! %types-installed? #t)))
+
   (define (default-value-for-type type-sym)
     (case type-sym
       [(void)                (void)]
@@ -176,6 +211,7 @@
   ;; `(foreign-callable-entry-point (callable-handle-code h))` to get the
   ;; C-callable address, and `release-callable!` to tear it down.
   (define (build-callable proc param-type-syms return-type-sym)
+    (ensure-ftypes-visible!)
     (let* ([default (default-value-for-type return-type-sym)]
            [id      (%callable-register! proc default)]
            [arity   (length param-type-syms)]

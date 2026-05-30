@@ -188,6 +188,23 @@ resolve the helpers at call time.
 > which is precisely why the dropped closed-world mode (ADR-0009) could not
 > support dispatch-using apps. RSS stays flat across repeated dispatch, so the
 > eval'd forms are cached, not re-synthesised per call.
+> **2026-05-30 (standalone) — a struct-by-value IMP needs its ftype names
+> re-`define-ftype`d into the interaction-environment.** `drawing-canvas` (leaf
+> `060/050/070`) threw `unrecognized foreign-callable argument ftype name NSRect`
+> in the standalone bundle: `drawRect:`'s IMP is `(& NSRect)`, and the
+> `foreign-callable` form eval's in `(interaction-environment)`, so `NSRect` must
+> resolve there. In a `--script` run the app's own top-level `(import (apianyware
+> runtime types))` populated that env; the standalone **top-level-program wrapper
+> seals the program** (`compile-whole-program`), importing into lexical scope and
+> *de-registering* libraries — so the interaction-environment lacks the ftype
+> **and** a runtime `(import (apianyware runtime types))` fails with "invisible
+> library". Fix (`dispatch.sls`, `ensure-ftypes-visible!`): re-`define-ftype` the
+> geometry structs (NSPoint/NSSize/NSRect/NSRange) directly into the
+> interaction-environment, lazily on first `build-callable`. ftypes are
+> structural, so re-declaring them depends only on `(chezscheme)` and is immune to
+> library sealing. Keep these forms byte-for-byte in sync with `(apianyware
+> runtime types)`. Only struct-by-value `foreign-callable` params hit this;
+> scalar/`void*` tokens always resolve.
 
 🔴 **2026-05-29 — every struct-by-value return needs Chez's hidden result-buffer
 arg, regardless of size.** Leaf 025 implemented the textbook ABI rule (only
