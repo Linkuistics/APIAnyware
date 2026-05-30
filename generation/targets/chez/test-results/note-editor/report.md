@@ -3,6 +3,12 @@
 **Date:** 2026-05-29
 **Status:** Pass
 
+> **Superseded by the standalone re-verification (2026-05-30) below.** The body
+> describes the retired source-exec / precompile bundle. Under ADR-0009 chez apps
+> ship as a self-contained open-world standalone binary; source-exec-era caveats
+> (menu-bar "chez", `brew install chezscheme`) are obsolete — see the dated
+> section at the end.
+
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --example bundle_app -p
@@ -159,3 +165,55 @@ block is harmless but unnecessary.
 - Markdown rendering is byte-for-byte equivalent to the racket renderer
   (verified by host-side unit checks of `render-markdown` against the racket
   output format, plus the in-VM visual render here).
+
+---
+
+## Standalone re-verification (2026-05-30, leaf `060/050/060`)
+
+**Status: PASS.** Sixth portfolio app. New axis: **block bridge** — a completion
+handler passed from a Scheme proc into ObjC as a block (`make-objc-block`),
+distinct from delegate selectors. Also the designated **TCC-grant continuity**
+app (node done-bar; spike F5).
+
+**Build.** `cargo run --release --example bundle_app -p
+apianyware-macos-bundle-chez -- note-editor`. Output: `Note Editor.app`,
+**5.5 MB** (largest app, 521 LOC), bundle id `com.linkuistics.NoteEditor`, signed
+`APIAnyware Local Signing`; no Chez/Scheme linkage; no new wrapper collisions.
+
+**VM verify (no-Chez bar).** Golden macOS 26.3 arm64, no Chez present. Uploaded
+(md5-verified), unpacked, quarantine-stripped, `open -n`.
+- [x] Empty state: toolbar `New / Open… / Save… / Undo / Redo`, status "Ready",
+      split editor|preview with a "Start typing Markdown…" placeholder.
+- [x] **Live Markdown preview** — typing `# Hello Chez … **written** … *saved*`
+      renders bold H1 / bold / italic in the right pane on each keystroke (the
+      NSTextView `textDidChange:` path); window title gains "— edited"
+      (`screenshot-standalone-001-live-preview.png`).
+- [x] **Block bridge fires (the headline result)** — Save… opens the
+      `beginSheetModalForWindow:completionHandler:` save sheet ("Save As" /
+      "Where: Documents"). Naming the file `chez-standalone-note` + Save makes the
+      **completion handler (a Scheme `lambda` boxed via `make-objc-block`, retained
+      by the sheet for its async life) fire with `response = NSModalResponseOK`**,
+      read the panel URL, and write the file. Proof on disk:
+      `/Users/admin/Documents/chez-standalone-note.md` contains exactly the typed
+      markdown. Window title → `chez-standalone-note.md — Note Editor`, dirty flag
+      cleared (`screenshot-standalone-002-save-sheet-block.png`). This is the async
+      ObjC-block callback path surviving whole-program optimisation in the no-Chez
+      standalone.
+- [x] **TCC-grant continuity confirmed (node done-bar)** — the signed standalone
+      binary wrote to `~/Documents` (a TCC-protected location) with no permission
+      denial. The `com.linkuistics.*` bundle id + persistent local-signing
+      identity carry the file-access grant for a directly-signed standalone binary,
+      resolving spike F5's deferred question. (The save panel's own user-consent
+      grants the path; the key result is the standalone performs sandbox-respecting
+      file I/O cleanly.)
+- [x] **`New` discard logic** — after save (clean doc), New resets to "Untitled"
+      with no spurious discard prompt; the `confirm-discard?` alert (a separate
+      dispatch path) was also observed firing when a dirty doc would be lost.
+- [x] **RSS ~145 MB**, healthy — gc/guardian balance holds across the block
+      create/fire/free cycle.
+
+Consistent with the leaf-020 dispatch-substrate proof: the block-callback path,
+like the delegate paths, fires correctly under the embedded boot.
+
+**Obsoleted source-exec caveats (resolved by standalone):** menu bar reads "Note
+Editor"; no `brew install chezscheme`; 5.5 MB bundle. No app code changes.
