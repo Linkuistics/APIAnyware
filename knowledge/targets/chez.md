@@ -330,3 +330,128 @@ block create/free.
   batteries (hand-rolled parsing) and a slow one-time whole-program compile at
   *build* time. Best when you want a tight, transparent native bridge with a
   dependency-free `.app` and are willing to write the glue.
+
+## 9. Self-contained distribution (the standalone toolchain)
+
+A chez `.app` is a **self-contained, open-world native binary**: its
+`Contents/MacOS/<App>` embeds the Chez kernel and a whole-program boot image, so
+it launches on a machine with **no Chez installed** — no `brew install
+chezscheme`, no stub-launcher exec into a system `chez`. This is the *only* chez
+bundle shape; the source-exec / precompile model it replaced is retired
+(**ADR-0009**, `docs/adr/0009-chez-self-contained-bundle.md`). The deep design
+rationale lives in `docs/specs/2026-05-29-chez-standalone-distribution-design.md`;
+this section is the operational reproduction recipe. Racket's stub-launcher path
+(§ racket.md 9) is untouched — only chez changed.
+
+**Build vs. runtime dependency.** Chez is a **build-time-only** dependency: the
+bundler discovers the kernel artifacts from the dev host's Chez install and bakes
+them into the boot. The shipped `.app` depends on nothing but system frameworks
+(`otool -L` on the binary shows only `Foundation`/`AppKit`/`libSystem`/
+`libiconv`/`libncurses`/`libz` — no Chez/Scheme/petite).
+
+### Required Chez kernel artifacts
+
+From the Homebrew Chez install, under
+`/opt/homebrew/Cellar/chezscheme/<ver>/lib/csv<ver>/tarm64osx/` (verified on
+10.4.1):
+
+| Artifact | Role |
+|---|---|
+| `petite.boot` | base boot (reader, evaluator, no compiler) |
+| `scheme.boot` | the compiler / `eval` / `interaction-environment` — **required for open-world** (the dispatch substrate `eval`s `foreign-callable` trampolines at runtime; a `petite`-only boot cannot) |
+| `libkernel.a` | the kernel static lib linked into the binary |
+| `liblz4.a`, `libz.a` | compression libs the kernel needs |
+| `scheme.h` | kernel C API header for `embed_main.c` |
+
+`standalone.rs::discover_kernel_dir` finds these: it honours `AW_CHEZ_KERNEL_DIR`
+if set, else globs the Cellar for a `csv<ver>/<arch>osx` dir containing both
+`libkernel.a` and `scheme.h`. Build-time only.
+
+### The build pipeline
+
+Driven per-app by `bundle-chez/src/standalone.rs::bundle_app`:
+
+```mermaid
+flowchart TD
+  A["app entry .sls<br/>(apps/&lt;name&gt;/&lt;name&gt;.sls)"] --> B
+  B["1. Generate top-level-program wrapper<br/>(per-app collision set → facade (except …);<br/>install (scheme-start) thunk)"] --> C
+  C["2. Whole-program compile<br/>compile-program → compile-whole-program<br/>(~160 s / ~1.6 GB; tree-shakes 139 MB → ~413 KB obj)"] --> D
+  D["3. make-boot-file with EMPTY base list:<br/>petite.boot + scheme.boot + prelude.so + whole.so<br/>→ one self-contained &lt;App&gt;.boot"] --> E
+  E["4. cc-link embedding host:<br/>embed_main.c + libkernel.a + liblz4.a + libz.a<br/>(−liconv −lncurses −lz, Foundation, AppKit)<br/>⚠ do NOT link kernel main.o (F9)"] --> F
+  F["5. Assemble + sign .app:<br/>boot + dylib under Resources/ (F4);<br/>sign nested dylib then bundle"] --> G["self-contained &lt;App&gt;.app"]
+```
+
+Gotchas baked into the pipeline:
+- **F9 — don't link the kernel's `main.o`.** It defines its own `main()` which
+  collides with `embed_main.c`'s. Link `libkernel.a` + the compression libs only.
+- **F4 — boot + dylib go under `Contents/Resources/`, not `MacOS/`.** `codesign
+  --strict` rejects non-Mach-O files in `Contents/MacOS/` ("code object is not
+  signed at all"), so the `.boot` data file is sealed as a resource. The host
+  probes both a flat run-dir and the `.app` `../Resources` layout.
+- **F2 — the top-level-program wrapper.** `--script` runs in the interaction
+  environment (last-wins rebinding); `compile-whole-program` enforces strict R6RS
+  where a name exported by two imported libraries is a hard duplicate-import
+  error. The bundler computes the per-app collision set (a chez
+  `environment-symbols` probe over the import closure) and emits `(except <facade>
+  <names>…)` so framework facades yield to the curated runtime API and
+  `(chezscheme)`. Per-app, not a fixed list — each app's import set determines its
+  collisions.
+- **F3 — the dylib-search prelude.** A tiny prelude object linked into the boot
+  ahead of the app sets `(library-directories)` from an exe-relative
+  `../Resources` path (via the `AW_RESOURCE_DIR` env var the host sets before
+  `Sbuild_heap`), so `ffi.sls`'s `resolve-dylib-path` finds the bundled
+  `libAPIAnywareChez.dylib` during boot load. A custom embedding host does *not*
+  read `CHEZSCHEMELIBDIRS`.
+- **F6 — banner suppression.** `(suppress-greeting #t)` before `Sscheme_start`
+  (harmless in a windowed `.app`, noise in console runs).
+- **ftype visibility under the seal (2026-05-30).** `compile-whole-program`
+  de-registers libraries, so a struct-by-value IMP's `foreign-callable` ftype
+  (e.g. `(& NSRect)` in `drawing-canvas`'s `drawRect:`) is invisible in the
+  interaction-environment where the form eval's. `dispatch.sls`
+  re-`define-ftype`s the geometry structs there (see § 6). Only struct-by-value
+  callable params hit this.
+
+### Bundle layout
+
+```text
+<App>.app/Contents/
+  MacOS/<App>                       ← native binary: embed_main + libkernel + app boot
+  Info.plist                        ← CFBundleName = "<App>"
+  Resources/
+    <App>.boot                      ← petite + scheme + prelude + app whole-program boot
+    lib/libAPIAnywareChez.dylib     ← loaded at runtime by ffi.sls (mandatory; ADR-0005)
+```
+
+### Dev-repro recipe
+
+Build one app's standalone `.app`:
+
+```bash
+cargo run --release --example bundle_app -p apianyware-macos-bundle-chez -- <script-name>
+# → generation/targets/chez/apps/<script>/build/<App Name>.app
+```
+
+The display name comes from the H1 of `knowledge/apps/<script>/spec.md`; the
+bundle id is `com.linkuistics.<NoSpaceTitle>`. Prereqs: a host Chez install
+(kernel artifacts), `cc`, `codesign`, and the generated runtime tree +
+`lib/libAPIAnywareChez.dylib` present under `generation/targets/chez/`.
+
+Verify in a **no-Chez VM** ([[reference-testanyware-cli]]) — no provisioning, the
+kernel is embedded:
+
+```bash
+vmid=$(testanyware vm start --platform macos); export TESTANYWARE_VM_ID=$vmid
+testanyware exec "which chez || echo NO_CHEZ"          # confirm the bar
+tar czf /tmp/app.tgz -C .../build "<App Name>.app"     # ~3–4 MB, single-shot upload
+testanyware upload /tmp/app.tgz /Users/admin/app.tgz
+testanyware exec "cd /Users/admin && tar xzf app.tgz && xattr -dr com.apple.quarantine '<App Name>.app' && open -n '<App Name>.app'"
+testanyware screenshot -o /tmp/v.png --window "<Window Title>"
+```
+
+### Build-time cost
+
+The whole-program compile is **~160 s / ~1.6 GB peak RSS per app** (it compiles
+the full import closure, incl. the ~70k-line AppKit facade, then tree-shakes).
+This is a **bundler/CI cost, not user-facing** — the shipped `.app` cold-launches
+in ~0.29 s. Compared with the retired source-exec bundle (104 MB, ~13.9 s launch),
+the standalone is ~30× smaller and ~50× faster to launch.
