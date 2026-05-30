@@ -1213,7 +1213,7 @@
 ;; NSXPCConnectionOptions
 (define NSXPCConnectionPrivileged 4096)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/FoundationErrors.h:11:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/FoundationErrors.h:11:1)
 (define NSFileNoSuchFileError 4)
 (define NSFileLockingError 255)
 (define NSFileReadUnknownError 256)
@@ -1299,29 +1299,29 @@
 (define NSCompressionErrorMinimum 5376)
 (define NSCompressionErrorMaximum 5503)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSBundle.h:127:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSBundle.h:127:1)
 (define NSBundleExecutableArchitectureI386 7)
 (define NSBundleExecutableArchitecturePPC 18)
 (define NSBundleExecutableArchitectureX86_64 16777223)
 (define NSBundleExecutableArchitecturePPC64 16777234)
 (define NSBundleExecutableArchitectureARM64 16777228)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSByteOrder.h:10:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSByteOrder.h:10:1)
 (define NS_UnknownByteOrder 0)
 (define NS_LittleEndian 1)
 (define NS_BigEndian 2)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSCalendar.h:113:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSCalendar.h:113:1)
 (define NSWrapCalendarComponents 1)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSCalendar.h:423:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSCalendar.h:423:1)
 (define NSDateComponentUndefined 9223372036854775807)
 (define NSUndefinedDateComponent 9223372036854775807)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSCharacterSet.h:14:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSCharacterSet.h:14:1)
 (define NSOpenStepUnicodeReservedBase 62464)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSProcessInfo.h:11:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSProcessInfo.h:11:1)
 (define NSWindowsNTOperatingSystem 1)
 (define NSWindows95OperatingSystem 2)
 (define NSSolarisOperatingSystem 3)
@@ -1330,7 +1330,7 @@
 (define NSSunOSOperatingSystem 6)
 (define NSOSF1OperatingSystem 7)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSScriptCommand.h:13:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSScriptCommand.h:13:1)
 (define NSNoScriptError 0)
 (define NSReceiverEvaluationScriptError 1)
 (define NSKeySpecifierEvaluationScriptError 2)
@@ -1343,7 +1343,7 @@
 (define NSOperationNotSupportedForKeyScriptError 9)
 (define NSCannotCreateScriptCommandError 10)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSScriptObjectSpecifiers.h:13:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSScriptObjectSpecifiers.h:13:1)
 (define NSNoSpecifierError 0)
 (define NSNoTopLevelContainersSpecifierError 1)
 (define NSContainerSpecifierError 2)
@@ -1352,10 +1352,10 @@
 (define NSInternalSpecifierError 5)
 (define NSOperationNotSupportedForKeySpecifierError 6)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSString.h:548:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSString.h:548:1)
 (define NSProprietaryStringEncoding 65536)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSString.h:68:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSString.h:68:1)
 (define NSASCIIStringEncoding 1)
 (define NSNEXTSTEPStringEncoding 2)
 (define NSJapaneseEUCStringEncoding 3)
@@ -1380,10 +1380,10 @@
 (define NSUTF32BigEndianStringEncoding 2550137088)
 (define NSUTF32LittleEndianStringEncoding 2617245952)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSTextCheckingResult.h:32:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSTextCheckingResult.h:32:1)
 (define NSTextCheckingAllSystemTypes 4294967295)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSURLError.h:101:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSURLError.h:101:1)
 (define NSURLErrorUnknown -1)
 (define NSURLErrorCancelled -999)
 (define NSURLErrorBadURL -1000)
@@ -1434,18 +1434,18 @@
 (define NSURLErrorBackgroundSessionInUseByAnotherProcess -996)
 (define NSURLErrorBackgroundSessionWasDisconnected -997)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSURLError.h:69:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSURLError.h:69:1)
 (define NSURLErrorCancelledReasonUserForceQuitApplication 0)
 (define NSURLErrorCancelledReasonBackgroundUpdatesDisabled 1)
 (define NSURLErrorCancelledReasonInsufficientSystemResources 2)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSUbiquitousKeyValueStore.h:47:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSUbiquitousKeyValueStore.h:47:1)
 (define NSUbiquitousKeyValueStoreServerChange 0)
 (define NSUbiquitousKeyValueStoreInitialSyncChange 1)
 (define NSUbiquitousKeyValueStoreQuotaViolationChange 2)
 (define NSUbiquitousKeyValueStoreAccountChange 3)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSZone.h:32:1)
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSZone.h:32:1)
 (define NSScannedOption 1)
 (define NSCollectorDisabledOption 2)
 

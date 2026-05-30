@@ -2092,7 +2092,7 @@
 (define NSWritingToolsResultTable 8)
 (define NSWritingToolsResultPresentationIntent 16)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/AppKitErrors.h:15:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/AppKitErrors.h:15:1)
 (define NSTextReadInapplicableDocumentTypeError 65806)
 (define NSTextWriteInapplicableDocumentTypeError 66062)
 (define NSTextReadWriteErrorMinimum 65792)
@@ -2126,25 +2126,25 @@
 (define NSPasteboardErrorMinimum 67584)
 (define NSPasteboardErrorMaximum 67839)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAccessibilityConstants.h:731:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSAccessibilityConstants.h:731:1)
 (define NSAccessibilityHourMinuteDateTimeComponentsFlag 12)
 (define NSAccessibilityHourMinuteSecondDateTimeComponentsFlag 14)
 (define NSAccessibilityYearMonthDateTimeComponentsFlag 192)
 (define NSAccessibilityYearMonthDayDateTimeComponentsFlag 224)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSApplication.h:127:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSApplication.h:127:1)
 (define NSUpdateWindowsRunLoopOrdering 500000)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSApplication.h:698:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSApplication.h:698:1)
 (define NSRunStoppedResponse -1000)
 (define NSRunAbortedResponse -1001)
 (define NSRunContinuesResponse -1002)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAttributedString.h:379:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSAttributedString.h:379:1)
 (define NSNoUnderlineStyle 0)
 (define NSSingleUnderlineStyle 1)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSCell.h:363:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSCell.h:363:1)
 (define NSAnyType 0)
 (define NSIntType 1)
 (define NSPositiveIntType 2)
@@ -2153,7 +2153,7 @@
 (define NSDoubleType 6)
 (define NSPositiveDoubleType 7)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSEvent.h:557:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSEvent.h:557:1)
 (define NSUpArrowFunctionKey 63232)
 (define NSDownArrowFunctionKey 63233)
 (define NSLeftArrowFunctionKey 63234)
@@ -2227,11 +2227,11 @@
 (define NSHelpFunctionKey 63302)
 (define NSModeSwitchFunctionKey 63303)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSFont.h:147:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSFont.h:147:1)
 (define NSControlGlyph 16777215)
 (define NSNullGlyph 0)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSFontDescriptor.h:206:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSFontDescriptor.h:206:1)
 (define NSFontUnknownClass 0)
 (define NSFontOldStyleSerifsClass 268435456)
 (define NSFontTransitionalSerifsClass 536870912)
@@ -2244,10 +2244,10 @@
 (define NSFontScriptsClass -1610612736)
 (define NSFontSymbolicClass -1073741824)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSFontDescriptor.h:220:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSFontDescriptor.h:220:1)
 (define NSFontFamilyClassMask 4026531840)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSFontDescriptor.h:224:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSFontDescriptor.h:224:1)
 (define NSFontItalicTrait 1)
 (define NSFontBoldTrait 2)
 (define NSFontExpandedTrait 32)
@@ -2256,7 +2256,7 @@
 (define NSFontVerticalTrait 2048)
 (define NSFontUIOptimizedTrait 4096)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSFontPanel.h:65:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSFontPanel.h:65:1)
 (define NSFontPanelFaceModeMask 1)
 (define NSFontPanelSizeModeMask 2)
 (define NSFontPanelCollectionModeMask 4)
@@ -2269,7 +2269,7 @@
 (define NSFontPanelStandardModesMask 65535)
 (define NSFontPanelAllModesMask 4294967295)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSFontPanel.h:82:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSFontPanel.h:82:1)
 (define NSFPPreviewButton 131)
 (define NSFPRevertButton 130)
 (define NSFPSetButton 132)
@@ -2278,32 +2278,32 @@
 (define NSFPSizeTitle 133)
 (define NSFPCurrentField 134)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSGlyphGenerator.h:18:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSGlyphGenerator.h:18:1)
 (define NSShowControlGlyphs 1)
 (define NSShowInvisibleGlyphs 2)
 (define NSWantsBidiLevels 4)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSImageRep.h:29:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSImageRep.h:29:1)
 (define NSImageRepMatchesDevice 0)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSInterfaceStyle.h:13:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSInterfaceStyle.h:13:1)
 (define NSNoInterfaceStyle 0)
 (define NSNextStepInterfaceStyle 1)
 (define NSWindows95InterfaceStyle 2)
 (define NSMacintoshInterfaceStyle 3)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSLayoutManager.h:438:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSLayoutManager.h:438:1)
 (define NSGlyphAttributeSoft 0)
 (define NSGlyphAttributeElastic 1)
 (define NSGlyphAttributeBidiLevel 2)
 (define NSGlyphAttributeInscribe 5)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSOpenGL.h:104:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSOpenGL.h:104:1)
 (define NSOpenGLProfileVersionLegacy 4096)
 (define NSOpenGLProfileVersion3_2Core 12800)
 (define NSOpenGLProfileVersion4_1Core 16640)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSOpenGL.h:59:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSOpenGL.h:59:1)
 (define NSOpenGLPFAAllRenderers 1)
 (define NSOpenGLPFATripleBuffer 3)
 (define NSOpenGLPFADoubleBuffer 5)
@@ -2344,24 +2344,24 @@
 (define NSOpenGLPFAPixelBuffer 90)
 (define NSOpenGLPFARemotePixelBuffer 91)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSOutlineView.h:27:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSOutlineView.h:27:1)
 (define NSOutlineViewDropOnItemIndex -1)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSPanel.h:44:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSPanel.h:44:1)
 (define NSAlertDefaultReturn 1)
 (define NSAlertAlternateReturn 0)
 (define NSAlertOtherReturn -1)
 (define NSAlertErrorReturn -2)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSPanel.h:50:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSPanel.h:50:1)
 (define NSOKButton 1)
 (define NSCancelButton 0)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSSavePanel.h:292:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSSavePanel.h:292:1)
 (define NSFileHandlingPanelCancelButton 0)
 (define NSFileHandlingPanelOKButton 1)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSText.h:150:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSText.h:150:1)
 (define NSEnterCharacter 3)
 (define NSBackspaceCharacter 8)
 (define NSTabCharacter 9)
@@ -2373,7 +2373,7 @@
 (define NSLineSeparatorCharacter 8232)
 (define NSParagraphSeparatorCharacter 8233)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSText.h:187:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSText.h:187:1)
 (define NSIllegalTextMovement 0)
 (define NSReturnTextMovement 16)
 (define NSTabTextMovement 17)
@@ -2385,14 +2385,14 @@
 (define NSCancelTextMovement 23)
 (define NSOtherTextMovement 0)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSText.h:210:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSText.h:210:1)
 (define NSTextWritingDirectionEmbedding 0)
 (define NSTextWritingDirectionOverride 2)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSTextAttachment.h:18:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSTextAttachment.h:18:1)
 (define NSAttachmentCharacter 65532)
 
-;; enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSWindow.h:75:1)
+;; enum (unnamed at System/Library/Frameworks/AppKit.framework/Headers/NSWindow.h:75:1)
 (define NSDisplayWindowRunLoopOrdering 600000)
 (define NSResetCursorRectsRunLoopOrdering 700000)
 
