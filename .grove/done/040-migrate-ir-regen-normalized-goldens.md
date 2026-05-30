@@ -47,3 +47,28 @@ records the decision.
 - Must run under `SDKROOT=macosx`.
 - If the migration script is throwaway, do not leave it committed; if it is
   reusable, place it where pipeline tooling lives and say so in the commit.
+
+## Resolution (reframed under goldens-as-truth)
+The leaf assumed a *committed* enriched IR to migrate; there is none — the IR
+(`analysis/ir/enriched/*.json`, 16/90 MB) is gitignored. The committed artifact
+that carries the absolute SDK path is the **goldens**
+(`golden-{foundation,appkit}/enums.rkt`, 16 + 28 unnamed-enum lines; no other
+golden file contains an absolute path). So the data migration target is the
+goldens, not the IR.
+
+What was done:
+- Verified the absolute prefix appears in the local IR **only** within
+  unnamed-enum names (16 + 28 = 44, zero elsewhere) — blast radius is exactly
+  those names, matching 030's premise.
+- Emitter-authoritative regen: applied 030's prefix-strip to the local IR's enum
+  names, ran `UPDATE_GOLDEN`, kept only the two `enums.rkt` changes, and reverted
+  the 3 unrelated files that `UPDATE_GOLDEN` would have *regressed* (the local IR
+  is under-enriched — see 020 — so a blanket regen strips correct block/weak
+  annotations). Net committed diff: 44 lines, absolute → `System/Library/...`,
+  nothing else.
+- Round-trip confirms 030 ⇄ 040 consistency: `enums.rkt` is no longer in the
+  snapshot DIFFERS set, so a future fresh-IR regen reproduces it exactly.
+- ADR `docs/adr/0010-unnamed-enum-sdk-relative-paths.md` records the decision and
+  why the IR was *not* hand-migrated/full-regenerated.
+- No migration script left behind (a one-shot string-replace on a gitignored,
+  now-removed local IR copy).
