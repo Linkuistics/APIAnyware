@@ -3,6 +3,12 @@
 **Date:** 2026-05-29
 **Status:** Pass
 
+> **Superseded by the standalone re-verification (2026-05-30) below.** The body
+> describes the **retired source-exec / precompile bundle**. Under ADR-0009 chez
+> apps ship as a self-contained open-world standalone binary; the source-exec-era
+> caveats (menu-bar reads "chez", `brew install chezscheme` provisioning) are
+> obsolete — see the dated section at the end for the production result.
+
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --release --example bundle_app -p
@@ -95,3 +101,55 @@ SCNMaterialProperty all bind cleanly.
   `--window` filter combined with `--role` may need a fix in
   TestAnyware's agent query path — captured here as an observation, not
   triaged as a bug.
+
+---
+
+## Standalone re-verification (2026-05-30, leaf `060/050/030`)
+
+**Status: PASS.** Third portfolio app. New axis: **SceneKit/Metal framework
+reach** — the first GPU-backed app, testing whether the standalone binary's
+dylib-search prelude resolves the Metal rendering stack at runtime in a VM.
+
+**Build.** `cargo run --release --example bundle_app -p
+apianyware-macos-bundle-chez -- scenekit-viewer`. Output: `SceneKit Viewer.app`,
+**5.0 MB**, bundle id `com.linkuistics.SceneKitViewer`, signed. `otool -L` shows
+no Chez/Scheme linkage (kernel baked in); SceneKit/Metal are not statically
+linked into the main binary — they load at runtime via the framework class
+libraries' `load-shared-object`, which is exactly what the dylib-search prelude
+(spike F3) had to make work in a no-Chez VM.
+
+**VM verify (no-Chez bar).** Golden macOS 26.3 arm64, confirmed no Chez present.
+Uploaded (md5-verified), unpacked, quarantine-stripped, `open -n`.
+- [x] **SceneKit/Metal renders** — a red 3D cube with correct lighting/shading
+      on a dark-gray background, **spinning** (`scnaction-repeat-action-forever`)
+      (`screenshot-standalone-001-cube-render.png`). The GPU stack resolves at
+      runtime in the VM; not a flat 2D fallback. Banner suppressed.
+- [x] **`geometryChanged:` trampoline fires** — popup "Cube" → "Sphere" swaps the
+      3D geometry *and* `apply-current-color!` re-applies the tracked red
+      (`screenshot-standalone-002-sphere-swap.png`).
+- [x] **`openColor:` trampoline fires** — clicking "Color…" opens the shared
+      NSColorPanel (250×397 floating window). First chez sample to drive the
+      shared color panel; cross-window target/action wiring (panel target = the
+      app's delegate) works in the standalone binary.
+- [x] **`colorChanged:` trampoline fires** — selecting Generic Gray (rgb 0.25) in
+      the panel recolors the sphere red→gray live (panel is `continuous #t`)
+      (`screenshot-standalone-003-color-changed-gray.png`). The handler's
+      device-RGB color-space conversion path works under the embedded boot (no
+      crash on the grayscale→RGB conversion).
+- [x] **RSS flat at ~126 MB** across repeated geometry/color interaction — no leak.
+
+All three selectors of the single `make-delegate` confirmed live in the no-Chez
+standalone — consistent with the dispatch-substrate proof from leaf `020`.
+
+**VM-interaction note (technique, not an app defect).** The tahoe golden image's
+"click empty area → show desktop widgets" behaviour repeatedly stole focus on
+near-miss clicks against the floating color panel near a screen edge. Reliable
+workaround: `agent window-move --window "Colors" --x 400 --y 300` to centre the
+panel away from edges, then click accessibility elements at their *exact*
+reported coordinates (the `rgb 0.25` color-well at its snapshot bounds) rather
+than estimating from a screenshot. Worth reusing for `pdfkit-viewer` /
+`mini-browser` / `note-editor`, which also drive auxiliary windows/panels.
+
+**Obsoleted source-exec caveats (resolved by standalone):** menu bar reads
+"SceneKit Viewer"; no `brew install chezscheme`; 5.0 MB vs the precompile
+bundle. No app code changes; no pipeline divergence.
