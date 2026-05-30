@@ -178,6 +178,16 @@ see top-level bindings installed later, so the eval'd body's helpers
 form is eval'd in **`(interaction-environment)`** (mutable). If you extend the
 dispatch substrate, preserve this — a `(environment …)` snapshot will fail to
 resolve the helpers at call time.
+> **2026-05-30 (standalone) — this substrate survives whole-program optimisation
+> and runs in a no-Chez binary.** `ui-controls-gallery` (leaf `060/050/020`)
+> verified all three trampolines (`selectRadio:`, `sliderChanged:`,
+> `stepperChanged:`) firing in a production open-world standalone `.app` on a VM
+> with no Chez installed. This works *only because the open-world boot embeds the
+> full `scheme`* (compiler + `eval` + `interaction-environment`), not `petite`.
+> A `petite`-only boot would have no compiler and these `eval`s would fail —
+> which is precisely why the dropped closed-world mode (ADR-0009) could not
+> support dispatch-using apps. RSS stays flat across repeated dispatch, so the
+> eval'd forms are cached, not re-synthesised per call.
 
 🔴 **2026-05-29 — every struct-by-value return needs Chez's hidden result-buffer
 arg, regardless of size.** Leaf 025 implemented the textbook ABI rule (only
