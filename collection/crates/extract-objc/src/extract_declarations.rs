@@ -713,8 +713,51 @@ fn extract_category(
 // Enum extraction
 // ---------------------------------------------------------------------------
 
+/// Relativize the absolute SDK path that libclang bakes into unnamed-enum
+/// names so the resulting IR is environment-independent.
+///
+/// libclang returns the "name" of an anonymous enum as a synthetic string of
+/// the shape `enum (unnamed at <abs-path>:<line>:<col>)`, where `<abs-path>` is
+/// the host-specific absolute path to the SDK header. We strip the SDK root so
+/// the embedded path matches `SourceProvenance.header` (SDK-relative), reusing
+/// the same `strip_prefix(sdk_path)` relativization as `extract_provenance`.
+///
+/// Names without the `(unnamed at <path>:line:col)` shape (i.e. ordinary named
+/// enums) pass through unchanged, as does a path that does not start with
+/// `sdk_path` (same `unwrap_or` fallback as `extract_provenance`).
+fn relativize_unnamed_name(name: &str, sdk_path: &Path) -> String {
+    const MARKER: &str = "(unnamed at ";
+    let Some(marker_at) = name.find(MARKER) else {
+        return name.to_string();
+    };
+    let prefix_end = marker_at + MARKER.len();
+    // The remainder must be `<path>:<line>:<col>)`.
+    let Some(body) = name[prefix_end..].strip_suffix(')') else {
+        return name.to_string();
+    };
+    // Peel the trailing `:<line>:<col>` off the right. POSIX header paths carry
+    // no `:`, so the two rightmost colons unambiguously delimit line and column.
+    let mut parts = body.rsplitn(3, ':');
+    let (Some(col), Some(line), Some(path_str)) =
+        (parts.next(), parts.next(), parts.next())
+    else {
+        return name.to_string();
+    };
+    // Reuse `extract_provenance`'s relativization: strip the SDK root, falling
+    // through unchanged for a path that does not start with it.
+    let path = Path::new(path_str);
+    let rel = path.strip_prefix(sdk_path).unwrap_or(path);
+    format!(
+        "{}{}:{}:{})",
+        &name[..prefix_end],
+        rel.to_string_lossy(),
+        line,
+        col
+    )
+}
+
 fn extract_enum(entity: &Entity<'_>, sdk_path: &Path) -> Option<ir::Enum> {
-    let name = entity.get_name()?;
+    let name = relativize_unnamed_name(&entity.get_name()?, sdk_path);
 
     let enum_clang_type = entity.get_enum_underlying_type()?;
     let enum_type = map_type(&enum_clang_type);
@@ -1331,5 +1374,34 @@ mod tests {
         ));
         assert!(!line_is_decl_boundary(""));
         assert!(!line_is_decl_boundary("// trailing line comment"));
+    }
+
+    const TEST_SDK: &str = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk";
+
+    #[test]
+    fn relativize_unnamed_name_strips_sdk_prefix() {
+        let sdk = Path::new(TEST_SDK);
+        let name = "enum (unnamed at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/FoundationErrors.h:11:1)";
+        assert_eq!(
+            relativize_unnamed_name(name, sdk),
+            "enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/FoundationErrors.h:11:1)"
+        );
+    }
+
+    #[test]
+    fn relativize_unnamed_name_leaves_named_enum_untouched() {
+        let sdk = Path::new(TEST_SDK);
+        assert_eq!(
+            relativize_unnamed_name("NSComparisonResult", sdk),
+            "NSComparisonResult"
+        );
+    }
+
+    #[test]
+    fn relativize_unnamed_name_leaves_path_outside_sdk_untouched() {
+        let sdk = Path::new(TEST_SDK);
+        // A header outside the SDK root: strip_prefix fails, name is unchanged.
+        let name = "enum (unnamed at /usr/include/Foo.h:3:5)";
+        assert_eq!(relativize_unnamed_name(name, sdk), name);
     }
 }
