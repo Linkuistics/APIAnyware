@@ -98,7 +98,12 @@ Racket 9.2's "more static alternative to `ffi/unsafe`" for binding C APIs
 (require path `ffi2`, package `ffi2-lib`). The `racket` target's FFI layer —
 both the Rust emitter's generated output and the hand-written runtime — targets
 ffi2, with `ffi/unsafe`/`ffi/unsafe/objc` retained only where ffi2 has no
-equivalent (notably ObjC message dispatch — exact boundary TBD by research).
+equivalent. **Boundary (resolved 2026-05-31, leaf 020):** ffi2 has *no* ObjC
+layer, so all message dispatch (`tell`/`import-class`/`objc_msgSend`) stays on
+`ffi/unsafe/objc`; ffi2 covers the C-function layer only; values cross the seam
+via `ptr_t->cpointer` / `cpointer->ptr_t`. ffi2 is **not** in the minimal
+distribution — provision with `raco pkg install ffi2-lib`. Full map:
+`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
 _Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
 class-system work.
 
