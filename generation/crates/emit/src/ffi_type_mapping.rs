@@ -207,6 +207,60 @@ impl FfiTypeMapper for RacketFfiTypeMapper {
     }
 }
 
+/// Translate an `ffi/unsafe` Racket FFI spelling to its ffi2 equivalent.
+///
+/// ffi2 drops `ffi/unsafe`'s leading-underscore convention for a `_t` suffix
+/// (`_uint64` → `uint64_t`, `_double` → `double_t`; research doc §3.3). The
+/// translation is mechanical — strip the leading `_`, append `_t` — for every
+/// spelling [`RacketFfiTypeMapper`] can emit *except* the two that have no
+/// underscore-renamed ffi2 form:
+///
+/// - `_pointer` → `ptr_t` (not `pointer_t`)
+/// - `_id` → `ptr_t` — ffi2 has **no** Objective-C `id` concept; on the
+///   C-function side of the seam an object crosses as an opaque `ptr_t` (the
+///   shape the generated native dispatch entries take, per the 010 spike). The
+///   `_id` *tag* is re-applied at the seam by `ffi2-ptr->id` (runtime
+///   `ffi2-seam.rkt`) only where the value re-enters the retained `tell` layer.
+///
+/// Geometry struct spellings (`_NSRect` → `NSRect_t`, …) fall through the
+/// generic rule, matching the `define-ffi2-type NSRect_t (struct_t …)` names
+/// the emitter cutover (leaf 050) generates.
+pub fn ffi_unsafe_to_ffi2(spelling: &str) -> String {
+    match spelling {
+        // ffi2 has no `id`; objects/pointers cross as the opaque `ptr_t`.
+        "_pointer" | "_id" => "ptr_t".to_string(),
+        // Generic rule: strip the leading `_`, append `_t`. Correct for every
+        // base type (`_void`→`void_t`, `_uint64`→`uint64_t`, `_string`→
+        // `string_t`, `_bool`→`bool_t`, …) and every geometry struct
+        // (`_NSRect`→`NSRect_t`, …) the Racket mapper emits.
+        _ => match spelling.strip_prefix('_') {
+            Some(stem) => format!("{stem}_t"),
+            // Defensive: the Racket mapper always emits a `_`-prefixed spelling,
+            // so this arm is unreachable in practice. Pass through unchanged
+            // rather than mangle an unexpected input.
+            None => spelling.to_string(),
+        },
+    }
+}
+
+/// ffi2 Racket FFI type mapper — the seam counterpart of [`RacketFfiTypeMapper`].
+///
+/// Produces ffi2 type spellings (`uint64_t`, `ptr_t`, `double_t`, `NSRect_t`, …)
+/// for the C-function layer (`emit_functions.rs`, `emit_constants.rs`) and the
+/// thin ffi2 bindings into the generated native dispatch library (leaf 040).
+///
+/// Implemented by delegating to [`RacketFfiTypeMapper`] and translating the
+/// resulting spelling via [`ffi_unsafe_to_ffi2`], so the two mappers stay in
+/// lockstep by construction — a new IR-shape handled in the `ffi/unsafe` mapper
+/// is automatically reflected here.
+pub struct RacketFfi2TypeMapper;
+
+impl FfiTypeMapper for RacketFfi2TypeMapper {
+    fn map_type(&self, type_ref: &TypeRef, is_return_type: bool) -> String {
+        ffi_unsafe_to_ffi2(&RacketFfiTypeMapper.map_type(type_ref, is_return_type))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -765,6 +819,159 @@ mod tests {
         assert!(!is_generic_type_param("CFStringEncoding"));
         assert!(!is_generic_type_param("WKContentMode"));
         assert!(!is_generic_type_param("MTLResourceType"));
+    }
+
+    // --- ffi2 type mapper (RacketFfi2TypeMapper / ffi_unsafe_to_ffi2) ---
+
+    #[test]
+    fn ffi2_translation_base_types() {
+        // The closed set of `ffi/unsafe` spellings the Racket mapper emits,
+        // each translated to its ffi2 form. Base types: strip `_`, append `_t`.
+        assert_eq!(ffi_unsafe_to_ffi2("_void"), "void_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_bool"), "bool_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_int8"), "int8_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_uint8"), "uint8_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_int16"), "int16_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_uint16"), "uint16_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_int32"), "int32_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_uint32"), "uint32_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_int64"), "int64_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_uint64"), "uint64_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_float"), "float_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_double"), "double_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_string"), "string_t");
+    }
+
+    #[test]
+    fn ffi2_translation_pointer_and_id_collapse_to_ptr_t() {
+        // ffi2 has no `id`; both `_pointer` and `_id` cross as the opaque
+        // `ptr_t` on the C-function side of the seam. (`pointer_t`/`id_t` would
+        // be the naive strip+suffix output — both wrong.)
+        assert_eq!(ffi_unsafe_to_ffi2("_pointer"), "ptr_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_id"), "ptr_t");
+    }
+
+    #[test]
+    fn ffi2_translation_geometry_structs() {
+        assert_eq!(ffi_unsafe_to_ffi2("_NSRect"), "NSRect_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_NSPoint"), "NSPoint_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_NSSize"), "NSSize_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_NSRange"), "NSRange_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_NSEdgeInsets"), "NSEdgeInsets_t");
+        assert_eq!(
+            ffi_unsafe_to_ffi2("_NSDirectionalEdgeInsets"),
+            "NSDirectionalEdgeInsets_t"
+        );
+        assert_eq!(
+            ffi_unsafe_to_ffi2("_NSAffineTransformStruct"),
+            "NSAffineTransformStruct_t"
+        );
+        assert_eq!(ffi_unsafe_to_ffi2("_CGAffineTransform"), "CGAffineTransform_t");
+        assert_eq!(ffi_unsafe_to_ffi2("_CGVector"), "CGVector_t");
+    }
+
+    #[test]
+    fn ffi2_mapper_matches_racket_mapper_in_lockstep() {
+        // RacketFfi2TypeMapper must equal ffi_unsafe_to_ffi2 ∘ RacketFfiTypeMapper
+        // across a representative spread of IR shapes — proving the delegation
+        // wiring is intact (not just the string table).
+        let unsafe_m = RacketFfiTypeMapper;
+        let ffi2_m = RacketFfi2TypeMapper;
+        let cases: Vec<(TypeRef, bool)> = vec![
+            (make_type(TypeRefKind::Primitive { name: "void".into() }), true),
+            (make_type(TypeRefKind::Primitive { name: "void".into() }), false),
+            (make_type(TypeRefKind::Primitive { name: "uint64".into() }), false),
+            (make_type(TypeRefKind::Primitive { name: "double".into() }), false),
+            (make_type(TypeRefKind::Primitive { name: "bool".into() }), false),
+            (make_type(TypeRefKind::Id), false),
+            (
+                make_type(TypeRefKind::Class {
+                    name: "NSString".into(),
+                    framework: None,
+                    params: vec![],
+                }),
+                true,
+            ),
+            (make_type(TypeRefKind::CString), false),
+            (make_type(TypeRefKind::Pointer), false),
+            (make_type(TypeRefKind::Selector), false),
+            (make_type(TypeRefKind::Struct { name: "NSRect".into() }), false),
+            (
+                make_type(TypeRefKind::Alias {
+                    name: "AXValueType".into(),
+                    framework: None,
+                    underlying_primitive: Some("uint32".into()),
+                }),
+                false,
+            ),
+            (
+                make_type(TypeRefKind::Alias {
+                    name: "NSWindowLevel".into(),
+                    framework: None,
+                    underlying_primitive: Some("int64".into()),
+                }),
+                false,
+            ),
+        ];
+        for (t, is_ret) in &cases {
+            assert_eq!(
+                ffi2_m.map_type(t, *is_ret),
+                ffi_unsafe_to_ffi2(&unsafe_m.map_type(t, *is_ret)),
+                "ffi2 mapper drifted from ffi/unsafe mapper for {t:?} (is_ret={is_ret})"
+            );
+        }
+    }
+
+    #[test]
+    fn ffi2_mapper_object_and_struct_spellings() {
+        // End-to-end through the IR: objects → ptr_t, geometry → struct_t name,
+        // signed/unsigned enum widths preserved.
+        let m = RacketFfi2TypeMapper;
+        assert_eq!(m.map_type(&make_type(TypeRefKind::Id), false), "ptr_t");
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Class {
+                    name: "NSView".into(),
+                    framework: None,
+                    params: vec![],
+                }),
+                true,
+            ),
+            "ptr_t"
+        );
+        assert_eq!(
+            m.map_type(&make_type(TypeRefKind::Struct { name: "CGRect".into() }), false),
+            "NSRect_t"
+        );
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Primitive { name: "void".into() }),
+                true
+            ),
+            "void_t"
+        );
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Primitive { name: "void".into() }),
+                false
+            ),
+            "ptr_t"
+        );
+        assert_eq!(
+            m.map_type(&make_type(TypeRefKind::CString), false),
+            "string_t"
+        );
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Alias {
+                    name: "NSWindowLevel".into(),
+                    framework: None,
+                    underlying_primitive: Some("int64".into()),
+                }),
+                false,
+            ),
+            "int64_t"
+        );
     }
 
     #[test]

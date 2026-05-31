@@ -265,4 +265,49 @@ mod tests {
         assert_eq!(params, "_id _uint64");
         assert_eq!(ret, "_void");
     }
+
+    /// The signature machinery is FFI-spelling-agnostic: handed the ffi2 mapper
+    /// (`RacketFfi2TypeMapper`), `block_ffi_types` — shared_signatures' public,
+    /// mapper-parametric type-collection entry — yields ffi2 spellings, and
+    /// `make_signature_key` composes them into a full ffi2 signature key. This
+    /// is the leaf's "shared_signatures.rs can emit ffi2 type spellings" bar.
+    #[test]
+    fn shared_signatures_emit_ffi2_spellings() {
+        use apianyware_macos_emit::ffi_type_mapping::RacketFfi2TypeMapper;
+        use apianyware_macos_types::type_ref::TypeRefKind;
+
+        let mapper = RacketFfi2TypeMapper;
+        let params = vec![
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Id,
+            },
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
+            },
+        ];
+        let ret = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Class {
+                name: "NSString".into(),
+                framework: None,
+                params: vec![],
+            },
+        };
+
+        let (param_types, return_type) = block_ffi_types(&params, &ret, &mapper);
+        // Object -> ptr_t, double -> double_t, object return -> ptr_t.
+        assert_eq!(param_types, vec!["ptr_t".to_string(), "double_t".to_string()]);
+        assert_eq!(return_type, "ptr_t");
+
+        let key = make_signature_key(&param_types, &return_type);
+        assert_eq!(key, "ptr_t double_t -> ptr_t");
+        // And the key parses back through the same machinery.
+        let (parsed_params, parsed_ret) = SignatureMap::parse_key(&key);
+        assert_eq!(parsed_params, "ptr_t double_t");
+        assert_eq!(parsed_ret, "ptr_t");
+    }
 }

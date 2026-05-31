@@ -101,7 +101,11 @@ ffi2, with `ffi/unsafe`/`ffi/unsafe/objc` retained only where ffi2 has no
 equivalent. **Boundary (resolved 2026-05-31, leaf 020):** ffi2 has *no* ObjC
 layer, so all message dispatch (`tell`/`import-class`/`objc_msgSend`) stays on
 `ffi/unsafe/objc`; ffi2 covers the C-function layer only; values cross the seam
-via `ptr_t->cpointer` / `cpointer->ptr_t`. ffi2 is **not** in the minimal
+via `ptr_t->cpointer` / `cpointer->ptr_t`. The seam plumbing — ffi2 re-export
+under the `(except-in ffi/unsafe ->)` discipline, arm64 width aliases, and the
+bridge (incl. `_id`-tagging via `ffi2-ptr->id`/`id->ffi2-ptr`) — lives in
+`runtime/ffi2-seam.rkt` (leaf 030); its ffi2 type-mapper counterpart is
+`RacketFfi2TypeMapper`. ffi2 is **not** in the minimal
 distribution — provision with `raco pkg install ffi2-lib`. Full map:
 `docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
 _Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
