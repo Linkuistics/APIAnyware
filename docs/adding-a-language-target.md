@@ -4,6 +4,15 @@ Step-by-step guide for adding a language target to APIAnyware-MacOS. Written
 against the real two-target world (`racket` and `chez`) — follow it and you could
 plausibly stand up a third.
 
+> **Fundamental design goal (ADR-0010):** the per-target **native (Swift)
+> library is the binding** — purpose-built for one target, it maps the macOS API
+> idiomatically into that language and owns memory / callbacks / closures /
+> lifetimes / threading, using the target's own FFI/embedding C-API wherever
+> possible. The generated/scripting side is a thin, static seam; in the limit the
+> binding is almost entirely native (a fat native core behind a thin crossing).
+> LLM-assisted coding makes a bespoke native library per target affordable. Plan
+> every target toward this north star — the steps below serve it.
+
 > **A *target* is a complete pipeline output for one language** — its emitter
 > crate, runtime support, sample apps, bundler integration, and knowledge files.
 > The on-disk unit is `generation/targets/<id>/`. There is **one binding style

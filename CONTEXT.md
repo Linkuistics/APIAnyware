@@ -4,6 +4,20 @@ This repo generates language-native bindings to the macOS system frameworks
 (collect → analyse → generate pipeline) and ships sample apps that exercise
 those bindings on real macOS.
 
+## Fundamental design goal
+
+For each target language, APIAnyware ships a **native (Swift) library
+purpose-built and optimised for that one target to bind to** — mapping the macOS
+API model idiomatically into the target language and owning the hard runtime
+concerns (memory management, callbacks, closures, lifetimes, threading), using
+wherever possible the FFI/embedding C-API the *target language itself* provides.
+In the limit the binding is provided **almost entirely in the native library**,
+with the generated/scripting-side surface kept thin and static — a fat native
+core behind a thin crossing. LLM-assisted coding is what makes a bespoke,
+fully-optimised native library per target affordable. This is the project's
+north star; everything else (emitter, runtime, bundler) serves it. See
+**ADR-0010**.
+
 ## Language
 
 **Target**:
