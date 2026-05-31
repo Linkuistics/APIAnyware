@@ -1,0 +1,71 @@
+######## BUILD ########
+build rc=0
+0000000000000b5c T _aw_spike_call_int_cb
+0000000000000c2c T _aw_spike_call_on_gcd
+0000000000000d1c T _aw_spike_call_on_main
+0000000000000bd0 T _aw_spike_call_on_pthread
+0000000000000b68 T _aw_spike_call_void_cb
+00000000000007c8 T _aw_spike_ffi_msg_uint
+000000000000088c T _aw_spike_ffi_msg_uint_nocache
+0000000000000b6c T _aw_spike_floor_hash_loop
+0000000000000a54 T _aw_spike_invoke_id1
+0000000000000994 T _aw_spike_invoke_uint
+0000000000000b28 T _aw_spike_make_nsobject
+0000000000000b34 T _aw_spike_make_nsstring
+0000000000000960 T _aw_spike_msg_id1
+0000000000000930 T _aw_spike_msg_uint
+000000000000095c T _aw_spike_msg_uint_sel
+000000000000092c T _aw_spike_sel
+0000000000000b58 T _aw_spike_void_noop
+
+######## DISPATCH BENCHMARK ########
+ffi2 dispatch spike — N = 3000000 iterations, selector -hash
+
+C-floor (loop in C)             6.8 ms	2.3 ns/call	(chk 3064711343193622528)
+in-racket-tell                  266.1 ms	88.7 ns/call	(chk 316659360596256000000)
+native-typed-ffi2 (SEL cached)  61.4 ms	20.5 ns/call	(chk 316659360596256000000)
+native-typed-ffi2 (str/call)    281.0 ms	93.7 ns/call	(chk 316659360596256000000)
+native-nsinvocation-ffi2        2036.4 ms	678.8 ns/call	(chk 316659360596256000000)
+native-libffi (CIF cached)      116.5 ms	38.8 ns/call	(chk 316659360596256000000)
+native-libffi (CIF per call)    145.7 ms	48.6 ns/call	(chk 316659360596256000000)
+
+done.
+dispatch rc=0
+
+######## CALLBACK THREAD MATRIX ########
+---- mode: cproc-main ----
+mode=cproc-main starting...
+mode=cproc-main hit=cproc EXIT-OK
+   verdict: OK (rc=0)
+
+---- mode: cproc-pthread ----
+run.sh: line 28:  2573 Illegal instruction: 4     racket callback-thread.rkt "$m" > ".out.$m" 2>&1
+mode=cproc-pthread starting...
+   verdict: CRASHED signal=4 (rc=132)  [SIGILL=4 SIGABRT=6 SIGSEGV=11]
+
+---- mode: cproc-gcd ----
+run.sh: line 28:  2578 Illegal instruction: 4     racket callback-thread.rkt "$m" > ".out.$m" 2>&1
+mode=cproc-gcd starting...
+   verdict: CRASHED signal=4 (rc=132)  [SIGILL=4 SIGABRT=6 SIGSEGV=11]
+
+---- mode: ffi2-main ----
+mode=ffi2-main starting...
+application: not a procedure;
+ expected a procedure that can be applied to arguments
+  given: #f
+  context...:
+   /Users/antony/Library/Racket/9.2/pkgs/ffi2-lib/ffi2/private/core.rkt:986:15: aw_spike_call_on_main
+   body of "/Users/antony/Development/APIAnyware-MacOS/.grove-worktrees/update-racket-to-9.2-and-use-ffi2/docs/research/2026-05-31-racket-ffi2-spike/callback-thread.rkt"
+   verdict: nonzero rc=1
+
+---- mode: ffi2-pthread ----
+run.sh: line 28:  2589 Illegal instruction: 4     racket callback-thread.rkt "$m" > ".out.$m" 2>&1
+mode=ffi2-pthread starting...
+   verdict: CRASHED signal=4 (rc=132)  [SIGILL=4 SIGABRT=6 SIGSEGV=11]
+
+---- mode: ffi2-gcd ----
+run.sh: line 28:  2594 Illegal instruction: 4     racket callback-thread.rkt "$m" > ".out.$m" 2>&1
+mode=ffi2-gcd starting...
+   verdict: CRASHED signal=4 (rc=132)  [SIGILL=4 SIGABRT=6 SIGSEGV=11]
+
+######## DONE ########

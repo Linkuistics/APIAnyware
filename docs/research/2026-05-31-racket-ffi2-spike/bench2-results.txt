@@ -1,0 +1,18 @@
+== h  (id,SEL)->uint64 [scalar] ==  N=3000000
+  racket-msgsend        8.6 ns/call	(26. ms)
+  generated-typed       4.8 ns/call	(14. ms)
+  libffi-generic        19.0 ns/call	(57. ms)
+== idfor:  (id,SEL,id)->id [pointer] ==  N=3000000
+  racket-msgsend        11.4 ns/call	(34. ms)
+  generated-typed       5.9 ns/call	(18. ms)
+  libffi-generic        22.1 ns/call	(66. ms)
+== rectfor:  (id,SEL,uint64)->CGRect [STRUCT] ==  N=1500000
+  racket-msgsend        89.8 ns/call	(135. ms)
+  generated-typed       11.0 ns/call	(17. ms)
+  libffi-generic        26.4 ns/call	(40. ms)
+== addx:y:  (id,SEL,double,double)->double [float] ==  N=3000000
+  racket-msgsend        11.7 ns/call	(35. ms)
+  generated-typed       5.9 ns/call	(18. ms)
+  libffi-generic        26.8 ns/call	(80. ms)
+
+done.
