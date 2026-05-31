@@ -13,6 +13,13 @@ plausibly stand up a third.
 > LLM-assisted coding makes a bespoke native library per target affordable. Plan
 > every target toward this north star — the steps below serve it.
 
+> **Targets are hermetically isolated (ADR-0011):** a target's generator,
+> runtime, and native library share *nothing* with other targets — no shared
+> native substrate. The only cross-target commonality is the **API analysis**
+> (`collect → analyse`). Duplication across similar targets is accepted by
+> design (it's cheap; LLM-assisted) so that paradigmatically-alien future targets
+> never pay a wrong-abstraction tax. Build a new target standalone.
+
 > **A *target* is a complete pipeline output for one language** — its emitter
 > crate, runtime support, sample apps, bundler integration, and knowledge files.
 > The on-disk unit is `generation/targets/<id>/`. There is **one binding style

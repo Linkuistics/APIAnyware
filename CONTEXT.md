@@ -15,8 +15,15 @@ In the limit the binding is provided **almost entirely in the native library**,
 with the generated/scripting-side surface kept thin and static — a fat native
 core behind a thin crossing. LLM-assisted coding is what makes a bespoke,
 fully-optimised native library per target affordable. This is the project's
-north star; everything else (emitter, runtime, bundler) serves it. See
-**ADR-0010**.
+north star; everything else (emitter, runtime, bundler) serves it.
+
+**Targets are hermetically isolated.** Each target's generator, runtime, and
+native library share *nothing* with other targets — there is no shared native
+substrate. The only cross-target commonality is the **API analysis**
+(`collect → analyse`, the macOS API model / IR); everything downstream of
+analysis is per-target. (Future targets — Prolog, Haskell, Idris2, TypeScript —
+are paradigmatically alien; a shared substrate would be the wrong abstraction.)
+See **ADR-0010** and **ADR-0011**.
 
 ## Language
 
