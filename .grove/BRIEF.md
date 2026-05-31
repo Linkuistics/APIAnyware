@@ -73,6 +73,9 @@ changes/work (per the APIAnyware-wide policy in auto-memory):
 native library *is* the binding). So 040 is reframed: prefer moving binding
 logic (memory/callbacks/lifetimes/coercions) into the `libAPIAnywareRacket`
 Swift library — exposed to Racket through Racket CS's C embedding API, with ffi2
-as the thin static seam — over re-implementing it in Racket. **Re-grilling 040's
-scope under this frame is advisable before decomposing it**; the 020 research
-doc characterises ffi2 (still valid as the seam mechanism) but predates ADR-0010.
+as the thin static seam — over re-implementing it in Racket. 040 has now been
+re-grilled and decomposed under ADR-0010 **and ADR-0011 (hermetic isolation)**:
+the node also **dissolves the shared `APIAnywareCommon` Swift layer** so each
+target is self-contained — this grove therefore owns keeping Chez/Gerbil
+building + their Swift tests green. See
+`040-migrate-emitter-and-runtime-to-ffi2/BRIEF.md`.
