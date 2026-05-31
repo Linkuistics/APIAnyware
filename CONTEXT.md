@@ -102,14 +102,6 @@ equivalent (notably ObjC message dispatch — exact boundary TBD by research).
 _Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
 class-system work.
 
-## Flagged ambiguities
-
-- **Target vs. Language** _(resolved → being executed)_. The Rust trait is
-  `LanguageEmitter` / `LanguageInfo` and the CLI flag is `--lang`, but the
-  on-disk unit is a **target**. Decision: rename the trait/flag to `Target*` /
-  `--target` — executed by the `update-racket-to-9.2-and-use-ffi2` grove
-  (leaf 010), alongside `racket-oo` → `racket`. Remove this note once 010 lands.
-
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez

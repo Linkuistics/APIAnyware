@@ -26,18 +26,18 @@ use std::{env, fs, io};
 pub struct GoldenTest {
     /// Root directory containing golden files (e.g., `tests/golden/`).
     golden_dir: PathBuf,
-    /// Language identifier (e.g., `"racket"`).
-    language: String,
+    /// Target identifier (e.g., `"racket"`).
+    target: String,
 }
 
 impl GoldenTest {
     /// Create a new golden test runner.
     ///
     /// Golden files are expected directly under `golden_dir`.
-    pub fn new(golden_dir: &Path, language: &str) -> Self {
+    pub fn new(golden_dir: &Path, target: &str) -> Self {
         Self {
             golden_dir: golden_dir.to_path_buf(),
-            language: language.to_string(),
+            target: target.to_string(),
         }
     }
 
@@ -54,13 +54,13 @@ impl GoldenTest {
             update_golden_directory(generated_dir, &self.golden_dir)?;
             eprintln!(
                 "Updated golden files for {} at {}",
-                self.language,
+                self.target,
                 self.golden_dir.display()
             );
             return Ok(());
         }
 
-        compare_directories(generated_dir, &self.golden_dir, &self.language)
+        compare_directories(generated_dir, &self.golden_dir, &self.target)
     }
 
     /// Compare a subset of generated output against golden files.
@@ -82,7 +82,7 @@ impl GoldenTest {
             eprintln!(
                 "Updated {} golden subset files for {} at {}",
                 golden_file_list.len(),
-                self.language,
+                self.target,
                 self.golden_dir.display()
             );
             return Ok(());
@@ -92,7 +92,7 @@ impl GoldenTest {
             generated_dir,
             &self.golden_dir,
             golden_file_list,
-            &self.language,
+            &self.target,
         )
     }
 }
@@ -153,7 +153,7 @@ fn collect_recursive(base: &Path, current: &Path, paths: &mut BTreeSet<PathBuf>)
 fn compare_directories(
     generated_dir: &Path,
     golden_dir: &Path,
-    language: &str,
+    target: &str,
 ) -> Result<(), GoldenMismatch> {
     let generated_files = collect_relative_paths(generated_dir)?;
     let golden_files = collect_relative_paths(golden_dir)?;
@@ -202,7 +202,7 @@ fn compare_directories(
 
     if has_diff {
         let header = format!(
-            "Golden file mismatch for {language}.\n\
+            "Golden file mismatch for {target}.\n\
              Golden dir: {}\n\
              Generated dir: {}\n\
              Run with UPDATE_GOLDEN=1 to accept the new output.\n\n",
@@ -302,7 +302,7 @@ fn compare_subset(
     generated_dir: &Path,
     golden_dir: &Path,
     file_list: &[&str],
-    language: &str,
+    target: &str,
 ) -> Result<(), GoldenMismatch> {
     let mut report = String::new();
     let mut has_diff = false;
@@ -346,7 +346,7 @@ fn compare_subset(
 
     if has_diff {
         let header = format!(
-            "Golden subset mismatch for {language}.\n\
+            "Golden subset mismatch for {target}.\n\
              Golden dir: {}\n\
              Generated dir: {}\n\
              Checked {} files.\n\

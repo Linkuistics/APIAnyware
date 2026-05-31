@@ -15,7 +15,7 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::language_emitter::{EmitResult, LanguageEmitter, LanguageInfo};
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
 use apianyware_macos_emit::write_line;
@@ -29,7 +29,7 @@ use crate::emit_functions::{
 };
 use crate::emit_protocol::{generate_protocol_file, protocol_exports};
 
-pub const CHEZ_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
+pub const CHEZ_TARGET_INFO: TargetInfo = TargetInfo {
     id: "chez",
     display_name: "Chez Scheme",
     generated_subdir: "apianyware",
@@ -37,9 +37,9 @@ pub const CHEZ_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
 
 pub struct ChezEmitter;
 
-impl LanguageEmitter for ChezEmitter {
-    fn language_info(&self) -> &LanguageInfo {
-        &CHEZ_LANGUAGE_INFO
+impl TargetEmitter for ChezEmitter {
+    fn target_info(&self) -> &TargetInfo {
+        &CHEZ_TARGET_INFO
     }
 
     fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult> {
@@ -275,10 +275,10 @@ mod tests {
     }
 
     #[test]
-    fn chez_language_info() {
+    fn chez_target_info() {
         let e = ChezEmitter;
-        assert_eq!(e.language_info().id, "chez");
-        assert_eq!(e.language_info().display_name, "Chez Scheme");
+        assert_eq!(e.target_info().id, "chez");
+        assert_eq!(e.target_info().display_name, "Chez Scheme");
     }
 
     #[test]

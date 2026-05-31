@@ -30,7 +30,7 @@ generation/targets/*/runtime/compiled/
 generation/targets/*/apianyware/runtime/compiled/
 generation/targets/*/apps/*/compiled/
 
-# Built sample-app .app bundles (regenerable via bundle-racket-oo)
+# Built sample-app .app bundles (regenerable via bundle-racket)
 generation/targets/*/apps/*/build/
 
 # AppSpec runner artifacts captured per-app (regenerable from runner output)

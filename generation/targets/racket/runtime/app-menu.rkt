@@ -36,7 +36,7 @@
 ;; from `CFBundleName` in the bundle's `Info.plist`, not from this Racket
 ;; code. An unbundled `racket script.rkt` will display "racket" up there
 ;; even with this menu installed. Bundle via
-;; `apianyware-macos-bundle-racket-oo` for the full effect.
+;; `apianyware-macos-bundle-racket` for the full effect.
 
 (require ffi/unsafe
          ffi/unsafe/objc

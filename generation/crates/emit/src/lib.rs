@@ -1,12 +1,12 @@
 //! Shared emitter framework — naming utilities, FFI type mapping, code writer,
-//! framework ordering, doc rendering, the language-emitter abstraction, and
+//! framework ordering, doc rendering, the target-emitter abstraction, and
 //! pattern dispatch.
 //!
-//! This crate provides the common infrastructure used by all language-specific
+//! This crate provides the common infrastructure used by all target-specific
 //! emitter crates (`emit-racket`, `emit-chez`). It has no dependency on any
-//! specific target language.
+//! specific target target.
 
-pub mod language_emitter;
+pub mod target_emitter;
 pub mod code_writer;
 pub mod doc_rendering;
 pub mod ffi_type_mapping;

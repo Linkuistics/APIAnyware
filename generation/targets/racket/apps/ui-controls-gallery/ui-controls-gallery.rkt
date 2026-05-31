@@ -72,7 +72,7 @@
 
 ;; Standard macOS app menu (About / Hide / Quit). Bold app-name slot
 ;; in the menu bar comes from CFBundleName when launched as a .app
-;; bundle (see `apianyware-macos-bundle-racket-oo`).
+;; bundle (see `apianyware-macos-bundle-racket`).
 (install-standard-app-menu! app "UI Controls Gallery")
 
 ;; --- Window (500x600, centered, resizable) ---

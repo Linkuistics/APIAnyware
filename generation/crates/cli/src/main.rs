@@ -1,9 +1,9 @@
-//! CLI for the generation pipeline: emit language bindings from enriched IR.
+//! CLI for the generation pipeline: emit target bindings from enriched IR.
 //!
 //! Usage:
-//!   apianyware-macos-generate                              # generate all languages
-//!   apianyware-macos-generate --lang racket             # generate Racket only
-//!   apianyware-macos-generate --list-languages             # show available emitters
+//!   apianyware-macos-generate                              # generate all targets
+//!   apianyware-macos-generate --target racket             # generate Racket only
+//!   apianyware-macos-generate --list-targets             # show available emitters
 
 mod generate;
 mod registry;
@@ -15,25 +15,25 @@ use clap::Parser;
 
 #[derive(Parser)]
 #[command(name = "apianyware-macos-generate")]
-#[command(about = "Generate language bindings from enriched macOS API IR")]
+#[command(about = "Generate target bindings from enriched macOS API IR")]
 struct Cli {
-    /// Language(s) to generate bindings for (comma-separated or repeated).
-    /// Default: all registered languages.
+    /// Target(s) to generate bindings for (comma-separated or repeated).
+    /// Default: all registered targets.
     #[arg(long, value_delimiter = ',')]
-    lang: Vec<String>,
+    target: Vec<String>,
 
     /// Directory containing enriched IR JSON files.
     #[arg(long, default_value = "analysis/ir/enriched")]
     input_dir: PathBuf,
 
     /// Base output directory for generated targets.
-    /// Output goes to `{output-dir}/{lang}/generated/`.
+    /// Output goes to `{output-dir}/{target}/generated/`.
     #[arg(long, default_value = "generation/targets")]
     output_dir: PathBuf,
 
-    /// List available language emitters.
+    /// List available target emitters.
     #[arg(long)]
-    list_languages: bool,
+    list_targets: bool,
 }
 
 fn main() -> Result<()> {
@@ -47,25 +47,25 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     let registry = registry::EmitterRegistry::new();
 
-    if cli.list_languages {
-        println!("Available language emitters:\n");
-        println!("{}", registry.format_language_list());
+    if cli.list_targets {
+        println!("Available target emitters:\n");
+        println!("{}", registry.format_target_list());
         return Ok(());
     }
 
-    let lang_filter = if cli.lang.is_empty() {
+    let target_filter = if cli.target.is_empty() {
         None
     } else {
-        Some(cli.lang.as_slice())
+        Some(cli.target.as_slice())
     };
 
     let summaries =
-        generate::run_generation(&registry, &cli.input_dir, &cli.output_dir, lang_filter)?;
+        generate::run_generation(&registry, &cli.input_dir, &cli.output_dir, target_filter)?;
 
     // Print final summary
     for summary in &summaries {
         tracing::info!(
-            language = %summary.language_id,
+            target = %summary.target_id,
             frameworks = summary.frameworks_generated,
             files = summary.total_files_written,
             classes = summary.total_classes,

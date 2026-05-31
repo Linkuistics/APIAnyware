@@ -1,4 +1,4 @@
-//! Language-emitter abstraction shared by every target's emitter crate.
+//! Target-emitter abstraction shared by every target's emitter crate.
 //!
 //! Each target produces exactly one binding style by construction; the style
 //! is implicit in the target, never reified here. See
@@ -9,8 +9,8 @@ use std::path::Path;
 
 use apianyware_macos_types::Framework;
 
-/// Metadata about a target language emitter.
-pub struct LanguageInfo {
+/// Metadata about a target target emitter.
+pub struct TargetInfo {
     /// Short identifier used in CLI (e.g., `"racket"`).
     pub id: &'static str,
     /// Human-readable name (e.g., `"Racket"`).
@@ -41,20 +41,20 @@ pub struct EmitResult {
     pub constants_emitted: usize,
 }
 
-/// Trait that all language-specific emitters implement.
+/// Trait that all target-specific emitters implement.
 ///
 /// The generation CLI uses this to dispatch framework emission to the
-/// appropriate language emitter based on the `--lang` flag.
-pub trait LanguageEmitter {
+/// appropriate target emitter based on the `--lang` flag.
+pub trait TargetEmitter {
     /// Metadata about this emitter.
-    fn language_info(&self) -> &LanguageInfo;
+    fn target_info(&self) -> &TargetInfo;
 
     /// Emit bindings for a single framework.
     ///
     /// `output_dir` is the target's generated-bindings root (e.g.,
     /// `generation/targets/racket/generated/` for racket,
     /// `generation/targets/chez/apianyware/` for chez — see
-    /// `LanguageInfo::generated_subdir`). The emitter creates a
+    /// `TargetInfo::generated_subdir`). The emitter creates a
     /// framework subdirectory within it.
     fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult>;
 }
@@ -64,8 +64,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_language_info() {
-        let racket = LanguageInfo {
+    fn test_target_info() {
+        let racket = TargetInfo {
             id: "racket",
             display_name: "Racket",
             generated_subdir: "generated",

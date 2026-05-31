@@ -6,7 +6,7 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::language_emitter::{EmitResult, LanguageEmitter, LanguageInfo};
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
 use apianyware_macos_emit::write_line;
@@ -18,19 +18,19 @@ use crate::emit_enums::generate_enums_file;
 use crate::emit_functions::{count_emittable, generate_functions_file};
 use crate::emit_protocol::generate_protocol_file;
 
-/// Language metadata for the Racket emitter.
-pub const RACKET_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
+/// Target metadata for the Racket emitter.
+pub const RACKET_TARGET_INFO: TargetInfo = TargetInfo {
     id: "racket",
     display_name: "Racket",
     generated_subdir: "generated",
 };
 
-/// Racket language emitter implementing the shared [`LanguageEmitter`] trait.
+/// Racket target emitter implementing the shared [`TargetEmitter`] trait.
 pub struct RacketEmitter;
 
-impl LanguageEmitter for RacketEmitter {
-    fn language_info(&self) -> &LanguageInfo {
-        &RACKET_LANGUAGE_INFO
+impl TargetEmitter for RacketEmitter {
+    fn target_info(&self) -> &TargetInfo {
+        &RACKET_TARGET_INFO
     }
 
     fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult> {
@@ -399,8 +399,8 @@ mod tests {
     }
 
     #[test]
-    fn test_racket_language_info() {
-        assert_eq!(RACKET_LANGUAGE_INFO.id, "racket");
-        assert_eq!(RACKET_LANGUAGE_INFO.display_name, "Racket");
+    fn test_racket_target_info() {
+        assert_eq!(RACKET_TARGET_INFO.id, "racket");
+        assert_eq!(RACKET_TARGET_INFO.display_name, "Racket");
     }
 }
