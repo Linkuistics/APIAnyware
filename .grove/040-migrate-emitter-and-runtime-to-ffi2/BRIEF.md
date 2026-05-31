@@ -17,10 +17,14 @@
    mandatory.
 2. **Hermetic isolation (ADR-0011).** Targets share *nothing* downstream of the
    API analysis. No common native substrate.
-3. **Dissolve `APIAnywareCommon` now.** Split it into each of
-   `APIAnywareRacket` / `APIAnywareChez` / `APIAnywareGerbil`, delete it from
-   `swift/Package.swift`. **This node owns keeping all three targets building +
-   their Swift tests green** (`APIAnywareCommonTests` content rehomed).
+3. **Racket de-shares from `APIAnywareCommon` (ADR-0011).** Extract the Common
+   code racket uses into `APIAnywareRacket` and drop the dependency — racket's
+   lib becomes self-contained. Do **not** touch Chez/Gerbil: Chez de-shares in
+   its own grove (`chez-adopt-native-binding`); Gerbil is an inert 3-line stub.
+   `APIAnywareCommon` itself (+ the Gerbil stub + its `Package.swift` target) is
+   physically deleted by whichever grove de-shares **last** — it will observe no
+   remaining real consumer. (Revised 2026-05-31: the earlier "dissolve all three
+   here" scope moved to per-target groves, per the hermetic-isolation philosophy.)
 
 ## The two code surfaces (unchanged from the original leaf)
 
@@ -38,15 +42,17 @@
 
 ## Done when
 - This node's child leaves are complete; the full pipeline regenerates clean on
-  Racket 9.2 + ffi2; **all three target dylibs build and their Swift tests pass**;
-  the racket build is green.
-- `APIAnywareCommon` no longer exists; each target dylib is self-contained.
+  Racket 9.2 + ffi2; the racket build + `APIAnywareRacket` Swift tests are green.
+  (Chez/Gerbil must still **build** — racket's de-share drops only racket's own
+  dependency edge and does not modify their code.)
+- `APIAnywareRacket` is self-contained (no `APIAnywareCommon` dependency).
+  `APIAnywareCommon` is deleted by the last grove to de-share (see decision #3),
+  not necessarily here.
 - Genuinely hard-to-reverse mechanism choices (dispatch relocation, the
   embedding direction) are captured in ADR(s) raised by the 010 design leaf.
 - Visual VM-verify of the racket sample apps is **050's** job (root leaf); these
-  child leaves leave the build green but defer VM-verify. (Chez/Gerbil full
-  VM-verify is **out of scope** here — their bar is build + Swift tests green; a
-  flagged regression risk, since Common dissolution touches their native code.)
+  child leaves leave the build green but defer VM-verify. (Chez/Gerbil are not
+  touched by this grove — Chez adopts the architecture in its own grove.)
 
 ## Child leaves (seeded backbone — 010 reshapes/inserts as the spike resolves)
 - **010 design-and-spike** (planning): the load-bearing design. Resolve, with a
@@ -60,8 +66,10 @@
   atomic-mode thread-safety finding). Write a design spec under `docs/specs/`;
   raise ADR(s) for the hard-to-reverse choices; then **grow/insert** the
   execution leaves below (esp. the dispatch-into-native leaf).
-- **020 dissolve-apianyware-common** (work): split Common into the three target
-  libs per 010's racket shape; delete it; update `Package.swift`; all three green.
+- **020 racket-extract-from-common** (work): extract racket's needs from Common
+  into `APIAnywareRacket` per 010's shape; drop the dependency so the racket lib
+  is self-contained. Do **not** touch Chez/Gerbil. Common deletion is deferred to
+  the last grove to de-share (decision #3).
 - **030 racket-ffi2-seam-and-type-mapper** (work): ffi2 base types + arrow
   procedures + `define-ffi2-definer`; `ptr_t<->cpointer` bridge; the ffi2 type
   mapper in `shared_signatures.rs`. Provision (`raco pkg install ffi2-lib`) is
