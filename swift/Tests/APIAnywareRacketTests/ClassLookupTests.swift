@@ -1,5 +1,5 @@
 import Testing
-@testable import APIAnywareCommon
+@testable import APIAnywareRacket
 
 @Test func getClassFindsNSObject() {
     let cls = getClass("NSObject")

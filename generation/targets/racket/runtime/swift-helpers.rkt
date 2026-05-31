@@ -2,8 +2,8 @@
 ;; swift-helpers.rkt — Conditional loading of libAPIAnywareRacket.dylib
 ;;
 ;; Tries to load the Swift helper dylib from ../lib/ relative to this file.
-;; When available, exports FFI bindings for the aw_common_* and aw_racket_*
-;; C functions. When unavailable, exports #f for all functions and
+;; When available, exports FFI bindings for the aw_racket_* C functions.
+;; When unavailable, exports #f for all functions and
 ;; swift-available? is #f.
 ;;
 ;; Usage in other runtime modules:
@@ -72,37 +72,37 @@
 
 ;; --- Autorelease pool ---
 
-(define-swift swift:autorelease-push "aw_common_autorelease_push"
+(define-swift swift:autorelease-push "aw_racket_autorelease_push"
   (_fun -> _pointer))
 
-(define-swift swift:autorelease-pop "aw_common_autorelease_pop"
+(define-swift swift:autorelease-pop "aw_racket_autorelease_pop"
   (_fun _pointer -> _void))
 
 ;; --- Memory management ---
 
-(define-swift swift:retain "aw_common_retain"
+(define-swift swift:retain "aw_racket_retain"
   (_fun _pointer -> _pointer))
 
-(define-swift swift:release "aw_common_release"
+(define-swift swift:release "aw_racket_release"
   (_fun _pointer -> _void))
 
 ;; --- Class/selector lookup ---
 
-(define-swift swift:get-class "aw_common_get_class"
+(define-swift swift:get-class "aw_racket_get_class"
   (_fun _string -> _pointer))
 
-(define-swift swift:sel-register "aw_common_sel_register"
+(define-swift swift:sel-register "aw_racket_sel_register"
   (_fun _string -> _pointer))
 
 ;; --- String conversion ---
 
-(define-swift swift:string-to-nsstring "aw_common_string_to_nsstring"
+(define-swift swift:string-to-nsstring "aw_racket_string_to_nsstring"
   (_fun _string -> _pointer))
 
-(define-swift swift:nsstring-to-string "aw_common_nsstring_to_string"
+(define-swift swift:nsstring-to-string "aw_racket_nsstring_to_string"
   (_fun _pointer -> _string))
 
-(define-swift swift:nsstring-length "aw_common_nsstring_length"
+(define-swift swift:nsstring-length "aw_racket_nsstring_length"
   (_fun _pointer -> _uint64))
 
 ;; --- Block bridging ---

@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import APIAnywareCommon
+@testable import APIAnywareRacket
 
 // MARK: - CGPoint
 

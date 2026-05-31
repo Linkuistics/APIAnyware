@@ -1,5 +1,5 @@
 import Testing
-@testable import APIAnywareCommon
+@testable import APIAnywareRacket
 
 @Test func autoreleasePoolPushAndPop() {
     let pool = autoreleasePoolPush()

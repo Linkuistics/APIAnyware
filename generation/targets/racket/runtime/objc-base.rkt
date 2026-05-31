@@ -1,8 +1,8 @@
 #lang racket/base
 ;; objc-base.rkt — Core ObjC object wrapping with GC-attached release
 ;;
-;; When libAPIAnywareRacket.dylib is available, uses aw_common_autorelease_push/pop
-;; and aw_common_retain/release. Falls back to direct libobjc calls when absent.
+;; When libAPIAnywareRacket.dylib is available, uses aw_racket_autorelease_push/pop
+;; and aw_racket_retain/release. Falls back to direct libobjc calls when absent.
 ;;
 ;; Provides:
 ;;   wrap-objc-object   — wrap an ObjC pointer with a release finalizer
