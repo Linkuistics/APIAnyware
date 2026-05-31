@@ -6,6 +6,30 @@ framework gotchas discovered while building it. The target is past build-out —
 emitter, 18-file runtime, C-API emission, snapshot + runtime-load harnesses,
 7 sample apps, and a developer guide are all complete.
 
+## 0. Toolchain (Racket 9.2 + ffi2)
+
+The target is pinned to **Racket 9.2** — Homebrew `minimal-racket`, installed at
+`/opt/homebrew/bin/racket` (the path baked into `bundle-racket`'s
+`DEFAULT_RACKET_PATH`, used by sample-app bundles, the runtime-load harness, and
+these docs). **ffi2** is provisioned with a single `raco pkg install ffi2-lib`
+(source: the official `github.com/racket/racket` monorepo, `pkgs/ffi2-lib`);
+ffi2 is **not** in the minimal distribution, so a fresh 9.2 machine must run that
+one command after install. `(require ffi2)` then resolves.
+
+ffi2 and `ffi/unsafe`/`ffi/unsafe/objc` **coexist** in one installation — the
+emitter and runtime still use `ffi/unsafe` today; the ffi2 migration of the FFI
+layer is its own workstream (see `CONTEXT.md` "ffi2" and
+`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`). Conceptual boundary
+lives in the glossary; this note records only the *provisioning* fact.
+
+- **Three-way `->` conflict (new, 2026-05-31).** `ffi2` *also* exports `->`
+  (its arrow type). A module that requires both `ffi2` and `ffi/unsafe` fails
+  with `identifier already required: -> … also provided by ffi2` — the same
+  class of clash §2.1 already documents between `ffi/unsafe` and
+  `racket/contract`. Any 040 emit site mixing the two FFIs must `rename-in` one
+  of the arrows (e.g. keep `ffi2`'s `->` bare and rename `ffi/unsafe`'s, or vice
+  versa) on top of the existing `racket/contract` `->` → `c->` rename.
+
 ## 1. Overview
 
 "OO" is a target *name* only. Every file under `generation/targets/racket/`
