@@ -17,5 +17,15 @@ the **ffi2 type mapper** to `shared_signatures.rs` (parallel to the current
 - Build green. (Visual VM-verify deferred to root leaf 050.)
 
 ## Notes
-- Requires `ffi2-lib` provisioned — that's **root leaf 030**'s job, done first.
-- Shape gated on **010** (what stays Racket vs. moves native).
+- **`ffi2-lib` is already provisioned** (retired leaf 030-adopt-racket-9.2-toolchain;
+  `(require ffi2)` loads). This leaf only makes that durable in the toolchain/CI
+  provisioning script — do not re-run `raco pkg install` ad hoc (supply-chain-gated).
+- Shape settled by **010** (DONE): design spec
+  `docs/specs/2026-05-31-racket-native-binding-design.md` §5 (ffi2 role + hybrid
+  boundary). This leaf is the **C-function layer + seam plumbing**; outbound ObjC
+  *dispatch* relocates into generated native entries in leaf **040** (ADR-0013).
+- **Spike findings to apply (010):** `ffi2-sizeof` exists (closes the 020
+  `ctype-sizeof` gap); `ptr_t->cpointer`/`cpointer->ptr_t` confirmed working;
+  `->` **collides** between ffi2 and ffi/unsafe — any module mixing them must use
+  `(except-in ffi/unsafe ->)` (NOT `rename-in ffi2`, which breaks nested arrow
+  parsing), or keep the two libraries in separate modules.

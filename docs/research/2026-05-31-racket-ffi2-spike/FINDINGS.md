@@ -15,40 +15,65 @@ ffi2-lib installed (leaf 030).
 
 ---
 
-## 1. Outbound dispatch microbenchmark (sending `-hash`, N=3,000,000)
+## 1. Outbound dispatch — exploratory single-shape pass (`run.sh`, send `-hash`)
 
-| approach | ns/call | vs `tell` |
-|---|--:|--:|
-| C floor (objc_msgSend loop in C, one FFI crossing) | ~2.5 | — |
-| **in-Racket `tell`** (today's path, SEL cached by macro) | **~90–110** | 1.0× |
-| **native typed via ffi2** (C `objc_msgSend` shim, SEL cached) | **~20** | **~4–5× faster** |
-| native typed via ffi2 (selector string marshalled per call) | ~86–94 | ~1× |
-| **native libffi generic via ffi2, CIF cached** | **~39** | **~2.3× faster** |
-| native libffi generic via ffi2, CIF rebuilt per call | ~49 | ~1.8× faster |
-| native NSInvocation generic via ffi2 | ~660–680 | **~7× slower** |
+This first pass (selector `-hash`, scalar return) compared mechanisms against the
+*all-object* `tell` macro. It is superseded by the multi-shape, honest-baseline
+pass in §1b — kept for the record. Approx ns/call: C-floor ~2.5; in-Racket `tell`
+~90–110; native typed via ffi2 (SEL cached) ~20; native libffi (CIF cached) ~39;
+NSInvocation ~680; selector-string-per-call ~86 (→ **SEL caching is essential**,
+costs ~65 ns).
 
-**Reading.**
-- The ffi2↔`ffi/unsafe` seam is *cheap*: routing dispatch through a native typed
-  C shim via ffi2 is **5× faster** than today's in-Racket `tell`. This inverts
-  the a-priori fear that the seam tax would make relocation a loss.
-- **SEL caching is essential**: passing the selector as a string per call adds
-  ~65 ns (string marshalling). A relocated dispatcher must pre-register SELs.
-- **NSInvocation loses badly** (~7× slower than `tell`) — not viable as a generic
-  dispatcher. **But libffi is the viable generic dispatcher** (D1 follow-up
-  spike): ~39 ns CIF-cached, **2.3× faster than `tell`** and ~17× faster than
-  NSInvocation. Crucially it is *one* generic native function — no per-signature
-  typed-entry library. CIF caching only saves ~10 ns on this 2-arg signature
-  (would widen for richer signatures), so even CIF-per-call (~49 ns) beats `tell`.
-  Ranking: typed-native (20) < libffi (39) < tell (90) ≪ NSInvocation (680).
-- **Caveat — bottleneck relevance.** 90 ns/call saved matters only at millions
-  of calls/sec. The racket sample apps are GUI apps; per-method dispatch is *not*
-  their bottleneck. The speedup is real but the *workload* does not need it. The
-  ADR-0010 case for relocation is therefore architectural (thin scripting side),
-  not performance-urgent.
-- **Caveat — bridging tax not isolated.** This bench bridged the target pointer
-  once (stable object) and returns `uint64`. Methods that take/return `_id` pay
-  `ptr_t<->cpointer` bridging both ways per call (020 §2); a relocated dispatcher
-  carrying `_id` values would pay more than the 20 ns measured here.
+> ⚠️ **Superseded reading.** This pass concluded "libffi is the viable generic
+> dispatcher, 2.3× faster than `tell`." That measured libffi against the *slow
+> all-object `tell` path*, the wrong baseline for the typed shapes a generated
+> entry replaces. Against the honest baseline (in-Racket typed `get-ffi-obj`
+> msgSend, §1b) **libffi is actually slower** on scalar/pointer/float and only
+> wins on struct returns — it is dominated by generated-typed everywhere. §1b is
+> the decision-grade data.
+
+- **Caveat — bottleneck relevance (still holds).** Per-method dispatch is not the
+  GUI-app bottleneck; the ADR-0010 case is primarily architectural (thin scripting
+  side), with performance a by-product.
+
+## 1b. Multi-shape dispatch, honest baseline (`bench2.rkt`) — decision-grade
+
+Controlled `AWSpikeTarget` with four representative ABI shapes, each dispatched
+three ways. **Baseline corrected vs §1:** for shapes needing typed dispatch
+(non-all-object), the *honest* status quo is not `tell` (the ~90 ns macro, used
+only for all-object shapes) but Racket's **typed `get-ffi-obj objc_msgSend`**
+(`DispatchStrategy::TypedMsgSend`) — already ~10 ns. Measured ns/call, two runs
+(N=3M; struct N=1.5M):
+
+| shape | racket-msgsend (status-quo typed) | **generated-typed** | libffi-generic |
+|---|--:|--:|--:|
+| `h` → uint64 (scalar) | ~10 | **~5** | ~19 |
+| `idfor:` → id (pointer both ways) | ~12 | **~6** | ~22 |
+| `rectfor:` → CGRect (**struct return**) | ~90 | **~11** | ~26 |
+| `addx:y:` → double (2 float args) | ~12 | **~6** | ~27 |
+
+**Three decisive results:**
+1. **Generated-typed wins every shape** — ~2× the status-quo typed msgSend on
+   simple shapes, **~8× on struct returns** (11 vs 90 ns). ~5–6 ns is essentially
+   "ffi2 callout + objc_msgSend": the generated C entry does the ABI in compiled
+   code, ffi2 just calls it.
+2. **The struct-return gap is the marshalling-depth thesis in miniature.** Racket
+   pays ~90 ns to marshal a `CGRect` return; the native entry unpacks it in ~11.
+   Pushing ABI work native is an order of magnitude where the value crosses.
+3. **libffi is dominated — not a contender.** It is *slower* than the status-quo
+   typed msgSend on scalar/pointer/float (19–27 vs 10–12 ns), winning only on
+   struct returns, and ~3–4× slower than generated-typed everywhere. It interprets
+   an `ffi_cif` per call. **Dropped to escape-hatch only** (statically un-typable
+   signatures). The §1 "libffi viable" reading was an artifact of the wrong (slow
+   `tell`) baseline.
+
+The combinatorics (§2b) are the asset that makes generated-typed free: the API
+analysis enumerates every signature, so we generate exactly the typed entries and
+regenerate them — never hand-written.
+
+*Measurement caveat:* loops discard results, so the optimiser may elide a little;
+the struct out-buffer write resists elision. Relative ordering is stable across
+runs and an earlier checksum-matched variant confirmed correctness.
 
 ## 2. Callback / foreign-thread matrix (020's biggest unknown)
 
@@ -124,9 +149,14 @@ entry to serve a single method.
 - **Honest caveat:** 160 slightly *under*counts true typed entries — arm64 cares
   about struct-by-value layout (NSRect=4×SIMD, NSRange=2×int, small vs large
   struct returns) and some width/signedness, which my coarse collapse merged. The
-  real typed-entry count sits between 160 and 213. libffi derives all of this from
-  `ffi_type` descriptors automatically, sidestepping the per-entry struct-ABI
-  minefield — which strengthens, not weakens, the libffi case.
+  real typed-entry count sits between 160 and 213. This struct-ABI complexity is
+  the one place libffi has an *engineering* edge (it derives layout from
+  `ffi_type` descriptors) — but **the emitter has the same information from the
+  IR** and generates the correct struct layout per entry, so the C compiler does
+  the same job at compile time. §1b shows generated-typed is ~2.4× faster than
+  libffi *on exactly the struct-return shape* (11 vs 26 ns) — so the codegen path
+  both sidesteps the minefield and wins. The count is not a reason to prefer
+  libffi.
 
 ## 3. Disposition facts established
 
@@ -149,15 +179,15 @@ entry to serve a single method.
 
 ## 4. Conclusions feeding D1 / D2
 
-- **D1 (dispatch).** libffi is now proven as a viable *generic* native dispatcher
-  (~39 ns, 2.3× faster than `tell`, no per-signature library). Three live
-  options: (a) **conservative** — keep per-method `tell`, aim ADR-0010 at batch
-  marshalling + the native callback trampoline, ffi2 only for the C-function
-  layer; (b) **libffi generic dispatcher** — one native dispatch entry point the
-  emitted shims call, 2.3× faster *and* it shrinks the Racket dispatch surface
-  toward the ADR-0010 "thin scripting side" goal; (c) typed-native per-signature
-  (fastest at 20 ns but combinatorial). The per-call speed is not the GUI
-  bottleneck, so (b)'s real appeal is *architectural* (thin seam), not perf.
+- **D1 (dispatch) — SETTLED: generated typed native dispatch (ADR-0013).** The
+  multi-shape honest-baseline pass (§1b) is decisive: generated-typed is fastest
+  on every shape (~2× the status-quo typed msgSend, ~8× on struct returns), and
+  libffi is *dominated* (slower than the status quo on non-struct shapes). The
+  "combinatorial" objection (§2b) dissolves because the entries are generated from
+  the IR, not hand-written — the API analysis enumerates every signature. libffi
+  is retained only as the escape hatch for statically un-typable signatures. The
+  earlier "three live options incl. libffi generic dispatcher" framing was based
+  on the superseded §1 baseline.
 - **D2 (embedding direction / callbacks).** Stay **outbound** (Racket→Swift via
   ffi2/C-ABI on opaque pointers); **do not** adopt ffi2 callbacks (void-broken +
   foreign-thread SIGILL); **do not** pursue inbound Racket-CS C-embedding (no

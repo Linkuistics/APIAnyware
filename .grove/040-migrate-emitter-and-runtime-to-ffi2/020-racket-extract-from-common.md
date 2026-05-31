@@ -10,6 +10,14 @@ target. Rehome the relevant `APIAnywareCommonTests` into `APIAnywareRacketTests`
 Do **not** modify Chez/Gerbil — Chez de-shares in its own grove
 (`chez-adopt-native-binding`); Gerbil is an inert stub.
 
+**What racket actually uses (010 spike, via `swift-helpers.rkt`):**
+StringConversion, StructMarshal, ClassLookup, MemoryManagement, AutoreleasePool,
+ObservationBridge. Rehome these. **Do NOT rehome `MessageSend.swift`
+(`aw_common_msg_*`) — it is dead code** (the spike found zero callers in
+`generation/` or `runtime/`; generated bindings dispatch in-Racket today). It is
+superseded by the generated typed native dispatch (leaf 040, ADR-0013) — drop it,
+don't carry it over.
+
 ## Done when
 - `APIAnywareRacket` no longer depends on `APIAnywareCommon`; it builds and its
   Swift tests pass standalone.

@@ -107,6 +107,45 @@ distribution — provision with `raco pkg install ffi2-lib`. Full map:
 _Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
 class-system work.
 
+## Native binding mechanism
+
+**Generated typed dispatch**:
+The `racket` target's outbound method-dispatch mechanism: the emitter generates
+**one typed native (Swift/C) dispatch entry per distinct method ABI signature**,
+derived from the API analysis, and emits a thin Racket ffi2 binding that calls
+it. Chosen over in-Racket `tell`/typed `get-ffi-obj` msgSend, generic
+NSInvocation, and generic libffi because the signature set is *known at
+generation time* — so compile-time ABI specialisation (~5–6 ns/call: ~2× faster
+than the status-quo typed `get-ffi-obj` msgSend on simple shapes, **~8× on struct
+returns** where Racket otherwise pays to marshal a CGRect) is bought with
+generated code at zero hand-maintenance. libffi (the generic alternative) is
+actually *slower* than the typed status quo on non-struct shapes and is kept only
+as the escape hatch for signatures the emitter cannot type statically. See
+**ADR-0013** and `docs/specs/2026-05-31-racket-native-binding-design.md`.
+_Avoid_: "msgSend wrapper" (ambiguous with the deleted `aw_common_msg_*`);
+"libffi dispatch" (libffi is only the rejected generic alternative / escape hatch).
+
+**Marshalling-depth spectrum**:
+How much of a method's argument/result marshalling and lifetime handling moves
+into its generated native entry, so the scripting side never sees it. *Depth 0*
+= dispatch only (opaque pointers). *Depth 1* (the target) = typed marshalling per
+method — strings/structs cross as Racket-friendly representations, the Racket
+wrapper is a coercion-free ffi2 call. *Depth 2* = semantic batching (collections
+in one native call, `NSError**` → `(values result error)`). The emitter walks the
+spectrum *per method* from the IR types. Embodies ADR-0010's "target never
+considers the FFI boundary."
+_Avoid_: treating it as a global switch (it is per-method).
+
+**Native trampoline**:
+The inbound-callback mechanism: a native Swift object/IMP
+(`DelegateBridge`/`BlockBridge`) receives the ObjC call, owns thread-safety
+(bouncing foreign-OS-thread invocations to a Racket-safe thread via
+`main-thread.rkt`), and invokes the registered Racket `_cprocedure` callback.
+Kept and deepened (not replaced) by the ffi2 migration: ffi2 callbacks SIGILL on
+foreign threads and have a void-return bug. See **ADR-0014**.
+_Avoid_: "ffi2 callback" (rejected); "inbound embedding" (the rejected
+Racket-CS-C-API alternative).
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
