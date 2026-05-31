@@ -47,6 +47,24 @@ Numeric order encodes the dependency chain, with one orthogonal exception:
 
 ## Notes
 Migration is **straight to 9.2+ffi2** — no staged "9.2 on old ffi" baseline (by
-decision). The likely ffi2 shape is *hybrid*: ffi2 for the C-function/ctype
-layer, retain `ffi/unsafe/objc` for ObjC message dispatch — but that is leaf
-020's question to settle, not a foregone conclusion.
+decision).
+
+**Boundary settled by 020** (`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`):
+the hybrid is *forced* — ffi2 has no ObjC layer, so message dispatch
+(`tell`/`objc_msgSend`/`import-class`) stays on `ffi/unsafe/objc`; ffi2 covers
+the C-function layer; values cross the seam via `ptr_t<->cpointer`.
+
+**Guiding directive (2026-05-31).** Two priorities, both ranked above minimizing
+changes/work (per the APIAnyware-wide policy in auto-memory):
+1. *Maximum ffi2 advantage.* On the C-function side of the seam, prefer the
+   richest ffi2 idiom: tagged pointer subtypes over hand-rolled `(cast _pointer
+   _id)`, custom `#:racket->c`/`#:c->racket` over manual coercion, `struct_t`
+   with generated accessors, `define-ffi2-definer` + arrow types, and
+   allocator/deallocator (incl. `#:gcable-immobile`) for memory safety. Adopt
+   ffi2 everywhere it *can* go, not only where it is least effort.
+2. *Maximum performance.* Push as much work as possible into the **native** layer
+   (`libAPIAnywareRacket.dylib` Swift/C helpers) and keep the Racket bridge thin
+   — ffi2 is the *seam*, not where heavy lifting lives. Favour a thin, static
+   ffi2 entry point over interpreted-Racket logic that fans out many per-call FFI
+   crossings (e.g. batch type-mapping conversions natively). The two priorities
+   compose: a fat native core behind a thin, idiomatic, static ffi2 seam.
