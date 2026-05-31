@@ -40,3 +40,9 @@ A `docs/research/` doc exists that answers, with citations to the ffi2 docs:
   defines the retained-`ffi/unsafe` boundary.
 - A finding that *changes* the migration approach belongs in an ADR raised by
   040; a finding that merely confirms an approach stays in this doc with a pointer.
+- **Source must be fetched live, not recalled.** Racket 9.2 / ffi2 sit at/after
+  the assistant's knowledge cutoff, so the doc's content must come from actually
+  fetching `https://docs.racket-lang.org/ffi2/` (WebFetch) plus reading our
+  in-repo FFI surface under `generation/targets/racket/runtime/` — not from
+  memory. Verify the source URL resolves as the first step; if it 404s or ffi2
+  is not yet published, that itself is a blocker to surface before writing.
