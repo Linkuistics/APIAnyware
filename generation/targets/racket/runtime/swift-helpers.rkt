@@ -33,6 +33,14 @@
          swift:nsstring-to-string
          swift:nsstring-length
 
+         ;; Collection marshalling (batched — leaf 050/030)
+         swift:list->nsarray
+         swift:nsarray-count
+         swift:nsarray-get-all
+         swift:hash->nsdictionary
+         swift:nsdictionary-count
+         swift:nsdictionary-get-all
+
          ;; Block bridging
          swift:create-block
          swift:release-block
@@ -104,6 +112,46 @@
 
 (define-swift swift:nsstring-length "aw_racket_nsstring_length"
   (_fun _pointer -> _uint64))
+
+;; --- Collection marshalling (batched — leaf 050/030) ---
+;;
+;; One native call per collection instead of N per-element `tell`s. The input
+;; direction uses `(_list i …)` so `ffi/unsafe` marshals the Racket list to a
+;; transient C array for the call; the read-back direction uses `(_list o … n)`,
+;; which allocates the out buffer, passes it native to fill, and converts the
+;; result back to a Racket list of length `n`. `_intptr` matches Swift's `Int`.
+
+;; (id* items, Int count) -> NSArray (+1 retained)
+(define-swift swift:list->nsarray "aw_racket_list_to_nsarray"
+  (_fun (_list i _pointer) _intptr -> _pointer))
+
+(define-swift swift:nsarray-count "aw_racket_nsarray_count"
+  (_fun _pointer -> _intptr))
+
+;; (NSArray, Int count, id* out) -> fills `out`; returns the Racket list.
+(define-swift swift:nsarray-get-all "aw_racket_nsarray_get_all"
+  (_fun (arr : _pointer)
+        (count : _intptr)
+        (out : (_list o _pointer count))
+        -> _void
+        -> out))
+
+;; (char** keys, id* values, Int count) -> NSDictionary (+1 retained)
+(define-swift swift:hash->nsdictionary "aw_racket_hash_to_nsdictionary"
+  (_fun (_list i _string) (_list i _pointer) _intptr -> _pointer))
+
+(define-swift swift:nsdictionary-count "aw_racket_nsdictionary_count"
+  (_fun _pointer -> _intptr))
+
+;; (NSDictionary, Int count, char** outKeys, id* outValues) -> fills both;
+;; returns (values key-strings value-pointers). Keys convert char*→Racket string.
+(define-swift swift:nsdictionary-get-all "aw_racket_nsdictionary_get_all"
+  (_fun (dict : _pointer)
+        (count : _intptr)
+        (keys : (_list o _string count))
+        (vals : (_list o _pointer count))
+        -> _void
+        -> (values keys vals)))
 
 ;; --- Block bridging ---
 

@@ -6,13 +6,16 @@
 //! `get-ffi-obj objc_msgSend`/`tell`. This module owns the native side:
 //!
 //! - [`AbiType`] — the small closed set of ABI shapes a `_fun … -> …` signature
-//!   collapses to. Objects (`_id`), pointers (`_pointer`), C strings (`_string`),
-//!   selectors and blocks all collapse to a single [`AbiType::Ptr`]: at the ABI
-//!   level they are one machine pointer (the spike's 213 IR signatures → ~160 ABI
-//!   shapes collapse, `FINDINGS.md` §2b). The emitter's *ffi2 binding* keeps the
-//!   richer spelling (`string_t`, so ffi2 still marshals the Racket string to a
-//!   `char*`); the native entry only sees the collapsed pointer. Both lower to the
-//!   same machine ABI, so they interoperate.
+//!   collapses to. Objects (`_id`), pointers (`_pointer`), selectors and blocks all
+//!   collapse to a single [`AbiType::Ptr`]: at the ABI level they are one machine
+//!   pointer (the spike's 213 IR signatures → ~160 ABI shapes collapse,
+//!   `FINDINGS.md` §2b). C strings (`_string`) are the one pointer-shaped exception
+//!   that keeps its own [`AbiType::CStr`]: at the machine ABI a `char*` is a
+//!   pointer like any other (the native entry forwards it untouched), but the
+//!   emitter's *ffi2 binding* must spell it `string_t` so ffi2 marshals the Racket
+//!   string ⇄ `char*` across the seam — see leaf 050/030. Keeping it a distinct code
+//!   gives string signatures their own (harmlessly near-duplicate) native entries
+//!   rather than colliding a `string_t` binding and a `ptr_t` binding on one symbol.
 //! - [`NativeSig`] — a full (params → return) ABI signature with a stable,
 //!   content-addressed [`NativeSig::entry_name`]. Because the name is a pure
 //!   function of the signature, per-class emission needs no global counter: two
@@ -41,7 +44,17 @@
 //! across the whole binding (functions, `make-nsrect`, accessors) rather than
 //! introducing a divergent ffi2 `struct_t`. The entry name still encodes the struct
 //! identity (one code char per shape) so distinct struct casts get distinct
-//! entries. *Unknown* (non-geometry) structs and C strings stay non-routable (the
+//! entries.
+//!
+//! **C strings (leaf 050/030).** `_string` (`char*`) now routes too, via
+//! [`AbiType::CStr`]: the native entry forwards the pointer untouched (a `char*` is
+//! ABI-identical to any other pointer) and the ffi2 binding spells the argument /
+//! result `string_t`, so ffi2 owns the Racket-string ⇄ `char*` marshalling at the
+//! seam. A returned `string_t` is **+0/borrowed** — ffi2 copies the bytes into a
+//! Racket string and does *not* free the C buffer, matching the autoreleased
+//! `-UTF8String`-shaped returns that dominate ObjC `char*` results (and identical to
+//! the prior `get-ffi-obj` `_string` fallback's semantics, so routing changes
+//! nothing about ownership). *Unknown* (non-geometry) structs stay non-routable (the
 //! `from_ffi_unsafe` `None` arm) and keep the retained `get-ffi-obj` fallback — the
 //! escape hatch for shapes the emitter cannot lay out statically (spec §6/§8.2);
 //! variadics are already filtered upstream.
@@ -160,19 +173,26 @@ impl GeoStruct {
 
 /// One ABI shape a `_fun` argument/result collapses to.
 ///
-/// This is deliberately coarser than the Racket FFI spelling: every pointer-like
-/// spelling (`_id`, `_pointer`, `_string`, selector, block) is one [`Ptr`], because
-/// at the machine-call level they are one register-width pointer. The richer
-/// distinction survives in the emitter's ffi2 binding, not here. The exception is
-/// [`Struct`]: the geometry family crosses ffi2 as a `ptr_t` too, but each shape
-/// keeps its identity here because the native entry's `objc_msgSend` cast is
-/// struct-specific (so distinct shapes need distinct entries).
+/// This is deliberately coarser than the Racket FFI spelling: every *opaque*
+/// pointer-like spelling (`_id`, `_pointer`, selector, block) is one [`Ptr`],
+/// because at the machine-call level they are one register-width pointer. Two
+/// shapes keep their identity even though they also cross as a pointer: [`CStr`]
+/// (`char*`), because its ffi2 binding must spell `string_t` to drive the
+/// Racket-string ⇄ `char*` marshalling; and [`Struct`] (the geometry family),
+/// because the native entry's `objc_msgSend` cast is struct-specific. Distinct
+/// codes ⇒ distinct native entries, so a `string_t`/`struct_t` binding never
+/// collides with a `ptr_t` one on a content-addressed symbol.
 ///
 /// [`Ptr`]: AbiType::Ptr
+/// [`CStr`]: AbiType::CStr
 /// [`Struct`]: AbiType::Struct
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AbiType {
     Ptr,
+    /// A NUL-terminated C string (`char*`). ABI-identical to [`Ptr`]; distinguished
+    /// only so the ffi2 binding spells it `string_t` (ffi2 marshals the Racket
+    /// string ⇄ `char*`). A `string_t` *result* is +0/borrowed (copy-on-read).
+    CStr,
     Bool,
     Int8,
     UInt8,
@@ -193,18 +213,18 @@ pub enum AbiType {
 impl AbiType {
     /// Parse a Racket `ffi/unsafe` spelling (as produced by
     /// [`apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper`]) into an
-    /// ABI shape. Returns `None` for C strings and any unrecognised spelling —
-    /// those do not route natively (the retained `get-ffi-obj` escape hatch).
+    /// ABI shape. Returns `None` only for *unknown* (non-geometry) structs and any
+    /// unrecognised spelling — those do not route natively (the retained
+    /// `get-ffi-obj` escape hatch).
     pub fn from_ffi_unsafe(spelling: &str) -> Option<AbiType> {
         Some(match spelling {
             // Genuinely-opaque pointer-likes (object, raw pointer, selector)
             // collapse to one machine pointer and route with no marshalling.
-            // `_string` (C `char*`) is deliberately *not* here: routing it would
-            // either collide on the content-addressed entry name (a `string_t`
-            // and a `ptr_t` binding sharing one symbol) or need `char*<->string`
-            // marshalling — both Depth-2/leaf-050/030 concerns. So `_string`
-            // signatures stay on the existing typed path (`None` arm).
             "_id" | "_pointer" => AbiType::Ptr,
+            // `_string` (C `char*`) routes as a distinct shape so the ffi2 binding
+            // spells `string_t` (ffi2 marshals Racket string ⇄ `char*`); the native
+            // entry still just forwards the pointer (leaf 050/030).
+            "_string" => AbiType::CStr,
             "_bool" => AbiType::Bool,
             "_int8" => AbiType::Int8,
             "_uint8" => AbiType::UInt8,
@@ -232,6 +252,9 @@ impl AbiType {
     fn code(self) -> char {
         match self {
             AbiType::Ptr => 'P',
+            // 'N' = NUL-terminated C string; free in the code space (asserted in
+            // `tests::struct_codes_are_collision_free`, which covers CStr too).
+            AbiType::CStr => 'N',
             AbiType::Bool => 'b',
             AbiType::Int8 => 'c',
             AbiType::UInt8 => 'C',
@@ -256,6 +279,9 @@ impl AbiType {
     fn ffi2_type(self) -> &'static str {
         match self {
             AbiType::Ptr | AbiType::Struct(_) => "ptr_t",
+            // ffi2 marshals Racket string ⇄ `char*` at the seam; the native entry
+            // forwards the bare pointer (leaf 050/030).
+            AbiType::CStr => "string_t",
             AbiType::Bool => "bool_t",
             AbiType::Int8 => "int8_t",
             AbiType::UInt8 => "uint8_t",
@@ -278,7 +304,10 @@ impl AbiType {
     /// [`emit_one_entry`]. `Void` has no parameter form (filtered before use).
     fn swift_type(self) -> &'static str {
         match self {
-            AbiType::Ptr => "UnsafeMutableRawPointer?",
+            // CStr is ABI-identical to a raw pointer at the @convention(c) /
+            // @_cdecl boundary — ffi2's `string_t` lowers to `char*`, register-width.
+            // The native entry forwards it untouched, so it shares Ptr's Swift type.
+            AbiType::Ptr | AbiType::CStr => "UnsafeMutableRawPointer?",
             AbiType::Bool => "CBool",
             AbiType::Int8 => "Int8",
             AbiType::UInt8 => "UInt8",
@@ -430,9 +459,10 @@ pub fn collect_class_native_sigs(cls: &Class, mapper: &dyn FfiTypeMapper) -> BTr
 
     // Instance / class methods. Since leaf 050/010 every *routable* signature
     // dispatches natively — not just the scalar (`TypedMsgSend`) shapes but also
-    // the all-object ones (`_id` collapses to `ptr_t`). Only struct-by-value /
-    // C-string shapes stay non-routable (the `from_ffi_unsafe` `None` arm) and
-    // keep the `get-ffi-obj` fallback. This must mirror `emit_class::emit_method`
+    // the all-object ones (`_id` collapses to `ptr_t`) and, since leaf 050/030,
+    // C-string (`_string` → `string_t`) shapes. Only *unknown* (non-geometry)
+    // structs stay non-routable (the `from_ffi_unsafe` `None` arm) and keep the
+    // `get-ffi-obj` fallback. This must mirror `emit_class::emit_method`
     // exactly, erring toward over-collection (an unused entry is a harmless dead
     // binding; a missing one is an undefined identifier at Racket load).
     for m in methods {
@@ -450,8 +480,9 @@ pub fn collect_class_native_sigs(cls: &Class, mapper: &dyn FfiTypeMapper) -> BTr
     }
 
     // Property getters (`() -> <type>`) and setters (`(<type>) -> _void`). Both
-    // route natively for every routable shape (objects + scalars) since leaf
-    // 050/010; struct-typed accessors stay non-routable and keep `tell`.
+    // route natively for every routable shape (objects + scalars + C strings) since
+    // leaves 050/010 and 050/030; unknown-struct accessors stay non-routable and
+    // keep `tell`.
     for p in properties {
         let ffi_type = mapper.map_type(&p.property_type, false);
         if let Some(sig) = NativeSig::from_ffi_unsafe(&[], &ffi_type) {
@@ -655,9 +686,9 @@ mod tests {
             AbiType::from_ffi_unsafe("_CGAffineTransform"),
             Some(AbiType::Struct(GeoStruct::CGAffineTransform))
         );
-        // C strings stay non-routable (Depth-2, leaf 050/030).
-        assert_eq!(AbiType::from_ffi_unsafe("_string"), None);
-        // An unknown struct also stays non-routable (the escape hatch).
+        // C strings route as their own shape since leaf 050/030 (ffi2 `string_t`).
+        assert_eq!(AbiType::from_ffi_unsafe("_string"), Some(AbiType::CStr));
+        // An unknown struct stays non-routable (the escape hatch).
         assert_eq!(AbiType::from_ffi_unsafe("_NSDecimal"), None);
     }
 
@@ -679,6 +710,7 @@ mod tests {
         ];
         let scalars = [
             AbiType::Ptr,
+            AbiType::CStr,
             AbiType::Bool,
             AbiType::Int8,
             AbiType::UInt8,
@@ -730,9 +762,24 @@ mod tests {
     }
 
     #[test]
-    fn string_signatures_do_not_route() {
-        assert_eq!(NativeSig::from_ffi_unsafe(&["_string".into()], "_void"), None);
-        assert_eq!(NativeSig::from_ffi_unsafe(&[], "_string"), None);
+    fn string_signatures_route_as_string_t() {
+        // `_string` routes since leaf 050/030: native entry forwards the pointer,
+        // ffi2 binding spells `string_t` so ffi2 owns Racket-string ⇄ `char*`.
+        // A string param (e.g. +stringWithUTF8String:).
+        let (entry, arrow) = native_dispatch_binding(&["_string".into()], "_id").unwrap();
+        assert_eq!(entry, "aw_racket_msg_N_P");
+        assert_eq!(arrow, "(-> ptr_t ptr_t string_t ptr_t)");
+
+        // A string return (e.g. -UTF8String): +0/borrowed, ffi2 copies on read.
+        let (entry, arrow) = native_dispatch_binding(&[], "_string").unwrap();
+        assert_eq!(entry, "aw_racket_msg_0_N");
+        assert_eq!(arrow, "(-> ptr_t ptr_t string_t)");
+
+        // A `_string` shape is a *distinct* entry from the ABI-identical `_id`
+        // shape — distinct codes (N vs P), no content-addressed collision.
+        let s = NativeSig::from_ffi_unsafe(&["_string".into()], "_id").unwrap();
+        let p = NativeSig::from_ffi_unsafe(&["_id".into()], "_id").unwrap();
+        assert_ne!(s.entry_name(), p.entry_name());
     }
 
     #[test]
@@ -852,9 +899,9 @@ mod tests {
         assert_eq!(entry, "aw_racket_msg_PQ_v");
         assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t uint64_t void_t)");
 
-        // string / unknown-struct signatures do not produce a binding (escape
-        // hatch); known geometry structs do (see struct_signatures_route_*).
-        assert!(native_dispatch_binding(&[], "_string").is_none());
+        // unknown-struct signatures do not produce a binding (escape hatch); known
+        // geometry structs (see struct_signatures_route_*) and C strings (see
+        // string_signatures_route_as_string_t) do.
         assert!(native_dispatch_binding(&["_NSDecimal".into()], "_void").is_none());
     }
 

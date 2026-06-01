@@ -8,8 +8,13 @@
 ;;   make-nsrect, make-nspoint, make-nssize — struct constructors
 
 (require ffi/unsafe
+         ;; `_id` tagging only — `tell`/`import-class`/`sel_registerName` and the
+         ;; in-Racket CFString/objc_msgSend marshalling were retired in leaf
+         ;; 050/030; the per-element work now lives in libAPIAnywareRacket
+         ;; (CollectionMarshal.swift / StringConversion.swift).
          ffi/unsafe/objc
-         "objc-base.rkt")
+         "objc-base.rkt"
+         "swift-helpers.rkt")
 
 (provide string->nsstring
          nsstring->string
@@ -30,46 +35,27 @@
          NSRange-location NSRange-length
          _NSUInteger _NSInteger)
 
-;; Import Foundation classes
-(import-class NSString NSMutableArray NSDictionary NSMutableDictionary)
-
-;; CoreFoundation for string creation (toll-free bridged with NSString)
-(define cf-lib
-  (ffi-lib "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"))
-(define CFStringCreateWithCString
-  (get-ffi-obj "CFStringCreateWithCString" cf-lib
-    (_fun _pointer _string _uint32 -> _id)))
-(define kCFStringEncodingUTF8 #x08000100)
-
-;; Low-level ObjC runtime for methods with non-id parameters
-(define objc-lib (ffi-lib "libobjc"))
-(define msg-uint64->id
-  (get-ffi-obj "objc_msgSend" objc-lib
-    (_fun _pointer _pointer _uint64 -> _pointer)))
-(define msg-id->id
-  (get-ffi-obj "objc_msgSend" objc-lib
-    (_fun _pointer _pointer _id -> _pointer)))
-
-;; Selectors used internally
-(define sel-objectAtIndex (sel_registerName "objectAtIndex:"))
-(define sel-objectForKey (sel_registerName "objectForKey:"))
-(define sel-count (sel_registerName "count"))
-
 ;; arm64 integer types
 (define _NSUInteger _uint64)
 (define _NSInteger _int64)
 
-;; --- NSString conversions ---
+;; --- NSString conversions (Depth-2, leaf 050/030) ---
+;;
+;; The per-value marshalling now lives in libAPIAnywareRacket
+;; (StringConversion.swift); these are thin shims over the native helpers, not
+;; in-Racket CFString / `tell …UTF8String`.
 
-;; Convert a Racket string to an NSString (returns raw ObjC pointer, retained +1).
+;; Convert a Racket string to an NSString (raw `_id` pointer, retained +1).
 (define (string->nsstring str)
-  (CFStringCreateWithCString #f str kCFStringEncodingUTF8))
+  (cast (swift:string-to-nsstring str) _pointer _id))
 
-;; Convert an NSString (raw pointer) to a Racket string
+;; Convert an NSString (raw pointer) to a Racket string. The native helper
+;; returns a +0/borrowed `char*` (`-utf8String`); ffi `_string` copies it into a
+;; Racket string immediately (see StringConversion.swift ownership note).
 (define (nsstring->string nsstr)
   (if (not nsstr)
       ""
-      (tell #:type _string nsstr UTF8String)))
+      (or (swift:nsstring-to-string nsstr) "")))
 
 ;; Convert an NSString value to a Racket string.
 ;; Accepts objc-object (from wrapper returns), raw cpointer, or #f/nil.
@@ -82,52 +68,55 @@
     [(string? v) v]
     [else (error '->string "expected objc-object, cpointer, string, or #f, got ~a" v)]))
 
-;; --- NSArray conversions ---
+;; --- NSArray conversions (batched native — leaf 050/030) ---
 
-;; Convert a Racket list of raw ObjC pointers to an NSArray.
-;; Returns an objc-object wrapper around a +1-retained NSMutableArray so
-;; callers can pass the result directly into class-wrapper param contracts
-;; (which reject raw cpointers since 2026-04-16). Pass through
-;; unwrap-objc-object when a raw pointer is needed for `tell` / objc_msgSend.
+;; Convert a Racket list of ObjC values to an NSArray in one native call
+;; (`aw_racket_list_to_nsarray`), replacing the per-element `tell addObject:`
+;; loop. Accepts objc-objects or raw cpointers; returns an objc-object wrapper
+;; around a +1-retained NSMutableArray so callers can pass it straight into
+;; class-wrapper param contracts (which reject raw cpointers since 2026-04-16).
 (define (list->nsarray lst)
-  (let ([arr (tell (tell NSMutableArray alloc) init)])
-    (for ([item (in-list lst)])
-      (tell arr addObject: item))
-    (wrap-objc-object arr #:retained #t)))
+  (let ([items (map unwrap-objc-object lst)])
+    (wrap-objc-object (swift:list->nsarray items (length items))
+                      #:retained #t)))
 
-;; Convert an NSArray to a Racket list of raw ObjC pointers.
-;; Accepts either a raw cpointer or an objc-object wrapper.
+;; Convert an NSArray to a Racket list of raw ObjC `_id` pointers in one native
+;; call (`aw_racket_nsarray_get_all`), replacing the per-index `objectAtIndex:`
+;; loop. Accepts either a raw cpointer or an objc-object wrapper. The returned
+;; element pointers are unretained — valid because `nsarr` is held across the call.
 (define (nsarray->list nsarr)
   (let* ([raw (unwrap-objc-object nsarr)]
-         [count (tell #:type _NSUInteger raw count)])
-    (for/list ([i (in-range count)])
-      (cast (msg-uint64->id raw sel-objectAtIndex i) _pointer _id))))
+         [count (swift:nsarray-count raw)])
+    (if (zero? count)
+        '()
+        (map (lambda (p) (cast p _pointer _id))
+             (swift:nsarray-get-all raw count)))))
 
-;; --- NSDictionary conversions ---
+;; --- NSDictionary conversions (batched native — leaf 050/030) ---
 
-;; Convert a Racket hash (string keys → ObjC pointer values) to NSDictionary.
-;; Returns an objc-object wrapper around a +1-retained NSMutableDictionary;
-;; see list->nsarray for the rationale.
+;; Convert a Racket hash (string keys → ObjC values) to an NSDictionary in one
+;; native call (`aw_racket_hash_to_nsdictionary`), replacing the per-entry
+;; NSString creation + `setObject:forKey:` loop. Returns an objc-object wrapper
+;; around a +1-retained NSMutableDictionary; see list->nsarray for the rationale.
 (define (hash->nsdictionary ht)
-  (let ([dict (tell (tell NSMutableDictionary alloc) init)])
-    (for ([(k v) (in-hash ht)])
-      (let ([nskey (string->nsstring k)])
-        (tell dict setObject: v forKey: nskey)
-        (tell nskey release)))
-    (wrap-objc-object dict #:retained #t)))
+  (define-values (keys vals)
+    (for/lists (keys vals) ([(k v) (in-hash ht)])
+      (values k (unwrap-objc-object v))))
+  (wrap-objc-object (swift:hash->nsdictionary keys vals (length keys))
+                    #:retained #t))
 
-;; Convert an NSDictionary to a Racket hash (string keys → ObjC pointers).
-;; Accepts either a raw cpointer or an objc-object wrapper.
+;; Convert an NSDictionary to a Racket hash (string keys → ObjC `_id` pointers)
+;; in one native call (`aw_racket_nsdictionary_get_all`), replacing the `allKeys`
+;; + per-key `objectForKey:` + NSString→string loop. Accepts a raw cpointer or an
+;; objc-object wrapper. Key `char*`s are +0/borrowed; ffi `_string` copies them.
 (define (nsdictionary->hash nsdict)
   (let* ([raw (unwrap-objc-object nsdict)]
-         [keys (tell raw allKeys)]
-         [count (tell #:type _NSUInteger keys count)]
+         [count (swift:nsdictionary-count raw)]
          [ht (make-hash)])
-    (for ([i (in-range count)])
-      (let* ([key (cast (msg-uint64->id keys sel-objectAtIndex i) _pointer _id)]
-             [val (cast (msg-id->id raw sel-objectForKey key) _pointer _id)]
-             [key-str (nsstring->string key)])
-        (hash-set! ht key-str val)))
+    (when (> count 0)
+      (define-values (keys vals) (swift:nsdictionary-get-all raw count))
+      (for ([k (in-list keys)] [v (in-list vals)])
+        (hash-set! ht k (cast v _pointer _id))))
     ht))
 
 ;; --- Geometry struct types ---

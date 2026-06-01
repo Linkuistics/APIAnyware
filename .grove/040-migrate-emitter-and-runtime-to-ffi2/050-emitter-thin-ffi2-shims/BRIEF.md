@@ -34,10 +34,14 @@ job). The spectrum splits cleanly along §3's depth ordering.
   `native_dispatch.rs` (ffi2 `struct_t` ⇄ Swift `@_cdecl` by-value/out-buffer
   matching the arm64 `objc_msgSend` struct convention), route NSRect/NSPoint/
   CGAffineTransform-family returns & params natively. Witness: TestKit `frame`.
-- **030 Depth-2 strings + collections + NSError** — native `char*`⇄NSString
-  (with returned-string ownership), batched `list`⇄NSArray / `hash`⇄NSDictionary,
-  and `NSError**` out-params → `(values result error)`. Moves `type-mapping.rkt`'s
-  per-element `tell` conversions native.
+- **030 Depth-2 strings + collections** — native `char*`⇄NSString (returned-string
+  ownership = +0/borrowed, ffi2 `string_t` copy-on-read) + `_string` made routable
+  (`AbiType::CStr`), and batched `list`⇄NSArray / `hash`⇄NSDictionary
+  (`CollectionMarshal.swift`). Moved `type-mapping.rkt`'s per-element `tell`
+  conversions native; verified by a runtime round-trip smoke. **DONE 2026-06-01.**
+- **040 nserror-out-params** — NSError `**` out-params → `(values result error)`,
+  split out of 030 (decision 2026-06-01): no local witness, needs emitter+IR work
+  the marshalling slices didn't. **NEW.**
 
 ## Cross-cutting (each leaf preserves)
 - **Returned-object lifetime (+0/+1)** is already encoded via `returns_retained`
