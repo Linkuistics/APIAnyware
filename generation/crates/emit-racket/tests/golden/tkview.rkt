@@ -7,7 +7,8 @@
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
-         "../../runtime/coerce.rkt")
+         "../../runtime/coerce.rkt"
+         "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/TestKit.framework/TestKit"))
@@ -15,7 +16,6 @@
 
 
 ;; --- Class predicates ---
-(define (nsrect? v) (objc-instance-of? v "NSRect"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (tkview? v) (objc-instance-of? v "TKView"))
 (provide TKView)
@@ -27,7 +27,8 @@
   [tkview-set-hidden! (c-> tkview? boolean? void?)]
   [tkview-tag (c-> tkview? exact-integer?)]
   [tkview-set-tag! (c-> tkview? exact-integer? void?)]
-  [tkview-frame (c-> tkview? (or/c nsrect? objc-nil?))]
+  [tkview-frame (c-> tkview? any/c)]
+  [tkview-set-frame! (c-> tkview? any/c void?)]
   [tkview-dealloc (c-> tkview? void?)]
   [tkview-description (c-> tkview? (or/c nsstring? objc-nil?))]
   )
@@ -39,10 +40,12 @@
 (define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_R (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
+(define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 
 ;; --- Constructors ---
 (define (make-tkview)
@@ -66,8 +69,11 @@
 (define (tkview-set-tag! self value)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTag:")) value))
 (define (tkview-frame self)
-  (wrap-objc-object
-   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frame"))))))
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frame")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (tkview-set-frame! self value)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrame:")) (id->ffi2-ptr value)))
 
 ;; --- Instance methods ---
 (define (tkview-dealloc self)

@@ -25,7 +25,9 @@ use crate::naming::{
     make_constructor_name, make_method_name, make_property_getter_name, make_property_setter_name,
     make_unique_constructor_name,
 };
-use crate::native_dispatch::{collect_class_native_sigs, native_dispatch_binding, NativeSig};
+use crate::native_dispatch::{
+    collect_class_native_sigs, native_dispatch_binding, GeoStruct, NativeSig,
+};
 use crate::shared_signatures::{
     block_ffi_types, class_has_blocks, class_has_struct_types, collect_class_fallback_signatures,
     SignatureMap,
@@ -935,13 +937,30 @@ fn emit_property(
         "(coerce-arg self)".to_string()
     };
     if let Some((entry, _arrow)) = native_dispatch_binding(&[], &ffi_type) {
-        let call = native_call_expr(&entry, &getter_recv, &prop.name, &[], &[]);
         write_line!(w, "(define ({}{})", getter_name, getter_params);
-        if ffi_type == "_id" {
-            w.line("  (wrap-objc-object");
-            write_line!(w, "   (ffi2-ptr->id {})))", call);
+        if let Some(g) = GeoStruct::from_ffi_unsafe(&ffi_type) {
+            // Struct-by-value getter (e.g. `frame`): native out-buffer, hand back
+            // the cstruct (see `emit_method`'s struct-return branch).
+            let cstruct = g.racket_cstruct();
+            let call = native_call_expr_with_out(
+                &entry,
+                &getter_recv,
+                &prop.name,
+                &[],
+                &[],
+                Some("(cpointer->ptr_t buf)"),
+            );
+            write_line!(w, "  (let ([buf (malloc {cstruct})])");
+            write_line!(w, "    {}", call);
+            write_line!(w, "    (ptr-ref buf {cstruct})))");
         } else {
-            write_line!(w, "  {})", native_scalar_result(&call, &ffi_type));
+            let call = native_call_expr(&entry, &getter_recv, &prop.name, &[], &[]);
+            if ffi_type == "_id" {
+                w.line("  (wrap-objc-object");
+                write_line!(w, "   (ffi2-ptr->id {})))", call);
+            } else {
+                write_line!(w, "  {})", native_scalar_result(&call, &ffi_type));
+            }
         }
     } else if prop.class_property {
         write_line!(w, "(define ({})", getter_name);
@@ -1132,6 +1151,25 @@ fn emit_method(
     // `tell`-for-dispatch is gone from emitted methods. Only the non-routable
     // struct-by-value / C-string remainder keeps the `get-ffi-obj` fallback.
     if let Some((entry, _arrow)) = native_dispatch_binding(&param_types, &ret_ffi_type) {
+        // Struct-by-value return: allocate a cstruct out-buffer, let the native
+        // entry write the arm64 struct result through it, hand back the cstruct
+        // (the established `ffi/unsafe` rep — same as the old `tell #:type _NSRect`
+        // path produced). Struct *params* are bridged inside `native_call_expr*`.
+        if let Some(g) = GeoStruct::from_ffi_unsafe(&ret_ffi_type) {
+            let cstruct = g.racket_cstruct();
+            let call = native_call_expr_with_out(
+                &entry,
+                &target_expr,
+                &method.selector,
+                &call_args,
+                &param_types,
+                Some("(cpointer->ptr_t buf)"),
+            );
+            write_line!(w, "  (let ([buf (malloc {cstruct})])");
+            write_line!(w, "    {}", call);
+            write_line!(w, "    (ptr-ref buf {cstruct})))");
+            return;
+        }
         let call =
             native_call_expr(&entry, &target_expr, &method.selector, &call_args, &param_types);
         if ret_is_id && !ret_is_void {
@@ -1329,8 +1367,9 @@ fn ffi2_ptr_in(expr: &str) -> String {
 
 /// Build a native dispatch call expression:
 /// `(aw_racket_msg_<code> (id->ffi2-ptr <recv>) (id->ffi2-ptr (sel_registerName "sel")) <args…>)`.
-/// `call_args` and `param_ffi_types` are parallel; pointer-typed args take the
-/// `ptr_t` bridge, scalars pass through unchanged.
+/// `call_args` and `param_ffi_types` are parallel; pointer-typed args — and
+/// struct-by-value args, whose cstruct value *is* a cpointer to the struct bytes —
+/// take the `ptr_t` bridge, scalars pass through unchanged.
 fn native_call_expr(
     entry: &str,
     recv_expr: &str,
@@ -1338,16 +1377,33 @@ fn native_call_expr(
     call_args: &[String],
     param_ffi_types: &[String],
 ) -> String {
+    native_call_expr_with_out(entry, recv_expr, selector, call_args, param_ffi_types, None)
+}
+
+/// As [`native_call_expr`], with an optional trailing out-buffer argument (already
+/// a `ptr_t` expression). Struct *returns* allocate a cstruct buffer and pass its
+/// pointer here; the native entry writes the struct result through it.
+fn native_call_expr_with_out(
+    entry: &str,
+    recv_expr: &str,
+    selector: &str,
+    call_args: &[String],
+    param_ffi_types: &[String],
+    out_buffer: Option<&str>,
+) -> String {
     let mut parts = vec![
         ffi2_ptr_in(recv_expr),
         ffi2_ptr_in(&format!("(sel_registerName \"{selector}\")")),
     ];
     for (a, t) in call_args.iter().zip(param_ffi_types.iter()) {
-        if t == "_id" || t == "_pointer" {
+        if t == "_id" || t == "_pointer" || GeoStruct::from_ffi_unsafe(t).is_some() {
             parts.push(ffi2_ptr_in(a));
         } else {
             parts.push(a.clone());
         }
+    }
+    if let Some(out) = out_buffer {
+        parts.push(out.to_string());
     }
     format!("({entry} {})", parts.join(" "))
 }
@@ -2883,5 +2939,123 @@ mod tests {
             "constructor routed body:\n{out}"
         );
         assert!(out.contains("#:retained #t"), "constructor +1 retained:\n{out}");
+    }
+
+    fn type_nsrect() -> TypeRef {
+        // libclang models geometry typedefs (NSRect/CGRect/…) as aliases; the FFI
+        // mapper maps the alias to the `_NSRect` cstruct.
+        TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Alias {
+                name: "NSRect".into(),
+                framework: None,
+                underlying_primitive: None,
+            },
+        }
+    }
+
+    #[test]
+    fn native_dispatch_struct_return_and_param_property() {
+        // A read-write struct-by-value property (`frame`) — the §3 8× headline.
+        // Getter routes through the struct-return entry (out-buffer → cstruct);
+        // setter routes through the struct-param entry (cstruct pointer → ptr_t).
+        let cls = Class {
+            name: "TKView".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![Property {
+                name: "frame".into(),
+                property_type: type_nsrect(),
+                readonly: false,
+                class_property: false,
+                is_copy: false,
+                deprecated: false,
+                source: None,
+                provenance: None,
+                doc_refs: None,
+                origin: None,
+            }],
+            methods: vec![],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+
+        // Distinct content-addressed entries for the return vs param positions,
+        // even though both cross ffi2 as an out-buffer/by-pointer ptr_t.
+        assert!(
+            out.contains("(define-aw-msg aw_racket_msg_0_R (-> ptr_t ptr_t ptr_t void_t))"),
+            "struct-return binding (out-buffer + void result):\n{out}"
+        );
+        assert!(
+            out.contains("(define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))"),
+            "struct-param binding:\n{out}"
+        );
+
+        // Getter: allocate a cstruct out-buffer, write through it natively, hand
+        // back the `_NSRect` cstruct (the established `ffi/unsafe` rep).
+        assert!(
+            out.contains("(let ([buf (malloc _NSRect)])"),
+            "getter allocates cstruct out-buffer:\n{out}"
+        );
+        assert!(
+            out.contains("(aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"frame\")) (cpointer->ptr_t buf))"),
+            "getter passes out-buffer pointer to native entry:\n{out}"
+        );
+        assert!(
+            out.contains("(ptr-ref buf _NSRect)))"),
+            "getter hands back the cstruct:\n{out}"
+        );
+
+        // Setter: the cstruct value's pointer crosses as ptr_t.
+        assert!(
+            out.contains("(aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"setFrame:\")) (id->ffi2-ptr value))"),
+            "setter bridges struct param by pointer:\n{out}"
+        );
+
+        // type-mapping.rkt require is present (for the cstruct + malloc/ptr-ref).
+        assert!(
+            out.contains("\"../../runtime/type-mapping.rkt\""),
+            "struct file requires type-mapping.rkt:\n{out}"
+        );
+    }
+
+    #[test]
+    fn native_dispatch_struct_return_method() {
+        // A struct-returning instance method (not a property) routes the same way.
+        let cls = Class {
+            name: "TKView".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "convertedFrame",
+                false,
+                false,
+                vec![],
+                type_nsrect(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+        assert!(
+            out.contains("(let ([buf (malloc _NSRect)])"),
+            "struct-return method allocates out-buffer:\n{out}"
+        );
+        assert!(
+            out.contains("(aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"convertedFrame\")) (cpointer->ptr_t buf))"),
+            "struct-return method routes natively:\n{out}"
+        );
+        assert!(
+            out.contains("(ptr-ref buf _NSRect)))"),
+            "struct-return method hands back the cstruct:\n{out}"
+        );
     }
 }

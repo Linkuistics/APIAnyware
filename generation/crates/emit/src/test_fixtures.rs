@@ -152,6 +152,21 @@ fn type_class_nullable(name: &str) -> TypeRef {
     }
 }
 
+/// A geometry struct passed/returned by value (e.g. `NSRect`). libclang
+/// classifies these typedefs as aliases, so the FFI mapper recognises them via
+/// `TypeRefKind::Alias` → `_NSRect` (see `ffi_type_mapping`). Exercises the
+/// struct-by-value native dispatch path (leaf 050/020).
+fn type_struct(name: &str) -> TypeRef {
+    TypeRef {
+        nullable: false,
+        kind: TypeRefKind::Alias {
+            name: name.to_string(),
+            framework: None,
+            underlying_primitive: None,
+        },
+    }
+}
+
 fn type_pointer() -> TypeRef {
     TypeRef {
         nullable: false,
@@ -262,7 +277,7 @@ fn build_tkview() -> Class {
             property("title", type_class_nullable("NSString"), false),
             property("hidden", type_bool(), false),
             property("tag", type_int(), false),
-            property("frame", type_class("NSRect"), true),
+            property("frame", type_struct("NSRect"), false),
         ],
         methods: vec![
             method("init", false, true, vec![], type_instancetype()),
@@ -270,7 +285,7 @@ fn build_tkview() -> Class {
                 "initWithFrame:",
                 false,
                 true,
-                vec![param("frame", type_class("NSRect"))],
+                vec![param("frame", type_struct("NSRect"))],
                 type_instancetype(),
             ),
             // Instance method returning void — should use `tell` dispatch
@@ -349,7 +364,7 @@ fn build_tkbutton() -> Class {
             property("title", type_class_nullable("NSString"), false),
             property("hidden", type_bool(), false),
             property("tag", type_int(), false),
-            property("frame", type_class("NSRect"), true),
+            property("frame", type_struct("NSRect"), false),
         ],
     }
 }

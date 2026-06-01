@@ -101,10 +101,11 @@ impl SignatureMap {
 }
 
 /// Collect the typed signatures that do **not** route through the generated
-/// native dispatch table (ADR-0013) — i.e. struct-by-value or C-string shapes —
-/// and so keep the retained `get-ffi-obj` fallback path. The returned
-/// [`SignatureMap`] numbers only these, so `_msg-N` ids stay contiguous after the
-/// routable signatures move to `define-aw-msg` native bindings.
+/// native dispatch table (ADR-0013) — since leaf 050/020 that is C-string shapes
+/// and *unknown* (non-geometry) structs; the geometry struct family now routes
+/// natively by value. These keep the retained `get-ffi-obj` fallback path. The
+/// returned [`SignatureMap`] numbers only these, so `_msg-N` ids stay contiguous
+/// after the routable signatures move to `define-aw-msg` native bindings.
 ///
 /// This is [`collect_class_signatures`] minus every signature
 /// [`crate::native_dispatch::is_routable`] accepts; the two share the same

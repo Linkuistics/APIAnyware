@@ -8,7 +8,8 @@
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
-         "../../runtime/block.rkt")
+         "../../runtime/block.rkt"
+         "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/TestKit.framework/TestKit"))
@@ -16,7 +17,6 @@
 
 
 ;; --- Class predicates ---
-(define (nsrect? v) (objc-instance-of? v "NSRect"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (tkbutton? v) (objc-instance-of? v "TKButton"))
 (provide TKButton)
@@ -28,7 +28,8 @@
   [tkbutton-set-hidden! (c-> tkbutton? boolean? void?)]
   [tkbutton-tag (c-> tkbutton? exact-integer?)]
   [tkbutton-set-tag! (c-> tkbutton? exact-integer? void?)]
-  [tkbutton-frame (c-> tkbutton? (or/c nsrect? objc-nil?))]
+  [tkbutton-frame (c-> tkbutton? any/c)]
+  [tkbutton-set-frame! (c-> tkbutton? any/c void?)]
   [tkbutton-dealloc (c-> tkbutton? void?)]
   [tkbutton-description (c-> tkbutton? (or/c nsstring? objc-nil?))]
   [tkbutton-set-needs-display! (c-> tkbutton? void?)]
@@ -42,11 +43,13 @@
 (define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_R (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_dP_v (-> ptr_t ptr_t double_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 
 ;; --- Constructors ---
 (define (make-tkbutton)
@@ -70,8 +73,11 @@
 (define (tkbutton-set-tag! self value)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTag:")) value))
 (define (tkbutton-frame self)
-  (wrap-objc-object
-   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frame"))))))
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frame")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (tkbutton-set-frame! self value)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrame:")) (id->ffi2-ptr value)))
 
 ;; --- Instance methods ---
 (define (tkbutton-dealloc self)

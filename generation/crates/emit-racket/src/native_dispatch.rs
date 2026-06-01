@@ -24,12 +24,27 @@
 //!   concrete `@convention(c)` shape — the shipped form of the spike's `aw_t_*`
 //!   C entries.
 //!
-//! **Depth-0 scope (leaf 040).** Only *non-struct* signatures route natively in
-//! this leaf — scalars, floats, pointers, objects (the bulk). Struct-by-value
-//! params/returns (`_NSRect` & co.) keep the existing typed `get-ffi-obj` path;
-//! their out-buffer marshalling is leaf 050's headline (design spec §3). The
-//! single libffi generic dispatcher (spec §6) is the escape hatch for anything
-//! the emitter cannot type statically; variadics are already filtered upstream.
+//! **Struct-by-value (leaf 050/020).** The geometry family (`_NSRect`, `_NSPoint`,
+//! `_NSSize`, `_NSRange`, `_NSEdgeInsets`, `_NSDirectionalEdgeInsets`,
+//! `_NSAffineTransformStruct`, `_CGAffineTransform`, `_CGVector`) now routes
+//! natively too — the §3 "Depth 1" 8× headline (struct return ~90 ns in-Racket →
+//! ~11 ns native). The two stacked ABI problems are split: the generated `@_cdecl`
+//! entry casts `objc_msgSend` to the *concrete* struct-returning/-taking
+//! `@convention(c)` shape (the Swift compiler emits the correct arm64 convention —
+//! ≤16 B in regs, HFAs in `v0–v3`, larger via the `x8` indirect pointer — so we
+//! sidestep the `objc_msgSend_stret` minefield), and **ffi2 only ever sees an
+//! opaque `ptr_t`** to the struct's bytes: a struct *param* crosses as a pointer to
+//! the caller's cstruct, a struct *return* as a caller-allocated out-buffer pointer
+//! the entry writes into (the spike's `aw_t_rectfor` convention, FINDINGS.md §1b).
+//! The emitter hands back the existing `ffi/unsafe` `_NSRect`-family cstruct
+//! ([`crate::emit_class`] `malloc` + `ptr-ref`), keeping one struct representation
+//! across the whole binding (functions, `make-nsrect`, accessors) rather than
+//! introducing a divergent ffi2 `struct_t`. The entry name still encodes the struct
+//! identity (one code char per shape) so distinct struct casts get distinct
+//! entries. *Unknown* (non-geometry) structs and C strings stay non-routable (the
+//! `from_ffi_unsafe` `None` arm) and keep the retained `get-ffi-obj` fallback — the
+//! escape hatch for shapes the emitter cannot lay out statically (spec §6/§8.2);
+//! variadics are already filtered upstream.
 
 use std::collections::BTreeSet;
 
@@ -43,14 +58,118 @@ use crate::method_filter::{all_params_are_object_type, is_supported_method};
 /// hermetic isolation — the library owns its full symbol surface).
 pub const ENTRY_PREFIX: &str = "aw_racket_msg_";
 
+/// One of the known geometry structs that crosses the native dispatch seam
+/// by value (the closed set the `ffi_type_mapping` mapper recognises).
+///
+/// Each carries three facets the dispatch generator needs: a unique [`code`] char
+/// for the content-addressed entry name (so two distinct struct casts never share
+/// an entry); the concrete Swift type the generated `@_cdecl` entry casts
+/// `objc_msgSend` to (real CoreGraphics/Foundation/AppKit types — guaranteed C
+/// layout and arm64 ABI, unlike a hand-rolled Swift struct whose field order Swift
+/// may reorder); and the `ffi/unsafe` cstruct spelling ([`racket_cstruct`]) the
+/// emitter `malloc`s / `ptr-ref`s, matching `runtime/type-mapping.rkt`.
+///
+/// [`code`]: GeoStruct::code
+/// [`racket_cstruct`]: GeoStruct::racket_cstruct
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum GeoStruct {
+    NSRect,
+    NSPoint,
+    NSSize,
+    NSRange,
+    NSEdgeInsets,
+    NSDirectionalEdgeInsets,
+    NSAffineTransformStruct,
+    CGAffineTransform,
+    CGVector,
+}
+
+impl GeoStruct {
+    /// Parse the Racket `ffi/unsafe` cstruct spelling (`_NSRect`, …) — the output
+    /// of [`apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper`] for the
+    /// geometry typedefs — into a known struct, or `None`.
+    pub fn from_ffi_unsafe(spelling: &str) -> Option<GeoStruct> {
+        Some(match spelling {
+            "_NSRect" => GeoStruct::NSRect,
+            "_NSPoint" => GeoStruct::NSPoint,
+            "_NSSize" => GeoStruct::NSSize,
+            "_NSRange" => GeoStruct::NSRange,
+            "_NSEdgeInsets" => GeoStruct::NSEdgeInsets,
+            "_NSDirectionalEdgeInsets" => GeoStruct::NSDirectionalEdgeInsets,
+            "_NSAffineTransformStruct" => GeoStruct::NSAffineTransformStruct,
+            "_CGAffineTransform" => GeoStruct::CGAffineTransform,
+            "_CGVector" => GeoStruct::CGVector,
+            _ => return None,
+        })
+    }
+
+    /// The single-character entry-name code. Chosen from the uppercase letters the
+    /// scalar codes do *not* use (`P`/`C`/`S`/`I`/`Q` are taken), so a struct code
+    /// never collides with a scalar code in the concatenated entry name. Asserted
+    /// collision-free against the full code space in [`tests`].
+    fn code(self) -> char {
+        match self {
+            GeoStruct::NSRect => 'R',
+            GeoStruct::NSPoint => 'O',
+            GeoStruct::NSSize => 'Z',
+            GeoStruct::NSRange => 'G',
+            GeoStruct::NSEdgeInsets => 'E',
+            GeoStruct::NSDirectionalEdgeInsets => 'D',
+            GeoStruct::NSAffineTransformStruct => 'A',
+            GeoStruct::CGAffineTransform => 'T',
+            GeoStruct::CGVector => 'V',
+        }
+    }
+
+    /// The Swift type the generated entry casts `objc_msgSend` to. These are the
+    /// real framework types (guaranteed layout + arm64 ABI); the out-buffer /
+    /// caller cstruct must be byte-identical (it is — same field order and widths).
+    fn swift_type(self) -> &'static str {
+        match self {
+            GeoStruct::NSRect => "CGRect",
+            GeoStruct::NSPoint => "CGPoint",
+            GeoStruct::NSSize => "CGSize",
+            GeoStruct::NSRange => "NSRange",
+            GeoStruct::NSEdgeInsets => "NSEdgeInsets",
+            GeoStruct::NSDirectionalEdgeInsets => "NSDirectionalEdgeInsets",
+            GeoStruct::NSAffineTransformStruct => "NSAffineTransformStruct",
+            GeoStruct::CGAffineTransform => "CGAffineTransform",
+            GeoStruct::CGVector => "CGVector",
+        }
+    }
+
+    /// The `ffi/unsafe` cstruct spelling (`runtime/type-mapping.rkt`) the emitter
+    /// `malloc`s for a struct return and `ptr-ref`s back, and that a struct param's
+    /// value already carries. The inverse of [`from_ffi_unsafe`].
+    ///
+    /// [`from_ffi_unsafe`]: GeoStruct::from_ffi_unsafe
+    pub fn racket_cstruct(self) -> &'static str {
+        match self {
+            GeoStruct::NSRect => "_NSRect",
+            GeoStruct::NSPoint => "_NSPoint",
+            GeoStruct::NSSize => "_NSSize",
+            GeoStruct::NSRange => "_NSRange",
+            GeoStruct::NSEdgeInsets => "_NSEdgeInsets",
+            GeoStruct::NSDirectionalEdgeInsets => "_NSDirectionalEdgeInsets",
+            GeoStruct::NSAffineTransformStruct => "_NSAffineTransformStruct",
+            GeoStruct::CGAffineTransform => "_CGAffineTransform",
+            GeoStruct::CGVector => "_CGVector",
+        }
+    }
+}
+
 /// One ABI shape a `_fun` argument/result collapses to.
 ///
 /// This is deliberately coarser than the Racket FFI spelling: every pointer-like
 /// spelling (`_id`, `_pointer`, `_string`, selector, block) is one [`Ptr`], because
 /// at the machine-call level they are one register-width pointer. The richer
-/// distinction survives in the emitter's ffi2 binding, not here.
+/// distinction survives in the emitter's ffi2 binding, not here. The exception is
+/// [`Struct`]: the geometry family crosses ffi2 as a `ptr_t` too, but each shape
+/// keeps its identity here because the native entry's `objc_msgSend` cast is
+/// struct-specific (so distinct shapes need distinct entries).
 ///
 /// [`Ptr`]: AbiType::Ptr
+/// [`Struct`]: AbiType::Struct
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AbiType {
     Ptr,
@@ -65,6 +184,8 @@ pub enum AbiType {
     UInt64,
     Float,
     Double,
+    /// A geometry struct passed/returned by value (crosses ffi2 as a `ptr_t`).
+    Struct(GeoStruct),
     /// Valid only as a return type.
     Void,
 }
@@ -72,8 +193,8 @@ pub enum AbiType {
 impl AbiType {
     /// Parse a Racket `ffi/unsafe` spelling (as produced by
     /// [`apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper`]) into an
-    /// ABI shape. Returns `None` for struct-by-value spellings (`_NSRect` & co.)
-    /// — those do not route natively in this leaf (Depth-0; see module docs).
+    /// ABI shape. Returns `None` for C strings and any unrecognised spelling —
+    /// those do not route natively (the retained `get-ffi-obj` escape hatch).
     pub fn from_ffi_unsafe(spelling: &str) -> Option<AbiType> {
         Some(match spelling {
             // Genuinely-opaque pointer-likes (object, raw pointer, selector)
@@ -81,8 +202,8 @@ impl AbiType {
             // `_string` (C `char*`) is deliberately *not* here: routing it would
             // either collide on the content-addressed entry name (a `string_t`
             // and a `ptr_t` binding sharing one symbol) or need `char*<->string`
-            // marshalling — both Depth-1/leaf-050 concerns. So `_string` signatures
-            // stay on the existing typed path (falls through to the `None` arm).
+            // marshalling — both Depth-2/leaf-050/030 concerns. So `_string`
+            // signatures stay on the existing typed path (`None` arm).
             "_id" | "_pointer" => AbiType::Ptr,
             "_bool" => AbiType::Bool,
             "_int8" => AbiType::Int8,
@@ -96,8 +217,13 @@ impl AbiType {
             "_float" => AbiType::Float,
             "_double" => AbiType::Double,
             "_void" => AbiType::Void,
-            // `_NSRect`, `_NSPoint`, … and anything unrecognised: not routable.
-            _ => return None,
+            // Geometry structs (`_NSRect`, `_NSPoint`, …) cross by value — native
+            // owns the arm64 struct convention, ffi2 sees a `ptr_t` (leaf 050/020).
+            other => match GeoStruct::from_ffi_unsafe(other) {
+                Some(g) => AbiType::Struct(g),
+                // Unknown structs and anything unrecognised: not routable.
+                None => return None,
+            },
         })
     }
 
@@ -117,15 +243,19 @@ impl AbiType {
             AbiType::UInt64 => 'Q',
             AbiType::Float => 'f',
             AbiType::Double => 'd',
+            AbiType::Struct(g) => g.code(),
             AbiType::Void => 'v',
         }
     }
 
-    /// The ffi2 type spelling for this ABI shape, used in the emitter's
-    /// `define-aw-msg` binding arrow. Pointer-likes are the opaque `ptr_t`.
+    /// The ffi2 type spelling for this ABI shape in a *parameter* position of the
+    /// emitter's `define-aw-msg` binding arrow. Pointer-likes — and structs, which
+    /// cross as a pointer to their bytes — are the opaque `ptr_t`. (A struct
+    /// *return* is special: it crosses as a trailing out-buffer `ptr_t` with a
+    /// `void_t` result; see [`NativeSig::ffi2_arrow`].)
     fn ffi2_type(self) -> &'static str {
         match self {
-            AbiType::Ptr => "ptr_t",
+            AbiType::Ptr | AbiType::Struct(_) => "ptr_t",
             AbiType::Bool => "bool_t",
             AbiType::Int8 => "int8_t",
             AbiType::UInt8 => "uint8_t",
@@ -141,8 +271,11 @@ impl AbiType {
         }
     }
 
-    /// The Swift type for this ABI shape in a `@convention(c)` / `@_cdecl`
-    /// signature. `Void` has no parameter form (filtered before use).
+    /// The Swift type for this ABI shape in the **`@convention(c)` cast** of
+    /// `objc_msgSend` — i.e. the *real* method ABI. `Struct` is the concrete
+    /// by-value geometry type (so the compiler emits the arm64 struct convention);
+    /// the `@_cdecl` boundary itself crosses structs as raw pointers, handled in
+    /// [`emit_one_entry`]. `Void` has no parameter form (filtered before use).
     fn swift_type(self) -> &'static str {
         match self {
             AbiType::Ptr => "UnsafeMutableRawPointer?",
@@ -157,8 +290,14 @@ impl AbiType {
             AbiType::UInt64 => "UInt64",
             AbiType::Float => "Float",
             AbiType::Double => "Double",
+            AbiType::Struct(g) => g.swift_type(),
             AbiType::Void => "Void",
         }
+    }
+
+    /// Whether this shape is a by-value geometry struct.
+    fn is_struct(self) -> bool {
+        matches!(self, AbiType::Struct(_))
     }
 }
 
@@ -190,18 +329,36 @@ impl NativeSig {
     /// The ffi2 binding arrow for `(define-aw-msg <entry> <arrow>)`:
     /// `(-> ptr_t ptr_t <param ffi2 types…> <ret ffi2 type>)`. The two leading
     /// `ptr_t`s are the implicit `self` + `_cmd`.
+    ///
+    /// A **struct return** crosses as a caller-allocated out-buffer: the arrow
+    /// gains a trailing `ptr_t` parameter (the buffer) and its result becomes
+    /// `void_t` (the entry writes through the pointer rather than returning the
+    /// struct). Struct *params* are already `ptr_t` (see [`AbiType::ffi2_type`]).
     pub fn ffi2_arrow(&self) -> String {
         let mut parts = vec!["ptr_t".to_string(), "ptr_t".to_string()];
         for p in &self.params {
             parts.push(p.ffi2_type().to_string());
         }
-        parts.push(self.ret.ffi2_type().to_string());
+        if self.ret.is_struct() {
+            parts.push("ptr_t".to_string()); // out-buffer
+            parts.push("void_t".to_string());
+        } else {
+            parts.push(self.ret.ffi2_type().to_string());
+        }
         format!("(-> {})", parts.join(" "))
+    }
+
+    /// Whether this signature returns a struct by value (out-buffer convention).
+    pub fn ret_is_struct(&self) -> bool {
+        self.ret.is_struct()
     }
 
     /// The stable, content-addressed C entry name, e.g. `aw_racket_msg_PQ_v`
     /// (`(_id _uint64) -> _void`). A no-arg signature uses `0` for the empty
-    /// parameter list: `aw_racket_msg_0_Q` (`() -> _uint64`).
+    /// parameter list: `aw_racket_msg_0_Q` (`() -> _uint64`). A struct return
+    /// carries its struct code in the result position (`aw_racket_msg_0_R` for
+    /// `() -> _NSRect`), distinguishing distinct struct casts even though both
+    /// cross ffi2 via an out-buffer `ptr_t`.
     pub fn entry_name(&self) -> String {
         let params: String = if self.params.is_empty() {
             "0".to_string()
@@ -216,29 +373,16 @@ impl NativeSig {
 /// from the Racket `ffi/unsafe` param/return spellings the emitter already has.
 ///
 /// Returns `(entry_name, ffi2_arrow)` or `None` if the signature is not routable
-/// (struct or C-string token — those keep the existing typed path). For routable
-/// signatures every pointer-like is a bare `ptr_t` and every scalar its plain
-/// ffi2 type, so the arrow is built mechanically via [`ffi_unsafe_to_ffi2`] with
-/// no second mapper pass. The two leading `ptr_t`s are the implicit `self`+`_cmd`.
-///
-/// [`ffi_unsafe_to_ffi2`]: apianyware_macos_emit::ffi_type_mapping::ffi_unsafe_to_ffi2
+/// (C-string token or unknown struct — those keep the existing typed path). The
+/// entry name and arrow are both pure functions of the parsed [`NativeSig`], so
+/// they stay in lockstep with [`generate_dispatch_swift`]'s output and the
+/// out-buffer convention for struct returns ([`NativeSig::ffi2_arrow`]).
 pub fn native_dispatch_binding(
     param_spellings: &[String],
     ret_spelling: &str,
 ) -> Option<(String, String)> {
-    use apianyware_macos_emit::ffi_type_mapping::ffi_unsafe_to_ffi2;
-
     let sig = NativeSig::from_ffi_unsafe(param_spellings, ret_spelling)?;
-    let entry = sig.entry_name();
-
-    let mut arrow_types = vec!["ptr_t".to_string(), "ptr_t".to_string()];
-    for p in param_spellings {
-        arrow_types.push(ffi_unsafe_to_ffi2(p));
-    }
-    arrow_types.push(ffi_unsafe_to_ffi2(ret_spelling));
-    let arrow = format!("(-> {})", arrow_types.join(" "));
-
-    Some((entry, arrow))
+    Some((sig.entry_name(), sig.ffi2_arrow()))
 }
 
 /// Whether a typed signature routes through the generated native dispatch table
@@ -342,9 +486,12 @@ pub fn collect_global_signatures(
 /// `objc_msgSend` to the concrete `@convention(c)` shape and calling it.
 ///
 /// `self` and `_cmd` are the two leading `UnsafeMutableRawPointer?` parameters;
-/// the signature's `params` follow. The result is returned directly (the
-/// out-buffer convention the spike used for *struct* returns is a leaf-050
-/// concern — struct signatures never reach here, see [`AbiType::from_ffi_unsafe`]).
+/// the signature's `params` follow. Scalar/pointer results are returned directly.
+/// A **struct return** uses the spike's out-buffer convention: the entry takes a
+/// trailing `out` pointer, returns `Void`, and writes the by-value struct result
+/// through it. A **struct param** is received as a raw pointer and loaded to the
+/// by-value Swift struct before the call — so the `objc_msgSend` cast always sees
+/// the real arm64 struct convention while ffi2 only ever passes `ptr_t`s.
 pub fn generate_dispatch_swift(sigs: &BTreeSet<NativeSig>) -> String {
     let mut s = String::new();
     s.push_str("// Generated typed Objective-C dispatch entries (ADR-0013).\n");
@@ -354,7 +501,11 @@ pub fn generate_dispatch_swift(sigs: &BTreeSet<NativeSig>) -> String {
     s.push_str("// in the generated Racket class files. See:\n");
     s.push_str("//   docs/specs/2026-05-31-racket-native-binding-design.md §2\n");
     s.push_str("//   docs/adr/0013-generated-typed-native-dispatch.md\n\n");
-    s.push_str("import Darwin // dlsym, RTLD_DEFAULT\n\n");
+    s.push_str("import Darwin // dlsym, RTLD_DEFAULT\n");
+    s.push_str("// AppKit re-exports Foundation + CoreGraphics: the by-value geometry struct\n");
+    s.push_str("// types (CGRect, CGPoint, NSRange, NSEdgeInsets, NSAffineTransformStruct, …)\n");
+    s.push_str("// the struct-by-value entries cast objc_msgSend to (leaf 050/020).\n");
+    s.push_str("import AppKit\n\n");
     s.push_str("// objc_msgSend is marked unavailable in Swift's ObjectiveC overlay, so we\n");
     s.push_str("// resolve the symbol at load time and cast per call site. RTLD_DEFAULT is\n");
     s.push_str("// (void *)-2 on Darwin. `nonisolated(unsafe)` matches the codebase's other\n");
@@ -382,51 +533,97 @@ pub fn generate_dispatch_swift(sigs: &BTreeSet<NativeSig>) -> String {
 fn emit_one_entry(s: &mut String, sig: &NativeSig) {
     let name = sig.entry_name();
 
-    // The convention(c) function-pointer type that objc_msgSend is cast to.
-    // Leading two pointers are self + _cmd.
-    let mut conv_args = vec!["UnsafeMutableRawPointer?", "UnsafeMutableRawPointer?"];
+    // The convention(c) function-pointer type objc_msgSend is cast to — the *real*
+    // method ABI. Leading two pointers are self + _cmd; struct params/return are
+    // the concrete by-value Swift geometry types (so the compiler emits the arm64
+    // struct convention). This is unaffected by the @_cdecl boundary shaping below.
+    let mut conv_args = vec![
+        "UnsafeMutableRawPointer?".to_string(),
+        "UnsafeMutableRawPointer?".to_string(),
+    ];
     for p in &sig.params {
-        conv_args.push(p.swift_type());
+        conv_args.push(p.swift_type().to_string());
     }
-    let conv_ret = sig.ret.swift_type();
 
-    // The @_cdecl entry's own parameter list (named).
+    // The @_cdecl entry's own parameter list (named) and the call's argument list.
+    // Struct params cross the @_cdecl boundary as raw pointers, loaded to the
+    // by-value Swift struct before the cast call.
     let mut decl_params = vec![
         "_ recv: UnsafeMutableRawPointer?".to_string(),
         "_ sel: UnsafeMutableRawPointer?".to_string(),
     ];
     let mut call_args = vec!["recv".to_string(), "sel".to_string()];
+    let mut prelude = String::new();
     for (i, p) in sig.params.iter().enumerate() {
-        decl_params.push(format!("_ a{i}: {}", p.swift_type()));
-        call_args.push(format!("a{i}"));
+        match p {
+            AbiType::Struct(g) => {
+                decl_params.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
+                prelude.push_str(&format!(
+                    "  let s{i} = a{i}!.assumingMemoryBound(to: {}.self).pointee\n",
+                    g.swift_type()
+                ));
+                call_args.push(format!("s{i}"));
+            }
+            _ => {
+                decl_params.push(format!("_ a{i}: {}", p.swift_type()));
+                call_args.push(format!("a{i}"));
+            }
+        }
     }
 
     s.push_str(&format!("@_cdecl(\"{name}\")\n"));
-    if sig.ret == AbiType::Void {
-        s.push_str(&format!("public func {name}({}) {{\n", decl_params.join(", ")));
-        s.push_str(&format!(
-            "  typealias Fn = @convention(c) ({}) -> Void\n",
-            conv_args.join(", ")
-        ));
-        s.push_str(&format!(
-            "  unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
-            call_args.join(", ")
-        ));
-        s.push_str("}\n");
-    } else {
-        s.push_str(&format!(
-            "public func {name}({}) -> {conv_ret} {{\n",
-            decl_params.join(", ")
-        ));
-        s.push_str(&format!(
-            "  typealias Fn = @convention(c) ({}) -> {conv_ret}\n",
-            conv_args.join(", ")
-        ));
-        s.push_str(&format!(
-            "  return unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
-            call_args.join(", ")
-        ));
-        s.push_str("}\n");
+    match sig.ret {
+        AbiType::Void => {
+            s.push_str(&format!("public func {name}({}) {{\n", decl_params.join(", ")));
+            s.push_str(&prelude);
+            s.push_str(&format!(
+                "  typealias Fn = @convention(c) ({}) -> Void\n",
+                conv_args.join(", ")
+            ));
+            s.push_str(&format!(
+                "  unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
+                call_args.join(", ")
+            ));
+            s.push_str("}\n");
+        }
+        AbiType::Struct(g) => {
+            // Out-buffer convention: an extra trailing pointer the caller allocated;
+            // the cast call returns the struct by value and we write it through.
+            decl_params.push("_ out: UnsafeMutableRawPointer?".to_string());
+            s.push_str(&format!("public func {name}({}) {{\n", decl_params.join(", ")));
+            s.push_str(&prelude);
+            s.push_str(&format!(
+                "  typealias Fn = @convention(c) ({}) -> {}\n",
+                conv_args.join(", "),
+                g.swift_type()
+            ));
+            s.push_str(&format!(
+                "  let r = unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
+                call_args.join(", ")
+            ));
+            s.push_str(&format!(
+                "  out!.assumingMemoryBound(to: {}.self).pointee = r\n",
+                g.swift_type()
+            ));
+            s.push_str("}\n");
+        }
+        scalar => {
+            let conv_ret = scalar.swift_type();
+            s.push_str(&format!(
+                "public func {name}({}) -> {conv_ret} {{\n",
+                decl_params.join(", ")
+            ));
+            s.push_str(&prelude);
+            s.push_str(&format!(
+                "  typealias Fn = @convention(c) ({}) -> {conv_ret}\n",
+                conv_args.join(", ")
+            ));
+            s.push_str(&format!(
+                "  return unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
+                call_args.join(", ")
+            ));
+            s.push_str("}\n");
+        }
     }
 }
 
@@ -444,13 +641,63 @@ mod tests {
     }
 
     #[test]
-    fn abi_parse_rejects_structs_and_strings() {
-        // Structs: out-buffer marshalling is leaf 050.
-        assert_eq!(AbiType::from_ffi_unsafe("_NSRect"), None);
-        assert_eq!(AbiType::from_ffi_unsafe("_NSPoint"), None);
-        assert_eq!(AbiType::from_ffi_unsafe("_CGAffineTransform"), None);
-        // C strings: char*<->string marshalling is leaf 050 (see from_ffi_unsafe).
+    fn abi_parse_routes_geometry_structs() {
+        // Geometry structs route by value (leaf 050/020).
+        assert_eq!(
+            AbiType::from_ffi_unsafe("_NSRect"),
+            Some(AbiType::Struct(GeoStruct::NSRect))
+        );
+        assert_eq!(
+            AbiType::from_ffi_unsafe("_NSPoint"),
+            Some(AbiType::Struct(GeoStruct::NSPoint))
+        );
+        assert_eq!(
+            AbiType::from_ffi_unsafe("_CGAffineTransform"),
+            Some(AbiType::Struct(GeoStruct::CGAffineTransform))
+        );
+        // C strings stay non-routable (Depth-2, leaf 050/030).
         assert_eq!(AbiType::from_ffi_unsafe("_string"), None);
+        // An unknown struct also stays non-routable (the escape hatch).
+        assert_eq!(AbiType::from_ffi_unsafe("_NSDecimal"), None);
+    }
+
+    #[test]
+    fn struct_codes_are_collision_free() {
+        // Every struct code must differ from every other struct code AND from
+        // every scalar/pointer/void code, or the concatenated entry name is
+        // ambiguous. Assert uniqueness across the whole code space.
+        let geo = [
+            GeoStruct::NSRect,
+            GeoStruct::NSPoint,
+            GeoStruct::NSSize,
+            GeoStruct::NSRange,
+            GeoStruct::NSEdgeInsets,
+            GeoStruct::NSDirectionalEdgeInsets,
+            GeoStruct::NSAffineTransformStruct,
+            GeoStruct::CGAffineTransform,
+            GeoStruct::CGVector,
+        ];
+        let scalars = [
+            AbiType::Ptr,
+            AbiType::Bool,
+            AbiType::Int8,
+            AbiType::UInt8,
+            AbiType::Int16,
+            AbiType::UInt16,
+            AbiType::Int32,
+            AbiType::UInt32,
+            AbiType::Int64,
+            AbiType::UInt64,
+            AbiType::Float,
+            AbiType::Double,
+            AbiType::Void,
+        ];
+        let mut codes: Vec<char> = scalars.iter().map(|t| t.code()).collect();
+        codes.extend(geo.iter().map(|g| g.code()));
+        let mut deduped = codes.clone();
+        deduped.sort_unstable();
+        deduped.dedup();
+        assert_eq!(deduped.len(), codes.len(), "code collision: {codes:?}");
     }
 
     #[test]
@@ -489,13 +736,78 @@ mod tests {
     }
 
     #[test]
-    fn struct_signatures_do_not_route() {
-        // A struct param or return makes the whole signature non-routable.
-        assert_eq!(
-            NativeSig::from_ffi_unsafe(&["_NSRect".into()], "_void"),
-            None
+    fn struct_signatures_route_with_identity_encoded() {
+        // Struct return: identity in the result code, out-buffer in the arrow.
+        let (entry, arrow) = native_dispatch_binding(&[], "_NSRect").unwrap();
+        assert_eq!(entry, "aw_racket_msg_0_R");
+        // out-buffer ptr_t before the void_t result.
+        assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t void_t)");
+
+        // Struct param (e.g. setFrame:): crosses as ptr_t, identity in the param
+        // code. void return (no out-buffer).
+        let (entry, arrow) = native_dispatch_binding(&["_NSRect".into()], "_void").unwrap();
+        assert_eq!(entry, "aw_racket_msg_R_v");
+        assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t void_t)");
+
+        // Distinct struct shapes get distinct entries even though both cross as
+        // an out-buffer ptr_t — the cast differs (CGRect vs CGPoint).
+        let (rect, _) = native_dispatch_binding(&[], "_NSRect").unwrap();
+        let (point, _) = native_dispatch_binding(&[], "_NSPoint").unwrap();
+        assert_ne!(rect, point);
+        assert_eq!(point, "aw_racket_msg_0_O");
+
+        // Struct param + struct return + object arg (e.g. -adjustRect:context:).
+        let (entry, arrow) =
+            native_dispatch_binding(&["_NSRect".into(), "_id".into()], "_NSRect").unwrap();
+        assert_eq!(entry, "aw_racket_msg_RP_R");
+        assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t)");
+    }
+
+    #[test]
+    fn generated_swift_struct_return_uses_out_buffer() {
+        let mut sigs = BTreeSet::new();
+        sigs.insert(NativeSig::from_ffi_unsafe(&[], "_NSRect").unwrap()); // -frame
+        let swift = generate_dispatch_swift(&sigs);
+        assert!(swift.contains("import AppKit"), "imports:\n{swift}");
+        assert!(
+            swift.contains(
+                "public func aw_racket_msg_0_R(_ recv: UnsafeMutableRawPointer?, _ sel: UnsafeMutableRawPointer?, _ out: UnsafeMutableRawPointer?)"
+            ),
+            "struct-return decl with out-buffer:\n{swift}"
         );
-        assert_eq!(NativeSig::from_ffi_unsafe(&[], "_NSRect"), None);
+        assert!(
+            swift.contains("typealias Fn = @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> CGRect"),
+            "cast to concrete CGRect:\n{swift}"
+        );
+        assert!(
+            swift.contains("out!.assumingMemoryBound(to: CGRect.self).pointee = r"),
+            "writes result through out-buffer:\n{swift}"
+        );
+    }
+
+    #[test]
+    fn generated_swift_struct_param_loads_pointee() {
+        let mut sigs = BTreeSet::new();
+        sigs.insert(NativeSig::from_ffi_unsafe(&["_NSRect".into()], "_void").unwrap()); // setFrame:
+        let swift = generate_dispatch_swift(&sigs);
+        assert!(
+            swift.contains(
+                "public func aw_racket_msg_R_v(_ recv: UnsafeMutableRawPointer?, _ sel: UnsafeMutableRawPointer?, _ a0: UnsafeMutableRawPointer?)"
+            ),
+            "struct-param decl as raw pointer:\n{swift}"
+        );
+        assert!(
+            swift.contains("let s0 = a0!.assumingMemoryBound(to: CGRect.self).pointee"),
+            "loads struct param to by-value before call:\n{swift}"
+        );
+        assert!(
+            swift.contains("typealias Fn = @convention(c) (UnsafeMutableRawPointer?, UnsafeMutableRawPointer?, CGRect) -> Void"),
+            "cast takes CGRect by value:\n{swift}"
+        );
+        assert!(
+            swift.contains("unsafeBitCast(_awMsgSend, to: Fn.self)(recv, sel, s0)"),
+            "passes loaded struct value:\n{swift}"
+        );
     }
 
     #[test]
@@ -540,9 +852,10 @@ mod tests {
         assert_eq!(entry, "aw_racket_msg_PQ_v");
         assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t uint64_t void_t)");
 
-        // struct / string signatures do not produce a binding.
-        assert!(native_dispatch_binding(&["_NSRect".into()], "_void").is_none());
+        // string / unknown-struct signatures do not produce a binding (escape
+        // hatch); known geometry structs do (see struct_signatures_route_*).
         assert!(native_dispatch_binding(&[], "_string").is_none());
+        assert!(native_dispatch_binding(&["_NSDecimal".into()], "_void").is_none());
     }
 
     #[test]
@@ -550,5 +863,36 @@ mod tests {
         let swift = generate_dispatch_swift(&BTreeSet::new());
         assert!(swift.contains("import Darwin"));
         assert!(swift.contains("0 generated dispatch entries."));
+    }
+
+    /// Opt-in: write the `Dispatch.swift` the synthetic **TestKit** framework
+    /// generates (the only local witness — real-framework IR is gitignored) to the
+    /// real Generated/ path, so the worktree's dylib matches the committed TestKit
+    /// golden's `define-aw-msg` entries (incl. the struct-by-value `aw_racket_msg_*_R`
+    /// / `aw_racket_msg_R_*`) and `swift build` confirms they compile against the
+    /// real CoreGraphics/Foundation/AppKit struct types. Run with:
+    ///   AW_WRITE_DISPATCH=1 cargo test -p apianyware-macos-emit-racket \
+    ///     --lib native_dispatch::tests::write_testkit_dispatch_swift -- --ignored
+    /// then `cd swift && SDKROOT=macosx swift build --target APIAnywareRacket`.
+    /// Gitignored output; not part of CI. Real-framework regen + the dylib-symlink
+    /// repoint + runtime execution are the root-050 leaf's job (040 carryover).
+    #[test]
+    #[ignore]
+    fn write_testkit_dispatch_swift() {
+        use apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper;
+        use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
+
+        if std::env::var("AW_WRITE_DISPATCH").as_deref() != Ok("1") {
+            return;
+        }
+        let fw = build_snapshot_test_framework();
+        let sigs = collect_global_signatures(std::slice::from_ref(&fw), &RacketFfiTypeMapper);
+        let swift = generate_dispatch_swift(&sigs);
+        let out = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../swift/Sources/APIAnywareRacket/Generated/Dispatch.swift"
+        );
+        std::fs::write(out, swift).expect("write Dispatch.swift");
+        eprintln!("wrote TestKit Dispatch.swift ({} entries) to {out}", sigs.len());
     }
 }
