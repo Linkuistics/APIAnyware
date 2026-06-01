@@ -2,7 +2,8 @@
 ;; Generated binding for TKView (TestKit)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -34,11 +35,9 @@
 ;; --- Class reference ---
 (import-class TKView)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer _bool -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool -> _void)))
-(define _msg-1  ; (_fun _pointer _pointer _int64 -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _void)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
+(define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 
 ;; --- Constructors ---
 (define (make-tkview)
@@ -56,11 +55,11 @@
 (define (tkview-hidden self)
   (tell #:type _bool (coerce-arg self) hidden))
 (define (tkview-set-hidden! self value)
-  (_msg-0 (coerce-arg self) (sel_registerName "setHidden:") value))
+  (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setHidden:")) value))
 (define (tkview-tag self)
   (tell #:type _int64 (coerce-arg self) tag))
 (define (tkview-set-tag! self value)
-  (_msg-1 (coerce-arg self) (sel_registerName "setTag:") value))
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTag:")) value))
 (define (tkview-frame self)
   (wrap-objc-object
    (tell (coerce-arg self) frame)))

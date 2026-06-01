@@ -73,3 +73,27 @@ the Racket wrapper trends toward a single coercion-free ffi2 call.
   full rationale: `docs/specs/2026-05-31-racket-native-binding-design.md`.
 - Applies the **ADR-0010** economics (generated bespoke native code per target)
   and is **target-local** under **ADR-0011** (lives in `APIAnywareRacket`).
+
+## Implementation (leaf 040) — the hard-to-reverse specifics
+
+- **Entries are generated *Swift*, not the spike's `.m`.** SwiftPM forbids mixing
+  `.swift` and `.m`/`.c` in one target, so to keep the dispatch table inside the
+  single `APIAnywareRacket` dylib each entry is an `@_cdecl` Swift func that
+  `unsafeBitCast`s `objc_msgSend` to a concrete `@convention(c)` shape (ABI-
+  identical to the spike's C cast). `objc_msgSend` is fetched once via
+  `dlsym(RTLD_DEFAULT, …)` because Swift's ObjectiveC overlay marks it unavailable.
+- **Build order inverts to `generate → swift build`.** The table is written to
+  `swift/Sources/APIAnywareRacket/Generated/Dispatch.swift` (gitignored,
+  reproducible from the IR like the `.rkt` bindings) by
+  `apianyware-macos-generate`, then compiled by `swift build`. A clean checkout
+  therefore runs `generate` before `swift build` — already true for the `.rkt`
+  bindings the entries serve.
+- **Content-addressed names** (`aw_racket_msg_<param-codes>_<ret-code>`) make the
+  entry a pure function of its ABI signature, so per-class emission needs no
+  global counter and the per-signature ffi2 binding (`define-aw-msg`, runtime
+  `ffi2-dispatch.rkt`) is reconstructible anywhere.
+- **Depth-0 boundary (this leaf).** Struct-by-value and C-string signatures are
+  *non-routable* — their out-buffer / `char*<->string` marshalling is the
+  marshalling-depth concern of leaf 050; they keep the retained `get-ffi-obj`
+  path (emitted as `_cprocedure`, since the ffi2 header shadows `ffi/unsafe`'s
+  `->`). The all-object `tell` path is likewise retained (deleted in leaf 060).

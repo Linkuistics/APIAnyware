@@ -123,6 +123,26 @@ impl AbiType {
         }
     }
 
+    /// The ffi2 type spelling for this ABI shape, used in the emitter's
+    /// `define-aw-msg` binding arrow. Pointer-likes are the opaque `ptr_t`.
+    fn ffi2_type(self) -> &'static str {
+        match self {
+            AbiType::Ptr => "ptr_t",
+            AbiType::Bool => "bool_t",
+            AbiType::Int8 => "int8_t",
+            AbiType::UInt8 => "uint8_t",
+            AbiType::Int16 => "int16_t",
+            AbiType::UInt16 => "uint16_t",
+            AbiType::Int32 => "int32_t",
+            AbiType::UInt32 => "uint32_t",
+            AbiType::Int64 => "int64_t",
+            AbiType::UInt64 => "uint64_t",
+            AbiType::Float => "float_t",
+            AbiType::Double => "double_t",
+            AbiType::Void => "void_t",
+        }
+    }
+
     /// The Swift type for this ABI shape in a `@convention(c)` / `@_cdecl`
     /// signature. `Void` has no parameter form (filtered before use).
     fn swift_type(self) -> &'static str {
@@ -167,6 +187,18 @@ impl NativeSig {
         }
         let ret = AbiType::from_ffi_unsafe(ret_spelling)?;
         Some(NativeSig { params, ret })
+    }
+
+    /// The ffi2 binding arrow for `(define-aw-msg <entry> <arrow>)`:
+    /// `(-> ptr_t ptr_t <param ffi2 types…> <ret ffi2 type>)`. The two leading
+    /// `ptr_t`s are the implicit `self` + `_cmd`.
+    pub fn ffi2_arrow(&self) -> String {
+        let mut parts = vec!["ptr_t".to_string(), "ptr_t".to_string()];
+        for p in &self.params {
+            parts.push(p.ffi2_type().to_string());
+        }
+        parts.push(self.ret.ffi2_type().to_string());
+        format!("(-> {})", parts.join(" "))
     }
 
     /// The stable, content-addressed C entry name, e.g. `aw_racket_msg_PQ_v`
