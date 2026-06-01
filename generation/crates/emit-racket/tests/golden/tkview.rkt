@@ -36,6 +36,11 @@
 (import-class TKView)
 
 ;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 
@@ -49,24 +54,25 @@
 ;; --- Properties ---
 (define (tkview-title self)
   (wrap-objc-object
-   (tell (coerce-arg self) title)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "title"))))))
 (define (tkview-set-title! self value)
-  (tell #:type _void (coerce-arg self) setTitle: (coerce-arg value)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTitle:")) (id->ffi2-ptr (coerce-arg value))))
 (define (tkview-hidden self)
-  (tell #:type _bool (coerce-arg self) hidden))
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "hidden"))))
 (define (tkview-set-hidden! self value)
   (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setHidden:")) value))
 (define (tkview-tag self)
-  (tell #:type _int64 (coerce-arg self) tag))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tag"))))
 (define (tkview-set-tag! self value)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTag:")) value))
 (define (tkview-frame self)
   (wrap-objc-object
-   (tell (coerce-arg self) frame)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frame"))))))
 
 ;; --- Instance methods ---
 (define (tkview-dealloc self)
-  (tell #:type _void (coerce-arg self) dealloc))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dealloc"))))
 (define (tkview-description self)
   (wrap-objc-object
-   (tell (coerce-arg self) description)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "description"))))
+   ))

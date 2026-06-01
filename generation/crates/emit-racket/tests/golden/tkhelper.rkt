@@ -2,7 +2,8 @@
 ;; Generated binding for TKHelper (TestKit)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -26,6 +27,10 @@
 ;; --- Class reference ---
 (import-class TKHelper)
 
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
+
 ;; --- Constructors ---
 (define (make-tkhelper)
   (wrap-objc-object
@@ -35,7 +40,8 @@
 
 ;; --- Instance methods ---
 (define (tkhelper-dealloc self)
-  (tell #:type _void (coerce-arg self) dealloc))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dealloc"))))
 (define (tkhelper-description self)
   (wrap-objc-object
-   (tell (coerce-arg self) description)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "description"))))
+   ))

@@ -36,9 +36,7 @@ use std::collections::BTreeSet;
 use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_types::ir::{Class, Framework};
 
-use crate::method_filter::{
-    all_params_are_object_type, dispatch_strategy, is_supported_method, DispatchStrategy,
-};
+use crate::method_filter::{all_params_are_object_type, is_supported_method};
 
 /// The C-ABI prefix every generated native dispatch entry carries. Shares the
 /// `aw_racket_` namespace the rest of `libAPIAnywareRacket` uses (ADR-0011,
@@ -286,12 +284,15 @@ pub fn collect_class_native_sigs(cls: &Class, mapper: &dyn FfiTypeMapper) -> BTr
         }
     }
 
-    // Instance / class methods on the typed msgSend path.
+    // Instance / class methods. Since leaf 050/010 every *routable* signature
+    // dispatches natively — not just the scalar (`TypedMsgSend`) shapes but also
+    // the all-object ones (`_id` collapses to `ptr_t`). Only struct-by-value /
+    // C-string shapes stay non-routable (the `from_ffi_unsafe` `None` arm) and
+    // keep the `get-ffi-obj` fallback. This must mirror `emit_class::emit_method`
+    // exactly, erring toward over-collection (an unused entry is a harmless dead
+    // binding; a missing one is an undefined identifier at Racket load).
     for m in methods {
-        if !m.init_method
-            && is_supported_method(m)
-            && dispatch_strategy(m, mapper) == DispatchStrategy::TypedMsgSend
-        {
+        if !m.init_method && is_supported_method(m) {
             let params: Vec<String> = m
                 .params
                 .iter()
@@ -304,14 +305,17 @@ pub fn collect_class_native_sigs(cls: &Class, mapper: &dyn FfiTypeMapper) -> BTr
         }
     }
 
-    // Typed property setters: non-`_id` value type, `(value) -> _void`.
+    // Property getters (`() -> <type>`) and setters (`(<type>) -> _void`). Both
+    // route natively for every routable shape (objects + scalars) since leaf
+    // 050/010; struct-typed accessors stay non-routable and keep `tell`.
     for p in properties {
+        let ffi_type = mapper.map_type(&p.property_type, false);
+        if let Some(sig) = NativeSig::from_ffi_unsafe(&[], &ffi_type) {
+            sigs.insert(sig);
+        }
         if !p.readonly {
-            let ffi_type = mapper.map_type(&p.property_type, false);
-            if ffi_type != "_id" {
-                if let Some(sig) = NativeSig::from_ffi_unsafe(&[ffi_type], "_void") {
-                    sigs.insert(sig);
-                }
+            if let Some(sig) = NativeSig::from_ffi_unsafe(&[ffi_type], "_void") {
+                sigs.insert(sig);
             }
         }
     }

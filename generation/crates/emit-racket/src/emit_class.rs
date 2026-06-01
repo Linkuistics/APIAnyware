@@ -18,8 +18,7 @@ use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 use crate::emit_functions::map_contract;
 use crate::enrichment_comments::EnrichmentNotes;
 use crate::method_filter::{
-    all_params_are_object_type, dispatch_strategy, is_supported_method, returns_object_type,
-    returns_void, DispatchStrategy,
+    all_params_are_object_type, is_supported_method, returns_object_type, returns_void,
 };
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
@@ -925,16 +924,25 @@ fn emit_property(
     };
     let ffi_type = mapper.map_type(&prop.property_type, false);
 
-    // Getter
-    // Property getters return autoreleased (+0) objects, so #:retained is #f (default).
-    if prop.class_property && ffi_type == "_id" {
-        write_line!(w, "(define ({})", getter_name);
-        write_line!(w, "  (wrap-objc-object");
-        write_line!(w, "   (tell {} {})))", class_name, prop.name);
-    } else if ffi_type == "_id" {
-        write_line!(w, "(define ({} self)", getter_name);
-        write_line!(w, "  (wrap-objc-object");
-        write_line!(w, "   (tell (coerce-arg self) {})))", prop.name);
+    // Getter. Property getters return autoreleased (+0) objects, so no #:retained.
+    // Every routable shape (object + scalar) dispatches natively (ADR-0013) since
+    // leaf 050/010; struct-typed getters stay on the `tell` get-ffi-obj path until
+    // leaf 050/020 marshals structs natively.
+    let getter_params = if prop.class_property { "" } else { " self" };
+    let getter_recv = if prop.class_property {
+        class_name.to_string()
+    } else {
+        "(coerce-arg self)".to_string()
+    };
+    if let Some((entry, _arrow)) = native_dispatch_binding(&[], &ffi_type) {
+        let call = native_call_expr(&entry, &getter_recv, &prop.name, &[], &[]);
+        write_line!(w, "(define ({}{})", getter_name, getter_params);
+        if ffi_type == "_id" {
+            w.line("  (wrap-objc-object");
+            write_line!(w, "   (ffi2-ptr->id {})))", call);
+        } else {
+            write_line!(w, "  {})", native_scalar_result(&call, &ffi_type));
+        }
     } else if prop.class_property {
         write_line!(w, "(define ({})", getter_name);
         write_line!(
@@ -979,26 +987,22 @@ fn emit_property(
             "(coerce-arg self)".to_string()
         };
 
-        // For SEL-typed property setters, wrap value with sel_registerName
+        // For SEL-typed property setters, wrap value with sel_registerName; `_id`
+        // values coerce to the underlying object pointer before the ptr_t bridge.
         let is_sel_prop = matches!(prop.property_type.kind, TypeRefKind::Selector);
         let value_expr = if is_sel_prop {
             "(sel_registerName value)"
+        } else if ffi_type == "_id" {
+            "(coerce-arg value)"
         } else {
             "value"
         };
 
-        if ffi_type == "_id" {
-            write_line!(w, "(define ({}{} value)", setter_name, params);
-            write_line!(
-                w,
-                "  (tell #:type _void {} {} (coerce-arg value)))",
-                target,
-                setter_sel
-            );
-        } else if let Some((entry, _arrow)) =
+        if let Some((entry, _arrow)) =
             native_dispatch_binding(std::slice::from_ref(&ffi_type), "_void")
         {
-            // Routable typed setter → native dispatch (ADR-0013).
+            // Routable setter → native dispatch (ADR-0013). Includes `_id` values
+            // since leaf 050/010; only struct-valued setters keep the fallback.
             write_line!(w, "(define ({}{} value)", setter_name, params);
             let value_arg = value_expr.to_string();
             let call = native_call_expr(
@@ -1099,137 +1103,108 @@ fn emit_method(
 
     let retained = method_returns_retained(method);
 
-    let strategy = dispatch_strategy(method, mapper);
+    let param_types: Vec<String> = method
+        .params
+        .iter()
+        .map(|p| mapper.map_type(&p.param_type, false))
+        .collect();
+    let ret_ffi_type = mapper.map_type(&method.return_type, true);
+    let target_expr = if is_class_method {
+        class_name.to_string()
+    } else {
+        "(coerce-arg self)".to_string()
+    };
 
-    match strategy {
-        DispatchStrategy::Tell => {
-            let target = if is_class_method {
-                class_name.to_string()
+    let mut call_args: Vec<String> = param_names.clone();
+
+    // Block wrapping
+    emit_block_wrapping(w, &method.params, &mut call_args, mapper);
+
+    // Coerce id-kind params
+    coerce_id_params(&method.params, &mut call_args, mapper);
+
+    // Coerce SEL-typed params (string → sel_registerName)
+    coerce_sel_params(&method.params, &mut call_args);
+
+    // Every routable signature dispatches through the generated native entry
+    // (ADR-0013). Since leaf 050/010 this includes the all-object shapes that
+    // previously used the in-Racket `tell` macro (`_id` collapses to `ptr_t`);
+    // `tell`-for-dispatch is gone from emitted methods. Only the non-routable
+    // struct-by-value / C-string remainder keeps the `get-ffi-obj` fallback.
+    if let Some((entry, _arrow)) = native_dispatch_binding(&param_types, &ret_ffi_type) {
+        let call =
+            native_call_expr(&entry, &target_expr, &method.selector, &call_args, &param_types);
+        if ret_is_id && !ret_is_void {
+            w.line("  (wrap-objc-object");
+            write_line!(w, "   (ffi2-ptr->id {})", call);
+            if retained {
+                w.line("   #:retained #t))");
             } else {
-                "(coerce-arg self)".to_string()
-            };
-            let tell_args = format_tell_args(&method.selector, &param_names, &method.params);
+                w.raw_line("   ))");
+            }
+        } else if ret_is_void {
+            write_line!(w, "  {})", call);
+        } else {
+            write_line!(w, "  {})", native_scalar_result(&call, &ret_ffi_type));
+        }
+        return;
+    }
+
+    let shared_name = sig_map.lookup(&param_types, &ret_ffi_type);
+    match shared_name {
+        Some(name) => {
             if ret_is_id && !ret_is_void {
                 w.line("  (wrap-objc-object");
+                w.raw(&format!(
+                    "   ({} {} (sel_registerName \"{}\")",
+                    name, target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
+                }
+                w.raw_line(")");
                 if retained {
-                    write_line!(w, "   (tell {} {})", target, tell_args);
                     w.line("   #:retained #t))");
                 } else {
-                    write_line!(w, "   (tell {} {})))", target, tell_args);
+                    w.raw_line("   ))");
                 }
-            } else if ret_is_void {
-                // `#:type _void` ensures the underlying objc_msgSend binding
-                // declares a void return, matching the C ABI. Without this,
-                // `tell` defaults to `_id`-returning, which is a calling-
-                // convention mismatch on arm64e (PAC) and reads garbage from
-                // the return register on any platform.
-                write_line!(w, "  (tell #:type _void {} {}))", target, tell_args);
             } else {
-                write_line!(w, "  (tell {} {}))", target, tell_args);
+                w.raw(&format!(
+                    "  ({} {} (sel_registerName \"{}\")",
+                    name, target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
+                }
+                w.raw_line("))");
             }
         }
-        DispatchStrategy::TypedMsgSend => {
-            let param_types: Vec<String> = method
-                .params
-                .iter()
-                .map(|p| mapper.map_type(&p.param_type, false))
-                .collect();
-            let ret_ffi_type = mapper.map_type(&method.return_type, true);
-            let target_expr = if is_class_method {
-                class_name.to_string()
-            } else {
-                "(coerce-arg self)".to_string()
-            };
-
-            let mut call_args: Vec<String> = param_names.clone();
-
-            // Block wrapping
-            emit_block_wrapping(w, &method.params, &mut call_args, mapper);
-
-            // Coerce id-kind params
-            coerce_id_params(&method.params, &mut call_args, mapper);
-
-            // Coerce SEL-typed params (string → sel_registerName)
-            coerce_sel_params(&method.params, &mut call_args);
-
-            // Routable signatures dispatch through the generated native entry
-            // (ADR-0013); the rest keep the retained get-ffi-obj path.
-            if let Some((entry, _arrow)) = native_dispatch_binding(&param_types, &ret_ffi_type) {
-                let call =
-                    native_call_expr(&entry, &target_expr, &method.selector, &call_args, &param_types);
-                if ret_is_id && !ret_is_void {
-                    w.line("  (wrap-objc-object");
-                    write_line!(w, "   (ffi2-ptr->id {})", call);
-                    if retained {
-                        w.line("   #:retained #t))");
-                    } else {
-                        w.raw_line("   ))");
-                    }
-                } else if ret_is_void {
-                    write_line!(w, "  {})", call);
+        None => {
+            emit_inline_fallback_open(w, &param_types, &ret_ffi_type, needs_native);
+            if ret_is_id && !ret_is_void {
+                w.line("    (wrap-objc-object");
+                w.raw(&format!(
+                    "     (msg {} (sel_registerName \"{}\")",
+                    target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
+                }
+                w.raw_line(")");
+                if retained {
+                    w.line("     #:retained #t))))");
                 } else {
-                    write_line!(w, "  {})", native_scalar_result(&call, &ret_ffi_type));
+                    w.raw_line("     ))))");
                 }
-                return;
-            }
-
-            let shared_name = sig_map.lookup(&param_types, &ret_ffi_type);
-            match shared_name {
-                Some(name) => {
-                    if ret_is_id && !ret_is_void {
-                        w.line("  (wrap-objc-object");
-                        w.raw(&format!(
-                            "   ({} {} (sel_registerName \"{}\")",
-                            name, target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line(")");
-                        if retained {
-                            w.line("   #:retained #t))");
-                        } else {
-                            w.raw_line("   ))");
-                        }
-                    } else {
-                        w.raw(&format!(
-                            "  ({} {} (sel_registerName \"{}\")",
-                            name, target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line("))");
-                    }
+            } else {
+                w.raw(&format!(
+                    "    (msg {} (sel_registerName \"{}\")",
+                    target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
                 }
-                None => {
-                    emit_inline_fallback_open(w, &param_types, &ret_ffi_type, needs_native);
-                    if ret_is_id && !ret_is_void {
-                        w.line("    (wrap-objc-object");
-                        w.raw(&format!(
-                            "     (msg {} (sel_registerName \"{}\")",
-                            target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line(")");
-                        if retained {
-                            w.line("     #:retained #t))))");
-                        } else {
-                            w.raw_line("     ))))");
-                        }
-                    } else {
-                        w.raw(&format!(
-                            "    (msg {} (sel_registerName \"{}\")",
-                            target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line(")))");
-                    }
-                }
+                w.raw_line(")))");
             }
         }
     }
@@ -1734,12 +1709,11 @@ mod tests {
     }
 
     #[test]
-    fn test_id_property_setter_body_uses_void_typed_tell() {
-        // Setter must emit `(tell #:type _void ...)` so the underlying
-        // objc_msgSend binding matches the C ABI. The older form
-        // `(void (tell ...))` discarded the result at the Racket level but
-        // left objc_msgSend bound as `_id`-returning — a calling-convention
-        // mismatch that matters on arm64e PAC.
+    fn test_id_property_setter_routes_native() {
+        // Since leaf 050/010 an `_id` setter dispatches through the generated
+        // native entry (ADR-0013): `(_id) -> _void` is routable (`_id` collapses
+        // to `ptr_t`). The value coerces to its underlying object pointer, then
+        // the `ptr_t` bridge crosses it. No more in-Racket `tell` for dispatch.
         let cls = Class {
             name: "TKView".to_string(),
             superclass: String::new(),
@@ -1754,18 +1728,23 @@ mod tests {
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
-            output
-                .contains("  (tell #:type _void (coerce-arg self) setTitle: (coerce-arg value)))"),
-            "_id setter body must use `tell #:type _void`. Output:\n{output}"
+            output.contains(
+                "  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) \
+                 (id->ffi2-ptr (sel_registerName \"setTitle:\")) (id->ffi2-ptr (coerce-arg value))))"
+            ),
+            "_id setter body must route through native dispatch. Output:\n{output}"
         );
         assert!(
-            !output.contains("(void (tell"),
-            "Setter body must not use legacy `(void (tell ...))` form. Output:\n{output}"
+            !output.contains("(tell #:type _void"),
+            "Setter body must not use the legacy `tell` dispatch form. Output:\n{output}"
         );
     }
 
     #[test]
-    fn test_void_method_tell_dispatch_uses_void_typed_tell() {
+    fn test_void_object_method_routes_native() {
+        // All-object, void-returning method (`(_id) -> _void`) — previously the
+        // `tell` macro path — now dispatches through the generated native entry
+        // (ADR-0013), object arg coerced and bridged to `ptr_t`.
         let cls = Class {
             name: "TKView".to_string(),
             superclass: String::new(),
@@ -1789,17 +1768,23 @@ mod tests {
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
-            output.contains("  (tell #:type _void (coerce-arg self) addObject: (coerce-arg obj)))"),
-            "Void Tell-dispatch method body must use `tell #:type _void`. Output:\n{output}"
+            output.contains(
+                "  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) \
+                 (id->ffi2-ptr (sel_registerName \"addObject:\")) (id->ffi2-ptr (coerce-arg obj))))"
+            ),
+            "Void all-object method must route through native dispatch. Output:\n{output}"
         );
         assert!(
-            !output.contains("(void (tell"),
-            "Method body must not use legacy `(void (tell ...))` form. Output:\n{output}"
+            // The synthesized default constructor still uses `(tell (tell … alloc) init)`;
+            // only the method's *dispatch* must be native, not the `tell` token globally.
+            !output.contains("addObject: (coerce-arg obj)"),
+            "Method dispatch must not use the legacy `tell` keyword-arg form. Output:\n{output}"
         );
     }
 
     #[test]
-    fn test_void_zero_arg_tell_dispatch_uses_void_typed_tell() {
+    fn test_void_zero_arg_method_routes_native() {
+        // Zero-arg void method (`() -> _void`) → native `aw_racket_msg_0_v`.
         let cls = Class {
             name: "TKView".to_string(),
             superclass: String::new(),
@@ -1820,8 +1805,11 @@ mod tests {
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
-            output.contains("  (tell #:type _void (coerce-arg self) dealloc))"),
-            "Zero-arg void Tell-dispatch body must use `tell #:type _void`. Output:\n{output}"
+            output.contains(
+                "  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) \
+                 (id->ffi2-ptr (sel_registerName \"dealloc\"))))"
+            ),
+            "Zero-arg void method must route through native dispatch. Output:\n{output}"
         );
     }
 
@@ -1882,7 +1870,7 @@ mod tests {
                     },
                     false,
                 ),
-                // `_id` class property: tell-dispatch setter path.
+                // `_id` class property: native-dispatch setter path (050/010).
                 make_test_class_property("defaultTitle", TypeRefKind::Id, false),
             ],
             methods: vec![],
@@ -1923,8 +1911,12 @@ mod tests {
             "Class-property setter impls must not take `self`. Output:\n{output}"
         );
         assert!(
-            output.contains("(tell #:type _void TKWindow setDefaultTitle: (coerce-arg value))"),
-            "Class-property _id setter body must tell the class directly. Output:\n{output}"
+            output.contains(
+                "(aw_racket_msg_P_v (id->ffi2-ptr TKWindow) \
+                 (id->ffi2-ptr (sel_registerName \"setDefaultTitle:\")) (id->ffi2-ptr (coerce-arg value)))"
+            ),
+            "Class-property _id setter body must route native, targeting the class \
+             metaobject directly. Output:\n{output}"
         );
     }
 
