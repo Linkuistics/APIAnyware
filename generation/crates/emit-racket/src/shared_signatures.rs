@@ -100,6 +100,38 @@ impl SignatureMap {
     }
 }
 
+/// Collect the typed signatures that do **not** route through the generated
+/// native dispatch table (ADR-0013) — i.e. struct-by-value or C-string shapes —
+/// and so keep the retained `get-ffi-obj` fallback path. The returned
+/// [`SignatureMap`] numbers only these, so `_msg-N` ids stay contiguous after the
+/// routable signatures move to `define-aw-msg` native bindings.
+///
+/// This is [`collect_class_signatures`] minus every signature
+/// [`crate::native_dispatch::is_routable`] accepts; the two share the same
+/// per-method enumeration so the native and fallback partitions never overlap.
+pub fn collect_class_fallback_signatures(
+    cls: &Class,
+    mapper: &dyn FfiTypeMapper,
+) -> SignatureMap {
+    let full = collect_class_signatures(cls, mapper);
+    let entries: BTreeMap<String, usize> = full
+        .entries
+        .into_keys()
+        .filter(|key| {
+            let (param_str, ret) = SignatureMap::parse_key(key);
+            let params: Vec<String> = if param_str.is_empty() {
+                vec![]
+            } else {
+                param_str.split(' ').map(str::to_string).collect()
+            };
+            !crate::native_dispatch::is_routable(&params, ret)
+        })
+        .enumerate()
+        .map(|(i, k)| (k, i))
+        .collect();
+    SignatureMap { entries }
+}
+
 /// Collect all unique typed objc_msgSend signatures for a class.
 ///
 /// Only includes methods that use the typed msgSend path (not the `tell` path).

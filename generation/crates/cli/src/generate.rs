@@ -128,6 +128,47 @@ pub fn run_generation(
     Ok(summaries)
 }
 
+/// Generate the racket target's typed native dispatch table (ADR-0013) into the
+/// `APIAnywareRacket` Swift target, then `swift build` compiles it into the dylib.
+///
+/// This is a **global** pass (the dispatch entries are deduplicated across every
+/// framework, unlike the per-framework `.rkt` bindings), so it runs once after
+/// [`run_generation`] rather than per-framework. The build order is therefore
+/// `generate -> swift build` (the dispatch `.swift` must exist before the dylib
+/// is built). Returns the number of distinct entries written.
+///
+/// The collapsed-ABI signatures are derived from the `ffi/unsafe` spellings, so
+/// the mapper here is [`RacketFfiTypeMapper`] (not the ffi2 one): `native_dispatch`
+/// parses `_id`/`_uint64`/`_NSRect` tokens and collapses pointer-likes itself.
+pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper;
+    use apianyware_macos_emit_racket::native_dispatch::{
+        collect_global_signatures, generate_dispatch_swift,
+    };
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let sigs = collect_global_signatures(&frameworks, &RacketFfiTypeMapper);
+    let swift = generate_dispatch_swift(&sigs);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift)
+        .with_context(|| format!("writing {}", swift_out.display()))?;
+
+    tracing::info!(
+        entries = sigs.len(),
+        output = %swift_out.display(),
+        "generated native dispatch table"
+    );
+    Ok(sigs.len())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

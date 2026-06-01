@@ -13,6 +13,7 @@ pub mod emit_protocol;
 pub mod enrichment_comments;
 pub mod method_filter;
 pub mod naming;
+pub mod native_dispatch;
 pub mod shared_signatures;
 
 pub use emit_framework::RacketEmitter;

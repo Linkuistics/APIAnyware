@@ -25,6 +25,12 @@ generation/targets/*/generated/
 generation/targets/chez/apianyware/*
 !generation/targets/chez/apianyware/runtime
 
+# Generated typed native dispatch table (ADR-0013): one @_cdecl objc_msgSend
+# entry per ABI signature, emitted into the APIAnywareRacket Swift target by
+# `apianyware-macos-generate` and compiled by `swift build`. Like the .rkt
+# bindings it is reproducible from the IR (build order: generate -> swift build).
+swift/Sources/APIAnywareRacket/Generated/
+
 # Racket bytecode caches
 generation/targets/*/runtime/compiled/
 generation/targets/*/apianyware/runtime/compiled/

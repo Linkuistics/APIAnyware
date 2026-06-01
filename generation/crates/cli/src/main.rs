@@ -34,6 +34,20 @@ struct Cli {
     /// List available target emitters.
     #[arg(long)]
     list_targets: bool,
+
+    /// Output path for the racket target's generated native dispatch table
+    /// (ADR-0013). Written when racket is among the generated targets; `swift
+    /// build` then compiles it into `libAPIAnywareRacket`.
+    #[arg(
+        long,
+        default_value = "swift/Sources/APIAnywareRacket/Generated/Dispatch.swift"
+    )]
+    racket_dispatch_out: PathBuf,
+
+    /// Skip generating the racket native dispatch table (useful when only the
+    /// `.rkt` bindings are wanted, or the Swift target is unavailable).
+    #[arg(long)]
+    no_racket_dispatch: bool,
 }
 
 fn main() -> Result<()> {
@@ -61,6 +75,20 @@ fn main() -> Result<()> {
 
     let summaries =
         generate::run_generation(&registry, &cli.input_dir, &cli.output_dir, target_filter)?;
+
+    // Generate the racket native dispatch table (ADR-0013) when racket was among
+    // the targets. It is a global pass over all frameworks, so it runs once here
+    // rather than per-framework. Build order: generate (here) -> swift build.
+    let racket_generated = summaries.iter().any(|s| s.target_id == "racket");
+    if racket_generated && !cli.no_racket_dispatch {
+        let entries =
+            generate::run_racket_native_dispatch(&cli.input_dir, &cli.racket_dispatch_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.racket_dispatch_out.display(),
+            "racket native dispatch table generated — run `swift build` to compile it"
+        );
+    }
 
     // Print final summary
     for summary in &summaries {
