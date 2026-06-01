@@ -91,3 +91,21 @@ dispatch-into-native leaf (040) was inserted; 040→050, 050→060 shifted.
   `.rkt` (standing rule).
 - 020 research doc: `docs/research/2026-05-31-racket-9.2-ffi2-migration.md`
   (ffi2 API map + ObjC boundary; still valid as the *seam* characterisation).
+
+### Carryover from 040 (done 2026-06-01) → for 050 (full-pipeline regen + VM-verify)
+- **Foundation/AppKit subset goldens are stale.** 040's cutover changed the
+  emitter's dispatch output, but the `tests/golden-foundation/` and
+  `tests/golden-appkit/` snapshots could not be regenerated in 040's session (no
+  local enriched IR; their suites *skip* without it). Only the synthetic TestKit
+  golden was regenerated. 050's full-pipeline regen must `UPDATE_GOLDEN=1` these
+  two once IR exists, and is where real generated bindings first execute through
+  the native path (runtime smoke test / VM-verify).
+- **Build order inverted (ADR-0013): `generate → swift build`.** `generate` now
+  writes `swift/Sources/APIAnywareRacket/Generated/Dispatch.swift` (gitignored);
+  `swift build` compiles it into the dylib. Run generate before swift build.
+- **`lib/libAPIAnywareRacket.dylib` symlink points at the MAIN repo's `.build`,
+  not the worktree's.** Latent bug: in this worktree the runtime loads the main
+  repo's dylib, which won't have the worktree's generated `aw_racket_msg_*`
+  entries. 050 (or whoever first loads generated bindings here) must repoint it to
+  `swift/.build/.../libAPIAnywareRacket.dylib` in this worktree (the symlink is
+  git-tracked — decide whether the fix is committed or worktree-local).
