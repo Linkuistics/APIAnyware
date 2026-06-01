@@ -57,3 +57,35 @@ different and was separated so it gets the attention it needs without bloating
   move*; leave broad fallback removal to 060.
 - Returned-string/object ownership (+0/+1) discipline established in 030 (ffi2
   `string_t` and `#:retained`) is the precedent for the returned `NSError*`.
+
+## Resolution (2026-06-01)
+
+**No IR-type change was needed — and a local witness *did* exist.** Two
+discoveries reshaped the approach away from the brief's assumptions:
+
+1. **Detection already exists in the analysis pipeline.** `derive_error_pattern`
+   (annotate/heuristics) classifies a trailing `Pointer` param named `*error` as
+   `ErrorPattern::ErrorOutParam`; the enrich stage collects these into
+   `EnrichmentData::convenience_error_methods` (class+selector), which the racket
+   emitter *already received* (it was emitting a comment for them). So routing
+   keys off that existing signal — **no `TypeRefKind` variant, no `Param` field,
+   no extractor change** (a `Param` field alone would have hit 103 literal sites
+   across 15 files incl. emit-chez). Fully hermetic: chez ignores `fw.enrichment`
+   entirely, so its goldens are untouched.
+2. **TestKit had a witness after all.** `TKManager loadResource:error:` existed in
+   the fixture's `methods` but was shadowed by a non-empty `all_methods`. Adding
+   it to `all_methods` + populating the fixture's `enrichment` makes it emit — so
+   the committed golden now *shows* the `(values result error)` wrapper, and the
+   generated `Dispatch.swift` `aw_racket_msg_P_b_e` entry **compiles** against the
+   real SDK (`swift build` green). The brief's "no local witness / cargo-test-only
+   bar" was thereby exceeded.
+
+**Mechanism shipped.** Emitter drops the trailing `NSError **` from the wrapper's
+arity and returns `(values result error)`; the native `…_e` dispatch entry owns a
+local error cell (raw `UnsafeMutableRawPointer?`, ARC kept out of the loop),
+passes `&awErr` to `objc_msgSend`, **retains the autoreleased error +1**
+(`Unmanaged<AnyObject>.fromOpaque(e).retain()`) so Racket owns it independent of
+the autorelease pool, and writes it through a trailing out-buffer (mirroring the
+struct-return convention). Racket wraps it `#:retained #t`, or `#f` when nil.
+Struct-return + error-out is excluded (two out-buffers) — out of scope, keeps the
+existing path. Real-IR regen + VM-verify remain root-050.

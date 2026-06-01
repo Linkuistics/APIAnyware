@@ -8,6 +8,7 @@
 //! constants) to keep golden files reviewable while covering all generation
 //! branches.
 
+use apianyware_macos_types::enrichment::{ClassSelectorEntry, EnrichmentData};
 use apianyware_macos_types::ir::{
     Class, Constant, Enum, EnumValue, Framework, Function, Method, Param, Property, Protocol,
 };
@@ -64,7 +65,19 @@ pub fn build_snapshot_test_framework() -> Framework {
         ],
         class_annotations: vec![],
         api_patterns: vec![],
-        enrichment: None,
+        // Enrichment carries the analysis-stage `convenience_error_methods`
+        // relation (`ErrorPattern::ErrorOutParam`): `TKManager loadResource:error:`
+        // is the local witness for NSError out-param native routing (leaf 050/040)
+        // — its wrapper drops the trailing `error` param and returns
+        // `(values result error)`. The racket emitter consumes this; chez ignores
+        // `fw.enrichment` entirely, so this leaves the chez goldens untouched.
+        enrichment: Some(EnrichmentData {
+            convenience_error_methods: vec![ClassSelectorEntry {
+                class: "TKManager".to_string(),
+                selector: "loadResource:error:".to_string(),
+            }],
+            ..Default::default()
+        }),
         verification: None,
     }
 }
@@ -406,6 +419,19 @@ fn build_tkmanager() -> Class {
             method("init", false, true, vec![], type_instancetype()),
             method("dealloc", false, false, vec![], type_void()),
             method("description", false, false, vec![], type_class("NSString")),
+            // The NSError out-param witness (leaf 050/040). Mirrors the `methods`
+            // entry; present in `all_methods` so it survives `effective_methods`
+            // (which prefers the flattened set when non-empty) and is emitted.
+            method(
+                "loadResource:error:",
+                false,
+                false,
+                vec![
+                    param("name", type_class("NSString")),
+                    param("error", type_pointer()),
+                ],
+                type_bool(),
+            ),
         ],
         all_properties: vec![],
     }

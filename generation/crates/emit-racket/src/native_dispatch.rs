@@ -332,10 +332,25 @@ impl AbiType {
 
 /// A full method ABI signature: `self` and `_cmd` (always two leading pointers)
 /// are implicit; `params` are the *real* arguments, `ret` the result.
+///
+/// `error_out` marks the **NSError out-param** shape (leaf 050/040): a Cocoa
+/// `…error:` method whose trailing `NSError **` is *not* a normal `params`
+/// entry — instead the generated native entry synthesises the `NSError*` cell
+/// locally, passes `&err` to `objc_msgSend`, and hands the (retained, or nil)
+/// error back through an extra trailing out-buffer (mirroring the struct-return
+/// out-buffer convention). So `params` holds only the *visible* arguments (the
+/// error param removed); the error crossing is encoded by this flag, which adds
+/// the trailing `ptr_t` out-buffer to [`ffi2_arrow`] and the `_e` suffix to
+/// [`entry_name`] (so an error-out entry never collides with the same visible
+/// signature dispatched plainly). Spec §3 Depth 2.
+///
+/// [`ffi2_arrow`]: NativeSig::ffi2_arrow
+/// [`entry_name`]: NativeSig::entry_name
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NativeSig {
     pub params: Vec<AbiType>,
     pub ret: AbiType,
+    pub error_out: bool,
 }
 
 impl NativeSig {
@@ -352,7 +367,29 @@ impl NativeSig {
             params.push(t);
         }
         let ret = AbiType::from_ffi_unsafe(ret_spelling)?;
-        Some(NativeSig { params, ret })
+        Some(NativeSig {
+            params,
+            ret,
+            error_out: false,
+        })
+    }
+
+    /// Build the **NSError out-param** variant from the *visible* param spellings
+    /// (the trailing `NSError **` already removed by the caller) and the method's
+    /// return spelling. Returns `None` when the visible signature is not routable
+    /// (struct/unknown param) or when the return is a by-value struct — combining
+    /// the struct out-buffer and the error out-buffer is out of scope for this
+    /// leaf (such a method keeps the existing path). Spec §3 Depth 2.
+    pub fn error_out_from_ffi_unsafe(
+        visible_param_spellings: &[String],
+        ret_spelling: &str,
+    ) -> Option<NativeSig> {
+        let mut sig = NativeSig::from_ffi_unsafe(visible_param_spellings, ret_spelling)?;
+        if sig.ret.is_struct() {
+            return None; // struct-return + error-out unsupported (v1)
+        }
+        sig.error_out = true;
+        Some(sig)
     }
 
     /// The ffi2 binding arrow for `(define-aw-msg <entry> <arrow>)`:
@@ -372,6 +409,14 @@ impl NativeSig {
             parts.push("ptr_t".to_string()); // out-buffer
             parts.push("void_t".to_string());
         } else {
+            // NSError out-param: a trailing `ptr_t` out-buffer the native entry
+            // writes the retained `NSError*` (or nil) through, *before* the
+            // method's own (scalar/object/void) result. `error_out` excludes
+            // struct returns (see `error_out_from_ffi_unsafe`), so the two
+            // out-buffer shapes never co-occur.
+            if self.error_out {
+                parts.push("ptr_t".to_string()); // error out-buffer
+            }
             parts.push(self.ret.ffi2_type().to_string());
         }
         format!("(-> {})", parts.join(" "))
@@ -394,7 +439,18 @@ impl NativeSig {
         } else {
             self.params.iter().map(|t| t.code()).collect()
         };
-        format!("{ENTRY_PREFIX}{params}_{}", self.ret.code())
+        let base = format!("{ENTRY_PREFIX}{params}_{}", self.ret.code());
+        // The NSError out-param variant gets a distinct content-addressed name
+        // (`…_e`) so it never collides with the same *visible* signature
+        // dispatched plainly: e.g. `(NSString) -> BOOL` is `aw_racket_msg_P_b`,
+        // its `…error:` sibling `aw_racket_msg_P_b_e`. `_e` is unambiguous — the
+        // ret code is a single char, so the trailing `_e` cannot be mistaken for
+        // a struct/param code.
+        if self.error_out {
+            format!("{base}_e")
+        } else {
+            base
+        }
     }
 }
 
@@ -421,11 +477,101 @@ pub fn is_routable(param_spellings: &[String], ret_spelling: &str) -> bool {
     NativeSig::from_ffi_unsafe(param_spellings, ret_spelling).is_some()
 }
 
+/// The thin ffi2 binding for the **NSError out-param** variant of a method
+/// (leaf 050/040). `visible_param_spellings` are the method's arguments with the
+/// trailing `NSError **` removed; `ret_spelling` is the method's own return.
+///
+/// Returns `(entry_name, ffi2_arrow)` for the `…_e` error-out entry, or `None`
+/// when the visible signature is not routable or the return is a by-value struct
+/// (see [`NativeSig::error_out_from_ffi_unsafe`]) — in which case the emitter
+/// keeps the method on the existing path and the error param stays a plain
+/// `_pointer` argument.
+pub fn native_dispatch_error_binding(
+    visible_param_spellings: &[String],
+    ret_spelling: &str,
+) -> Option<(String, String)> {
+    let sig = NativeSig::error_out_from_ffi_unsafe(visible_param_spellings, ret_spelling)?;
+    Some((sig.entry_name(), sig.ffi2_arrow()))
+}
+
+/// The set of selectors for a class that the analysis stage classified as
+/// **NSError out-param** convenience methods (`ErrorPattern::ErrorOutParam` →
+/// `EnrichmentData::convenience_error_methods`). The emitter and the dispatch
+/// generator both key error-out routing off this set, so they collect the same
+/// `…_e` entries and never drift. Empty when there is no enrichment.
+pub fn class_error_selectors(
+    enrichment: Option<&apianyware_macos_types::enrichment::EnrichmentData>,
+    class_name: &str,
+) -> std::collections::HashSet<String> {
+    match enrichment {
+        None => std::collections::HashSet::new(),
+        Some(data) => data
+            .convenience_error_methods
+            .iter()
+            .filter(|e| e.class == class_name)
+            .map(|e| e.selector.clone())
+            .collect(),
+    }
+}
+
+/// Whether an instance/class method should route through the **NSError
+/// out-param** native entry (the `…_e` variant): its selector is in the
+/// enrichment-derived `error_selectors`, its trailing argument maps to a plain
+/// `_pointer` (the `NSError **` cell — the type-level corroboration of the
+/// analysis classification), and its *visible* signature (params minus that
+/// trailing pointer) is error-out-routable. The single predicate
+/// [`crate::emit_class`] and [`collect_class_native_sigs`] share so routing and
+/// entry-collection never diverge.
+pub fn is_error_out_routable(
+    param_spellings: &[String],
+    ret_spelling: &str,
+    selector: &str,
+    error_selectors: &std::collections::HashSet<String>,
+) -> bool {
+    if !error_selectors.contains(selector) {
+        return false;
+    }
+    match param_spellings.last() {
+        Some(last) if last == "_pointer" => NativeSig::error_out_from_ffi_unsafe(
+            &param_spellings[..param_spellings.len() - 1],
+            ret_spelling,
+        )
+        .is_some(),
+        _ => false,
+    }
+}
+
+/// The native dispatch signature for an instance/class method, honouring NSError
+/// out-param routing: the `…_e` error-out sig when [`is_error_out_routable`],
+/// otherwise the plain sig (or `None` when non-routable). Keeps
+/// [`collect_class_native_sigs`] and `emit_class::emit_method` choosing the same
+/// entry.
+pub fn method_native_sig(
+    param_spellings: &[String],
+    ret_spelling: &str,
+    selector: &str,
+    error_selectors: &std::collections::HashSet<String>,
+) -> Option<NativeSig> {
+    if is_error_out_routable(param_spellings, ret_spelling, selector, error_selectors) {
+        let visible = &param_spellings[..param_spellings.len() - 1];
+        return NativeSig::error_out_from_ffi_unsafe(visible, ret_spelling);
+    }
+    NativeSig::from_ffi_unsafe(param_spellings, ret_spelling)
+}
+
 /// Collect every routable native dispatch signature used by a class's typed
 /// dispatch paths (instance/class methods, typed constructors, typed property
 /// setters) — mirroring exactly which methods [`crate::emit_class`] routes
 /// natively, so the generated entry set and the emitted bindings never drift.
-pub fn collect_class_native_sigs(cls: &Class, mapper: &dyn FfiTypeMapper) -> BTreeSet<NativeSig> {
+///
+/// `error_selectors` are this class's NSError out-param selectors (from
+/// [`class_error_selectors`]); methods in it contribute their `…_e` error-out
+/// entry instead of the plain one.
+pub fn collect_class_native_sigs(
+    cls: &Class,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &std::collections::HashSet<String>,
+) -> BTreeSet<NativeSig> {
     let methods = if cls.all_methods.is_empty() {
         &cls.methods
     } else {
@@ -473,7 +619,11 @@ pub fn collect_class_native_sigs(cls: &Class, mapper: &dyn FfiTypeMapper) -> BTr
                 .map(|p| mapper.map_type(&p.param_type, false))
                 .collect();
             let ret = mapper.map_type(&m.return_type, true);
-            if let Some(sig) = NativeSig::from_ffi_unsafe(&params, &ret) {
+            // `method_native_sig` routes NSError out-param methods to their
+            // `…_e` error-out entry (visible params minus the trailing pointer)
+            // and everything else to the plain entry — the same choice
+            // `emit_class::emit_method` makes.
+            if let Some(sig) = method_native_sig(&params, &ret, &m.selector, error_selectors) {
                 sigs.insert(sig);
             }
         }
@@ -507,7 +657,8 @@ pub fn collect_global_signatures(
     let mut all = BTreeSet::new();
     for fw in frameworks {
         for cls in &fw.classes {
-            all.extend(collect_class_native_sigs(cls, mapper));
+            let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
+            all.extend(collect_class_native_sigs(cls, mapper, &error_selectors));
         }
     }
     all
@@ -602,11 +753,36 @@ fn emit_one_entry(s: &mut String, sig: &NativeSig) {
         }
     }
 
+    // NSError out-param (leaf 050/040): the real ObjC method's trailing argument
+    // is an `NSError **`. ffi2 never passes it — instead the native entry owns a
+    // local error cell `awErr`, passes `&awErr` to `objc_msgSend`, retains the
+    // (autoreleased, +0) result so Racket owns a +1 independent of the autorelease
+    // pool, and writes it through a trailing caller-allocated out-buffer. Using a
+    // raw `UnsafeMutableRawPointer?` cell (not a Swift `NSError?`) keeps ARC out of
+    // the loop: the +0 pointer is stored without an implicit retain/over-release.
+    // Struct returns are excluded upstream, so this composes only with Void/scalar.
+    let (err_decl, err_write) = if sig.error_out {
+        conv_args.push("UnsafeMutablePointer<UnsafeMutableRawPointer?>?".to_string());
+        decl_params.push("_ awErrOut: UnsafeMutableRawPointer?".to_string());
+        call_args.push("&awErr".to_string());
+        (
+            "  var awErr: UnsafeMutableRawPointer? = nil\n",
+            "  if let e = awErr { _ = Unmanaged<AnyObject>.fromOpaque(e).retain() }\n  \
+             awErrOut?.assumingMemoryBound(to: UnsafeMutableRawPointer?.self).pointee = awErr\n",
+        )
+    } else {
+        ("", "")
+    };
+
     s.push_str(&format!("@_cdecl(\"{name}\")\n"));
     match sig.ret {
         AbiType::Void => {
-            s.push_str(&format!("public func {name}({}) {{\n", decl_params.join(", ")));
+            s.push_str(&format!(
+                "public func {name}({}) {{\n",
+                decl_params.join(", ")
+            ));
             s.push_str(&prelude);
+            s.push_str(err_decl);
             s.push_str(&format!(
                 "  typealias Fn = @convention(c) ({}) -> Void\n",
                 conv_args.join(", ")
@@ -615,13 +791,17 @@ fn emit_one_entry(s: &mut String, sig: &NativeSig) {
                 "  unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
                 call_args.join(", ")
             ));
+            s.push_str(err_write);
             s.push_str("}\n");
         }
         AbiType::Struct(g) => {
             // Out-buffer convention: an extra trailing pointer the caller allocated;
             // the cast call returns the struct by value and we write it through.
             decl_params.push("_ out: UnsafeMutableRawPointer?".to_string());
-            s.push_str(&format!("public func {name}({}) {{\n", decl_params.join(", ")));
+            s.push_str(&format!(
+                "public func {name}({}) {{\n",
+                decl_params.join(", ")
+            ));
             s.push_str(&prelude);
             s.push_str(&format!(
                 "  typealias Fn = @convention(c) ({}) -> {}\n",
@@ -645,14 +825,26 @@ fn emit_one_entry(s: &mut String, sig: &NativeSig) {
                 decl_params.join(", ")
             ));
             s.push_str(&prelude);
+            s.push_str(err_decl);
             s.push_str(&format!(
                 "  typealias Fn = @convention(c) ({}) -> {conv_ret}\n",
                 conv_args.join(", ")
             ));
-            s.push_str(&format!(
-                "  return unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
-                call_args.join(", ")
-            ));
+            if sig.error_out {
+                // Capture the result, surface the error, then return — the error
+                // write must happen before the function returns the value.
+                s.push_str(&format!(
+                    "  let r = unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
+                    call_args.join(", ")
+                ));
+                s.push_str(err_write);
+                s.push_str("  return r\n");
+            } else {
+                s.push_str(&format!(
+                    "  return unsafeBitCast(_awMsgSend, to: Fn.self)({})\n",
+                    call_args.join(", ")
+                ));
+            }
             s.push_str("}\n");
         }
     }
@@ -912,6 +1104,175 @@ mod tests {
         assert!(swift.contains("0 generated dispatch entries."));
     }
 
+    // --- NSError out-param routing (leaf 050/040) ---
+
+    #[test]
+    fn error_out_binding_name_and_arrow() {
+        // `-loadResource:error:` → (NSString) -> BOOL with a trailing NSError**.
+        // The visible signature is `(_id) -> _bool`; the error-out entry carries
+        // the `…_e` suffix and an extra trailing `ptr_t` (the error out-buffer)
+        // before the bool result.
+        let (entry, arrow) = native_dispatch_error_binding(&["_id".into()], "_bool").unwrap();
+        assert_eq!(entry, "aw_racket_msg_P_b_e");
+        assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t ptr_t bool_t)");
+
+        // A no-visible-arg error method (`-doThingAndReturnError:`): just the
+        // error out-buffer before the result.
+        let (entry, arrow) = native_dispatch_error_binding(&[], "_bool").unwrap();
+        assert_eq!(entry, "aw_racket_msg_0_b_e");
+        assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t bool_t)");
+
+        // An object-returning error method (`-executeFetchRequest:error:` shape):
+        // result crosses as ptr_t.
+        let (entry, arrow) = native_dispatch_error_binding(&["_id".into()], "_id").unwrap();
+        assert_eq!(entry, "aw_racket_msg_P_P_e");
+        assert_eq!(arrow, "(-> ptr_t ptr_t ptr_t ptr_t ptr_t)");
+    }
+
+    #[test]
+    fn error_out_entry_never_collides_with_plain() {
+        // The `…_e` suffix keeps the error-out entry distinct from the same
+        // *visible* signature dispatched plainly — otherwise the two would share
+        // a content-addressed symbol with different ABIs.
+        let plain = NativeSig::from_ffi_unsafe(&["_id".into()], "_bool").unwrap();
+        let err = NativeSig::error_out_from_ffi_unsafe(&["_id".into()], "_bool").unwrap();
+        assert_ne!(plain.entry_name(), err.entry_name());
+        assert_eq!(plain.entry_name(), "aw_racket_msg_P_b");
+        assert_eq!(err.entry_name(), "aw_racket_msg_P_b_e");
+    }
+
+    #[test]
+    fn error_out_rejects_struct_return() {
+        // Struct-return + error-out is out of scope (two out-buffers); such a
+        // method keeps the existing path.
+        assert!(NativeSig::error_out_from_ffi_unsafe(&["_id".into()], "_NSRect").is_none());
+        assert!(native_dispatch_error_binding(&["_id".into()], "_NSRect").is_none());
+    }
+
+    #[test]
+    fn is_error_out_routable_requires_signal_and_trailing_pointer() {
+        let mut selectors = std::collections::HashSet::new();
+        selectors.insert("loadResource:error:".to_string());
+
+        // Selector in the enrichment set + trailing `_pointer` → routes.
+        assert!(is_error_out_routable(
+            &["_id".into(), "_pointer".into()],
+            "_bool",
+            "loadResource:error:",
+            &selectors
+        ));
+        // Same shape, selector NOT classified as error-out → does not route.
+        assert!(!is_error_out_routable(
+            &["_id".into(), "_pointer".into()],
+            "_bool",
+            "doSomething:with:",
+            &selectors
+        ));
+        // Classified, but the trailing arg is not a pointer (type-level guard
+        // fails) → does not route.
+        assert!(!is_error_out_routable(
+            &["_id".into(), "_uint64".into()],
+            "_bool",
+            "loadResource:error:",
+            &selectors
+        ));
+    }
+
+    #[test]
+    fn method_native_sig_picks_error_variant() {
+        let mut selectors = std::collections::HashSet::new();
+        selectors.insert("loadResource:error:".to_string());
+
+        // The error-out method's collected sig is the `…_e` variant over the
+        // *visible* params (trailing pointer dropped).
+        let sig = method_native_sig(
+            &["_id".into(), "_pointer".into()],
+            "_bool",
+            "loadResource:error:",
+            &selectors,
+        )
+        .unwrap();
+        assert!(sig.error_out);
+        assert_eq!(sig.entry_name(), "aw_racket_msg_P_b_e");
+
+        // A non-error method keeps the plain sig (trailing pointer retained).
+        let sig = method_native_sig(
+            &["_id".into(), "_pointer".into()],
+            "_bool",
+            "other:with:",
+            &selectors,
+        )
+        .unwrap();
+        assert!(!sig.error_out);
+        assert_eq!(sig.entry_name(), "aw_racket_msg_PP_b");
+    }
+
+    #[test]
+    fn generated_swift_error_out_synthesizes_cell_and_retains() {
+        let mut sigs = BTreeSet::new();
+        sigs.insert(NativeSig::error_out_from_ffi_unsafe(&["_id".into()], "_bool").unwrap());
+        let swift = generate_dispatch_swift(&sigs);
+
+        assert!(
+            swift.contains("@_cdecl(\"aw_racket_msg_P_b_e\")"),
+            "error-out entry name:\n{swift}"
+        );
+        // The @_cdecl takes the visible arg + a trailing error out-buffer.
+        assert!(
+            swift.contains(
+                "_ a0: UnsafeMutableRawPointer?, _ awErrOut: UnsafeMutableRawPointer?) -> CBool"
+            ),
+            "error-out decl shape:\n{swift}"
+        );
+        // The objc_msgSend cast's last arg is the typed NSError** cell.
+        assert!(
+            swift.contains("UnsafeMutablePointer<UnsafeMutableRawPointer?>?) -> CBool"),
+            "conv cast includes the error cell:\n{swift}"
+        );
+        // Local cell, &awErr passed to msgSend, +1 retain, write-through.
+        assert!(
+            swift.contains("var awErr: UnsafeMutableRawPointer? = nil"),
+            "{swift}"
+        );
+        assert!(swift.contains("(recv, sel, a0, &awErr)"), "{swift}");
+        assert!(
+            swift.contains("Unmanaged<AnyObject>.fromOpaque(e).retain()"),
+            "retains the autoreleased error +1:\n{swift}"
+        );
+        assert!(
+            swift.contains(
+                "awErrOut?.assumingMemoryBound(to: UnsafeMutableRawPointer?.self).pointee = awErr"
+            ),
+            "writes error through the out-buffer:\n{swift}"
+        );
+        assert!(
+            swift.contains("  return r\n"),
+            "returns the captured result:\n{swift}"
+        );
+    }
+
+    #[test]
+    fn class_error_selectors_filters_by_class() {
+        use apianyware_macos_types::enrichment::{ClassSelectorEntry, EnrichmentData};
+        let data = EnrichmentData {
+            convenience_error_methods: vec![
+                ClassSelectorEntry {
+                    class: "TKManager".into(),
+                    selector: "loadResource:error:".into(),
+                },
+                ClassSelectorEntry {
+                    class: "Other".into(),
+                    selector: "x:error:".into(),
+                },
+            ],
+            ..Default::default()
+        };
+        let sel = class_error_selectors(Some(&data), "TKManager");
+        assert!(sel.contains("loadResource:error:"));
+        assert!(!sel.contains("x:error:"));
+        assert!(class_error_selectors(None, "TKManager").is_empty());
+    }
+
     /// Opt-in: write the `Dispatch.swift` the synthetic **TestKit** framework
     /// generates (the only local witness — real-framework IR is gitignored) to the
     /// real Generated/ path, so the worktree's dylib matches the committed TestKit
@@ -940,6 +1301,9 @@ mod tests {
             "/../../../swift/Sources/APIAnywareRacket/Generated/Dispatch.swift"
         );
         std::fs::write(out, swift).expect("write Dispatch.swift");
-        eprintln!("wrote TestKit Dispatch.swift ({} entries) to {out}", sigs.len());
+        eprintln!(
+            "wrote TestKit Dispatch.swift ({} entries) to {out}",
+            sigs.len()
+        );
     }
 }

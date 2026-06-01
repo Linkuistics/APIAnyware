@@ -26,7 +26,8 @@ use crate::naming::{
     make_unique_constructor_name,
 };
 use crate::native_dispatch::{
-    collect_class_native_sigs, native_dispatch_binding, GeoStruct, NativeSig,
+    class_error_selectors, collect_class_native_sigs, is_error_out_routable,
+    native_dispatch_binding, native_dispatch_error_binding, GeoStruct, NativeSig,
 };
 use crate::shared_signatures::{
     block_ffi_types, class_has_blocks, class_has_struct_types, collect_class_fallback_signatures,
@@ -103,7 +104,13 @@ pub fn generate_class_file(
     // file routes natively iff it has at least one routable signature; such files
     // switch to the ffi2 header and emit their fallbacks as `_cprocedure` (since
     // the ffi2 header shadows `ffi/unsafe`'s `->`).
-    let native_sigs = collect_class_native_sigs(cls, &mapper);
+    // NSError out-param selectors for this class (leaf 050/040): the analysis
+    // stage's `convenience_error_methods`, keyed by (class, selector). Methods in
+    // this set route their trailing `NSError **` through the native `…_e` entry
+    // and return `(values result error)` instead of threading a caller-allocated
+    // cell through interpreted Racket.
+    let error_selectors = class_error_selectors(enrichment, &cls.name);
+    let native_sigs = collect_class_native_sigs(cls, &mapper, &error_selectors);
     let needs_native = !native_sigs.is_empty();
     let sig_map = collect_class_fallback_signatures(cls, &mapper);
 
@@ -151,6 +158,7 @@ pub fn generate_class_file(
         &class_methods,
         &class_method_disambig,
         &class_property_disambig,
+        &error_selectors,
     );
 
     // Collect class names for predicates (must be defined before
@@ -198,7 +206,15 @@ pub fn generate_class_file(
     if !init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
         for m in &init_methods {
-            emit_constructor(&mut w, &cls.name, m, &notes, &sig_map, &mapper, needs_native);
+            emit_constructor(
+                &mut w,
+                &cls.name,
+                m,
+                &notes,
+                &sig_map,
+                &mapper,
+                needs_native,
+            );
         }
         if needs_default_constructor {
             emit_default_constructor(&mut w, &cls.name);
@@ -211,7 +227,15 @@ pub fn generate_class_file(
         w.line(";; --- Properties ---");
         for p in &properties {
             let disambig = p.class_property && class_property_disambig.contains(&p.name);
-            emit_property(&mut w, &cls.name, p, disambig, &sig_map, &mapper, needs_native);
+            emit_property(
+                &mut w,
+                &cls.name,
+                p,
+                disambig,
+                &sig_map,
+                &mapper,
+                needs_native,
+            );
         }
         w.blank_line();
     }
@@ -221,7 +245,16 @@ pub fn generate_class_file(
         w.line(";; --- Instance methods ---");
         for m in &instance_methods {
             emit_method(
-                &mut w, &cls.name, m, false, false, &notes, &sig_map, &mapper, needs_native,
+                &mut w,
+                &cls.name,
+                m,
+                false,
+                false,
+                &notes,
+                &sig_map,
+                &mapper,
+                needs_native,
+                &error_selectors,
             );
         }
     }
@@ -233,7 +266,16 @@ pub fn generate_class_file(
         for m in &class_methods {
             let disambig = class_method_disambig.contains(&m.selector);
             emit_method(
-                &mut w, &cls.name, m, true, disambig, &notes, &sig_map, &mapper, needs_native,
+                &mut w,
+                &cls.name,
+                m,
+                true,
+                disambig,
+                &notes,
+                &sig_map,
+                &mapper,
+                needs_native,
+                &error_selectors,
             );
         }
     }
@@ -406,6 +448,45 @@ fn make_class_predicate_name(class_name: &str) -> String {
     format!("{}?", class_name_to_lowercase(class_name))
 }
 
+/// The contract for the **error** component of an NSError out-param wrapper's
+/// `(values result error)` result: a wrapped `NSError` object, or `#f` when the
+/// method reported no error. `objc-object?` is in scope via `objc-base.rkt`
+/// (re-exported by `coerce.rkt`).
+const ERROR_VALUE_CONTRACT: &str = "(or/c objc-object? #f)";
+
+/// Whether `method`'s trailing `NSError **` routes through the native error-out
+/// entry (leaf 050/040), so the wrapper drops it from its arity and returns
+/// `(values result error)`. Mirrors [`is_error_out_routable`] over the method's
+/// mapped param/return spellings.
+fn method_routes_error_out(
+    method: &Method,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &std::collections::HashSet<String>,
+) -> bool {
+    let param_types: Vec<String> = method
+        .params
+        .iter()
+        .map(|p| mapper.map_type(&p.param_type, false))
+        .collect();
+    let ret = mapper.map_type(&method.return_type, true);
+    is_error_out_routable(&param_types, &ret, &method.selector, error_selectors)
+}
+
+/// The parameters the Racket wrapper actually exposes: all of `method`'s params,
+/// minus the trailing `NSError **` when it routes natively (the error crossing is
+/// owned by the native entry). For every other method this is just `&method.params`.
+fn visible_params<'a>(
+    method: &'a Method,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &std::collections::HashSet<String>,
+) -> &'a [Param] {
+    if method_routes_error_out(method, mapper, error_selectors) {
+        &method.params[..method.params.len() - 1]
+    } else {
+        &method.params
+    }
+}
+
 /// Collect class names that need predicate definitions in the generated file.
 ///
 /// Includes:
@@ -476,6 +557,7 @@ struct ExportContract {
 }
 
 /// Collect all exported symbols and their contracts for a class.
+#[allow(clippy::too_many_arguments)]
 fn build_export_contracts(
     cls: &Class,
     properties: &[&Property],
@@ -484,9 +566,11 @@ fn build_export_contracts(
     class_methods: &[&Method],
     class_method_disambig: &std::collections::HashSet<String>,
     class_property_disambig: &std::collections::HashSet<String>,
+    error_selectors: &std::collections::HashSet<String>,
 ) -> Vec<ExportContract> {
     let mut exports = Vec::new();
     let self_predicate = make_class_predicate_name(&cls.name);
+    let mapper = RacketFfiTypeMapper;
 
     // Constructors: (-> param-contracts... cpointer?)
     for m in init_methods {
@@ -556,15 +640,18 @@ fn build_export_contracts(
         }
     }
 
-    // Instance methods: (-> <class>? param-contracts... return-contract)
+    // Instance methods: (-> <class>? param-contracts... return-contract).
+    // An NSError out-param method drops its trailing `NSError **` from the arity
+    // and returns `(values result error)` (leaf 050/040).
     for m in instance_methods {
         if !is_supported_method(m) {
             continue;
         }
         let name = make_method_name(&cls.name, &m.selector);
+        let vparams = visible_params(m, &mapper, error_selectors);
         let mut param_contracts = vec![self_predicate.clone()];
-        param_contracts.extend(m.params.iter().map(|p| map_param_contract(&p.param_type)));
-        let return_contract = map_return_contract(&m.return_type);
+        param_contracts.extend(vparams.iter().map(|p| map_param_contract(&p.param_type)));
+        let return_contract = method_return_contract(m, &mapper, error_selectors);
         let contract = format_arrow_contract(&param_contracts, &return_contract);
         exports.push(ExportContract { name, contract });
     }
@@ -579,17 +666,32 @@ fn build_export_contracts(
             &m.selector,
             class_method_disambig.contains(&m.selector),
         );
-        let param_contracts: Vec<String> = m
-            .params
+        let vparams = visible_params(m, &mapper, error_selectors);
+        let param_contracts: Vec<String> = vparams
             .iter()
             .map(|p| map_param_contract(&p.param_type))
             .collect();
-        let return_contract = map_return_contract(&m.return_type);
+        let return_contract = method_return_contract(m, &mapper, error_selectors);
         let contract = format_arrow_contract(&param_contracts, &return_contract);
         exports.push(ExportContract { name, contract });
     }
 
     exports
+}
+
+/// The wrapper's return contract for a method: its normal return contract, or —
+/// for an NSError out-param method — the `(values result error)` contract.
+fn method_return_contract(
+    method: &Method,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &std::collections::HashSet<String>,
+) -> String {
+    let result = map_return_contract(&method.return_type);
+    if method_routes_error_out(method, mapper, error_selectors) {
+        format!("(values {result} {ERROR_VALUE_CONTRACT})")
+    } else {
+        result
+    }
 }
 
 // --- Header ---
@@ -689,7 +791,12 @@ fn emit_shared_msg_bindings(
     if !native_sigs.is_empty() {
         w.line(";; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---");
         for sig in native_sigs {
-            write_line!(w, "(define-aw-msg {} {})", sig.entry_name(), sig.ffi2_arrow());
+            write_line!(
+                w,
+                "(define-aw-msg {} {})",
+                sig.entry_name(),
+                sig.ffi2_arrow()
+            );
         }
     }
 
@@ -815,7 +922,15 @@ fn emit_constructor(
         w.line("   #:retained #t))");
     } else {
         // Typed objc_msgSend path
-        emit_typed_constructor(w, class_name, method, &param_names, sig_map, mapper, needs_native);
+        emit_typed_constructor(
+            w,
+            class_name,
+            method,
+            &param_names,
+            sig_map,
+            mapper,
+            needs_native,
+        );
     }
     w.blank_line();
 }
@@ -1088,6 +1203,7 @@ fn emit_method(
     sig_map: &SignatureMap,
     mapper: &dyn FfiTypeMapper,
     needs_native: bool,
+    error_selectors: &std::collections::HashSet<String>,
 ) {
     if !is_supported_method(method) {
         return;
@@ -1095,8 +1211,13 @@ fn emit_method(
 
     emit_enrichment_notes(w, notes, &method.selector);
 
-    let param_names: Vec<String> = method
-        .params
+    // NSError out-param methods (leaf 050/040) drop the trailing `NSError **` from
+    // the wrapper's arity — the native `…_e` entry owns the error cell — and return
+    // `(values result error)`. `effective_params` is the visible parameter set.
+    let routes_error = method_routes_error_out(method, mapper, error_selectors);
+    let effective_params: &[Param] = visible_params(method, mapper, error_selectors);
+
+    let param_names: Vec<String> = effective_params
         .iter()
         .map(|p| camel_to_kebab(&p.name))
         .collect();
@@ -1122,8 +1243,7 @@ fn emit_method(
 
     let retained = method_returns_retained(method);
 
-    let param_types: Vec<String> = method
-        .params
+    let param_types: Vec<String> = effective_params
         .iter()
         .map(|p| mapper.map_type(&p.param_type, false))
         .collect();
@@ -1137,13 +1257,34 @@ fn emit_method(
     let mut call_args: Vec<String> = param_names.clone();
 
     // Block wrapping
-    emit_block_wrapping(w, &method.params, &mut call_args, mapper);
+    emit_block_wrapping(w, effective_params, &mut call_args, mapper);
 
     // Coerce id-kind params
-    coerce_id_params(&method.params, &mut call_args, mapper);
+    coerce_id_params(effective_params, &mut call_args, mapper);
 
     // Coerce SEL-typed params (string → sel_registerName)
-    coerce_sel_params(&method.params, &mut call_args);
+    coerce_sel_params(effective_params, &mut call_args);
+
+    // NSError out-param routing (leaf 050/040): a single ffi2 call into the `…_e`
+    // native entry with a caller-allocated error out-buffer, yielding
+    // `(values result error)`. `routes_error` guarantees the binding exists.
+    if routes_error {
+        if let Some((entry, _arrow)) = native_dispatch_error_binding(&param_types, &ret_ffi_type) {
+            emit_error_out_body(
+                w,
+                &entry,
+                &target_expr,
+                &method.selector,
+                &call_args,
+                &param_types,
+                &ret_ffi_type,
+                ret_is_id,
+                ret_is_void,
+                retained,
+            );
+            return;
+        }
+    }
 
     // Every routable signature dispatches through the generated native entry
     // (ADR-0013). Since leaf 050/010 this includes the all-object shapes that
@@ -1170,8 +1311,13 @@ fn emit_method(
             write_line!(w, "    (ptr-ref buf {cstruct})))");
             return;
         }
-        let call =
-            native_call_expr(&entry, &target_expr, &method.selector, &call_args, &param_types);
+        let call = native_call_expr(
+            &entry,
+            &target_expr,
+            &method.selector,
+            &call_args,
+            &param_types,
+        );
         if ret_is_id && !ret_is_void {
             w.line("  (wrap-objc-object");
             write_line!(w, "   (ffi2-ptr->id {})", call);
@@ -1421,6 +1567,59 @@ fn native_scalar_result(call: &str, ret_ffi_type: &str) -> String {
     }
 }
 
+/// Emit the body of an **NSError out-param** wrapper (leaf 050/040): allocate a
+/// one-pointer error cell, make a single ffi2 call into the `…_e` native entry
+/// (which writes the retained `NSError*`, or NULL, through the cell), and hand
+/// back `(values result error)`. The `let`'s init expressions evaluate
+/// left-to-right, so the call (which writes the cell) runs before the cell is
+/// read. `error` is the wrapped `NSError` (already +1 from the native side, so
+/// `#:retained #t`) or `#f` when the method reported none.
+#[allow(clippy::too_many_arguments)]
+fn emit_error_out_body(
+    w: &mut CodeWriter,
+    entry: &str,
+    target_expr: &str,
+    selector: &str,
+    call_args: &[String],
+    param_types: &[String],
+    ret_ffi_type: &str,
+    ret_is_id: bool,
+    ret_is_void: bool,
+    retained: bool,
+) {
+    let call = native_call_expr_with_out(
+        entry,
+        target_expr,
+        selector,
+        call_args,
+        param_types,
+        Some("(cpointer->ptr_t errbuf)"),
+    );
+    let err_value = "(if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))";
+    w.line("  (let ([errbuf (malloc _pointer)])");
+    if ret_is_void {
+        // No result value: run the call (writing the error cell), then pair the
+        // void result with the error.
+        write_line!(w, "    {}", call);
+        w.line("    (let ([err (ptr-ref errbuf _pointer)])");
+        write_line!(w, "      (values (void) {err_value}))))");
+    } else {
+        let result_expr = if ret_is_id {
+            if retained {
+                "(wrap-objc-object (ffi2-ptr->id result) #:retained #t)".to_string()
+            } else {
+                "(wrap-objc-object (ffi2-ptr->id result))".to_string()
+            }
+        } else {
+            // Scalar (incl. bool) passes through; a raw `_pointer` is re-tagged.
+            native_scalar_result("result", ret_ffi_type)
+        };
+        write_line!(w, "    (let ([result {call}]");
+        w.line("          [err (ptr-ref errbuf _pointer)])");
+        write_line!(w, "      (values {result_expr} {err_value}))))");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1569,6 +1768,100 @@ mod tests {
         assert!(output.contains("(import-class NSObject)"));
         assert!(output.contains("(define (nsobject-description self)"));
         assert!(output.contains("wrap-objc-object"));
+    }
+
+    #[test]
+    fn nserror_out_param_method_emits_values_wrapper() {
+        use apianyware_macos_types::enrichment::{ClassSelectorEntry, EnrichmentData};
+
+        // `-loadResource:error:` → BOOL, trailing `NSError **` (a Pointer named
+        // "error"). The enrichment classifies it as an NSError out-param.
+        let cls = Class {
+            name: "TKManager".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "loadResource:error:",
+                false,
+                false,
+                vec![
+                    Param {
+                        name: "name".into(),
+                        param_type: TypeRef {
+                            nullable: false,
+                            kind: TypeRefKind::Class {
+                                name: "NSString".into(),
+                                framework: None,
+                                params: vec![],
+                            },
+                        },
+                    },
+                    Param {
+                        name: "error".into(),
+                        param_type: TypeRef {
+                            nullable: true,
+                            kind: TypeRefKind::Pointer,
+                        },
+                    },
+                ],
+                TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Primitive {
+                        name: "BOOL".into(),
+                    },
+                },
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let enrichment = EnrichmentData {
+            convenience_error_methods: vec![ClassSelectorEntry {
+                class: "TKManager".into(),
+                selector: "loadResource:error:".into(),
+            }],
+            ..Default::default()
+        };
+
+        let output = generate_class_file(&cls, "TestKit", Some(&enrichment));
+
+        // The wrapper drops the trailing `error` param from its arity…
+        assert!(
+            output.contains("(define (tkmanager-load-resource-error self name)"),
+            "error param dropped from arity:\n{output}"
+        );
+        // …routes through the `…_e` native entry with an error out-buffer…
+        assert!(
+            output.contains(
+                "(define-aw-msg aw_racket_msg_P_b_e (-> ptr_t ptr_t ptr_t ptr_t bool_t))"
+            ),
+            "error-out native binding:\n{output}"
+        );
+        assert!(
+            output.contains("(let ([errbuf (malloc _pointer)])"),
+            "allocates the error cell:\n{output}"
+        );
+        assert!(
+            output.contains("(cpointer->ptr_t errbuf)"),
+            "passes the error out-buffer:\n{output}"
+        );
+        // …and returns `(values result error)`.
+        assert!(
+            output.contains(
+                "(values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t)))"
+            ),
+            "returns (values result error):\n{output}"
+        );
+        // The contract reflects the dropped param + the values return.
+        assert!(
+            output.contains(
+                "[tkmanager-load-resource-error (c-> tkmanager? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]"
+            ),
+            "values contract with dropped error param:\n{output}"
+        );
     }
 
     // --- Contract tests ---
@@ -2854,7 +3147,10 @@ mod tests {
         };
         let out = generate_class_file(&cls, "TestKit", None);
         // ffi2 header + native binding + routed body.
-        assert!(out.contains("\"../../runtime/ffi2-dispatch.rkt\""), "native header:\n{out}");
+        assert!(
+            out.contains("\"../../runtime/ffi2-dispatch.rkt\""),
+            "native header:\n{out}"
+        );
         assert!(
             out.contains("(define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))"),
             "scalar binding:\n{out}"
@@ -2938,7 +3234,10 @@ mod tests {
             out.contains("(ffi2-ptr->id (aw_racket_msg_Q_P (id->ffi2-ptr (tell TKArray alloc)) (id->ffi2-ptr (sel_registerName \"initWithCapacity:\")) capacity))"),
             "constructor routed body:\n{out}"
         );
-        assert!(out.contains("#:retained #t"), "constructor +1 retained:\n{out}");
+        assert!(
+            out.contains("#:retained #t"),
+            "constructor +1 retained:\n{out}"
+        );
     }
 
     fn type_nsrect() -> TypeRef {
