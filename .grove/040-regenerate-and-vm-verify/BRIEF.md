@@ -1,11 +1,17 @@
-# 040-regenerate-and-vm-verify
-
-**Kind:** work
+# 040-regenerate-and-vm-verify — brief
 
 ## Goal
 Regenerate the full chez pipeline against the self-contained `APIAnywareChez`
 (post de-Common, post thread-safety) and **VM-verify every chez sample app
 visually via TestAnyware** — the grove's done-bar (root BRIEF).
+
+## Decomposition
+Split into the mechanical half and the visual half (this leaf was too big for one
+focused session — regenerate + rebuild dylib + bundle 7 apps + VM-verify 7 apps):
+- **010-regenerate-build-bundle** — re-emit framework libs, rebuild the
+  self-contained dylib, bundle all 7 standalone `.app`s, CLI-sanity each.
+- **020-vm-verify-sample-apps** — VM-verify every app visually via TestAnyware to
+  the "visually perfect" bar; fix regressions; grow per-app leaves lazily.
 
 ## Context
 - Standing project rules: regenerate the pipeline aggressively after any
