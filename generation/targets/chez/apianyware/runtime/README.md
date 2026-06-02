@@ -80,6 +80,7 @@ chez --libdirs $LIBDIRS \
 # → [smoke-dispatch] 1. Block create+free OK
 #   [smoke-dispatch] 2. Delegate invocation OK
 #   [smoke-dispatch] 3. Dynamic subclass override OK
+#   [smoke-dispatch] 4. Background dispatch_async callback OK
 #   [smoke-dispatch] all tests passed
 ```
 

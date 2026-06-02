@@ -41,6 +41,18 @@
   ;; is sent `objc_release`.
   (define objc-guardian (make-guardian))
 
+  ;; ADR-0016 makes background callbacks real: a `__collect_safe`
+  ;; foreign-callable can run `wrap-objc-object` (guardian register) and
+  ;; `drain-objc-guardian` (guardian poll) on a GCD worker thread while
+  ;; the main thread does the same. Register and poll are *destructive
+  ;; operations on the same guardian object*, which threaded Chez does
+  ;; NOT guarantee thread-safe (only same-op-on-different-objects is).
+  ;; This mutex serialises them; the collector's own ready-queue updates
+  ;; are safe already because GC is stop-the-world. Bugs here are the
+  ;; use-after-free ADR-0007/ADR-0016 warn about. Uncontended cost is a
+  ;; few ns at each pool boundary — negligible on the UI path.
+  (define objc-guardian-mutex (make-mutex))
+
   ;; Wrap a raw ObjC `id` (an address-integer from the FFI) into an
   ;; `objc-object` record and register it with the guardian.
   ;;
@@ -64,7 +76,9 @@
          [else
           (unless retained? (objc_retain ptr))
           (let ([obj (make-objc-object ptr)])
-            (objc-guardian obj)
+            ;; Lock only the guardian register; keep the foreign
+            ;; `objc_retain` above outside the critical section.
+            (with-mutex objc-guardian-mutex (objc-guardian obj))
             obj)])]))
 
   ;; Borrow: wrap WITHOUT retain or guardian registration. The caller
@@ -85,13 +99,21 @@
   ;; explicitly for long-running loops outside the run-loop's
   ;; entry-point wrapping.
   (define (drain-objc-guardian)
-    (let loop ()
-      (let ([o (objc-guardian)])
-        (when o
+    ;; Pull every ready wrapper under the mutex, then send `objc_release`
+    ;; OUTSIDE the lock — so we never hold the guardian mutex across a
+    ;; foreign call, and concurrent drains from a background callback and
+    ;; the main thread can't corrupt the guardian's ready-queue.
+    (let ([ready
+           (with-mutex objc-guardian-mutex
+             (let loop ([acc '()])
+               (let ([o (objc-guardian)])
+                 (if o (loop (cons o acc)) acc))))])
+      (for-each
+        (lambda (o)
           (let ([p (objc-object-ptr o)])
             (unless (or (not p) (and (integer? p) (zero? p)))
-              (objc_release p)))
-          (loop)))))
+              (objc_release p))))
+        ready)))
 
   ;; (with-autorelease-pool body ...) — push an NSAutoreleasePool, run
   ;; body, pop the pool, then drain the guardian. The pool catches

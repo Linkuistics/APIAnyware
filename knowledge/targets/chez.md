@@ -126,6 +126,20 @@ These are the rules an app author must follow; they are not optional polish.
   pinned in a process-lifetime hashtable (`dynamic-class-imps`). If you build a
   bare `foreign-callable` yourself (escape hatch §5), **you** must `lock-object`
   it and keep the handle alive.
+- **Background callbacks are safe; blocking waits on the main thread need
+  `__collect_safe` (ADR-0016).** Every callback the runtime builds is a
+  `__collect_safe` `foreign-callable`, so a delegate method or block that fires
+  on a background thread (an `NSURLSession` completion, a `dispatch_async`
+  block) activates the worker thread for Scheme and tears the context down on
+  exit — no main-thread bounce required for non-UI work. **UI mutation still
+  belongs on the main thread** (AppKit), so bounce UI updates via the
+  `cocoa.sls` main-thread dispatch. The footgun is the *outbound* dual: if you
+  ever make a **blocking** foreign call on a Scheme thread (`dispatch_sync`, a
+  semaphore/`pthread_join` wait, a synchronous network call) while background
+  callbacks may run, declare that `foreign-procedure` `__collect_safe` too —
+  otherwise the blocked thread never reaches a GC safe point and a background
+  callback's allocation deadlocks the stop-the-world collector. See
+  `tests/smoke-dispatch.sls` test 4 for the canonical pattern.
 - **Use the framework facades, not hand-defined constants.** Import
   `(apianyware appkit)` / `(apianyware coregraphics)` etc. and use the emitted
   enums (`NSWindowStyleMaskTitled`, `NSButtonTypeRadio`, …). The racket ports'

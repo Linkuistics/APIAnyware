@@ -2,9 +2,11 @@
 ;;
 ;; Three sub-machineries share one substrate: `foreign-callable` exposes a
 ;; Scheme procedure as a C function pointer, `lock-object` keeps that code
-;; alive across the boundary, and every callable body wraps in
-;; `with-autorelease-pool` so transient +0 returns drain before the call
-;; unwinds (ADR-0007).
+;; alive across the boundary, every callable is `__collect_safe` so it may
+;; be entered from a background OS thread (ADR-0016), and every callable
+;; body wraps in `with-autorelease-pool` so transient +0 returns drain
+;; before the call unwinds (ADR-0007). The single `build-callable` form
+;; carries both properties, so all three bridges inherit them.
 ;;
 ;;   1. Block bridge — `make-objc-block` / `free-objc-block` /
 ;;      `call-with-objc-block`. The Scheme proc is wrapped in a
@@ -223,7 +225,24 @@
                                   (string-append "a" (number->string i)))
                                 (loop (+ i 1)))))]
            [form
-            `(foreign-callable
+            ;; `__collect_safe` (ADR-0016): make the callable safe to
+            ;; enter from a Scheme-unregistered OS thread. A bare
+            ;; `foreign-callable` entered from a background thread
+            ;; (NSURLSession completion, `dispatch_async` compute,
+            ;; delegate methods on a private queue) crashes hard — the
+            ;; generated prologue touches the thread's Scheme context
+            ;; before any user code runs (spike `FINDINGS.md` §C). The
+            ;; modifier makes Chez's prologue `Sactivate_thread` the
+            ;; caller on entry and revert on exit; for a thread it had
+            ;; to register from scratch it `Sdestroy_thread`s on the way
+            ;; out, so transient GCD workers don't leak thread contexts.
+            ;; This single point covers all three bridges: block invokes
+            ;; and dynamic-class IMPs ARE this entry pointer; the
+            ;; delegate Swift trampoline CALLS it — so none of them need
+            ;; native-side activation. Already-registered threads (the
+            ;; main thread after `main`, Scheme `fork-thread`s) are just
+            ;; reverted, not destroyed, so the UI path is unchanged.
+            `(foreign-callable __collect_safe
                (lambda ,arg-names
                  (%aw-chez-callable-invoke ,id (list ,@arg-names)))
                ,param-type-syms

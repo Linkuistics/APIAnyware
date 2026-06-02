@@ -76,6 +76,19 @@ the racket runtime relies on per-thread autorelease pools instead. See
 `docs/adr/0007-chez-lifetime-model.md`.
 _Avoid_: "main pool" (ambiguous with NSRunLoop's autorelease pool).
 
+**Foreign-thread activation**:
+The chez mechanism for callbacks that fire on a background OS thread. Every
+runtime callback is a `__collect_safe` `foreign-callable`, so Chez's generated
+C prologue registers ("activates") the calling thread before entering Scheme
+and destroys a freshly-created thread context on exit. Unlike racket, chez does
+**not bounce to the main thread for safety** — only for AppKit UI mutation. The
+dual obligation: a *blocking* outbound `foreign-procedure` on a Scheme thread
+must also be `__collect_safe`, or it parks the thread off any GC safe point and
+deadlocks a background callback's stop-the-world collection. See
+`docs/adr/0016-chez-outbound-callbacks-with-thread-activation.md`.
+_Avoid_: "main-thread bounce" as the chez safety mechanism (that is racket's
+model — ADR-0014; chez bounces only for UI).
+
 **Paradigm** _(retired)_:
 Formerly a dimension reified by the `BindingStyle` enum
 (`ObjectOriented | Functional | Procedural`), allowing one target to emit
