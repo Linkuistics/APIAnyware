@@ -45,6 +45,7 @@ const RUNTIME_FILES: &[&str] = &[
     "coerce.rkt",
     "delegate.rkt",
     "dynamic-class.rkt",
+    "ffi2-dispatch.rkt",
     "ffi2-seam.rkt",
     "main-thread.rkt",
     "nsevent-helpers.rkt",

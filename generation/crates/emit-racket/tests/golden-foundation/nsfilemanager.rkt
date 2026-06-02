@@ -2,7 +2,8 @@
 ;; Generated binding for NSFileManager (Foundation)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -31,60 +32,60 @@
   [nsfilemanager-home-directory-for-current-user (c-> nsfilemanager? (or/c nsurl? objc-nil?))]
   [nsfilemanager-temporary-directory (c-> nsfilemanager? (or/c nsurl? objc-nil?))]
   [nsfilemanager-ubiquity-identity-token (c-> nsfilemanager? any/c)]
-  [nsfilemanager-url-for-directory-in-domain-appropriate-for-url-create-error (c-> nsfilemanager? exact-nonnegative-integer? exact-nonnegative-integer? (or/c string? objc-object? #f) boolean? (or/c cpointer? #f) (or/c nsurl? objc-nil?))]
-  [nsfilemanager-url-for-publishing-ubiquitous-item-at-url-expiration-date-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c cpointer? #f) (or/c nsurl? objc-nil?))]
+  [nsfilemanager-url-for-directory-in-domain-appropriate-for-url-create-error (c-> nsfilemanager? exact-nonnegative-integer? exact-nonnegative-integer? (or/c string? objc-object? #f) boolean? (values (or/c nsurl? objc-nil?) (or/c objc-object? #f)))]
+  [nsfilemanager-url-for-publishing-ubiquitous-item-at-url-expiration-date-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) (values (or/c nsurl? objc-nil?) (or/c objc-object? #f)))]
   [nsfilemanager-url-for-ubiquity-container-identifier (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
   [nsfilemanager-ur-ls-for-directory-in-domains (c-> nsfilemanager? exact-nonnegative-integer? exact-nonnegative-integer? any/c)]
-  [nsfilemanager-attributes-of-file-system-for-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
-  [nsfilemanager-attributes-of-item-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
+  [nsfilemanager-attributes-of-file-system-for-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
+  [nsfilemanager-attributes-of-item-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
   [nsfilemanager-change-current-directory-path (c-> nsfilemanager? (or/c string? objc-object? #f) boolean?)]
   [nsfilemanager-components-to-display-for-path (c-> nsfilemanager? (or/c string? objc-object? #f) any/c)]
   [nsfilemanager-container-url-for-security-application-group-identifier (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
   [nsfilemanager-contents-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c nsdata? objc-nil?))]
   [nsfilemanager-contents-equal-at-path-and-path (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
-  [nsfilemanager-contents-of-directory-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
-  [nsfilemanager-contents-of-directory-at-url-including-properties-for-keys-options-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c cpointer? #f) any/c)]
-  [nsfilemanager-copy-item-at-path-to-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-copy-item-at-url-to-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-create-directory-at-path-with-intermediate-directories-attributes-error (c-> nsfilemanager? (or/c string? objc-object? #f) boolean? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-create-directory-at-url-with-intermediate-directories-attributes-error (c-> nsfilemanager? (or/c string? objc-object? #f) boolean? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-contents-of-directory-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
+  [nsfilemanager-contents-of-directory-at-url-including-properties-for-keys-options-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (values any/c (or/c objc-object? #f)))]
+  [nsfilemanager-copy-item-at-path-to-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-copy-item-at-url-to-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-create-directory-at-path-with-intermediate-directories-attributes-error (c-> nsfilemanager? (or/c string? objc-object? #f) boolean? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-create-directory-at-url-with-intermediate-directories-attributes-error (c-> nsfilemanager? (or/c string? objc-object? #f) boolean? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-create-file-at-path-contents-attributes (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
-  [nsfilemanager-create-symbolic-link-at-path-with-destination-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-create-symbolic-link-at-url-with-destination-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-destination-of-symbolic-link-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c nsstring? objc-nil?))]
+  [nsfilemanager-create-symbolic-link-at-path-with-destination-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-create-symbolic-link-at-url-with-destination-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-destination-of-symbolic-link-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (values (or/c nsstring? objc-nil?) (or/c objc-object? #f)))]
   [nsfilemanager-display-name-at-path! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c nsstring? objc-nil?))]
   [nsfilemanager-enumerator-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) any/c)]
   [nsfilemanager-enumerator-at-url-including-properties-for-keys-options-error-handler (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c procedure? #f) any/c)]
-  [nsfilemanager-evict-ubiquitous-item-at-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-evict-ubiquitous-item-at-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-fetch-latest-remote-version-of-item-at-url-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
   [nsfilemanager-file-exists-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) boolean?)]
   [nsfilemanager-file-exists-at-path-is-directory (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
   [nsfilemanager-file-system-representation-with-path (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? #f))]
   [nsfilemanager-get-file-provider-services-for-item-at-url-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
-  [nsfilemanager-get-relationship-of-directory-in-domain-to-item-at-url-error (c-> nsfilemanager? (or/c cpointer? #f) exact-nonnegative-integer? exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-get-relationship-of-directory-at-url-to-item-at-url-error (c-> nsfilemanager? (or/c cpointer? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-get-relationship-of-directory-in-domain-to-item-at-url-error (c-> nsfilemanager? (or/c cpointer? #f) exact-nonnegative-integer? exact-nonnegative-integer? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-get-relationship-of-directory-at-url-to-item-at-url-error (c-> nsfilemanager? (or/c cpointer? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-is-deletable-file-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) boolean?)]
   [nsfilemanager-is-executable-file-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) boolean?)]
   [nsfilemanager-is-readable-file-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) boolean?)]
   [nsfilemanager-is-ubiquitous-item-at-url (c-> nsfilemanager? (or/c string? objc-object? #f) boolean?)]
   [nsfilemanager-is-writable-file-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) boolean?)]
-  [nsfilemanager-link-item-at-path-to-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-link-item-at-url-to-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-link-item-at-path-to-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-link-item-at-url-to-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-mounted-volume-ur-ls-including-resource-values-for-keys-options (c-> nsfilemanager? (or/c string? objc-object? #f) exact-nonnegative-integer? any/c)]
-  [nsfilemanager-move-item-at-path-to-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-move-item-at-url-to-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-move-item-at-path-to-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-move-item-at-url-to-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-pause-sync-for-ubiquitous-item-at-url-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
-  [nsfilemanager-remove-item-at-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-remove-item-at-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-replace-item-at-url-with-item-at-url-backup-item-name-options-resulting-item-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c cpointer? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-remove-item-at-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-remove-item-at-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-replace-item-at-url-with-item-at-url-backup-item-name-options-resulting-item-url-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c cpointer? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-resume-sync-for-ubiquitous-item-at-url-with-behavior-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-integer? (or/c procedure? #f) void?)]
-  [nsfilemanager-set-attributes-of-item-at-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-set-ubiquitous-item-at-url-destination-url-error! (c-> nsfilemanager? boolean? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
-  [nsfilemanager-start-downloading-ubiquitous-item-at-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-set-attributes-of-item-at-path-error! (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-set-ubiquitous-item-at-url-destination-url-error! (c-> nsfilemanager? boolean? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
+  [nsfilemanager-start-downloading-ubiquitous-item-at-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-string-with-file-system-representation-length (c-> nsfilemanager? string? exact-nonnegative-integer? (or/c nsstring? objc-nil?))]
   [nsfilemanager-subpaths-at-path (c-> nsfilemanager? (or/c string? objc-object? #f) any/c)]
-  [nsfilemanager-subpaths-of-directory-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
-  [nsfilemanager-trash-item-at-url-resulting-item-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c cpointer? #f) boolean?)]
+  [nsfilemanager-subpaths-of-directory-at-path-error (c-> nsfilemanager? (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
+  [nsfilemanager-trash-item-at-url-resulting-item-url-error (c-> nsfilemanager? (or/c string? objc-object? #f) (or/c cpointer? #f) (values boolean? (or/c objc-object? #f)))]
   [nsfilemanager-unmount-volume-at-url-options-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c procedure? #f) void?)]
   [nsfilemanager-upload-local-version-of-ubiquitous-item-at-url-with-conflict-resolution-policy-completion-handler (c-> nsfilemanager? (or/c string? objc-object? #f) exact-integer? (or/c procedure? #f) void?)]
   )
@@ -92,51 +93,32 @@
 ;; --- Class reference ---
 (import-class NSFileManager)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer _bool _id _id _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool _id _id _pointer -> _bool)))
-(define _msg-1  ; (_fun _pointer _pointer _id -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _bool)))
-(define _msg-2  ; (_fun _pointer _pointer _id -> _string)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _string)))
-(define _msg-3  ; (_fun _pointer _pointer _id _bool _id _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _bool _id _pointer -> _bool)))
-(define _msg-4  ; (_fun _pointer _pointer _id _id -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id -> _bool)))
-(define _msg-5  ; (_fun _pointer _pointer _id _id _id -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _id -> _bool)))
-(define _msg-6  ; (_fun _pointer _pointer _id _id _id _uint64 _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _id _uint64 _pointer _pointer -> _bool)))
-(define _msg-7  ; (_fun _pointer _pointer _id _id _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _pointer -> _bool)))
-(define _msg-8  ; (_fun _pointer _pointer _id _id _uint64 _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _uint64 _pointer -> _id)))
-(define _msg-9  ; (_fun _pointer _pointer _id _int64 _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _int64 _pointer -> _void)))
-(define _msg-10  ; (_fun _pointer _pointer _id _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _bool)))
-(define _msg-11  ; (_fun _pointer _pointer _id _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _id)))
-(define _msg-12  ; (_fun _pointer _pointer _id _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _void)))
-(define _msg-13  ; (_fun _pointer _pointer _id _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer _pointer -> _bool)))
-(define _msg-14  ; (_fun _pointer _pointer _id _pointer _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer _pointer -> _id)))
-(define _msg-15  ; (_fun _pointer _pointer _id _uint64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _uint64 -> _id)))
-(define _msg-16  ; (_fun _pointer _pointer _id _uint64 _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _uint64 _pointer -> _void)))
-(define _msg-17  ; (_fun _pointer _pointer _pointer _id _id _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _id _id _pointer -> _bool)))
-(define _msg-18  ; (_fun _pointer _pointer _pointer _uint64 _uint64 _id _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _uint64 _uint64 _id _pointer -> _bool)))
-(define _msg-19  ; (_fun _pointer _pointer _string _uint64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _string _uint64 -> _id)))
-(define _msg-20  ; (_fun _pointer _pointer _uint64 _uint64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 _uint64 -> _id)))
-(define _msg-21  ; (_fun _pointer _pointer _uint64 _uint64 _id _bool _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 _uint64 _id _bool _pointer -> _id)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_P_e (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_N (-> ptr_t ptr_t ptr_t string_t))
+(define-aw-msg aw_racket_msg_P_b (-> ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_P_b_e (-> ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PP_P_e (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PP_b_e (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_b (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PPP_b_e (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PPPQP_b_e (-> ptr_t ptr_t ptr_t ptr_t ptr_t uint64_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PPQ_P_e (-> ptr_t ptr_t ptr_t ptr_t uint64_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPQP_P (-> ptr_t ptr_t ptr_t ptr_t uint64_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PbP_b_e (-> ptr_t ptr_t ptr_t bool_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PqP_v (-> ptr_t ptr_t ptr_t int64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PQ_P (-> ptr_t ptr_t ptr_t uint64_t ptr_t))
+(define-aw-msg aw_racket_msg_PQP_v (-> ptr_t ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PQQP_b_e (-> ptr_t ptr_t ptr_t uint64_t uint64_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_NQ_P (-> ptr_t ptr_t string_t uint64_t ptr_t))
+(define-aw-msg aw_racket_msg_bPP_b_e (-> ptr_t ptr_t bool_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_QQ_P (-> ptr_t ptr_t uint64_t uint64_t ptr_t))
+(define-aw-msg aw_racket_msg_QQPb_P_e (-> ptr_t ptr_t uint64_t uint64_t ptr_t bool_t ptr_t ptr_t))
 
 ;; --- Constructors ---
 (define (make-nsfilemanager)
@@ -148,215 +130,290 @@
 ;; --- Properties ---
 (define (nsfilemanager-current-directory-path self)
   (wrap-objc-object
-   (tell (coerce-arg self) currentDirectoryPath)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "currentDirectoryPath"))))))
 (define (nsfilemanager-default-manager)
   (wrap-objc-object
-   (tell NSFileManager defaultManager)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSFileManager) (id->ffi2-ptr (sel_registerName "defaultManager"))))))
 (define (nsfilemanager-delegate self)
   (wrap-objc-object
-   (tell (coerce-arg self) delegate)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "delegate"))))))
 (define (nsfilemanager-set-delegate! self value)
-  (tell #:type _void (coerce-arg self) setDelegate: (coerce-arg value)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setDelegate:")) (id->ffi2-ptr (coerce-arg value))))
 (define (nsfilemanager-home-directory-for-current-user self)
   (wrap-objc-object
-   (tell (coerce-arg self) homeDirectoryForCurrentUser)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "homeDirectoryForCurrentUser"))))))
 (define (nsfilemanager-temporary-directory self)
   (wrap-objc-object
-   (tell (coerce-arg self) temporaryDirectory)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "temporaryDirectory"))))))
 (define (nsfilemanager-ubiquity-identity-token self)
   (wrap-objc-object
-   (tell (coerce-arg self) ubiquityIdentityToken)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "ubiquityIdentityToken"))))))
 
 ;; --- Instance methods ---
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-url-for-directory-in-domain-appropriate-for-url-create-error self directory domain url should-create error)
-  (wrap-objc-object
-   (_msg-21 (coerce-arg self) (sel_registerName "URLForDirectory:inDomain:appropriateForURL:create:error:") directory domain (coerce-arg url) should-create error)
-   ))
+(define (nsfilemanager-url-for-directory-in-domain-appropriate-for-url-create-error self directory domain url should-create)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_QQPb_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "URLForDirectory:inDomain:appropriateForURL:create:error:")) directory domain (id->ffi2-ptr (coerce-arg url)) should-create (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-url-for-publishing-ubiquitous-item-at-url-expiration-date-error self url out-date error)
-  (wrap-objc-object
-   (_msg-14 (coerce-arg self) (sel_registerName "URLForPublishingUbiquitousItemAtURL:expirationDate:error:") (coerce-arg url) out-date error)
-   ))
+(define (nsfilemanager-url-for-publishing-ubiquitous-item-at-url-expiration-date-error self url out-date)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "URLForPublishingUbiquitousItemAtURL:expirationDate:error:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr out-date) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsfilemanager-url-for-ubiquity-container-identifier self container-identifier)
   (wrap-objc-object
-   (tell (coerce-arg self) URLForUbiquityContainerIdentifier: (coerce-arg container-identifier))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "URLForUbiquityContainerIdentifier:")) (id->ffi2-ptr (coerce-arg container-identifier))))
+   ))
 (define (nsfilemanager-ur-ls-for-directory-in-domains self directory domain-mask)
   (wrap-objc-object
-   (_msg-20 (coerce-arg self) (sel_registerName "URLsForDirectory:inDomains:") directory domain-mask)
+   (ffi2-ptr->id (aw_racket_msg_QQ_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "URLsForDirectory:inDomains:")) directory domain-mask))
    ))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-attributes-of-file-system-for-path-error self path error)
-  (wrap-objc-object
-   (_msg-11 (coerce-arg self) (sel_registerName "attributesOfFileSystemForPath:error:") (coerce-arg path) error)
-   ))
+(define (nsfilemanager-attributes-of-file-system-for-path-error self path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "attributesOfFileSystemForPath:error:")) (id->ffi2-ptr (coerce-arg path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-attributes-of-item-at-path-error self path error)
-  (wrap-objc-object
-   (_msg-11 (coerce-arg self) (sel_registerName "attributesOfItemAtPath:error:") (coerce-arg path) error)
-   ))
+(define (nsfilemanager-attributes-of-item-at-path-error self path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "attributesOfItemAtPath:error:")) (id->ffi2-ptr (coerce-arg path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsfilemanager-change-current-directory-path self path)
-  (_msg-1 (coerce-arg self) (sel_registerName "changeCurrentDirectoryPath:") (coerce-arg path)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCurrentDirectoryPath:")) (id->ffi2-ptr (coerce-arg path))))
 (define (nsfilemanager-components-to-display-for-path self path)
   (wrap-objc-object
-   (tell (coerce-arg self) componentsToDisplayForPath: (coerce-arg path))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "componentsToDisplayForPath:")) (id->ffi2-ptr (coerce-arg path))))
+   ))
 (define (nsfilemanager-container-url-for-security-application-group-identifier self group-identifier)
   (wrap-objc-object
-   (tell (coerce-arg self) containerURLForSecurityApplicationGroupIdentifier: (coerce-arg group-identifier))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "containerURLForSecurityApplicationGroupIdentifier:")) (id->ffi2-ptr (coerce-arg group-identifier))))
+   ))
 (define (nsfilemanager-contents-at-path self path)
   (wrap-objc-object
-   (tell (coerce-arg self) contentsAtPath: (coerce-arg path))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentsAtPath:")) (id->ffi2-ptr (coerce-arg path))))
+   ))
 (define (nsfilemanager-contents-equal-at-path-and-path self path1 path2)
-  (_msg-4 (coerce-arg self) (sel_registerName "contentsEqualAtPath:andPath:") (coerce-arg path1) (coerce-arg path2)))
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentsEqualAtPath:andPath:")) (id->ffi2-ptr (coerce-arg path1)) (id->ffi2-ptr (coerce-arg path2))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-contents-of-directory-at-path-error self path error)
-  (wrap-objc-object
-   (_msg-11 (coerce-arg self) (sel_registerName "contentsOfDirectoryAtPath:error:") (coerce-arg path) error)
-   ))
+(define (nsfilemanager-contents-of-directory-at-path-error self path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentsOfDirectoryAtPath:error:")) (id->ffi2-ptr (coerce-arg path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-contents-of-directory-at-url-including-properties-for-keys-options-error self url keys mask error)
-  (wrap-objc-object
-   (_msg-8 (coerce-arg self) (sel_registerName "contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:") (coerce-arg url) (coerce-arg keys) mask error)
-   ))
+(define (nsfilemanager-contents-of-directory-at-url-including-properties-for-keys-options-error self url keys mask)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PPQ_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr (coerce-arg keys)) mask (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-copy-item-at-path-to-path-error self src-path dst-path error)
-  (_msg-7 (coerce-arg self) (sel_registerName "copyItemAtPath:toPath:error:") (coerce-arg src-path) (coerce-arg dst-path) error))
+(define (nsfilemanager-copy-item-at-path-to-path-error self src-path dst-path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "copyItemAtPath:toPath:error:")) (id->ffi2-ptr (coerce-arg src-path)) (id->ffi2-ptr (coerce-arg dst-path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-copy-item-at-url-to-url-error self src-url dst-url error)
-  (_msg-7 (coerce-arg self) (sel_registerName "copyItemAtURL:toURL:error:") (coerce-arg src-url) (coerce-arg dst-url) error))
+(define (nsfilemanager-copy-item-at-url-to-url-error self src-url dst-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "copyItemAtURL:toURL:error:")) (id->ffi2-ptr (coerce-arg src-url)) (id->ffi2-ptr (coerce-arg dst-url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-create-directory-at-path-with-intermediate-directories-attributes-error self path create-intermediates attributes error)
-  (_msg-3 (coerce-arg self) (sel_registerName "createDirectoryAtPath:withIntermediateDirectories:attributes:error:") (coerce-arg path) create-intermediates (coerce-arg attributes) error))
+(define (nsfilemanager-create-directory-at-path-with-intermediate-directories-attributes-error self path create-intermediates attributes)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PbP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "createDirectoryAtPath:withIntermediateDirectories:attributes:error:")) (id->ffi2-ptr (coerce-arg path)) create-intermediates (id->ffi2-ptr (coerce-arg attributes)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-create-directory-at-url-with-intermediate-directories-attributes-error self url create-intermediates attributes error)
-  (_msg-3 (coerce-arg self) (sel_registerName "createDirectoryAtURL:withIntermediateDirectories:attributes:error:") (coerce-arg url) create-intermediates (coerce-arg attributes) error))
+(define (nsfilemanager-create-directory-at-url-with-intermediate-directories-attributes-error self url create-intermediates attributes)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PbP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "createDirectoryAtURL:withIntermediateDirectories:attributes:error:")) (id->ffi2-ptr (coerce-arg url)) create-intermediates (id->ffi2-ptr (coerce-arg attributes)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsfilemanager-create-file-at-path-contents-attributes self path data attr)
-  (_msg-5 (coerce-arg self) (sel_registerName "createFileAtPath:contents:attributes:") (coerce-arg path) (coerce-arg data) (coerce-arg attr)))
+  (aw_racket_msg_PPP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "createFileAtPath:contents:attributes:")) (id->ffi2-ptr (coerce-arg path)) (id->ffi2-ptr (coerce-arg data)) (id->ffi2-ptr (coerce-arg attr))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-create-symbolic-link-at-path-with-destination-path-error self path dest-path error)
-  (_msg-7 (coerce-arg self) (sel_registerName "createSymbolicLinkAtPath:withDestinationPath:error:") (coerce-arg path) (coerce-arg dest-path) error))
+(define (nsfilemanager-create-symbolic-link-at-path-with-destination-path-error self path dest-path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "createSymbolicLinkAtPath:withDestinationPath:error:")) (id->ffi2-ptr (coerce-arg path)) (id->ffi2-ptr (coerce-arg dest-path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-create-symbolic-link-at-url-with-destination-url-error self url dest-url error)
-  (_msg-7 (coerce-arg self) (sel_registerName "createSymbolicLinkAtURL:withDestinationURL:error:") (coerce-arg url) (coerce-arg dest-url) error))
+(define (nsfilemanager-create-symbolic-link-at-url-with-destination-url-error self url dest-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "createSymbolicLinkAtURL:withDestinationURL:error:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr (coerce-arg dest-url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-destination-of-symbolic-link-at-path-error self path error)
-  (wrap-objc-object
-   (_msg-11 (coerce-arg self) (sel_registerName "destinationOfSymbolicLinkAtPath:error:") (coerce-arg path) error)
-   ))
+(define (nsfilemanager-destination-of-symbolic-link-at-path-error self path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "destinationOfSymbolicLinkAtPath:error:")) (id->ffi2-ptr (coerce-arg path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsfilemanager-display-name-at-path! self path)
   (wrap-objc-object
-   (tell (coerce-arg self) displayNameAtPath: (coerce-arg path))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayNameAtPath:")) (id->ffi2-ptr (coerce-arg path))))
+   ))
 (define (nsfilemanager-enumerator-at-path self path)
   (wrap-objc-object
-   (tell (coerce-arg self) enumeratorAtPath: (coerce-arg path))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enumeratorAtPath:")) (id->ffi2-ptr (coerce-arg path))))
+   ))
 ;; block param 3: stored (retained across calls)
 (define (nsfilemanager-enumerator-at-url-including-properties-for-keys-options-error-handler self url keys mask handler)
   (define-values (_blk3 _blk3-id)
     (make-objc-block handler (list _id _id) _bool))
   (wrap-objc-object
-   (_msg-8 (coerce-arg self) (sel_registerName "enumeratorAtURL:includingPropertiesForKeys:options:errorHandler:") (coerce-arg url) (coerce-arg keys) mask _blk3)
+   (ffi2-ptr->id (aw_racket_msg_PPQP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enumeratorAtURL:includingPropertiesForKeys:options:errorHandler:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr (coerce-arg keys)) mask (id->ffi2-ptr _blk3)))
    ))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-evict-ubiquitous-item-at-url-error self url error)
-  (_msg-10 (coerce-arg self) (sel_registerName "evictUbiquitousItemAtURL:error:") (coerce-arg url) error))
+(define (nsfilemanager-evict-ubiquitous-item-at-url-error self url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "evictUbiquitousItemAtURL:error:")) (id->ffi2-ptr (coerce-arg url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; block param 1: async-copied (runtime-managed)
 (define (nsfilemanager-fetch-latest-remote-version-of-item-at-url-completion-handler self url completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id _id) _void))
-  (_msg-12 (coerce-arg self) (sel_registerName "fetchLatestRemoteVersionOfItemAtURL:completionHandler:") (coerce-arg url) _blk1))
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "fetchLatestRemoteVersionOfItemAtURL:completionHandler:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr _blk1)))
 (define (nsfilemanager-file-exists-at-path self path)
-  (_msg-1 (coerce-arg self) (sel_registerName "fileExistsAtPath:") (coerce-arg path)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "fileExistsAtPath:")) (id->ffi2-ptr (coerce-arg path))))
 (define (nsfilemanager-file-exists-at-path-is-directory self path is-directory)
-  (_msg-10 (coerce-arg self) (sel_registerName "fileExistsAtPath:isDirectory:") (coerce-arg path) is-directory))
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "fileExistsAtPath:isDirectory:")) (id->ffi2-ptr (coerce-arg path)) (id->ffi2-ptr is-directory)))
 (define (nsfilemanager-file-system-representation-with-path self path)
-  (_msg-2 (coerce-arg self) (sel_registerName "fileSystemRepresentationWithPath:") (coerce-arg path)))
+  (aw_racket_msg_P_N (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "fileSystemRepresentationWithPath:")) (id->ffi2-ptr (coerce-arg path))))
 ;; block param 1: async-copied (runtime-managed)
 (define (nsfilemanager-get-file-provider-services-for-item-at-url-completion-handler self url completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id _id) _void))
-  (_msg-12 (coerce-arg self) (sel_registerName "getFileProviderServicesForItemAtURL:completionHandler:") (coerce-arg url) _blk1))
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getFileProviderServicesForItemAtURL:completionHandler:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr _blk1)))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-get-relationship-of-directory-in-domain-to-item-at-url-error self out-relationship directory domain-mask url error)
-  (_msg-18 (coerce-arg self) (sel_registerName "getRelationship:ofDirectory:inDomain:toItemAtURL:error:") out-relationship directory domain-mask (coerce-arg url) error))
+(define (nsfilemanager-get-relationship-of-directory-in-domain-to-item-at-url-error self out-relationship directory domain-mask url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PQQP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRelationship:ofDirectory:inDomain:toItemAtURL:error:")) (id->ffi2-ptr out-relationship) directory domain-mask (id->ffi2-ptr (coerce-arg url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-get-relationship-of-directory-at-url-to-item-at-url-error self out-relationship directory-url other-url error)
-  (_msg-17 (coerce-arg self) (sel_registerName "getRelationship:ofDirectoryAtURL:toItemAtURL:error:") out-relationship (coerce-arg directory-url) (coerce-arg other-url) error))
+(define (nsfilemanager-get-relationship-of-directory-at-url-to-item-at-url-error self out-relationship directory-url other-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PPP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRelationship:ofDirectoryAtURL:toItemAtURL:error:")) (id->ffi2-ptr out-relationship) (id->ffi2-ptr (coerce-arg directory-url)) (id->ffi2-ptr (coerce-arg other-url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsfilemanager-is-deletable-file-at-path self path)
-  (_msg-1 (coerce-arg self) (sel_registerName "isDeletableFileAtPath:") (coerce-arg path)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDeletableFileAtPath:")) (id->ffi2-ptr (coerce-arg path))))
 (define (nsfilemanager-is-executable-file-at-path self path)
-  (_msg-1 (coerce-arg self) (sel_registerName "isExecutableFileAtPath:") (coerce-arg path)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isExecutableFileAtPath:")) (id->ffi2-ptr (coerce-arg path))))
 (define (nsfilemanager-is-readable-file-at-path self path)
-  (_msg-1 (coerce-arg self) (sel_registerName "isReadableFileAtPath:") (coerce-arg path)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isReadableFileAtPath:")) (id->ffi2-ptr (coerce-arg path))))
 (define (nsfilemanager-is-ubiquitous-item-at-url self url)
-  (_msg-1 (coerce-arg self) (sel_registerName "isUbiquitousItemAtURL:") (coerce-arg url)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isUbiquitousItemAtURL:")) (id->ffi2-ptr (coerce-arg url))))
 (define (nsfilemanager-is-writable-file-at-path self path)
-  (_msg-1 (coerce-arg self) (sel_registerName "isWritableFileAtPath:") (coerce-arg path)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isWritableFileAtPath:")) (id->ffi2-ptr (coerce-arg path))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-link-item-at-path-to-path-error self src-path dst-path error)
-  (_msg-7 (coerce-arg self) (sel_registerName "linkItemAtPath:toPath:error:") (coerce-arg src-path) (coerce-arg dst-path) error))
+(define (nsfilemanager-link-item-at-path-to-path-error self src-path dst-path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "linkItemAtPath:toPath:error:")) (id->ffi2-ptr (coerce-arg src-path)) (id->ffi2-ptr (coerce-arg dst-path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-link-item-at-url-to-url-error self src-url dst-url error)
-  (_msg-7 (coerce-arg self) (sel_registerName "linkItemAtURL:toURL:error:") (coerce-arg src-url) (coerce-arg dst-url) error))
+(define (nsfilemanager-link-item-at-url-to-url-error self src-url dst-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "linkItemAtURL:toURL:error:")) (id->ffi2-ptr (coerce-arg src-url)) (id->ffi2-ptr (coerce-arg dst-url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsfilemanager-mounted-volume-ur-ls-including-resource-values-for-keys-options self property-keys options)
   (wrap-objc-object
-   (_msg-15 (coerce-arg self) (sel_registerName "mountedVolumeURLsIncludingResourceValuesForKeys:options:") (coerce-arg property-keys) options)
+   (ffi2-ptr->id (aw_racket_msg_PQ_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mountedVolumeURLsIncludingResourceValuesForKeys:options:")) (id->ffi2-ptr (coerce-arg property-keys)) options))
    ))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-move-item-at-path-to-path-error! self src-path dst-path error)
-  (_msg-7 (coerce-arg self) (sel_registerName "moveItemAtPath:toPath:error:") (coerce-arg src-path) (coerce-arg dst-path) error))
+(define (nsfilemanager-move-item-at-path-to-path-error! self src-path dst-path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveItemAtPath:toPath:error:")) (id->ffi2-ptr (coerce-arg src-path)) (id->ffi2-ptr (coerce-arg dst-path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-move-item-at-url-to-url-error! self src-url dst-url error)
-  (_msg-7 (coerce-arg self) (sel_registerName "moveItemAtURL:toURL:error:") (coerce-arg src-url) (coerce-arg dst-url) error))
+(define (nsfilemanager-move-item-at-url-to-url-error! self src-url dst-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveItemAtURL:toURL:error:")) (id->ffi2-ptr (coerce-arg src-url)) (id->ffi2-ptr (coerce-arg dst-url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; block param 1: async-copied (runtime-managed)
 (define (nsfilemanager-pause-sync-for-ubiquitous-item-at-url-completion-handler self url completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id) _void))
-  (_msg-12 (coerce-arg self) (sel_registerName "pauseSyncForUbiquitousItemAtURL:completionHandler:") (coerce-arg url) _blk1))
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pauseSyncForUbiquitousItemAtURL:completionHandler:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr _blk1)))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-remove-item-at-path-error! self path error)
-  (_msg-10 (coerce-arg self) (sel_registerName "removeItemAtPath:error:") (coerce-arg path) error))
+(define (nsfilemanager-remove-item-at-path-error! self path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeItemAtPath:error:")) (id->ffi2-ptr (coerce-arg path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-remove-item-at-url-error! self url error)
-  (_msg-10 (coerce-arg self) (sel_registerName "removeItemAtURL:error:") (coerce-arg url) error))
+(define (nsfilemanager-remove-item-at-url-error! self url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeItemAtURL:error:")) (id->ffi2-ptr (coerce-arg url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-replace-item-at-url-with-item-at-url-backup-item-name-options-resulting-item-url-error! self original-item-url new-item-url backup-item-name options resulting-url error)
-  (_msg-6 (coerce-arg self) (sel_registerName "replaceItemAtURL:withItemAtURL:backupItemName:options:resultingItemURL:error:") (coerce-arg original-item-url) (coerce-arg new-item-url) (coerce-arg backup-item-name) options resulting-url error))
+(define (nsfilemanager-replace-item-at-url-with-item-at-url-backup-item-name-options-resulting-item-url-error! self original-item-url new-item-url backup-item-name options resulting-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PPPQP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replaceItemAtURL:withItemAtURL:backupItemName:options:resultingItemURL:error:")) (id->ffi2-ptr (coerce-arg original-item-url)) (id->ffi2-ptr (coerce-arg new-item-url)) (id->ffi2-ptr (coerce-arg backup-item-name)) options (id->ffi2-ptr resulting-url) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; block param 2: async-copied (runtime-managed)
 (define (nsfilemanager-resume-sync-for-ubiquitous-item-at-url-with-behavior-completion-handler self url behavior completion-handler)
   (define-values (_blk2 _blk2-id)
     (make-objc-block completion-handler (list _id) _void))
-  (_msg-9 (coerce-arg self) (sel_registerName "resumeSyncForUbiquitousItemAtURL:withBehavior:completionHandler:") (coerce-arg url) behavior _blk2))
+  (aw_racket_msg_PqP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resumeSyncForUbiquitousItemAtURL:withBehavior:completionHandler:")) (id->ffi2-ptr (coerce-arg url)) behavior (id->ffi2-ptr _blk2)))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-set-attributes-of-item-at-path-error! self attributes path error)
-  (_msg-7 (coerce-arg self) (sel_registerName "setAttributes:ofItemAtPath:error:") (coerce-arg attributes) (coerce-arg path) error))
+(define (nsfilemanager-set-attributes-of-item-at-path-error! self attributes path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAttributes:ofItemAtPath:error:")) (id->ffi2-ptr (coerce-arg attributes)) (id->ffi2-ptr (coerce-arg path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-set-ubiquitous-item-at-url-destination-url-error! self flag url destination-url error)
-  (_msg-0 (coerce-arg self) (sel_registerName "setUbiquitous:itemAtURL:destinationURL:error:") flag (coerce-arg url) (coerce-arg destination-url) error))
+(define (nsfilemanager-set-ubiquitous-item-at-url-destination-url-error! self flag url destination-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_bPP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setUbiquitous:itemAtURL:destinationURL:error:")) flag (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr (coerce-arg destination-url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-start-downloading-ubiquitous-item-at-url-error self url error)
-  (_msg-10 (coerce-arg self) (sel_registerName "startDownloadingUbiquitousItemAtURL:error:") (coerce-arg url) error))
+(define (nsfilemanager-start-downloading-ubiquitous-item-at-url-error self url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "startDownloadingUbiquitousItemAtURL:error:")) (id->ffi2-ptr (coerce-arg url)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsfilemanager-string-with-file-system-representation-length self str len)
   (wrap-objc-object
-   (_msg-19 (coerce-arg self) (sel_registerName "stringWithFileSystemRepresentation:length:") str len)
+   (ffi2-ptr->id (aw_racket_msg_NQ_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringWithFileSystemRepresentation:length:")) str len))
    ))
 (define (nsfilemanager-subpaths-at-path self path)
   (wrap-objc-object
-   (tell (coerce-arg self) subpathsAtPath: (coerce-arg path))))
-;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-subpaths-of-directory-at-path-error self path error)
-  (wrap-objc-object
-   (_msg-11 (coerce-arg self) (sel_registerName "subpathsOfDirectoryAtPath:error:") (coerce-arg path) error)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "subpathsAtPath:")) (id->ffi2-ptr (coerce-arg path))))
    ))
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsfilemanager-trash-item-at-url-resulting-item-url-error self url out-resulting-url error)
-  (_msg-13 (coerce-arg self) (sel_registerName "trashItemAtURL:resultingItemURL:error:") (coerce-arg url) out-resulting-url error))
+(define (nsfilemanager-subpaths-of-directory-at-path-error self path)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "subpathsOfDirectoryAtPath:error:")) (id->ffi2-ptr (coerce-arg path)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
+;; NSError out-param: result-or-error wrapper candidate
+(define (nsfilemanager-trash-item-at-url-resulting-item-url-error self url out-resulting-url)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "trashItemAtURL:resultingItemURL:error:")) (id->ffi2-ptr (coerce-arg url)) (id->ffi2-ptr out-resulting-url) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; block param 2: async-copied (runtime-managed)
 (define (nsfilemanager-unmount-volume-at-url-options-completion-handler self url mask completion-handler)
   (define-values (_blk2 _blk2-id)
     (make-objc-block completion-handler (list _id) _void))
-  (_msg-16 (coerce-arg self) (sel_registerName "unmountVolumeAtURL:options:completionHandler:") (coerce-arg url) mask _blk2))
+  (aw_racket_msg_PQP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unmountVolumeAtURL:options:completionHandler:")) (id->ffi2-ptr (coerce-arg url)) mask (id->ffi2-ptr _blk2)))
 ;; block param 2: async-copied (runtime-managed)
 (define (nsfilemanager-upload-local-version-of-ubiquitous-item-at-url-with-conflict-resolution-policy-completion-handler self url conflict-resolution-policy completion-handler)
   (define-values (_blk2 _blk2-id)
     (make-objc-block completion-handler (list _id _id) _void))
-  (_msg-9 (coerce-arg self) (sel_registerName "uploadLocalVersionOfUbiquitousItemAtURL:withConflictResolutionPolicy:completionHandler:") (coerce-arg url) conflict-resolution-policy _blk2))
+  (aw_racket_msg_PqP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uploadLocalVersionOfUbiquitousItemAtURL:withConflictResolutionPolicy:completionHandler:")) (id->ffi2-ptr (coerce-arg url)) conflict-resolution-policy (id->ffi2-ptr _blk2)))

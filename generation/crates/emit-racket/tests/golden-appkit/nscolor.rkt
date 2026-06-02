@@ -2,7 +2,8 @@
 ;; Generated binding for NSColor (AppKit)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -197,53 +198,31 @@
 ;; --- Class reference ---
 (import-class NSColor)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
-(define _msg-1  ; (_fun _pointer _pointer -> _double)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _double)))
-(define _msg-2  ; (_fun _pointer _pointer -> _int64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _int64)))
-(define _msg-3  ; (_fun _pointer _pointer -> _pointer)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _pointer)))
-(define _msg-4  ; (_fun _pointer _pointer -> _uint64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _uint64)))
-(define _msg-5  ; (_fun _pointer _pointer _NSRect -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _NSRect -> _void)))
-(define _msg-6  ; (_fun _pointer _pointer _bool -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool -> _void)))
-(define _msg-7  ; (_fun _pointer _pointer _double -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double -> _id)))
-(define _msg-8  ; (_fun _pointer _pointer _double _double -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double _double -> _id)))
-(define _msg-9  ; (_fun _pointer _pointer _double _double _double _double -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double _double _double _double -> _id)))
-(define _msg-10  ; (_fun _pointer _pointer _double _double _double _double _double -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double _double _double _double _double -> _id)))
-(define _msg-11  ; (_fun _pointer _pointer _double _id -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double _id -> _id)))
-(define _msg-12  ; (_fun _pointer _pointer _id _double _double _double _double -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _double _double _double _double -> _id)))
-(define _msg-13  ; (_fun _pointer _pointer _id _id -> _uint64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id -> _uint64)))
-(define _msg-14  ; (_fun _pointer _pointer _id _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _id)))
-(define _msg-15  ; (_fun _pointer _pointer _id _pointer _int64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer _int64 -> _id)))
-(define _msg-16  ; (_fun _pointer _pointer _int64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _id)))
-(define _msg-17  ; (_fun _pointer _pointer _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
-(define _msg-18  ; (_fun _pointer _pointer _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _void)))
-(define _msg-19  ; (_fun _pointer _pointer _pointer _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer -> _void)))
-(define _msg-20  ; (_fun _pointer _pointer _pointer _pointer _pointer _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer _pointer _pointer -> _void)))
-(define _msg-21  ; (_fun _pointer _pointer _pointer _pointer _pointer _pointer _pointer -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer _pointer _pointer _pointer -> _void)))
-(define _msg-22  ; (_fun _pointer _pointer _uint64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _id)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_Q (-> ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_0_d (-> ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PP_Q (-> ptr_t ptr_t ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPq_P (-> ptr_t ptr_t ptr_t ptr_t int64_t ptr_t))
+(define-aw-msg aw_racket_msg_Pdddd_P (-> ptr_t ptr_t ptr_t double_t double_t double_t double_t ptr_t))
+(define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
+(define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
+(define-aw-msg aw_racket_msg_Q_P (-> ptr_t ptr_t uint64_t ptr_t))
+(define-aw-msg aw_racket_msg_d_P (-> ptr_t ptr_t double_t ptr_t))
+(define-aw-msg aw_racket_msg_dP_P (-> ptr_t ptr_t double_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_dd_P (-> ptr_t ptr_t double_t double_t ptr_t))
+(define-aw-msg aw_racket_msg_dddd_P (-> ptr_t ptr_t double_t double_t double_t double_t ptr_t))
+(define-aw-msg aw_racket_msg_ddddd_P (-> ptr_t ptr_t double_t double_t double_t double_t double_t ptr_t))
+(define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 
 ;; --- Constructors ---
 (define (make-nscolor-init-with-coder coder)
@@ -261,496 +240,507 @@
 
 ;; --- Properties ---
 (define (nscolor-cg-color self)
-  (tell #:type _pointer (coerce-arg self) CGColor))
+  (ptr_t->cpointer (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "CGColor")))))
 (define (nscolor-alpha-component self)
-  (tell #:type _double (coerce-arg self) alphaComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "alphaComponent"))))
 (define (nscolor-alternate-selected-control-color)
   (wrap-objc-object
-   (tell NSColor alternateSelectedControlColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "alternateSelectedControlColor"))))))
 (define (nscolor-alternate-selected-control-text-color)
   (wrap-objc-object
-   (tell NSColor alternateSelectedControlTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "alternateSelectedControlTextColor"))))))
 (define (nscolor-alternating-content-background-colors)
   (wrap-objc-object
-   (tell NSColor alternatingContentBackgroundColors)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "alternatingContentBackgroundColors"))))))
 (define (nscolor-black-color)
   (wrap-objc-object
-   (tell NSColor blackColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "blackColor"))))))
 (define (nscolor-black-component self)
-  (tell #:type _double (coerce-arg self) blackComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "blackComponent"))))
 (define (nscolor-blue-color)
   (wrap-objc-object
-   (tell NSColor blueColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "blueColor"))))))
 (define (nscolor-blue-component self)
-  (tell #:type _double (coerce-arg self) blueComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "blueComponent"))))
 (define (nscolor-brightness-component self)
-  (tell #:type _double (coerce-arg self) brightnessComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "brightnessComponent"))))
 (define (nscolor-brown-color)
   (wrap-objc-object
-   (tell NSColor brownColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "brownColor"))))))
 (define (nscolor-catalog-name-component self)
   (wrap-objc-object
-   (tell (coerce-arg self) catalogNameComponent)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "catalogNameComponent"))))))
 (define (nscolor-clear-color)
   (wrap-objc-object
-   (tell NSColor clearColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "clearColor"))))))
 (define (nscolor-color-name-component self)
   (wrap-objc-object
-   (tell (coerce-arg self) colorNameComponent)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorNameComponent"))))))
 (define (nscolor-color-space self)
   (wrap-objc-object
-   (tell (coerce-arg self) colorSpace)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorSpace"))))))
 (define (nscolor-color-space-name self)
   (wrap-objc-object
-   (tell (coerce-arg self) colorSpaceName)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorSpaceName"))))))
 (define (nscolor-control-accent-color)
   (wrap-objc-object
-   (tell NSColor controlAccentColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlAccentColor"))))))
 (define (nscolor-control-alternating-row-background-colors)
   (wrap-objc-object
-   (tell NSColor controlAlternatingRowBackgroundColors)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlAlternatingRowBackgroundColors"))))))
 (define (nscolor-control-background-color)
   (wrap-objc-object
-   (tell NSColor controlBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlBackgroundColor"))))))
 (define (nscolor-control-color)
   (wrap-objc-object
-   (tell NSColor controlColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlColor"))))))
 (define (nscolor-control-dark-shadow-color)
   (wrap-objc-object
-   (tell NSColor controlDarkShadowColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlDarkShadowColor"))))))
 (define (nscolor-control-highlight-color)
   (wrap-objc-object
-   (tell NSColor controlHighlightColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlHighlightColor"))))))
 (define (nscolor-control-light-highlight-color)
   (wrap-objc-object
-   (tell NSColor controlLightHighlightColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlLightHighlightColor"))))))
 (define (nscolor-control-shadow-color)
   (wrap-objc-object
-   (tell NSColor controlShadowColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlShadowColor"))))))
 (define (nscolor-control-text-color)
   (wrap-objc-object
-   (tell NSColor controlTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "controlTextColor"))))))
 (define (nscolor-current-control-tint)
-  (tell #:type _uint64 NSColor currentControlTint))
+  (aw_racket_msg_0_Q (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "currentControlTint"))))
 (define (nscolor-cyan-color)
   (wrap-objc-object
-   (tell NSColor cyanColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "cyanColor"))))))
 (define (nscolor-cyan-component self)
-  (tell #:type _double (coerce-arg self) cyanComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "cyanComponent"))))
 (define (nscolor-dark-gray-color)
   (wrap-objc-object
-   (tell NSColor darkGrayColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "darkGrayColor"))))))
 (define (nscolor-disabled-control-text-color)
   (wrap-objc-object
-   (tell NSColor disabledControlTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "disabledControlTextColor"))))))
 (define (nscolor-find-highlight-color)
   (wrap-objc-object
-   (tell NSColor findHighlightColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "findHighlightColor"))))))
 (define (nscolor-gray-color)
   (wrap-objc-object
-   (tell NSColor grayColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "grayColor"))))))
 (define (nscolor-green-color)
   (wrap-objc-object
-   (tell NSColor greenColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "greenColor"))))))
 (define (nscolor-green-component self)
-  (tell #:type _double (coerce-arg self) greenComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "greenComponent"))))
 (define (nscolor-grid-color)
   (wrap-objc-object
-   (tell NSColor gridColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "gridColor"))))))
 (define (nscolor-header-color)
   (wrap-objc-object
-   (tell NSColor headerColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "headerColor"))))))
 (define (nscolor-header-text-color)
   (wrap-objc-object
-   (tell NSColor headerTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "headerTextColor"))))))
 (define (nscolor-highlight-color)
   (wrap-objc-object
-   (tell NSColor highlightColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "highlightColor"))))))
 (define (nscolor-hue-component self)
-  (tell #:type _double (coerce-arg self) hueComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "hueComponent"))))
 (define (nscolor-ignores-alpha)
-  (tell #:type _bool NSColor ignoresAlpha))
+  (aw_racket_msg_0_b (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "ignoresAlpha"))))
 (define (nscolor-set-ignores-alpha! value)
-  (_msg-6 NSColor (sel_registerName "setIgnoresAlpha:") value))
+  (aw_racket_msg_b_v (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "setIgnoresAlpha:")) value))
 (define (nscolor-keyboard-focus-indicator-color)
   (wrap-objc-object
-   (tell NSColor keyboardFocusIndicatorColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "keyboardFocusIndicatorColor"))))))
 (define (nscolor-knob-color)
   (wrap-objc-object
-   (tell NSColor knobColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "knobColor"))))))
 (define (nscolor-label-color)
   (wrap-objc-object
-   (tell NSColor labelColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "labelColor"))))))
 (define (nscolor-light-gray-color)
   (wrap-objc-object
-   (tell NSColor lightGrayColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "lightGrayColor"))))))
 (define (nscolor-linear-exposure self)
-  (tell #:type _double (coerce-arg self) linearExposure))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "linearExposure"))))
 (define (nscolor-link-color)
   (wrap-objc-object
-   (tell NSColor linkColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "linkColor"))))))
 (define (nscolor-localized-catalog-name-component self)
   (wrap-objc-object
-   (tell (coerce-arg self) localizedCatalogNameComponent)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "localizedCatalogNameComponent"))))))
 (define (nscolor-localized-color-name-component self)
   (wrap-objc-object
-   (tell (coerce-arg self) localizedColorNameComponent)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "localizedColorNameComponent"))))))
 (define (nscolor-magenta-color)
   (wrap-objc-object
-   (tell NSColor magentaColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "magentaColor"))))))
 (define (nscolor-magenta-component self)
-  (tell #:type _double (coerce-arg self) magentaComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "magentaComponent"))))
 (define (nscolor-number-of-components self)
-  (tell #:type _int64 (coerce-arg self) numberOfComponents))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "numberOfComponents"))))
 (define (nscolor-orange-color)
   (wrap-objc-object
-   (tell NSColor orangeColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "orangeColor"))))))
 (define (nscolor-pattern-image self)
   (wrap-objc-object
-   (tell (coerce-arg self) patternImage)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "patternImage"))))))
 (define (nscolor-placeholder-text-color)
   (wrap-objc-object
-   (tell NSColor placeholderTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "placeholderTextColor"))))))
 (define (nscolor-purple-color)
   (wrap-objc-object
-   (tell NSColor purpleColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "purpleColor"))))))
 (define (nscolor-quaternary-label-color)
   (wrap-objc-object
-   (tell NSColor quaternaryLabelColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "quaternaryLabelColor"))))))
 (define (nscolor-quaternary-system-fill-color)
   (wrap-objc-object
-   (tell NSColor quaternarySystemFillColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "quaternarySystemFillColor"))))))
 (define (nscolor-quinary-label-color)
   (wrap-objc-object
-   (tell NSColor quinaryLabelColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "quinaryLabelColor"))))))
 (define (nscolor-quinary-system-fill-color)
   (wrap-objc-object
-   (tell NSColor quinarySystemFillColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "quinarySystemFillColor"))))))
 (define (nscolor-red-color)
   (wrap-objc-object
-   (tell NSColor redColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "redColor"))))))
 (define (nscolor-red-component self)
-  (tell #:type _double (coerce-arg self) redComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "redComponent"))))
 (define (nscolor-saturation-component self)
-  (tell #:type _double (coerce-arg self) saturationComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "saturationComponent"))))
 (define (nscolor-scroll-bar-color)
   (wrap-objc-object
-   (tell NSColor scrollBarColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "scrollBarColor"))))))
 (define (nscolor-scrubber-textured-background-color)
   (wrap-objc-object
-   (tell NSColor scrubberTexturedBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "scrubberTexturedBackgroundColor"))))))
 (define (nscolor-secondary-label-color)
   (wrap-objc-object
-   (tell NSColor secondaryLabelColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "secondaryLabelColor"))))))
 (define (nscolor-secondary-selected-control-color)
   (wrap-objc-object
-   (tell NSColor secondarySelectedControlColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "secondarySelectedControlColor"))))))
 (define (nscolor-secondary-system-fill-color)
   (wrap-objc-object
-   (tell NSColor secondarySystemFillColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "secondarySystemFillColor"))))))
 (define (nscolor-selected-content-background-color)
   (wrap-objc-object
-   (tell NSColor selectedContentBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedContentBackgroundColor"))))))
 (define (nscolor-selected-control-color)
   (wrap-objc-object
-   (tell NSColor selectedControlColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedControlColor"))))))
 (define (nscolor-selected-control-text-color)
   (wrap-objc-object
-   (tell NSColor selectedControlTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedControlTextColor"))))))
 (define (nscolor-selected-knob-color)
   (wrap-objc-object
-   (tell NSColor selectedKnobColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedKnobColor"))))))
 (define (nscolor-selected-menu-item-color)
   (wrap-objc-object
-   (tell NSColor selectedMenuItemColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedMenuItemColor"))))))
 (define (nscolor-selected-menu-item-text-color)
   (wrap-objc-object
-   (tell NSColor selectedMenuItemTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedMenuItemTextColor"))))))
 (define (nscolor-selected-text-background-color)
   (wrap-objc-object
-   (tell NSColor selectedTextBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedTextBackgroundColor"))))))
 (define (nscolor-selected-text-color)
   (wrap-objc-object
-   (tell NSColor selectedTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "selectedTextColor"))))))
 (define (nscolor-separator-color)
   (wrap-objc-object
-   (tell NSColor separatorColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "separatorColor"))))))
 (define (nscolor-shadow-color)
   (wrap-objc-object
-   (tell NSColor shadowColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "shadowColor"))))))
 (define (nscolor-standard-dynamic-range-color self)
   (wrap-objc-object
-   (tell (coerce-arg self) standardDynamicRangeColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "standardDynamicRangeColor"))))))
 (define (nscolor-system-blue-color)
   (wrap-objc-object
-   (tell NSColor systemBlueColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemBlueColor"))))))
 (define (nscolor-system-brown-color)
   (wrap-objc-object
-   (tell NSColor systemBrownColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemBrownColor"))))))
 (define (nscolor-system-cyan-color)
   (wrap-objc-object
-   (tell NSColor systemCyanColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemCyanColor"))))))
 (define (nscolor-system-fill-color)
   (wrap-objc-object
-   (tell NSColor systemFillColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemFillColor"))))))
 (define (nscolor-system-gray-color)
   (wrap-objc-object
-   (tell NSColor systemGrayColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemGrayColor"))))))
 (define (nscolor-system-green-color)
   (wrap-objc-object
-   (tell NSColor systemGreenColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemGreenColor"))))))
 (define (nscolor-system-indigo-color)
   (wrap-objc-object
-   (tell NSColor systemIndigoColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemIndigoColor"))))))
 (define (nscolor-system-mint-color)
   (wrap-objc-object
-   (tell NSColor systemMintColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemMintColor"))))))
 (define (nscolor-system-orange-color)
   (wrap-objc-object
-   (tell NSColor systemOrangeColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemOrangeColor"))))))
 (define (nscolor-system-pink-color)
   (wrap-objc-object
-   (tell NSColor systemPinkColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemPinkColor"))))))
 (define (nscolor-system-purple-color)
   (wrap-objc-object
-   (tell NSColor systemPurpleColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemPurpleColor"))))))
 (define (nscolor-system-red-color)
   (wrap-objc-object
-   (tell NSColor systemRedColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemRedColor"))))))
 (define (nscolor-system-teal-color)
   (wrap-objc-object
-   (tell NSColor systemTealColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemTealColor"))))))
 (define (nscolor-system-yellow-color)
   (wrap-objc-object
-   (tell NSColor systemYellowColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "systemYellowColor"))))))
 (define (nscolor-tertiary-label-color)
   (wrap-objc-object
-   (tell NSColor tertiaryLabelColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "tertiaryLabelColor"))))))
 (define (nscolor-tertiary-system-fill-color)
   (wrap-objc-object
-   (tell NSColor tertiarySystemFillColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "tertiarySystemFillColor"))))))
 (define (nscolor-text-background-color)
   (wrap-objc-object
-   (tell NSColor textBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "textBackgroundColor"))))))
 (define (nscolor-text-color)
   (wrap-objc-object
-   (tell NSColor textColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "textColor"))))))
 (define (nscolor-text-insertion-point-color)
   (wrap-objc-object
-   (tell NSColor textInsertionPointColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "textInsertionPointColor"))))))
 (define (nscolor-transfer-representation)
   (wrap-objc-object
-   (tell NSColor transferRepresentation)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "transferRepresentation"))))))
 (define (nscolor-type self)
-  (tell #:type _int64 (coerce-arg self) type))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "type"))))
 (define (nscolor-under-page-background-color)
   (wrap-objc-object
-   (tell NSColor underPageBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "underPageBackgroundColor"))))))
 (define (nscolor-unemphasized-selected-content-background-color)
   (wrap-objc-object
-   (tell NSColor unemphasizedSelectedContentBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "unemphasizedSelectedContentBackgroundColor"))))))
 (define (nscolor-unemphasized-selected-text-background-color)
   (wrap-objc-object
-   (tell NSColor unemphasizedSelectedTextBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "unemphasizedSelectedTextBackgroundColor"))))))
 (define (nscolor-unemphasized-selected-text-color)
   (wrap-objc-object
-   (tell NSColor unemphasizedSelectedTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "unemphasizedSelectedTextColor"))))))
 (define (nscolor-white-color)
   (wrap-objc-object
-   (tell NSColor whiteColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "whiteColor"))))))
 (define (nscolor-white-component self)
-  (tell #:type _double (coerce-arg self) whiteComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "whiteComponent"))))
 (define (nscolor-window-background-color)
   (wrap-objc-object
-   (tell NSColor windowBackgroundColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "windowBackgroundColor"))))))
 (define (nscolor-window-frame-color)
   (wrap-objc-object
-   (tell NSColor windowFrameColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "windowFrameColor"))))))
 (define (nscolor-window-frame-text-color)
   (wrap-objc-object
-   (tell NSColor windowFrameTextColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "windowFrameTextColor"))))))
 (define (nscolor-yellow-color)
   (wrap-objc-object
-   (tell NSColor yellowColor)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "yellowColor"))))))
 (define (nscolor-yellow-component self)
-  (tell #:type _double (coerce-arg self) yellowComponent))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yellowComponent"))))
 
 ;; --- Instance methods ---
 (define (nscolor-accessibility-name self)
   (wrap-objc-object
-   (tell (coerce-arg self) accessibilityName)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityName"))))
+   ))
 (define (nscolor-blended-color-with-fraction-of-color self fraction color)
   (wrap-objc-object
-   (_msg-11 (coerce-arg self) (sel_registerName "blendedColorWithFraction:ofColor:") fraction (coerce-arg color))
+   (ffi2-ptr->id (aw_racket_msg_dP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "blendedColorWithFraction:ofColor:")) fraction (id->ffi2-ptr (coerce-arg color))))
    ))
 (define (nscolor-color-by-applying-content-headroom self content-headroom)
   (wrap-objc-object
-   (_msg-7 (coerce-arg self) (sel_registerName "colorByApplyingContentHeadroom:") content-headroom)
+   (ffi2-ptr->id (aw_racket_msg_d_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorByApplyingContentHeadroom:")) content-headroom))
    ))
 (define (nscolor-color-using-color-space self space)
   (wrap-objc-object
-   (tell (coerce-arg self) colorUsingColorSpace: (coerce-arg space))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorUsingColorSpace:")) (id->ffi2-ptr (coerce-arg space))))
+   ))
 (define (nscolor-color-using-type self type)
   (wrap-objc-object
-   (_msg-16 (coerce-arg self) (sel_registerName "colorUsingType:") type)
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorUsingType:")) type))
    ))
 (define (nscolor-color-with-alpha-component self alpha)
   (wrap-objc-object
-   (_msg-7 (coerce-arg self) (sel_registerName "colorWithAlphaComponent:") alpha)
+   (ffi2-ptr->id (aw_racket_msg_d_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorWithAlphaComponent:")) alpha))
    ))
 (define (nscolor-color-with-system-effect self system-effect)
   (wrap-objc-object
-   (_msg-16 (coerce-arg self) (sel_registerName "colorWithSystemEffect:") system-effect)
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "colorWithSystemEffect:")) system-effect))
    ))
 (define (nscolor-copy-with-zone self zone)
   (wrap-objc-object
-   (_msg-17 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "copyWithZone:")) (id->ffi2-ptr zone)))
    #:retained #t))
 (define (nscolor-draw-swatch-in-rect self rect)
-  (_msg-5 (coerce-arg self) (sel_registerName "drawSwatchInRect:") rect))
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawSwatchInRect:")) (id->ffi2-ptr rect)))
 (define (nscolor-encode-with-coder self coder)
-  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nscolor-get-components self components)
-  (_msg-18 (coerce-arg self) (sel_registerName "getComponents:") components))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getComponents:")) (id->ffi2-ptr components)))
 (define (nscolor-get-cyan-magenta-yellow-black-alpha self cyan magenta yellow black alpha)
-  (_msg-21 (coerce-arg self) (sel_registerName "getCyan:magenta:yellow:black:alpha:") cyan magenta yellow black alpha))
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getCyan:magenta:yellow:black:alpha:")) (id->ffi2-ptr cyan) (id->ffi2-ptr magenta) (id->ffi2-ptr yellow) (id->ffi2-ptr black) (id->ffi2-ptr alpha)))
 (define (nscolor-get-hue-saturation-brightness-alpha self hue saturation brightness alpha)
-  (_msg-20 (coerce-arg self) (sel_registerName "getHue:saturation:brightness:alpha:") hue saturation brightness alpha))
+  (aw_racket_msg_PPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getHue:saturation:brightness:alpha:")) (id->ffi2-ptr hue) (id->ffi2-ptr saturation) (id->ffi2-ptr brightness) (id->ffi2-ptr alpha)))
 (define (nscolor-get-red-green-blue-alpha self red green blue alpha)
-  (_msg-20 (coerce-arg self) (sel_registerName "getRed:green:blue:alpha:") red green blue alpha))
+  (aw_racket_msg_PPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRed:green:blue:alpha:")) (id->ffi2-ptr red) (id->ffi2-ptr green) (id->ffi2-ptr blue) (id->ffi2-ptr alpha)))
 (define (nscolor-get-white-alpha self white alpha)
-  (_msg-19 (coerce-arg self) (sel_registerName "getWhite:alpha:") white alpha))
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getWhite:alpha:")) (id->ffi2-ptr white) (id->ffi2-ptr alpha)))
 (define (nscolor-highlight-with-level self val)
   (wrap-objc-object
-   (_msg-7 (coerce-arg self) (sel_registerName "highlightWithLevel:") val)
+   (ffi2-ptr->id (aw_racket_msg_d_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "highlightWithLevel:")) val))
    ))
 (define (nscolor-imported-content-types self)
   (wrap-objc-object
-   (tell (coerce-arg self) importedContentTypes)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "importedContentTypes"))))
+   ))
 (define (nscolor-pasteboard-property-list-for-type self type)
   (wrap-objc-object
-   (tell (coerce-arg self) pasteboardPropertyListForType: (coerce-arg type))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pasteboardPropertyListForType:")) (id->ffi2-ptr (coerce-arg type))))
+   ))
 (define (nscolor-set! self)
-  (tell #:type _void (coerce-arg self) set))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "set"))))
 (define (nscolor-set-fill! self)
-  (tell #:type _void (coerce-arg self) setFill))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFill"))))
 (define (nscolor-set-stroke! self)
-  (tell #:type _void (coerce-arg self) setStroke))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setStroke"))))
 (define (nscolor-shadow-with-level self val)
   (wrap-objc-object
-   (_msg-7 (coerce-arg self) (sel_registerName "shadowWithLevel:") val)
+   (ffi2-ptr->id (aw_racket_msg_d_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "shadowWithLevel:")) val))
    ))
 (define (nscolor-writable-types-for-pasteboard self pasteboard)
   (wrap-objc-object
-   (tell (coerce-arg self) writableTypesForPasteboard: (coerce-arg pasteboard))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writableTypesForPasteboard:")) (id->ffi2-ptr (coerce-arg pasteboard))))
+   ))
 (define (nscolor-write-to-pasteboard self paste-board)
-  (tell #:type _void (coerce-arg self) writeToPasteboard: (coerce-arg paste-board)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writeToPasteboard:")) (id->ffi2-ptr (coerce-arg paste-board))))
 (define (nscolor-writing-options-for-type-pasteboard self type pasteboard)
-  (_msg-13 (coerce-arg self) (sel_registerName "writingOptionsForType:pasteboard:") (coerce-arg type) (coerce-arg pasteboard)))
+  (aw_racket_msg_PP_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writingOptionsForType:pasteboard:")) (id->ffi2-ptr (coerce-arg type)) (id->ffi2-ptr (coerce-arg pasteboard))))
 
 ;; --- Class methods ---
 (define (nscolor-color-for-control-tint control-tint)
   (wrap-objc-object
-   (_msg-22 NSColor (sel_registerName "colorForControlTint:") control-tint)
+   (ffi2-ptr->id (aw_racket_msg_Q_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorForControlTint:")) control-tint))
    ))
 (define (nscolor-color-from-pasteboard paste-board)
   (wrap-objc-object
-   (tell NSColor colorFromPasteboard: (coerce-arg paste-board))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorFromPasteboard:")) (id->ffi2-ptr (coerce-arg paste-board))))
+   ))
 (define (nscolor-color-named name)
   (wrap-objc-object
-   (tell NSColor colorNamed: (coerce-arg name))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorNamed:")) (id->ffi2-ptr (coerce-arg name))))
+   ))
 (define (nscolor-color-named-bundle name bundle)
   (wrap-objc-object
-   (tell NSColor colorNamed: (coerce-arg name) bundle: (coerce-arg bundle))))
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorNamed:bundle:")) (id->ffi2-ptr (coerce-arg name)) (id->ffi2-ptr (coerce-arg bundle))))
+   ))
 (define (nscolor-color-with-cg-color cg-color)
   (wrap-objc-object
-   (_msg-17 NSColor (sel_registerName "colorWithCGColor:") cg-color)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithCGColor:")) (id->ffi2-ptr cg-color)))
    ))
 (define (nscolor-color-with-calibrated-hue-saturation-brightness-alpha hue saturation brightness alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithCalibratedHue:saturation:brightness:alpha:") hue saturation brightness alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithCalibratedHue:saturation:brightness:alpha:")) hue saturation brightness alpha))
    ))
 (define (nscolor-color-with-calibrated-red-green-blue-alpha red green blue alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithCalibratedRed:green:blue:alpha:") red green blue alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithCalibratedRed:green:blue:alpha:")) red green blue alpha))
    ))
 (define (nscolor-color-with-calibrated-white-alpha white alpha)
   (wrap-objc-object
-   (_msg-8 NSColor (sel_registerName "colorWithCalibratedWhite:alpha:") white alpha)
+   (ffi2-ptr->id (aw_racket_msg_dd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithCalibratedWhite:alpha:")) white alpha))
    ))
 (define (nscolor-color-with-catalog-name-color-name list-name color-name)
   (wrap-objc-object
-   (tell NSColor colorWithCatalogName: (coerce-arg list-name) colorName: (coerce-arg color-name))))
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithCatalogName:colorName:")) (id->ffi2-ptr (coerce-arg list-name)) (id->ffi2-ptr (coerce-arg color-name))))
+   ))
 (define (nscolor-color-with-color-space-components-count space components number-of-components)
   (wrap-objc-object
-   (_msg-15 NSColor (sel_registerName "colorWithColorSpace:components:count:") (coerce-arg space) components number-of-components)
+   (ffi2-ptr->id (aw_racket_msg_PPq_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithColorSpace:components:count:")) (id->ffi2-ptr (coerce-arg space)) (id->ffi2-ptr components) number-of-components))
    ))
 (define (nscolor-color-with-color-space-hue-saturation-brightness-alpha space hue saturation brightness alpha)
   (wrap-objc-object
-   (_msg-12 NSColor (sel_registerName "colorWithColorSpace:hue:saturation:brightness:alpha:") (coerce-arg space) hue saturation brightness alpha)
+   (ffi2-ptr->id (aw_racket_msg_Pdddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithColorSpace:hue:saturation:brightness:alpha:")) (id->ffi2-ptr (coerce-arg space)) hue saturation brightness alpha))
    ))
 (define (nscolor-color-with-device-cyan-magenta-yellow-black-alpha cyan magenta yellow black alpha)
   (wrap-objc-object
-   (_msg-10 NSColor (sel_registerName "colorWithDeviceCyan:magenta:yellow:black:alpha:") cyan magenta yellow black alpha)
+   (ffi2-ptr->id (aw_racket_msg_ddddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithDeviceCyan:magenta:yellow:black:alpha:")) cyan magenta yellow black alpha))
    ))
 (define (nscolor-color-with-device-hue-saturation-brightness-alpha hue saturation brightness alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithDeviceHue:saturation:brightness:alpha:") hue saturation brightness alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithDeviceHue:saturation:brightness:alpha:")) hue saturation brightness alpha))
    ))
 (define (nscolor-color-with-device-red-green-blue-alpha red green blue alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithDeviceRed:green:blue:alpha:") red green blue alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithDeviceRed:green:blue:alpha:")) red green blue alpha))
    ))
 (define (nscolor-color-with-device-white-alpha white alpha)
   (wrap-objc-object
-   (_msg-8 NSColor (sel_registerName "colorWithDeviceWhite:alpha:") white alpha)
+   (ffi2-ptr->id (aw_racket_msg_dd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithDeviceWhite:alpha:")) white alpha))
    ))
 (define (nscolor-color-with-display-p3-red-green-blue-alpha red green blue alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithDisplayP3Red:green:blue:alpha:") red green blue alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithDisplayP3Red:green:blue:alpha:")) red green blue alpha))
    ))
 (define (nscolor-color-with-generic-gamma22-white-alpha white alpha)
   (wrap-objc-object
-   (_msg-8 NSColor (sel_registerName "colorWithGenericGamma22White:alpha:") white alpha)
+   (ffi2-ptr->id (aw_racket_msg_dd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithGenericGamma22White:alpha:")) white alpha))
    ))
 (define (nscolor-color-with-hue-saturation-brightness-alpha hue saturation brightness alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithHue:saturation:brightness:alpha:") hue saturation brightness alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithHue:saturation:brightness:alpha:")) hue saturation brightness alpha))
    ))
 ;; block param 1: stored (retained across calls)
 (define (nscolor-color-with-name-dynamic-provider color-name dynamic-provider)
   (define-values (_blk1 _blk1-id)
     (make-objc-block dynamic-provider (list _id) _id))
   (wrap-objc-object
-   (_msg-14 NSColor (sel_registerName "colorWithName:dynamicProvider:") (coerce-arg color-name) _blk1)
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithName:dynamicProvider:")) (id->ffi2-ptr (coerce-arg color-name)) (id->ffi2-ptr _blk1)))
    ))
 (define (nscolor-color-with-pattern-image image)
   (wrap-objc-object
-   (tell NSColor colorWithPatternImage: (coerce-arg image))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithPatternImage:")) (id->ffi2-ptr (coerce-arg image))))
+   ))
 (define (nscolor-color-with-red-green-blue-alpha red green blue alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithRed:green:blue:alpha:") red green blue alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithRed:green:blue:alpha:")) red green blue alpha))
    ))
 (define (nscolor-color-with-red-green-blue-alpha-exposure red green blue alpha exposure)
   (wrap-objc-object
-   (_msg-10 NSColor (sel_registerName "colorWithRed:green:blue:alpha:exposure:") red green blue alpha exposure)
+   (ffi2-ptr->id (aw_racket_msg_ddddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithRed:green:blue:alpha:exposure:")) red green blue alpha exposure))
    ))
 (define (nscolor-color-with-red-green-blue-alpha-linear-exposure red green blue alpha linear-exposure)
   (wrap-objc-object
-   (_msg-10 NSColor (sel_registerName "colorWithRed:green:blue:alpha:linearExposure:") red green blue alpha linear-exposure)
+   (ffi2-ptr->id (aw_racket_msg_ddddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithRed:green:blue:alpha:linearExposure:")) red green blue alpha linear-exposure))
    ))
 (define (nscolor-color-with-srgb-red-green-blue-alpha red green blue alpha)
   (wrap-objc-object
-   (_msg-9 NSColor (sel_registerName "colorWithSRGBRed:green:blue:alpha:") red green blue alpha)
+   (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithSRGBRed:green:blue:alpha:")) red green blue alpha))
    ))
 (define (nscolor-color-with-white-alpha white alpha)
   (wrap-objc-object
-   (_msg-8 NSColor (sel_registerName "colorWithWhite:alpha:") white alpha)
+   (ffi2-ptr->id (aw_racket_msg_dd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithWhite:alpha:")) white alpha))
    ))
 (define (nscolor-readable-types-for-pasteboard pasteboard)
   (wrap-objc-object
-   (tell NSColor readableTypesForPasteboard: (coerce-arg pasteboard))))
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "readableTypesForPasteboard:")) (id->ffi2-ptr (coerce-arg pasteboard))))
+   ))
 (define (nscolor-reading-options-for-type-pasteboard type pasteboard)
-  (_msg-13 NSColor (sel_registerName "readingOptionsForType:pasteboard:") (coerce-arg type) (coerce-arg pasteboard)))
+  (aw_racket_msg_PP_Q (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "readingOptionsForType:pasteboard:")) (id->ffi2-ptr (coerce-arg type)) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nscolor-supports-secure-coding)
-  (_msg-0 NSColor (sel_registerName "supportsSecureCoding")))
+  (aw_racket_msg_0_b (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "supportsSecureCoding"))))

@@ -8,19 +8,26 @@ emitter, 18-file runtime, C-API emission, snapshot + runtime-load harnesses,
 
 ## 0. Toolchain (Racket 9.2 + ffi2)
 
-The target is pinned to **Racket 9.2** — Homebrew `minimal-racket`, installed at
-`/opt/homebrew/bin/racket` (the path baked into `bundle-racket`'s
-`DEFAULT_RACKET_PATH`, used by sample-app bundles, the runtime-load harness, and
-these docs). **ffi2** is provisioned with a single `raco pkg install ffi2-lib`
-(source: the official `github.com/racket/racket` monorepo, `pkgs/ffi2-lib`);
-ffi2 is **not** in the minimal distribution, so a fresh 9.2 machine must run that
-one command after install. `(require ffi2)` then resolves.
+The target is pinned to **Racket 9.2**, reached at `/opt/homebrew/bin/racket`
+(the path baked into `bundle-racket`'s `DEFAULT_RACKET_PATH`, used by sample-app
+bundles, the runtime-load harness, and these docs). On the dev host that path is
+a symlink into a full `/Applications/Racket v9.2/` distribution; 9.2 is a
+pre-release/snapshot build (the public mirror tops out at 9.1), so it is **not
+downloadable** — provision a fresh machine by copying the host distribution, not
+by running an installer (see the VM-verify recipe in §8). **ffi2** is provisioned
+with a single `raco pkg install ffi2-lib` (source: the official
+`github.com/racket/racket` monorepo, `pkgs/ffi2-lib`); ffi2 is **not** in the
+base distribution, so a fresh 9.2 machine must run that one command after install
+(it fetches from GitHub). `(require ffi2)` then resolves.
 
-ffi2 and `ffi/unsafe`/`ffi/unsafe/objc` **coexist** in one installation — the
-emitter and runtime still use `ffi/unsafe` today; the ffi2 migration of the FFI
-layer is its own workstream (see `CONTEXT.md` "ffi2" and
-`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`). Conceptual boundary
-lives in the glossary; this note records only the *provisioning* fact.
+ffi2 and `ffi/unsafe`/`ffi/unsafe/objc` **coexist** in one installation. As of
+the 2026-06 migration (grove `update-racket-to-9.2-and-use-ffi2`) the emitter and
+runtime are **on ffi2 by default**: generated C-function dispatch goes through
+the typed native dispatch table (ADR-0013, `runtime/ffi2-dispatch.rkt`) with
+values crossing the seam via `id->ffi2-ptr`/`ffi2-ptr->id`; `ffi/unsafe`/
+`ffi/unsafe/objc` is retained only where ffi2 has no equivalent (ObjC message
+dispatch boundary). See `CONTEXT.md` "ffi2" and
+`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
 
 - **Three-way `->` conflict (new, 2026-05-31).** `ffi2` *also* exports `->`
   (its arrow type). A module that requires both `ffi2` and `ffi/unsafe` fails
@@ -699,6 +706,34 @@ need `UPDATE_GOLDEN=1`.
 until the pipeline is re-run, so: regenerate before testing emitter changes,
 and when triaging a "bug" in generated output, check whether the source already
 carries a fix that has not been regenerated.
+
+**VM-verification (TestAnyware), racket recipe.** racket sample apps are
+stub-launcher bundles that exec the *system* Racket (unlike chez's self-contained
+binaries), so the VM must have Racket 9.2 + ffi2 provisioned. The TestAnyware
+golden ships neither, and 9.2 is not downloadable (§0). Working recipe (verified
+2026-06-02, TestAnyware 1.2.0, golden `macos-tahoe`/26.3):
+1. `vmid=$(testanyware vm start --platform macos)`; `export TESTANYWARE_VM_ID=$vmid`.
+2. Disable the tahoe desktop-reveal focus-steal once:
+   `testanyware exec "defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false; killall WindowManager"`.
+3. Provision Racket: tar the host distribution **excluding `doc`, `share/doc`,
+   and the GUI `*.app`s** (≈223 MB gzip vs 977 MB full) and restore it to the
+   **identical path** `/Applications/Racket v9.2/` in the VM so baked-in absolute
+   paths resolve with zero relocation. TestAnyware 1.2.0 `upload` has **no** 4 MB
+   chunk limit (the old `split -b 4m` recipe is obsolete) — single-shot the
+   tarball. Symlink `/opt/homebrew/bin/{racket,raco}` → the distribution (the
+   bundle's `DEFAULT_RACKET_PATH`). Then `raco pkg install --auto --scope user
+   ffi2-lib` (fetches from GitHub; VM has network).
+4. Build bundles on the host (`cargo run --example bundle_app -p
+   apianyware-macos-bundle-racket -- --all`), `tar`/`upload`/extract each `.app`,
+   `xattr -dr com.apple.quarantine`, then `open -n --stderr <log> --stdout <log>
+   "<App>.app"`. **First launch compiles the bundle's `.rkt` graph** (no `.zo`
+   shipped) — allow ~25–35 s before a window appears.
+5. The `testanyware exec` channel times out at **30 s** — keep per-call `sleep`s
+   under that; poll the window with `testanyware agent windows` and capture with
+   `testanyware screenshot`. `input key` modifiers use `--modifiers cmd,shift`
+   (not `cmd+a`). If a window is reported `[focused]` but absent from a
+   screenshot, the desktop-reveal stole focus — re-apply step 2 and
+   `testanyware agent window-move --window <name> --x .. --y ..` to raise it.
 
 ## 9. Sample apps & bundling
 

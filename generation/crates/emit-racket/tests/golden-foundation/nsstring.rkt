@@ -2,7 +2,8 @@
 ;; Generated binding for NSString (Foundation)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -66,7 +67,7 @@
   [nsstring-load-data-with-type-identifier-for-item-provider-completion-handler (c-> nsstring? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
   [nsstring-mutable-copy-with-zone (c-> nsstring? (or/c cpointer? #f) any/c)]
   [nsstring-writable-type-identifiers-for-item-provider (c-> nsstring? any/c)]
-  [nsstring-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
+  [nsstring-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
   [nsstring-readable-type-identifiers-for-item-provider (c-> any/c)]
   [nsstring-supports-secure-coding (c-> boolean?)]
   )
@@ -74,21 +75,21 @@
 ;; --- Class reference ---
 (import-class NSString)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
-(define _msg-1  ; (_fun _pointer _pointer -> _uint64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _uint64)))
-(define _msg-2  ; (_fun _pointer _pointer _id -> _int64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _int64)))
-(define _msg-3  ; (_fun _pointer _pointer _id _id _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _pointer -> _id)))
-(define _msg-4  ; (_fun _pointer _pointer _id _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer -> _id)))
-(define _msg-5  ; (_fun _pointer _pointer _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
-(define _msg-6  ; (_fun _pointer _pointer _uint64 -> _uint16)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _uint16)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_N (-> ptr_t ptr_t string_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_i (-> ptr_t ptr_t int32_t))
+(define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_Q (-> ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_0_f (-> ptr_t ptr_t float_t))
+(define-aw-msg aw_racket_msg_0_d (-> ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_q (-> ptr_t ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PP_P_e (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_Q_S (-> ptr_t ptr_t uint64_t uint16_t))
 
 ;; --- Constructors ---
 (define (make-nsstring-init-with-coder coder)
@@ -100,136 +101,139 @@
 
 ;; --- Properties ---
 (define (nsstring-utf8-string self)
-  (tell #:type _string (coerce-arg self) UTF8String))
+  (aw_racket_msg_0_N (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "UTF8String"))))
 (define (nsstring-absolute-path self)
-  (tell #:type _bool (coerce-arg self) absolutePath))
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "absolutePath"))))
 (define (nsstring-available-string-encodings)
-  (tell #:type _pointer NSString availableStringEncodings))
+  (ptr_t->cpointer (aw_racket_msg_0_P (id->ffi2-ptr NSString) (id->ffi2-ptr (sel_registerName "availableStringEncodings")))))
 (define (nsstring-bool-value self)
-  (tell #:type _bool (coerce-arg self) boolValue))
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "boolValue"))))
 (define (nsstring-capitalized-string self)
   (wrap-objc-object
-   (tell (coerce-arg self) capitalizedString)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "capitalizedString"))))))
 (define (nsstring-custom-playground-quick-look self)
   (wrap-objc-object
-   (tell (coerce-arg self) customPlaygroundQuickLook)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "customPlaygroundQuickLook"))))))
 (define (nsstring-decomposed-string-with-canonical-mapping self)
   (wrap-objc-object
-   (tell (coerce-arg self) decomposedStringWithCanonicalMapping)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "decomposedStringWithCanonicalMapping"))))))
 (define (nsstring-decomposed-string-with-compatibility-mapping self)
   (wrap-objc-object
-   (tell (coerce-arg self) decomposedStringWithCompatibilityMapping)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "decomposedStringWithCompatibilityMapping"))))))
 (define (nsstring-default-c-string-encoding)
-  (tell #:type _uint64 NSString defaultCStringEncoding))
+  (aw_racket_msg_0_Q (id->ffi2-ptr NSString) (id->ffi2-ptr (sel_registerName "defaultCStringEncoding"))))
 (define (nsstring-description self)
   (wrap-objc-object
-   (tell (coerce-arg self) description)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "description"))))))
 (define (nsstring-double-value self)
-  (tell #:type _double (coerce-arg self) doubleValue))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "doubleValue"))))
 (define (nsstring-fastest-encoding self)
-  (tell #:type _uint64 (coerce-arg self) fastestEncoding))
+  (aw_racket_msg_0_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "fastestEncoding"))))
 (define (nsstring-file-system-representation self)
-  (tell #:type _string (coerce-arg self) fileSystemRepresentation))
+  (aw_racket_msg_0_N (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "fileSystemRepresentation"))))
 (define (nsstring-float-value self)
-  (tell #:type _float (coerce-arg self) floatValue))
+  (aw_racket_msg_0_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "floatValue"))))
 (define (nsstring-hash self)
-  (tell #:type _uint64 (coerce-arg self) hash))
+  (aw_racket_msg_0_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "hash"))))
 (define (nsstring-int-value self)
-  (tell #:type _int32 (coerce-arg self) intValue))
+  (aw_racket_msg_0_i (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "intValue"))))
 (define (nsstring-integer-value self)
-  (tell #:type _int64 (coerce-arg self) integerValue))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "integerValue"))))
 (define (nsstring-last-path-component self)
   (wrap-objc-object
-   (tell (coerce-arg self) lastPathComponent)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lastPathComponent"))))))
 (define (nsstring-length self)
-  (tell #:type _uint64 (coerce-arg self) length))
+  (aw_racket_msg_0_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "length"))))
 (define (nsstring-localized-capitalized-string self)
   (wrap-objc-object
-   (tell (coerce-arg self) localizedCapitalizedString)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "localizedCapitalizedString"))))))
 (define (nsstring-localized-lowercase-string self)
   (wrap-objc-object
-   (tell (coerce-arg self) localizedLowercaseString)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "localizedLowercaseString"))))))
 (define (nsstring-localized-uppercase-string self)
   (wrap-objc-object
-   (tell (coerce-arg self) localizedUppercaseString)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "localizedUppercaseString"))))))
 (define (nsstring-long-long-value self)
-  (tell #:type _int64 (coerce-arg self) longLongValue))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "longLongValue"))))
 (define (nsstring-lowercase-string self)
   (wrap-objc-object
-   (tell (coerce-arg self) lowercaseString)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lowercaseString"))))))
 (define (nsstring-path-components self)
   (wrap-objc-object
-   (tell (coerce-arg self) pathComponents)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pathComponents"))))))
 (define (nsstring-path-extension self)
   (wrap-objc-object
-   (tell (coerce-arg self) pathExtension)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pathExtension"))))))
 (define (nsstring-precomposed-string-with-canonical-mapping self)
   (wrap-objc-object
-   (tell (coerce-arg self) precomposedStringWithCanonicalMapping)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "precomposedStringWithCanonicalMapping"))))))
 (define (nsstring-precomposed-string-with-compatibility-mapping self)
   (wrap-objc-object
-   (tell (coerce-arg self) precomposedStringWithCompatibilityMapping)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "precomposedStringWithCompatibilityMapping"))))))
 (define (nsstring-smallest-encoding self)
-  (tell #:type _uint64 (coerce-arg self) smallestEncoding))
+  (aw_racket_msg_0_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "smallestEncoding"))))
 (define (nsstring-string-by-abbreviating-with-tilde-in-path self)
   (wrap-objc-object
-   (tell (coerce-arg self) stringByAbbreviatingWithTildeInPath)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringByAbbreviatingWithTildeInPath"))))))
 (define (nsstring-string-by-deleting-last-path-component self)
   (wrap-objc-object
-   (tell (coerce-arg self) stringByDeletingLastPathComponent)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringByDeletingLastPathComponent"))))))
 (define (nsstring-string-by-deleting-path-extension self)
   (wrap-objc-object
-   (tell (coerce-arg self) stringByDeletingPathExtension)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringByDeletingPathExtension"))))))
 (define (nsstring-string-by-expanding-tilde-in-path self)
   (wrap-objc-object
-   (tell (coerce-arg self) stringByExpandingTildeInPath)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringByExpandingTildeInPath"))))))
 (define (nsstring-string-by-removing-percent-encoding self)
   (wrap-objc-object
-   (tell (coerce-arg self) stringByRemovingPercentEncoding)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringByRemovingPercentEncoding"))))))
 (define (nsstring-string-by-resolving-symlinks-in-path self)
   (wrap-objc-object
-   (tell (coerce-arg self) stringByResolvingSymlinksInPath)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringByResolvingSymlinksInPath"))))))
 (define (nsstring-string-by-standardizing-path self)
   (wrap-objc-object
-   (tell (coerce-arg self) stringByStandardizingPath)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "stringByStandardizingPath"))))))
 (define (nsstring-uppercase-string self)
   (wrap-objc-object
-   (tell (coerce-arg self) uppercaseString)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseString"))))))
 
 ;; --- Instance methods ---
 (define (nsstring-character-at-index self index)
-  (_msg-6 (coerce-arg self) (sel_registerName "characterAtIndex:") index))
+  (aw_racket_msg_Q_S (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "characterAtIndex:")) index))
 (define (nsstring-copy-with-zone self zone)
   (wrap-objc-object
-   (_msg-5 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "copyWithZone:")) (id->ffi2-ptr zone)))
    #:retained #t))
 (define (nsstring-encode-with-coder self coder)
-  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsstring-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
-  (_msg-2 (coerce-arg self) (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:") (coerce-arg type-identifier)))
+  (aw_racket_msg_P_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:")) (id->ffi2-ptr (coerce-arg type-identifier))))
 ;; block param 1: async-copied (runtime-managed)
 (define (nsstring-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
   (define-values (_blk1 _blk1-id)
     (make-objc-block completion-handler (list _id _id) _void))
   (wrap-objc-object
-   (_msg-4 (coerce-arg self) (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:") (coerce-arg type-identifier) _blk1)
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:")) (id->ffi2-ptr (coerce-arg type-identifier)) (id->ffi2-ptr _blk1)))
    ))
 (define (nsstring-mutable-copy-with-zone self zone)
   (wrap-objc-object
-   (_msg-5 (coerce-arg self) (sel_registerName "mutableCopyWithZone:") zone)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mutableCopyWithZone:")) (id->ffi2-ptr zone)))
    #:retained #t))
 (define (nsstring-writable-type-identifiers-for-item-provider self)
   (wrap-objc-object
-   (tell (coerce-arg self) writableTypeIdentifiersForItemProvider)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writableTypeIdentifiersForItemProvider"))))
+   ))
 
 ;; --- Class methods ---
 ;; NSError out-param: result-or-error wrapper candidate
-(define (nsstring-object-with-item-provider-data-type-identifier-error data type-identifier out-error)
-  (wrap-objc-object
-   (_msg-3 NSString (sel_registerName "objectWithItemProviderData:typeIdentifier:error:") (coerce-arg data) (coerce-arg type-identifier) out-error)
-   ))
+(define (nsstring-object-with-item-provider-data-type-identifier-error data type-identifier)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_P_e (id->ffi2-ptr NSString) (id->ffi2-ptr (sel_registerName "objectWithItemProviderData:typeIdentifier:error:")) (id->ffi2-ptr (coerce-arg data)) (id->ffi2-ptr (coerce-arg type-identifier)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsstring-readable-type-identifiers-for-item-provider)
   (wrap-objc-object
-   (tell NSString readableTypeIdentifiersForItemProvider)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSString) (id->ffi2-ptr (sel_registerName "readableTypeIdentifiersForItemProvider"))))
+   ))
 (define (nsstring-supports-secure-coding)
-  (_msg-0 NSString (sel_registerName "supportsSecureCoding")))
+  (aw_racket_msg_0_b (id->ffi2-ptr NSString) (id->ffi2-ptr (sel_registerName "supportsSecureCoding"))))

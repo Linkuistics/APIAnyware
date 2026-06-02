@@ -2,7 +2,8 @@
 ;; Generated binding for NSArray (Foundation)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -42,19 +43,16 @@
 ;; --- Class reference ---
 (import-class NSArray)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
-(define _msg-1  ; (_fun _pointer _pointer -> _uint64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _uint64)))
-(define _msg-2  ; (_fun _pointer _pointer _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
-(define _msg-3  ; (_fun _pointer _pointer _pointer _pointer _uint64 -> _uint64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _pointer _uint64 -> _uint64)))
-(define _msg-4  ; (_fun _pointer _pointer _pointer _uint64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer _uint64 -> _id)))
-(define _msg-5  ; (_fun _pointer _pointer _uint64 -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _uint64 -> _id)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_Q (-> ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPQ_Q (-> ptr_t ptr_t ptr_t ptr_t uint64_t uint64_t))
+(define-aw-msg aw_racket_msg_PQ_P (-> ptr_t ptr_t ptr_t uint64_t ptr_t))
+(define-aw-msg aw_racket_msg_Q_P (-> ptr_t ptr_t uint64_t ptr_t))
 
 ;; --- Constructors ---
 (define (make-nsarray-init-with-coder coder)
@@ -65,55 +63,53 @@
 
 (define (make-nsarray-init-with-objects-count objects cnt)
   (wrap-objc-object
-   (_msg-4 (tell NSArray alloc)
-       (sel_registerName "initWithObjects:count:")
-       objects
-       cnt)
+   (ffi2-ptr->id (aw_racket_msg_PQ_P (id->ffi2-ptr (tell NSArray alloc)) (id->ffi2-ptr (sel_registerName "initWithObjects:count:")) (id->ffi2-ptr objects) cnt))
    #:retained #t))
 
 
 ;; --- Properties ---
 (define (nsarray-count self)
-  (tell #:type _uint64 (coerce-arg self) count))
+  (aw_racket_msg_0_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "count"))))
 (define (nsarray-custom-mirror self)
   (wrap-objc-object
-   (tell (coerce-arg self) customMirror)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "customMirror"))))))
 (define (nsarray-description self)
   (wrap-objc-object
-   (tell (coerce-arg self) description)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "description"))))))
 (define (nsarray-first-object self)
   (wrap-objc-object
-   (tell (coerce-arg self) firstObject)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "firstObject"))))))
 (define (nsarray-last-object self)
   (wrap-objc-object
-   (tell (coerce-arg self) lastObject)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lastObject"))))))
 (define (nsarray-sorted-array-hint self)
   (wrap-objc-object
-   (tell (coerce-arg self) sortedArrayHint)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sortedArrayHint"))))))
 (define (nsarray-underestimated-count self)
-  (tell #:type _int64 (coerce-arg self) underestimatedCount))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "underestimatedCount"))))
 
 ;; --- Instance methods ---
 (define (nsarray-copy-with-zone self zone)
   (wrap-objc-object
-   (_msg-2 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "copyWithZone:")) (id->ffi2-ptr zone)))
    #:retained #t))
 (define (nsarray-count-by-enumerating-with-state-objects-count self state buffer len)
-  (_msg-3 (coerce-arg self) (sel_registerName "countByEnumeratingWithState:objects:count:") state buffer len))
+  (aw_racket_msg_PPQ_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "countByEnumeratingWithState:objects:count:")) (id->ffi2-ptr state) (id->ffi2-ptr buffer) len))
 (define (nsarray-encode-with-coder self coder)
-  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsarray-make-iterator self)
   (wrap-objc-object
-   (tell (coerce-arg self) makeIterator)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeIterator"))))
+   ))
 (define (nsarray-mutable-copy-with-zone self zone)
   (wrap-objc-object
-   (_msg-2 (coerce-arg self) (sel_registerName "mutableCopyWithZone:") zone)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mutableCopyWithZone:")) (id->ffi2-ptr zone)))
    #:retained #t))
 (define (nsarray-object-at-index self index)
   (wrap-objc-object
-   (_msg-5 (coerce-arg self) (sel_registerName "objectAtIndex:") index)
+   (ffi2-ptr->id (aw_racket_msg_Q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "objectAtIndex:")) index))
    ))
 
 ;; --- Class methods ---
 (define (nsarray-supports-secure-coding)
-  (_msg-0 NSArray (sel_registerName "supportsSecureCoding")))
+  (aw_racket_msg_0_b (id->ffi2-ptr NSArray) (id->ffi2-ptr (sel_registerName "supportsSecureCoding"))))
