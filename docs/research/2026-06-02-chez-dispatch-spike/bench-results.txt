@@ -1,0 +1,26 @@
+
+=== PART A: dispatch (3000000 iters) ===
+ scalar  (id,SEL,long)->long
+  direct foreign-procedure              8.9 ns/call
+  native typed shim (hop)               7.6 ns/call
+  libffi generic (cached)              21.2 ns/call
+ id->id  (id,SEL,id)->id
+  direct foreign-procedure             17.2 ns/call
+  native typed shim (hop)              18.1 ns/call
+ 2xfloat (id,SEL,dbl,dbl)->dbl
+  direct foreign-procedure              6.4 ns/call
+  native typed shim (hop)               6.8 ns/call
+ struct  (id,SEL)->NSRect
+  direct foreign-procedure (& NSRect)    11.3 ns/call
+  native shim -> flat buffer           34.1 ns/call
+
+=== PART B: marshalling (3000000 iters) ===
+ string in/out  -appendBang:
+  chez-side: str2ns+msg+ns2str        276.1 ns/call
+  native one-call append-bang         243.3 ns/call
+ list->NSArray (8 elems, 100000 iters)
+  chez-side: mutarray + loop          666.4 ns/call
+  native one-call (joined+split)     1084.7 ns/call
+  native char** batch (marshal+1 call)  1455.8 ns/call
+
+done.

@@ -1,0 +1,35 @@
+========== stage: direct ==========
+threaded? = #t
+stage=direct : calling foreign-callable ...
+  [C] direct: isMainThread=1
+stage=direct : SURVIVED. hits=1
+(exit code: 0)
+
+========== stage: pthread ==========
+threaded? = #t
+stage=pthread : calling foreign-callable ...
+  [C] pthread: isMainThread=0
+nonrecoverable invalid memory reference
+(exit code: 134)
+
+========== stage: pthread-act ==========
+threaded? = #t
+stage=pthread-act : calling foreign-callable ...
+  [C] pthread-act: isMainThread=0
+stage=pthread-act : SURVIVED. hits=1
+(exit code: 0)
+
+========== stage: gcd ==========
+threaded? = #t
+stage=gcd : calling foreign-callable ...
+  [C] gcd-async: isMainThread=0
+nonrecoverable invalid memory reference
+(exit code: 134)
+
+========== stage: gcd-act ==========
+threaded? = #t
+stage=gcd-act : calling foreign-callable ...
+  [C] gcd-async-act: isMainThread=0
+stage=gcd-act : SURVIVED. hits=1
+(exit code: 0)
+
