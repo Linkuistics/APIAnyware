@@ -1,18 +1,18 @@
 //! Core generation orchestration — loads enriched IR, invokes emitters,
-//! writes output to `generation/targets/{lang}/generated/`.
+//! writes output to `generation/targets/{target}/generated/`.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use apianyware_macos_emit::language_emitter::{EmitResult, LanguageEmitter, LanguageInfo};
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::framework_ordering::topological_sort;
 
 use crate::registry::EmitterRegistry;
 
-/// Result of generating bindings for one language across all frameworks.
+/// Result of generating bindings for one target across all frameworks.
 #[derive(Debug, Default)]
 pub struct GenerationSummary {
-    pub language_id: String,
+    pub target_id: String,
     pub frameworks_generated: usize,
     pub total_files_written: usize,
     pub total_classes: usize,
@@ -30,25 +30,25 @@ impl GenerationSummary {
     }
 }
 
-/// Build the output directory path for a language.
+/// Build the output directory path for a target.
 ///
 /// Pattern: `{base_output_dir}/{info.id}/{info.generated_subdir}/`.
 /// Most targets use the conventional `generated` subdir; the chez target
 /// uses `apianyware` so Chez's default library-name resolution finds the
 /// emitted files with `--libdirs generation/targets/chez`.
-pub fn output_dir_for_language(base_output_dir: &Path, info: &LanguageInfo) -> PathBuf {
+pub fn output_dir_for_target(base_output_dir: &Path, info: &TargetInfo) -> PathBuf {
     base_output_dir.join(info.id).join(info.generated_subdir)
 }
 
-/// Generate bindings for the specified languages (or all if none specified).
+/// Generate bindings for the specified targets (or all if none specified).
 ///
-/// For each language, generates all enriched frameworks. Reads enriched IR
-/// from `input_dir`, writes to `{base_output_dir}/{lang}/generated/`.
+/// For each target, generates all enriched frameworks. Reads enriched IR
+/// from `input_dir`, writes to `{base_output_dir}/{target}/generated/`.
 pub fn run_generation(
     registry: &EmitterRegistry,
     input_dir: &Path,
     base_output_dir: &Path,
-    language_filter: Option<&[String]>,
+    target_filter: Option<&[String]>,
 ) -> Result<Vec<GenerationSummary>> {
     // Load all enriched frameworks
     let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
@@ -67,14 +67,14 @@ pub fn run_generation(
     tracing::info!(frameworks = ordered_frameworks.len(), "loaded enriched IR");
 
     // Determine which emitters to run
-    let emitters: Vec<&dyn LanguageEmitter> = if let Some(langs) = language_filter {
+    let emitters: Vec<&dyn TargetEmitter> = if let Some(targets) = target_filter {
         let mut found = Vec::new();
-        for lang in langs {
-            match registry.get(lang) {
+        for target in targets {
+            match registry.get(target) {
                 Some(emitter) => found.push(emitter),
                 None => bail!(
-                    "unknown language: '{}'. Use --list-languages to see available emitters.",
-                    lang
+                    "unknown target: '{}'. Use --list-targets to see available emitters.",
+                    target
                 ),
             }
         }
@@ -86,17 +86,17 @@ pub fn run_generation(
     let mut summaries = Vec::new();
 
     for emitter in &emitters {
-        let info = emitter.language_info();
-        let out_dir = output_dir_for_language(base_output_dir, info);
+        let info = emitter.target_info();
+        let out_dir = output_dir_for_target(base_output_dir, info);
 
         tracing::info!(
-            language = info.id,
+            target = info.id,
             output = %out_dir.display(),
             "generating bindings"
         );
 
         let mut summary = GenerationSummary {
-            language_id: info.id.to_string(),
+            target_id: info.id.to_string(),
             ..Default::default()
         };
 
@@ -116,16 +116,57 @@ pub fn run_generation(
         }
 
         tracing::info!(
-            language = info.id,
+            target = info.id,
             frameworks = summary.frameworks_generated,
             files = summary.total_files_written,
-            "language complete"
+            "target complete"
         );
 
         summaries.push(summary);
     }
 
     Ok(summaries)
+}
+
+/// Generate the racket target's typed native dispatch table (ADR-0013) into the
+/// `APIAnywareRacket` Swift target, then `swift build` compiles it into the dylib.
+///
+/// This is a **global** pass (the dispatch entries are deduplicated across every
+/// framework, unlike the per-framework `.rkt` bindings), so it runs once after
+/// [`run_generation`] rather than per-framework. The build order is therefore
+/// `generate -> swift build` (the dispatch `.swift` must exist before the dylib
+/// is built). Returns the number of distinct entries written.
+///
+/// The collapsed-ABI signatures are derived from the `ffi/unsafe` spellings, so
+/// the mapper here is [`RacketFfiTypeMapper`] (not the ffi2 one): `native_dispatch`
+/// parses `_id`/`_uint64`/`_NSRect` tokens and collapses pointer-likes itself.
+pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper;
+    use apianyware_macos_emit_racket::native_dispatch::{
+        collect_global_signatures, generate_dispatch_swift,
+    };
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let sigs = collect_global_signatures(&frameworks, &RacketFfiTypeMapper);
+    let swift = generate_dispatch_swift(&sigs);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift)
+        .with_context(|| format!("writing {}", swift_out.display()))?;
+
+    tracing::info!(
+        entries = sigs.len(),
+        output = %swift_out.display(),
+        "generated native dispatch table"
+    );
+    Ok(sigs.len())
 }
 
 #[cfg(test)]
@@ -195,31 +236,31 @@ mod tests {
     }
 
     #[test]
-    fn output_dir_for_language_builds_correct_path() {
+    fn output_dir_for_target_builds_correct_path() {
         let base = Path::new("/out/targets");
-        let racket = LanguageInfo {
+        let racket = TargetInfo {
             id: "racket",
             display_name: "Racket",
             generated_subdir: "generated",
         };
         assert_eq!(
-            output_dir_for_language(base, &racket),
+            output_dir_for_target(base, &racket),
             PathBuf::from("/out/targets/racket/generated")
         );
 
-        let chez = LanguageInfo {
+        let chez = TargetInfo {
             id: "chez",
             display_name: "Chez Scheme",
             generated_subdir: "apianyware",
         };
         assert_eq!(
-            output_dir_for_language(base, &chez),
+            output_dir_for_target(base, &chez),
             PathBuf::from("/out/targets/chez/apianyware")
         );
     }
 
     #[test]
-    fn generate_single_language() {
+    fn generate_single_target() {
         let tmp = tempfile::tempdir().unwrap();
         let input_dir = tmp.path().join("enriched");
         let output_dir = tmp.path().join("targets");
@@ -228,11 +269,11 @@ mod tests {
         write_test_framework(&input_dir, &fw);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket".to_string()];
-        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
+        let targets = vec!["racket".to_string()];
+        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         assert_eq!(summaries.len(), 1);
-        assert_eq!(summaries[0].language_id, "racket");
+        assert_eq!(summaries[0].target_id, "racket");
         assert!(summaries[0].total_files_written > 0);
 
         // Verify output structure
@@ -251,8 +292,8 @@ mod tests {
         write_test_framework(&input_dir, &make_test_framework("AppKit"));
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket".to_string()];
-        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
+        let targets = vec!["racket".to_string()];
+        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         // Both frameworks generated
         assert_eq!(summaries[0].frameworks_generated, 2);
@@ -263,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn generate_all_languages() {
+    fn generate_all_targets() {
         let tmp = tempfile::tempdir().unwrap();
         let input_dir = tmp.path().join("enriched");
         let output_dir = tmp.path().join("targets");
@@ -273,13 +314,13 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Should generate for all registered languages (currently just racket)
+        // Should generate for all registered targets (currently just racket)
         assert!(!summaries.is_empty());
-        assert_eq!(summaries[0].language_id, "racket");
+        assert_eq!(summaries[0].target_id, "racket");
     }
 
     #[test]
-    fn generate_unknown_language_returns_error() {
+    fn generate_unknown_target_returns_error() {
         let tmp = tempfile::tempdir().unwrap();
         let input_dir = tmp.path().join("enriched");
         let output_dir = tmp.path().join("targets");
@@ -287,12 +328,12 @@ mod tests {
         write_test_framework(&input_dir, &make_test_framework("TestKit"));
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["unknown".to_string()];
-        let result = run_generation(&registry, &input_dir, &output_dir, Some(&langs));
+        let targets = vec!["unknown".to_string()];
+        let result = run_generation(&registry, &input_dir, &output_dir, Some(&targets));
 
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("unknown language"));
+        assert!(err.contains("unknown target"));
     }
 
     #[test]
@@ -323,8 +364,8 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket".to_string()];
-        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
+        let targets = vec!["racket".to_string()];
+        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         let summary = &summaries[0];
         assert_eq!(summary.frameworks_generated, 1);
@@ -342,8 +383,8 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket".to_string()];
-        run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
+        let targets = vec!["racket".to_string()];
+        run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         let testkit_dir = output_dir.join("racket/generated/testkit");
 
@@ -379,8 +420,8 @@ mod tests {
         write_test_framework(&input_dir, &build_snapshot_test_framework());
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket".to_string()];
-        run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
+        let targets = vec!["racket".to_string()];
+        run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         let testkit_dir = output_dir.join("racket/generated/testkit");
 
@@ -439,9 +480,9 @@ mod tests {
             assert!(
                 s.total_files_written > 0,
                 "{} should produce files",
-                s.language_id
+                s.target_id
             );
-            assert_eq!(s.total_classes, 5, "{} class count", s.language_id);
+            assert_eq!(s.total_classes, 5, "{} class count", s.target_id);
         }
     }
 
@@ -461,8 +502,8 @@ mod tests {
         write_test_framework(&input_dir, &appkit);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket".to_string()];
-        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
+        let targets = vec!["racket".to_string()];
+        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         assert_eq!(summaries[0].frameworks_generated, 2);
 
@@ -494,8 +535,8 @@ mod tests {
         write_test_framework(&input_dir, &fw2);
 
         let registry = EmitterRegistry::new();
-        let langs = vec!["racket".to_string()];
-        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&langs)).unwrap();
+        let targets = vec!["racket".to_string()];
+        let summaries = run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         let summary = &summaries[0];
         assert_eq!(summary.frameworks_generated, 2);

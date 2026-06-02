@@ -12,7 +12,7 @@
 // Note: this registry does NOT retain ObjC objects (no Unmanaged.retain).
 // It stores raw pointer values to prevent the *language runtime's GC* from
 // collecting the backing allocation. The caller manages ObjC refcounting
-// separately via aw_common_retain/aw_common_release.
+// separately via aw_racket_retain/aw_racket_release.
 //
 // Exports: aw_racket_prevent_gc, aw_racket_allow_gc, aw_racket_gc_count
 

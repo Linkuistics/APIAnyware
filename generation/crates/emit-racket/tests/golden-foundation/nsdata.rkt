@@ -2,7 +2,8 @@
 ;; Generated binding for NSData (Foundation)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -36,15 +37,13 @@
 ;; --- Class reference ---
 (import-class NSData)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
-(define _msg-1  ; (_fun _pointer _pointer -> _pointer)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _pointer)))
-(define _msg-2  ; (_fun _pointer _pointer -> _uint64)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _uint64)))
-(define _msg-3  ; (_fun _pointer _pointer _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _pointer -> _id)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_Q (-> ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 
 ;; --- Constructors ---
 (define (make-nsdata-init-with-coder coder)
@@ -56,32 +55,32 @@
 
 ;; --- Properties ---
 (define (nsdata-bytes self)
-  (tell #:type _pointer (coerce-arg self) bytes))
+  (ptr_t->cpointer (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "bytes")))))
 (define (nsdata-description self)
   (wrap-objc-object
-   (tell (coerce-arg self) description)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "description"))))))
 (define (nsdata-end-index self)
-  (tell #:type _int64 (coerce-arg self) endIndex))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endIndex"))))
 (define (nsdata-length self)
-  (tell #:type _uint64 (coerce-arg self) length))
+  (aw_racket_msg_0_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "length"))))
 (define (nsdata-regions self)
   (wrap-objc-object
-   (tell (coerce-arg self) regions)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "regions"))))))
 (define (nsdata-start-index self)
-  (tell #:type _int64 (coerce-arg self) startIndex))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "startIndex"))))
 
 ;; --- Instance methods ---
 (define (nsdata-copy-with-zone self zone)
   (wrap-objc-object
-   (_msg-3 (coerce-arg self) (sel_registerName "copyWithZone:") zone)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "copyWithZone:")) (id->ffi2-ptr zone)))
    #:retained #t))
 (define (nsdata-encode-with-coder self coder)
-  (tell #:type _void (coerce-arg self) encodeWithCoder: (coerce-arg coder)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsdata-mutable-copy-with-zone self zone)
   (wrap-objc-object
-   (_msg-3 (coerce-arg self) (sel_registerName "mutableCopyWithZone:") zone)
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mutableCopyWithZone:")) (id->ffi2-ptr zone)))
    #:retained #t))
 
 ;; --- Class methods ---
 (define (nsdata-supports-secure-coding)
-  (_msg-0 NSData (sel_registerName "supportsSecureCoding")))
+  (aw_racket_msg_0_b (id->ffi2-ptr NSData) (id->ffi2-ptr (sel_registerName "supportsSecureCoding"))))

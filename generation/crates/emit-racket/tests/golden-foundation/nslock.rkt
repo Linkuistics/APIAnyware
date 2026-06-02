@@ -2,7 +2,8 @@
 ;; Generated binding for NSLock (Foundation)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -30,11 +31,12 @@
 ;; --- Class reference ---
 (import-class NSLock)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
-(define _msg-1  ; (_fun _pointer _pointer _id -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id -> _bool)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_b (-> ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 
 ;; --- Constructors ---
 (define (make-nslock)
@@ -46,16 +48,16 @@
 ;; --- Properties ---
 (define (nslock-name self)
   (wrap-objc-object
-   (tell (coerce-arg self) name)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "name"))))))
 (define (nslock-set-name! self value)
-  (tell #:type _void (coerce-arg self) setName: (coerce-arg value)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setName:")) (id->ffi2-ptr (coerce-arg value))))
 
 ;; --- Instance methods ---
 (define (nslock-lock self)
-  (tell #:type _void (coerce-arg self) lock))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lock"))))
 (define (nslock-lock-before-date self limit)
-  (_msg-1 (coerce-arg self) (sel_registerName "lockBeforeDate:") (coerce-arg limit)))
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lockBeforeDate:")) (id->ffi2-ptr (coerce-arg limit))))
 (define (nslock-try-lock self)
-  (_msg-0 (coerce-arg self) (sel_registerName "tryLock")))
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryLock"))))
 (define (nslock-unlock self)
-  (tell #:type _void (coerce-arg self) unlock))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unlock"))))

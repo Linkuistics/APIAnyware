@@ -62,7 +62,7 @@ inherits is **ADR-0005** — read it first.
 2. **Write a design spec** to `docs/specs/YYYY-MM-DD-<id>-design.md` recording at
    minimum:
    - **Language / display name** — e.g. "Chez Scheme".
-   - **Target id** — the CLI `--lang` value and on-disk dir name (`racket`,
+   - **Target id** — the CLI `--target` value and on-disk dir name (`racket`,
      `chez`). A plain language id; no `{lang}-{paradigm}` slug.
    - **Implementation(s)** — which compiler/runtime (e.g. Chez 10.4.1).
    - **Idiom commitments** — the language constructs the emitter leans on, per
@@ -97,7 +97,7 @@ generation/crates/emit-{id}/
     emit_enums.rs
     emit_constants.rs
     emit_functions.rs
-    emit_framework.rs     — LanguageInfo + LanguageEmitter impl, per-framework driver
+    emit_framework.rs     — TargetInfo + TargetEmitter impl, per-framework driver
 ```
 
 ### Cargo.toml
@@ -144,19 +144,19 @@ impl FfiTypeMapper for {Lang}FfiTypeMapper {
 }
 ```
 
-### Implement `LanguageInfo` + `LanguageEmitter`
+### Implement `TargetInfo` + `TargetEmitter`
 
-In `emit_framework.rs`. `LanguageInfo` is **three fields** — there is no
+In `emit_framework.rs`. `TargetInfo` is **three fields** — there is no
 `supported_styles` / `default_style`:
 
 ```rust
-use apianyware_macos_emit::language_emitter::{LanguageInfo, LanguageEmitter, EmitResult};
+use apianyware_macos_emit::target_emitter::{TargetInfo, TargetEmitter, EmitResult};
 use apianyware_macos_types::framework::Framework;
 use std::io;
 use std::path::Path;
 
-pub const {LANG}_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
-    id: "{id}",                  // CLI --lang value + on-disk dir
+pub const {LANG}_TARGET_INFO: TargetInfo = TargetInfo {
+    id: "{id}",                  // CLI --target value + on-disk dir
     display_name: "{Language}",
     generated_subdir: "generated", // subdir under targets/{id}/ for framework output.
                                     // racket uses "generated"; chez uses "apianyware"
@@ -166,8 +166,8 @@ pub const {LANG}_LANGUAGE_INFO: LanguageInfo = LanguageInfo {
 
 pub struct {Lang}Emitter;
 
-impl LanguageEmitter for {Lang}Emitter {
-    fn language_info(&self) -> &LanguageInfo { &{LANG}_LANGUAGE_INFO }
+impl TargetEmitter for {Lang}Emitter {
+    fn target_info(&self) -> &TargetInfo { &{LANG}_TARGET_INFO }
 
     // No `style` parameter — one binding style per target (ADR-0004).
     fn emit_framework(&self, framework: &Framework, output_dir: &Path)
@@ -179,7 +179,7 @@ impl LanguageEmitter for {Lang}Emitter {
 }
 ```
 
-(The trait and types live in `emit/src/language_emitter.rs`. It was once
+(The trait and types live in `emit/src/target_emitter.rs`. It was once
 `binding_style.rs`, but the `BindingStyle` enum is gone — ADR-0004.)
 
 ### Key design decisions per language
@@ -227,7 +227,7 @@ Emitters are registered in one place — `generation/crates/cli/src/registry.rs`
 `EmitterRegistry::new()`:
 
 ```rust
-let emitters: Vec<Box<dyn LanguageEmitter>> = vec![
+let emitters: Vec<Box<dyn TargetEmitter>> = vec![
     Box::new(apianyware_macos_emit_racket::RacketEmitter),
     Box::new(apianyware_macos_emit_chez::ChezEmitter),
     Box::new(apianyware_macos_emit_{id}::{Lang}Emitter),   // ← add this
@@ -235,8 +235,8 @@ let emitters: Vec<Box<dyn LanguageEmitter>> = vec![
 ```
 
 Add `apianyware-macos-emit-{id}` as a `cli` dependency. The registry keys on
-`language_info().id`, so `--lang {id}` and `--list-languages` work with no
-further wiring. (`--lang` takes repeated values; default is all registered
+`target_info().id`, so `--target {id}` and `--list-targets` work with no
+further wiring. (`--target` takes repeated values; default is all registered
 languages.)
 
 ## Step 6: Snapshot / golden tests (optional but recommended)
@@ -249,7 +249,7 @@ deterministic golden tests against the 5-class `TestKit` fixture
 use apianyware_macos_emit::snapshot_testing::GoldenTest;
 use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
 use apianyware_macos_emit_{id}::emit_framework::{Lang}Emitter;
-use apianyware_macos_emit::language_emitter::LanguageEmitter;
+use apianyware_macos_emit::target_emitter::TargetEmitter;
 
 #[test]
 fn snapshot_{id}_testkit() {
@@ -325,10 +325,10 @@ the H1 of `knowledge/apps/<app>/spec.md`.
 ```text
 [ ] Design spec written (docs/specs/YYYY-MM-DD-<id>-design.md); ADR-0005 idiom posture understood
 [ ] emit-<id> crate created, compiles, tests pass
-[ ] LanguageInfo {id, display_name, generated_subdir} + LanguageEmitter::emit_framework implemented
+[ ] TargetInfo {id, display_name, generated_subdir} + TargetEmitter::emit_framework implemented
 [ ] Runtime library written, loads in the target language
 [ ] Swift dylib builds and FFI verified (if needed)
-[ ] Registered in EmitterRegistry::new() (cli/src/registry.rs); --lang <id> works
+[ ] Registered in EmitterRegistry::new() (cli/src/registry.rs); --target <id> works
 [ ] Snapshot/golden or inline emission tests in place (target's choice)
 [ ] All 7 sample apps built
 [ ] All 7 sample apps pass TestAnyware VM verification (one report each)

@@ -2,7 +2,8 @@
 ;; Generated binding for NSStatusBar (AppKit)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -30,13 +31,12 @@
 ;; --- Class reference ---
 (import-class NSStatusBar)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer -> _bool)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _bool)))
-(define _msg-1  ; (_fun _pointer _pointer -> _double)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer -> _double)))
-(define _msg-2  ; (_fun _pointer _pointer _double -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _double -> _id)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_d (-> ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_d_P (-> ptr_t ptr_t double_t ptr_t))
 
 ;; --- Constructors ---
 (define (make-nsstatusbar)
@@ -48,18 +48,18 @@
 ;; --- Properties ---
 (define (nsstatusbar-system-status-bar)
   (wrap-objc-object
-   (tell NSStatusBar systemStatusBar)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSStatusBar) (id->ffi2-ptr (sel_registerName "systemStatusBar"))))))
 (define (nsstatusbar-thickness self)
-  (tell #:type _double (coerce-arg self) thickness))
+  (aw_racket_msg_0_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "thickness"))))
 (define (nsstatusbar-vertical self)
-  (tell #:type _bool (coerce-arg self) vertical))
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "vertical"))))
 
 ;; --- Instance methods ---
 (define (nsstatusbar-is-vertical self)
-  (_msg-0 (coerce-arg self) (sel_registerName "isVertical")))
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVertical"))))
 (define (nsstatusbar-remove-status-item! self item)
-  (tell #:type _void (coerce-arg self) removeStatusItem: (coerce-arg item)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeStatusItem:")) (id->ffi2-ptr (coerce-arg item))))
 (define (nsstatusbar-status-item-with-length self length)
   (wrap-objc-object
-   (_msg-2 (coerce-arg self) (sel_registerName "statusItemWithLength:") length)
+   (ffi2-ptr->id (aw_racket_msg_d_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "statusItemWithLength:")) length))
    ))

@@ -16,7 +16,7 @@
 ;;   - WKWebView loadHTMLString:baseURL: (HTML-as-string, not URL nav)
 ;;   - Cross-framework imports (AppKit + Foundation + WebKit)
 ;;
-;; Run via bundle-racket-oo (see README). Never run the .rkt directly
+;; Run via bundle-racket (see README). Never run the .rkt directly
 ;; from the command line — menu bar app name requires a proper bundle.
 
 (require racket/file

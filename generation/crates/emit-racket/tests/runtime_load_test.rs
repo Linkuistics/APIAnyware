@@ -32,7 +32,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_emit::language_emitter::LanguageEmitter;
+use apianyware_macos_emit::target_emitter::TargetEmitter;
 use apianyware_macos_emit_racket::emit_framework::RacketEmitter;
 use apianyware_macos_types::ir::Framework;
 
@@ -45,6 +45,8 @@ const RUNTIME_FILES: &[&str] = &[
     "coerce.rkt",
     "delegate.rkt",
     "dynamic-class.rkt",
+    "ffi2-dispatch.rkt",
+    "ffi2-seam.rkt",
     "main-thread.rkt",
     "nsevent-helpers.rkt",
     "nsview-helpers.rkt",

@@ -13,7 +13,9 @@
 ;; For synchronous-only APIs (enumeration, sorting), ObjC does NOT call
 ;; Block_copy, so auto-dispose does not fire. Call free-objc-block explicitly.
 ;;
-;; Falls back to pure-Racket block ABI construction when the dylib is absent.
+;; The native block construction is mandatory (ADR-0010) — there is no
+;; pure-Racket block-ABI fallback. `ffi/unsafe` is retained only for the
+;; outbound callback creation (`_cprocedure` + `function-ptr`), per ADR-0014.
 
 (require ffi/unsafe
          "swift-helpers.rkt")
@@ -29,25 +31,6 @@
 (define active-blocks (make-hash))
 (define next-id 0)
 
-;; --- Pure-Racket block ABI (fallback) ---
-
-(define-cstruct _BlockDescriptor
-  ([reserved _uint64]
-   [size _uint64]))
-
-(define-cstruct _BlockLiteral
-  ([isa _pointer]
-   [flags _int32]
-   [reserved _int32]
-   [invoke _fpointer]
-   [descriptor _pointer]))
-
-(define _NSConcreteStackBlock
-  (get-ffi-obj "_NSConcreteStackBlock" #f _pointer))
-
-(define shared-descriptor
-  (make-BlockDescriptor 0 (ctype-sizeof _BlockLiteral)))
-
 ;; --- Public API ---
 
 ;; Create an ObjC block from a Racket procedure.
@@ -60,10 +43,10 @@
 ;;   block-pointer: cpointer to pass to ObjC methods expecting a block
 ;;   block-id:      integer handle — pass to free-objc-block when done
 ;;
-;; With the Swift dylib, blocks use _NSConcreteGlobalBlock and
-;; BLOCK_HAS_COPY_DISPOSE. For async APIs (completion handlers, etc.),
-;; the block is auto-managed via copy/dispose helpers. For synchronous
-;; APIs (enumerateObjectsUsingBlock:, etc.), call free-objc-block after.
+;; Blocks use _NSConcreteGlobalBlock and BLOCK_HAS_COPY_DISPOSE (native helper).
+;; For async APIs (completion handlers, etc.), the block is auto-managed via
+;; copy/dispose helpers. For synchronous APIs (enumerateObjectsUsingBlock:,
+;; etc.), call free-objc-block after.
 (define (make-objc-block proc param-types return-type)
   ;; nil proc → NULL block pointer (ObjC nil — "no callback")
   (if (not proc)
@@ -80,24 +63,16 @@
         (define invoke-ctype (_cprocedure all-param-types return-type))
         (define callback (function-ptr wrapper-proc invoke-ctype))
 
-        ;; Create the block struct
-        (define block
-          (if swift-available?
-              ;; Swift helper: _NSConcreteGlobalBlock + BLOCK_HAS_COPY_DISPOSE
-              (swift:create-block callback)
-              ;; Pure Racket fallback: manual block ABI construction
-              (make-BlockLiteral _NSConcreteStackBlock
-                                 0         ; flags
-                                 0         ; reserved
-                                 callback
-                                 shared-descriptor)))
+        ;; Create the block struct natively:
+        ;; _NSConcreteGlobalBlock + BLOCK_HAS_COPY_DISPOSE.
+        (define block (swift:create-block callback))
 
         ;; Store references to prevent GC
         (define id next-id)
         (set! next-id (add1 next-id))
 
-        ;; Note: with Swift dylib, create-block calls prevent_gc internally.
-        ;; We still store the Racket-side reference to prevent Racket GC.
+        ;; Note: create-block calls prevent_gc internally. We still store the
+        ;; Racket-side reference to prevent Racket GC.
         (hash-set! active-blocks id (list callback block proc))
 
         (values block id))))
@@ -114,9 +89,7 @@
 (define (free-objc-block block-id)
   (define entry (hash-ref active-blocks block-id #f))
   (when entry
-    (when swift-available?
-      (define block (cadr entry))
-      (swift:release-block block))
+    (swift:release-block (cadr entry))
     (hash-remove! active-blocks block-id)))
 
 ;; Convenience: create a block, call body with it, keep it alive.

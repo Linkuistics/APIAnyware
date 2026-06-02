@@ -2,7 +2,7 @@
 ;; objc-subclass.rkt — Declarative ObjC subclass macro over dynamic-class.rkt
 ;;
 ;; Wraps `make-dynamic-subclass` with per-method sugar that matches the one
-;; place the flat racket-oo API hurts: dynamic subclassing. Sample-app
+;; place the flat racket API hurts: dynamic subclassing. Sample-app
 ;; callers that previously hand-rolled `function-ptr`, _cprocedure signature
 ;; assembly, module-level GC pinning, and superclass type-encoding lookup
 ;; now get a single declarative form:

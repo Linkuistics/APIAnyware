@@ -100,6 +100,40 @@ impl SignatureMap {
     }
 }
 
+/// Collect the typed signatures that do **not** route through the generated
+/// native dispatch table (ADR-0013) — since leaf 050/030 that is only *unknown*
+/// (non-geometry) structs; the geometry struct family routes natively by value
+/// (050/020) and C strings route via ffi2 `string_t` (050/030). These keep the
+/// retained `get-ffi-obj` fallback path. The
+/// returned [`SignatureMap`] numbers only these, so `_msg-N` ids stay contiguous
+/// after the routable signatures move to `define-aw-msg` native bindings.
+///
+/// This is [`collect_class_signatures`] minus every signature
+/// [`crate::native_dispatch::is_routable`] accepts; the two share the same
+/// per-method enumeration so the native and fallback partitions never overlap.
+pub fn collect_class_fallback_signatures(
+    cls: &Class,
+    mapper: &dyn FfiTypeMapper,
+) -> SignatureMap {
+    let full = collect_class_signatures(cls, mapper);
+    let entries: BTreeMap<String, usize> = full
+        .entries
+        .into_keys()
+        .filter(|key| {
+            let (param_str, ret) = SignatureMap::parse_key(key);
+            let params: Vec<String> = if param_str.is_empty() {
+                vec![]
+            } else {
+                param_str.split(' ').map(str::to_string).collect()
+            };
+            !crate::native_dispatch::is_routable(&params, ret)
+        })
+        .enumerate()
+        .map(|(i, k)| (k, i))
+        .collect();
+    SignatureMap { entries }
+}
+
 /// Collect all unique typed objc_msgSend signatures for a class.
 ///
 /// Only includes methods that use the typed msgSend path (not the `tell` path).
@@ -264,5 +298,50 @@ mod tests {
         let (params, ret) = SignatureMap::parse_key("_id _uint64 -> _void");
         assert_eq!(params, "_id _uint64");
         assert_eq!(ret, "_void");
+    }
+
+    /// The signature machinery is FFI-spelling-agnostic: handed the ffi2 mapper
+    /// (`RacketFfi2TypeMapper`), `block_ffi_types` — shared_signatures' public,
+    /// mapper-parametric type-collection entry — yields ffi2 spellings, and
+    /// `make_signature_key` composes them into a full ffi2 signature key. This
+    /// is the leaf's "shared_signatures.rs can emit ffi2 type spellings" bar.
+    #[test]
+    fn shared_signatures_emit_ffi2_spellings() {
+        use apianyware_macos_emit::ffi_type_mapping::RacketFfi2TypeMapper;
+        use apianyware_macos_types::type_ref::TypeRefKind;
+
+        let mapper = RacketFfi2TypeMapper;
+        let params = vec![
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Id,
+            },
+            TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
+            },
+        ];
+        let ret = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Class {
+                name: "NSString".into(),
+                framework: None,
+                params: vec![],
+            },
+        };
+
+        let (param_types, return_type) = block_ffi_types(&params, &ret, &mapper);
+        // Object -> ptr_t, double -> double_t, object return -> ptr_t.
+        assert_eq!(param_types, vec!["ptr_t".to_string(), "double_t".to_string()]);
+        assert_eq!(return_type, "ptr_t");
+
+        let key = make_signature_key(&param_types, &return_type);
+        assert_eq!(key, "ptr_t double_t -> ptr_t");
+        // And the key parses back through the same machinery.
+        let (parsed_params, parsed_ret) = SignatureMap::parse_key(&key);
+        assert_eq!(parsed_params, "ptr_t double_t");
+        assert_eq!(parsed_ret, "ptr_t");
     }
 }

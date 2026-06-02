@@ -92,8 +92,8 @@ cargo run -p apianyware-macos-generate
 Generates bindings for all registered languages and all binding styles from the enriched IR. To generate for a specific language:
 
 ```sh
-cargo run -p apianyware-macos-generate -- --lang racket
-cargo run -p apianyware-macos-generate -- --list-languages    # show available emitters
+cargo run -p apianyware-macos-generate -- --target racket
+cargo run -p apianyware-macos-generate -- --list-targets    # show available emitters
 ```
 
 Output goes to `generation/targets/{lang}/generated/{style}/`.

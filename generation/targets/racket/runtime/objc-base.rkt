@@ -1,8 +1,11 @@
 #lang racket/base
 ;; objc-base.rkt — Core ObjC object wrapping with GC-attached release
 ;;
-;; When libAPIAnywareRacket.dylib is available, uses aw_common_autorelease_push/pop
-;; and aw_common_retain/release. Falls back to direct libobjc calls when absent.
+;; Retain/release/autorelease-pool go through the mandatory native helpers
+;; (aw_racket_autorelease_push/pop, aw_racket_retain/release) — the dylib is the
+;; binding (ADR-0010), so there is no pure-Racket libobjc fallback. `tell` is
+;; retained only for the genuinely-ObjC operations ffi2 has no equivalent for
+;; (autorelease, isKindOfClass:), per the 020/010 boundary.
 ;;
 ;; Provides:
 ;;   wrap-objc-object   — wrap an ObjC pointer with a release finalizer
@@ -36,24 +39,17 @@
          nil->false
          objc-instance-of?)
 
-;; --- Autorelease pool (fallback when Swift helpers unavailable) ---
+;; --- Autorelease pool (native helpers) ---
 
+;; libobjc is still needed below for class introspection (objc_getClass /
+;; isKindOfClass:); the autorelease pool itself goes through the native helpers.
 (define objc-lib (ffi-lib "libobjc"))
-(define objc_autoreleasePoolPush-raw
-  (get-ffi-obj "objc_autoreleasePoolPush" objc-lib (_fun -> _pointer)))
-(define objc_autoreleasePoolPop-raw
-  (get-ffi-obj "objc_autoreleasePoolPop" objc-lib (_fun _pointer -> _void)))
 
-;; Dispatch to Swift helpers or raw ObjC runtime
 (define (autorelease-push)
-  (if swift-available?
-      (swift:autorelease-push)
-      (objc_autoreleasePoolPush-raw)))
+  (swift:autorelease-push))
 
 (define (autorelease-pop pool)
-  (if swift-available?
-      (swift:autorelease-pop pool)
-      (objc_autoreleasePoolPop-raw pool)))
+  (swift:autorelease-pop pool))
 
 ;; Struct wrapping an ObjC object pointer.
 ;; Using a struct lets us attach a finalizer and prevent premature GC.
@@ -83,9 +79,7 @@
         ;; For +0 (autoreleased) objects, retain immediately to prevent
         ;; the autorelease pool from deallocating the object.
         (unless retained
-          (if swift-available?
-              (swift:retain ptr)
-              (tell ptr retain)))
+          (swift:retain ptr))
         (let ([obj (objc-object ptr '())])
           (register-finalizer obj release-prevent-gc)
           obj))))
@@ -105,9 +99,7 @@
 ;; Finalizer: release the ObjC object when the wrapper is collected.
 (define (release-prevent-gc obj)
   (when (objc-object-ptr obj)
-    (if swift-available?
-        (swift:release (objc-object-ptr obj))
-        (tell (objc-object-ptr obj) release))
+    (swift:release (objc-object-ptr obj))
     (set-objc-object-ptr! obj #f)))
 
 ;; Unwrap to raw pointer for FFI calls.
@@ -130,16 +122,13 @@
 
 ;; Explicit retain/release for manual memory management
 (define (objc-retain obj)
-  (if swift-available?
-      (begin (swift:retain (unwrap-objc-object obj)) obj)
-      (begin (tell (unwrap-objc-object obj) retain) obj)))
+  (swift:retain (unwrap-objc-object obj))
+  obj)
 
 (define (objc-release obj)
   (when (objc-object? obj)
     (when (objc-object-ptr obj)
-      (if swift-available?
-          (swift:release (objc-object-ptr obj))
-          (tell (objc-object-ptr obj) release))
+      (swift:release (objc-object-ptr obj))
       (set-objc-object-ptr! obj #f))))
 
 ;; Autorelease an ObjC object and return the raw pointer.

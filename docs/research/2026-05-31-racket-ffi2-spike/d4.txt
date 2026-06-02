@@ -1,0 +1,6 @@
+A void-cb returns (void): FAIL application: not a procedure;
+B void-cb returns 0: FAIL procedure: foreign-callback result does not match type
+C void-cb returns (values): FAIL result arity mismatch;
+D pre-made ffi2-callback void: FAIL aw_spike_call_void_cb: foreign-procedure argument does not match type
+E int-cb (control): OK -> 42
+diag4 done.

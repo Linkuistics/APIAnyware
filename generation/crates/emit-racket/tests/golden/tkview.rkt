@@ -2,11 +2,13 @@
 ;; Generated binding for TKView (TestKit)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
-         "../../runtime/coerce.rkt")
+         "../../runtime/coerce.rkt"
+         "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/TestKit.framework/TestKit"))
@@ -14,7 +16,6 @@
 
 
 ;; --- Class predicates ---
-(define (nsrect? v) (objc-instance-of? v "NSRect"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (tkview? v) (objc-instance-of? v "TKView"))
 (provide TKView)
@@ -26,7 +27,8 @@
   [tkview-set-hidden! (c-> tkview? boolean? void?)]
   [tkview-tag (c-> tkview? exact-integer?)]
   [tkview-set-tag! (c-> tkview? exact-integer? void?)]
-  [tkview-frame (c-> tkview? (or/c nsrect? objc-nil?))]
+  [tkview-frame (c-> tkview? any/c)]
+  [tkview-set-frame! (c-> tkview? any/c void?)]
   [tkview-dealloc (c-> tkview? void?)]
   [tkview-description (c-> tkview? (or/c nsstring? objc-nil?))]
   )
@@ -34,11 +36,16 @@
 ;; --- Class reference ---
 (import-class TKView)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer _bool -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _bool -> _void)))
-(define _msg-1  ; (_fun _pointer _pointer _int64 -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _int64 -> _void)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_q (-> ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_0_R (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
+(define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
+(define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 
 ;; --- Constructors ---
 (define (make-tkview)
@@ -50,24 +57,28 @@
 ;; --- Properties ---
 (define (tkview-title self)
   (wrap-objc-object
-   (tell (coerce-arg self) title)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "title"))))))
 (define (tkview-set-title! self value)
-  (tell #:type _void (coerce-arg self) setTitle: (coerce-arg value)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTitle:")) (id->ffi2-ptr (coerce-arg value))))
 (define (tkview-hidden self)
-  (tell #:type _bool (coerce-arg self) hidden))
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "hidden"))))
 (define (tkview-set-hidden! self value)
-  (_msg-0 (coerce-arg self) (sel_registerName "setHidden:") value))
+  (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setHidden:")) value))
 (define (tkview-tag self)
-  (tell #:type _int64 (coerce-arg self) tag))
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tag"))))
 (define (tkview-set-tag! self value)
-  (_msg-1 (coerce-arg self) (sel_registerName "setTag:") value))
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTag:")) value))
 (define (tkview-frame self)
-  (wrap-objc-object
-   (tell (coerce-arg self) frame)))
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frame")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (tkview-set-frame! self value)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrame:")) (id->ffi2-ptr value)))
 
 ;; --- Instance methods ---
 (define (tkview-dealloc self)
-  (tell #:type _void (coerce-arg self) dealloc))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dealloc"))))
 (define (tkview-description self)
   (wrap-objc-object
-   (tell (coerce-arg self) description)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "description"))))
+   ))

@@ -27,7 +27,7 @@
 #
 # Usage:
 #   ./analysis/scripts/regenerate-stale-pipeline.sh           # all targets
-#   ./analysis/scripts/regenerate-stale-pipeline.sh --lang racket-oo
+#   ./analysis/scripts/regenerate-stale-pipeline.sh --target racket
 #
 # Exits non-zero on any cargo failure so a calling work-phase hook can
 # abort the cycle before launching claude.
@@ -41,11 +41,11 @@ cd "$PROJECT_ROOT"
 LANG_FILTER=""
 if [[ $# -gt 0 ]]; then
     case "$1" in
-        --lang)
+        --target)
             LANG_FILTER="$2"
             ;;
         *)
-            echo "Usage: $0 [--lang <target>]" >&2
+            echo "Usage: $0 [--target <target>]" >&2
             exit 1
             ;;
     esac
@@ -127,7 +127,7 @@ fi
 
 GENERATE_SRC_INPUTS=(
     generation/crates/emit/src
-    generation/crates/emit-racket-oo/src
+    generation/crates/emit-racket/src
     generation/crates/cli/src
 )
 GENERATE_SRC_PATHS=()
@@ -183,14 +183,14 @@ if [[ ${#STALE_TARGETS[@]} -eq 0 ]]; then
 else
     if [[ -n "$LANG_FILTER" ]]; then
         echo "=== generate: regenerating ${LANG_FILTER} ==="
-        cargo run --quiet -p apianyware-macos-generate -- --lang "$LANG_FILTER"
+        cargo run --quiet -p apianyware-macos-generate -- --target "$LANG_FILTER"
     elif [[ ${#STALE_TARGETS[@]} -eq ${#TARGETS[@]} ]]; then
         echo "=== generate: regenerating all targets (${STALE_TARGETS[*]}) ==="
         cargo run --quiet -p apianyware-macos-generate
     else
         echo "=== generate: regenerating stale targets (${STALE_TARGETS[*]}) ==="
         for tgt in "${STALE_TARGETS[@]}"; do
-            cargo run --quiet -p apianyware-macos-generate -- --lang "$tgt"
+            cargo run --quiet -p apianyware-macos-generate -- --target "$tgt"
         done
     fi
 fi

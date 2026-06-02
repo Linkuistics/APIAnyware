@@ -3,7 +3,7 @@
 ;;
 ;; Tests that:
 ;;   1. All 8 runtime modules can be required without errors
-;;   2. swift-available? is #t (dylib loaded successfully)
+;;   2. The mandatory dylib loaded (require would have errored otherwise)
 ;;   3. Key exports are present and non-#f
 
 (require rackunit
@@ -21,9 +21,12 @@
   (test-suite
    "Runtime module loading"
 
-   (test-case "swift-helpers.rkt loads and dylib is available"
-     (check-true swift-available?
-                 "libAPIAnywareRacket.dylib should be loadable"))
+   (test-case "swift-helpers.rkt loads the mandatory dylib"
+     ;; The dylib is mandatory (ADR-0010): swift-helpers.rkt errors at load if it
+     ;; is absent, so a successful require above already proves availability.
+     ;; Confirm a representative native binding is bound as a procedure.
+     (check-true (procedure? swift:autorelease-push)
+                 "native helpers should be bound when the dylib loaded"))
 
    (test-case "Swift FFI functions are bound (not #f)"
      (check-not-false swift:autorelease-push "autorelease-push should be bound")

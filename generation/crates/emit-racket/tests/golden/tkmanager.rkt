@@ -2,7 +2,8 @@
 ;; Generated binding for TKManager (TestKit)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -21,10 +22,16 @@
   [make-tkmanager (c-> any/c)]
   [tkmanager-dealloc (c-> tkmanager? void?)]
   [tkmanager-description (c-> tkmanager? (or/c nsstring? objc-nil?))]
+  [tkmanager-load-resource-error (c-> tkmanager? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   )
 
 ;; --- Class reference ---
 (import-class TKManager)
+
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_b_e (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 
 ;; --- Constructors ---
 (define (make-tkmanager)
@@ -35,7 +42,14 @@
 
 ;; --- Instance methods ---
 (define (tkmanager-dealloc self)
-  (tell #:type _void (coerce-arg self) dealloc))
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dealloc"))))
 (define (tkmanager-description self)
   (wrap-objc-object
-   (tell (coerce-arg self) description)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "description"))))
+   ))
+;; NSError out-param: result-or-error wrapper candidate
+(define (tkmanager-load-resource-error self name)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "loadResource:error:")) (id->ffi2-ptr (coerce-arg name)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))

@@ -16,8 +16,10 @@
          "../runtime/objc-base.rkt"
          "../runtime/type-mapping.rkt"
          "../runtime/block.rkt"
-         ;; Generated bindings (individual modules, not main.rkt — too slow to load all 300+)
-         "../generated/foundation/nsobject.rkt"
+         ;; Generated bindings (individual modules, not main.rkt — too slow to load all 300+).
+         ;; NSObject is intentionally absent: it lives in objc/runtime, not Foundation, so
+         ;; extract-swift's foreign-module type-decl filter drops it from Foundation's IR.
+         ;; NSObject behaviour is exercised via the runtime (wrap-objc-object, etc.).
          "../generated/foundation/nsstring.rkt"
          "../generated/foundation/nsarray.rkt"
          "../generated/foundation/nsmutablearray.rkt"

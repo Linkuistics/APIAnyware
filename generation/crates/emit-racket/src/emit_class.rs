@@ -18,16 +18,19 @@ use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 use crate::emit_functions::map_contract;
 use crate::enrichment_comments::EnrichmentNotes;
 use crate::method_filter::{
-    all_params_are_object_type, dispatch_strategy, is_supported_method, returns_object_type,
-    returns_void, DispatchStrategy,
+    all_params_are_object_type, is_supported_method, returns_object_type, returns_void,
 };
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
     make_constructor_name, make_method_name, make_property_getter_name, make_property_setter_name,
     make_unique_constructor_name,
 };
+use crate::native_dispatch::{
+    class_error_selectors, collect_class_native_sigs, is_error_out_routable,
+    native_dispatch_binding, native_dispatch_error_binding, GeoStruct, NativeSig,
+};
 use crate::shared_signatures::{
-    block_ffi_types, class_has_blocks, class_has_struct_types, collect_class_signatures,
+    block_ffi_types, class_has_blocks, class_has_struct_types, collect_class_fallback_signatures,
     SignatureMap,
 };
 
@@ -94,7 +97,22 @@ pub fn generate_class_file(
 
     let needs_blocks = class_has_blocks(cls);
     let needs_structs = class_has_struct_types(cls, &mapper);
-    let sig_map = collect_class_signatures(cls, &mapper);
+
+    // Generated typed native dispatch (ADR-0013): the routable signatures move to
+    // thin ffi2 bindings into the native dispatch table; only the non-routable
+    // (struct / C-string) remainder keeps a `get-ffi-obj` `_msg-N` fallback. A
+    // file routes natively iff it has at least one routable signature; such files
+    // switch to the ffi2 header and emit their fallbacks as `_cprocedure` (since
+    // the ffi2 header shadows `ffi/unsafe`'s `->`).
+    // NSError out-param selectors for this class (leaf 050/040): the analysis
+    // stage's `convenience_error_methods`, keyed by (class, selector). Methods in
+    // this set route their trailing `NSError **` through the native `…_e` entry
+    // and return `(values result error)` instead of threading a caller-allocated
+    // cell through interpreted Racket.
+    let error_selectors = class_error_selectors(enrichment, &cls.name);
+    let native_sigs = collect_class_native_sigs(cls, &mapper, &error_selectors);
+    let needs_native = !native_sigs.is_empty();
+    let sig_map = collect_class_fallback_signatures(cls, &mapper);
 
     // Names that must be disambiguated from a same-named instance binding.
     // Example: NSEvent has both @property(class) modifierFlags and
@@ -140,6 +158,7 @@ pub fn generate_class_file(
         &class_methods,
         &class_method_disambig,
         &class_property_disambig,
+        &error_selectors,
     );
 
     // Collect class names for predicates (must be defined before
@@ -154,7 +173,14 @@ pub fn generate_class_file(
     );
 
     // Header
-    emit_header(&mut w, &cls.name, framework, needs_blocks, needs_structs);
+    emit_header(
+        &mut w,
+        &cls.name,
+        framework,
+        needs_blocks,
+        needs_structs,
+        needs_native,
+    );
 
     // Threading note: surface main-thread affinity from enrichment data.
     if notes.is_main_thread() {
@@ -171,15 +197,24 @@ pub fn generate_class_file(
     w.line(";; --- Class reference ---");
     write_line!(w, "(import-class {})", cls.name);
 
-    // Shared msgSend bindings
-    emit_shared_msg_bindings(&mut w, &sig_map);
+    // Shared msgSend bindings: native dispatch entries (routable) + the
+    // `_msg-N` get-ffi-obj fallbacks (non-routable struct/string shapes).
+    emit_shared_msg_bindings(&mut w, &native_sigs, &sig_map, needs_native);
 
     // Constructors
     let needs_default_constructor = !has_explicit_constructor(&init_methods);
     if !init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
         for m in &init_methods {
-            emit_constructor(&mut w, &cls.name, m, &notes, &sig_map, &mapper);
+            emit_constructor(
+                &mut w,
+                &cls.name,
+                m,
+                &notes,
+                &sig_map,
+                &mapper,
+                needs_native,
+            );
         }
         if needs_default_constructor {
             emit_default_constructor(&mut w, &cls.name);
@@ -192,7 +227,15 @@ pub fn generate_class_file(
         w.line(";; --- Properties ---");
         for p in &properties {
             let disambig = p.class_property && class_property_disambig.contains(&p.name);
-            emit_property(&mut w, &cls.name, p, disambig, &sig_map, &mapper);
+            emit_property(
+                &mut w,
+                &cls.name,
+                p,
+                disambig,
+                &sig_map,
+                &mapper,
+                needs_native,
+            );
         }
         w.blank_line();
     }
@@ -202,7 +245,16 @@ pub fn generate_class_file(
         w.line(";; --- Instance methods ---");
         for m in &instance_methods {
             emit_method(
-                &mut w, &cls.name, m, false, false, &notes, &sig_map, &mapper,
+                &mut w,
+                &cls.name,
+                m,
+                false,
+                false,
+                &notes,
+                &sig_map,
+                &mapper,
+                needs_native,
+                &error_selectors,
             );
         }
     }
@@ -214,7 +266,16 @@ pub fn generate_class_file(
         for m in &class_methods {
             let disambig = class_method_disambig.contains(&m.selector);
             emit_method(
-                &mut w, &cls.name, m, true, disambig, &notes, &sig_map, &mapper,
+                &mut w,
+                &cls.name,
+                m,
+                true,
+                disambig,
+                &notes,
+                &sig_map,
+                &mapper,
+                needs_native,
+                &error_selectors,
             );
         }
     }
@@ -387,6 +448,45 @@ fn make_class_predicate_name(class_name: &str) -> String {
     format!("{}?", class_name_to_lowercase(class_name))
 }
 
+/// The contract for the **error** component of an NSError out-param wrapper's
+/// `(values result error)` result: a wrapped `NSError` object, or `#f` when the
+/// method reported no error. `objc-object?` is in scope via `objc-base.rkt`
+/// (re-exported by `coerce.rkt`).
+const ERROR_VALUE_CONTRACT: &str = "(or/c objc-object? #f)";
+
+/// Whether `method`'s trailing `NSError **` routes through the native error-out
+/// entry (leaf 050/040), so the wrapper drops it from its arity and returns
+/// `(values result error)`. Mirrors [`is_error_out_routable`] over the method's
+/// mapped param/return spellings.
+fn method_routes_error_out(
+    method: &Method,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &std::collections::HashSet<String>,
+) -> bool {
+    let param_types: Vec<String> = method
+        .params
+        .iter()
+        .map(|p| mapper.map_type(&p.param_type, false))
+        .collect();
+    let ret = mapper.map_type(&method.return_type, true);
+    is_error_out_routable(&param_types, &ret, &method.selector, error_selectors)
+}
+
+/// The parameters the Racket wrapper actually exposes: all of `method`'s params,
+/// minus the trailing `NSError **` when it routes natively (the error crossing is
+/// owned by the native entry). For every other method this is just `&method.params`.
+fn visible_params<'a>(
+    method: &'a Method,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &std::collections::HashSet<String>,
+) -> &'a [Param] {
+    if method_routes_error_out(method, mapper, error_selectors) {
+        &method.params[..method.params.len() - 1]
+    } else {
+        &method.params
+    }
+}
+
 /// Collect class names that need predicate definitions in the generated file.
 ///
 /// Includes:
@@ -457,6 +557,7 @@ struct ExportContract {
 }
 
 /// Collect all exported symbols and their contracts for a class.
+#[allow(clippy::too_many_arguments)]
 fn build_export_contracts(
     cls: &Class,
     properties: &[&Property],
@@ -465,9 +566,11 @@ fn build_export_contracts(
     class_methods: &[&Method],
     class_method_disambig: &std::collections::HashSet<String>,
     class_property_disambig: &std::collections::HashSet<String>,
+    error_selectors: &std::collections::HashSet<String>,
 ) -> Vec<ExportContract> {
     let mut exports = Vec::new();
     let self_predicate = make_class_predicate_name(&cls.name);
+    let mapper = RacketFfiTypeMapper;
 
     // Constructors: (-> param-contracts... cpointer?)
     for m in init_methods {
@@ -537,15 +640,18 @@ fn build_export_contracts(
         }
     }
 
-    // Instance methods: (-> <class>? param-contracts... return-contract)
+    // Instance methods: (-> <class>? param-contracts... return-contract).
+    // An NSError out-param method drops its trailing `NSError **` from the arity
+    // and returns `(values result error)` (leaf 050/040).
     for m in instance_methods {
         if !is_supported_method(m) {
             continue;
         }
         let name = make_method_name(&cls.name, &m.selector);
+        let vparams = visible_params(m, &mapper, error_selectors);
         let mut param_contracts = vec![self_predicate.clone()];
-        param_contracts.extend(m.params.iter().map(|p| map_param_contract(&p.param_type)));
-        let return_contract = map_return_contract(&m.return_type);
+        param_contracts.extend(vparams.iter().map(|p| map_param_contract(&p.param_type)));
+        let return_contract = method_return_contract(m, &mapper, error_selectors);
         let contract = format_arrow_contract(&param_contracts, &return_contract);
         exports.push(ExportContract { name, contract });
     }
@@ -560,17 +666,32 @@ fn build_export_contracts(
             &m.selector,
             class_method_disambig.contains(&m.selector),
         );
-        let param_contracts: Vec<String> = m
-            .params
+        let vparams = visible_params(m, &mapper, error_selectors);
+        let param_contracts: Vec<String> = vparams
             .iter()
             .map(|p| map_param_contract(&p.param_type))
             .collect();
-        let return_contract = map_return_contract(&m.return_type);
+        let return_contract = method_return_contract(m, &mapper, error_selectors);
         let contract = format_arrow_contract(&param_contracts, &return_contract);
         exports.push(ExportContract { name, contract });
     }
 
     exports
+}
+
+/// The wrapper's return contract for a method: its normal return contract, or —
+/// for an NSError out-param method — the `(values result error)` contract.
+fn method_return_contract(
+    method: &Method,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &std::collections::HashSet<String>,
+) -> String {
+    let result = map_return_contract(&method.return_type);
+    if method_routes_error_out(method, mapper, error_selectors) {
+        format!("(values {result} {ERROR_VALUE_CONTRACT})")
+    } else {
+        result
+    }
 }
 
 // --- Header ---
@@ -581,19 +702,37 @@ fn emit_header(
     framework: &str,
     needs_blocks: bool,
     needs_structs: bool,
+    needs_native: bool,
 ) {
     w.line("#lang racket/base");
     write_line!(w, ";; Generated binding for {} ({})", class_name, framework);
     w.line(";; Do not edit — regenerate from enriched IR");
     w.blank_line();
-    w.line("(require ffi/unsafe");
-    w.raw("         ffi/unsafe/objc\n");
-    // `racket/contract` and `ffi/unsafe` both export `->` with different
-    // semantics (contract arrow vs `_fun` type arrow). Rename the contract
-    // arrow to `c->` so both are usable in the same module.
-    w.raw("         (rename-in racket/contract [-> c->])\n");
-    w.raw("         \"../../runtime/objc-base.rkt\"\n");
-    w.raw("         \"../../runtime/coerce.rkt\"");
+
+    if needs_native {
+        // Native-dispatch (ADR-0013) header. ffi2 (via ffi2-dispatch.rkt) owns the
+        // `->` arrow needed for the native binding arrow types; `ffi/unsafe`'s `->`
+        // is dropped with `except-in` (the spike's `->` discipline — renaming on
+        // ffi2's side breaks its nested-arrow parsing), so any retained
+        // `get-ffi-obj` fallback uses `_cprocedure`, not `_fun`. `ffi/unsafe/objc`
+        // stays for `import-class`/`tell`/`sel_registerName`; `racket/contract`'s
+        // `->` is renamed to `c->`.
+        w.line("(require \"../../runtime/ffi2-dispatch.rkt\"");
+        w.raw("         (except-in ffi/unsafe ->)\n");
+        w.raw("         ffi/unsafe/objc\n");
+        w.raw("         (rename-in racket/contract [-> c->])\n");
+        w.raw("         \"../../runtime/objc-base.rkt\"\n");
+        w.raw("         \"../../runtime/coerce.rkt\"");
+    } else {
+        w.line("(require ffi/unsafe");
+        w.raw("         ffi/unsafe/objc\n");
+        // `racket/contract` and `ffi/unsafe` both export `->` with different
+        // semantics (contract arrow vs `_fun` type arrow). Rename the contract
+        // arrow to `c->` so both are usable in the same module.
+        w.raw("         (rename-in racket/contract [-> c->])\n");
+        w.raw("         \"../../runtime/objc-base.rkt\"\n");
+        w.raw("         \"../../runtime/coerce.rkt\"");
+    }
     if needs_blocks {
         w.raw("\n         \"../../runtime/block.rkt\"");
     }
@@ -634,40 +773,87 @@ fn emit_provide(w: &mut CodeWriter, class_name: &str, exports: &[ExportContract]
 
 // --- Shared msgSend bindings ---
 
-fn emit_shared_msg_bindings(w: &mut CodeWriter, sig_map: &SignatureMap) {
-    if sig_map.is_empty() {
+fn emit_shared_msg_bindings(
+    w: &mut CodeWriter,
+    native_sigs: &std::collections::BTreeSet<NativeSig>,
+    sig_map: &SignatureMap,
+    needs_native: bool,
+) {
+    if native_sigs.is_empty() && sig_map.is_empty() {
         w.blank_line();
         return;
     }
 
     w.blank_line();
-    w.line(";; --- Shared typed objc_msgSend bindings ---");
-    for (key, id) in sig_map.iter_sorted() {
-        let (param_str, ret_str) = SignatureMap::parse_key(key);
-        let param_types: Vec<&str> = if param_str.is_empty() {
-            vec![]
-        } else {
-            param_str.split(' ').collect()
-        };
 
-        // Comment showing the signature
-        let mut comment = format!("(define _msg-{id}  ; (_fun _pointer _pointer");
-        for pt in &param_types {
-            comment.push(' ');
-            comment.push_str(pt);
+    // Native dispatch bindings (ADR-0013): one thin ffi2 binding per routable
+    // signature into the generated `aw_racket_msg_<code>` entry.
+    if !native_sigs.is_empty() {
+        w.line(";; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---");
+        for sig in native_sigs {
+            write_line!(
+                w,
+                "(define-aw-msg {} {})",
+                sig.entry_name(),
+                sig.ffi2_arrow()
+            );
         }
-        comment.push_str(&format!(" -> {ret_str})"));
-        w.line(&comment);
+    }
 
-        // Binding definition
-        let mut binding =
-            String::from("  (get-ffi-obj \"objc_msgSend\" _objc-lib (_fun _pointer _pointer");
-        for pt in &param_types {
-            binding.push(' ');
-            binding.push_str(pt);
+    // Retained `get-ffi-obj` fallbacks for the non-routable (struct / C-string)
+    // signatures. In a native-dispatch file `ffi/unsafe`'s `->` is shadowed by
+    // ffi2's, so the fallback uses `_cprocedure`; otherwise the historical `_fun`
+    // form (byte-identical to pre-ADR-0013 output for non-native files).
+    if !sig_map.is_empty() {
+        w.line(";; --- Shared typed objc_msgSend bindings ---");
+        for (key, id) in sig_map.iter_sorted() {
+            let (param_str, ret_str) = SignatureMap::parse_key(key);
+            let param_types: Vec<&str> = if param_str.is_empty() {
+                vec![]
+            } else {
+                param_str.split(' ').collect()
+            };
+
+            if needs_native {
+                // `_cprocedure` form (no `->` token).
+                let mut comment = format!("(define _msg-{id}  ; (objc_msgSend _pointer _pointer");
+                for pt in &param_types {
+                    comment.push(' ');
+                    comment.push_str(pt);
+                }
+                comment.push_str(&format!(" -> {ret_str})"));
+                w.line(&comment);
+
+                let mut binding = String::from(
+                    "  (get-ffi-obj \"objc_msgSend\" _objc-lib (_cprocedure (list _pointer _pointer",
+                );
+                for pt in &param_types {
+                    binding.push(' ');
+                    binding.push_str(pt);
+                }
+                binding.push_str(&format!(") {ret_str})))"));
+                w.line(&binding);
+            } else {
+                // Historical `_fun` form.
+                let mut comment = format!("(define _msg-{id}  ; (_fun _pointer _pointer");
+                for pt in &param_types {
+                    comment.push(' ');
+                    comment.push_str(pt);
+                }
+                comment.push_str(&format!(" -> {ret_str})"));
+                w.line(&comment);
+
+                let mut binding = String::from(
+                    "  (get-ffi-obj \"objc_msgSend\" _objc-lib (_fun _pointer _pointer",
+                );
+                for pt in &param_types {
+                    binding.push(' ');
+                    binding.push_str(pt);
+                }
+                binding.push_str(&format!(" -> {ret_str})))"));
+                w.line(&binding);
+            }
         }
-        binding.push_str(&format!(" -> {ret_str})))"));
-        w.line(&binding);
     }
     w.blank_line();
 }
@@ -703,6 +889,7 @@ fn emit_constructor(
     notes: &EnrichmentNotes,
     sig_map: &SignatureMap,
     mapper: &dyn FfiTypeMapper,
+    needs_native: bool,
 ) {
     if !is_supported_method(method) || method.selector == "init" {
         return;
@@ -735,7 +922,15 @@ fn emit_constructor(
         w.line("   #:retained #t))");
     } else {
         // Typed objc_msgSend path
-        emit_typed_constructor(w, class_name, method, &param_names, sig_map, mapper);
+        emit_typed_constructor(
+            w,
+            class_name,
+            method,
+            &param_names,
+            sig_map,
+            mapper,
+            needs_native,
+        );
     }
     w.blank_line();
 }
@@ -747,6 +942,7 @@ fn emit_typed_constructor(
     param_names: &[String],
     sig_map: &SignatureMap,
     mapper: &dyn FfiTypeMapper,
+    needs_native: bool,
 ) {
     let param_types: Vec<String> = method
         .params
@@ -764,6 +960,17 @@ fn emit_typed_constructor(
 
     // Coerce SEL-typed params (string → sel_registerName)
     coerce_sel_params(&method.params, &mut call_args);
+
+    // Routable init signatures dispatch through the generated native entry
+    // (ADR-0013); the receiver is `[Class alloc]`, the result a +1 `_id`.
+    if let Some((entry, _arrow)) = native_dispatch_binding(&param_types, "_id") {
+        let recv = format!("(tell {class_name} alloc)");
+        let call = native_call_expr(&entry, &recv, &method.selector, &call_args, &param_types);
+        w.line("  (wrap-objc-object");
+        write_line!(w, "   (ffi2-ptr->id {})", call);
+        w.line("   #:retained #t))");
+        return;
+    }
 
     let shared_name = sig_map.lookup(&param_types, "_id");
     match shared_name {
@@ -788,11 +995,19 @@ fn emit_typed_constructor(
             );
             write_line!(w, "  (let ([{}", inline_name);
             w.raw("         (get-ffi-obj \"objc_msgSend\" _objc-lib\n");
-            w.raw("           (_fun _pointer _pointer");
-            for pt in &param_types {
-                w.raw(&format!(" {pt}"));
+            if needs_native {
+                w.raw("           (_cprocedure (list _pointer _pointer");
+                for pt in &param_types {
+                    w.raw(&format!(" {pt}"));
+                }
+                w.raw_line(") _id))]");
+            } else {
+                w.raw("           (_fun _pointer _pointer");
+                for pt in &param_types {
+                    w.raw(&format!(" {pt}"));
+                }
+                w.raw_line(" -> _id))]");
             }
-            w.raw_line(" -> _id))]");
             w.line("    (wrap-objc-object");
             write_line!(w, "     ({} (tell {} alloc)", inline_name, class_name);
             w.raw(&format!(
@@ -817,6 +1032,7 @@ fn emit_property(
     disambiguate: bool,
     sig_map: &SignatureMap,
     mapper: &dyn FfiTypeMapper,
+    needs_native: bool,
 ) {
     let getter_name = if prop.class_property {
         make_class_property_getter_name(class_name, &prop.name, disambiguate)
@@ -825,16 +1041,42 @@ fn emit_property(
     };
     let ffi_type = mapper.map_type(&prop.property_type, false);
 
-    // Getter
-    // Property getters return autoreleased (+0) objects, so #:retained is #f (default).
-    if prop.class_property && ffi_type == "_id" {
-        write_line!(w, "(define ({})", getter_name);
-        write_line!(w, "  (wrap-objc-object");
-        write_line!(w, "   (tell {} {})))", class_name, prop.name);
-    } else if ffi_type == "_id" {
-        write_line!(w, "(define ({} self)", getter_name);
-        write_line!(w, "  (wrap-objc-object");
-        write_line!(w, "   (tell (coerce-arg self) {})))", prop.name);
+    // Getter. Property getters return autoreleased (+0) objects, so no #:retained.
+    // Every routable shape (object + scalar) dispatches natively (ADR-0013) since
+    // leaf 050/010; struct-typed getters stay on the `tell` get-ffi-obj path until
+    // leaf 050/020 marshals structs natively.
+    let getter_params = if prop.class_property { "" } else { " self" };
+    let getter_recv = if prop.class_property {
+        class_name.to_string()
+    } else {
+        "(coerce-arg self)".to_string()
+    };
+    if let Some((entry, _arrow)) = native_dispatch_binding(&[], &ffi_type) {
+        write_line!(w, "(define ({}{})", getter_name, getter_params);
+        if let Some(g) = GeoStruct::from_ffi_unsafe(&ffi_type) {
+            // Struct-by-value getter (e.g. `frame`): native out-buffer, hand back
+            // the cstruct (see `emit_method`'s struct-return branch).
+            let cstruct = g.racket_cstruct();
+            let call = native_call_expr_with_out(
+                &entry,
+                &getter_recv,
+                &prop.name,
+                &[],
+                &[],
+                Some("(cpointer->ptr_t buf)"),
+            );
+            write_line!(w, "  (let ([buf (malloc {cstruct})])");
+            write_line!(w, "    {}", call);
+            write_line!(w, "    (ptr-ref buf {cstruct})))");
+        } else {
+            let call = native_call_expr(&entry, &getter_recv, &prop.name, &[], &[]);
+            if ffi_type == "_id" {
+                w.line("  (wrap-objc-object");
+                write_line!(w, "   (ffi2-ptr->id {})))", call);
+            } else {
+                write_line!(w, "  {})", native_scalar_result(&call, &ffi_type));
+            }
+        }
     } else if prop.class_property {
         write_line!(w, "(define ({})", getter_name);
         write_line!(
@@ -879,22 +1121,32 @@ fn emit_property(
             "(coerce-arg self)".to_string()
         };
 
-        // For SEL-typed property setters, wrap value with sel_registerName
+        // For SEL-typed property setters, wrap value with sel_registerName; `_id`
+        // values coerce to the underlying object pointer before the ptr_t bridge.
         let is_sel_prop = matches!(prop.property_type.kind, TypeRefKind::Selector);
         let value_expr = if is_sel_prop {
             "(sel_registerName value)"
+        } else if ffi_type == "_id" {
+            "(coerce-arg value)"
         } else {
             "value"
         };
 
-        if ffi_type == "_id" {
+        if let Some((entry, _arrow)) =
+            native_dispatch_binding(std::slice::from_ref(&ffi_type), "_void")
+        {
+            // Routable setter → native dispatch (ADR-0013). Includes `_id` values
+            // since leaf 050/010; only struct-valued setters keep the fallback.
             write_line!(w, "(define ({}{} value)", setter_name, params);
-            write_line!(
-                w,
-                "  (tell #:type _void {} {} (coerce-arg value)))",
-                target,
-                setter_sel
+            let value_arg = value_expr.to_string();
+            let call = native_call_expr(
+                &entry,
+                &target,
+                &setter_sel,
+                std::slice::from_ref(&value_arg),
+                std::slice::from_ref(&ffi_type),
             );
+            write_line!(w, "  {})", call);
         } else {
             let shared_name = sig_map.lookup(std::slice::from_ref(&ffi_type), "_void");
             match shared_name {
@@ -912,11 +1164,19 @@ fn emit_property(
                 None => {
                     write_line!(w, "(define ({}{} value)", setter_name, params);
                     w.line("  (let ([msg (get-ffi-obj \"objc_msgSend\" _objc-lib");
-                    write_line!(
-                        w,
-                        "              (_fun _pointer _pointer {} -> _void))])",
-                        ffi_type
-                    );
+                    if needs_native {
+                        write_line!(
+                            w,
+                            "              (_cprocedure (list _pointer _pointer {}) _void))])",
+                            ffi_type
+                        );
+                    } else {
+                        write_line!(
+                            w,
+                            "              (_fun _pointer _pointer {} -> _void))])",
+                            ffi_type
+                        );
+                    }
                     write_line!(
                         w,
                         "    (msg {} (sel_registerName \"{}\") {})))",
@@ -942,6 +1202,8 @@ fn emit_method(
     notes: &EnrichmentNotes,
     sig_map: &SignatureMap,
     mapper: &dyn FfiTypeMapper,
+    needs_native: bool,
+    error_selectors: &std::collections::HashSet<String>,
 ) {
     if !is_supported_method(method) {
         return;
@@ -949,8 +1211,13 @@ fn emit_method(
 
     emit_enrichment_notes(w, notes, &method.selector);
 
-    let param_names: Vec<String> = method
-        .params
+    // NSError out-param methods (leaf 050/040) drop the trailing `NSError **` from
+    // the wrapper's arity — the native `…_e` entry owns the error cell — and return
+    // `(values result error)`. `effective_params` is the visible parameter set.
+    let routes_error = method_routes_error_out(method, mapper, error_selectors);
+    let effective_params: &[Param] = visible_params(method, mapper, error_selectors);
+
+    let param_names: Vec<String> = effective_params
         .iter()
         .map(|p| camel_to_kebab(&p.name))
         .collect();
@@ -976,123 +1243,179 @@ fn emit_method(
 
     let retained = method_returns_retained(method);
 
-    let strategy = dispatch_strategy(method, mapper);
+    let param_types: Vec<String> = effective_params
+        .iter()
+        .map(|p| mapper.map_type(&p.param_type, false))
+        .collect();
+    let ret_ffi_type = mapper.map_type(&method.return_type, true);
+    let target_expr = if is_class_method {
+        class_name.to_string()
+    } else {
+        "(coerce-arg self)".to_string()
+    };
 
-    match strategy {
-        DispatchStrategy::Tell => {
-            let target = if is_class_method {
-                class_name.to_string()
+    let mut call_args: Vec<String> = param_names.clone();
+
+    // Block wrapping
+    emit_block_wrapping(w, effective_params, &mut call_args, mapper);
+
+    // Coerce id-kind params
+    coerce_id_params(effective_params, &mut call_args, mapper);
+
+    // Coerce SEL-typed params (string → sel_registerName)
+    coerce_sel_params(effective_params, &mut call_args);
+
+    // NSError out-param routing (leaf 050/040): a single ffi2 call into the `…_e`
+    // native entry with a caller-allocated error out-buffer, yielding
+    // `(values result error)`. `routes_error` guarantees the binding exists.
+    if routes_error {
+        if let Some((entry, _arrow)) = native_dispatch_error_binding(&param_types, &ret_ffi_type) {
+            emit_error_out_body(
+                w,
+                &entry,
+                &target_expr,
+                &method.selector,
+                &call_args,
+                &param_types,
+                &ret_ffi_type,
+                ret_is_id,
+                ret_is_void,
+                retained,
+            );
+            return;
+        }
+    }
+
+    // Every routable signature dispatches through the generated native entry
+    // (ADR-0013). Since leaf 050/010 this includes the all-object shapes that
+    // previously used the in-Racket `tell` macro (`_id` collapses to `ptr_t`);
+    // `tell`-for-dispatch is gone from emitted methods. Only the non-routable
+    // struct-by-value / C-string remainder keeps the `get-ffi-obj` fallback.
+    if let Some((entry, _arrow)) = native_dispatch_binding(&param_types, &ret_ffi_type) {
+        // Struct-by-value return: allocate a cstruct out-buffer, let the native
+        // entry write the arm64 struct result through it, hand back the cstruct
+        // (the established `ffi/unsafe` rep — same as the old `tell #:type _NSRect`
+        // path produced). Struct *params* are bridged inside `native_call_expr*`.
+        if let Some(g) = GeoStruct::from_ffi_unsafe(&ret_ffi_type) {
+            let cstruct = g.racket_cstruct();
+            let call = native_call_expr_with_out(
+                &entry,
+                &target_expr,
+                &method.selector,
+                &call_args,
+                &param_types,
+                Some("(cpointer->ptr_t buf)"),
+            );
+            write_line!(w, "  (let ([buf (malloc {cstruct})])");
+            write_line!(w, "    {}", call);
+            write_line!(w, "    (ptr-ref buf {cstruct})))");
+            return;
+        }
+        let call = native_call_expr(
+            &entry,
+            &target_expr,
+            &method.selector,
+            &call_args,
+            &param_types,
+        );
+        if ret_is_id && !ret_is_void {
+            w.line("  (wrap-objc-object");
+            write_line!(w, "   (ffi2-ptr->id {})", call);
+            if retained {
+                w.line("   #:retained #t))");
             } else {
-                "(coerce-arg self)".to_string()
-            };
-            let tell_args = format_tell_args(&method.selector, &param_names, &method.params);
+                w.raw_line("   ))");
+            }
+        } else if ret_is_void {
+            write_line!(w, "  {})", call);
+        } else {
+            write_line!(w, "  {})", native_scalar_result(&call, &ret_ffi_type));
+        }
+        return;
+    }
+
+    let shared_name = sig_map.lookup(&param_types, &ret_ffi_type);
+    match shared_name {
+        Some(name) => {
             if ret_is_id && !ret_is_void {
                 w.line("  (wrap-objc-object");
+                w.raw(&format!(
+                    "   ({} {} (sel_registerName \"{}\")",
+                    name, target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
+                }
+                w.raw_line(")");
                 if retained {
-                    write_line!(w, "   (tell {} {})", target, tell_args);
                     w.line("   #:retained #t))");
                 } else {
-                    write_line!(w, "   (tell {} {})))", target, tell_args);
+                    w.raw_line("   ))");
                 }
-            } else if ret_is_void {
-                // `#:type _void` ensures the underlying objc_msgSend binding
-                // declares a void return, matching the C ABI. Without this,
-                // `tell` defaults to `_id`-returning, which is a calling-
-                // convention mismatch on arm64e (PAC) and reads garbage from
-                // the return register on any platform.
-                write_line!(w, "  (tell #:type _void {} {}))", target, tell_args);
             } else {
-                write_line!(w, "  (tell {} {}))", target, tell_args);
+                w.raw(&format!(
+                    "  ({} {} (sel_registerName \"{}\")",
+                    name, target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
+                }
+                w.raw_line("))");
             }
         }
-        DispatchStrategy::TypedMsgSend => {
-            let param_types: Vec<String> = method
-                .params
-                .iter()
-                .map(|p| mapper.map_type(&p.param_type, false))
-                .collect();
-            let ret_ffi_type = mapper.map_type(&method.return_type, true);
-            let target_expr = if is_class_method {
-                class_name.to_string()
+        None => {
+            emit_inline_fallback_open(w, &param_types, &ret_ffi_type, needs_native);
+            if ret_is_id && !ret_is_void {
+                w.line("    (wrap-objc-object");
+                w.raw(&format!(
+                    "     (msg {} (sel_registerName \"{}\")",
+                    target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
+                }
+                w.raw_line(")");
+                if retained {
+                    w.line("     #:retained #t))))");
+                } else {
+                    w.raw_line("     ))))");
+                }
             } else {
-                "(coerce-arg self)".to_string()
-            };
-
-            let mut call_args: Vec<String> = param_names.clone();
-
-            // Block wrapping
-            emit_block_wrapping(w, &method.params, &mut call_args, mapper);
-
-            // Coerce id-kind params
-            coerce_id_params(&method.params, &mut call_args, mapper);
-
-            // Coerce SEL-typed params (string → sel_registerName)
-            coerce_sel_params(&method.params, &mut call_args);
-
-            let shared_name = sig_map.lookup(&param_types, &ret_ffi_type);
-            match shared_name {
-                Some(name) => {
-                    if ret_is_id && !ret_is_void {
-                        w.line("  (wrap-objc-object");
-                        w.raw(&format!(
-                            "   ({} {} (sel_registerName \"{}\")",
-                            name, target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line(")");
-                        if retained {
-                            w.line("   #:retained #t))");
-                        } else {
-                            w.raw_line("   ))");
-                        }
-                    } else {
-                        w.raw(&format!(
-                            "  ({} {} (sel_registerName \"{}\")",
-                            name, target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line("))");
-                    }
+                w.raw(&format!(
+                    "    (msg {} (sel_registerName \"{}\")",
+                    target_expr, method.selector
+                ));
+                for arg in &call_args {
+                    w.raw(&format!(" {arg}"));
                 }
-                None => {
-                    w.line("  (let ([msg (get-ffi-obj \"objc_msgSend\" _objc-lib");
-                    w.raw("              (_fun _pointer _pointer");
-                    for pt in &param_types {
-                        w.raw(&format!(" {pt}"));
-                    }
-                    w.raw(&format!(" -> {ret_ffi_type}))])\n"));
-                    if ret_is_id && !ret_is_void {
-                        w.line("    (wrap-objc-object");
-                        w.raw(&format!(
-                            "     (msg {} (sel_registerName \"{}\")",
-                            target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line(")");
-                        if retained {
-                            w.line("     #:retained #t))))");
-                        } else {
-                            w.raw_line("     ))))");
-                        }
-                    } else {
-                        w.raw(&format!(
-                            "    (msg {} (sel_registerName \"{}\")",
-                            target_expr, method.selector
-                        ));
-                        for arg in &call_args {
-                            w.raw(&format!(" {arg}"));
-                        }
-                        w.raw_line(")))");
-                    }
-                }
+                w.raw_line(")))");
             }
         }
+    }
+}
+
+/// Open an inline `(let ([msg (get-ffi-obj … )])` for a single-use typed
+/// objc_msgSend. Uses `_cprocedure` in a native-dispatch file (where ffi2 shadows
+/// `ffi/unsafe`'s `->`) and the historical `_fun` form otherwise.
+fn emit_inline_fallback_open(
+    w: &mut CodeWriter,
+    param_types: &[String],
+    ret_ffi_type: &str,
+    needs_native: bool,
+) {
+    w.line("  (let ([msg (get-ffi-obj \"objc_msgSend\" _objc-lib");
+    if needs_native {
+        w.raw("              (_cprocedure (list _pointer _pointer");
+        for pt in param_types {
+            w.raw(&format!(" {pt}"));
+        }
+        w.raw(&format!(") {ret_ffi_type}))])\n"));
+    } else {
+        w.raw("              (_fun _pointer _pointer");
+        for pt in param_types {
+            w.raw(&format!(" {pt}"));
+        }
+        w.raw(&format!(" -> {ret_ffi_type}))])\n"));
     }
 }
 
@@ -1175,6 +1498,125 @@ fn coerce_sel_params(params: &[Param], call_args: &mut [String]) {
         if matches!(p.param_type.kind, TypeRefKind::Selector) {
             call_args[i] = format!("(sel_registerName {})", call_args[i]);
         }
+    }
+}
+
+// --- Native dispatch call construction (ADR-0013) ---
+
+/// Bridge a pointer-typed expression (object / selector / block — all `cpointer`s
+/// in the retained ffi/unsafe world) into a ffi2 `ptr_t` for a native dispatch
+/// call. `id->ffi2-ptr` (runtime `ffi2-seam.rkt`) is `cpointer->ptr_t`, valid for
+/// any cpointer regardless of `_id` tagging.
+fn ffi2_ptr_in(expr: &str) -> String {
+    format!("(id->ffi2-ptr {expr})")
+}
+
+/// Build a native dispatch call expression:
+/// `(aw_racket_msg_<code> (id->ffi2-ptr <recv>) (id->ffi2-ptr (sel_registerName "sel")) <args…>)`.
+/// `call_args` and `param_ffi_types` are parallel; pointer-typed args — and
+/// struct-by-value args, whose cstruct value *is* a cpointer to the struct bytes —
+/// take the `ptr_t` bridge, scalars pass through unchanged.
+fn native_call_expr(
+    entry: &str,
+    recv_expr: &str,
+    selector: &str,
+    call_args: &[String],
+    param_ffi_types: &[String],
+) -> String {
+    native_call_expr_with_out(entry, recv_expr, selector, call_args, param_ffi_types, None)
+}
+
+/// As [`native_call_expr`], with an optional trailing out-buffer argument (already
+/// a `ptr_t` expression). Struct *returns* allocate a cstruct buffer and pass its
+/// pointer here; the native entry writes the struct result through it.
+fn native_call_expr_with_out(
+    entry: &str,
+    recv_expr: &str,
+    selector: &str,
+    call_args: &[String],
+    param_ffi_types: &[String],
+    out_buffer: Option<&str>,
+) -> String {
+    let mut parts = vec![
+        ffi2_ptr_in(recv_expr),
+        ffi2_ptr_in(&format!("(sel_registerName \"{selector}\")")),
+    ];
+    for (a, t) in call_args.iter().zip(param_ffi_types.iter()) {
+        if t == "_id" || t == "_pointer" || GeoStruct::from_ffi_unsafe(t).is_some() {
+            parts.push(ffi2_ptr_in(a));
+        } else {
+            parts.push(a.clone());
+        }
+    }
+    if let Some(out) = out_buffer {
+        parts.push(out.to_string());
+    }
+    format!("({entry} {})", parts.join(" "))
+}
+
+/// Convert a native dispatch call's `ptr_t` result back into the representation
+/// the wrapper's contract expects, for non-object returns: a raw `_pointer`
+/// return becomes a `cpointer` via `ptr_t->cpointer`. Object (`_id`) returns are
+/// handled at the call site (they go through `ffi2-ptr->id` + `wrap-objc-object`);
+/// scalar/void returns need no conversion. Returns the (possibly-wrapped) expr.
+fn native_scalar_result(call: &str, ret_ffi_type: &str) -> String {
+    if ret_ffi_type == "_pointer" {
+        format!("(ptr_t->cpointer {call})")
+    } else {
+        call.to_string()
+    }
+}
+
+/// Emit the body of an **NSError out-param** wrapper (leaf 050/040): allocate a
+/// one-pointer error cell, make a single ffi2 call into the `…_e` native entry
+/// (which writes the retained `NSError*`, or NULL, through the cell), and hand
+/// back `(values result error)`. The `let`'s init expressions evaluate
+/// left-to-right, so the call (which writes the cell) runs before the cell is
+/// read. `error` is the wrapped `NSError` (already +1 from the native side, so
+/// `#:retained #t`) or `#f` when the method reported none.
+#[allow(clippy::too_many_arguments)]
+fn emit_error_out_body(
+    w: &mut CodeWriter,
+    entry: &str,
+    target_expr: &str,
+    selector: &str,
+    call_args: &[String],
+    param_types: &[String],
+    ret_ffi_type: &str,
+    ret_is_id: bool,
+    ret_is_void: bool,
+    retained: bool,
+) {
+    let call = native_call_expr_with_out(
+        entry,
+        target_expr,
+        selector,
+        call_args,
+        param_types,
+        Some("(cpointer->ptr_t errbuf)"),
+    );
+    let err_value = "(if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))";
+    w.line("  (let ([errbuf (malloc _pointer)])");
+    if ret_is_void {
+        // No result value: run the call (writing the error cell), then pair the
+        // void result with the error.
+        write_line!(w, "    {}", call);
+        w.line("    (let ([err (ptr-ref errbuf _pointer)])");
+        write_line!(w, "      (values (void) {err_value}))))");
+    } else {
+        let result_expr = if ret_is_id {
+            if retained {
+                "(wrap-objc-object (ffi2-ptr->id result) #:retained #t)".to_string()
+            } else {
+                "(wrap-objc-object (ffi2-ptr->id result))".to_string()
+            }
+        } else {
+            // Scalar (incl. bool) passes through; a raw `_pointer` is re-tagged.
+            native_scalar_result("result", ret_ffi_type)
+        };
+        write_line!(w, "    (let ([result {call}]");
+        w.line("          [err (ptr-ref errbuf _pointer)])");
+        write_line!(w, "      (values {result_expr} {err_value}))))");
     }
 }
 
@@ -1326,6 +1768,100 @@ mod tests {
         assert!(output.contains("(import-class NSObject)"));
         assert!(output.contains("(define (nsobject-description self)"));
         assert!(output.contains("wrap-objc-object"));
+    }
+
+    #[test]
+    fn nserror_out_param_method_emits_values_wrapper() {
+        use apianyware_macos_types::enrichment::{ClassSelectorEntry, EnrichmentData};
+
+        // `-loadResource:error:` → BOOL, trailing `NSError **` (a Pointer named
+        // "error"). The enrichment classifies it as an NSError out-param.
+        let cls = Class {
+            name: "TKManager".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "loadResource:error:",
+                false,
+                false,
+                vec![
+                    Param {
+                        name: "name".into(),
+                        param_type: TypeRef {
+                            nullable: false,
+                            kind: TypeRefKind::Class {
+                                name: "NSString".into(),
+                                framework: None,
+                                params: vec![],
+                            },
+                        },
+                    },
+                    Param {
+                        name: "error".into(),
+                        param_type: TypeRef {
+                            nullable: true,
+                            kind: TypeRefKind::Pointer,
+                        },
+                    },
+                ],
+                TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Primitive {
+                        name: "BOOL".into(),
+                    },
+                },
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let enrichment = EnrichmentData {
+            convenience_error_methods: vec![ClassSelectorEntry {
+                class: "TKManager".into(),
+                selector: "loadResource:error:".into(),
+            }],
+            ..Default::default()
+        };
+
+        let output = generate_class_file(&cls, "TestKit", Some(&enrichment));
+
+        // The wrapper drops the trailing `error` param from its arity…
+        assert!(
+            output.contains("(define (tkmanager-load-resource-error self name)"),
+            "error param dropped from arity:\n{output}"
+        );
+        // …routes through the `…_e` native entry with an error out-buffer…
+        assert!(
+            output.contains(
+                "(define-aw-msg aw_racket_msg_P_b_e (-> ptr_t ptr_t ptr_t ptr_t bool_t))"
+            ),
+            "error-out native binding:\n{output}"
+        );
+        assert!(
+            output.contains("(let ([errbuf (malloc _pointer)])"),
+            "allocates the error cell:\n{output}"
+        );
+        assert!(
+            output.contains("(cpointer->ptr_t errbuf)"),
+            "passes the error out-buffer:\n{output}"
+        );
+        // …and returns `(values result error)`.
+        assert!(
+            output.contains(
+                "(values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t)))"
+            ),
+            "returns (values result error):\n{output}"
+        );
+        // The contract reflects the dropped param + the values return.
+        assert!(
+            output.contains(
+                "[tkmanager-load-resource-error (c-> tkmanager? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]"
+            ),
+            "values contract with dropped error param:\n{output}"
+        );
     }
 
     // --- Contract tests ---
@@ -1522,12 +2058,11 @@ mod tests {
     }
 
     #[test]
-    fn test_id_property_setter_body_uses_void_typed_tell() {
-        // Setter must emit `(tell #:type _void ...)` so the underlying
-        // objc_msgSend binding matches the C ABI. The older form
-        // `(void (tell ...))` discarded the result at the Racket level but
-        // left objc_msgSend bound as `_id`-returning — a calling-convention
-        // mismatch that matters on arm64e PAC.
+    fn test_id_property_setter_routes_native() {
+        // Since leaf 050/010 an `_id` setter dispatches through the generated
+        // native entry (ADR-0013): `(_id) -> _void` is routable (`_id` collapses
+        // to `ptr_t`). The value coerces to its underlying object pointer, then
+        // the `ptr_t` bridge crosses it. No more in-Racket `tell` for dispatch.
         let cls = Class {
             name: "TKView".to_string(),
             superclass: String::new(),
@@ -1542,18 +2077,23 @@ mod tests {
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
-            output
-                .contains("  (tell #:type _void (coerce-arg self) setTitle: (coerce-arg value)))"),
-            "_id setter body must use `tell #:type _void`. Output:\n{output}"
+            output.contains(
+                "  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) \
+                 (id->ffi2-ptr (sel_registerName \"setTitle:\")) (id->ffi2-ptr (coerce-arg value))))"
+            ),
+            "_id setter body must route through native dispatch. Output:\n{output}"
         );
         assert!(
-            !output.contains("(void (tell"),
-            "Setter body must not use legacy `(void (tell ...))` form. Output:\n{output}"
+            !output.contains("(tell #:type _void"),
+            "Setter body must not use the legacy `tell` dispatch form. Output:\n{output}"
         );
     }
 
     #[test]
-    fn test_void_method_tell_dispatch_uses_void_typed_tell() {
+    fn test_void_object_method_routes_native() {
+        // All-object, void-returning method (`(_id) -> _void`) — previously the
+        // `tell` macro path — now dispatches through the generated native entry
+        // (ADR-0013), object arg coerced and bridged to `ptr_t`.
         let cls = Class {
             name: "TKView".to_string(),
             superclass: String::new(),
@@ -1577,17 +2117,23 @@ mod tests {
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
-            output.contains("  (tell #:type _void (coerce-arg self) addObject: (coerce-arg obj)))"),
-            "Void Tell-dispatch method body must use `tell #:type _void`. Output:\n{output}"
+            output.contains(
+                "  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) \
+                 (id->ffi2-ptr (sel_registerName \"addObject:\")) (id->ffi2-ptr (coerce-arg obj))))"
+            ),
+            "Void all-object method must route through native dispatch. Output:\n{output}"
         );
         assert!(
-            !output.contains("(void (tell"),
-            "Method body must not use legacy `(void (tell ...))` form. Output:\n{output}"
+            // The synthesized default constructor still uses `(tell (tell … alloc) init)`;
+            // only the method's *dispatch* must be native, not the `tell` token globally.
+            !output.contains("addObject: (coerce-arg obj)"),
+            "Method dispatch must not use the legacy `tell` keyword-arg form. Output:\n{output}"
         );
     }
 
     #[test]
-    fn test_void_zero_arg_tell_dispatch_uses_void_typed_tell() {
+    fn test_void_zero_arg_method_routes_native() {
+        // Zero-arg void method (`() -> _void`) → native `aw_racket_msg_0_v`.
         let cls = Class {
             name: "TKView".to_string(),
             superclass: String::new(),
@@ -1608,8 +2154,11 @@ mod tests {
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
-            output.contains("  (tell #:type _void (coerce-arg self) dealloc))"),
-            "Zero-arg void Tell-dispatch body must use `tell #:type _void`. Output:\n{output}"
+            output.contains(
+                "  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) \
+                 (id->ffi2-ptr (sel_registerName \"dealloc\"))))"
+            ),
+            "Zero-arg void method must route through native dispatch. Output:\n{output}"
         );
     }
 
@@ -1670,7 +2219,7 @@ mod tests {
                     },
                     false,
                 ),
-                // `_id` class property: tell-dispatch setter path.
+                // `_id` class property: native-dispatch setter path (050/010).
                 make_test_class_property("defaultTitle", TypeRefKind::Id, false),
             ],
             methods: vec![],
@@ -1711,8 +2260,12 @@ mod tests {
             "Class-property setter impls must not take `self`. Output:\n{output}"
         );
         assert!(
-            output.contains("(tell #:type _void TKWindow setDefaultTitle: (coerce-arg value))"),
-            "Class-property _id setter body must tell the class directly. Output:\n{output}"
+            output.contains(
+                "(aw_racket_msg_P_v (id->ffi2-ptr TKWindow) \
+                 (id->ffi2-ptr (sel_registerName \"setDefaultTitle:\")) (id->ffi2-ptr (coerce-arg value)))"
+            ),
+            "Class-property _id setter body must route native, targeting the class \
+             metaobject directly. Output:\n{output}"
         );
     }
 
@@ -2537,6 +3090,271 @@ mod tests {
         assert!(
             !plain.contains(";; Threading:"),
             "non-main-thread class must get no threading comment, got:\n{plain}"
+        );
+    }
+
+    // --- Generated native dispatch routing (ADR-0013) ---
+
+    fn type_u64() -> TypeRef {
+        TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Primitive {
+                name: "uint64".into(),
+            },
+        }
+    }
+
+    fn type_i64() -> TypeRef {
+        TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Primitive {
+                name: "int64".into(),
+            },
+        }
+    }
+
+    fn type_instancetype() -> TypeRef {
+        TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Instancetype,
+        }
+    }
+
+    #[test]
+    fn native_dispatch_scalar_return_method() {
+        // A typed scalar method (int64 arg -> int64) routes through the generated
+        // native entry: receiver + selector bridged to ptr_t, scalar arg direct.
+        let cls = Class {
+            name: "TKView".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "computeWithValue:",
+                false,
+                false,
+                vec![Param {
+                    name: "value".into(),
+                    param_type: type_i64(),
+                }],
+                type_i64(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+        // ffi2 header + native binding + routed body.
+        assert!(
+            out.contains("\"../../runtime/ffi2-dispatch.rkt\""),
+            "native header:\n{out}"
+        );
+        assert!(
+            out.contains("(define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))"),
+            "scalar binding:\n{out}"
+        );
+        assert!(
+            out.contains("(aw_racket_msg_q_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"computeWithValue:\")) value)"),
+            "scalar routed body:\n{out}"
+        );
+    }
+
+    #[test]
+    fn native_dispatch_object_return_method() {
+        // A typed object-returning method (uint64 arg -> id) routes natively and
+        // re-tags the ptr_t result as _id for wrap-objc-object. Not retained.
+        let cls = Class {
+            name: "TKArray".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "objectAtIndex:",
+                false,
+                false,
+                vec![Param {
+                    name: "index".into(),
+                    param_type: type_u64(),
+                }],
+                type_id(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+        assert!(
+            out.contains("(define-aw-msg aw_racket_msg_Q_P (-> ptr_t ptr_t uint64_t ptr_t))"),
+            "object binding:\n{out}"
+        );
+        assert!(
+            out.contains("(ffi2-ptr->id (aw_racket_msg_Q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"objectAtIndex:\")) index))"),
+            "object routed body:\n{out}"
+        );
+        assert!(out.contains("(wrap-objc-object"), "object wrap:\n{out}");
+        // objectAtIndex: is not a +1 family → the wrap closes without a
+        // #:retained finalizer (the `)) ` after the routed call, not `#:retained`).
+        assert!(
+            out.contains("\"objectAtIndex:\")) index))\n   ))"),
+            "non-retained object return must close without #:retained:\n{out}"
+        );
+    }
+
+    #[test]
+    fn native_dispatch_typed_constructor() {
+        // A typed init (uint64 -> instancetype) routes natively; receiver is
+        // [Class alloc], result is the +1 owned object.
+        let cls = Class {
+            name: "TKArray".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "initWithCapacity:",
+                false,
+                true,
+                vec![Param {
+                    name: "capacity".into(),
+                    param_type: type_u64(),
+                }],
+                type_instancetype(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+        assert!(
+            out.contains("(ffi2-ptr->id (aw_racket_msg_Q_P (id->ffi2-ptr (tell TKArray alloc)) (id->ffi2-ptr (sel_registerName \"initWithCapacity:\")) capacity))"),
+            "constructor routed body:\n{out}"
+        );
+        assert!(
+            out.contains("#:retained #t"),
+            "constructor +1 retained:\n{out}"
+        );
+    }
+
+    fn type_nsrect() -> TypeRef {
+        // libclang models geometry typedefs (NSRect/CGRect/…) as aliases; the FFI
+        // mapper maps the alias to the `_NSRect` cstruct.
+        TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Alias {
+                name: "NSRect".into(),
+                framework: None,
+                underlying_primitive: None,
+            },
+        }
+    }
+
+    #[test]
+    fn native_dispatch_struct_return_and_param_property() {
+        // A read-write struct-by-value property (`frame`) — the §3 8× headline.
+        // Getter routes through the struct-return entry (out-buffer → cstruct);
+        // setter routes through the struct-param entry (cstruct pointer → ptr_t).
+        let cls = Class {
+            name: "TKView".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![Property {
+                name: "frame".into(),
+                property_type: type_nsrect(),
+                readonly: false,
+                class_property: false,
+                is_copy: false,
+                deprecated: false,
+                source: None,
+                provenance: None,
+                doc_refs: None,
+                origin: None,
+            }],
+            methods: vec![],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+
+        // Distinct content-addressed entries for the return vs param positions,
+        // even though both cross ffi2 as an out-buffer/by-pointer ptr_t.
+        assert!(
+            out.contains("(define-aw-msg aw_racket_msg_0_R (-> ptr_t ptr_t ptr_t void_t))"),
+            "struct-return binding (out-buffer + void result):\n{out}"
+        );
+        assert!(
+            out.contains("(define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))"),
+            "struct-param binding:\n{out}"
+        );
+
+        // Getter: allocate a cstruct out-buffer, write through it natively, hand
+        // back the `_NSRect` cstruct (the established `ffi/unsafe` rep).
+        assert!(
+            out.contains("(let ([buf (malloc _NSRect)])"),
+            "getter allocates cstruct out-buffer:\n{out}"
+        );
+        assert!(
+            out.contains("(aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"frame\")) (cpointer->ptr_t buf))"),
+            "getter passes out-buffer pointer to native entry:\n{out}"
+        );
+        assert!(
+            out.contains("(ptr-ref buf _NSRect)))"),
+            "getter hands back the cstruct:\n{out}"
+        );
+
+        // Setter: the cstruct value's pointer crosses as ptr_t.
+        assert!(
+            out.contains("(aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"setFrame:\")) (id->ffi2-ptr value))"),
+            "setter bridges struct param by pointer:\n{out}"
+        );
+
+        // type-mapping.rkt require is present (for the cstruct + malloc/ptr-ref).
+        assert!(
+            out.contains("\"../../runtime/type-mapping.rkt\""),
+            "struct file requires type-mapping.rkt:\n{out}"
+        );
+    }
+
+    #[test]
+    fn native_dispatch_struct_return_method() {
+        // A struct-returning instance method (not a property) routes the same way.
+        let cls = Class {
+            name: "TKView".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![make_test_method(
+                "convertedFrame",
+                false,
+                false,
+                vec![],
+                type_nsrect(),
+            )],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+        assert!(
+            out.contains("(let ([buf (malloc _NSRect)])"),
+            "struct-return method allocates out-buffer:\n{out}"
+        );
+        assert!(
+            out.contains("(aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName \"convertedFrame\")) (cpointer->ptr_t buf))"),
+            "struct-return method routes natively:\n{out}"
+        );
+        assert!(
+            out.contains("(ptr-ref buf _NSRect)))"),
+            "struct-return method hands back the cstruct:\n{out}"
         );
     }
 }

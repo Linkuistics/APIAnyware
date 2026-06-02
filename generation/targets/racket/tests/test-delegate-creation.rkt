@@ -53,13 +53,14 @@
        (make-delegate
         "windowDidResize:" (lambda (notif) (set-box! called? #t))))
 
-     ;; Should be a valid ObjC _id pointer
+     ;; make-delegate returns an objc-object wrapper (so it satisfies
+     ;; objc-object? param contracts); unwrap to the raw _id for direct msgSend.
      (check-not-false del "Delegate should be non-null")
-     (check-pred cpointer? del "Should be a pointer")
+     (check-pred objc-object? del "Should be an objc-object wrapper")
 
      ;; Verify it responds to the registered selector
      (define responds
-       (msg-send-responds del sel-respondsToSelector
+       (msg-send-responds (unwrap-objc-object del) sel-respondsToSelector
                           (sel_registerName "windowDidResize:")))
      (check-true responds "Delegate should respond to windowDidResize:")
 
@@ -79,9 +80,9 @@
      (import-class NSNull)
      (define null-instance (tell NSNull null))
 
-     (msg-send-1id del (sel_registerName "windowDidResize:")
+     (msg-send-1id (unwrap-objc-object del) (sel_registerName "windowDidResize:")
                    (cast null-instance _id _pointer))
-     (msg-send-1id del (sel_registerName "windowDidMove:")
+     (msg-send-1id (unwrap-objc-object del) (sel_registerName "windowDidMove:")
                    (cast null-instance _id _pointer))
 
      (check-equal? (reverse (unbox log)) '("resized" "moved")
@@ -99,7 +100,7 @@
      (import-class NSNull)
      (define null-instance (tell NSNull null))
      (define result
-       (msg-send-1id->bool del (sel_registerName "windowShouldClose:")
+       (msg-send-1id->bool (unwrap-objc-object del) (sel_registerName "windowShouldClose:")
                            (cast null-instance _id _pointer)))
      (check-true result "Handler returning #t should produce YES")
 
@@ -113,7 +114,7 @@
      (import-class NSNull)
      (define null-instance (tell NSNull null))
      (define result
-       (msg-send-1id->bool del (sel_registerName "shouldSelectItem:")
+       (msg-send-1id->bool (unwrap-objc-object del) (sel_registerName "shouldSelectItem:")
                            (cast null-instance _id _pointer)))
      (check-false result "Handler returning #f should produce NO")
 
@@ -130,7 +131,7 @@
      (define null-instance (tell NSNull null))
 
      ;; Call with original handler
-     (msg-send-1id del (sel_registerName "windowDidResize:")
+     (msg-send-1id (unwrap-objc-object del) (sel_registerName "windowDidResize:")
                    (cast null-instance _id _pointer))
 
      ;; Update the handler
@@ -139,7 +140,7 @@
                       (set-box! log (cons "v2" (unbox log)))))
 
      ;; Call again — should use updated handler
-     (msg-send-1id del (sel_registerName "windowDidResize:")
+     (msg-send-1id (unwrap-objc-object del) (sel_registerName "windowDidResize:")
                    (cast null-instance _id _pointer))
 
      (check-equal? (reverse (unbox log)) '("v1" "v2")
@@ -173,9 +174,9 @@
      (define null-instance (tell NSNull null))
 
      ;; Call both
-     (msg-send-1id del1 (sel_registerName "windowDidResize:")
+     (msg-send-1id (unwrap-objc-object del1) (sel_registerName "windowDidResize:")
                    (cast null-instance _id _pointer))
-     (msg-send-1id del2 (sel_registerName "windowDidResize:")
+     (msg-send-1id (unwrap-objc-object del2) (sel_registerName "windowDidResize:")
                    (cast null-instance _id _pointer))
 
      (check-equal? (unbox log1) '("d1") "Delegate 1 should only see its call")

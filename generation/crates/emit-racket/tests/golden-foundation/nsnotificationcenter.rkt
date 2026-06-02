@@ -2,7 +2,8 @@
 ;; Generated binding for NSNotificationCenter (Foundation)
 ;; Do not edit — regenerate from enriched IR
 
-(require ffi/unsafe
+(require "../../runtime/ffi2-dispatch.rkt"
+         (except-in ffi/unsafe ->)
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
@@ -32,11 +33,13 @@
 ;; --- Class reference ---
 (import-class NSNotificationCenter)
 
-;; --- Shared typed objc_msgSend bindings ---
-(define _msg-0  ; (_fun _pointer _pointer _id _id _id _pointer -> _id)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _id _id _pointer -> _id)))
-(define _msg-1  ; (_fun _pointer _pointer _id _pointer _id _id -> _void)
-  (get-ffi-obj "objc_msgSend" _objc-lib (_fun _pointer _pointer _id _pointer _id _id -> _void)))
+;; --- Native dispatch bindings (generated objc_msgSend, ADR-0013) ---
+(define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 
 ;; --- Constructors ---
 (define (make-nsnotificationcenter)
@@ -48,26 +51,26 @@
 ;; --- Properties ---
 (define (nsnotificationcenter-default-center)
   (wrap-objc-object
-   (tell NSNotificationCenter defaultCenter)))
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSNotificationCenter) (id->ffi2-ptr (sel_registerName "defaultCenter"))))))
 
 ;; --- Instance methods ---
 ;; param 0: weak reference
 (define (nsnotificationcenter-add-observer-selector-name-object! self observer a-selector a-name an-object)
-  (_msg-1 (coerce-arg self) (sel_registerName "addObserver:selector:name:object:") (coerce-arg observer) (sel_registerName a-selector) (coerce-arg a-name) (coerce-arg an-object)))
+  (aw_racket_msg_PPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addObserver:selector:name:object:")) (id->ffi2-ptr (coerce-arg observer)) (id->ffi2-ptr (sel_registerName a-selector)) (id->ffi2-ptr (coerce-arg a-name)) (id->ffi2-ptr (coerce-arg an-object))))
 ;; block param 3: stored (retained across calls)
 (define (nsnotificationcenter-add-observer-for-name-object-queue-using-block! self name obj queue block)
   (define-values (_blk3 _blk3-id)
     (make-objc-block block (list _id) _void))
   (wrap-objc-object
-   (_msg-0 (coerce-arg self) (sel_registerName "addObserverForName:object:queue:usingBlock:") (coerce-arg name) (coerce-arg obj) (coerce-arg queue) _blk3)
+   (ffi2-ptr->id (aw_racket_msg_PPPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addObserverForName:object:queue:usingBlock:")) (id->ffi2-ptr (coerce-arg name)) (id->ffi2-ptr (coerce-arg obj)) (id->ffi2-ptr (coerce-arg queue)) (id->ffi2-ptr _blk3)))
    ))
 (define (nsnotificationcenter-post-notification self notification)
-  (tell #:type _void (coerce-arg self) postNotification: (coerce-arg notification)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "postNotification:")) (id->ffi2-ptr (coerce-arg notification))))
 (define (nsnotificationcenter-post-notification-name-object self a-name an-object)
-  (tell #:type _void (coerce-arg self) postNotificationName: (coerce-arg a-name) object: (coerce-arg an-object)))
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "postNotificationName:object:")) (id->ffi2-ptr (coerce-arg a-name)) (id->ffi2-ptr (coerce-arg an-object))))
 (define (nsnotificationcenter-post-notification-name-object-user-info self a-name an-object a-user-info)
-  (tell #:type _void (coerce-arg self) postNotificationName: (coerce-arg a-name) object: (coerce-arg an-object) userInfo: (coerce-arg a-user-info)))
+  (aw_racket_msg_PPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "postNotificationName:object:userInfo:")) (id->ffi2-ptr (coerce-arg a-name)) (id->ffi2-ptr (coerce-arg an-object)) (id->ffi2-ptr (coerce-arg a-user-info))))
 (define (nsnotificationcenter-remove-observer! self observer)
-  (tell #:type _void (coerce-arg self) removeObserver: (coerce-arg observer)))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeObserver:")) (id->ffi2-ptr (coerce-arg observer))))
 (define (nsnotificationcenter-remove-observer-name-object! self observer a-name an-object)
-  (tell #:type _void (coerce-arg self) removeObserver: (coerce-arg observer) name: (coerce-arg a-name) object: (coerce-arg an-object)))
+  (aw_racket_msg_PPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeObserver:name:object:")) (id->ffi2-ptr (coerce-arg observer)) (id->ffi2-ptr (coerce-arg a-name)) (id->ffi2-ptr (coerce-arg an-object))))

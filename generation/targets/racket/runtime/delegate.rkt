@@ -1,11 +1,11 @@
 #lang racket/base
 ;; delegate.rkt — Create ObjC delegate objects from Racket lambdas
 ;;
-;; When libAPIAnywareRacket.dylib is available, uses aw_racket_register_delegate
-;; and aw_racket_set_method for delegate creation and dispatch. The Swift helper
-;; handles ObjC class creation, IMP trampolines, and dispatch table management.
-;;
-;; Falls back to pure-Racket delegate creation when the dylib is absent.
+;; Uses the mandatory native helpers (aw_racket_register_delegate,
+;; aw_racket_set_method) for delegate creation and dispatch. The native Swift
+;; trampoline (DelegateBridge) handles ObjC class creation, IMP trampolines,
+;; foreign-thread safety, and dispatch-table management (ADR-0010/ADR-0014).
+;; There is no pure-Racket fallback.
 ;;
 ;; IMPORTANT: Cocoa delegate properties are weak — the owning object does NOT
 ;; retain its delegate. The Racket code must keep a reference to the delegate
@@ -32,8 +32,7 @@
 (provide make-delegate
          delegate-set!
          delegate-remove!
-         free-delegate
-         delegate-class-count)
+         free-delegate)
 
 ;; --- Return type detection (shared by both implementations) ---
 
@@ -201,156 +200,6 @@
   ;; Return as _id for compatibility with `tell`
   (cast instance _pointer _id))
 
-;; --- Pure-Racket implementation (fallback) ---
-
-(define objc-lib (ffi-lib "libobjc"))
-
-(define objc_allocateClassPair
-  (get-ffi-obj "objc_allocateClassPair" objc-lib
-    (_fun _pointer _string _uint64 -> _pointer)))
-
-(define class_addMethod
-  (get-ffi-obj "class_addMethod" objc-lib
-    (_fun _pointer _pointer _fpointer _string -> _bool)))
-
-(define objc_registerClassPair
-  (get-ffi-obj "objc_registerClassPair" objc-lib
-    (_fun _pointer -> _void)))
-
-(define objc_getClass
-  (get-ffi-obj "objc_getClass" objc-lib
-    (_fun _string -> _pointer)))
-
-(define objc_msgSend-alloc
-  (get-ffi-obj "objc_msgSend" objc-lib
-    (_fun _pointer _pointer -> _pointer)))
-
-(define objc_msgSend-init
-  (get-ffi-obj "objc_msgSend" objc-lib
-    (_fun _pointer _pointer -> _pointer)))
-
-(define NSObject-class (objc_getClass "NSObject"))
-
-;; Dispatch table and class cache for fallback mode.
-(define dispatch-table (make-hash))
-(define class-counter 0)
-(define class-cache (make-hash))
-
-(define (type-encoding-void n-params)
-  (string-append "v@:" (make-string n-params #\@)))
-
-(define (type-encoding-bool n-params)
-  (string-append "B@:" (make-string n-params #\@)))
-
-(define (type-encoding-id n-params)
-  (string-append "@@:" (make-string n-params #\@)))
-
-;; "i" = C int32. "q" = C int64; NSInteger on 64-bit Apple platforms is
-;; typedef'd to `long` and clang encodes it as "q", so the long branch
-;; covers the NSInteger case used by NSTableViewDataSource etc.
-(define (type-encoding-int n-params)
-  (string-append "i@:" (make-string n-params #\@)))
-
-(define (type-encoding-long n-params)
-  (string-append "q@:" (make-string n-params #\@)))
-
-(define (get-or-create-delegate-class method-sigs)
-  (define cache-key
-    (sort method-sigs string<? #:key car))
-  (define cached (hash-ref class-cache cache-key #f))
-  (if cached
-      (car cached)
-      (let ()
-        (define name (format "APIAnywareDelegate~a" class-counter))
-        (set! class-counter (add1 class-counter))
-
-        (define cls (objc_allocateClassPair NSObject-class name 0))
-        (unless cls
-          (error 'make-delegate "failed to create ObjC class ~a" name))
-
-        (define imps '())
-
-        (for ([sig (in-list method-sigs)])
-          (define sel-str (car sig))
-          (define ret-kind (cdr sig))
-          (define n-params (selector-param-count sel-str))
-          (define sel (sel_registerName sel-str))
-
-          (define all-param-types
-            (make-list (+ 2 n-params) _pointer))
-
-          (define ret-type
-            (case ret-kind
-              [(void) _void]
-              [(bool) _bool]
-              [(id)   _pointer]
-              [(int)  _int32]
-              [(long) _int64]
-              [else   _void]))
-
-          (define default-ret
-            (case ret-kind
-              [(void) (void)]
-              [(bool) #f]
-              [(id)   #f]
-              [(int)  0]
-              [(long) 0]
-              [else   (void)]))
-
-          (define imp-proc
-            (lambda args
-              (define self-ptr (car args))
-              (define method-args (cddr args))
-              (define key (cast self-ptr _pointer _intptr))
-              (define handlers (hash-ref dispatch-table key #hash()))
-              (define handler (hash-ref handlers sel-str #f))
-              (if handler
-                  (apply handler method-args)
-                  default-ret)))
-
-          (define imp-ctype (_cprocedure all-param-types ret-type))
-          (define imp-fptr (function-ptr imp-proc imp-ctype))
-          (set! imps (cons imp-fptr imps))
-
-          (define encoding
-            (case ret-kind
-              [(void) (type-encoding-void n-params)]
-              [(bool) (type-encoding-bool n-params)]
-              [(id)   (type-encoding-id n-params)]
-              [(int)  (type-encoding-int n-params)]
-              [(long) (type-encoding-long n-params)]
-              [else   (type-encoding-void n-params)]))
-
-          (class_addMethod cls sel imp-fptr encoding))
-
-        (objc_registerClassPair cls)
-        (hash-set! class-cache cache-key (list cls imps))
-        cls)))
-
-(define (make-delegate/racket return-types handlers-alist)
-  (define method-sigs
-    (map (lambda (pair)
-           (define sel (car pair))
-           (define ret-kind (hash-ref return-types sel (guess-return-kind sel)))
-           (cons sel ret-kind))
-         handlers-alist))
-
-  (define cls (get-or-create-delegate-class method-sigs))
-
-  (define raw-instance
-    (objc_msgSend-init
-     (objc_msgSend-alloc cls (sel_registerName "alloc"))
-     (sel_registerName "init")))
-  (define instance (cast raw-instance _pointer _id))
-
-  (define key (cast raw-instance _pointer _intptr))
-  (define handlers-hash (make-hash))
-  (for ([pair (in-list handlers-alist)])
-    (hash-set! handlers-hash (car pair) (cdr pair)))
-  (hash-set! dispatch-table key handlers-hash)
-
-  instance)
-
 ;; --- Public API ---
 
 ;; Create a delegate instance.
@@ -392,9 +241,7 @@
             (loop (cddr rest) (cons (cons sel wrapped) result))))))
 
   (define instance
-    (if swift-available?
-        (make-delegate/swift return-types handlers-alist)
-        (make-delegate/racket return-types handlers-alist)))
+    (make-delegate/swift return-types handlers-alist))
 
   ;; Store param-types for delegate-set! to use on future handler updates
   (unless (hash-empty? param-types)
@@ -415,75 +262,52 @@
   (define types-for-sel (hash-ref stored-param-types selector #f))
   (define wrapped-handler (wrap-handler-with-param-types handler types-for-sel))
 
-  (if swift-available?
-      ;; Swift mode: update callback in Swift dispatch table
-      (let ()
-        (define instance-ptr (cast raw _pointer _pointer))
-        (define key (cast instance-ptr _pointer _intptr))
-        (define n-params (selector-param-count selector))
-        ;; Look up the return type from registration
-        (define ret-types (hash-ref swift-delegate-ret-types key #hash()))
-        (define ret-kind (hash-ref ret-types selector 'void))
-        (define ffi-param-types (make-list n-params _pointer))
-        (define ret-type
-          (case ret-kind
-            [(void) _void]
-            [(bool) _bool]
-            [(id)   _pointer]
-            [(int)  _int32]
-            [(long) _int64]
-            [else   _void]))
-        (define callback-proc
-          (lambda args (apply wrapped-handler (take args (min (length args) n-params)))))
-        (define callback-ctype (_cprocedure ffi-param-types ret-type))
-        (define callback-fptr (function-ptr callback-proc callback-ctype))
+  ;; Update callback in the native dispatch table
+  (let ()
+    (define instance-ptr (cast raw _pointer _pointer))
+    (define key (cast instance-ptr _pointer _intptr))
+    (define n-params (selector-param-count selector))
+    ;; Look up the return type from registration
+    (define ret-types (hash-ref swift-delegate-ret-types key #hash()))
+    (define ret-kind (hash-ref ret-types selector 'void))
+    (define ffi-param-types (make-list n-params _pointer))
+    (define ret-type
+      (case ret-kind
+        [(void) _void]
+        [(bool) _bool]
+        [(id)   _pointer]
+        [(int)  _int32]
+        [(long) _int64]
+        [else   _void]))
+    (define callback-proc
+      (lambda args (apply wrapped-handler (take args (min (length args) n-params)))))
+    (define callback-ctype (_cprocedure ffi-param-types ret-type))
+    (define callback-fptr (function-ptr callback-proc callback-ctype))
 
-        (swift:set-method instance-ptr selector callback-fptr)
+    (swift:set-method instance-ptr selector callback-fptr)
 
-        ;; Prevent GC of new callback
-        (define gc-handle (swift:prevent-gc callback-fptr))
-        (define existing (hash-ref swift-gc-handles key '()))
-        (hash-set! swift-gc-handles key
-                   (cons (list callback-fptr gc-handle callback-proc) existing)))
-      ;; Racket fallback mode
-      (let ()
-        (define key (cast raw _pointer _intptr))
-        (define handlers (hash-ref dispatch-table key #f))
-        (unless handlers
-          (error 'delegate-set! "not a managed delegate: ~a" delegate))
-        (hash-set! handlers selector wrapped-handler))))
+    ;; Prevent GC of new callback
+    (define gc-handle (swift:prevent-gc callback-fptr))
+    (define existing (hash-ref swift-gc-handles key '()))
+    (hash-set! swift-gc-handles key
+               (cons (list callback-fptr gc-handle callback-proc) existing))))
 
 ;; Remove a handler (method will use default return).
 (define (delegate-remove! delegate selector)
   (define raw (unwrap-objc-object delegate))
-  (if swift-available?
-      (let ()
-        (define instance-ptr (cast raw _pointer _pointer))
-        (swift:set-method instance-ptr selector #f))
-      (let ()
-        (define key (cast raw _pointer _intptr))
-        (define handlers (hash-ref dispatch-table key #f))
-        (when handlers
-          (hash-remove! handlers selector)))))
+  (define instance-ptr (cast raw _pointer _pointer))
+  (swift:set-method instance-ptr selector #f))
 
 ;; Release a delegate's dispatch table entry.
 (define (free-delegate delegate)
   (define raw (unwrap-objc-object delegate))
   (define delegate-key (cast raw _pointer _intptr))
   (hash-remove! delegate-param-types delegate-key)
-  (if swift-available?
-      (let ()
-        (define instance-ptr (cast raw _pointer _pointer))
-        (define key (cast instance-ptr _pointer _intptr))
-        ;; Release GC prevention handles
-        (for ([entry (in-list (hash-ref swift-gc-handles key '()))])
-          (swift:allow-gc (cadr entry)))
-        (hash-remove! swift-gc-handles key)
-        (hash-remove! swift-delegate-ret-types key)
-        (swift:free-delegate instance-ptr))
-      (let ()
-        (define key (cast raw _pointer _intptr))
-        (hash-remove! dispatch-table key))))
-
-;; Return the number of delegate classes created (for testing).
-(define (delegate-class-count) class-counter)
+  (define instance-ptr (cast raw _pointer _pointer))
+  (define key (cast instance-ptr _pointer _intptr))
+  ;; Release GC prevention handles
+  (for ([entry (in-list (hash-ref swift-gc-handles key '()))])
+    (swift:allow-gc (cadr entry)))
+  (hash-remove! swift-gc-handles key)
+  (hash-remove! swift-delegate-ret-types key)
+  (swift:free-delegate instance-ptr))

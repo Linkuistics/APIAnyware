@@ -86,37 +86,69 @@ two targets** (e.g. `chez-class`, `chez-functional`) rather than
 reintroducing this dimension.
 _Avoid_: do not reuse this word in the new design.
 
-**Open-world build** _(the chez standalone bundle shape)_:
-A self-contained chez `.app` whose binary **embeds the full `scheme` boot** —
-compiler, `eval`, and `load` all live at runtime — plus a whole-program boot
-image of the app and its dependencies. No system Chez is needed to run it. The
-app can compile and load arbitrary Scheme after launch; the dispatch substrate
-keeps its runtime-`eval` backend, synthesizing `foreign-callable` trampolines on
-demand. This is the **single** chez bundle shape — it replaced the source-exec
-model entirely (ADR-0009). The contrasting **Closed-world build** was evaluated
-and dropped, so "open-world" no longer names one pole of a live contrast; it
-names the artifact (full boot, runtime `eval` available).
-_Avoid_: "dynamic build", "full build", "source-exec" (the retired prior model).
+## Racket target toolchain
 
-**Closed-world build** _(retired)_:
-Formerly the second proposed chez standalone mode — a `.app` sealed via
-`compile-whole-program` against a `petite`-only boot, with no runtime compiler.
-Retired (ADR-0009): the spike showed its gain over open-world was marginal
-(~1 MB / ~60 ms) while closed-world for any dispatch-using app is *physically
-impossible* without a separate eval-free dispatch backend (a `petite` boot
-"cannot compile foreign-callable"). The cost did not justify the gain. **If a
-future app genuinely needs a sealed, no-runtime-compiler build, add it back as a
-variant then** (ADR-0004's lazy-extension hatch).
-_Avoid_: do not reintroduce as a live mode without re-opening ADR-0009.
+**Racket 9.2**:
+The upstream Racket release the `racket` target is built and run against.
+Introduces **ffi2**. Replaces the previously-unpinned, pre-9 toolchain.
+_Avoid_: "latest Racket" (the target is pinned, not floating).
 
-## Flagged ambiguities
+**ffi2**:
+Racket 9.2's "more static alternative to `ffi/unsafe`" for binding C APIs
+(require path `ffi2`, package `ffi2-lib`). The `racket` target's FFI layer —
+both the Rust emitter's generated output and the hand-written runtime — targets
+ffi2, with `ffi/unsafe`/`ffi/unsafe/objc` retained only where ffi2 has no
+equivalent. **Boundary (resolved 2026-05-31, leaf 020):** ffi2 has *no* ObjC
+layer, so all message dispatch (`tell`/`import-class`/`objc_msgSend`) stays on
+`ffi/unsafe/objc`; ffi2 covers the C-function layer only; values cross the seam
+via `ptr_t->cpointer` / `cpointer->ptr_t`. The seam plumbing — ffi2 re-export
+under the `(except-in ffi/unsafe ->)` discipline, arm64 width aliases, and the
+bridge (incl. `_id`-tagging via `ffi2-ptr->id`/`id->ffi2-ptr`) — lives in
+`runtime/ffi2-seam.rkt` (leaf 030); its ffi2 type-mapper counterpart is
+`RacketFfi2TypeMapper`. ffi2 is **not** in the minimal
+distribution — provision with `raco pkg install ffi2-lib`. Full map:
+`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
+_Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
+class-system work.
 
-- **Target vs. Language.** The Rust trait is `LanguageEmitter` /
-  `LanguageInfo` and the CLI flag is `--lang`, but the on-disk unit is
-  `generation/targets/<name>/` and includes more than an emitter (runtime,
-  sample apps, bundler). Canonical term: **target**. Renaming the trait /
-  flag is in-scope for the paradigm-retirement grove only if it falls out
-  naturally from other edits; otherwise follow-up work.
+## Native binding mechanism
+
+**Generated typed dispatch**:
+The `racket` target's outbound method-dispatch mechanism: the emitter generates
+**one typed native (Swift/C) dispatch entry per distinct method ABI signature**,
+derived from the API analysis, and emits a thin Racket ffi2 binding that calls
+it. Chosen over in-Racket `tell`/typed `get-ffi-obj` msgSend, generic
+NSInvocation, and generic libffi because the signature set is *known at
+generation time* — so compile-time ABI specialisation (~5–6 ns/call: ~2× faster
+than the status-quo typed `get-ffi-obj` msgSend on simple shapes, **~8× on struct
+returns** where Racket otherwise pays to marshal a CGRect) is bought with
+generated code at zero hand-maintenance. libffi (the generic alternative) is
+actually *slower* than the typed status quo on non-struct shapes and is kept only
+as the escape hatch for signatures the emitter cannot type statically. See
+**ADR-0013** and `docs/specs/2026-05-31-racket-native-binding-design.md`.
+_Avoid_: "msgSend wrapper" (ambiguous with the deleted `aw_common_msg_*`);
+"libffi dispatch" (libffi is only the rejected generic alternative / escape hatch).
+
+**Marshalling-depth spectrum**:
+How much of a method's argument/result marshalling and lifetime handling moves
+into its generated native entry, so the scripting side never sees it. *Depth 0*
+= dispatch only (opaque pointers). *Depth 1* (the target) = typed marshalling per
+method — strings/structs cross as Racket-friendly representations, the Racket
+wrapper is a coercion-free ffi2 call. *Depth 2* = semantic batching (collections
+in one native call, `NSError**` → `(values result error)`). The emitter walks the
+spectrum *per method* from the IR types. Embodies ADR-0010's "target never
+considers the FFI boundary."
+_Avoid_: treating it as a global switch (it is per-method).
+
+**Native trampoline**:
+The inbound-callback mechanism: a native Swift object/IMP
+(`DelegateBridge`/`BlockBridge`) receives the ObjC call, owns thread-safety
+(bouncing foreign-OS-thread invocations to a Racket-safe thread via
+`main-thread.rkt`), and invokes the registered Racket `_cprocedure` callback.
+Kept and deepened (not replaced) by the ffi2 migration: ffi2 callbacks SIGILL on
+foreign threads and have a void-return bug. See **ADR-0014**.
+_Avoid_: "ffi2 callback" (rejected); "inbound embedding" (the rejected
+Racket-CS-C-API alternative).
 
 ## Example dialogue
 

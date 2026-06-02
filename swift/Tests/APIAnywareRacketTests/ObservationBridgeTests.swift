@@ -3,7 +3,7 @@
 import Foundation
 import Testing
 import Observation
-@testable import APIAnywareCommon
+@testable import APIAnywareRacket
 
 // MARK: - Test fixture
 
