@@ -1,22 +1,20 @@
 #lang racket/base
-;; swift-helpers.rkt — Conditional loading of libAPIAnywareRacket.dylib
+;; swift-helpers.rkt — Mandatory loading of libAPIAnywareRacket.dylib
 ;;
-;; Tries to load the Swift helper dylib from ../lib/ relative to this file.
-;; When available, exports FFI bindings for the aw_racket_* C functions.
-;; When unavailable, exports #f for all functions and
-;; swift-available? is #f.
+;; Loads the Swift helper dylib from ../lib/ relative to this file and exports
+;; FFI bindings for the aw_racket_* C functions. The dylib is the binding
+;; (ADR-0010): there is no pure-Racket fallback. If the dylib cannot be loaded,
+;; or a required aw_racket_* symbol is missing (a stale/mismatched build), the
+;; module fails to load with a clear error rather than silently degrading.
 ;;
 ;; Usage in other runtime modules:
 ;;   (require "swift-helpers.rkt")
-;;   (when swift-available?
-;;     (swift:autorelease-push) ...)
+;;   (swift:autorelease-push) ...
 
 (require ffi/unsafe
          racket/path)
 
-(provide swift-available?
-
-         ;; Autorelease pool
+(provide ;; Autorelease pool
          swift:autorelease-push
          swift:autorelease-pop
 
@@ -64,19 +62,29 @@
          [path (resolved-module-path-name mp)])
     (if (path? path) (path-only path) (current-directory))))
 
+;; The dylib is mandatory (ADR-0010). A load failure here is fatal: the runtime
+;; cannot function without the native binding, so surface a clear error at module
+;; load time rather than degrade to a non-existent fallback.
 (define anyware-lib
-  (with-handlers ([exn:fail? (lambda (e) #f)])
+  (with-handlers
+      ([exn:fail?
+        (lambda (e)
+          (error 'swift-helpers
+                 (string-append
+                  "libAPIAnywareRacket.dylib could not be loaded from ~a.\n"
+                  "The native library is mandatory (ADR-0010); there is no "
+                  "pure-Racket fallback.\nBuild it with `swift build` and ensure "
+                  "lib/libAPIAnywareRacket.dylib resolves to it.\nUnderlying "
+                  "error: ~a")
+                 (build-path this-dir 'up "lib")
+                 (exn-message e)))])
     (ffi-lib (build-path this-dir 'up "lib" "libAPIAnywareRacket"))))
 
-(define swift-available? (and anyware-lib #t))
-
-;; Helper: extract an FFI function from the dylib, or return #f if unavailable.
+;; Helper: bind an aw_racket_* C function from the dylib. A missing symbol is a
+;; hard error (stale/mismatched dylib) — no failure thunk, so the module fails
+;; to load clearly instead of binding the name to #f.
 (define-syntax-rule (define-swift name c-name type)
-  (define name
-    (if anyware-lib
-        (get-ffi-obj c-name anyware-lib type
-                     (lambda () #f))
-        #f)))
+  (define name (get-ffi-obj c-name anyware-lib type)))
 
 ;; --- Autorelease pool ---
 
