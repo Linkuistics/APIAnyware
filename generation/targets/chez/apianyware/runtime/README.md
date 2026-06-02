@@ -15,12 +15,13 @@ load, libobjc surface, guardian + autoreleasepool lifetime model,
 free-* paths). `types.sls` and `cocoa.sls` still have stub bodies; the
 follow-on leaf wires them up.
 
-During the chez bring-up (030..060) the dylib loader points at
-`generation/targets/racket/lib/libAPIAnywareRacket.dylib` because its
-`aw_common_*` surface is target-agnostic. Leaf 060 builds the
-chez-specific `libAPIAnywareChez.dylib` and the loader's candidate
-order flips. This is the only point of cross-target borrowing in the
-chez build; it disappears with 060.
+The loader resolves the chez-specific `libAPIAnywareChez.dylib` (built
+by leaf 060). That dylib is self-contained (ADR-0011): it owns its
+entire native surface under chez's own `aw_chez_*` ABI prefix, sharing
+nothing with other targets. (During early bring-up the loader borrowed
+racket's dylib; that cross-target borrowing ended with leaf 060, and the
+former shared `APIAnywareCommon` substrate was deleted once chez — its
+last consumer — de-shared.)
 
 ## Cluster map
 

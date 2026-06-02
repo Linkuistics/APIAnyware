@@ -2,10 +2,10 @@
 ;;
 ;; Holds:
 ;;   - mandatory load of `libAPIAnywareChez.dylib` (per ADR-0005 /
-;;     decision 7). The dylib statically embeds APIAnywareCommon, so the
-;;     `aw_common_*` surface ships in the same file as `aw_chez_*`.
+;;     decision 7). The dylib is self-contained (ADR-0011): it owns its
+;;     entire `aw_chez_*` surface with no shared substrate.
 ;;   - libobjc class/sel/msgSend/retain/release surface
-;;   - autorelease pool primitives via the dylib's `aw_common_*` wrappers
+;;   - autorelease pool primitives via the dylib's `aw_chez_*` wrappers
 ;;   - NSString round-trip helpers used by `(apianyware runtime types)`
 ;;
 ;; Absorbs from the racket runtime: swift-helpers.rkt (full rewrite,
@@ -74,31 +74,31 @@
 
   (define libobjc-loaded? (make-parameter %dylib-loaded))
 
-  ;; --- Dylib `aw_common_*` surface ------------------------------------
+  ;; --- Dylib `aw_chez_*` surface --------------------------------------
 
-  (define aw-common-get-class
-    (foreign-procedure "aw_common_get_class" (string) void*))
+  (define aw-chez-get-class
+    (foreign-procedure "aw_chez_get_class" (string) void*))
 
-  (define aw-common-sel-register
-    (foreign-procedure "aw_common_sel_register" (string) void*))
+  (define aw-chez-sel-register
+    (foreign-procedure "aw_chez_sel_register" (string) void*))
 
-  (define aw-common-retain
-    (foreign-procedure "aw_common_retain" (void*) void*))
+  (define aw-chez-retain
+    (foreign-procedure "aw_chez_retain" (void*) void*))
 
-  (define aw-common-release
-    (foreign-procedure "aw_common_release" (void*) void))
+  (define aw-chez-release
+    (foreign-procedure "aw_chez_release" (void*) void))
 
-  (define aw-common-autorelease-push
-    (foreign-procedure "aw_common_autorelease_push" () void*))
+  (define aw-chez-autorelease-push
+    (foreign-procedure "aw_chez_autorelease_push" () void*))
 
-  (define aw-common-autorelease-pop
-    (foreign-procedure "aw_common_autorelease_pop" (void*) void))
+  (define aw-chez-autorelease-pop
+    (foreign-procedure "aw_chez_autorelease_pop" (void*) void))
 
-  (define aw-common-string-to-nsstring
-    (foreign-procedure "aw_common_string_to_nsstring" (string) void*))
+  (define aw-chez-string-to-nsstring
+    (foreign-procedure "aw_chez_string_to_nsstring" (string) void*))
 
-  (define aw-common-nsstring-to-string
-    (foreign-procedure "aw_common_nsstring_to_string" (void*) string))
+  (define aw-chez-nsstring-to-string
+    (foreign-procedure "aw_chez_nsstring_to_string" (void*) string))
 
   ;; --- libobjc raw surface --------------------------------------------
 
@@ -130,8 +130,8 @@
 
   ;; --- Public surface -------------------------------------------------
 
-  (define objc_getClass aw-common-get-class)
-  (define sel_registerName aw-common-sel-register)
+  (define objc_getClass aw-chez-get-class)
+  (define sel_registerName aw-chez-sel-register)
 
   ;; sel_registerName is idempotent but each call still crosses the FFI
   ;; boundary; cache results to keep emitted call sites cheap.
@@ -139,15 +139,15 @@
 
   (define (sel-register name)
     (or (hashtable-ref sel-cache name #f)
-        (let ([sel (aw-common-sel-register name)])
+        (let ([sel (aw-chez-sel-register name)])
           (hashtable-set! sel-cache name sel)
           sel)))
 
-  (define objc_autoreleasePoolPush aw-common-autorelease-push)
-  (define objc_autoreleasePoolPop  aw-common-autorelease-pop)
+  (define objc_autoreleasePoolPush aw-chez-autorelease-push)
+  (define objc_autoreleasePoolPop  aw-chez-autorelease-pop)
 
-  (define objc_retain  aw-common-retain)
-  (define objc_release aw-common-release)
+  (define objc_retain  aw-chez-retain)
+  (define objc_release aw-chez-release)
 
-  (define string->nsstring-ptr aw-common-string-to-nsstring)
-  (define nsstring-ptr->string aw-common-nsstring-to-string))
+  (define string->nsstring-ptr aw-chez-string-to-nsstring)
+  (define nsstring-ptr->string aw-chez-nsstring-to-string))
