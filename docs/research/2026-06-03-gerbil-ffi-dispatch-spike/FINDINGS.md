@@ -152,35 +152,46 @@ model (ADR-0010/-0013), the real entry will more likely return the rect
 *decomposed* into Scheme floats (multiple values / f64vector) rather than hand a
 foreign CGRect to Scheme. Capability proven either way.
 
-## 5. Static-exe + framework link (◑ capability confirmed; on-machine launch RE-HOMED to the distribution leaf)
+## 5. Static-exe + framework link (✅ characterized — macOS distribution recipe found)
 
-**Status:** the `--enable-shared=no` Gerbil source build
-(`build-gerbil-static.sh` → `~/.local/gerbil-0.18.2-static`) was kicked off and is
-a healthy but *very* slow from-scratch self-hosting build (Gambit bootstrap →
-bootclean → core pass building gsc/gsi → Gambit install → full Gerbil build →
-install; ~1.5 h in and still in the Gambit core pass, the multi-MB single-function
-`_num.c`/`_std.c`/gsc C files defeat the C compiler's allocator at
-`-O1 -march=native`). It will finish in the background.
+The `--enable-shared=no` source toolchain finished
+(`build-gerbil-static.sh` → `~/.local/gerbil-0.18.2-static`, ~80 min from-scratch
+self-hosting build). Results:
 
-**What is already established (so this is confirmatory, not a risk):**
-- Gerbil's own docs: `gxc -static -exe` (or `static-exe:` build specs) build a
-  fully static binary given a Gerbil configured `--enable-shared=no`; foreign
-  frameworks link via `-ld-options -framework <FW>` (web sources, FINDINGS intro).
-- Our build is configured exactly so (`--disable-shared --enable-single-host`,
-  visible in the gambit cc lines).
-- The dynamic `gxc -exe … -ld-options "-framework Foundation"` path already works
-  end-to-end (items 1–4): framework linking is proven; only the *static libgambit*
-  link remains to be exercised.
+**(a) Fully-static (`gxc -exe -static`) does NOT work on macOS.**
+`ld: library 'crt0.o' not found` — Apple does not support statically linking
+libSystem / fully-static executables. Gerbil's docs' "provided your system
+supports it" caveat *excludes* macOS. Do not pursue `-static` for the target.
 
-**Re-homed:** the on-machine "`gxc -static -exe` + `-framework AppKit` → launchable
-self-contained binary that opens a window" verification moves to the **distribution
-/ bundler leaf** in the build subtree (created by 030). Rationale: it is the same
-work the bundler must do for ADR-0009's self-contained-bundle model, it needs this
-exact static toolchain, and that toolchain (this background build) will be
-installed at `~/.local/gerbil-0.18.2-static` by then. The spike's *decisive*
-purpose — settling Q1 and Q2 — is complete without it. **030 must add a leaf:**
-"verify static-exe self-contained binary (Gerbil ADR-0009 distribution)", using
-`~/.local/gerbil-0.18.2-static/bin/gxc -static -exe`.
+**(b) The correct macOS recipe: `gxc -exe` against the `--enable-shared=no`
+toolchain.** Compiles, runs, FFI round-trips, and **embeds the Gerbil/Gambit
+runtime statically** — `otool -L` shows NO libgambit/libgerbil dylib dependency.
+Frameworks link normally (`-ld-options "-framework Foundation"` and
+`"-framework AppKit"` both ✅; `NSApplication` resolves at runtime → AppKit PASS).
+
+**(c) The self-containment gap the bundler must close.** `otool -L` of a plain
+`gxc -exe` binary:
+```
+Foundation / AppKit (system frameworks)        ✓ always present
+/usr/lib/libSystem.B.dylib, libz, libsqlite3,
+  libobjc.A.dylib                              ✓ system (/usr/lib)
+/opt/homebrew/opt/openssl@3/libssl.3,
+  libcrypto.3                                  ⚠️ Homebrew — NOT on a clean target
+```
+The Gerbil stdlib pulls **openssl@3** (libssl/libcrypto) via Homebrew paths. For
+ADR-0009 self-contained distribution the `.app` bundler must **vendor these
+dylibs into the bundle and relocate their load paths** (`install_name_tool` /
+`@executable_path`/`@rpath`) — the same dylib-staging chez's bundler does. System
+`/usr/lib/*` deps need nothing.
+
+**Net macOS distribution model for gerbil (for the bundler leaf):** NOT
+fully-static; instead **`gxc -exe` (static runtime via `--enable-shared=no`) +
+.app dylib-relocation of the openssl@3 deps**. This realises ADR-0009
+("self-contained, no Gerbil install on target") on macOS's terms.
+
+**Still for the build phase (genuinely needs it):** a VM-verified hello-window
+(actually drawing) is a sample-app leaf per the app ladder + the VM-verify rule;
+this spike proved the toolchain/link/runtime-embed, not pixels.
 ## 6. Compile-time DX vs generated-FFI volume (✅ settles Q1 axis 2 — user steer)
 
 `06-compile-time.sh` (N typed `define-c-lambda` per method — the chez ADR-0015
@@ -258,7 +269,10 @@ design). Validated.**
 - Struct-by-value works; `(c-define-type … (struct …))`, by-value args (item 4).
 - Toolchain provisioning recipe + the stale-`.o.lock` hazard (§0).
 
-**Distribution (item 5):** ⏳ pending the `--enable-shared=no` source build
-(`~/.local/gerbil-0.18.2-static`, configured `--disable-shared --enable-single-host`).
-Will confirm `gxc -static -exe … -framework AppKit` yields a launchable
-self-contained binary — the ADR-0009 self-contained-bundle model for gerbil.
+**Distribution (item 5): ✅ characterized.** macOS recipe = `gxc -exe` against the
+`--enable-shared=no` toolchain (`~/.local/gerbil-0.18.2-static`) — embeds the
+Gerbil/Gambit runtime statically, links system frameworks; `-static`
+(fully-static) is unsupported on macOS (no crt0.o). The only self-containment gap
+is the Gerbil stdlib's **openssl@3** Homebrew dylib dep, which the `.app` bundler
+must vendor + relocate (chez-style). 030's distribution leaf APPLIES this recipe
+(+ VM-verified hello-window), it no longer needs to discover it. See §5.

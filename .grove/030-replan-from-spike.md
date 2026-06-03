@@ -39,12 +39,13 @@ recommendations pre-judge most of this grilling.
   registration, emission tests, the 7 sample apps **each with a VM-verify leaf**,
   bundler integration (`static-exe` per the guide Step 8),
   `knowledge/targets/gerbil.md`, README status.
-- **Carried over from 020 (spike item 5, re-homed):** add an early
-  distribution-verification leaf — "`gxc -static -exe … -framework AppKit` yields
-  a launchable self-contained binary (Gerbil ADR-0009 model)" — using the static
-  toolchain at `~/.local/gerbil-0.18.2-static/bin/gxc` (built by the spike's
-  `build-gerbil-static.sh`; finishing in the background). This de-risks the
-  bundler before the app ladder leans on it. See FINDINGS §5.
+- **Carried over from 020 (spike item 5 — now CHARACTERIZED, FINDINGS §5):** the
+  macOS distribution recipe is known — `gxc -exe` against the `--enable-shared=no`
+  toolchain (`~/.local/gerbil-0.18.2-static/bin/gxc`) embeds the runtime
+  statically; `-static` (fully-static) is unsupported on macOS; the only gap is
+  vendoring+relocating the Gerbil stdlib's **openssl@3** dylib dep into the `.app`
+  (chez-style). 030's distribution/bundler leaf APPLIES this (dylib relocation +
+  VM-verified hello-window), it no longer needs to discover it.
 
 ## Notes
 
