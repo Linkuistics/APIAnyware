@@ -119,6 +119,42 @@ redeclaration proves noisy.
 040/020/040 the typed `wrap`/`->ptr` + both surfaces, 040/020/050 the `nserror` +
 `call-with-nserror-out` contract — each inbox-notes here when it runs.)
 
+### Exact names emitted by leaf 040/020/030 (manifest class graph) — LANDED
+
+The class-graph block now emitted at the top of every class module (and a bare
+`defclass`-only variant for synthesized intermediate nodes). The runtime `objc`
+module **must export these by these exact spellings**:
+
+- **`NSObject` root `defclass`** — the runtime owns
+  `(defclass NSObject (ptr) transparent: #t)` (the single class-graph root holding
+  the `ptr` slot + the ADR-0019 will). Must export `NSObject`, the predicate
+  `NSObject?`, the accessor `NSObject-ptr`, and `make-NSObject` (keyword ctor
+  `(make-NSObject ptr: …)`, per spike `07-dual-surface.ss`). Every generated
+  `defclass` chains up to `NSObject` and every class module imports it via the
+  already-emitted `(import … :gerbil-bindings/runtime/objc)`.
+- **`register-objc-class!`** — a runtime proc called once per class at module
+  load: `(register-objc-class! <gerbil-class> "<objc-name>" "<objc-super-name>")`.
+  Builds the **ObjC-name → Gerbil-type** map the class-aware `wrap` consults
+  (`object_getClass` → exact bound type, nearest **bound** ancestor as fallback)
+  AND stores the **ObjC superclass name** the transparent-subclassing bridge feeds
+  to `objc_allocateClassPair`. The third arg is the *real* IR `superclass` (may be
+  `""` for an ObjC root / synthesized node, may name a class whose Gerbil type was
+  not statically resolvable — the runtime resolves it by ObjC name at wrap time).
+  This is the registry the §"objc / class-graph module" Done-when calls for.
+- **`transparent: #t`** is emitted on every generated `defclass` (printability /
+  structural debug) — confirm gsc accepts it on the runtime root too.
+
+Class identifiers are emitted in **ObjC PascalCase** (`NSButton`, `NSView`) — the
+Gerbil class id == the ObjC class name; module stems stay lowercase
+(`nsbutton.ss`). Each class module exports its `<Class>` + `<Class>?`. A class's
+`defclass` derives from its resolved parent: same-framework parent ⇒ local sibling
+import; cross-framework parent ⇒ import from the owning framework (needs the global
+`ClassRegistry`, wired by leaf 060 — see that leaf's note); runtime root ⇒ no extra
+import. **Transitional:** the leaf-010 proc surface (`wrap-objc-obj`/`objc-obj->ptr`
+over the legacy `objc-obj` handle) still sits *below* the graph block in each
+module until leaf 040/020/040 rewrites it — the runtime must keep the old `objc-obj`
+contract working alongside the new `NSObject` root until then.
+
 ## Notes
 
 The two-toolchain rule (spec §1): develop/measure on the bottled gerbil. Clear

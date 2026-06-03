@@ -425,7 +425,11 @@ mod tests {
             kind: TypeRefKind::Id,
         };
         // void (^)(id) — all slots reduce to scalar/pointer tokens → bridgeable.
-        assert!(is_bridgeable_block(std::slice::from_ref(&id_param), &void_ret, &m));
+        assert!(is_bridgeable_block(
+            std::slice::from_ref(&id_param),
+            &void_ret,
+            &m
+        ));
         // A block taking a by-value geometry struct is not bridgeable.
         let rect_param = TypeRef {
             nullable: false,

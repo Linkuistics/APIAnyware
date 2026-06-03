@@ -40,6 +40,7 @@
 //!   IR-independent) is owned by the runtime/build setup (leaf 050), not emitted
 //!   per run. See the inbox note captured for 050.
 
+pub mod class_graph;
 pub mod emit_class;
 pub mod emit_framework;
 pub mod ffi_type_mapping;

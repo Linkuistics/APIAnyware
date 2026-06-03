@@ -207,6 +207,38 @@ _Avoid_: `objc-obj` / a single `(defstruct objc-obj (ptr))` handle (the
 superseded ADR-0018 model — receiver-only dispatch over one type is vacuous);
 "no class graph".
 
+**Class registry / `register-objc-class!` (gerbil)**:
+The wrap-boundary + subclassing-bridge registry (ADR-0020). Each emitted class
+module, right after its `(defclass …)`, emits
+`(register-objc-class! <gerbil-class> "<objc-name>" "<objc-super>")` — a runtime
+call (runtime owns the proc, leaf 050) that records the **ObjC-name → Gerbil-type**
+mapping the wrap boundary consults (`object_getClass` → the exact bound type, with
+the runtime walking the ObjC superclass chain to the **nearest bound ancestor** when
+a class is unbound) and the **ObjC superclass name** the subclassing bridge passes
+to `objc_allocateClassPair`. Registration is **inline per class module** (not a
+central table), so importing a class registers it and the framework facade
+registers them all; the nearest-bound-ancestor fallback covers classes whose
+module was not loaded.
+_Avoid_: a per-framework registration table; deriving the ObjC super from the
+resolved Gerbil parent (the registration's super is the *real* IR `superclass`,
+even when the Gerbil parent degrades to the runtime root).
+
+**Cross-framework parent resolution / `ClassRegistry` (gerbil, emitter)**:
+The emitter-side seam (leaf 030) for placing a `defclass` parent that lives in
+another framework. `Class.ancestors` is sorted alphabetically (not chain order),
+so the graph is built from each class's immediate `superclass` edge. A parent is
+**local** (same framework — the common case, resolved from the framework's own
+class set), the **runtime root** (`NSObject` / empty super), **cross-framework**
+(resolved via a `ClassRegistry` mapping class-name → owning-framework, built once
+over all loaded frameworks by the CLI pre-pass — leaf 060), or a **synthesized
+bare node** (a same-framework ancestor referenced but not collected: emitted as a
+minimal `defclass`-only module rooted on `NSObject`, since its own parent is
+unknowable from an unordered ancestor set). The per-framework emitter cannot see
+other frameworks, so an empty registry degrades a cross-framework parent to the
+runtime root while preserving the true ObjC super in the registration.
+_Avoid_: reconstructing the chain from `ancestors` ordering; re-defining a
+cross-framework ancestor locally (import it from its owner instead).
+
 **Generated `define-c-lambda` dispatch (gerbil)**:
 The gerbil outbound-dispatch mechanism: the emitter open-codes one typed
 `define-c-lambda` per distinct method ABI signature into the binding library,

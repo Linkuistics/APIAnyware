@@ -1,6 +1,12 @@
-//! Gerbil class module emission — the procedural binding (leaf 020/010).
+//! Gerbil class module emission — the manifest class graph + procedural binding.
 //!
 //! Each ObjC class becomes one Gerbil `.ss` module:
+//!   - the class's slice of the **manifest `defclass` graph** (ADR-0020): one
+//!     `(defclass (<Class> <Super>) () transparent: #t)` deriving from the class's
+//!     resolved Gerbil parent ([`crate::class_graph`]), plus a
+//!     `(register-objc-class! …)` form registering the ObjC-name↔Gerbil-type pair
+//!     (the wrap boundary) and the ObjC superclass name (the subclassing bridge).
+//!     This is the structural foundation the dispatch surfaces (leaf 040) hang on;
 //!   - a single `begin-ffi` block holding **one inline-cast `objc_msgSend`
 //!     `define-c-lambda` per distinct method ABI signature** (arm64 forbids a
 //!     variadic `objc_msgSend`, so each call shape needs its own typed C cast —
@@ -8,14 +14,19 @@
 //!     but deduplicated by signature: ADR-0017, spike `01-reachability.ss`),
 //!     plus `objc_getClass` / `sel_registerName`;
 //!   - module-level selector caches (`sel_registerName` once at load);
-//!   - the **procedural core** — one plain procedure per emitted method over the
-//!     single `objc-obj` handle (ADR-0018), constructors, and properties.
+//!   - a **procedural surface** — one plain procedure per emitted method,
+//!     constructors, and properties.
 //!
-//! The opt-in `:std/generic` OO veneer and the `(values result error)` error
-//! model for trailing-`NSError**` methods are sibling leaf 020 — this leaf emits
-//! the complete *functional* binding only. Block-parameter methods stay deferred
-//! exactly as [`crate::method_filter`] already defers them (the `make-objc-block`
-//! boxing is 020's).
+//! ## Transitional note (leaf 030)
+//!
+//! Leaf 030 adds the `defclass` graph (above) on top of leaf 010's procedural
+//! surface. That proc surface still threads the legacy single-`objc-obj` handle;
+//! leaf 040 rewrites it onto the typed graph (the proc core + the dual built-in
+//! `{sel obj}` / `:std/generic` `(sel obj)` consumption surfaces) and leaf 050
+//! layers `(values result error)` for trailing-`NSError**` methods. The emitted
+//! module therefore carries *both* object models in this leaf — coherent at the
+//! Rust level (the crate compiles, tests assert on emitted text); the Gerbil
+//! modules are unified at 040 before any VM-verify.
 //!
 //! The IR-shaping machinery (`build_class_plan`, `collect_exports`,
 //! `dedupe_across_categories`, the property/class-method collision pre-pass) is
@@ -25,11 +36,21 @@
 //! ## Runtime contract (names owned by leaf 050)
 //!
 //! Emitted against the runtime module `:gerbil-bindings/runtime/objc`:
-//! `(defstruct objc-obj (ptr))` ⇒ `make-objc-obj` / `objc-obj-ptr` / `objc-obj?`;
-//! `wrap-objc-obj` (raw `id` ptr → `objc-obj`, registers a Gambit will;
-//! `(wrap-objc-obj ptr)` autoreleased, `(wrap-objc-obj ptr #t)` retained — mirrors
-//! chez `wrap-objc-object`); `objc-obj->ptr` (coerce an `objc-obj` *or* `#f`/nil
-//! to a raw pointer for an outbound `id` argument). Captured to 050's inbox.
+//! - **`(defclass NSObject (ptr) transparent: #t)`** — the single runtime-owned
+//!   class-graph root (holds the `ptr` slot + the ADR-0019 lifetime will); every
+//!   emitted `defclass` chains up to it. ⇒ `NSObject` / `NSObject?` /
+//!   `NSObject-ptr` / `make-NSObject`.
+//! - **`(register-objc-class! <gerbil-class> "<objc-name>" "<objc-super>")`** —
+//!   records the ObjC-name → Gerbil-type mapping the wrap boundary uses
+//!   (`object_getClass` → exact bound type, nearest bound ancestor as fallback)
+//!   and the ObjC superclass name the subclassing bridge passes to
+//!   `objc_allocateClassPair`.
+//! - `(defstruct objc-obj (ptr))` ⇒ `make-objc-obj` / `objc-obj-ptr` / `objc-obj?`;
+//!   `wrap-objc-obj` (raw `id` ptr → `objc-obj`, registers a Gambit will;
+//!   `(wrap-objc-obj ptr)` autoreleased, `(wrap-objc-obj ptr #t)` retained — mirrors
+//!   chez `wrap-objc-object`); `objc-obj->ptr` (coerce an `objc-obj` *or* `#f`/nil
+//!   to a raw pointer for an outbound `id` argument). **Transitional** (leaf 040
+//!   folds these into the class-aware `wrap`). Captured to 050's inbox.
 
 use std::collections::HashSet;
 
@@ -40,6 +61,7 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
+use crate::class_graph::{ParentRef, RUNTIME_ROOT};
 use crate::ffi_type_mapping::{is_known_geometry_alias, GerbilFfiTypeMapper, POINTER};
 use crate::method_filter::{is_supported_method, returns_object_type, returns_void};
 use crate::naming::{
@@ -51,29 +73,57 @@ use crate::naming::{
 /// The runtime module the generated class binds against (objc-obj + lifetime).
 const RUNTIME_OBJC_IMPORT: &str = ":gerbil-bindings/runtime/objc";
 
-/// Generate the full `.ss` module text for one class.
+/// Generate the full `.ss` module text for one class, rooting its `defclass` on
+/// the runtime [`RUNTIME_ROOT`]. Convenience over
+/// [`generate_class_file_with_parent`] for the common root case (and tests).
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
-    generate_class_file_with_exports(cls, framework).0
+    generate_class_file_with_parent(cls, framework, &ParentRef::RuntimeRoot).0
 }
 
 /// Compute the exported names for one class, in sorted order, without rendering
 /// the body. Used by `emit_framework` to build the facade re-export list.
 pub fn class_exports(cls: &Class) -> Vec<String> {
     let mapper = GerbilFfiTypeMapper;
-    build_class_plan(cls, &mapper).exports
+    let plan = build_class_plan(cls, &mapper);
+    merged_exports(cls, plan.exports)
 }
 
-/// Compute exports + render the class module in a single pass (mirrors chez's
-/// `generate_class_file_with_exports` shape so `emit_framework` calls one fn).
-pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String, Vec<String>) {
+/// The Gerbil class identifier + subtype predicate this class contributes to the
+/// module's exports — the manifest-graph names sibling/subclass modules and user
+/// subclassing (`(defclass (MyView NSView) …)`) need in scope. Empty for the
+/// runtime-owned [`RUNTIME_ROOT`] (the runtime exports those).
+fn class_graph_exports(cls: &Class) -> Vec<String> {
+    if cls.name == RUNTIME_ROOT {
+        return Vec::new();
+    }
+    vec![cls.name.clone(), format!("{}?", cls.name)]
+}
+
+/// Merge the proc-surface exports with the class-graph exports, sorted + deduped.
+fn merged_exports(cls: &Class, mut exports: Vec<String>) -> Vec<String> {
+    exports.extend(class_graph_exports(cls));
+    exports.sort();
+    exports.dedup();
+    exports
+}
+
+/// Compute exports + render the class module in a single pass, deriving the
+/// class's `defclass` from `parent` (resolved by [`crate::class_graph`]).
+pub fn generate_class_file_with_parent(
+    cls: &Class,
+    framework: &str,
+    parent: &ParentRef,
+) -> (String, Vec<String>) {
     let mapper = GerbilFfiTypeMapper;
     let plan = build_class_plan(cls, &mapper);
+    let exports = merged_exports(cls, plan.exports.clone());
     let mut w = CodeWriter::new();
 
     let needs_default_constructor =
         !has_explicit_constructor(&plan.init_methods.iter().collect::<Vec<&Method>>(), &mapper);
 
-    emit_header(&mut w, cls, framework, &plan.exports);
+    emit_header(&mut w, cls, framework, &exports, parent);
+    emit_class_graph_block(&mut w, &cls.name, &cls.superclass, parent);
     emit_ffi_block(&mut w, cls, &plan, needs_default_constructor, &mapper);
     emit_selector_caches(&mut w, cls, &plan);
 
@@ -108,7 +158,33 @@ pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String
         }
     }
 
-    (w.finish(), plan.exports)
+    (w.finish(), exports)
+}
+
+/// Render a **bare** synthesized intermediate node ([`crate::class_graph`]): a
+/// `defclass`-only module with no proc surface. Emitted for a same-framework
+/// ancestor referenced as a superclass but not collected as a class, so the
+/// graph has no dangling parent. Its own parent is unknowable from an unordered
+/// ancestor set, so it roots on the runtime [`RUNTIME_ROOT`].
+pub fn generate_bare_module(class_name: &str, framework: &str) -> (String, Vec<String>) {
+    let exports = vec![class_name.to_string(), format!("{}?", class_name)];
+    let mut w = CodeWriter::new();
+    write_line!(
+        w,
+        ";;; Generated binding for {} ({}) — synthesized bare class-graph node",
+        class_name,
+        framework
+    );
+    write_line!(w, "(import {})", RUNTIME_OBJC_IMPORT);
+    w.line("(export");
+    for name in &exports {
+        write_line!(w, "  {}", name);
+    }
+    w.line("  )");
+    w.blank_line();
+    // No collected superclass for a synthesized node ⇒ empty ObjC super name.
+    emit_class_graph_block(&mut w, class_name, "", &ParentRef::RuntimeRoot);
+    (w.finish(), exports)
 }
 
 // --- class plan (ported from emit-chez, target-neutral) -------------------
@@ -625,7 +701,13 @@ fn geometry_decl(token: &str) -> Option<(&'static str, &'static str, &'static st
 
 // --- emission -------------------------------------------------------------
 
-fn emit_header(w: &mut CodeWriter, cls: &Class, framework: &str, exports: &[String]) {
+fn emit_header(
+    w: &mut CodeWriter,
+    cls: &Class,
+    framework: &str,
+    exports: &[String],
+    parent: &ParentRef,
+) {
     write_line!(
         w,
         ";;; Generated binding for {} ({}) — do not edit",
@@ -633,6 +715,13 @@ fn emit_header(w: &mut CodeWriter, cls: &Class, framework: &str, exports: &[Stri
         framework
     );
     w.line("(import :std/foreign");
+    // The parent's module must be in scope for `(defclass (Self Parent) …)`. The
+    // runtime root needs no extra import (it lives in the runtime module already
+    // imported below); local/cross-framework parents import their sibling/owning
+    // module.
+    if let Some(import_path) = parent_import_path(parent, &framework.to_ascii_lowercase()) {
+        write_line!(w, "        {}", import_path);
+    }
     write_line!(w, "        {})", RUNTIME_OBJC_IMPORT);
 
     if exports.is_empty() {
@@ -644,6 +733,54 @@ fn emit_header(w: &mut CodeWriter, cls: &Class, framework: &str, exports: &[Stri
         }
         w.line("  )");
     }
+    w.blank_line();
+}
+
+/// The `:gerbil-bindings/<fw>/<cls>` import the child module needs to bring the
+/// parent class identifier into scope, or `None` for the runtime root (already
+/// imported via the runtime module). A local parent lives under the current
+/// framework; a cross-framework parent under its owning framework.
+fn parent_import_path(parent: &ParentRef, framework_low: &str) -> Option<String> {
+    let (fw_low, name) = match parent {
+        ParentRef::RuntimeRoot => return None,
+        ParentRef::Local(name) => (framework_low, name),
+        ParentRef::CrossFramework { name, fw_low } => (fw_low.as_str(), name),
+    };
+    Some(format!(
+        ":{}/{}/{}",
+        crate::emit_framework::PACKAGE,
+        fw_low,
+        class_name_to_lowercase(name)
+    ))
+}
+
+/// Emit the manifest class-graph forms (ADR-0020): the `defclass` deriving from
+/// the resolved parent, then the runtime registration carrying the ObjC name and
+/// ObjC superclass name (for the wrap boundary + subclassing bridge). The
+/// runtime-owned [`RUNTIME_ROOT`] is never re-defined here.
+fn emit_class_graph_block(
+    w: &mut CodeWriter,
+    class_name: &str,
+    objc_super: &str,
+    parent: &ParentRef,
+) {
+    if class_name == RUNTIME_ROOT {
+        return;
+    }
+    w.line(";; --- Class graph (ADR-0020) ---");
+    write_line!(
+        w,
+        "(defclass ({} {}) () transparent: #t)",
+        class_name,
+        parent.gerbil_name()
+    );
+    write_line!(
+        w,
+        "(register-objc-class! {} \"{}\" \"{}\")",
+        class_name,
+        class_name,
+        objc_super
+    );
     w.blank_line();
 }
 
@@ -1288,8 +1425,91 @@ mod tests {
         let exports = class_exports(&cls);
         assert!(exports.contains(&"make-nsstring".to_string()));
         assert!(exports.contains(&"nsstring-length".to_string()));
+        // The Gerbil class identifier + subtype predicate are exported so
+        // sibling/subclass modules (and user subclassing) see them.
+        assert!(exports.contains(&"NSString".to_string()));
+        assert!(exports.contains(&"NSString?".to_string()));
         let mut sorted = exports.clone();
         sorted.sort();
         assert_eq!(exports, sorted);
+    }
+
+    // --- manifest class graph (ADR-0020, leaf 030) -----------------------
+
+    #[test]
+    fn defclass_derives_from_runtime_root_and_registers() {
+        // A class whose super is NSObject roots its defclass on the runtime root
+        // and inherits the `ptr` slot from it (no own slots).
+        let cls = cls_with("NSView", vec![], vec![]);
+        let out = generate_class_file(&cls, "AppKit");
+        assert!(out.contains(";; --- Class graph (ADR-0020) ---"));
+        assert!(out.contains("(defclass (NSView NSObject) () transparent: #t)"));
+        // Registration carries the ObjC name + ObjC super name (wrap boundary +
+        // subclassing bridge). cls_with leaves superclass empty ⇒ "".
+        assert!(out.contains("(register-objc-class! NSView \"NSView\" \"\")"));
+        // The runtime root needs no extra import (it lives in the runtime module).
+        assert!(!out.contains(":gerbil-bindings/appkit/nsobject"));
+    }
+
+    #[test]
+    fn defclass_records_objc_superclass_name() {
+        // The registration's third field is the real ObjC super name, taken
+        // verbatim from the IR — even when the Gerbil parent resolves elsewhere.
+        let mut cls = cls_with("NSButton", vec![], vec![]);
+        cls.superclass = "NSControl".into();
+        let out =
+            generate_class_file_with_parent(&cls, "AppKit", &ParentRef::Local("NSControl".into()));
+        assert!(out
+            .0
+            .contains("(defclass (NSButton NSControl) () transparent: #t)"));
+        assert!(out
+            .0
+            .contains("(register-objc-class! NSButton \"NSButton\" \"NSControl\")"));
+        // A local parent imports its sibling module under the current framework.
+        assert!(out.0.contains(":gerbil-bindings/appkit/nscontrol"));
+    }
+
+    #[test]
+    fn cross_framework_parent_imports_owning_module() {
+        let mut cls = cls_with("NSTextStorage", vec![], vec![]);
+        cls.superclass = "NSMutableAttributedString".into();
+        let parent = ParentRef::CrossFramework {
+            name: "NSMutableAttributedString".into(),
+            fw_low: "foundation".into(),
+        };
+        let out = generate_class_file_with_parent(&cls, "AppKit", &parent);
+        assert!(out
+            .0
+            .contains("(defclass (NSTextStorage NSMutableAttributedString) () transparent: #t)"));
+        // Imported from its OWNING framework, not AppKit.
+        assert!(out
+            .0
+            .contains(":gerbil-bindings/foundation/nsmutableattributedstring"));
+    }
+
+    #[test]
+    fn bare_module_is_defclass_only() {
+        let (out, exports) = generate_bare_module("Mid", "Widgets");
+        assert!(out.contains("synthesized bare class-graph node"));
+        assert!(out.contains("(defclass (Mid NSObject) () transparent: #t)"));
+        assert!(out.contains("(register-objc-class! Mid \"Mid\" \"\")"));
+        // No proc surface, no FFI block.
+        assert!(!out.contains("begin-ffi"));
+        assert!(!out.contains("(define ("));
+        assert_eq!(exports, vec!["Mid".to_string(), "Mid?".to_string()]);
+    }
+
+    #[test]
+    fn nsobject_itself_emits_no_defclass() {
+        // The runtime owns NSObject; the emitter never re-defines it even if it
+        // appears in the IR's class list.
+        let cls = cls_with("NSObject", vec![], vec![]);
+        let out = generate_class_file(&cls, "Foundation");
+        assert!(!out.contains("(defclass (NSObject"));
+        assert!(!out.contains("register-objc-class! NSObject"));
+        // ...and does not export the runtime-owned identifiers.
+        let exports = class_exports(&cls);
+        assert!(!exports.contains(&"NSObject".to_string()));
+        assert!(!exports.contains(&"NSObject?".to_string()));
     }
 }

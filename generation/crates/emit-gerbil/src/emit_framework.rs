@@ -8,12 +8,13 @@
 //! an app can `(import :gerbil-bindings/<framework>)` for the whole framework or
 //! `(import :gerbil-bindings/<framework>/<class>)` for one class.
 //!
-//! **Status (leaf 010 — crate foundation):** this file stands up the orchestrator
-//! and the facade-generation machinery (the [`SubModule`] collection + the
-//! collision-rename pass), and handles the **empty framework** end-to-end. The
-//! per-construct loops (classes, enums, constants, functions, protocols) are
-//! added by leaves 020–040, each pushing its emitted modules onto `submodules`;
-//! until then a framework emits just its (possibly empty) facade.
+//! **Status (leaf 040/020/030 — manifest class graph):** the orchestrator + the
+//! facade-generation machinery (the [`SubModule`] collection + collision-rename
+//! pass) stand up the empty framework; the **class loop** emits one module per
+//! class (its `defclass`-graph slice + proc surface) and one per synthesized bare
+//! intermediate node, resolving parents via [`build_class_graph`]. The remaining
+//! per-construct loops (enums, constants, functions, protocols) are added by the
+//! sibling leaves, each pushing its emitted modules onto `submodules`.
 
 use std::io;
 use std::path::Path;
@@ -23,7 +24,8 @@ use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInf
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::generate_class_file_with_exports;
+use crate::class_graph::{build_class_graph, ClassRegistry, ParentRef};
+use crate::emit_class::{generate_bare_module, generate_class_file_with_parent};
 use crate::naming::class_module_stem;
 
 /// The Gerbil package every emitted module lives under: an app imports a class
@@ -41,7 +43,26 @@ pub const GERBIL_TARGET_INFO: TargetInfo = TargetInfo {
     generated_subdir: "lib",
 };
 
-pub struct GerbilEmitter;
+/// The Gerbil emitter. Carries the cross-framework [`ClassRegistry`] used to
+/// resolve manifest-graph parents that live in another framework (ADR-0020).
+/// Default-constructed the registry is empty — same-framework parents still
+/// resolve from each framework's own class set; the CLI pre-pass (leaf 060)
+/// builds the global registry via [`ClassRegistry::from_frameworks`] and
+/// constructs the emitter with [`GerbilEmitter::with_registry`].
+#[derive(Default)]
+pub struct GerbilEmitter {
+    class_registry: ClassRegistry,
+}
+
+impl GerbilEmitter {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_registry(class_registry: ClassRegistry) -> Self {
+        Self { class_registry }
+    }
+}
 
 impl TargetEmitter for GerbilEmitter {
     fn target_info(&self) -> &TargetInfo {
@@ -49,7 +70,7 @@ impl TargetEmitter for GerbilEmitter {
     }
 
     fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult> {
-        emit_framework(framework, output_dir)
+        emit_framework(framework, output_dir, &self.class_registry)
     }
 }
 
@@ -77,7 +98,11 @@ impl SubModule {
     }
 }
 
-pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResult> {
+pub fn emit_framework(
+    fw: &Framework,
+    output_dir: &Path,
+    registry: &ClassRegistry,
+) -> io::Result<EmitResult> {
     let fw_low = fw.name.to_ascii_lowercase();
 
     let mut files_written: usize = 0;
@@ -85,15 +110,39 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
 
     std::fs::create_dir_all(output_dir)?;
 
-    // Class modules: one `<fw_low>/<cls>.ss` per class (leaf 020). Leaves 030–040
-    // add enums.ss / constants.ss / functions.ss / protocols/<proto>.ss the same
-    // way, each pushing a `SubModule` so the facade re-exports it.
-    if !fw.classes.is_empty() {
+    // Resolve the manifest class graph (ADR-0020): each class's Gerbil parent,
+    // plus any bare intermediate nodes that must be synthesized so the graph has
+    // no dangling parent.
+    let graph = build_class_graph(fw, registry);
+
+    // Class modules: one `<fw_low>/<cls>.ss` per class, each emitting its slice
+    // of the `defclass` graph (deriving from its resolved parent) + the proc
+    // surface. Leaves 040 (surfaces) and the other construct leaves add their
+    // forms the same way, each pushing a `SubModule` so the facade re-exports it.
+    if !fw.classes.is_empty() || !graph.synthesized.is_empty() {
         let class_dir = output_dir.join(&fw_low);
         std::fs::create_dir_all(&class_dir)?;
         for cls in &fw.classes {
             let cls_low = class_module_stem(&cls.name);
-            let (content, exports) = generate_class_file_with_exports(cls, &fw.name);
+            let parent = graph
+                .parents
+                .get(&cls.name)
+                .cloned()
+                .unwrap_or(ParentRef::RuntimeRoot);
+            let (content, exports) = generate_class_file_with_parent(cls, &fw.name, &parent);
+            std::fs::write(class_dir.join(format!("{cls_low}.ss")), content)?;
+            files_written += 1;
+            submodules.push(SubModule {
+                import_path: SubModule::import_path(&fw_low, &[&cls_low]),
+                exports,
+                is_protocol: false,
+            });
+        }
+        // Synthesized bare intermediate nodes: minimal `defclass`-only modules so
+        // a child's local parent import resolves (no dangling reference).
+        for name in &graph.synthesized {
+            let cls_low = class_module_stem(name);
+            let (content, exports) = generate_bare_module(name, &fw.name);
             std::fs::write(class_dir.join(format!("{cls_low}.ss")), content)?;
             files_written += 1;
             submodules.push(SubModule {
@@ -227,7 +276,7 @@ mod tests {
 
     #[test]
     fn gerbil_target_info() {
-        let e = GerbilEmitter;
+        let e = GerbilEmitter::new();
         assert_eq!(e.target_info().id, "gerbil");
         assert_eq!(e.target_info().display_name, "Gerbil Scheme");
         assert_eq!(e.target_info().generated_subdir, "lib");
@@ -237,7 +286,7 @@ mod tests {
     fn empty_framework_writes_just_facade() {
         let tmp = tempfile::tempdir().unwrap();
         let fw = make_minimal_framework("TestKit");
-        let res = emit_framework(&fw, tmp.path()).unwrap();
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
         assert_eq!(res.files_written, 1);
         let facade = tmp.path().join("testkit.ss");
         assert!(facade.exists());
@@ -272,6 +321,74 @@ mod tests {
         assert!(body.contains("(make-nswindow make-nswindow-protocol)"));
         assert!(body.contains("make-nswindow-protocol"));
         assert!(body.contains("nswindow-title"));
+    }
+
+    fn class_with(name: &str, superclass: &str) -> apianyware_macos_types::ir::Class {
+        apianyware_macos_types::ir::Class {
+            name: name.into(),
+            superclass: superclass.into(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        }
+    }
+
+    #[test]
+    fn emits_class_graph_chain_and_cross_framework_import() {
+        // A same-framework chain NSResponder -> NSObject(root), NSView ->
+        // NSResponder, plus a cross-framework parent resolved via the registry.
+        let tmp = tempfile::tempdir().unwrap();
+        let mut fw = make_minimal_framework("AppKit");
+        fw.classes = vec![
+            class_with("NSResponder", "NSObject"),
+            class_with("NSView", "NSResponder"),
+            class_with("NSTextStorage", "NSMutableAttributedString"),
+        ];
+        let mut reg = ClassRegistry::new();
+        reg.insert("NSMutableAttributedString", "foundation");
+
+        emit_framework(&fw, tmp.path(), &reg).unwrap();
+
+        let responder = std::fs::read_to_string(tmp.path().join("appkit/nsresponder.ss")).unwrap();
+        assert!(responder.contains("(defclass (NSResponder NSObject) () transparent: #t)"));
+
+        let view = std::fs::read_to_string(tmp.path().join("appkit/nsview.ss")).unwrap();
+        assert!(view.contains("(defclass (NSView NSResponder) () transparent: #t)"));
+        assert!(view.contains(":gerbil-bindings/appkit/nsresponder"));
+
+        let storage = std::fs::read_to_string(tmp.path().join("appkit/nstextstorage.ss")).unwrap();
+        assert!(storage
+            .contains("(defclass (NSTextStorage NSMutableAttributedString) () transparent: #t)"));
+        assert!(storage.contains(":gerbil-bindings/foundation/nsmutableattributedstring"));
+
+        // The facade re-exports every class's Gerbil identifier.
+        let facade = std::fs::read_to_string(tmp.path().join("appkit.ss")).unwrap();
+        assert!(facade.contains("NSView"));
+        assert!(facade.contains("NSResponder"));
+    }
+
+    #[test]
+    fn synthesized_bare_intermediate_is_written_and_linked() {
+        // A leaf whose super is an uncollected, unowned intermediate: a bare
+        // module is synthesized for it and the leaf links to it locally.
+        let tmp = tempfile::tempdir().unwrap();
+        let mut fw = make_minimal_framework("Widgets");
+        fw.classes = vec![class_with("Leaf", "Mid")];
+
+        emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+
+        let mid = std::fs::read_to_string(tmp.path().join("widgets/mid.ss")).unwrap();
+        assert!(mid.contains("synthesized bare class-graph node"));
+        assert!(mid.contains("(defclass (Mid NSObject) () transparent: #t)"));
+
+        let leaf = std::fs::read_to_string(tmp.path().join("widgets/leaf.ss")).unwrap();
+        assert!(leaf.contains("(defclass (Leaf Mid) () transparent: #t)"));
+        assert!(leaf.contains(":gerbil-bindings/widgets/mid"));
     }
 
     #[test]
