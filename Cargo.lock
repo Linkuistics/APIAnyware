@@ -190,6 +190,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-macos-emit-gerbil"
+version = "0.1.0"
+dependencies = [
+ "apianyware-macos-emit",
+ "apianyware-macos-types",
+ "tempfile",
+]
+
+[[package]]
 name = "apianyware-macos-emit-racket"
 version = "0.1.0"
 dependencies = [

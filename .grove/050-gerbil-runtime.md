@@ -33,6 +33,33 @@ copies (ADR-0011 hermetic isolation).
 - Runtime smoke tests (objc round-trip, lifetime, veneer dispatch) pass via gsc
   build (CLI smoke; VM-verify is the apps' job).
 
+## Contract settled by node 040 (emitter)
+
+The emitter (`emit-gerbil`, leaf 040) fixed these; the runtime must match them:
+
+- **Package name `gerbil-bindings`.** Generated modules import as
+  `:gerbil-bindings/<framework>/<class>` (and a framework facade as
+  `:gerbil-bindings/<framework>`). The runtime owns the **static `gerbil.pkg`**
+  (`(package: gerbil-bindings)`) at the generated package root
+  (`generation/targets/gerbil/lib/`, `generated_subdir = "lib"`) — it is *not*
+  emitted per run (IR-independent). Decide whether the runtime modules live under
+  the same package or a sibling (e.g. `:gerbil-bindings/runtime/objc`) — the
+  emitted code references runtime entries by bare imported name, so the import
+  path is the runtime's call as long as the names resolve.
+- **Names the generated code calls into (must exist in the runtime, exact
+  spellings TBD as leaves 020–040 land — they will append here / inbox-note):**
+  the `objc-obj` constructor + `objc-obj-ptr` accessor (ADR-0018 handle), a
+  `wrap`/lifetime entry for `id`-typed returns (ADR-0019 will), the
+  `with-autorelease-pool` entry macro, the block-bridge constructor
+  (`make-objc-block` analogue), the delegate-bridge constructor (`make-delegate`
+  analogue), the `nserror` wrapper for `(values result error)`, and a
+  string→NSString helper for CFSTR constants. Treat any name a construct-emitter
+  leaf emits against as binding on this module.
+- **`:std/generic` veneer:** generated veneer uses `(import :std/generic)`'s
+  `defgeneric`/`defmethod` (NOT the built-in `{}` system — measured slower,
+  ADR-0018); note the rename needed to avoid the built-in `defmethod` clash
+  (`03b-generic-tax.ss` used `(rename-in :std/generic (defmethod g:defmethod))`).
+
 ## Notes
 
 The two-toolchain rule (spec §1): develop/measure on the bottled gerbil. Clear
