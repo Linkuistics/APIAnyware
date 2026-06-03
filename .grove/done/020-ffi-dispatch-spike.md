@@ -50,10 +50,25 @@ recommendation back to Q1/Q2/distribution:
 4. **Struct-by-value returns** — CGRect (and an NSRect-shaped struct) crossing the
    FFI by value via Gerbil/Gambit `c-struct`/`(struct ...)`. Confirm correctness;
    note the idiomatic `c-struct` form.
-5. **Static-exe + framework link (de-risks distribution)** —
-   `gxc -static -exe … -ld-options -framework AppKit` (and `-framework Cocoa`)
-   yields a self-contained binary that launches and opens a window. Record the
-   exact build invocation + any `--enable-shared=no` requirement.
+5. **Static-exe + framework link (de-risks distribution)** — ◑ RE-HOMED. The
+   `--enable-shared=no` source toolchain was built (`build-gerbil-static.sh` →
+   `~/.local/gerbil-0.18.2-static`); the capability is confirmed by upstream docs
+   + our `--disable-shared` config + the working dynamic framework-link path
+   (items 1–4). The on-machine `gxc -static -exe … -framework AppKit` launchable-
+   binary verification is moved to the distribution/bundler leaf 030 will create
+   (it is the same ADR-0009 bundler work and needs this exact toolchain). See
+   FINDINGS §5.
+6. **Compile-time DX (NEW — second dispatch axis; user steer).** Measure
+   `gxc`/`gsc`/`cc` wall-clock as a function of generated-FFI *volume*: compile
+   N×{10,100,1000} typed `define-c-lambda` msgSend wrappers (the per-method chez
+   ADR-0015 shape) and chart compile time vs N; contrast with the fixed cost of
+   calling a precompiled native lib through a thin seam (the racket ADR-0013
+   shape). Rationale: ADR-0015 weighed ONLY runtime ns/call; for Gerbil
+   (Scheme→Gambit→C→cc) generated-source volume drives compile time, and Chez
+   already proved long compiles are a DX PITA. This axis may favour a FATTER
+   native lib for Gerbil even though direct dispatch is runtime-optimal — making
+   Gerbil legitimately diverge from Chez (ADR-0011 licenses it). Output: a
+   runtime-vs-compile-time trade-off table for 030.
 
 ## Notes
 

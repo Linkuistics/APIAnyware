@@ -19,7 +19,14 @@ recommendations pre-judge most of this grilling.
 
 ## Done when
 
-- Q1 and Q2 settled from spike numbers (running log here).
+- Q1 settled from spike numbers on **two axes**: runtime ns/call AND compile-time
+  DX (gxc/gsc/cc wall-clock vs generated-FFI volume). ADR-0015 weighed only
+  runtime; for Gerbil (Scheme→Gambit→C→cc) generated-source volume drives compile
+  time — and Chez already proved long compiles are a DX PITA — so a fatter native
+  lib (racket ADR-0013 shape) may win for Gerbil despite direct dispatch being
+  runtime-optimal. The Q1 ADR must record BOTH axes (where ADR-0015 recorded one)
+  and is free to diverge from Chez (ADR-0011 licenses per-target divergence).
+- Q2 settled from spike numbers (running log here).
 - Design spec written: `docs/specs/<date>-gerbil-target-design.md` (per the
   9-step guide Step 1: language/id, toolchain, idiom commitments, dylib?,
   emitter crate, runtime location, distribution model).
@@ -32,6 +39,12 @@ recommendations pre-judge most of this grilling.
   registration, emission tests, the 7 sample apps **each with a VM-verify leaf**,
   bundler integration (`static-exe` per the guide Step 8),
   `knowledge/targets/gerbil.md`, README status.
+- **Carried over from 020 (spike item 5, re-homed):** add an early
+  distribution-verification leaf — "`gxc -static -exe … -framework AppKit` yields
+  a launchable self-contained binary (Gerbil ADR-0009 model)" — using the static
+  toolchain at `~/.local/gerbil-0.18.2-static/bin/gxc` (built by the spike's
+  `build-gerbil-static.sh`; finishing in the background). This de-risks the
+  bundler before the app ladder leans on it. See FINDINGS §5.
 
 ## Notes
 

@@ -1,0 +1,12 @@
+# Spike build artifacts — all regenerable from the .ss sources / .sh scripts.
+*__exe.scm
+build.log
+# compiled Mach-O benchmark binaries (extensionless)
+01-reachability
+02-dispatch-cost
+03-oo-tax
+04-struct-return
+oo-probe
+# generated benchmark sources + binaries (emitted by 06*.sh)
+gen_*
+gens_*
