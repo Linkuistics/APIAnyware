@@ -7,6 +7,8 @@ build.log
 01-reachability-static
 02-dispatch-cost
 03-oo-tax
+03-oo-tax-rebuild
+03b-generic-tax
 04-struct-return
 05-appkit-link
 oo-probe

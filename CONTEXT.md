@@ -193,6 +193,51 @@ foreign threads and have a void-return bug. See **ADR-0014**.
 _Avoid_: "ffi2 callback" (rejected); "inbound embedding" (the rejected
 Racket-CS-C-API alternative).
 
+## Gerbil native binding mechanism
+
+**`objc-obj` (gerbil)**:
+The single Gerbil `(defstruct objc-obj (ptr))` wrapping an ObjC `id`. The gerbil
+analogue of the shared `objc-object` record — one handle struct, no per-class
+subtypes; generated class files are procedure namespaces keyed per class, not a
+record hierarchy. Lifetime is a Gambit **will** + entry-point autoreleasepool
+(ADR-0019), not a guardian (chez ADR-0007) or finalizer (racket).
+_Avoid_: `objc-object` (that name is the racket/chez record; gerbil's is
+`objc-obj`); a `defclass` hierarchy mirroring the ObjC class graph.
+
+**Generated `define-c-lambda` dispatch (gerbil)**:
+The gerbil outbound-dispatch mechanism: the emitter open-codes one typed
+`define-c-lambda` per distinct method ABI signature into the binding library,
+with an inline-cast `objc_msgSend` body (arm64 forbids variadic msgSend). The
+compiled-FFI analogue of chez's per-signature `foreign-procedure` (ADR-0015) —
+**converges with chez, diverges from racket's generated native dispatch
+(ADR-0013) and from the 020 spike's fat-native headline**. Settled on two axes:
+runtime is a tie (a native shim is free in a compiled-FFI binary), and the
+compile-time penalty is a *one-time binding-build cost*, not per-app, because
+Gerbil compiles a binding **library to `.ssi`+`.o1` once** and importing apps
+reuse it (the **precompilation** finding). See ADR-0017.
+_Avoid_: "fat-native dispatch" / "Swift dispatch table" for gerbil (that is
+racket ADR-0013; gerbil keeps the crossing in Gerbil).
+
+**Procedural core / OO veneer (gerbil)**:
+The gerbil two-layer object model (ADR-0018). The **procedural core** is the hot
+path — plain procedures over the `objc-obj` handle (16.3 ns measured). The **OO
+veneer** is an *opt-in* layer of `:std/generic` generic functions
+(`(defmethod (length (o objc-obj)) …)`, 29.4 ns) — chosen over Gerbil's built-in
+`{}` method dispatch (42.8 ns) purely on measured cost. OO is the **veneer, not
+the foundation** (a pure native-OO foundation taxes every call ~4×).
+_Avoid_: built-in `{}` dispatch (measured ~31% slower — rejected); "class
+hierarchy" (the veneer is generic functions over one handle, no graph).
+
+**ObjC-in-gsc native core (gerbil)**:
+The gerbil native core (block/delegate bridges, dynamic classes, lifetime
+helpers, thread activation) authored as **Objective-C compiled by `gsc` into the
+static executable** (via `c-declare`/a companion `.m`, `-x objective-c`), NOT a
+separate Swift dylib. Keeps the static-exe self-contained (ADR-0009); ADR-0011
+licenses diverging from racket/chez's Swift dylib. Honours ADR-0010 (a
+purpose-built native core) in the language gsc speaks. See ADR-0017.
+_Avoid_: "Swift dylib"/`libAPIAnywareGerbil.dylib` (that is the
+racket/chez shape; gerbil compiles ObjC inline via gsc).
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez

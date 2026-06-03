@@ -24,8 +24,19 @@ integration, `knowledge/targets/gerbil.md`, and README status updated.
 
 ## Decomposition
 
-_To be grown by the 010-plan grilling session — leaves are added lazily as the
-design tree is walked._
+Design settled by 030 (re-grill from the 020 spike). Full design:
+`docs/specs/2026-06-03-gerbil-target-design.md`; decisions in ADR-0017 (dispatch +
+ObjC-in-gsc native core), ADR-0018 (object model), ADR-0019 (lifetime), with the
+error model converging on ADR-0006.
+
+Build subtree (grown by 030):
+- **040** emit-gerbil crate (per-signature `define-c-lambda`, like emit-chez)
+- **050** gerbil runtime (objc/ffi/types + ObjC native core, wills+pool, `:std/generic`)
+- **060** CLI registration + emission tests
+- **070** bundle-gerbil + VM-verified hello-window (applies the §5 distribution recipe)
+- **080** threading spike (planning; spike-gated D4) + threading ADR
+- **090** remaining 6 sample apps (decompose per-app; each VM-verified)
+- **100** knowledge/targets/gerbil.md + README status (closes the 9-step guide)
 
 ## Pointers
 

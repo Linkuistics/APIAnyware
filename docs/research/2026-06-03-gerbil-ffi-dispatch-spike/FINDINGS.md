@@ -134,6 +134,38 @@ in tight loops, where the layering lets the programmer drop down. For 030: explo
 whether a cheaper veneer dispatch (`:std/generic`, or predicate-dispatch) beats
 built-in `{}` if the tax ever matters.
 
+### 3b. OO-veneer dispatch mechanism — `:std/generic` vs built-in `{}` (✅ — 030 follow-up, settles veneer dispatch)
+
+`03b-generic-tax.ss`, **built with the bottled Cellar gerbil** (see ⚠️ toolchain
+note below), `-O`, 30M calls, same `-[NSString length]` harness, veneer dispatches
+on the RECEIVER only (`(length obj)`, selector baked in — the realistic veneer shape):
+
+| layer | ns/call | tax over proc core |
+|---|---|---|
+| raw-ffi (ptr) | 10.9 | — |
+| proc over struct (procedural core) | 16.3 | — |
+| **`:std/generic` dispatch** | **29.4** | **+13.1 ns** |
+| built-in `{}` dispatch | 42.8 | +26.5 ns |
+
+**`:std/generic` is ~31% faster than built-in `{}` (29.4 vs 42.8 ns) — it HALVES the
+veneer's opt-in tax over the procedural core.** Item 3's headline (built-in `{}` at
+43.8 ns) measured only `{}`; this follow-up shows the cheaper mechanism. Structural
+reason: `:std/generic` has arity-specialised dispatchers (`generic-dispatch1..4`,
+`std/generic/dispatch.ss`) keyed on the type descriptor; built-in `{}` does a MOP
+method-table lookup by type+name each call. Both dispatch on the single `objc-obj`
+handle struct (no class graph). Correct `:std/generic` method form (NOT `{name type}`):
+`(defmethod (generic-id (arg type)) body)`. **030 decision: the OO veneer uses
+`:std/generic` generic functions over the single handle struct.**
+
+⚠️ **Toolchain-perf caveat (important for `knowledge/targets/gerbil.md`):** the two
+gerbil toolchains are NOT interchangeable for *performance* measurement. The same
+source built with the `--enable-shared=no` **static toolchain**
+(`~/.local/gerbil-0.18.2-static`) ran the Scheme paths ~10× slower (proc 16→83 ns,
+`{}` 43→476 ns) than the **bottled Cellar** build, while the FFI path was unchanged —
+i.e. the static prelude's `-O` Scheme codegen is far less optimised. **Measure on the
+bottle; distribute on the static build** (§5). Whether the static prelude can be
+rebuilt at the bottle's optimisation level is an open item for the build phase.
+
 ## 4. Struct-by-value returns (CGRect) (✅ PASS)
 
 `04-struct-return.ss`. Both probes pass:
