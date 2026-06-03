@@ -1,6 +1,29 @@
-# 020-emit-class
+# 020-emit-class — brief
 
-**Kind:** work
+## Decomposition (decided in-session, leaf 020 bootstrap)
+
+One session can't carry dispatch + per-signature dedup + proc-core + veneer +
+constructors + properties + the `(values result error)` error model at quality —
+the error model alone depends on shared enrichment machinery
+(`class_error_selectors` / `is_error_out_routable` in `emit-racket`'s
+`native_dispatch`, or the `emit` crate) plus a runtime contract, and the veneer
+doubles per-method emission. Split into two child leaves, each green at commit:
+
+- **010-dispatch-proc-core** — the procedural binding: the class plan/exports/dedup
+  machinery (ported from chez), the `begin-ffi` dispatch block (per-signature
+  `define-c-lambda` dedup, inline-cast `objc_msgSend`, `___CAST`/`___return` for
+  const returns, struct-by-value `c-define-type`s), the proc-core procedures over
+  `objc-obj`, constructors (default + explicit), and properties (getter/setter).
+  Wired into `emit_framework`; crate compiles; tests cover a method, a
+  struct-returning method, a property, the default + an explicit constructor.
+- **020-veneer-and-errors** — the layers on top: the opt-in `:std/generic`
+  `(defmethod (sel (o objc-obj)) …)` veneer over each emitted proc (+ export
+  wiring), and the `(values result error)` error model for trailing `NSError**`
+  methods (`method_filter` adjustment + in-Gerbil out-param `define-c-lambda`
+  shape + the `nserror` runtime contract, inbox-noted to 050).
+
+The Done-when below is the **union** of the two children's done-bars (the
+040-node acceptance for the class emitter).
 
 ## Goal
 
