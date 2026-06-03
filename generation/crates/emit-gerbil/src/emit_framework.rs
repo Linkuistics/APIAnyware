@@ -23,6 +23,9 @@ use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInf
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
+use crate::emit_class::generate_class_file_with_exports;
+use crate::naming::class_module_stem;
+
 /// The Gerbil package every emitted module lives under: an app imports a class
 /// as `:gerbil-bindings/<framework>/<class>` and a whole framework as
 /// `:gerbil-bindings/<framework>`. See the layout note in `lib.rs`.
@@ -77,23 +80,38 @@ impl SubModule {
 pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResult> {
     let fw_low = fw.name.to_ascii_lowercase();
 
-    let files_written: usize = 0;
-    let submodules: Vec<SubModule> = Vec::new();
+    let mut files_written: usize = 0;
+    let mut submodules: Vec<SubModule> = Vec::new();
 
-    // Leaves 020–040 populate `submodules` here: one entry per class module,
-    // plus enums.ss / constants.ss / functions.ss / protocols/<proto>.ss, each
-    // written via a `FileEmitter` and pushed onto `submodules` so the facade
-    // re-exports it. Until then the framework emits just its facade.
+    std::fs::create_dir_all(output_dir)?;
+
+    // Class modules: one `<fw_low>/<cls>.ss` per class (leaf 020). Leaves 030–040
+    // add enums.ss / constants.ss / functions.ss / protocols/<proto>.ss the same
+    // way, each pushing a `SubModule` so the facade re-exports it.
+    if !fw.classes.is_empty() {
+        let class_dir = output_dir.join(&fw_low);
+        std::fs::create_dir_all(&class_dir)?;
+        for cls in &fw.classes {
+            let cls_low = class_module_stem(&cls.name);
+            let (content, exports) = generate_class_file_with_exports(cls, &fw.name);
+            std::fs::write(class_dir.join(format!("{cls_low}.ss")), content)?;
+            files_written += 1;
+            submodules.push(SubModule {
+                import_path: SubModule::import_path(&fw_low, &[&cls_low]),
+                exports,
+                is_protocol: false,
+            });
+        }
+    }
 
     // Per-framework facade: `<framework>.ss` next to the framework directory.
     let facade = generate_facade_file(&fw.name, &submodules);
     let facade_path = output_dir.join(format!("{fw_low}.ss"));
-    std::fs::create_dir_all(output_dir)?;
     std::fs::write(&facade_path, facade)?;
 
     Ok(EmitResult {
         files_written: files_written + 1,
-        classes_emitted: 0,
+        classes_emitted: fw.classes.len(),
         protocols_emitted: 0,
         enums_emitted: 0,
         functions_emitted: 0,

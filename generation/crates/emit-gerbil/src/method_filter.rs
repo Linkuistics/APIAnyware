@@ -167,11 +167,25 @@ mod tests {
     fn geometry_return_supported_but_unknown_struct_deferred() {
         let m = GerbilFfiTypeMapper;
         assert!(is_supported_method(
-            &method("frame", false, false, ty(TypeRefKind::Struct { name: "CGRect".into() })),
+            &method(
+                "frame",
+                false,
+                false,
+                ty(TypeRefKind::Struct {
+                    name: "CGRect".into()
+                })
+            ),
             &m
         ));
         assert!(!is_supported_method(
-            &method("weird", false, false, ty(TypeRefKind::Struct { name: "SomeStruct".into() })),
+            &method(
+                "weird",
+                false,
+                false,
+                ty(TypeRefKind::Struct {
+                    name: "SomeStruct".into()
+                })
+            ),
             &m
         ));
     }
@@ -183,6 +197,9 @@ mod tests {
             params: vec![],
             return_type: Box::new(TypeRef::void()),
         });
-        assert!(!is_supported_method(&method("handler", false, false, block), &m));
+        assert!(!is_supported_method(
+            &method("handler", false, false, block),
+            &m
+        ));
     }
 }

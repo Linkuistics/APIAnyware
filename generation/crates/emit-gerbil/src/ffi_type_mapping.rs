@@ -189,7 +189,9 @@ pub fn is_bridgeable_block(
     mapper: &dyn FfiTypeMapper,
 ) -> bool {
     block_token(return_type, true, mapper).is_some()
-        && params.iter().all(|p| block_token(p, false, mapper).is_some())
+        && params
+            .iter()
+            .all(|p| block_token(p, false, mapper).is_some())
 }
 
 #[cfg(test)]
@@ -207,11 +209,21 @@ mod tests {
     fn void_return_vs_param() {
         let m = GerbilFfiTypeMapper;
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "void".into() }), true),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
+                true
+            ),
             "void"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "void".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
+                false
+            ),
             "(pointer void)"
         );
     }
@@ -220,23 +232,48 @@ mod tests {
     fn primitives() {
         let m = GerbilFfiTypeMapper;
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "uint64".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "uint64".into()
+                }),
+                false
+            ),
             "unsigned-int64"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "int64".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "int64".into()
+                }),
+                false
+            ),
             "int64"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "double".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "double".into()
+                }),
+                false
+            ),
             "double"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "bool".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "bool".into()
+                }),
+                false
+            ),
             "bool"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "uint32".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "uint32".into()
+                }),
+                false
+            ),
             "unsigned-int32"
         );
     }
@@ -272,7 +309,10 @@ mod tests {
             m.map_type(&ty(TypeRefKind::Instancetype), false),
             "(pointer void)"
         );
-        assert_eq!(m.map_type(&ty(TypeRefKind::Selector), false), "(pointer void)");
+        assert_eq!(
+            m.map_type(&ty(TypeRefKind::Selector), false),
+            "(pointer void)"
+        );
         assert_eq!(
             m.map_type(
                 &ty(TypeRefKind::Class {
@@ -308,12 +348,22 @@ mod tests {
             "CGRect"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Struct { name: "CGPoint".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Struct {
+                    name: "CGPoint".into()
+                }),
+                false
+            ),
             "CGPoint"
         );
         // A non-geometry struct falls back to an opaque pointer.
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Struct { name: "SomeOther".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Struct {
+                    name: "SomeOther".into()
+                }),
+                false
+            ),
             "(pointer void)"
         );
         assert!(is_known_geometry_alias("CGRect"));
@@ -366,18 +416,22 @@ mod tests {
         let m = GerbilFfiTypeMapper;
         let void_ret = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Primitive { name: "void".into() },
+            kind: TypeRefKind::Primitive {
+                name: "void".into(),
+            },
         };
         let id_param = TypeRef {
             nullable: false,
             kind: TypeRefKind::Id,
         };
         // void (^)(id) — all slots reduce to scalar/pointer tokens → bridgeable.
-        assert!(is_bridgeable_block(&[id_param.clone()], &void_ret, &m));
+        assert!(is_bridgeable_block(std::slice::from_ref(&id_param), &void_ret, &m));
         // A block taking a by-value geometry struct is not bridgeable.
         let rect_param = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Struct { name: "CGRect".into() },
+            kind: TypeRefKind::Struct {
+                name: "CGRect".into(),
+            },
         };
         assert!(!is_bridgeable_block(&[rect_param], &void_ret, &m));
     }

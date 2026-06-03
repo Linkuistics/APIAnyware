@@ -125,8 +125,20 @@ mod tests {
     fn same_shape_shares_key() {
         let m = GerbilFfiTypeMapper;
         // -length and -count are both (id, SEL) → NSUInteger.
-        let length = msgsend_signature_key(&[], &ty(TypeRefKind::Primitive { name: "uint64".into() }), &m);
-        let count = msgsend_signature_key(&[], &ty(TypeRefKind::Primitive { name: "nsuinteger".into() }), &m);
+        let length = msgsend_signature_key(
+            &[],
+            &ty(TypeRefKind::Primitive {
+                name: "uint64".into(),
+            }),
+            &m,
+        );
+        let count = msgsend_signature_key(
+            &[],
+            &ty(TypeRefKind::Primitive {
+                name: "nsuinteger".into(),
+            }),
+            &m,
+        );
         assert_eq!(length, count);
         assert_eq!(length, "=>unsigned-int64");
     }
@@ -134,13 +146,11 @@ mod tests {
     #[test]
     fn differing_params_differ() {
         let m = GerbilFfiTypeMapper;
-        let one = msgsend_signature_key(
-            &[param(TypeRefKind::Id)],
-            &ty(TypeRefKind::Id),
-            &m,
-        );
+        let one = msgsend_signature_key(&[param(TypeRefKind::Id)], &ty(TypeRefKind::Id), &m);
         let two = msgsend_signature_key(
-            &[param(TypeRefKind::Primitive { name: "double".into() })],
+            &[param(TypeRefKind::Primitive {
+                name: "double".into(),
+            })],
             &ty(TypeRefKind::Id),
             &m,
         );
@@ -152,7 +162,12 @@ mod tests {
     #[test]
     fn arg_tokens_prepend_id_and_sel() {
         let m = GerbilFfiTypeMapper;
-        let toks = msgsend_arg_tokens(&[param(TypeRefKind::Primitive { name: "double".into() })], &m);
+        let toks = msgsend_arg_tokens(
+            &[param(TypeRefKind::Primitive {
+                name: "double".into(),
+            })],
+            &m,
+        );
         assert_eq!(toks, vec!["(pointer void)", "(pointer void)", "double"]);
     }
 }
