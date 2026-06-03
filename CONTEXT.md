@@ -124,6 +124,36 @@ distribution — provision with `raco pkg install ffi2-lib`. Full map:
 _Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
 class-system work.
 
+## Gerbil target toolchain
+
+**Gerbil 0.18.x**:
+The upstream Gerbil Scheme release the `gerbil` target is built and run against.
+Since the v0.18 cycle Gerbil vendors **Gambit as a git submodule** — there is no
+external Gambit dependency; the Gerbil distribution *is* the Gambit it compiles
+through. Gerbil compiles Scheme → Gambit → C → a native executable (a
+**compiled-FFI target**, like chez and unlike interpreted-FFI racket — the
+distinction ADR-0015 turns on).
+_Avoid_: "Gerbil/Gambit" as two pinned things (one pin since v0.18); "latest
+Gerbil" (the target is pinned).
+
+**`:std/foreign`**:
+Gerbil's FFI library and the `gerbil` target's FFI layer — `begin-ffi` (emits the
+extern + namespace declarations), `define-c-lambda` (Scheme wrapper for a C
+function), and `c-declare` for inline C. The idiomatic Gerbil way to reach
+`objc_msgSend` / libobjc; the analogue of chez's `foreign-procedure` and racket's
+ffi2 + `ffi/unsafe/objc`.
+_Avoid_: "the FFI" (name it `:std/foreign`); conflating raw Gambit `c-lambda`
+with the `:std/foreign` conveniences layered over it.
+
+**`static-exe` (Gerbil standalone)**:
+Gerbil's self-contained-binary build — `gxc -static -exe` or the `static-exe:` /
+`optimized-static-exe:` build-script specs — producing a fully static native
+executable that needs no Gerbil/Gambit installed on the target machine. Requires
+a Gerbil configured `--enable-shared=no`; foreign-framework linkage is passed via
+`-ld-options -framework AppKit`. The natural realisation of chez's self-contained
+distribution model (ADR-0009) for the `gerbil` target.
+_Avoid_: "stub-launcher" (that is racket's distribution model, not gerbil's).
+
 ## Native binding mechanism
 
 **Generated typed dispatch**:
