@@ -308,3 +308,42 @@ Gerbil/Gambit runtime statically, links system frameworks; `-static`
 is the Gerbil stdlib's **openssl@3** Homebrew dylib dep, which the `.app` bundler
 must vendor + relocate (chez-style). 030's distribution leaf APPLIES this recipe
 (+ VM-verified hello-window), it no longer needs to discover it. See §5.
+
+## 7. Dual-surface object model (✅ — added 2026-06-03, reopens Q2)
+
+**Spike `07-dual-surface.ss` (gxi, no FFI — pure dispatch semantics).** Run after
+040/020 surfaced that ADR-0018's *single `objc-obj` handle* makes receiver-only
+generic dispatch **vacuous** (one type → nothing to dispatch on), collapsing
+gerbil into "chez with different syntax" and defeating the three-Scheme paradigm
+experiment. The pivot: **manifest the ObjC class graph as a Gerbil type
+hierarchy** so OO and generics have real types to dispatch on. Question the spike
+settles: can **one** target carry **both** Gerbil dispatch models over **one**
+`defclass` hierarchy, sharing identifiers?
+
+Result — **YES, decisively:**
+
+| test | result |
+|---|---|
+| T1 `defclass` graph `NSObject→NSString→NSMutableString` + subtype predicates | ✅ inheritance works |
+| T2 built-in `{length o}` MOP method on `NSString`, inherited by `NSMutableString` | ✅ `{length mstr}` dispatches up the graph |
+| T3 `:std/generic` `(length o)` on `NSString`, inherited by `NSMutableString` | ✅ `(length mstr)` dispatches up the graph |
+| **T4 SAME identifier `length` serves BOTH** `{length o}` AND `(length o)` | ✅ **distinct bodies, no binding collision** |
+| T5 arg-taking method (`append`) on both surfaces, same id (incl. multimethod) | ✅ both work |
+
+**Why no collision:** `{length o}` is reader syntax that dispatches via the MOP
+method table keyed by the *symbol* `length` — it never references a top-level
+`length` binding. `(g:defgeneric length)` creates the top-level generic-function
+binding `length`; the built-in `(defmethod {length NSString} …)` only adds to the
+method table. Two machineries, one source-level name. (Gerbil ships two
+`defmethod` macros — built-in `{}` and `:std/generic`'s — already coexisting in
+spike `03b`; this proves the *names* coexist too.)
+
+**Decision (user-confirmed):** ONE gerbil target reifies the ObjC class graph as a
+`defclass` hierarchy and emits **both** surfaces over it — built-in `{sel obj}` OO
+*and* `:std/generic` `(sel obj)` generics — bottoming out in the leaf-010 `%msg-…`
+FFI crossings. **Supersedes ADR-0018** (the single-handle/thin-veneer model). Two
+separate gerbil targets are NOT needed — that would ~double the workstream
+(emitter, runtime, bundler, 14 sample apps, docs) to vary an axis one target
+varies internally. Build cost moves to the **wrap boundary**: returning an `id`
+now needs `object_getClass` → class-name → Gerbil-type lookup (nearest bound
+ancestor as fallback) — priced into the runtime, not the dispatch path.

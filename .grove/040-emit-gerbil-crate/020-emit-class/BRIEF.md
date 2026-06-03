@@ -1,94 +1,76 @@
 # 020-emit-class — brief
 
-## Decomposition (decided in-session, leaf 020 bootstrap)
+## Object-model pivot (re-grilled in-session, 2026-06-03 — ADR-0020)
 
-One session can't carry dispatch + per-signature dedup + proc-core + veneer +
-constructors + properties + the `(values result error)` error model at quality —
-the error model alone depends on shared enrichment machinery
-(`class_error_selectors` / `is_error_out_routable` in `emit-racket`'s
-`native_dispatch`, or the `emit` crate) plus a runtime contract, and the veneer
-doubles per-method emission. Split into two child leaves, each green at commit:
+The original decomposition (010-dispatch-proc-core + 020-veneer-and-errors) was
+built on ADR-0018's **single `objc-obj` handle + opt-in `:std/generic` veneer**.
+Building leaf 020 surfaced that this is **vacuous**: with every wrapped object the
+same `objc-obj` type, receiver-only generic dispatch has nothing to dispatch on,
+and a wrapper-only model can never **extend** the frameworks (subclass + override
+a method the run loop invokes). That collapses gerbil into "chez with different
+syntax" and defeats the three-Scheme paradigm experiment.
 
-- **010-dispatch-proc-core** — the procedural binding: the class plan/exports/dedup
-  machinery (ported from chez), the `begin-ffi` dispatch block (per-signature
-  `define-c-lambda` dedup, inline-cast `objc_msgSend`, `___CAST`/`___return` for
-  const returns, struct-by-value `c-define-type`s), the proc-core procedures over
-  `objc-obj`, constructors (default + explicit), and properties (getter/setter).
-  Wired into `emit_framework`; crate compiles; tests cover a method, a
-  struct-returning method, a property, the default + an explicit constructor.
-- **020-veneer-and-errors** — the layers on top: the opt-in `:std/generic`
-  `(defmethod (sel (o objc-obj)) …)` veneer over each emitted proc (+ export
-  wiring), and the `(values result error)` error model for trailing `NSError**`
-  methods (`method_filter` adjustment + in-Gerbil out-param `define-c-lambda`
-  shape + the `nserror` runtime contract, inbox-noted to 050).
+Re-grilled with the user → **ADR-0020** (supersedes ADR-0018), spike-validated by
+`07-dual-surface.ss` (FINDINGS §7). New object model:
 
-The Done-when below is the **union** of the two children's done-bars (the
-040-node acceptance for the class emitter).
+1. **Manifest the full ObjC class graph** as a `defclass` hierarchy (full ancestor
+   chain, incl. unbound intermediates — matches Apple docs; `NSObject` = runtime
+   root; each class defined once in its owning framework's module).
+2. **Both dispatch surfaces over it**, sharing identifiers: built-in `{sel obj}`
+   MOP *and* `:std/generic` `(sel obj)`, both forwarding to an inlinable
+   per-class **proc core** that bottoms out in leaf-010's `%msg-…` crossings.
+3. **Transparent extensible subclassing:** `(defclass (MyView NSView) …)` +
+   overrides synthesizes a real ObjC subclass (runtime, node 050). The emitter
+   side here just emits each `defclass` with its ObjC class name + parent so the
+   runtime synthesis bridge + wrap registry have what they need.
+4. **Error model** `(values result error)` unchanged (ADR-0006), layered on the
+   procs (so both surfaces inherit it).
 
-## Goal
+**What survives from 010 (done):** the per-signature `%msg-…` `define-c-lambda`
+crossings, selector caches, signature dedup, `begin-ffi`/geometry decls,
+`method_filter`, the class-plan/dedup machinery. **What 010 built that gets
+rewritten:** the single-`objc-obj` proc/constructor/property *surface* over the
+opaque handle — re-targeted onto the typed `defclass` graph.
 
-Write `emit_class.rs` — the dispatch core of the emitter. One ObjC class →
-one Gerbil module of: per-signature `define-c-lambda` msgSend bindings, a
-procedural-core procedure per emitted method over the single `objc-obj` handle,
-constructors, properties, and the opt-in `:std/generic` veneer. Wire it into
-`emit_framework` (the class loop + the `main` re-export entry).
+## New decomposition (live leaves)
+
+- **030-manifest-class-graph** — emit the `defclass` hierarchy: build the type
+  graph from bound classes ∪ their full ancestor chains; emit each class once in
+  its owning framework module (`(defclass (<Class> <Super>) …)`, root carries the
+  `ptr` slot); bare nodes for unbound intermediates; cross-framework parent ⇒
+  import; the class-name↔Gerbil-type **registry** the wrap boundary uses; each
+  class carries its ObjC name (registry + runtime subclassing). The structural
+  foundation the surfaces hang on.
+- **040-consumption-surfaces** — over the graph: the inlinable **proc core**
+  (one impl per method) + **both** surfaces (`{sel self}` built-in and
+  `(sel (o <Class>))` `:std/generic`, shared identifiers, the `g:defmethod`
+  rename), constructors (return typed instances), properties (getter/setter on
+  both surfaces). Export + facade wiring.
+- **050-error-model** — `(values result error)` for trailing-`NSError**` methods:
+  `method_filter` change + the in-Gerbil out-param crossing + the `nserror`
+  runtime contract (inbox-noted to node 050). Carries the detailed contract
+  worked out in the retired `020-veneer-and-errors` leaf.
+
+## Goal (node)
+
+`emit_class.rs` emits one Gerbil `.ss` module per ObjC class: the class's slice of
+the manifest `defclass` graph, the proc core + dual consumption surfaces over it,
+constructors, properties, and `(values result error)` for fallible methods —
+wired into `emit_framework`. The node Done-when is the union of the three live
+leaves' Done-whens.
 
 ## Context
 
-Node brief + design spec §3 (dispatch), §3a (object model), §4 (FFI compilation).
-ADR-0017 (per-signature `define-c-lambda`, ObjC-in-gsc core), ADR-0018 (procedural
-core + `:std/generic` veneer over one `objc-obj`), ADR-0006/§error-model
-(`(values result error)`). Reference: `emit-chez/src/emit_class.rs` (1,208 lines —
-`build_class_plan`, `collect_exports`, `dedupe_across_categories`, `emit_method`,
-`emit_constructor`, `emit_default_constructor`, `emit_property`, the
-returns-retained / init-family logic). Foundation from leaf 010
-(`naming`, `ffi_type_mapping`, `method_filter`, `shared_signatures`).
-
-## Done when
-
-- `generate_class_file(cls, framework) -> String` and `class_exports(cls) ->
-  Vec<String>` exist (the two entry points `emit_framework` calls), mirroring
-  chez's `generate_class_file_with_exports` single-pass shape.
-- **Dispatch:** one typed `define-c-lambda` per **distinct method ABI signature**
-  (group via the 010 `shared_signatures` key — do not emit a duplicate crossing
-  per selector), inside a `begin-ffi` block. Body is an **inline-cast
-  `objc_msgSend`** (arm64 forbids variadic msgSend — cast to the exact prototype),
-  with `___CAST`/`___return` for `const`-qualified returns to avoid `cast-qual`
-  warnings (FINDINGS §1). C-safe headers (`<objc/runtime.h>`, `<objc/message.h>`,
-  CoreGraphics) declared; the unit is compiled `-x objective-c` (the cc-option is
-  a runtime/CLI build concern — emit the source assuming it).
-- **Procedural core (hot path):** a plain procedure per supported method, keyed
-  per class (`<class>-<selector>`), taking/returning the `objc-obj` handle
-  (`(defstruct objc-obj (ptr))` lives in the runtime — emit calls to its
-  constructor/accessor by the runtime's agreed names; if unknown, inbox-note 050).
-  `id`-typed returns wrapped through the runtime's `wrap`/lifetime entry.
-- **OO veneer (opt-in):** for each method also emit a `:std/generic`
-  `(defmethod (<selector> (o objc-obj)) …)` dispatching to the proc-core
-  procedure — the 29.4 ns veneer, NOT Gerbil built-in `{}` dispatch (CONTEXT.md,
-  ADR-0018). Veneer is additive; the proc core is the foundation.
-- **Constructors:** explicit `initX:` → `make-<class>-…`; synthesize a default
-  `make-<class>` (alloc+init) when no explicit initializer, like chez's
-  `emit_default_constructor`. Honour `returns_retained` / init-family ownership.
-- **Properties:** getter + `…-set-x!` setter; skip unsupported struct-valued
-  properties (per `method_filter`).
-- **Error model:** a method whose ObjC signature ends in `NSError**` returns
-  `(values result error)` (`#f` on success, an `nserror` on failure) — `let-values`
-  at call sites. ADR-0006 applied to gerbil.
-- Export-name collision handling across categories/properties (port chez's
-  `dedupe_across_categories` safety net).
-- `emit_framework` writes one module per class and adds it to the `main`
-  re-export. Crate compiles; unit tests cover a representative class (a method,
-  a struct-returning method, an `NSError**` method, a property, the default
-  constructor) the way chez's `emit_class` tests do.
+Design spec §3/§3a/§4; **ADR-0020** (object model — primary), ADR-0017 (dispatch +
+native core), ADR-0019 (lifetime), ADR-0006 (errors). FINDINGS §7 (dual-surface
+spike). Reference: `emit-chez/src/emit_class.rs` (class-plan/dedup machinery is
+target-neutral) and racket's `dynamic-class.rkt` / `define-objc-subclass` (the
+subclassing prior art the runtime mirrors). Foundation from leaf 010.
 
 ## Notes
 
-**May itself decompose.** If one session can't carry dispatch + proc-core +
-veneer + constructors + properties + error-model, decompose into e.g.
-`021-dispatch-and-proc-core`, `022-constructors-properties-veneer-errors`. Decide
-when the session shows it's too big — don't pre-split.
-
-Names the runtime owns (`objc-obj` ctor/accessor, `wrap`, the will/lifetime
-helper, `make-objc-block`, the nserror wrapper) are 050's. Where 020 needs a name
-that isn't settled, pick the obvious one, emit against it, and **inbox-add to 050**
-recording the contract so the runtime matches — rather than blocking.
+Each leaf wires its output into `emit_framework` so the crate compiles + tests
+green at every commit. Names the runtime (node 050) owns — `defclass` root +
+`ptr` accessor, `wrap` (now class-aware), the class registry, `nserror`, the
+synthesis bridge — are settled there; where a leaf needs an unsettled name, pick
+the obvious one, emit against it, and **inbox-add to 050**.

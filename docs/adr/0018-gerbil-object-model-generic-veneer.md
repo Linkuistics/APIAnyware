@@ -1,6 +1,14 @@
 # Gerbil object model: opt-in `:std/generic` veneer over a procedural core
 
-**Status:** accepted
+**Status:** superseded by ADR-0020
+
+> Superseded 2026-06-03 while building leaf 040/020. The single-`objc-obj`
+> handle makes receiver-only generic dispatch **vacuous** (one type ⇒ nothing to
+> dispatch on), collapsing gerbil into "chez with different syntax", and a
+> wrapper-only model cannot **extend** the frameworks (subclass + override). See
+> ADR-0020 (manifest class hierarchy · dual dispatch surface · transparent
+> subclassing) and FINDINGS §7. The dispatch-cost measurements below remain valid
+> and still inform the fast-path layering.
 
 The `gerbil` target exposes its bindings as a **procedural core** — a single
 `(defstruct objc-obj (ptr))` handle plus plain procedures keyed per class — with

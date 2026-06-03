@@ -195,14 +195,17 @@ Racket-CS-C-API alternative).
 
 ## Gerbil native binding mechanism
 
-**`objc-obj` (gerbil)**:
-The single Gerbil `(defstruct objc-obj (ptr))` wrapping an ObjC `id`. The gerbil
-analogue of the shared `objc-object` record — one handle struct, no per-class
-subtypes; generated class files are procedure namespaces keyed per class, not a
-record hierarchy. Lifetime is a Gambit **will** + entry-point autoreleasepool
-(ADR-0019), not a guardian (chez ADR-0007) or finalizer (racket).
-_Avoid_: `objc-object` (that name is the racket/chez record; gerbil's is
-`objc-obj`); a `defclass` hierarchy mirroring the ObjC class graph.
+**Manifest class hierarchy (gerbil)**:
+The gerbil object model (ADR-0020, supersedes ADR-0018): the **full ObjC class
+graph reified as a Gerbil `defclass` hierarchy** (`NSButton : NSControl : NSView
+: NSResponder : NSObject`), full ancestor chain incl. intermediate classes we
+bind no methods of, matching Apple's documented graph. Root is a runtime-owned
+`NSObject` carrying the `ptr` slot; each class defined once by its owning
+framework's module (cross-framework ancestry ⇒ cross-module import). Lifetime is
+a Gambit **will** + entry-point autoreleasepool (ADR-0019).
+_Avoid_: `objc-obj` / a single `(defstruct objc-obj (ptr))` handle (the
+superseded ADR-0018 model — receiver-only dispatch over one type is vacuous);
+"no class graph".
 
 **Generated `define-c-lambda` dispatch (gerbil)**:
 The gerbil outbound-dispatch mechanism: the emitter open-codes one typed
@@ -218,15 +221,30 @@ reuse it (the **precompilation** finding). See ADR-0017.
 _Avoid_: "fat-native dispatch" / "Swift dispatch table" for gerbil (that is
 racket ADR-0013; gerbil keeps the crossing in Gerbil).
 
-**Procedural core / OO veneer (gerbil)**:
-The gerbil two-layer object model (ADR-0018). The **procedural core** is the hot
-path — plain procedures over the `objc-obj` handle (16.3 ns measured). The **OO
-veneer** is an *opt-in* layer of `:std/generic` generic functions
-(`(defmethod (length (o objc-obj)) …)`, 29.4 ns) — chosen over Gerbil's built-in
-`{}` method dispatch (42.8 ns) purely on measured cost. OO is the **veneer, not
-the foundation** (a pure native-OO foundation taxes every call ~4×).
-_Avoid_: built-in `{}` dispatch (measured ~31% slower — rejected); "class
-hierarchy" (the veneer is generic functions over one handle, no graph).
+**Dual dispatch surface / proc core (gerbil)**:
+Over the manifest class hierarchy the emitter exposes **both** Gerbil dispatch
+surfaces (ADR-0020): the built-in `{sel obj}` MOP (42.8 ns) *and* `:std/generic`
+`(sel obj)` generics (29.4 ns), sharing identifiers (spike `07-dual-surface.ss`
+proved no collision — `{}` keys on the method-table symbol, the generic is a
+top-level binding). Both forward to an inlinable **proc core** (`nsstring-length`,
+16.3 ns — DRY substrate + designated fast path) bottoming out in the `%msg-…`
+crossings. OO is the natural **extension** surface, generics the **consumption**
+surface.
+_Avoid_: "OO veneer" / "opt-in single layer" (superseded ADR-0018); calling `{}`
+"rejected" (both surfaces are emitted now).
+
+**Transparent extensible subclassing (gerbil)**:
+The gerbil extension model (ADR-0020): deriving `(defclass (MyView NSView) …)`
+with override methods **transparently synthesizes a real ObjC subclass** at
+runtime (`objc_allocateClassPair` + IMP trampolines + `objc_registerClassPair`)
+so the frameworks dispatch callbacks into the user's Gerbil methods —
+*deriving in Gerbil = deriving in ObjC*. The binding library re-exports
+`defclass`/`defmethod` that **shadow** the built-ins (falling through for
+non-ObjC classes); the runtime owns the libobjc synthesis bridge (gerbil analogue
+of racket's `dynamic-class.rkt`). Promotes dynamic-class synthesis from a
+deferred native-core item to the core of the object model.
+_Avoid_: a detached `define-objc-subclass` macro (that is racket's shape; gerbil
+integrates with `defclass`); "dynamic classes are out of scope / later".
 
 **ObjC-in-gsc native core (gerbil)**:
 The gerbil native core (block/delegate bridges, dynamic classes, lifetime

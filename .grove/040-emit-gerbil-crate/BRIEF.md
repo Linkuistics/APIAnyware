@@ -42,8 +42,11 @@ acceptance is the union of the child leaves' Done-whens:
   `___CAST`/`___return` for `const` returns (FINDINGS §1).
 - **`begin-ffi`** blocks with C-safe headers (`<objc/runtime.h>`,
   `<objc/message.h>`, CoreGraphics); FFI unit compiled `-x objective-c` (§4).
-- **Object model (ADR-0018):** procedure namespaces over the single `objc-obj`
-  handle struct; opt-in `:std/generic` veneer (`(defmethod (sel (o objc-obj)) …)`).
+- **Object model (ADR-0020, supersedes ADR-0018):** the **full ObjC class graph
+  reified as a `defclass` hierarchy**, with **both** dispatch surfaces over it
+  (built-in `{sel obj}` MOP *and* `:std/generic` `(sel obj)`, shared identifiers)
+  forwarding to an inlinable per-class proc core; **transparent extensible
+  subclassing** (`(defclass (MyView NSView) …)` synthesizes a real ObjC subclass).
 - **Error model:** `(values result error)` for trailing-`NSError**` methods
   (ADR-0006 applied to gerbil).
 - Enums/constants/functions in idiomatic Gerbil.
@@ -59,10 +62,12 @@ acceptance is the union of the child leaves' Done-whens:
   green. Settles the Gerbil **module/package layout** (`.ss` filenames, the
   `(import :…/<fw>/<cls>)` form, the `main` re-export shape) since every later
   emitter slots into it.
-- **020** class emitter (`emit_class.rs`) — the heavy one: per-signature
-  `define-c-lambda` dispatch, `begin-ffi`, inline-cast `objc_msgSend`, procedural
-  core over `objc-obj` + opt-in `:std/generic` veneer, constructors, properties,
-  `(values result error)`. May itself decompose. Wire into `emit_framework`.
+- **020** class emitter (`emit_class.rs`) — the heavy one, **re-decomposed after
+  the ADR-0020 object-model pivot** into: 030 manifest `defclass` graph, 040 proc
+  core + dual consumption surfaces (`{}` + `:std/generic`) + constructors +
+  properties, 050 `(values result error)`. (010 dispatch-proc-core done — its
+  `%msg-…` crossings survive; its single-`objc-obj` surface is rewritten onto the
+  graph.) See `020-emit-class/BRIEF.md`. Wire into `emit_framework`.
 - **030** protocol emitter (`emit_protocol.rs`) — delegate-protocol emission.
   Wire in.
 - **040** enums + constants + functions emitters — idiomatic Gerbil. Wire in.
@@ -73,10 +78,11 @@ acceptance is the union of the child leaves' Done-whens:
   §3a object model, §4 C-vs-ObjC FFI, §8 layout).
 - Reference: `generation/crates/emit-chez/src/` (every file has a Gerbil
   counterpart) and `generation/crates/emit/src/` (shared trait/writer reused).
-- Glossary: `CONTEXT.md` — `objc-obj (gerbil)`, `Generated define-c-lambda
-  dispatch (gerbil)`, `Procedural core / OO veneer (gerbil)`, `:std/foreign`.
-- ADRs: 0017 (dispatch + native core), 0018 (object model), 0019 (lifetime),
-  0006 (error model).
+- Glossary: `CONTEXT.md` — `Manifest class hierarchy (gerbil)`, `Generated
+  define-c-lambda dispatch (gerbil)`, `Dual dispatch surface / proc core
+  (gerbil)`, `Transparent extensible subclassing (gerbil)`, `:std/foreign`.
+- ADRs: 0017 (dispatch + native core), **0020 (object model — supersedes 0018)**,
+  0019 (lifetime), 0006 (error model).
 - FINDINGS: `docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md`
   §1 (`___CAST`/const), §4 (struct-by-value, `-x objective-c`).
 

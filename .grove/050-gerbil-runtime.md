@@ -14,24 +14,47 @@ Design: `docs/specs/2026-06-03-gerbil-target-design.md` §5, §6. Reference layo
 `cocoa.sls`, `dispatch.sls`, `cocoa-helpers.sls`, `tests/`). Gerbil analogues, NOT
 copies (ADR-0011 hermetic isolation).
 
+> **Object-model pivot (ADR-0020, supersedes ADR-0018).** This brief predates the
+> pivot; the `objc-obj` single-handle / `:std/generic`-veneer framing below is
+> superseded. The runtime now backs a **manifest `defclass` class graph** with
+> **two dispatch surfaces** and **transparent extensible subclassing** — which
+> promotes dynamic-class synthesis from a deferred native-core item to **core**.
+> Exact contract names re-settle as the 040/020 leaves (030/040/050) land and
+> inbox-note here. This leaf is now larger and **likely decomposes**.
+
 ## Done when
 
-- **`objc` module:** the `objc-obj` handle struct (ADR-0018), `wrap-objc-obj`
-  registering a Gambit **will** sending `release` (ADR-0019), and the
+- **`objc` / class-graph module:** the runtime-owned **`NSObject` root `defclass`**
+  carrying the `ptr` slot + the Gambit **will** sending `release` (ADR-0019); the
+  class-name↔Gerbil-type **registry** + a class-aware `wrap` (`object_getClass` →
+  exact bound type, fallback to nearest bound ancestor); `->ptr` arg coercion; the
   `with-autorelease-pool` entry-point macro.
 - **`ffi` module:** `:std/foreign` seam, arm64 width aliases, the `objc_getClass`/
   `sel_registerName`/`objc_msgSend` plumbing; FFI unit compiled `-x objective-c`.
 - **`types` module:** value marshalling in idiomatic Gerbil (strings, structs,
-  CGRect decomposition per FINDINGS §4), `(values result error)` `nserror` struct.
-- **`:std/generic` veneer support:** the generic-function machinery the emitter's
-  veneer methods bind into.
-- **ObjC native core (ADR-0017):** block/delegate bridges + dynamic-class support
-  authored as Objective-C compiled by gsc (`c-declare`/companion `.m`,
+  CGRect decomposition per FINDINGS §4), the `nserror` struct + the
+  `call-with-nserror-out` helper backing `(values result error)` (contract from
+  leaf 040/020/050).
+- **Dual dispatch surface support (ADR-0020):** the `:std/generic` machinery the
+  generic surface binds into **and** the built-in `{}` MOP surface both work over
+  the emitted `defclass` graph (the rename to avoid the `defmethod` clash).
+- **Transparent subclassing bridge (ADR-0020 — now core, not deferred):** the
+  shadowing `defclass`/`defmethod` forms that, for an ObjC-backed superclass,
+  synthesize a real ObjC subclass (`objc_allocateClassPair` + IMP trampolines
+  inferring signatures from the superclass's ObjC type encodings +
+  `objc_registerClassPair`) routing framework callbacks into the user's Gerbil
+  methods; falling through to the built-ins for non-ObjC classes. Gerbil analogue
+  of racket's `dynamic-class.rkt` / `define-objc-subclass`. **Settle the
+  `class_addMethod`-after-`objc_registerClassPair` ordering** (separate top-level
+  `defmethod`s vs racket's add-all-then-register).
+- **ObjC native core (ADR-0017):** block/delegate bridges + the subclass synthesis
+  bridge authored as Objective-C compiled by gsc (`c-declare`/companion `.m`,
   `-x objective-c`), statically linked. **Main-thread model only** here — the
   foreign-thread story is the 080 threading spike (callbacks may bounce to main as
   a placeholder, like racket ADR-0014).
-- Runtime smoke tests (objc round-trip, lifetime, veneer dispatch) pass via gsc
-  build (CLI smoke; VM-verify is the apps' job).
+- Runtime smoke tests (objc round-trip, lifetime, both dispatch surfaces,
+  a synthesized subclass receiving a framework callback) pass via gsc build (CLI
+  smoke; VM-verify is the apps' job).
 
 ## Contract settled by node 040 (emitter)
 
@@ -55,10 +78,12 @@ The emitter (`emit-gerbil`, leaf 040) fixed these; the runtime must match them:
   analogue), the `nserror` wrapper for `(values result error)`, and a
   string→NSString helper for CFSTR constants. Treat any name a construct-emitter
   leaf emits against as binding on this module.
-- **`:std/generic` veneer:** generated veneer uses `(import :std/generic)`'s
-  `defgeneric`/`defmethod` (NOT the built-in `{}` system — measured slower,
-  ADR-0018); note the rename needed to avoid the built-in `defmethod` clash
-  (`03b-generic-tax.ss` used `(rename-in :std/generic (defmethod g:defmethod))`).
+- **Dual dispatch surface (ADR-0020, supersedes the veneer bullet):** generated
+  code emits **both** the built-in `{sel obj}` MOP surface **and** the
+  `:std/generic` `(sel obj)` surface over the `defclass` graph — `{}` is no longer
+  rejected (ADR-0018's cost-only rejection is superseded; both are offered, proc
+  core is the fast path). Note the rename to avoid the built-in `defmethod` clash
+  (`03b`/`07` used `(rename-in :std/generic (defmethod g:defmethod))`).
 
 ### Exact names emitted by leaf 040/020/010 (dispatch-proc-core)
 
@@ -89,8 +114,10 @@ the struct tags compile and adjust `geometry_decl` in `emit_class.rs` if not.
 Consider hoisting these typedefs into the shared FFI prelude if per-module
 redeclaration proves noisy.
 
-(Sibling leaf 040/020/020 adds the `:std/generic` veneer + the `nserror`
-`(values result error)` contract — those names land here when that leaf runs.)
+(Post-ADR-0020 these names are re-targeted onto the `defclass` graph: leaf
+040/020/030 settles the `NSObject` root + `ptr` accessor + class registry,
+040/020/040 the typed `wrap`/`->ptr` + both surfaces, 040/020/050 the `nserror` +
+`call-with-nserror-out` contract — each inbox-notes here when it runs.)
 
 ## Notes
 
