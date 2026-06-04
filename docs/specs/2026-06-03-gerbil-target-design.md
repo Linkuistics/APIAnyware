@@ -116,6 +116,20 @@ and the ObjC native core (§6) need it anyway. C-safe headers (`<objc/runtime.h>
 types/selectors are available in the ObjC-compiled unit. `const`-qualified returns
 cast via `___CAST`/`___return` to avoid `cast-qual` warnings (FINDINGS §1).
 
+**Umbrella headers for symbol *declarations* (constants + functions).** The class
+emitter needs no framework header — `objc_msgSend` dispatch is dynamic (selector
+strings), so only `<objc/runtime.h>`/`<objc/message.h>` are required. But the
+`constants.ss`/`functions.ss` emitters read/call C symbols *by name* in
+`define-c-lambda` bodies (chez resolves these at link time with `foreign-entry`
+and needs no declaration; Gambit emits real C that names the symbol). So each
+`begin-ffi` block `#include`s the framework **umbrella header**
+(`<Foundation/Foundation.h>`, `<AppKit/AppKit.h>`, `libdispatch` →
+`<dispatch/dispatch.h>`; `shared_signatures::framework_umbrella_header`). These are
+Objective-C and only compile under `-x objective-c` — a hard dependency of the
+data modules on the build flag above, which 060/070 must apply to every generated
+`.ss` → C compile, and which a first sample-app compile must confirm per framework
+(synthetic pseudo-frameworks beyond libdispatch may need an umbrella-map entry).
+
 ## 5. Lifetime model (→ ADR-0019)
 
 **Decision: Gambit `will`s + entry-point `@autoreleasepool`** — the Gambit-idiomatic
