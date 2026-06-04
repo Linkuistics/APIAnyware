@@ -1,28 +1,74 @@
-# 050-gerbil-runtime
-
-**Kind:** work
+# 050-gerbil-runtime — brief
 
 ## Goal
 
 Build the gerbil runtime (`generation/targets/gerbil/runtime/`): the hand-written
-Gerbil modules + the Objective-C native core that the generated bindings sit on.
+Gerbil modules + the Objective-C native core that the generated bindings (emitted
+by node 040) sit on. Under ADR-0020 the runtime owns a **manifest `defclass` class
+graph**, **two dispatch surfaces**, **transparent extensible subclassing** (real
+ObjC subclass synthesis — promoted from deferred to core), the **wills + pool**
+lifetime model (ADR-0019), and the **`(values result error)`** error model
+(ADR-0006). The per-signature `%msg-…` FFI crossings are emitted *inline per class
+module* (node 040), not runtime-owned.
 
 ## Context
 
-Design: `docs/specs/2026-06-03-gerbil-target-design.md` §5, §6. Reference layout:
-`generation/targets/chez/apianyware/runtime/` (`ffi.sls`, `objc.sls`, `types.sls`,
-`cocoa.sls`, `dispatch.sls`, `cocoa-helpers.sls`, `tests/`). Gerbil analogues, NOT
-copies (ADR-0011 hermetic isolation).
+Design: `docs/specs/2026-06-03-gerbil-target-design.md` §4–§6, error model. ADRs
+0017 (dispatch + ObjC-in-gsc core), 0019 (lifetime), 0020 (object model, supersedes
+0018), 0006 (nserror shape). Reference layout (analogues, NOT copies — ADR-0011
+hermetic isolation): `generation/targets/chez/apianyware/runtime/` and racket's
+`runtime/dynamic-class.rkt` (the transparent-subclass analogue).
 
-> **Object-model pivot (ADR-0020, supersedes ADR-0018).** This brief predates the
-> pivot; the `objc-obj` single-handle / `:std/generic`-veneer framing below is
-> superseded. The runtime now backs a **manifest `defclass` class graph** with
-> **two dispatch surfaces** and **transparent extensible subclassing** — which
-> promotes dynamic-class synthesis from a deferred native-core item to **core**.
-> Exact contract names re-settle as the 040/020 leaves (030/040/050) land and
-> inbox-note here. This leaf is now larger and **likely decomposes**.
+Toolchain (spec §1): bottled gerbil at `/opt/homebrew/Cellar/gerbil-scheme/0.18.2`
+for dev/measure; `gxc`/`gxi` are multicall symlinks in its `bin/` (not on PATH).
+FFI/runtime unit compiles **`-x objective-c`** (spec §4). Clear stale
+`~/.gerbil/lib/static/<mod>.o.lock` on hung builds.
+
+## Decomposition
+
+The runtime layers by capability — data plane first (most generated code needs it),
+then the two ObjC-native-core bridges, then a consolidation/verification pass. The
+**binding contracts** the emitter (040) already emits against are recorded verbatim
+in the sections below; every child leaf must honour those exact spellings (or
+co-adjust the emitter + the contract together).
+
+- **010 data-plane** — the `gerbil-bindings` package skeleton (`gerbil.pkg`,
+  `-x objective-c` build config) + the `objc`/`types`/`ffi` runtime modules' data
+  plane: `NSObject` root `defclass` + ptr slot + ADR-0019 will, `register-objc-class!`
+  + class registry, class-aware `wrap`, `->ptr`, `with-autorelease-pool` /
+  `define-entry-point`, the `nserror` record + `call-with-nserror-out`,
+  `string->nsstring` + value/struct marshalling, dual-surface (`:std/generic` +
+  `{}`) import resolution. Resolves the first-compile open items (geometry struct
+  tags, `(declare (inline))` pragma, cross-module generic unification). `make-delegate`
+  / `make-objc-block` / subclass synthesis are stubbed so the package compiles.
+  Smoke: a hand-written class module round-trips NSString/NSMutableArray through
+  wrap/->ptr/pool/will + an `nserror` path, compiled by gxc.
+- **020 native-bridges** — the ObjC native core (`.m` / `c-declare`, `-x objective-c`):
+  `make-objc-block` (block trampolines → Gerbil callback) and `make-delegate` (the
+  monomorphic `objc_allocateClassPair` delegate bridge per the protocol contract
+  below). IMP trampolines marshal per the Gambit FFI token vocabulary. Smoke: a
+  delegate receives a real framework callback.
+- **030 subclass-synthesis** — the transparent extensible subclassing bridge: the
+  shadowing `defclass`/`defmethod` forms that synthesize a real ObjC subclass from
+  an ObjC-backed superclass (`objc_allocateClassPair` + IMP from superclass type
+  encodings + `objc_registerClassPair`), routing framework callbacks into user
+  Gerbil override methods; fall-through for non-ObjC classes. Settles the
+  `class_addMethod`-after-`registerClassPair` ordering. Racket `dynamic-class.rkt`
+  analogue. Smoke: a synthesized `NSView` subclass with a `drawRect:` override
+  receives the framework callback.
+- **040 smoke-suite** — consolidate the runtime smoke tests (objc round-trip,
+  lifetime, both dispatch surfaces, synthesized-subclass callback) into
+  `runtime/tests/`, write the runtime README, and close any open items deferred
+  from 010–030. (VM-verify of real apps is node 070/090's job, not here.)
+
+Threading is **out of scope here** (main-thread-only); the foreign-thread story is
+node 080's spike. Callbacks may bounce to main as a placeholder (racket ADR-0014).
 
 ## Done when
+
+(Each child leaf carries its own done-bar; the node retires when all four land and
+the consolidated smoke suite passes via gxc.) The original aggregate done-bars,
+retained for reference:
 
 - **`objc` / class-graph module:** the runtime-owned **`NSObject` root `defclass`**
   carrying the `ptr` slot + the Gambit **will** sending `release` (ADR-0019); the
