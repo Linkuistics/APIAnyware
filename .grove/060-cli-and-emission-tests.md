@@ -65,3 +65,25 @@ emitter takes a `ClassRegistry` (in `emit-gerbil/src/class_graph.rs`):
   super lives in the base framework) should assert the cross-framework
   `:gerbil-bindings/<owner>/<parent>` import appears — exercising the wired
   registry end-to-end.
+
+### From leaf 050/040 (smoke-suite) — cross-module generic unification (escalated)
+
+The dual-surface emission (ADR-0020, leaf 040/020/040) has each class module
+declare its **own** `(g:defgeneric <bare-sel>)` for every instance selector it
+exposes. Two **unrelated** classes that share a selector name (`count`, `title`,
+`name`, …) therefore export the **same** generic identifier from **different**
+modules; when `emit_framework.rs` builds the framework facade that re-exports
+them, those coincidental collisions clash/collapse. This is **unsound for
+coincidentally-shared selectors** and surfaces only at the full
+emitted-framework build (the runtime smokes each declare one class, so they
+cannot see it — confirmed at 050/040: every smoke is single-class and green).
+
+**Sound fix (the BRIEF's stated direction):** a **shared generics-declaration
+module** — the global selector set declared once (`(g:defgeneric count)` …) and
+imported everywhere — the exact analogue of the cross-framework `ClassRegistry`
+above. Build it in the same CLI pre-pass that builds the registry (it has all
+loaded frameworks in scope), have `emit_class` import it instead of declaring
+per-module `g:defgeneric`s, and have the facade re-export from it. A golden test
+over two unrelated classes sharing a selector should assert a single generic
+declaration site. (ADR-0019's illustrative `wrap-objc-obj` spelling also wants
+reconciling to `wrap` — cosmetic, do alongside.)

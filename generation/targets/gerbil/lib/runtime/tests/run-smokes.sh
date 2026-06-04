@@ -39,11 +39,11 @@ gxc -O -ld-options "-lobjc $BLK_O" \
     "$RT/ffi.ss" "$RT/native-core.ss" "$RT/objc.ss" "$RT/subclass.ss"
 
 rc=0
-for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges smoke-subclass; do
+for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges smoke-subclass smoke-geometry; do
   echo "== $smoke =="
   gxc -exe -o "$OUT/$smoke" -ld-options "$LD" "$HERE/$smoke.ss"
   if "$OUT/$smoke" | sed 's/^/   /'; then :; fi
-  if ! "$OUT/$smoke" | grep -qE 'SMOKE-OK|DUAL-OK|BRIDGES-OK|SUBCLASS-OK'; then
+  if ! "$OUT/$smoke" | grep -qE 'SMOKE-OK|DUAL-OK|BRIDGES-OK|SUBCLASS-OK|GEOMETRY-OK'; then
     echo "   !! $smoke did not report OK"; rc=1
   fi
 done

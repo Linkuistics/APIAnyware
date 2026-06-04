@@ -92,11 +92,15 @@ pub fn is_known_geometry_alias(name: &str) -> bool {
 /// `(c-define-type <token> (struct "<tag>"))` declaration and the `#include`
 /// any `begin-ffi` block referencing that token in an arg/return slot needs.
 /// Shared by the class emitter and the function emitter (both pass geometry
-/// structs by value, FINDINGS §4). The CoreGraphics tokens are confident (spike
-/// §4); the NS-prefixed and affine ones carry their best-known struct tag +
-/// header and are an inbox item for 050/070 (the `-x objective-c` unit makes the
-/// Foundation/QuartzCore tags available, but the exact spelling wants a
-/// gsc-compile confirmation the VM-verify leaf gives).
+/// structs by value, FINDINGS §4). All eight struct-tag + header pairs are
+/// **compile-verified** (leaf 050/040 smoke build, `cc -c` against the SDK):
+/// the CoreGraphics tokens parse as plain C (gcc-15-clean — the existing
+/// runtime path); the NS-prefixed and affine ones require `-x objective-c`
+/// (clang), so a class/function module referencing them inherits the node-055
+/// umbrella-header compiler decision (same clang path as `constants`/
+/// `functions`). The `NSDirectionalEdgeInsets` token's header was corrected
+/// from `<Foundation/NSGeometry.h>` (where it does NOT live) to its real
+/// AppKit home at 050/040.
 pub fn geometry_decl(token: &str) -> Option<(&'static str, &'static str, &'static str)> {
     match token {
         "CGRect" => Some(("CGRect", "CGRect", "<CoreGraphics/CGGeometry.h>")),
@@ -110,10 +114,13 @@ pub fn geometry_decl(token: &str) -> Option<(&'static str, &'static str, &'stati
         )),
         "NSRange" => Some(("NSRange", "_NSRange", "<Foundation/NSRange.h>")),
         "NSEdgeInsets" => Some(("NSEdgeInsets", "NSEdgeInsets", "<Foundation/NSGeometry.h>")),
+        // NSDirectionalEdgeInsets is an AppKit type (compositional-layout
+        // header), NOT a Foundation/NSGeometry one — corrected + compile-
+        // verified at 050/040.
         "NSDirectionalEdgeInsets" => Some((
             "NSDirectionalEdgeInsets",
             "NSDirectionalEdgeInsets",
-            "<Foundation/NSGeometry.h>",
+            "<AppKit/NSCollectionViewCompositionalLayout.h>",
         )),
         "NSAffineTransformStruct" => Some((
             "NSAffineTransformStruct",

@@ -111,6 +111,39 @@ nearest bound ancestor when the dynamic class is unbound (e.g. a string literal'
 *syntax*, only valid in type positions; the registry stores the runtime descriptor
 `NSString::t` + a positional constructor closure `(lambda (p) (make-NSString ptr: p))`.
 
+## Dispatch surfaces & fast-path layering (ADR-0020)
+
+Every bound instance method/property is offered through **two** call surfaces over
+**one** proc core, so a caller picks idiom without paying twice:
+
+```scheme
+(nsstring-length s)   ; proc core      — the fast path, a plain define
+{str-length s}        ; {} MOP surface — Gerbil's built-in object syntax
+(str-length s)        ; :std/generic   — the generic-function surface
+```
+
+The three layers, fastest first:
+
+1. **Proc core** — `(define (<class>-<sel> self …) (%msg-… (NSObject-ptr self) %sel-… …))`.
+   A direct read of the receiver's `ptr` slot + the cached selector + the
+   per-signature `%msg-…` FFI crossing. No dispatch. `(declare (inline))` lets the
+   two surface forwarders inline straight onto it (**confirmed honoured by gsc** at
+   leaf 050/040 — `smoke-dual-surface` compiles + runs green with the pragma; it does
+   not fight the `begin-ffi`/`defclass` forms above it).
+2. **`{}` MOP surface** — `(defmethod {<bare-sel> <Class>} (lambda (self …) (<class>-<sel> self …)))`,
+   Gerbil's built-in method syntax, forwarding to the proc core.
+3. **`:std/generic` surface** — `(g:defmethod (<bare-sel> (o <Class>) …) (<class>-<sel> o …))`,
+   the generic-function surface, also forwarding to the proc core. `:std/generic` is
+   imported **renamed** (`(rename-in :std/generic (defgeneric g:defgeneric) (defmethod
+   g:defmethod))`) so its `defmethod` does not clash with the built-in `{}` `defmethod`;
+   both surfaces share one identifier per selector.
+
+Below the proc core sits the **raw `%msg-…`** per-signature crossing (emitted inline
+per class module in the `begin-ffi` block, not runtime-owned) — the bare
+`objc_msgSend` cast. Class methods + class properties stay **proc-only** (no instance
+receiver to dispatch on). All three smokes' `smoke-dual-surface` asserts the three
+forms agree over a real `-[NSString length]`.
+
 ## Lifetime (ADR-0019)
 
 `wrap` registers a Gambit `will` that sends `objc_release` when the wrapper is
@@ -161,16 +194,46 @@ every `-ld-options` link line (runtime modules + each app exe).
 Stale-lock hazard: a killed `gxc` leaves `~/.gerbil/lib/static/<mod>.o.lock`;
 clear `~/.gerbil/lib/static/<mod>*` before retrying.
 
+## Geometry structs by value (FINDINGS §4, ADR-0020)
+
+Geometry types (`CGRect`/`NSRect`, `CGPoint`, `CGSize`, `CGVector`,
+`CGAffineTransform`, `NSRange`, `NSEdgeInsets`, `NSDirectionalEdgeInsets`,
+`NSAffineTransformStruct`) cross the FFI **by value**, not as pointers: the
+emitter puts a `(c-define-type <Tok> (struct "<tag>"))` + the owning header's
+`#include` into each class/function module's `begin-ffi` block
+(`emit-gerbil/src/ffi_type_mapping.rs::geometry_decl`), and the crossing's plain
+`objc_msgSend` cast returns the struct (arm64: ≤16 bytes in registers, larger via
+the x8 hidden pointer — proven, FINDINGS §4). All eight tag+header pairs are
+**compile-verified** (leaf 050/040):
+
+- The **CoreGraphics** tokens' headers are **plain-C-safe** (gcc-15-clean) and
+  round-trip end-to-end through gsc — `tests/smoke-geometry.ss` (incl. a real
+  `-[NSScreen frame]` struct return).
+- The **NS-prefixed / affine** tokens' headers are **not** C-safe (they pull in
+  ObjC), so a module referencing them needs the `-x objective-c` / `-cc clang`
+  path — the **same** decision node 055 settles for the umbrella headers. Their
+  tag+header spellings are confirmed by a standalone `cc -x objective-c` probe;
+  `NSDirectionalEdgeInsets`'s header was corrected (it lives in
+  `<AppKit/NSCollectionViewCompositionalLayout.h>`, not `<Foundation/NSGeometry.h>`).
+
 ## Tests
 
 `tests/run-smokes.sh` builds + runs the smoke programs (it compiles the clang
-companion and links it into every smoke). Leaf 010 ships `smoke-data-plane.ss`
-(FFI round-trip, class-aware wrap, lifetime will, `call-with-nserror-out` against
-a real failing Cocoa call) and `smoke-dual-surface.ss` (proc core + `{}` MOP +
-`:std/generic`, all agreeing); leaf 020 adds `smoke-native-bridges.ss` (a
-`make-delegate` instance receiving a real `-[NSTimer fire]` target/action, and a
-`make-objc-block` invoked by `-[NSArray enumerateObjectsUsingBlock:]`, args
-marshalled per token); leaf 030 adds `smoke-subclass.ss` (a synthesized `NSView`
-subclass whose `drawRect:`/`isFlipped` overrides receive ObjC-runtime dispatch with
-the correct typed `self`, installed in an `NSWindow`). CLI smoke only — VM-verify of
-real apps is node 070/090.
+companion and links it into every smoke). The suite, consolidated at leaf 050/040:
+
+- `smoke-data-plane.ss` (leaf 010) — FFI round-trip, class-aware `wrap` into the
+  exact bound type, the lifetime will surviving a GC sweep, and
+  `call-with-nserror-out` `(values result error)` against a real failing Cocoa call.
+- `smoke-dual-surface.ss` (leaf 010) — proc core + `{}` MOP + `:std/generic`, all
+  three agreeing over a real `-[NSString length]` (also the `(declare (inline))`
+  confirmation).
+- `smoke-native-bridges.ss` (leaf 020) — a `make-delegate` instance receiving a real
+  `-[NSTimer fire]` target/action, and a `make-objc-block` invoked by
+  `-[NSArray enumerateObjectsUsingBlock:]`, args marshalled per FFI token.
+- `smoke-subclass.ss` (leaf 030) — a synthesized `NSView` subclass whose
+  `drawRect:`/`isFlipped` overrides receive ObjC-runtime dispatch with the correct
+  typed `self`, installed in an `NSWindow`.
+- `smoke-geometry.ss` (leaf 040) — by-value round-trip of the CoreGraphics geometry
+  structs (incl. a real `-[NSScreen frame]` CGRect return), see above.
+
+CLI smoke only — VM-verify of real apps is node 070/090.

@@ -37,6 +37,35 @@ will independently exercise `-gsc-option -cc clang` + `-fblocks` for the runtime
 own ObjC block trampolines — that result is evidence for this decision (run 055
 after 020 lands).
 
+### Also in scope — geometry struct headers (escalated from leaf 050/040)
+
+The umbrella-header / gcc-15-vs-clang split is **not limited to**
+`constants.ss`/`functions.ss`. Any emitted **class/function module** that takes
+or returns an NS-prefixed or affine geometry struct by value (`NSRange`,
+`NSEdgeInsets`, `NSDirectionalEdgeInsets`, `NSAffineTransformStruct`) emits a
+`(c-declare "#include <Foundation/NSRange.h>")` (etc.) into its `begin-ffi`
+block — and those Foundation/AppKit headers are **NOT C-safe** (`@class NSString`
+in `NSObjCRuntime.h`), so they need the same `-x objective-c` / `-cc clang` path.
+Verified at 050/040 by a standalone `cc` probe:
+
+- **plain C (gcc-15 or clang)** — CoreGraphics geometry headers
+  (`<CoreGraphics/CGGeometry.h>`, `<CoreGraphics/CGAffineTransform.h>`) compile
+  clean; the Foundation/AppKit geometry headers do **not**.
+- **`clang -x objective-c`** — all eight geometry struct tags compile
+  (CGRect/CGPoint/CGSize/CGVector/CGAffineTransform + `_NSRange`/NSEdgeInsets/
+  NSDirectionalEdgeInsets/NSAffineTransformStruct). The CG-only subset also
+  round-trips through gsc end-to-end (leaf 050/040 `smoke-geometry.ss`, plain
+  path).
+
+So the per-module compiler selection (option **c**) must key on **geometry
+tokens too**, not just umbrella `#include`s — a class module with an `NSRange`
+arg is a clang-path module even though it includes no framework umbrella. The
+emitter already centralises these headers in `geometry_decl` (`emit-gerbil/src/
+ffi_type_mapping.rs`), so the build config can detect them from the emitted
+`#include` set. One geometry-tag bug was found+fixed at 050/040
+(`NSDirectionalEdgeInsets` lives in `<AppKit/NSCollectionViewCompositional
+Layout.h>`, not `<Foundation/NSGeometry.h>`).
+
 ## Decision space (for the ADR)
 
 - **(a) Mandate a clang-configured gerbil.** Drive the dev bottle via
