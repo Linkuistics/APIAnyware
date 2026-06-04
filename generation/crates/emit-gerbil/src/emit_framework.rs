@@ -27,6 +27,7 @@ use apianyware_macos_types::ir::Framework;
 
 use crate::class_graph::{build_class_graph, ClassRegistry, ParentRef};
 use crate::emit_class::{generate_bare_module, generate_class_file_with_parent};
+use crate::emit_protocol::{generate_protocol_file, protocol_exports};
 use crate::naming::class_module_stem;
 
 /// The Gerbil package every emitted module lives under: an app imports a class
@@ -158,6 +159,32 @@ pub fn emit_framework(
         }
     }
 
+    // Delegate-protocol modules: one `<fw_low>/protocols/<proto>.ss` per ObjC
+    // `@protocol` that declares at least one method (empty marker protocols are
+    // skipped — there is nothing to delegate). Each builds a `make-<proto>`
+    // delegate constructor over the runtime bridge; the facade re-exports them,
+    // renaming on a class/protocol name collision (`is_protocol`).
+    let delegate_protocols: Vec<_> = fw
+        .protocols
+        .iter()
+        .filter(|p| !p.required_methods.is_empty() || !p.optional_methods.is_empty())
+        .collect();
+    if !delegate_protocols.is_empty() {
+        let protocols_dir = output_dir.join(&fw_low).join("protocols");
+        std::fs::create_dir_all(&protocols_dir)?;
+        for proto in &delegate_protocols {
+            let proto_low = class_module_stem(&proto.name);
+            let content = generate_protocol_file(proto, &fw.name);
+            std::fs::write(protocols_dir.join(format!("{proto_low}.ss")), content)?;
+            files_written += 1;
+            submodules.push(SubModule {
+                import_path: SubModule::import_path(&fw_low, &["protocols", &proto_low]),
+                exports: protocol_exports(proto),
+                is_protocol: true,
+            });
+        }
+    }
+
     // Per-framework facade: `<framework>.ss` next to the framework directory.
     let facade = generate_facade_file(&fw.name, &submodules);
     let facade_path = output_dir.join(format!("{fw_low}.ss"));
@@ -166,7 +193,7 @@ pub fn emit_framework(
     Ok(EmitResult {
         files_written: files_written + 1,
         classes_emitted: fw.classes.len(),
-        protocols_emitted: 0,
+        protocols_emitted: delegate_protocols.len(),
         enums_emitted: 0,
         functions_emitted: 0,
         constants_emitted: 0,
@@ -394,6 +421,99 @@ mod tests {
         let leaf = std::fs::read_to_string(tmp.path().join("widgets/leaf.ss")).unwrap();
         assert!(leaf.contains("(defclass (Leaf Mid) () transparent: #t)"));
         assert!(leaf.contains(":gerbil-bindings/widgets/mid"));
+    }
+
+    fn method(sel: &str, ret: &str) -> apianyware_macos_types::ir::Method {
+        use apianyware_macos_types::ir::Method;
+        use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+        Method {
+            selector: sel.into(),
+            class_method: false,
+            init_method: false,
+            params: vec![],
+            return_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive { name: ret.into() },
+            },
+            deprecated: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+            category: None,
+            overrides: None,
+            returns_retained: None,
+            satisfies_protocol: None,
+        }
+    }
+
+    fn protocol(name: &str, optional: Vec<apianyware_macos_types::ir::Method>) -> Protocol {
+        use apianyware_macos_types::ir::Protocol as P;
+        P {
+            name: name.into(),
+            inherits: vec![],
+            required_methods: vec![],
+            optional_methods: optional,
+            properties: vec![],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+        }
+    }
+
+    use apianyware_macos_types::ir::Protocol;
+
+    #[test]
+    fn framework_with_protocol_writes_under_protocols_subdir() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut fw = make_minimal_framework("AppKit");
+        fw.protocols
+            .push(protocol("NSWindowDelegate", vec![method("windowWillClose:", "void")]));
+
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        assert_eq!(res.protocols_emitted, 1);
+
+        let module = tmp.path().join("appkit/protocols/nswindowdelegate.ss");
+        assert!(module.exists());
+        let body = std::fs::read_to_string(&module).unwrap();
+        assert!(body.contains("make-nswindowdelegate"));
+
+        // The facade imports the protocol module and re-exports its names.
+        let facade = std::fs::read_to_string(tmp.path().join("appkit.ss")).unwrap();
+        assert!(facade.contains(":gerbil-bindings/appkit/protocols/nswindowdelegate"));
+        assert!(facade.contains("make-nswindowdelegate"));
+    }
+
+    #[test]
+    fn empty_protocols_are_skipped() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut fw = make_minimal_framework("AppKit");
+        fw.protocols.push(protocol("NSEmptyMarker", vec![]));
+
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        assert_eq!(res.protocols_emitted, 0);
+        assert!(!tmp.path().join("appkit/protocols").exists());
+    }
+
+    #[test]
+    fn class_protocol_name_collision_renames_protocol_in_facade() {
+        // Apple ships class/protocol pairs (e.g. NSAccessibilityElement); the
+        // protocol export is the side that takes the `-protocol` suffix.
+        let tmp = tempfile::tempdir().unwrap();
+        let mut fw = make_minimal_framework("AppKit");
+        fw.classes = vec![class_with("NSAccessibilityElement", "NSObject")];
+        fw.protocols.push(protocol(
+            "NSAccessibilityElement",
+            vec![method("accessibilityFrame", "void")],
+        ));
+
+        emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+
+        let facade = std::fs::read_to_string(tmp.path().join("appkit.ss")).unwrap();
+        // The colliding protocol constructor is renamed; the class keeps its name.
+        assert!(facade.contains("(make-nsaccessibilityelement make-nsaccessibilityelement-protocol)"));
+        assert!(facade.contains("make-nsaccessibilityelement-protocol"));
     }
 
     #[test]
