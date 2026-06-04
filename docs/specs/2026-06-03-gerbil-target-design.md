@@ -39,9 +39,12 @@ The emitter writes the source a Gerbil programmer would actually write:
   Gambit `c-lambda`. One typed `define-c-lambda` per distinct method ABI signature
   (see §3) — the idiomatic, compiled equivalent of chez's per-signature
   `foreign-procedure`.
-- **`define-c-lambda` bodies compile as Objective-C** (§4): the FFI/runtime unit
-  is compiled `-x objective-c` so `@autoreleasepool`, blocks, and real ObjC types
-  are available — needed for lifetime (§5) and bridges (§6) anyway.
+- **`define-c-lambda` bodies compile as plain C under the default gcc-15** (§4,
+  **ADR-0021**): the emitter synthesizes the C declarations its crossings need
+  (ObjC pointers as `void *`; inline plain-C typedefs for the NS-geometry structs)
+  rather than `#include`-ing an Objective-C umbrella header, so no `-x
+  objective-c`. The one genuinely-ObjC unit (block literals) is isolated into a
+  `clang -fblocks` companion (§5/§6, runtime README).
 - **`:std/generic`** generic functions for the opt-in OO veneer (§3, Q2), over a
   single `objc-obj` handle struct (`defstruct`). NO `defclass` graph mirroring the
   ObjC class hierarchy.

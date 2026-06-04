@@ -9,11 +9,16 @@
 //! Symbol resolution differs from chez. chez looks the symbol up at link time
 //! across loaded shared objects (`foreign-procedure "name"`) and needs no
 //! declaration; Gambit emits a real C call `name(args)`, so `name` must be
-//! *declared* — we `#include` the framework umbrella header in the `begin-ffi`
-//! block (Objective-C; compiles because the FFI unit is `-x objective-c`,
-//! design §4). By-value geometry struct args/returns additionally need their
+//! *declared*. Rather than `#include` the framework umbrella header (Objective-C,
+//! which the bottle's default gcc-15 cannot parse), we **synthesize a C
+//! prototype** per function — `extern <ret> NAME(<arg>…);`, spelling ObjC
+//! pointer types as `void *` ([`c_proto_type`]) — so every crossing compiles
+//! under the default compiler with no clang / `-x objective-c` (**ADR-0021**,
+//! superseding design §4). A `bool` slot pulls in the C-safe `<stdbool.h>`.
+//! By-value geometry struct args/returns additionally need their
 //! `(c-define-type … (struct "…"))` declaration (FINDINGS §4), shared with the
-//! class emitter via [`geometry_decl`].
+//! class emitter via [`emit_geometry_decls`] (CoreGraphics headers `#include`d,
+//! NS structs declared inline).
 //!
 //! The bindings are a thin **raw** FFI surface (like chez): an object-returning
 //! C function hands back a raw `(pointer void)`, not a `wrap`ped object — these
@@ -28,8 +33,10 @@ use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Function;
 
-use crate::ffi_type_mapping::{geometry_decl, GerbilFfiTypeMapper};
-use crate::shared_signatures::{framework_umbrella_header, is_libdispatch_unexported};
+use crate::ffi_type_mapping::{
+    c_proto_type, emit_geometry_decls, geometry_decl, GeometryDecl, GerbilFfiTypeMapper,
+};
+use crate::shared_signatures::is_libdispatch_unexported;
 
 /// True if a function can be emitted as a Gambit `define-c-lambda`.
 fn is_emittable(f: &Function) -> bool {
@@ -81,13 +88,18 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
         .collect();
 
     // By-value geometry structs anywhere in an arg/return slot need a
-    // `c-define-type` + header in the begin-ffi prelude.
+    // `c-define-type` + decl (CG header / inline NS struct) in the begin-ffi
+    // prelude. A `bool` slot needs the C-safe `<stdbool.h>` for the prototype.
     let mut seen = HashSet::new();
-    let mut geo: Vec<(&'static str, &'static str, &'static str)> = Vec::new();
+    let mut geo: Vec<GeometryDecl> = Vec::new();
+    let mut needs_stdbool = false;
     for (_, args, ret) in &crossings {
         for tok in args.iter().chain(std::iter::once(ret)) {
+            if tok == "bool" {
+                needs_stdbool = true;
+            }
             if let Some(decl) = geometry_decl(tok) {
-                if seen.insert(decl.0) {
+                if seen.insert(decl.token) {
                     geo.push(decl);
                 }
             }
@@ -119,16 +131,26 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
         write_line!(w, "            {}", f.name);
     }
     w.line("            )");
-    write_line!(
-        w,
-        "  (c-declare \"#include {}\")",
-        framework_umbrella_header(framework)
-    );
-    for (_, _, header) in &geo {
-        write_line!(w, "  (c-declare \"#include {}\")", header);
+    // Synthesized C declarations only — no framework umbrella `#include`
+    // (ADR-0021), so the unit compiles under the default gcc-15.
+    if needs_stdbool {
+        w.line("  (c-declare \"#include <stdbool.h>\")");
     }
-    for (tok, tag, _) in &geo {
-        write_line!(w, "  (c-define-type {} (struct \"{}\"))", tok, tag);
+    emit_geometry_decls(&mut w, &geo);
+    for (f, args, ret) in &crossings {
+        let proto_args: Vec<String> = args.iter().map(|a| c_proto_type(a)).collect();
+        let proto_args = if proto_args.is_empty() {
+            "void".to_string()
+        } else {
+            proto_args.join(", ")
+        };
+        write_line!(
+            w,
+            "  (c-declare \"extern {} {}({});\")",
+            c_proto_type(ret),
+            f.name,
+            proto_args
+        );
     }
     w.blank_line();
 
@@ -186,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn simple_function_emits_define_c_lambda_under_umbrella() {
+    fn simple_function_emits_synthesized_prototype_not_umbrella() {
         let fs = vec![func(
             "TKComputeDistance",
             vec![
@@ -199,14 +221,16 @@ mod tests {
         )];
         let out = generate_functions_file(&fs, "TestKit");
         assert!(out.contains(";;; Generated C function bindings for TestKit"));
-        assert!(out.contains("(c-declare \"#include <TestKit/TestKit.h>\")"));
+        // ADR-0021: synthesized prototype, no umbrella #include.
+        assert!(!out.contains("#include <TestKit/TestKit.h>"));
+        assert!(out.contains("(c-declare \"extern double TKComputeDistance(double, double);\")"));
         assert!(out.contains(
             "(define-c-lambda TKComputeDistance (double double) double \"TKComputeDistance\")"
         ));
     }
 
     #[test]
-    fn zero_arg_function_emits_empty_param_list() {
+    fn zero_arg_function_prototype_uses_void_param_list() {
         let fs = vec![func(
             "TKReset",
             vec![],
@@ -215,7 +239,23 @@ mod tests {
             false,
         )];
         let out = generate_functions_file(&fs, "TestKit");
+        // A zero-arg C prototype spells `(void)`, not `()`.
+        assert!(out.contains("(c-declare \"extern void TKReset(void);\")"));
         assert!(out.contains("(define-c-lambda TKReset () void \"TKReset\")"));
+    }
+
+    #[test]
+    fn bool_slot_pulls_in_stdbool() {
+        let fs = vec![func(
+            "TKToggle",
+            vec![param("on", TypeRefKind::Primitive { name: "bool".into() })],
+            TypeRefKind::Primitive { name: "bool".into() },
+            false,
+            false,
+        )];
+        let out = generate_functions_file(&fs, "TestKit");
+        assert!(out.contains("(c-declare \"#include <stdbool.h>\")"));
+        assert!(out.contains("(c-declare \"extern bool TKToggle(bool);\")"));
     }
 
     #[test]
@@ -246,6 +286,8 @@ mod tests {
     fn function_returning_id_maps_to_raw_pointer() {
         let fs = vec![func("TKMakeWidget", vec![], TypeRefKind::Id, false, false)];
         let out = generate_functions_file(&fs, "TestKit");
+        // ObjC pointer return collapses to `void *` in the synthesized prototype.
+        assert!(out.contains("(c-declare \"extern void * TKMakeWidget(void);\")"));
         assert!(out.contains(
             "(define-c-lambda TKMakeWidget () (pointer void) \"TKMakeWidget\")"
         ));
@@ -255,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn by_value_geometry_emits_c_define_type() {
+    fn by_value_cg_geometry_includes_header_and_struct_proto() {
         let fs = vec![func(
             "TKBounds",
             vec![param(
@@ -269,12 +311,37 @@ mod tests {
         let out = generate_functions_file(&fs, "TestKit");
         assert!(out.contains("(c-define-type CGRect (struct \"CGRect\"))"));
         assert!(out.contains("(c-define-type CGPoint (struct \"CGPoint\"))"));
+        // CoreGraphics headers are C-safe — kept.
         assert!(out.contains("(c-declare \"#include <CoreGraphics/CGGeometry.h>\")"));
+        // The prototype spells the by-value structs as `struct <tag>`.
+        assert!(out.contains("(c-declare \"extern struct CGPoint TKBounds(struct CGRect);\")"));
         assert!(out.contains("(define-c-lambda TKBounds (CGRect) CGPoint \"TKBounds\")"));
     }
 
     #[test]
-    fn libdispatch_uses_dispatch_umbrella_and_skips_unexported() {
+    fn ns_geometry_emits_inline_struct_not_umbrella() {
+        // An NS-prefixed geometry struct gets an ABI-exact inline plain-C decl —
+        // never the non-C-safe Foundation/AppKit header.
+        let fs = vec![func(
+            "TKMakeRange",
+            vec![param("len", TypeRefKind::Primitive { name: "uint64".into() })],
+            TypeRefKind::Struct { name: "NSRange".into() },
+            false,
+            false,
+        )];
+        let out = generate_functions_file(&fs, "TestKit");
+        assert!(out.contains(
+            "(c-declare \"struct _NSRange { unsigned long location; unsigned long length; };\")"
+        ));
+        assert!(out.contains("(c-define-type NSRange (struct \"_NSRange\"))"));
+        assert!(!out.contains("#include <Foundation/"));
+        assert!(out.contains(
+            "(c-declare \"extern struct _NSRange TKMakeRange(unsigned long long);\")"
+        ));
+    }
+
+    #[test]
+    fn libdispatch_synthesizes_prototypes_and_skips_unexported() {
         let fs = vec![
             func(
                 "dispatch_async",
@@ -292,7 +359,9 @@ mod tests {
             ),
         ];
         let out = generate_functions_file(&fs, "libdispatch");
-        assert!(out.contains("(c-declare \"#include <dispatch/dispatch.h>\")"));
+        // ADR-0021: no umbrella; synthesized prototype with ObjC ptrs as void *.
+        assert!(!out.contains("#include <dispatch/dispatch.h>"));
+        assert!(out.contains("(c-declare \"extern void dispatch_async(void *, void *);\")"));
         assert!(out.contains("dispatch_async"));
         assert!(!out.contains("dispatch_cancel"));
     }

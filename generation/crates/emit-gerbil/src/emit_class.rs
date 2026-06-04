@@ -112,7 +112,10 @@ use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
-use crate::ffi_type_mapping::{geometry_decl, is_known_geometry_alias, GerbilFfiTypeMapper, POINTER};
+use crate::ffi_type_mapping::{
+    emit_geometry_decls, geometry_decl, is_known_geometry_alias, GeometryDecl, GerbilFfiTypeMapper,
+    POINTER,
+};
 use crate::method_filter::{
     is_error_out_method, is_supported_method, is_supported_method_ctx, returns_object_type,
     returns_void,
@@ -830,15 +833,16 @@ fn collect_signatures(
     by_name.into_values().collect()
 }
 
-/// Geometry struct tokens used anywhere in the class's signatures, with the C
-/// struct tag + header each needs in the `begin-ffi` `c-declare` prelude.
-fn geometry_decls(sigs: &[Signature]) -> Vec<(&'static str, &'static str, &'static str)> {
+/// Geometry struct tokens used anywhere in the class's signatures, each with the
+/// C struct tag + scope (CG header / inline NS struct) it needs in the
+/// `begin-ffi` `c-declare` prelude (ADR-0021).
+fn geometry_decls(sigs: &[Signature]) -> Vec<GeometryDecl> {
     let mut seen = HashSet::new();
     let mut out = Vec::new();
     for sig in sigs {
         for tok in sig.arg_tokens.iter().chain(std::iter::once(&sig.ret_token)) {
             if let Some(decl) = geometry_decl(tok) {
-                if seen.insert(decl.0) {
+                if seen.insert(decl.token) {
                     out.push(decl);
                 }
             }
@@ -960,15 +964,13 @@ fn emit_ffi_block(
     }
     w.line("            )");
 
+    // All C-safe under the default gcc-15 (ADR-0021): objc/CoreGraphics headers
+    // plus inline plain-C decls for the NS geometry structs — no framework
+    // umbrella `#include`.
     w.line("  (c-declare \"#include <objc/runtime.h>\")");
     w.line("  (c-declare \"#include <objc/message.h>\")");
     w.line("  (c-declare \"#include <stdint.h>\")");
-    for (_, _, header) in &geo {
-        write_line!(w, "  (c-declare \"#include {}\")", header);
-    }
-    for (tok, tag, _) in &geo {
-        write_line!(w, "  (c-define-type {} (struct \"{}\"))", tok, tag);
-    }
+    emit_geometry_decls(w, &geo);
     w.blank_line();
 
     w.line("  (define-c-lambda objc_getClass (char-string) (pointer void) \"objc_getClass\")");

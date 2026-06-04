@@ -204,22 +204,27 @@ clear `~/.gerbil/lib/static/<mod>*` before retrying.
 Geometry types (`CGRect`/`NSRect`, `CGPoint`, `CGSize`, `CGVector`,
 `CGAffineTransform`, `NSRange`, `NSEdgeInsets`, `NSDirectionalEdgeInsets`,
 `NSAffineTransformStruct`) cross the FFI **by value**, not as pointers: the
-emitter puts a `(c-define-type <Tok> (struct "<tag>"))` + the owning header's
-`#include` into each class/function module's `begin-ffi` block
-(`emit-gerbil/src/ffi_type_mapping.rs::geometry_decl`), and the crossing's plain
-`objc_msgSend` cast returns the struct (arm64: ≤16 bytes in registers, larger via
-the x8 hidden pointer — proven, FINDINGS §4). All eight tag+header pairs are
-**compile-verified** (leaf 050/040):
+emitter puts a `(c-define-type <Tok> (struct "<tag>"))` + a C-scope decl into each
+class/function module's `begin-ffi` block
+(`emit-gerbil/src/ffi_type_mapping.rs::geometry_decl` + `emit_geometry_decls`),
+and the crossing's plain `objc_msgSend` cast returns the struct (arm64: ≤16 bytes
+in registers, larger via the x8 hidden pointer — proven, FINDINGS §4). Every
+token compiles under the **default gcc-15** (ADR-0021 — no `-x objective-c`):
 
-- The **CoreGraphics** tokens' headers are **plain-C-safe** (gcc-15-clean) and
-  round-trip end-to-end through gsc — `tests/smoke-geometry.ss` (incl. a real
-  `-[NSScreen frame]` struct return).
-- The **NS-prefixed / affine** tokens' headers are **not** C-safe (they pull in
-  ObjC), so a module referencing them needs the `-x objective-c` / `-cc clang`
-  path — the **same** decision node 055 settles for the umbrella headers. Their
-  tag+header spellings are confirmed by a standalone `cc -x objective-c` probe;
-  `NSDirectionalEdgeInsets`'s header was corrected (it lives in
-  `<AppKit/NSCollectionViewCompositionalLayout.h>`, not `<Foundation/NSGeometry.h>`).
+- The **CoreGraphics** tokens' headers are **plain-C-safe** (gcc-15-clean), so the
+  emitter `#include`s them (`GeometryCScope::Header`). They round-trip end-to-end
+  through gsc — `tests/smoke-geometry.ss` (incl. a real `-[NSScreen frame]` struct
+  return).
+- The four **NS-prefixed / affine** tokens' headers are **not** C-safe (they pull
+  in ObjC), so the emitter declares an **inline plain-C tagged struct** instead
+  (`GeometryCScope::InlineStruct`; `CGFloat`→`double`, `NSUInteger`→`unsigned
+  long`), keeping the `(c-define-type Tok (struct "tag"))` crossing. The SDK-exact
+  field layouts (055/020) round-trip by value through the same default-compiler
+  gsc path in `tests/smoke-geometry.ss`. `NSAffineTransformStruct`'s SDK typedef
+  is anonymous-tagged, so the inline form gives it the real
+  `NSAffineTransformStruct` tag the `c-define-type` names;
+  `NSDirectionalEdgeInsets` lives in AppKit (compositional-layout), not
+  Foundation/NSGeometry — the source of its inline field list.
 
 ## Tests
 

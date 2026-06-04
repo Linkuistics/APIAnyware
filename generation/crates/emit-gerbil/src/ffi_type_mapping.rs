@@ -12,18 +12,22 @@
 //! - geometry struct typedefs → a **by-value** `c-define-type` token (e.g.
 //!   `CGRect`), the genuine divergence from chez's by-reference `(& NSRect)`
 //!   ftype-pointers. The matching `(c-define-type <Tok> (struct "<CName>"))`
-//!   declaration is emitted into the `begin-ffi` block by the class emitter
-//!   (leaf 020); this module only produces the token. Struct args/returns pass
-//!   by value — `___arg1.origin.x`, dot not arrow (FINDINGS §4).
+//!   declaration is emitted into the `begin-ffi` block by the class/function
+//!   emitters via [`emit_geometry_decls`]; this module produces the token and
+//!   the [`GeometryDecl`]. Struct args/returns pass by value — `___arg1.origin.x`,
+//!   dot not arrow (FINDINGS §4).
 //!
-//! The FFI unit is compiled `-x objective-c` (design §4), so real ObjC/Cocoa
-//! struct names are available; CoreGraphics (`CGRect`/`CGFloat`) is C-safe. The
-//! NS-prefixed geometry structs (`NSRange`, `NSEdgeInsets`, …) need their
-//! Foundation declaration in scope or a typedef in the `begin-ffi` `c-declare`
-//! prelude — that header/typedef set is the class emitter's call (leaf 020),
-//! noted there.
+//! Every emitted module compiles under the bottle's **default gcc-15** — no
+//! `-x objective-c`, no framework umbrella `#include` (ADR-0021, superseding
+//! design §4). CoreGraphics struct headers (`CGRect`/`CGFloat`) are C-safe, so
+//! they are `#include`d directly; the four NS-prefixed geometry structs
+//! (`NSRange`, `NSEdgeInsets`, `NSDirectionalEdgeInsets`,
+//! `NSAffineTransformStruct`) have Objective-C headers, so the emitter declares
+//! an **ABI-exact plain-C tagged struct inline** instead ([`GeometryCScope`]).
 
+use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
+use apianyware_macos_emit::write_line;
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 /// The opaque-pointer token. ObjC `id`/`Class`/`SEL`, blocks, and raw C
@@ -63,6 +67,21 @@ pub fn c_type_for_token(token: &str) -> &'static str {
         // never through this scalar helper; an opaque pointer is the safe default
         // for any unrecognised token.
         _ => "void *",
+    }
+}
+
+/// The C type a `define-c-lambda` arg/return token reduces to **in a synthesized
+/// function prototype** (ADR-0021). Scalars and pointers defer to
+/// [`c_type_for_token`]; a by-value geometry token spells `struct <tag>` (the
+/// same tag its [`geometry_decl`] `c-define-type` names — valid because the tag
+/// is in C scope, via a CoreGraphics header or an inline plain-C struct). The
+/// real symbol's `CGRect`/`NSRange` typedef is identical to `struct CGRect` /
+/// `struct _NSRange`, so the prototype is ABI-compatible with both Gambit's
+/// by-value marshalling and the exported function.
+pub fn c_proto_type(token: &str) -> String {
+    match geometry_decl(token) {
+        Some(decl) => format!("struct {}", decl.tag),
+        None => c_type_for_token(token).to_string(),
     }
 }
 
@@ -124,46 +143,96 @@ pub fn is_known_geometry_alias(name: &str) -> bool {
     map_geometry_alias(name).is_some()
 }
 
-/// `(token, c-struct-tag, header)` for a by-value geometry struct token — the
-/// `(c-define-type <token> (struct "<tag>"))` declaration and the `#include`
-/// any `begin-ffi` block referencing that token in an arg/return slot needs.
-/// Shared by the class emitter and the function emitter (both pass geometry
-/// structs by value, FINDINGS §4). All eight struct-tag + header pairs are
-/// **compile-verified** (leaf 050/040 smoke build, `cc -c` against the SDK):
-/// the CoreGraphics tokens parse as plain C (gcc-15-clean — the existing
-/// runtime path); the NS-prefixed and affine ones require `-x objective-c`
-/// (clang), so a class/function module referencing them inherits the node-055
-/// umbrella-header compiler decision (same clang path as `constants`/
-/// `functions`). The `NSDirectionalEdgeInsets` token's header was corrected
-/// from `<Foundation/NSGeometry.h>` (where it does NOT live) to its real
-/// AppKit home at 050/040.
-pub fn geometry_decl(token: &str) -> Option<(&'static str, &'static str, &'static str)> {
-    match token {
-        "CGRect" => Some(("CGRect", "CGRect", "<CoreGraphics/CGGeometry.h>")),
-        "CGPoint" => Some(("CGPoint", "CGPoint", "<CoreGraphics/CGGeometry.h>")),
-        "CGSize" => Some(("CGSize", "CGSize", "<CoreGraphics/CGGeometry.h>")),
-        "CGVector" => Some(("CGVector", "CGVector", "<CoreGraphics/CGGeometry.h>")),
-        "CGAffineTransform" => Some((
+/// How a geometry struct's C tag is brought into a `begin-ffi` block's scope
+/// (ADR-0021). CoreGraphics struct headers are C-safe under the default gcc-15,
+/// so they are `#include`d; the NS-prefixed structs have Objective-C headers, so
+/// the emitter declares an ABI-exact plain-C tagged struct inline instead.
+#[derive(Clone, Copy)]
+pub enum GeometryCScope {
+    /// `#include` this C-safe CoreGraphics header to bring the struct tag in.
+    Header(&'static str),
+    /// Emit this inline plain-C `struct <tag> { … };` (the NS structs).
+    InlineStruct(&'static str),
+}
+
+/// A by-value geometry struct token, its C struct tag (the `(c-define-type
+/// <token> (struct "<tag>"))` names it), and how to bring that tag into C scope.
+/// Shared by the class and function emitters (both pass geometry structs by
+/// value, FINDINGS §4) through [`emit_geometry_decls`].
+///
+/// The four inline NS structs are **ABI-exact, SDK-verified** (field order +
+/// width against the macOS SDK headers, 055/020): `NSUInteger → unsigned long`,
+/// `CGFloat → double` on arm64. `NSAffineTransformStruct` is declared by the SDK
+/// as an *anonymous*-tagged typedef, so the inline form gives it a real
+/// `NSAffineTransformStruct` tag (matching the `c-define-type`) — which the old
+/// umbrella-header path lacked. `NSDirectionalEdgeInsets` lives in AppKit's
+/// compositional-layout header, not Foundation/NSGeometry (the source of its
+/// inline field list).
+pub struct GeometryDecl {
+    pub token: &'static str,
+    pub tag: &'static str,
+    pub scope: GeometryCScope,
+}
+
+pub fn geometry_decl(token: &str) -> Option<GeometryDecl> {
+    use GeometryCScope::{Header, InlineStruct};
+    let cg = "<CoreGraphics/CGGeometry.h>";
+    let (token, tag, scope) = match token {
+        "CGRect" => ("CGRect", "CGRect", Header(cg)),
+        "CGPoint" => ("CGPoint", "CGPoint", Header(cg)),
+        "CGSize" => ("CGSize", "CGSize", Header(cg)),
+        "CGVector" => ("CGVector", "CGVector", Header(cg)),
+        "CGAffineTransform" => (
             "CGAffineTransform",
             "CGAffineTransform",
-            "<CoreGraphics/CGAffineTransform.h>",
-        )),
-        "NSRange" => Some(("NSRange", "_NSRange", "<Foundation/NSRange.h>")),
-        "NSEdgeInsets" => Some(("NSEdgeInsets", "NSEdgeInsets", "<Foundation/NSGeometry.h>")),
-        // NSDirectionalEdgeInsets is an AppKit type (compositional-layout
-        // header), NOT a Foundation/NSGeometry one — corrected + compile-
-        // verified at 050/040.
-        "NSDirectionalEdgeInsets" => Some((
+            Header("<CoreGraphics/CGAffineTransform.h>"),
+        ),
+        "NSRange" => (
+            "NSRange",
+            "_NSRange",
+            InlineStruct("struct _NSRange { unsigned long location; unsigned long length; };"),
+        ),
+        "NSEdgeInsets" => (
+            "NSEdgeInsets",
+            "NSEdgeInsets",
+            InlineStruct(
+                "struct NSEdgeInsets { double top; double left; double bottom; double right; };",
+            ),
+        ),
+        "NSDirectionalEdgeInsets" => (
             "NSDirectionalEdgeInsets",
             "NSDirectionalEdgeInsets",
-            "<AppKit/NSCollectionViewCompositionalLayout.h>",
-        )),
-        "NSAffineTransformStruct" => Some((
+            InlineStruct(
+                "struct NSDirectionalEdgeInsets { double top; double leading; double bottom; double trailing; };",
+            ),
+        ),
+        "NSAffineTransformStruct" => (
             "NSAffineTransformStruct",
             "NSAffineTransformStruct",
-            "<Foundation/NSAffineTransform.h>",
-        )),
-        _ => None,
+            InlineStruct(
+                "struct NSAffineTransformStruct { double m11; double m12; double m21; double m22; double tX; double tY; };",
+            ),
+        ),
+        _ => return None,
+    };
+    Some(GeometryDecl { token, tag, scope })
+}
+
+/// Emit the geometry `c-declare` prelude (a C-safe header `#include` or an
+/// inline plain-C struct) and the `c-define-type` token for each geometry struct
+/// a module uses, indented to sit inside a `begin-ffi` block. Shared by the
+/// class and function emitters so both stay ADR-0021-consistent — no module
+/// emits a framework umbrella `#include`. The `c-declare`s precede every
+/// `c-define-type` so the struct tags are in scope when the types are defined.
+pub fn emit_geometry_decls(w: &mut CodeWriter, decls: &[GeometryDecl]) {
+    for d in decls {
+        match d.scope {
+            GeometryCScope::Header(h) => write_line!(w, "  (c-declare \"#include {}\")", h),
+            GeometryCScope::InlineStruct(s) => write_line!(w, "  (c-declare \"{}\")", s),
+        }
+    }
+    for d in decls {
+        write_line!(w, "  (c-define-type {} (struct \"{}\"))", d.token, d.tag);
     }
 }
 

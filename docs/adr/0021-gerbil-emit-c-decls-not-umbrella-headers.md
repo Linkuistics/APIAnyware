@@ -131,11 +131,19 @@ Real Foundation symbols, synthesized `extern`s, default compiler:
 NSCocoaErrorDomain non-null: #t = NSCocoaErrorDomain
 NSURLFileScheme   non-null: #t = file
 NSFoundationVersionNumber = 5026.5            # constants.ss shape
-NSHomeDirectory = /Users/antony              # functions.ss shape
+NSHomeDirectory = /Users/antony              # functions.ss shape (object return)
+NSRange round-trip = {3, 7}                   # functions.ss NS-geometry by value
 i64=42 u64=42 i32=42 dbl=3. flt=3. bool=#t i8=10 str=hello-from-c   # full token table
 ```
 
 The same default gcc-15 invocation that fails on `#include <Foundation/Foundation.h>`
 (`stray '@'`) compiles the synthesized-`extern` module cleanly and the program
-reads the real symbol values. Converted-emitter output is compile-verified for
-constants at leaf 055/010 and for functions + geometry at 055/020.
+reads the real symbol values. The `NSRange` line is the strongest geometry proof:
+an `NSRange` left C as a by-value `struct _NSRange` **return** (`NSRangeFromString`)
+and re-entered as a by-value **arg** (`NSStringFromRange`), spelled only by the
+emitter's inline `struct _NSRange` — identical formatting out confirms the field
+offsets are ABI-exact. Converted-emitter output is compile-verified for constants
+at leaf 055/010 (`examples/dump_foundation_constants.rs`) and for functions +
+geometry at 055/020 (`examples/dump_foundation_functions.rs`); the runtime
+smoke-geometry suite additionally round-trips all four NS structs by value under
+the default compiler.
