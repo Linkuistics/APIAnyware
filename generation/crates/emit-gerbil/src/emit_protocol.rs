@@ -26,10 +26,11 @@
 //! - **Type tokens.** chez's table emitted `void*`-per-param and a small
 //!   return-symbol set; here each param **and** the return reduce through
 //!   [`GerbilFfiTypeMapper`](crate::ffi_type_mapping::GerbilFfiTypeMapper) to a
-//!   real Gambit FFI token (`(pointer void)`, `bool`, `int64`, …). The native
-//!   delegate bridge (leaf 050) reads these as the per-selector marshalling
-//!   spec, so an object param arrives at the bridge as `(pointer void)` for it
-//!   to `wrap`.
+//!   real Gambit FFI token (`(pointer void)`, `bool`, `int64`, …) — EXCEPT an
+//!   ObjC object, emitted as the marker `object` (see [`spec_token`]) so the
+//!   bridge `wrap`s it while passing a raw `(pointer void)` (a `BOOL*`, a block,
+//!   a `SEL`) straight through. The native delegate bridge (leaf 050) reads
+//!   these as the per-selector marshalling spec.
 //!
 //! ## Runtime contract (owned by leaf 050)
 //!
@@ -47,11 +48,31 @@ use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_emit::naming::class_name_to_lowercase;
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::{Method, Protocol};
+use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::GerbilFfiTypeMapper;
 
 /// The runtime module the generated protocol binds against (`make-delegate`).
 const RUNTIME_OBJC_IMPORT: &str = ":gerbil-bindings/runtime/objc";
+
+/// The delegate-bridge spec token for one callback param / return.
+///
+/// Diverges from the plain `define-c-lambda` crossing token in ONE way that the
+/// native bridge needs: an ObjC **object** (`id`/`Class<…>`/`instancetype`) is
+/// emitted as the marker `object`, NOT `(pointer void)`. Both are pointer-width,
+/// but the bridge must `wrap` an object into a bound instance while passing a
+/// *raw* C pointer (`(pointer void)` — a `BOOL*` out-param, a block, a `SEL`)
+/// straight through: `object_getClass` on a non-object pointer dereferences
+/// garbage and crashes (leaf 050/020 finding). Everything else reduces through
+/// the shared [`GerbilFfiTypeMapper`] exactly as the crossings do.
+fn spec_token(t: &TypeRef, is_return: bool, mapper: &GerbilFfiTypeMapper) -> String {
+    match &t.kind {
+        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+            "object".to_string()
+        }
+        _ => mapper.map_type(t, is_return),
+    }
+}
 
 /// Names exported by a protocol module.
 pub fn protocol_exports(proto: &Protocol) -> Vec<String> {
@@ -119,9 +140,9 @@ pub fn generate_protocol_file(proto: &Protocol, framework: &str) -> String {
             let pts: Vec<String> = m
                 .params
                 .iter()
-                .map(|p| mapper.map_type(&p.param_type, false))
+                .map(|p| spec_token(&p.param_type, false, &mapper))
                 .collect();
-            let ret = mapper.map_type(&m.return_type, true);
+            let ret = spec_token(&m.return_type, true, &mapper);
             write_line!(w, "    (\"{}\" ({}) {})", m.selector, pts.join(" "), ret);
         }
         w.line("    ))");
@@ -294,12 +315,13 @@ mod tests {
             vec![],
         );
         let out = generate_protocol_file(&p, "TestKit");
-        // Object param → `(pointer void)`; void/bool/int64 returns idiomatic.
-        assert!(out.contains("(\"didStart:\" ((pointer void)) void)"));
+        // Object param → the `object` marker (the bridge wraps it); void/bool/
+        // int64 returns idiomatic.
+        assert!(out.contains("(\"didStart:\" (object) void)"));
         assert!(out.contains("(\"shouldContinue\" () bool)"));
-        // instancetype return → opaque pointer.
-        assert!(out.contains("(\"produceResult\" () (pointer void))"));
-        assert!(out.contains("(\"numberOfRowsInTableView:\" ((pointer void)) int64)"));
+        // instancetype return → the `object` marker too (a wrappable result).
+        assert!(out.contains("(\"produceResult\" () object)"));
+        assert!(out.contains("(\"numberOfRowsInTableView:\" (object) int64)"));
     }
 
     #[test]

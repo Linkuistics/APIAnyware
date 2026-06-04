@@ -17,19 +17,19 @@
 
 (import :std/foreign)
 (export objc-get-class object-get-class class-get-name class-get-superclass
-        sel-register
+        sel-register sel-get-name
         objc-retain objc-release
         autorelease-pool-push autorelease-pool-pop
-        string->nsstring nsstring->string
-        null-ptr ptr-null?
+        string->nsstring nsstring->string cstr->string
+        null-ptr ptr-null? ptr->int
         msg-id msg-long
         alloc-id-cell id-cell-ref free-cell)
 
 (begin-ffi (objc-get-class object-get-class class-get-name class-get-superclass
-            sel-register objc-retain objc-release
+            sel-register sel-get-name objc-retain objc-release
             autorelease-pool-push autorelease-pool-pop
-            string->nsstring nsstring->string
-            null-ptr ptr-null?
+            string->nsstring nsstring->string cstr->string
+            null-ptr ptr-null? ptr->int
             msg-id msg-long
             alloc-id-cell id-cell-ref free-cell)
   (c-declare "#include <objc/runtime.h>")
@@ -57,6 +57,10 @@
     "___return((void*)class_getSuperclass((Class)___arg1));")
   (define-c-lambda sel-register (char-string) (pointer void)
     "___return((void*)sel_registerName(___arg1));")
+  ;; sel_getName: an IMP trampoline (native-core) reads the live SEL back to its
+  ;; selector string to key the per-class dispatch table.
+  (define-c-lambda sel-get-name ((pointer void)) char-string
+    "___return((char*)sel_getName((SEL)___arg1));")
 
   ;; --- lifetime primitives (ADR-0019) --------------------------------------
   (define-c-lambda objc-retain ((pointer void)) (pointer void)
@@ -82,10 +86,20 @@
     "SEL sel = sel_registerName(\"UTF8String\");
      const char* (*send)(id, SEL) = (const char* (*)(id, SEL))objc_msgSend;
      ___return((char*)send((id)___arg1, sel));")
+  ;; A raw `char*` (delivered to a callback as an opaque pointer) → Scheme
+  ;; string — the C-string analogue of `nsstring->string`, used by the native
+  ;; callback bridge's `char-string` param coercion.
+  (define-c-lambda cstr->string ((pointer void)) char-string
+    "___return((char*)___arg1);")
 
   ;; --- pointer helpers ------------------------------------------------------
   (define-c-lambda null-ptr () (pointer void) "___return(NULL);")
   (define-c-lambda ptr-null? ((pointer void)) bool "___return(___arg1 == NULL);")
+  ;; Reinterpret a tagged foreign pointer's bits as a signed machine integer.
+  ;; Two uses in the native core: keying the IMP dispatch table by a class's
+  ;; address, and recovering a callback's integer/bool argument (delivered to a
+  ;; generic all-pointer trampoline as pointer-width bits) per its FFI token.
+  (define-c-lambda ptr->int ((pointer void)) ssize_t "___return((intptr_t)___arg1);")
 
   ;; --- generic msgSend variants (used by call-with-nserror-out to read an
   ;;     NSError's fields; one cast per return shape) --------------------------

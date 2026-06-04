@@ -20,10 +20,11 @@
 
 (import :std/foreign
         :gerbil/gambit                       ; make-will
-        :gerbil-bindings/runtime/ffi)
+        :gerbil-bindings/runtime/ffi
+        :gerbil-bindings/runtime/native-core)
 (export NSObject NSObject? NSObject-ptr make-NSObject
         register-objc-class!
-        wrap ->ptr
+        wrap wrap-borrowed ->ptr
         with-autorelease-pool define-entry-point
         ;; nserror / error model (ADR-0006)
         make-nserror nserror? nserror-domain nserror-code
@@ -87,6 +88,16 @@
         ;; fires at GC, no explicit drain needed, unlike chez's guardian).
         (make-will obj (lambda (dead) (objc-release (NSObject-ptr dead))))
         obj))))
+
+;; `wrap-borrowed` — a class-aware wrap that does NOT retain and registers NO
+;; release will: for an object handed to a callback (a delegate method arg, a
+;; block arg), which we borrow for the callback's dynamic extent only. Keeping
+;; the wrapper past the callback is the caller's risk (cf. racket
+;; `borrow-objc-object`). nil → #f.
+(def (wrap-borrowed ptr)
+  (if (ptr-null? ptr)
+    #f
+    ((registry-ctor-for-class (object-get-class ptr)) ptr)))
 
 ;; Coerce an outbound `id` argument: a bound instance → its raw ptr; #f/nil →
 ;; the C NULL pointer. The proc core reads `self` directly via `(NSObject-ptr
@@ -152,8 +163,136 @@
       (free-cell cell)
       (values result err))))
 
-;; --- native-core stubs (leaves 050/020 + 050/030) -------------------------
-(def (make-delegate . _)
-  (error "make-delegate: native delegate bridge not yet implemented (leaf 050/020)"))
-(def (make-objc-block . _)
-  (error "make-objc-block: native block bridge not yet implemented (leaf 050/020)"))
+;; --- callback bridges (leaf 050/020, ADR-0017 native core) ----------------
+;; Both bridges sit on the native core (`native-core.ss`): a generic C
+;; trampoline re-enters Gerbil and looks the registered closure up. This layer
+;; owns the TOKEN MARSHALLING — turning the emitter's FFI tokens (the same
+;; `GerbilFfiTypeMapper` vocabulary the class crossings use) into the per-arg /
+;; per-return coercion the trampoline cannot do itself.
+
+;; Spec token → coercion class. A token is a Scheme datum from the emitter's
+;; per-selector spec (emit_protocol `spec_token`):
+;;   `object`         — an ObjC object: WRAP it into a bound instance (in) /
+;;                      coerce a bound instance back to a ptr (out).
+;;   `(pointer void)` — a RAW C pointer (a `BOOL*` out-param, a block, a `SEL`):
+;;                      passed straight through, NEVER wrapped (object_getClass
+;;                      on a non-object crashes — leaf 050/020 finding).
+;;   `bool` / intN / `char-string` — scalars.
+;; `float`/`double`/by-value structs are NOT deliverable by the generic
+;; trampoline (FP registers / struct ABI — see native-core.ss); we raise on them
+;; rather than pass garbage, so an unsupported callback signature fails loudly.
+(def (token->kind tok)
+  (cond
+    ((eq? tok 'object) 'obj)
+    ((equal? tok '(pointer void)) 'ptr)
+    ((eq? tok 'void) 'void)
+    ((eq? tok 'bool) 'bool)
+    ((memq tok '(int8 int16 int32 int64
+                 unsigned-int8 unsigned-int16 unsigned-int32 unsigned-int64)) 'long)
+    ((eq? tok 'char-string) 'string)
+    (else
+     (error "native callback bridge: unsupported FFI token in signature" tok))))
+
+;; The ObjC @encode signature string class_addMethod wants: return, self (@),
+;; _cmd (:), then each param. Approximate but consistent — for direct
+;; objc_msgSend IMP dispatch only the arg COUNT / pointer-ness matters; the
+;; runtime uses the string for introspection/forwarding.
+(def (token->encode tok)
+  (case (token->kind tok)
+    ((void) "v") ((obj) "@") ((ptr) "^v") ((bool) "B") ((long) "q") ((string) "*")))
+(def (encode-signature ret-tok param-toks)
+  (string-append (token->encode ret-tok) "@:"
+                 (apply string-append (map token->encode param-toks))))
+
+;; Return token → the int native-core's trampoline `switch`es read. Both an
+;; `object` and a raw `(pointer void)` return are a pointer-width return (kind-id).
+(def (return-kind-int tok)
+  (case (token->kind tok)
+    ((void)     kind-void)
+    ((obj ptr)  kind-id)
+    ((bool)     kind-bool)
+    ((long)     kind-long)
+    (else (error "native callback bridge: unsupported return token" tok))))
+
+;; Coerce one raw trampoline arg (delivered pointer-width) to a Gerbil value.
+(def (coerce-in tok raw)
+  (case (token->kind tok)
+    ((obj)    (wrap-borrowed raw))            ; borrowed object → bound instance
+    ((ptr)    raw)                            ; raw C pointer — passed through
+    ((bool)   (not (ptr-null? raw)))          ; pointer bits as truth
+    ((long)   (ptr->int raw))                 ; pointer bits as integer
+    ((string) (and (not (ptr-null? raw)) (cstr->string raw)))
+    (else (error "native callback bridge: unsupported param token" tok))))
+
+;; Coerce the user proc's result to the C-ready value the trampoline returns.
+(def (coerce-out tok val)
+  (case (token->kind tok)
+    ((void) (void))
+    ((obj)  (->ptr val))                      ; bound instance / #f → ptr / null
+    ((ptr)  (or val (null-ptr)))              ; raw pointer result (or null)
+    ((bool) (and val #t))
+    ((long) val)
+    (else (error "native callback bridge: unsupported return token" tok))))
+
+(def (take-up-to lst n)
+  (let loop ((l lst) (n n) (acc '()))
+    (if (or (##fxzero? n) (null? l))
+      (reverse acc)
+      (loop (cdr l) (##fx- n 1) (cons (car l) acc)))))
+
+;; The closure the trampoline runs: coerce the first `arity` raw args per the
+;; param tokens, apply the user proc, coerce the result per the return token.
+;; Accepts the trampoline's fixed arg tail (4 for IMPs, 3 for blocks) variadically.
+(def (make-callback-closure proc param-toks ret-tok arity)
+  (lambda raw-args
+    (coerce-out ret-tok
+                (apply proc (map coerce-in param-toks (take-up-to raw-args arity))))))
+
+;; `make-delegate` (ADR-0017 §6, contract from emit_protocol). One arg: a list
+;; of `(selector-string proc (param-token …) return-token)` specs. Synthesizes a
+;; fresh ObjC class, installs an IMP per selector dispatching into `proc`, and
+;; returns a +1-retained instance. The caller MUST keep the returned object
+;; reachable: AppKit `setDelegate:` does not retain (ADR-0019); the will then
+;; releases the +1 on GC. The synthesized class + its closures live for the
+;; process (one class per call) — acceptable for the bounded delegate set.
+(def *delegate-class-counter* 0)
+(def (make-delegate specs)
+  (let* ((n *delegate-class-counter*)
+         (class-name (string-append "AWGerbilDelegate_" (number->string n)))
+         (cls (allocate-class-pair class-name "NSObject")))
+    (set! *delegate-class-counter* (##fx+ n 1))
+    (when (ptr-null? cls)
+      (error "make-delegate: objc_allocateClassPair failed" class-name))
+    (for-each
+     (lambda (spec)
+       (let* ((sel        (car spec))
+              (proc       (cadr spec))
+              (param-toks (caddr spec))
+              (ret-tok    (cadddr spec))
+              (arity      (length param-toks)))
+         (when (##fx> arity 4)
+           (error "make-delegate: selector exceeds the 4-arg trampoline cap" sel))
+         (register-imp-closure! cls sel
+                                (make-callback-closure proc param-toks ret-tok arity))
+         (class-add-method cls sel (encode-signature ret-tok param-toks)
+                           (return-kind-int ret-tok))))
+     specs)
+    (register-class-pair cls)
+    (wrap (class-new-instance cls) #t)))
+
+;; `make-objc-block` (ADR-0017 §6). Wraps a Gerbil proc as an ObjC block usable
+;; as a block-typed argument. `param-toks`/`ret-tok` are the inner block
+;; signature's FFI tokens (bridgeable set: scalar / `(pointer void)`; see
+;; `is_bridgeable_block`). A `#f` proc → the null block ("no callback"). Returns
+;; a raw block pointer (already a foreign pointer; passes through `->ptr`).
+;; The closure is rooted by its block-id; the block is not yet released (see
+;; native_block.c lifetime note).
+(def (make-objc-block proc param-toks ret-tok)
+  (if (not proc)
+    (null-ptr)
+    (let ((arity (length param-toks)))
+      (when (##fx> arity 3)
+        (error "make-objc-block: block exceeds the 3-arg trampoline cap"))
+      (let ((id (next-block-id!)))
+        (register-block-closure! id (make-callback-closure proc param-toks ret-tok arity))
+        (make-block id (return-kind-int ret-tok))))))

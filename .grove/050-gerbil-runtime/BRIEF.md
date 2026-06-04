@@ -294,6 +294,36 @@ Both consumption surfaces (`{}` and `:std/generic`) forward to this proc, so the
 return the two values too. Call site:
 `(let-values (((r err) (nsdata-write-to-file-error data "/tmp/x"))) …)`.
 
+### Native bridges settled by leaf 050/020 — LANDED
+
+The two ObjC-native-core callback bridges now exist (replacing the 010 stubs),
+on a new runtime module `:gerbil-bindings/runtime/native-core` (the generic C
+`c-define` trampolines + dispatch tables + class-pair/IMP plumbing — shared with
+030) plus the clang companion `runtime/native_block.c` (the `^` block literals).
+`objc.ss` owns the token marshalling and exports, by these spellings:
+
+- **`(make-delegate specs)`** — `specs` = list of `(selector-string proc
+  (param-token …) return-token)`. Synthesizes an ObjC class, one IMP per
+  selector → `proc`, returns a `+1`-retained instance (caller must root it).
+- **`(make-objc-block proc (param-token …) return-token)`** — wraps a proc as an
+  ObjC block; `#f` proc → null block. (No emitter caller yet; forward contract.)
+- **`wrap-borrowed`** — class-aware wrap with NO retain / NO will, for objects
+  handed to a callback (borrowed for the callback's extent).
+
+**Spec-token reshape (co-adjusted in `emit_protocol.rs`, brief-licensed).** The
+delegate/block spec now emits **`object`** for an ObjC-object param/return,
+distinct from a raw **`(pointer void)`** (a `BOOL*` out-param, a block, a `SEL`):
+the bridge `wrap`s an `object` but passes a raw pointer through — `object_getClass`
+on a non-object crashes. **Known gaps** (documented, not blocking): `float`/
+`double` + by-value struct callback args are not deliverable by the generic
+all-pointer trampoline (the bridge raises on those tokens); IMP arity caps at 4
+method args, blocks at 3. Main-thread only (foreign threads are node 080).
+
+**Build impact for 030 + 060/070.** 030 reuses `allocate-class-pair` /
+`class-add-method` / `register-class-pair` from `native-core`. The build must
+`clang -fblocks -c native_block.c` and add its `.o` to EVERY `-ld-options` line
+(runtime `-O` compile + each app exe) — see `runtime/README.md` "Building".
+
 ## Notes
 
 The two-toolchain rule (spec §1): develop/measure on the bottled gerbil. Clear
