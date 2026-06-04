@@ -26,20 +26,24 @@ echo "== compiling clang companion (native_block.c, -fblocks) =="
 BLK_O="$OUT/native_block.o"
 clang -fblocks -isysroot "$SDKROOT" -c "$RT/native_block.c" -o "$BLK_O"
 
-LD="-lobjc -framework Foundation $BLK_O"
+# AppKit (transitively Foundation) — smoke-subclass synthesizes an NSView subclass
+# and drives it through NSWindow/NSApplication; the others only need Foundation,
+# but linking AppKit everywhere is harmless.
+LD="-lobjc -framework AppKit -framework Foundation $BLK_O"
 
 echo "== compiling runtime modules (static cache) =="
-# Order matters: objc.ss imports native-core.ss imports ffi.ss. native-core's
-# loadable object references the companion's block-maker symbols, so the .o must
-# be on its link line here too.
-gxc -O -ld-options "-lobjc $BLK_O" "$RT/ffi.ss" "$RT/native-core.ss" "$RT/objc.ss"
+# Order matters: subclass.ss imports objc.ss imports native-core.ss imports ffi.ss.
+# native-core's loadable object references the companion's block-maker symbols, so
+# the .o must be on its link line here too.
+gxc -O -ld-options "-lobjc $BLK_O" \
+    "$RT/ffi.ss" "$RT/native-core.ss" "$RT/objc.ss" "$RT/subclass.ss"
 
 rc=0
-for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges; do
+for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges smoke-subclass; do
   echo "== $smoke =="
   gxc -exe -o "$OUT/$smoke" -ld-options "$LD" "$HERE/$smoke.ss"
   if "$OUT/$smoke" | sed 's/^/   /'; then :; fi
-  if ! "$OUT/$smoke" | grep -qE 'SMOKE-OK|DUAL-OK|BRIDGES-OK'; then
+  if ! "$OUT/$smoke" | grep -qE 'SMOKE-OK|DUAL-OK|BRIDGES-OK|SUBCLASS-OK'; then
     echo "   !! $smoke did not report OK"; rc=1
   fi
 done

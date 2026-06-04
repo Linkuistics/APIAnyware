@@ -89,14 +89,20 @@
 ;; returns the C-ready value for its return kind (a foreign pointer for `id`, a
 ;; boolean for `bool`, an integer for `long`); these procs just route + supply a
 ;; benign default when no closure is registered (shouldn't happen post-build).
+;;
+;; `self` is passed THROUGH to the closure as its leading argument (leaf 050/030):
+;; a transparent-subclass override needs the receiver to recover its Gerbil
+;; instance from the back-reference table; a delegate closure simply ignores it
+;; (its `make-imp-callback-closure` drops the leading self). The block dispatchers
+;; below take no self — a block has no receiver.
 (def (imp-dispatch-void self cmd a1 a2 a3 a4)
-  (let (p (imp-lookup self cmd)) (when p (p a1 a2 a3 a4))))
+  (let (p (imp-lookup self cmd)) (when p (p self a1 a2 a3 a4))))
 (def (imp-dispatch-id self cmd a1 a2 a3 a4)
-  (let (p (imp-lookup self cmd)) (if p (p a1 a2 a3 a4) (null-ptr))))
+  (let (p (imp-lookup self cmd)) (if p (p self a1 a2 a3 a4) (null-ptr))))
 (def (imp-dispatch-bool self cmd a1 a2 a3 a4)
-  (let (p (imp-lookup self cmd)) (if p (p a1 a2 a3 a4) #f)))
+  (let (p (imp-lookup self cmd)) (if p (p self a1 a2 a3 a4) #f)))
 (def (imp-dispatch-long self cmd a1 a2 a3 a4)
-  (let (p (imp-lookup self cmd)) (if p (p a1 a2 a3 a4) 0)))
+  (let (p (imp-lookup self cmd)) (if p (p self a1 a2 a3 a4) 0)))
 
 (def (block-dispatch-void id a1 a2 a3)
   (let (p (hash-get *block-table* id)) (when p (p a1 a2 a3))))

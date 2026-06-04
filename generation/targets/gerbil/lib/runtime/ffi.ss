@@ -18,19 +18,24 @@
 (import :std/foreign)
 (export objc-get-class object-get-class class-get-name class-get-superclass
         sel-register sel-get-name
+        class-get-instance-method method-type-encoding
         objc-retain objc-release
         autorelease-pool-push autorelease-pool-pop
         string->nsstring nsstring->string cstr->string
         null-ptr ptr-null? ptr->int
         msg-id msg-long
+        msg-super-void msg-super-id
         alloc-id-cell id-cell-ref free-cell)
 
 (begin-ffi (objc-get-class object-get-class class-get-name class-get-superclass
-            sel-register sel-get-name objc-retain objc-release
+            sel-register sel-get-name
+            class-get-instance-method method-type-encoding
+            objc-retain objc-release
             autorelease-pool-push autorelease-pool-pop
             string->nsstring nsstring->string cstr->string
             null-ptr ptr-null? ptr->int
             msg-id msg-long
+            msg-super-void msg-super-id
             alloc-id-cell id-cell-ref free-cell)
   (c-declare "#include <objc/runtime.h>")
   (c-declare "#include <objc/message.h>")
@@ -61,6 +66,17 @@
   ;; selector string to key the per-class dispatch table.
   (define-c-lambda sel-get-name ((pointer void)) char-string
     "___return((char*)sel_getName((SEL)___arg1));")
+
+  ;; --- subclass-override signature inference (leaf 050/030) ------------------
+  ;; class_getInstanceMethod searches the class AND its superclasses, so the
+  ;; transparent-subclassing bridge reads an INHERITED selector's Method off the
+  ;; ObjC superclass to recover its @encode string — the ABI-exact signature the
+  ;; IMP trampoline + class_addMethod need (the NSRect/CGRect struct encoding is
+  ;; version-sensitive; pulling it from the live superclass is always correct).
+  (define-c-lambda class-get-instance-method ((pointer void) (pointer void)) (pointer void)
+    "___return((void*)class_getInstanceMethod((Class)___arg1,(SEL)___arg2));")
+  (define-c-lambda method-type-encoding ((pointer void)) char-string
+    "___return((char*)method_getTypeEncoding((Method)___arg1));")
 
   ;; --- lifetime primitives (ADR-0019) --------------------------------------
   (define-c-lambda objc-retain ((pointer void)) (pointer void)
@@ -109,6 +125,25 @@
   (define-c-lambda msg-long ((pointer void) (pointer void)) long
     "long (*send)(id, SEL) = (long (*)(id, SEL))objc_msgSend;
      ___return(send((id)___arg1, (SEL)___arg2));")
+
+  ;; --- super-dispatch (leaf 050/030, ADR-0020 "call super then extend") -----
+  ;; `objc_msgSendSuper` against `{ self, <super-class> }`: the receiver stays
+  ;; `self` but the method lookup begins at the SUPERCLASS, so an override body
+  ;; can chain to the inherited implementation. `super-name` is the synthesized
+  ;; class's ObjC superclass (the bound class being subclassed). Argument-passing
+  ;; super-sends are deferred (struct/typed args need per-signature crossings);
+  ;; the void + id zero-arg shapes cover the common `[super drawRect:]`-style and
+  ;; lifecycle chains. void/id return shapes only.
+  (define-c-lambda msg-super-void ((pointer void) char-string (pointer void)) void
+    "struct objc_super sup = { (id)___arg1, objc_getClass(___arg2) };
+     void (*send)(struct objc_super*, SEL) =
+       (void (*)(struct objc_super*, SEL))objc_msgSendSuper;
+     send(&sup, (SEL)___arg3);")
+  (define-c-lambda msg-super-id ((pointer void) char-string (pointer void)) (pointer void)
+    "struct objc_super sup = { (id)___arg1, objc_getClass(___arg2) };
+     id (*send)(struct objc_super*, SEL) =
+       (id (*)(struct objc_super*, SEL))objc_msgSendSuper;
+     ___return((void*)send(&sup, (SEL)___arg3));")
 
   ;; --- NSError** out-param cell (call-with-nserror-out, ADR-0006) -----------
   ;; A heap-allocated id* slot, zeroed: the emitted `%msg-…-e` crossing takes it

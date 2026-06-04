@@ -30,8 +30,9 @@
         make-nserror nserror? nserror-domain nserror-code
         nserror-localised-description nserror-userinfo
         call-with-nserror-out
-        ;; native-core stubs (leaves 020/030)
-        make-delegate make-objc-block)
+        make-delegate make-objc-block
+        ;; token marshalling reused by the transparent-subclass bridge (subclass.ss)
+        token->kind return-kind-int coerce-in coerce-out encode-signature)
 
 ;; Re-export the FFI helpers the generated constants/functions modules call by
 ;; bare name (`string->nsstring`, and the libobjc seam advanced code may want).
@@ -240,11 +241,21 @@
       (reverse acc)
       (loop (cdr l) (##fx- n 1) (cons (car l) acc)))))
 
-;; The closure the trampoline runs: coerce the first `arity` raw args per the
-;; param tokens, apply the user proc, coerce the result per the return token.
-;; Accepts the trampoline's fixed arg tail (4 for IMPs, 3 for blocks) variadically.
+;; The BLOCK closure the trampoline runs: coerce the first `arity` raw args per
+;; the param tokens, apply the user proc, coerce the result per the return token.
+;; A block has no receiver, so the block trampoline passes only its arg tail (3).
 (def (make-callback-closure proc param-toks ret-tok arity)
   (lambda raw-args
+    (coerce-out ret-tok
+                (apply proc (map coerce-in param-toks (take-up-to raw-args arity))))))
+
+;; The IMP closure for a DELEGATE method: the IMP trampoline now passes the
+;; receiver `self` as the leading arg (leaf 050/030), but a delegate proc closes
+;; over its own state and does not want the synthesized delegate instance — so we
+;; DROP the leading self and marshal only the method's visible args. (The
+;; transparent-subclass bridge, by contrast, keeps self — see `subclass.ss`.)
+(def (make-imp-callback-closure proc param-toks ret-tok arity)
+  (lambda (_self . raw-args)
     (coerce-out ret-tok
                 (apply proc (map coerce-in param-toks (take-up-to raw-args arity))))))
 
@@ -273,7 +284,7 @@
          (when (##fx> arity 4)
            (error "make-delegate: selector exceeds the 4-arg trampoline cap" sel))
          (register-imp-closure! cls sel
-                                (make-callback-closure proc param-toks ret-tok arity))
+                                (make-imp-callback-closure proc param-toks ret-tok arity))
          (class-add-method cls sel (encode-signature ret-tok param-toks)
                            (return-kind-int ret-tok))))
      specs)

@@ -324,6 +324,44 @@ method args, blocks at 3. Main-thread only (foreign threads are node 080).
 `clang -fblocks -c native_block.c` and add its `.o` to EVERY `-ld-options` line
 (runtime `-O` compile + each app exe) — see `runtime/README.md` "Building".
 
+### Transparent subclassing settled by leaf 050/030 — LANDED
+
+The shadowing `defclass`/`defmethod`/`new` forms (ADR-0020's centre) live on a
+**new module `:gerbil-bindings/runtime/subclass`** — imported ONLY by user app code
+that subclasses, NOT by generated bindings (the generated graph uses the built-in
+`defclass`; a shadow there would try to synthesize a subclass for every bound
+class). For node **090** (sample apps — drawing-canvas especially): the subclassing
+surface is
+
+```scheme
+(import :gerbil-bindings/appkit/nsview :gerbil-bindings/runtime/subclass)
+(defclass (CanvasView NSView) (slots …))
+(defmethod (CanvasView "drawRect:") (self) …)   ; ObjC selector as a STRING
+(def v (new CanvasView))
+```
+
+Override formals are `(self . deliverable-args)` — omit struct/`float`/`double`
+args (e.g. `drawRect:`'s `CGRect`), which the generic trampoline can't carry.
+`call-super`/`call-super-id` cover zero-arg `[super …]` chains.
+
+**Emitter impact: NONE.** ADR-0020 anticipated the emitter (040) emitting
+superclass *type encodings* for IMP-signature inference; instead the runtime infers
+them **live** from the ObjC superclass (`class_getInstanceMethod` +
+`method_getTypeEncoding`) — always ABI-correct, version-proof, zero emitter
+metadata. So node 040 needs no follow-up for subclassing; the already-emitted
+`defclass` graph + `register-objc-class!` registry are sufficient.
+
+**Native-core change (backward-compatible):** the IMP trampoline now passes the
+receiver `self` to its closure (the override needs it to recover its Gerbil
+instance); delegate closures drop the leading self (`make-imp-callback-closure`).
+The 020 delegate/block smoke still passes. New ffi crossings:
+`class-get-instance-method`, `method-type-encoding`, `msg-super-void`,
+`msg-super-id`. New smoke: `tests/smoke-subclass.ss`.
+
+**Ordering decision:** synthesize+register the class pair at `defclass`; each
+`defmethod` override does a post-registration `class_addMethod` (legal — no ivars).
+Constraint on user/emitted code: an override `defmethod` must follow its `defclass`.
+
 ## Notes
 
 The two-toolchain rule (spec §1): develop/measure on the bottled gerbil. Clear

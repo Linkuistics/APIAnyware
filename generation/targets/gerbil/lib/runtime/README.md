@@ -14,6 +14,7 @@ seeded by leaf 010 (data plane) and expanded by leaf 040 (smoke-suite).
 | `ffi.ss`  | `:gerbil-bindings/runtime/ffi`  | C-safe libobjc seam: class/sel lookup, retain/release, autorelease pool, `string->nsstring`/`nsstring->string`, null + NSError-out-cell helpers. `:std/foreign` `define-c-lambda` crossings — **no separate dylib** (ADR-0017 §6). |
 | `objc.ss` | `:gerbil-bindings/runtime/objc` | The module every generated binding imports. Owns the class-graph root `(defclass NSObject (ptr) …)`, the ObjC-name→constructor registry + class-aware `wrap`/`wrap-borrowed`, `->ptr`, the lifetime `will` (ADR-0019), `with-autorelease-pool` / `define-entry-point`, the `nserror` record + `call-with-nserror-out` (ADR-0006), and the two callback bridges `make-delegate` / `make-objc-block` (the token marshalling on top of `native-core`). Re-exports `ffi.ss`. |
 | `native-core.ss` | `:gerbil-bindings/runtime/native-core` | The ObjC native core (ADR-0017 §6): the generic C trampolines (Gambit `c-define`, one per return shape) that let an ObjC IMP or block call BACK into a runtime-chosen Gerbil closure, the dispatch tables those consult, and the `objc_allocateClassPair`/`class_addMethod`/`objc_registerClassPair` plumbing (shared with leaf 030). C-safe (`<objc/runtime.h>`), gcc-15-clean. |
+| `subclass.ss` | `:gerbil-bindings/runtime/subclass` | Transparent extensible subclassing (ADR-0020, leaf 050/030): the shadowing `defclass`/`defmethod`/`new` forms that synthesize a real ObjC subclass from an ObjC-backed superclass and route framework callbacks into Gerbil overrides. Imported ONLY by user app code that subclasses — NOT by generated bindings (which use the built-in `defclass`). Builds on `native-core`'s class-pair plumbing. |
 | `native_block.c` | — (linked `.o`) | The clang companion: the ObjC block literals (`^`) `make-objc-block` builds. The ONE thing gcc-15 cannot parse, so it is compiled separately by `clang -fblocks` and linked in. Self-contained (the dispatcher is passed in as an opaque fn-pointer), so it links on every link line. |
 
 ### Native callback bridges (leaf 050/020, ADR-0017 §6)
@@ -40,6 +41,66 @@ crashes. Known gaps: the generic trampoline cannot deliver `float`/`double` (FP
 registers) or by-value struct args (the bridge raises on those tokens); IMP arity
 caps at 4 method args, blocks at 3. Main-thread model only (foreign-thread
 activation is node 080).
+
+### Transparent extensible subclassing (leaf 050/030, ADR-0020 — the centre)
+
+*Deriving in Gerbil = deriving in ObjC.* `subclass.ss` re-exports `defclass` /
+`defmethod` / `new` forms that **shadow** Gerbil's built-ins. A user app that wants
+a custom view writes:
+
+```scheme
+(import :gerbil-bindings/appkit/nsview          ; the bound NSView
+        :gerbil-bindings/runtime/subclass)      ; the shadowing forms
+
+(defclass (CanvasView NSView) (strokes))        ; synthesizes a real ObjC subclass
+(defmethod (CanvasView "drawRect:") (self)      ; installs an IMP → framework calls this
+  (render (CanvasView-strokes self)))
+(defmethod (CanvasView "isFlipped") (self) #t)
+
+(def view (new CanvasView))                     ; alloc+init the synthesized class
+```
+
+How it works:
+
+- **`defclass`** expands to the built-in `defclass` (so `CanvasView?`, the extra
+  slots, the inherited `ptr` slot, and the keyword constructor all exist) PLUS a
+  load-time `register-objc-subclass!` that — when the superclass is ObjC-backed —
+  synthesizes and **registers** an `objc_allocateClassPair` subclass. The ObjC
+  super name is `(symbol->string 'NSView)` (Gerbil class id == ObjC name). For a
+  non-ObjC superclass it is a plain Gerbil class (clean fall-through; `new` errors,
+  overrides are no-ops).
+- **`defmethod (Class "objcSelector:")`** installs an IMP via the native core. The
+  signature is **inferred from the ObjC superclass's `method_getTypeEncoding`** —
+  the ABI-exact encoding is used verbatim for `class_addMethod`, and a parsed token
+  list drives the trampoline's arg/return marshalling (objc.ss's shared vocabulary).
+  Override formals are `(self . deliverable-args)`: struct/`float`/`double` args
+  cannot ride the generic pointer-width trampoline, so they are omitted (e.g.
+  `drawRect:`'s `CGRect` — the override is just `(self)`). Any other `defmethod`
+  shape (`{sel Class}` built-in MOP) falls through to the built-in.
+- **`new`** allocs+inits the synthesized class and records a back-reference
+  ObjC-ptr → Gerbil-instance, so the override's `self` is the **typed** Gerbil
+  instance (its slots, its methods), recovered when a framework callback fires.
+- **`call-super` / `call-super-id`** give the common zero-arg `[super …]` chain.
+
+**Registration ordering (the wrinkle ADR-0020 flagged):** the class pair is
+synthesized+registered at `defclass`, and each separate top-level `defmethod`
+override does a **post-registration `class_addMethod`** — legal on a registered
+class (only `class_addIvar` is forbidden after registration, and we add no ivars:
+the Gerbil instance holds the extra slots). The only constraint on user code: an
+override `defmethod` must textually follow its `defclass`. This fits Gerbil's
+separate-top-level-forms model with no deferred bookkeeping (racket's
+`dynamic-class.rkt` batches add-then-register because its bridge is one call).
+
+**Lifetime (main-thread, bounded-instance scope):** the back-reference table is
+strong and the alloc `+1` is held implicitly, so a synthesized instance is
+retained for the **process** — exactly racket's proven drawing-canvas model
+(custom views/controllers are few and app-lifetime). A `dealloc`-driven reclaim is
+the natural future refinement.
+
+**Known gaps** (shared with the callback bridges): struct/`float`/`double` override
+args are not delivered; struct/`float`/`double` override *returns* are unsupported
+(raise at install). Argument-passing super-sends are deferred. Main-thread only
+(foreign-thread activation is node 080).
 
 ## Object model (ADR-0018/0020)
 
@@ -109,4 +170,7 @@ a real failing Cocoa call) and `smoke-dual-surface.ss` (proc core + `{}` MOP +
 `:std/generic`, all agreeing); leaf 020 adds `smoke-native-bridges.ss` (a
 `make-delegate` instance receiving a real `-[NSTimer fire]` target/action, and a
 `make-objc-block` invoked by `-[NSArray enumerateObjectsUsingBlock:]`, args
-marshalled per token). CLI smoke only — VM-verify of real apps is node 070/090.
+marshalled per token); leaf 030 adds `smoke-subclass.ss` (a synthesized `NSView`
+subclass whose `drawRect:`/`isFlipped` overrides receive ObjC-runtime dispatch with
+the correct typed `self`, installed in an `NSWindow`). CLI smoke only — VM-verify of
+real apps is node 070/090.

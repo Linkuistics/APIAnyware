@@ -29,6 +29,12 @@ to discover it.
 
 ## Notes
 
+⚠️ Runtime block-literal companion (from leaf 050/020): every app exe link line must
+include `native_block.o` (clang-compiled from `lib/runtime/native_block.c` with
+`-fblocks`) alongside `-lobjc` and the touched `-framework`s — the runtime's
+`make-objc-block` / native-core references its `aw_make_block_*` symbols. See
+`runtime/README.md` "Building" and the 060 build-config note.
+
 ⚠️ Two-toolchain perf caveat (spec §1, FINDINGS §3b): the static toolchain's `-O`
 Scheme codegen ran ~10× slower than the bottle's. If hello-window feels sluggish,
 that is the prelude-optimisation gap, not the binding — investigate whether the
