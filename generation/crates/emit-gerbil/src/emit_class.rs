@@ -38,6 +38,9 @@
 //!   (nsstring-length o))`, called `(length obj)`. The `(rename-in :std/generic
 //!   (defgeneric g:defgeneric) (defmethod g:defmethod))` import dodges the
 //!   built-in `defmethod` clash (spike `03b`). **Same identifier** as surface 1.
+//!   The generic *itself* (`g:defgeneric length`) is declared ONCE in the shared
+//!   [`crate::emit_generics`] module and imported here — not per class module — so
+//!   a selector shared by unrelated classes is a single generic they all extend.
 //!
 //! Surfaces are emitted only for **instance** methods and **instance** properties
 //! (a receiver to dispatch on); class methods/properties stay proc-only. Because
@@ -95,12 +98,13 @@
 //!   `nserror-localised-description` / `nserror-userinfo`, mirroring chez) — the
 //!   error-model settler the `(values result error)` procs bottom out in
 //!   (contract inbox-noted to 050).
-//! - **The `:std/generic` rename import** + cross-module generic unification: each
-//!   class module currently declares its own `(g:defgeneric <sel>)`, so two
-//!   *unrelated* classes sharing a selector name (e.g. `count`, `title`) collide
-//!   at the framework facade. A shared generics-declaration module (the global
-//!   selector set, like the cross-framework `ClassRegistry`) is the fix — owned by
-//!   the runtime/CLI pre-pass. Captured to 050's inbox.
+//! - **The `:std/generic` rename import** + cross-module generic unification:
+//!   declaring `(g:defgeneric <sel>)` per class module made two *unrelated* classes
+//!   sharing a selector name (e.g. `count`, `title`) export colliding generics at
+//!   the framework facade. **Fixed (leaf 060/020):** the global selector set is
+//!   declared ONCE in the shared [`crate::emit_generics`] module (the analogue of
+//!   the cross-framework `ClassRegistry`), written by the CLI pre-pass; each class
+//!   imports it and extends the single shared generic.
 
 use std::collections::{BTreeSet, HashSet};
 
@@ -133,8 +137,16 @@ const RUNTIME_OBJC_IMPORT: &str = ":gerbil-bindings/runtime/objc";
 /// The `:std/generic` import, renamed so its `defgeneric`/`defmethod` don't clash
 /// with the built-in `{}` MOP `defmethod` (spike `03b`). The generic surface is
 /// emitted with `g:defgeneric` / `g:defmethod`.
-const GENERIC_IMPORT: &str =
+pub(crate) const GENERIC_IMPORT: &str =
     "(rename-in :std/generic (defgeneric g:defgeneric) (defmethod g:defmethod))";
+
+/// The shared global generics module ([`crate::emit_generics`]): every distinct
+/// instance-surface selector across all frameworks is declared ONCE there as a
+/// `:std/generic` generic, so a selector shared by unrelated classes (`count`,
+/// `title`, …) is a single generic they all extend — not N per-module generics
+/// that clash at the framework facade (the cross-module unification fix). A class
+/// imports it to bring those generic identifiers into scope for its `g:defmethod`s.
+pub(crate) const GENERICS_MODULE_IMPORT: &str = ":gerbil-bindings/generics";
 
 /// The root-class `ptr` slot accessor — the direct, fast read of a typed
 /// `defclass` instance's pointer (`(NSObject-ptr self)`), used as the receiver in
@@ -188,6 +200,17 @@ fn merged_exports(cls: &Class, plan: &ClassPlan) -> Vec<String> {
     exports
 }
 
+/// The distinct bare-kebab surface selectors one class contributes to the global
+/// generics set — the same computation [`instance_surface_selectors`] does, but
+/// from a [`Class`] + its error selectors (building the plan internally). Used by
+/// [`crate::emit_generics`] to union the global selector set across frameworks so
+/// the per-class surface and the global declarations stay in lock-step.
+pub(crate) fn class_surface_selectors(cls: &Class, error_selectors: &HashSet<String>) -> Vec<String> {
+    let mapper = GerbilFfiTypeMapper;
+    let plan = build_class_plan(cls, &mapper, error_selectors);
+    instance_surface_selectors(cls, &plan)
+}
+
 /// The distinct bare-kebab surface selectors this class emits a `{}`/generic
 /// method for: its instance methods + instance-property getters/setters. Sorted,
 /// deduped — the generic-declaration block and the export list both consume it.
@@ -229,8 +252,11 @@ pub fn generate_class_file_with_parent(
 
     let needs_default_constructor =
         !has_explicit_constructor(&plan.init_methods.iter().collect::<Vec<&Method>>(), &mapper);
+    // The class extends the shared global generics only when it has an instance
+    // surface — drives whether the generics module is imported in the header.
+    let imports_generics = !instance_surface_selectors(cls, &plan).is_empty();
 
-    emit_header(&mut w, cls, framework, &exports, parent);
+    emit_header(&mut w, cls, framework, &exports, parent, imports_generics);
     emit_class_graph_block(&mut w, &cls.name, &cls.superclass, parent);
     emit_ffi_block(&mut w, cls, &plan, needs_default_constructor, &mapper);
     emit_selector_caches(&mut w, cls, &plan);
@@ -859,6 +885,7 @@ fn emit_header(
     framework: &str,
     exports: &[String],
     parent: &ParentRef,
+    imports_generics: bool,
 ) {
     write_line!(
         w,
@@ -869,6 +896,14 @@ fn emit_header(
     w.line("(import :std/foreign");
     // `:std/generic` (renamed) backs the generic consumption surface.
     write_line!(w, "        {}", GENERIC_IMPORT);
+    // The shared global generics module: the class's `g:defmethod`s extend the
+    // single generic each selector is declared as there (no per-module
+    // `g:defgeneric` → no facade clash between unrelated same-named selectors).
+    // Imported only when the class has an instance surface (else the module may
+    // not exist for an all-empty IR).
+    if imports_generics {
+        write_line!(w, "        {}", GENERICS_MODULE_IMPORT);
+    }
     // The parent's module must be in scope for `(defclass (Self Parent) …)`. The
     // runtime root needs no extra import (it lives in the runtime module already
     // imported below); local/cross-framework parents import their sibling/owning
@@ -1045,24 +1080,24 @@ fn emit_selector_caches(w: &mut CodeWriter, cls: &Class, plan: &ClassPlan) {
 
 /// Declarations shared by the dual consumption surfaces (ADR-0020): the
 /// module-level `(declare (inline))` that lets the surface forwarders inline the
-/// proc core (the designated fast path), then one `(g:defgeneric <sel>)` per
-/// distinct instance surface selector — the `:std/generic` generics the surface
-/// `g:defmethod`s extend. Emitted once, before the procs/surfaces that need them.
+/// proc core (the designated fast path). Emitted once, before the procs/surfaces
+/// that need it, only when the class has an instance surface.
 ///
-/// Each module declaring its own generics means two *unrelated* classes sharing a
-/// selector name collide at the framework facade; a shared global generics module
-/// is the fix (inbox-noted to 050). The built-in `{}` surface needs no
-/// declaration — it dispatches by method-table symbol.
+/// The generics themselves are **not** declared here. Each module declaring its
+/// own `(g:defgeneric <sel>)` made two *unrelated* classes sharing a selector name
+/// export colliding generics at the framework facade; the generics now live ONCE
+/// in the shared [`crate::emit_generics`] module (imported via
+/// [`GENERICS_MODULE_IMPORT`]), and this class's `g:defmethod`s extend those. The
+/// built-in `{}` surface needs no declaration — it dispatches by method-table
+/// symbol.
 fn emit_surface_decls(w: &mut CodeWriter, cls: &Class, plan: &ClassPlan) {
     let selectors = instance_surface_selectors(cls, plan);
     if selectors.is_empty() {
         return;
     }
-    w.line(";; --- Dispatch surfaces (ADR-0020): inlinable proc core + generics ---");
+    w.line(";; --- Dispatch surfaces (ADR-0020): inlinable proc core; generics are");
+    w.line(";;     declared once in :gerbil-bindings/generics and extended below ---");
     w.line("(declare (inline))");
-    for sel in &selectors {
-        write_line!(w, "(g:defgeneric {})", sel);
-    }
     w.blank_line();
 }
 
@@ -1511,7 +1546,11 @@ mod tests {
         assert!(out.contains("(define %sel-nsstring-length (sel_registerName \"length\"))"));
         // dual consumption surfaces, shared identifier `length`, forward to proc
         assert!(out.contains("(declare (inline))"));
-        assert!(out.contains("(g:defgeneric length)"));
+        // The generic is NOT declared per-module any more — it lives once in the
+        // shared :gerbil-bindings/generics module, which this class imports and
+        // extends via g:defmethod.
+        assert!(!out.contains("(g:defgeneric length)"));
+        assert!(out.contains(":gerbil-bindings/generics"));
         assert!(out
             .contains("(defmethod {length NSString} (lambda (self) (nsstring-length self)))"));
         assert!(out.contains("(g:defmethod (length (o NSString)) (nsstring-length o))"));
@@ -1654,9 +1693,12 @@ mod tests {
         assert!(out
             .contains("(%msg-p->v (NSObject-ptr self) %sel-nswindow-set-title (->ptr value))"));
         assert!(out.contains("(define %sel-nswindow-set-title (sel_registerName \"setTitle:\"))"));
-        // Both surfaces over the getter AND the setter, bare-kebab selectors.
-        assert!(out.contains("(g:defgeneric title)"));
-        assert!(out.contains("(g:defgeneric set-title!)"));
+        // Both surfaces over the getter AND the setter, bare-kebab selectors. The
+        // generics are declared once in the shared module (imported here), not
+        // per-module.
+        assert!(!out.contains("(g:defgeneric title)"));
+        assert!(!out.contains("(g:defgeneric set-title!)"));
+        assert!(out.contains(":gerbil-bindings/generics"));
         assert!(out.contains("(defmethod {title NSWindow} (lambda (self) (nswindow-title self)))"));
         assert!(out.contains("(g:defmethod (title (o NSWindow)) (nswindow-title o))"));
         assert!(out.contains(
@@ -1679,9 +1721,11 @@ mod tests {
         assert!(out
             .contains("(wrap (%msg-v->p (objc_getClass \"NSString\") %sel-nsstring-string))"));
         // Class methods are proc-only — no instance receiver to dispatch on, so
-        // no `{}`/generic surface and no generic declaration.
+        // no `{}`/generic surface, no g:defmethod, and (no instance surface at all)
+        // the class does not even import the shared generics module.
         assert!(!out.contains("(defmethod {string NSString}"));
-        assert!(!out.contains("(g:defgeneric string)"));
+        assert!(!out.contains("(g:defmethod (string "));
+        assert!(!out.contains(":gerbil-bindings/generics"));
     }
 
     #[test]
@@ -1763,7 +1807,9 @@ mod tests {
         assert!(out.contains(
             "(g:defmethod (set-object-for-key! (o NSMutableDictionary) object key) (nsmutabledictionary-set-object-for-key! o object key))"
         ));
-        assert!(out.contains("(g:defgeneric set-object-for-key!)"));
+        // The generic is declared once in the shared module, not here.
+        assert!(!out.contains("(g:defgeneric set-object-for-key!)"));
+        assert!(out.contains(":gerbil-bindings/generics"));
     }
 
     #[test]
@@ -1791,10 +1837,12 @@ mod tests {
                 &HashSet::new(),
             )
             .0;
-        // No own method ⇒ no proc, no surface, no generic decl for `length`.
+        // No own method ⇒ no proc, no surface, no g:defmethod for `length`, and
+        // (no instance surface at all) no import of the shared generics module.
         assert!(!out.contains("(define (nsmutablestring-length"));
         assert!(!out.contains("(defmethod {length NSMutableString}"));
-        assert!(!out.contains("(g:defgeneric length)"));
+        assert!(!out.contains("(g:defmethod (length "));
+        assert!(!out.contains(":gerbil-bindings/generics"));
         // ...but the defclass link to the ancestor IS present (inheritance path).
         assert!(out.contains("(defclass (NSMutableString NSString) () transparent: #t)"));
     }

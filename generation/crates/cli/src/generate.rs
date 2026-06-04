@@ -113,6 +113,15 @@ pub fn run_generation(
                 let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
                     &ordered_frameworks,
                 );
+                // Same whole-program shape: the shared global generics module
+                // (`generics.ss`) holds one `:std/generic` generic per distinct
+                // instance-surface selector across every framework, so a selector
+                // shared by unrelated classes is one generic they all extend
+                // (cross-module unification fix). Written once, here.
+                apianyware_macos_emit_gerbil::write_global_generics_module(
+                    &ordered_frameworks,
+                    &out_dir,
+                )?;
                 gerbil_configured = apianyware_macos_emit_gerbil::GerbilEmitter::with_registry(reg);
                 &gerbil_configured
             } else {
@@ -556,6 +565,91 @@ mod tests {
             storage.contains(":gerbil-bindings/foundation/nsmutableattributedstring"),
             "cross-framework parent import should resolve through the wired registry:\n{storage}"
         );
+    }
+
+    fn class_with_method(name: &str, selector: &str) -> Class {
+        Class {
+            name: name.into(),
+            superclass: "NSObject".into(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![Method {
+                selector: selector.into(),
+                class_method: false,
+                init_method: false,
+                params: vec![],
+                return_type: TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Primitive {
+                        name: "uint64".into(),
+                    },
+                },
+                deprecated: false,
+                variadic: false,
+                source: None,
+                provenance: None,
+                doc_refs: None,
+                origin: None,
+                category: None,
+                overrides: None,
+                returns_retained: None,
+                satisfies_protocol: None,
+            }],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        }
+    }
+
+    #[test]
+    fn gerbil_shared_generic_declared_once_across_unrelated_classes() {
+        // Two unrelated classes in two frameworks both expose `count`. The CLI
+        // pre-pass writes a single shared generics.ss with ONE (g:defgeneric
+        // count); each class module imports it rather than re-declaring — the
+        // cross-module generic-unification fix, proven end-to-end.
+        let tmp = tempfile::tempdir().unwrap();
+        let input_dir = tmp.path().join("enriched");
+        let output_dir = tmp.path().join("targets");
+
+        let mut foundation = make_test_framework("Foundation");
+        foundation.classes = vec![class_with_method("NSArray", "count")];
+        let mut coredata = make_test_framework("CoreData");
+        coredata.depends_on = vec!["Foundation".to_string()];
+        coredata.classes = vec![class_with_method("NSFetchRequest", "count")];
+
+        write_test_framework(&input_dir, &foundation);
+        write_test_framework(&input_dir, &coredata);
+
+        let registry = EmitterRegistry::new();
+        let targets = vec!["gerbil".to_string()];
+        run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
+
+        let lib = output_dir.join("gerbil/lib");
+        let generics = std::fs::read_to_string(lib.join("generics.ss")).unwrap();
+        assert_eq!(
+            generics.matches("(g:defgeneric count)").count(),
+            1,
+            "single declaration site for the shared generic:\n{generics}"
+        );
+
+        // Both class modules import the shared module and do NOT declare the generic.
+        for module in ["foundation/nsarray.ss", "coredata/nsfetchrequest.ss"] {
+            let body = std::fs::read_to_string(lib.join(module)).unwrap();
+            assert!(
+                body.contains(":gerbil-bindings/generics"),
+                "{module} should import the shared generics module:\n{body}"
+            );
+            assert!(
+                !body.contains("(g:defgeneric count)"),
+                "{module} must not re-declare the shared generic:\n{body}"
+            );
+            assert!(
+                body.contains("(g:defmethod (count "),
+                "{module} should extend the shared generic:\n{body}"
+            );
+        }
     }
 
     #[test]

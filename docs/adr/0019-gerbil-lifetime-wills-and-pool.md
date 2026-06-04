@@ -35,7 +35,8 @@ Two mechanisms intentionally combined, exactly as ADR-0007:
 
 ## Consequences
 
-- The gerbil `runtime/objc` cluster owns will registration at `wrap-objc-obj` and
+- The gerbil `runtime/objc` cluster owns will registration at `wrap` (the class-
+  aware wrap boundary — the emitter's actual spelling, not chez's `wrap-objc-obj`) and
   the `with-autorelease-pool` entry-point macro. Load-bearing: bugs surface as
   use-after-free or unbounded Activity-Monitor growth (same failure signature as
   the chez guardian).

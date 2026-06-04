@@ -46,6 +46,7 @@ pub mod emit_constants;
 pub mod emit_enums;
 pub mod emit_framework;
 pub mod emit_functions;
+pub mod emit_generics;
 pub mod emit_protocol;
 pub mod ffi_type_mapping;
 pub mod method_filter;
@@ -53,3 +54,4 @@ pub mod naming;
 pub mod shared_signatures;
 
 pub use emit_framework::{GerbilEmitter, GERBIL_TARGET_INFO};
+pub use emit_generics::write_global_generics_module;
