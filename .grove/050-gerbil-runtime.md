@@ -206,6 +206,48 @@ set, declared once and imported everywhere) — the analogue of the cross-framew
 re-export is unsound for coincidentally-shared selectors. (ADR-0019's illustrative
 `wrap-objc-obj` spelling also wants reconciling to `wrap` when the runtime lands.)
 
+### Exact names emitted by leaf 040/020/050 (error model / nserror) — LANDED
+
+gerbil is the **first** target to actually emit the `(values result error)` model
+(ADR-0006); emit-chez reserved the accessor names but never wired emission. The
+emitted class modules now reference two runtime-owned names that this node must
+provide and export from `:gerbil-bindings/runtime/objc`:
+
+- **`call-with-nserror-out`** — the in-Gerbil out-param settler. Contract:
+  - takes one thunk of one argument;
+  - allocates a 1-pointer cell, zeroed (compatible with the Gambit FFI token
+    `(pointer (pointer void))` — a pointer to a `void*` slot; the emitted `-e`
+    crossing `define-c-lambda` takes this cell as its trailing arg and casts it to
+    `NSError**`);
+  - runs `(thunk cell)`; the thunk is the per-method body, which calls the
+    `%msg-…-e` crossing with `cell` as the trailing `%err-cell` arg and returns ONE
+    value (its own result-wrapping already applied — object returns `(wrap …)`,
+    scalar/bool returns bare);
+  - reads the captured `NSError*` pointer out of the cell;
+  - builds an `nserror` from it (or `#f` when the captured pointer is null);
+  - frees the cell;
+  - returns TWO values: `(values <thunk-result> <nserror-or-#f>)`.
+  The error object is **+1/retained-owned** by the caller (mirrors racket's
+  `wrap-objc-object … #:retained #t`): Cocoa hands back an autoreleased/retained
+  `NSError*` through the out-param, so `call-with-nserror-out` owns that retain
+  decision and registers the ADR-0019 lifetime will on the built `nserror`.
+
+- **The `nserror` record + API**, mirroring chez's `(apianyware runtime objc)`
+  exports: `make-nserror` `nserror?` `nserror-domain` `nserror-code`
+  `nserror-localised-description` `nserror-userinfo` (chez spelling is British
+  `localised`; keep it consistent unless this node decides otherwise).
+
+Emitted call shape (witness) — for `-writeToFile:error:` on NSData →
+```
+(define (nsdata-write-to-file-error self path)
+  (call-with-nserror-out
+    (lambda (%err-cell)
+      (%msg-p-pp->b-e (NSObject-ptr self) %sel-nsdata-write-to-file-error (->ptr path) %err-cell))))
+```
+Both consumption surfaces (`{}` and `:std/generic`) forward to this proc, so they
+return the two values too. Call site:
+`(let-values (((r err) (nsdata-write-to-file-error data "/tmp/x"))) …)`.
+
 ## Notes
 
 The two-toolchain rule (spec §1): develop/measure on the bottled gerbil. Clear
