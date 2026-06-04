@@ -35,6 +35,18 @@ include `native_block.o` (clang-compiled from `lib/runtime/native_block.c` with
 `make-objc-block` / native-core references its `aw_make_block_*` symbols. See
 `runtime/README.md` "Building" and the 060 build-config note.
 
+⚠️ Emitted modules use the DEFAULT compiler (from node 055, ADR-0021): the emitter
+never `#include`s a framework umbrella header — it synthesizes the C declaration
+(`extern`/prototype/inline-typedef) for each symbol its `constants.ss`/`functions.ss`/
+geometry crossings name, ObjC pointer types spelled `void *`. **Consequence for the
+build config this node bakes: generated `.ss` → C compiles use the DEFAULT compiler
+(gcc-15) with NO special flags** — no `-cc clang`, no `-x objective-c`, no
+SDKROOT-for-clang. The ONLY non-default compile in the whole build is the
+`native_block.c` companion above. (Proven at 055/010: a real Foundation
+`constants.ss` from the emitter compiled + ran under default gcc-15.)
+`SDKROOT=$(xcrun --sdk macosx --show-sdk-path)` is still exported — gambit needs it
+for the SDK framework paths — but it does not select a compiler.
+
 ⚠️ Two-toolchain perf caveat (spec §1, FINDINGS §3b): the static toolchain's `-O`
 Scheme codegen ran ~10× slower than the bottle's. If hello-window feels sluggish,
 that is the prelude-optimisation gap, not the binding — investigate whether the
