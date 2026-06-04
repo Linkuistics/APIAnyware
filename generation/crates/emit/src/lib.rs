@@ -9,6 +9,7 @@
 pub mod target_emitter;
 pub mod code_writer;
 pub mod doc_rendering;
+pub mod enrichment;
 pub mod ffi_type_mapping;
 pub mod framework_ordering;
 pub mod naming;

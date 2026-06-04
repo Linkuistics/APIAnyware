@@ -495,24 +495,11 @@ pub fn native_dispatch_error_binding(
 }
 
 /// The set of selectors for a class that the analysis stage classified as
-/// **NSError out-param** convenience methods (`ErrorPattern::ErrorOutParam` →
-/// `EnrichmentData::convenience_error_methods`). The emitter and the dispatch
-/// generator both key error-out routing off this set, so they collect the same
-/// `…_e` entries and never drift. Empty when there is no enrichment.
-pub fn class_error_selectors(
-    enrichment: Option<&apianyware_macos_types::enrichment::EnrichmentData>,
-    class_name: &str,
-) -> std::collections::HashSet<String> {
-    match enrichment {
-        None => std::collections::HashSet::new(),
-        Some(data) => data
-            .convenience_error_methods
-            .iter()
-            .filter(|e| e.class == class_name)
-            .map(|e| e.selector.clone())
-            .collect(),
-    }
-}
+/// **NSError out-param** convenience methods. Re-exported from the shared `emit`
+/// crate ([`apianyware_macos_emit::enrichment::class_error_selectors`]): the
+/// classification is target-neutral, so racket and gerbil key error-out routing
+/// off the *same* helper and never drift.
+pub use apianyware_macos_emit::enrichment::class_error_selectors;
 
 /// Whether an instance/class method should route through the **NSError
 /// out-param** native entry (the `…_e` variant): its selector is in the

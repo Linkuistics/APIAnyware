@@ -20,6 +20,7 @@ use std::io;
 use std::path::Path;
 
 use apianyware_macos_emit::code_writer::CodeWriter;
+use apianyware_macos_emit::enrichment::class_error_selectors;
 use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
@@ -129,7 +130,11 @@ pub fn emit_framework(
                 .get(&cls.name)
                 .cloned()
                 .unwrap_or(ParentRef::RuntimeRoot);
-            let (content, exports) = generate_class_file_with_parent(cls, &fw.name, &parent);
+            // The class's NSError out-param selectors (ADR-0006), from the
+            // shared enrichment helper so racket + gerbil key off the same set.
+            let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
+            let (content, exports) =
+                generate_class_file_with_parent(cls, &fw.name, &parent, &error_selectors);
             std::fs::write(class_dir.join(format!("{cls_low}.ss")), content)?;
             files_written += 1;
             submodules.push(SubModule {

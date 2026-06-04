@@ -16,6 +16,8 @@
 //! unconditionally (the reverse C-block → Gerbil-proc direction is not modelled
 //! at this layer).
 
+use std::collections::HashSet;
+
 use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_types::ir::{Method, Param};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
@@ -40,6 +42,39 @@ pub fn is_supported_method(method: &Method, mapper: &dyn FfiTypeMapper) -> bool 
         return false;
     }
     true
+}
+
+/// Whether a method routes to the `(values result error)` error model
+/// (ADR-0006 applied to gerbil): its selector is in the class's
+/// enrichment-derived `error_selectors` set **and** its trailing param is a raw
+/// pointer (the `NSError**` cell — type-level corroboration of the analysis
+/// classification). Gerbil keeps the out-param crossing in Gerbil (ADR-0017),
+/// so the predicate works over the IR directly rather than over a native
+/// dispatch signature the way racket's `is_error_out_routable` does.
+pub fn is_error_out_method(method: &Method, error_selectors: &HashSet<String>) -> bool {
+    error_selectors.contains(&method.selector)
+        && matches!(
+            method.params.last().map(|p| &p.param_type.kind),
+            Some(TypeRefKind::Pointer)
+        )
+}
+
+/// Supportedness honouring NSError out-param routing. An error-out method
+/// ([`is_error_out_method`]) is bindable when its **visible** signature (params
+/// minus the trailing `NSError**` cell) is — so the trailing error pointer is
+/// permitted while any *other* raw pointer in the visible args still defers.
+/// Non-error methods fall through to plain [`is_supported_method`].
+pub fn is_supported_method_ctx(
+    method: &Method,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &HashSet<String>,
+) -> bool {
+    if is_error_out_method(method, error_selectors) {
+        let mut visible = method.clone();
+        visible.params.pop();
+        return is_supported_method(&visible, mapper);
+    }
+    is_supported_method(method, mapper)
 }
 
 pub fn returns_object_type(method: &Method, mapper: &dyn FfiTypeMapper) -> bool {
@@ -201,5 +236,66 @@ mod tests {
             &method("handler", false, false, block),
             &m
         ));
+    }
+
+    // --- NSError out-param routing (leaf 050) ----------------------------
+
+    fn param(name: &str, kind: TypeRefKind) -> Param {
+        Param {
+            name: name.into(),
+            param_type: ty(kind),
+        }
+    }
+
+    fn error_method(selector: &str, visible: Vec<Param>) -> Method {
+        let mut m = method("x", false, false, ty(TypeRefKind::Primitive { name: "bool".into() }));
+        m.selector = selector.into();
+        // Visible args, then the trailing NSError** cell (a raw pointer).
+        m.params = visible;
+        m.params.push(param("error", TypeRefKind::Pointer));
+        m
+    }
+
+    #[test]
+    fn error_out_method_recognised_by_set_and_trailing_pointer() {
+        let mut errs = HashSet::new();
+        errs.insert("writeToFile:error:".to_string());
+        let m = error_method("writeToFile:error:", vec![param("path", TypeRefKind::Id)]);
+        assert!(is_error_out_method(&m, &errs));
+        // Selector not in the set ⇒ not error-routed even with a trailing pointer.
+        assert!(!is_error_out_method(&m, &HashSet::new()));
+        // In the set but no trailing pointer ⇒ not error-routed.
+        let no_ptr = method("writeToFile:error:", false, false, ty(TypeRefKind::Primitive { name: "bool".into() }));
+        assert!(!is_error_out_method(&no_ptr, &errs));
+    }
+
+    #[test]
+    fn trailing_nserror_method_becomes_supported() {
+        let m = GerbilFfiTypeMapper;
+        let mut errs = HashSet::new();
+        errs.insert("writeToFile:error:".to_string());
+        let meth = error_method("writeToFile:error:", vec![param("path", TypeRefKind::Id)]);
+        // Plain supportedness still defers it (the raw trailing pointer).
+        assert!(!is_supported_method(&meth, &m));
+        // Error-context supportedness accepts it (the trailing pointer is the cell).
+        assert!(is_supported_method_ctx(&meth, &m, &errs));
+    }
+
+    #[test]
+    fn non_error_trailing_pointer_still_defers() {
+        let m = GerbilFfiTypeMapper;
+        // Same shape, but the selector is NOT an enrichment error method.
+        let meth = error_method("getBytes:length:", vec![param("buf", TypeRefKind::Id)]);
+        assert!(!is_supported_method_ctx(&meth, &m, &HashSet::new()));
+    }
+
+    #[test]
+    fn error_method_with_other_raw_pointer_param_still_defers() {
+        let m = GerbilFfiTypeMapper;
+        let mut errs = HashSet::new();
+        errs.insert("doThing:error:".to_string());
+        // A non-trailing raw pointer in the visible args is still unbindable.
+        let meth = error_method("doThing:error:", vec![param("raw", TypeRefKind::Pointer)]);
+        assert!(!is_supported_method_ctx(&meth, &m, &errs));
     }
 }

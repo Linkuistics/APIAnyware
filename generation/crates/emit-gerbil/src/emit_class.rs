@@ -49,8 +49,24 @@
 //! The IR-shaping machinery (`build_class_plan`, `collect_exports`,
 //! `dedupe_across_categories`, the property/class-method collision pre-pass) is
 //! ported from `emit-chez/src/emit_class.rs` — it is target-neutral; only the
-//! naming calls and the emitted source forms are Gerbil-specific. Leaf 050 layers
-//! `(values result error)` for trailing-`NSError**` methods.
+//! naming calls and the emitted source forms are Gerbil-specific.
+//!
+//! ## Error model (ADR-0006, leaf 050)
+//!
+//! A method whose selector is in the class's enrichment-derived NSError
+//! out-param set (`error_selectors`, from the shared
+//! [`apianyware_macos_emit::enrichment::class_error_selectors`]) **and** whose
+//! trailing param is a raw pointer (the `NSError**` cell) returns `(values
+//! result error)` instead of threading the pointer. The trailing `NSError**` is
+//! dropped from the proc's visible arity; the per-signature crossing gains an
+//! `-e` variant taking the visible args + a trailing `(pointer (pointer void))`
+//! cell, casting that actual to `NSError**` so the method writes the `NSError*`
+//! through it (the in-Gerbil out-param crossing — ADR-0017, *not* racket's
+//! native `…_e` entry). The proc wraps the crossing in the runtime's
+//! `call-with-nserror-out`, which allocates the cell and returns `(values
+//! <wrapped-result> <nserror-or-#f>)`; both consumption surfaces forward to it,
+//! so they return the two values too. Gerbil is the first target to actually
+//! emit this (emit-chez reserved the `nserror` names but never wired emission).
 //!
 //! ## Runtime contract (names owned by leaf 050)
 //!
@@ -70,6 +86,11 @@
 //!   `(wrap p)` autoreleased, `(wrap p #t)` retained.
 //! - **`(->ptr x)`** — coerce a bound instance *or* `#f`/nil to a raw pointer for
 //!   an outbound `id` argument (instance → its `ptr`, `#f` → null).
+//! - **`(call-with-nserror-out thunk)`** + the **`nserror`** record
+//!   (`make-nserror` / `nserror?` / `nserror-domain` / `nserror-code` /
+//!   `nserror-localised-description` / `nserror-userinfo`, mirroring chez) — the
+//!   error-model settler the `(values result error)` procs bottom out in
+//!   (contract inbox-noted to 050).
 //! - **The `:std/generic` rename import** + cross-module generic unification: each
 //!   class module currently declares its own `(g:defgeneric <sel>)`, so two
 //!   *unrelated* classes sharing a selector name (e.g. `count`, `title`) collide
@@ -88,7 +109,10 @@ use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
 use crate::ffi_type_mapping::{is_known_geometry_alias, GerbilFfiTypeMapper, POINTER};
-use crate::method_filter::{is_supported_method, returns_object_type, returns_void};
+use crate::method_filter::{
+    is_error_out_method, is_supported_method, is_supported_method_ctx, returns_object_type,
+    returns_void,
+};
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
     make_method_name, make_property_getter_name, make_property_setter_name,
@@ -116,14 +140,20 @@ fn root_ptr_accessor(receiver: &str) -> String {
 /// the runtime [`RUNTIME_ROOT`]. Convenience over
 /// [`generate_class_file_with_parent`] for the common root case (and tests).
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
-    generate_class_file_with_parent(cls, framework, &ParentRef::RuntimeRoot).0
+    generate_class_file_with_parent(cls, framework, &ParentRef::RuntimeRoot, &HashSet::new()).0
 }
 
 /// Compute the exported names for one class, in sorted order, without rendering
 /// the body. Used by `emit_framework` to build the facade re-export list.
+///
+/// Computed with an empty error-selector set — the real pipeline reads exports
+/// from [`generate_class_file_with_parent`]'s return value (which threads the
+/// class's enrichment error selectors), so this convenience never gates the
+/// facade; error methods would be excluded here exactly as they are with no
+/// enrichment.
 pub fn class_exports(cls: &Class) -> Vec<String> {
     let mapper = GerbilFfiTypeMapper;
-    let plan = build_class_plan(cls, &mapper);
+    let plan = build_class_plan(cls, &mapper, &HashSet::new());
     merged_exports(cls, &plan)
 }
 
@@ -158,7 +188,7 @@ fn instance_surface_selectors(cls: &Class, plan: &ClassPlan) -> Vec<String> {
     let mapper = GerbilFfiTypeMapper;
     let mut sels: BTreeSet<String> = BTreeSet::new();
     for m in &plan.instance_methods {
-        if is_supported_method(m, &mapper) {
+        if is_supported_method_ctx(m, &mapper, &plan.error_selectors) {
             let proc = make_method_name(&cls.name, &m.selector);
             sels.insert(surface_selector(&cls.name, &proc));
         }
@@ -183,9 +213,10 @@ pub fn generate_class_file_with_parent(
     cls: &Class,
     framework: &str,
     parent: &ParentRef,
+    error_selectors: &HashSet<String>,
 ) -> (String, Vec<String>) {
     let mapper = GerbilFfiTypeMapper;
-    let plan = build_class_plan(cls, &mapper);
+    let plan = build_class_plan(cls, &mapper, error_selectors);
     let exports = merged_exports(cls, &plan);
     let mut w = CodeWriter::new();
 
@@ -218,14 +249,14 @@ pub fn generate_class_file_with_parent(
     if !plan.instance_methods.is_empty() {
         w.line(";; --- Instance methods ---");
         for m in &plan.instance_methods {
-            emit_method(&mut w, &cls.name, m, false, &mapper);
+            emit_method(&mut w, &cls.name, m, false, &mapper, &plan.error_selectors);
         }
     }
 
     if !plan.class_methods.is_empty() {
         w.line(";; --- Class methods ---");
         for m in &plan.class_methods {
-            emit_method(&mut w, &cls.name, m, true, &mapper);
+            emit_method(&mut w, &cls.name, m, true, &mapper, &plan.error_selectors);
         }
     }
 
@@ -267,9 +298,17 @@ struct ClassPlan {
     instance_methods: Vec<Method>,
     class_methods: Vec<Method>,
     exports: Vec<String>,
+    /// This class's enrichment-derived NSError out-param selectors (ADR-0006).
+    /// Threaded from `fw.enrichment` so every supportedness / signature /
+    /// emission decision keys error routing off the one set and never drifts.
+    error_selectors: HashSet<String>,
 }
 
-fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
+fn build_class_plan(
+    cls: &Class,
+    mapper: &dyn FfiTypeMapper,
+    error_selectors: &HashSet<String>,
+) -> ClassPlan {
     let methods_owned: Vec<Method> = effective_methods(cls).into_iter().cloned().collect();
     let mut properties_owned: Vec<Property> = effective_properties(cls)
         .into_iter()
@@ -360,6 +399,7 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
         &instance_refs,
         &class_refs,
         mapper,
+        error_selectors,
     );
 
     let (filtered_props, filtered_inst, filtered_class, exports) = dedupe_across_categories(
@@ -376,6 +416,7 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
         instance_methods: filtered_inst,
         class_methods: filtered_class,
         exports,
+        error_selectors: error_selectors.clone(),
     }
 }
 
@@ -467,6 +508,7 @@ fn collect_exports(
     instance_methods: &[&Method],
     class_methods: &[&Method],
     mapper: &dyn FfiTypeMapper,
+    error_selectors: &HashSet<String>,
 ) -> Vec<String> {
     let mut exports: Vec<String> = Vec::new();
 
@@ -498,13 +540,13 @@ fn collect_exports(
     }
 
     for m in instance_methods {
-        if !is_supported_method(m, mapper) {
+        if !is_supported_method_ctx(m, mapper, error_selectors) {
             continue;
         }
         exports.push(make_method_name(class_name, &m.selector));
     }
     for m in class_methods {
-        if !is_supported_method(m, mapper) {
+        if !is_supported_method_ctx(m, mapper, error_selectors) {
             continue;
         }
         exports.push(make_class_method_name(class_name, &m.selector, false));
@@ -544,6 +586,37 @@ struct Signature {
     arg_tokens: Vec<String>,
     /// Gambit FFI return token.
     ret_token: String,
+    /// An NSError out-param crossing (ADR-0006): the trailing arg token is the
+    /// [`NSERROR_CELL`] and the msgSend body casts that actual to `NSError**`.
+    /// The binding carries an `-e` suffix (mirroring racket's `…_e` entry).
+    error_out: bool,
+}
+
+/// The Gambit FFI token for the `NSError**` out-param cell threaded into an
+/// error-out crossing: a pointer to a `(pointer void)` slot the method writes
+/// the `NSError*` through. Cast to `NSError**` inside the msgSend body.
+const NSERROR_CELL: &str = "(pointer (pointer void))";
+
+/// The crossing arg tokens (leading `id`+`SEL`) for a method's NSError
+/// out-param entry: the method's **visible** params (all but the trailing
+/// `NSError**`) followed by the [`NSERROR_CELL`].
+fn error_out_arg_tokens(params: &[Param], mapper: &dyn FfiTypeMapper) -> Vec<String> {
+    let mut toks = vec![POINTER.to_string(), POINTER.to_string()];
+    let visible = &params[..params.len().saturating_sub(1)];
+    toks.extend(visible.iter().map(|p| mapper.map_type(&p.param_type, false)));
+    toks.push(NSERROR_CELL.to_string());
+    toks
+}
+
+/// The `%msg-…-e` binding name for a method's NSError out-param crossing — the
+/// plain signature binding over its visible args + the error cell, suffixed
+/// `-e` so it never collides with the same visible signature dispatched plainly.
+/// Computed identically at the crossing definition ([`collect_signatures`]) and
+/// the call site ([`emit_method`]) so the two never drift.
+fn error_binding_name(method: &Method, mapper: &dyn FfiTypeMapper) -> String {
+    let toks = error_out_arg_tokens(&method.params, mapper);
+    let ret = mapper.map_type(&method.return_type, true);
+    format!("{}-e", signature_binding_name(&toks[2..], &ret))
 }
 
 /// The `%msg-…` binding name for a msgSend shape. Built from the *variable*
@@ -568,6 +641,8 @@ fn signature_binding_name(param_tokens: &[String], ret_token: &str) -> String {
 fn token_code(token: &str) -> String {
     match token {
         "(pointer void)" => "p".into(),
+        // The NSError** out-param cell (a pointer to a pointer slot).
+        "(pointer (pointer void))" => "pp".into(),
         "char-string" => "str".into(),
         "void" => "v".into(),
         "bool" => "b".into(),
@@ -613,18 +688,34 @@ fn c_cast_type(token: &str) -> &str {
 
 /// The inline-cast `objc_msgSend` C body for one signature (spike
 /// `01-reachability.ss` shape). `arg_tokens` includes the leading `id`/`SEL`.
-fn msgsend_body(arg_tokens: &[String], ret_token: &str) -> String {
-    // Cast prototype: id, SEL, then each extra param's C type.
+///
+/// When `error_out`, the trailing arg is the [`NSERROR_CELL`]: the cast
+/// prototype's last type is `NSError**` and the trailing actual is cast
+/// `(NSError**)___argN`, so the method writes the `NSError*` through it
+/// (ADR-0006; the in-Gerbil out-param crossing, ADR-0017).
+fn msgsend_body(arg_tokens: &[String], ret_token: &str, error_out: bool) -> String {
+    let n = arg_tokens.len();
+    // Cast prototype: id, SEL, then each extra param's C type (the trailing
+    // error cell, if any, spelled `NSError**`).
     let mut proto = vec!["id".to_string(), "SEL".to_string()];
-    for t in &arg_tokens[2..] {
-        proto.push(c_cast_type(t).to_string());
+    for (idx, t) in arg_tokens.iter().enumerate().skip(2) {
+        if error_out && idx == n - 1 {
+            proto.push("NSError**".to_string());
+        } else {
+            proto.push(c_cast_type(t).to_string());
+        }
     }
     let proto = proto.join(", ");
 
-    // Call actuals: ___arg1 (receiver), (SEL)___arg2, then ___arg3…
+    // Call actuals: ___arg1 (receiver), (SEL)___arg2, then ___arg3… (the
+    // trailing error cell, if any, cast `(NSError**)`).
     let mut actuals = vec!["___arg1".to_string(), "(SEL)___arg2".to_string()];
-    for i in 2..arg_tokens.len() {
-        actuals.push(format!("___arg{}", i + 1));
+    for i in 2..n {
+        if error_out && i == n - 1 {
+            actuals.push(format!("(NSError**)___arg{}", i + 1));
+        } else {
+            actuals.push(format!("___arg{}", i + 1));
+        }
     }
     let actuals = actuals.join(", ");
 
@@ -659,26 +750,30 @@ fn collect_signatures(
     let mut by_name: std::collections::BTreeMap<String, Signature> =
         std::collections::BTreeMap::new();
 
-    let mut add = |args: Vec<String>, ret: String| {
+    let mut add = |args: Vec<String>, ret: String, error_out: bool| {
         let param_tokens = args[2..].to_vec();
-        let binding = signature_binding_name(&param_tokens, &ret);
+        let mut binding = signature_binding_name(&param_tokens, &ret);
+        if error_out {
+            binding.push_str("-e");
+        }
         by_name.entry(binding.clone()).or_insert(Signature {
             binding,
             arg_tokens: args,
             ret_token: ret,
+            error_out,
         });
     };
 
     // Alloc shape `(id, SEL) -> id` is needed by every constructor.
     if needs_default_constructor || !plan.init_methods.is_empty() {
-        add(vec![POINTER.into(), POINTER.into()], POINTER.into());
+        add(vec![POINTER.into(), POINTER.into()], POINTER.into(), false);
     }
     // Default ctor's `init` is the alloc shape; explicit ctors add their init.
     for m in &plan.init_methods {
         if !is_supported_method(m, mapper) || m.selector == "init" {
             continue;
         }
-        add(arg_tokens_for(&m.params, mapper), POINTER.into());
+        add(arg_tokens_for(&m.params, mapper), POINTER.into(), false);
     }
 
     for m in plan
@@ -686,13 +781,24 @@ fn collect_signatures(
         .iter()
         .chain(plan.class_methods.iter())
     {
-        if !is_supported_method(m, mapper) {
+        if !is_supported_method_ctx(m, mapper, &plan.error_selectors) {
             continue;
         }
-        add(
-            arg_tokens_for(&m.params, mapper),
-            mapper.map_type(&m.return_type, true),
-        );
+        if is_error_out_method(m, &plan.error_selectors) {
+            // NSError out-param: a distinct `-e` crossing over the visible args
+            // + the trailing error cell (the in-Gerbil out-param crossing).
+            add(
+                error_out_arg_tokens(&m.params, mapper),
+                mapper.map_type(&m.return_type, true),
+                true,
+            );
+        } else {
+            add(
+                arg_tokens_for(&m.params, mapper),
+                mapper.map_type(&m.return_type, true),
+                false,
+            );
+        }
     }
 
     for p in &plan.properties {
@@ -700,6 +806,7 @@ fn collect_signatures(
         add(
             vec![POINTER.into(), POINTER.into()],
             mapper.map_type(&p.property_type, true),
+            false,
         );
         if !p.readonly {
             // Setter: (id, SEL, prop-type) -> void.
@@ -710,6 +817,7 @@ fn collect_signatures(
                     mapper.map_type(&p.property_type, false),
                 ],
                 "void".into(),
+                false,
             );
         }
     }
@@ -898,7 +1006,7 @@ fn emit_ffi_block(
         write_line!(
             w,
             "    \"{}\")",
-            msgsend_body(&sig.arg_tokens, &sig.ret_token)
+            msgsend_body(&sig.arg_tokens, &sig.ret_token, sig.error_out)
         );
     }
     w.line("  )");
@@ -935,7 +1043,7 @@ fn emit_selector_caches(w: &mut CodeWriter, cls: &Class, plan: &ClassPlan) {
         .iter()
         .chain(plan.class_methods.iter())
     {
-        if is_supported_method(m, &mapper) {
+        if is_supported_method_ctx(m, &mapper, &plan.error_selectors) {
             emit_sel(w, &m.selector);
             any = true;
         }
@@ -1040,21 +1148,37 @@ fn emit_method(
     method: &Method,
     is_class_method: bool,
     mapper: &dyn FfiTypeMapper,
+    error_selectors: &HashSet<String>,
 ) {
-    if !is_supported_method(method, mapper) {
+    if !is_supported_method_ctx(method, mapper, error_selectors) {
         return;
     }
+    // NSError out-param methods (ADR-0006) drop the trailing `NSError**` from
+    // the proc's arity and return `(values result error)` via the runtime's
+    // `call-with-nserror-out` (the error half is layered on the proc core, so
+    // both surfaces inherit it). Every other method threads all its params.
+    let is_err = is_error_out_method(method, error_selectors);
+    let visible_params: &[Param] = if is_err {
+        &method.params[..method.params.len() - 1]
+    } else {
+        &method.params
+    };
+
     let fn_name = if is_class_method {
         make_class_method_name(class_name, &method.selector, false)
     } else {
         make_method_name(class_name, &method.selector)
     };
-    let binding = signature_binding_name(
-        &arg_tokens_for(&method.params, mapper)[2..],
-        &mapper.map_type(&method.return_type, true),
-    );
+    let binding = if is_err {
+        error_binding_name(method, mapper)
+    } else {
+        signature_binding_name(
+            &arg_tokens_for(&method.params, mapper)[2..],
+            &mapper.map_type(&method.return_type, true),
+        )
+    };
     let sel_var = make_selector_binding_name(class_name, &method.selector);
-    let param_vars = param_var_names(&method.params);
+    let param_vars = param_var_names(visible_params);
 
     let mut sig = format!("(define ({fn_name}");
     if !is_class_method {
@@ -1072,23 +1196,39 @@ fn emit_method(
     } else {
         root_ptr_accessor("self")
     };
-    let coerced: Vec<String> = method
-        .params
+    let mut actuals: Vec<String> = visible_params
         .iter()
         .zip(param_vars.iter())
         .map(|(p, v)| coerce_arg_expr(p, v))
         .collect();
+    if is_err {
+        // The runtime supplies the zeroed `NSError**` cell to the thunk.
+        actuals.push("%err-cell".to_string());
+    }
     let call = format!(
         "({binding} {receiver} {sel_var}{sp}{args})",
-        sp = if coerced.is_empty() { "" } else { " " },
-        args = coerced.join(" ")
+        sp = if actuals.is_empty() { "" } else { " " },
+        args = actuals.join(" ")
     );
-    write_line!(w, "  {})", wrap_return(method, &call, mapper));
+    let wrapped = wrap_return(method, &call, mapper);
+    if is_err {
+        // `call-with-nserror-out` allocates the cell, runs the thunk with it,
+        // and returns `(values <thunk-result> <nserror-or-#f>)`; the proc only
+        // adds its own result-wrapping inside the thunk (runtime contract owned
+        // by node 050).
+        w.line("  (call-with-nserror-out");
+        w.line("    (lambda (%err-cell)");
+        write_line!(w, "      {})))", wrapped);
+    } else {
+        write_line!(w, "  {})", wrapped);
+    }
 
     // Both consumption surfaces over the proc core — instance methods only (a
     // receiver to dispatch on). Class methods are proc-only namespaced functions.
     // `emit_instance_surfaces` keeps the proc + its surfaces a tight unit and
-    // emits the trailing blank; a class-method proc emits its own.
+    // emits the trailing blank; a class-method proc emits its own. Error-out
+    // procs expose their visible arity, so the surfaces forward those args and
+    // return the two values too.
     if is_class_method {
         w.blank_line();
     } else {
@@ -1661,8 +1801,13 @@ mod tests {
             }),
         )];
         let out =
-            generate_class_file_with_parent(&child, "Foundation", &ParentRef::Local("NSString".into()))
-                .0;
+            generate_class_file_with_parent(
+                &child,
+                "Foundation",
+                &ParentRef::Local("NSString".into()),
+                &HashSet::new(),
+            )
+            .0;
         // No own method ⇒ no proc, no surface, no generic decl for `length`.
         assert!(!out.contains("(define (nsmutablestring-length"));
         assert!(!out.contains("(defmethod {length NSMutableString}"));
@@ -1685,6 +1830,102 @@ mod tests {
         // surfaces present for the instance method
         assert!(out.contains("(defmethod {first-object NSArray}"));
         assert!(out.contains("(g:defmethod (first-object (o NSArray))"));
+    }
+
+    // --- error model (ADR-0006, leaf 050) --------------------------------
+
+    fn error_selectors(sel: &str) -> HashSet<String> {
+        let mut s = HashSet::new();
+        s.insert(sel.to_string());
+        s
+    }
+
+    /// `-writeToFile:error:` → `(values BOOL nserror)`: trailing `NSError**`
+    /// param dropped from arity, the `-e` crossing, `call-with-nserror-out`.
+    #[test]
+    fn nserror_method_emits_values_result_error() {
+        let mut m = make_method(
+            "writeToFile:error:",
+            false,
+            false,
+            ty(TypeRefKind::Primitive {
+                name: "bool".into(),
+            }),
+        );
+        m.params = vec![
+            param("path", TypeRefKind::Id),
+            param("error", TypeRefKind::Pointer),
+        ];
+        let cls = cls_with("NSData", vec![m], vec![]);
+        let errs = error_selectors("writeToFile:error:");
+        let out =
+            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs).0;
+
+        // The `-e` crossing: visible (pointer void) arg + trailing NSError** cell.
+        assert!(out.contains(
+            "(define-c-lambda %msg-p-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer (pointer void))) bool"
+        ), "missing -e crossing decl:\n{out}");
+        // The body casts the trailing actual to NSError**.
+        assert!(out.contains(
+            "((BOOL (*)(id, SEL, id, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (NSError**)___arg4)"
+        ), "missing NSError** cast body:\n{out}");
+        // The proc drops the trailing error param (visible arity = self + path)
+        // and returns two values via the runtime helper.
+        assert!(out.contains("(define (nsdata-write-to-file-error self path)"), "proc arity:\n{out}");
+        assert!(out.contains("(call-with-nserror-out"), "no call-with-nserror-out:\n{out}");
+        assert!(out.contains("(lambda (%err-cell)"), "no err-cell thunk:\n{out}");
+        assert!(out.contains(
+            "(%msg-p-pp->b-e (NSObject-ptr self) %sel-nsdata-write-to-file-error (->ptr path) %err-cell)"
+        ), "crossing call site:\n{out}");
+        // The selector is cached on the full, real selector.
+        assert!(out.contains(
+            "(define %sel-nsdata-write-to-file-error (sel_registerName \"writeToFile:error:\"))"
+        ), "selector cache:\n{out}");
+        // Both surfaces forward the visible-arity proc (so they return two values too).
+        assert!(out.contains(
+            "(defmethod {write-to-file-error NSData} (lambda (self path) (nsdata-write-to-file-error self path)))"
+        ), "{{}} surface:\n{out}");
+        assert!(out.contains(
+            "(g:defmethod (write-to-file-error (o NSData) path) (nsdata-write-to-file-error o path))"
+        ), "generic surface:\n{out}");
+    }
+
+    /// The same trailing-pointer shape, but NOT an enrichment error method,
+    /// still defers (raw pointers are unbindable) — no proc, no crossing.
+    #[test]
+    fn non_error_trailing_pointer_method_deferred() {
+        let mut m = make_method("getBytes:error:", false, false, ty(TypeRefKind::Id));
+        m.params = vec![
+            param("buffer", TypeRefKind::Id),
+            param("error", TypeRefKind::Pointer),
+        ];
+        let cls = cls_with("NSData", vec![m], vec![]);
+        // Empty error set ⇒ not error-routed ⇒ deferred.
+        let out =
+            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &HashSet::new())
+                .0;
+        assert!(!out.contains("nsdata-get-bytes-error"), "should be deferred:\n{out}");
+        assert!(!out.contains("-e ("), "no -e crossing:\n{out}");
+    }
+
+    /// An object-returning NSError method wraps the result inside the thunk; the
+    /// error half comes from `call-with-nserror-out`.
+    #[test]
+    fn nserror_object_return_wraps_result_inside_thunk() {
+        let mut m = make_method("dataWithContentsOfURL:error:", false, false, ty(TypeRefKind::Id));
+        m.params = vec![
+            param("url", TypeRefKind::Id),
+            param("error", TypeRefKind::Pointer),
+        ];
+        let cls = cls_with("NSData", vec![m], vec![]);
+        let errs = error_selectors("dataWithContentsOfURL:error:");
+        let out =
+            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs).0;
+        // Object return ⇒ the crossing call is wrapped; that wrapped value is the
+        // thunk's single result, which call-with-nserror-out pairs with the error.
+        assert!(out.contains(
+            "(wrap (%msg-p-pp->p-e (NSObject-ptr self) %sel-nsdata-data-with-contents-of-url-error (->ptr url) %err-cell))"
+        ), "wrapped object result inside thunk:\n{out}");
     }
 
     // --- manifest class graph (ADR-0020, leaf 030) -----------------------
@@ -1711,7 +1952,12 @@ mod tests {
         let mut cls = cls_with("NSButton", vec![], vec![]);
         cls.superclass = "NSControl".into();
         let out =
-            generate_class_file_with_parent(&cls, "AppKit", &ParentRef::Local("NSControl".into()));
+            generate_class_file_with_parent(
+                &cls,
+                "AppKit",
+                &ParentRef::Local("NSControl".into()),
+                &HashSet::new(),
+            );
         assert!(out
             .0
             .contains("(defclass (NSButton NSControl) () transparent: #t)"));
@@ -1730,7 +1976,7 @@ mod tests {
             name: "NSMutableAttributedString".into(),
             fw_low: "foundation".into(),
         };
-        let out = generate_class_file_with_parent(&cls, "AppKit", &parent);
+        let out = generate_class_file_with_parent(&cls, "AppKit", &parent, &HashSet::new());
         assert!(out
             .0
             .contains("(defclass (NSTextStorage NSMutableAttributedString) () transparent: #t)"));
