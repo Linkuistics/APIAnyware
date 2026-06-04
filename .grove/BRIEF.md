@@ -32,6 +32,8 @@ error model converging on ADR-0006.
 Build subtree (grown by 030):
 - **040** emit-gerbil crate (per-signature `define-c-lambda`, like emit-chez)
 - **050** gerbil runtime (objc/ffi/types + ObjC native core, wills+pool, `:std/generic`)
+- **055** compiler-resolution (ADR: how emitted constants/functions umbrella-header
+  modules compile — gcc-15 can't, clang can; found at 050/010, gates 060/070)
 - **060** CLI registration + emission tests
 - **070** bundle-gerbil + VM-verified hello-window (applies the §5 distribution recipe)
 - **080** threading spike (planning; spike-gated D4) + threading ADR
