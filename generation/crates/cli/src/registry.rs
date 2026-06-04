@@ -15,6 +15,11 @@ impl EmitterRegistry {
         let emitters: Vec<Box<dyn TargetEmitter>> = vec![
             Box::new(apianyware_macos_emit_racket::RacketEmitter),
             Box::new(apianyware_macos_emit_chez::ChezEmitter),
+            // Gerbil's per-run emitter carries an empty cross-framework
+            // `ClassRegistry`; the generate pre-pass swaps in a populated one
+            // built over all loaded frameworks (see `generate.rs`). The
+            // registry instance here is what `--list-targets` / lookups see.
+            Box::new(apianyware_macos_emit_gerbil::GerbilEmitter::new()),
         ];
         Self { emitters }
     }
@@ -75,6 +80,17 @@ mod tests {
         let ids: Vec<&str> = all.iter().map(|e| e.target_info().id).collect();
         assert!(ids.contains(&"racket"));
         assert!(ids.contains(&"chez"));
+        assert!(ids.contains(&"gerbil"));
+    }
+
+    #[test]
+    fn registry_contains_gerbil() {
+        let registry = EmitterRegistry::new();
+        let gerbil = registry.get("gerbil");
+        assert!(gerbil.is_some(), "registry should contain gerbil emitter");
+        let info = gerbil.unwrap().target_info();
+        assert_eq!(info.id, "gerbil");
+        assert_eq!(info.display_name, "Gerbil Scheme");
     }
 
     #[test]
@@ -95,5 +111,7 @@ mod tests {
         assert!(list.contains("Racket"));
         assert!(list.contains("chez"));
         assert!(list.contains("Chez Scheme"));
+        assert!(list.contains("gerbil"));
+        assert!(list.contains("Gerbil Scheme"));
     }
 }

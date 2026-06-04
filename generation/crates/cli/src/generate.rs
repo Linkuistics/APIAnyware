@@ -100,8 +100,27 @@ pub fn run_generation(
             ..Default::default()
         };
 
+        // Gerbil's manifest class graph (ADR-0020) places a class's parent in
+        // whichever framework *owns* it — a cross-framework fact — but
+        // `emit_framework` runs per framework and cannot see the others. So
+        // build the global class→owning-framework `ClassRegistry` once over
+        // every loaded framework and run a program-configured emitter, the
+        // same whole-program shape as racket's native-dispatch pass. Every
+        // other target uses the registry instance unchanged.
+        let gerbil_configured;
+        let active: &dyn TargetEmitter =
+            if info.id == apianyware_macos_emit_gerbil::GERBIL_TARGET_INFO.id {
+                let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
+                    &ordered_frameworks,
+                );
+                gerbil_configured = apianyware_macos_emit_gerbil::GerbilEmitter::with_registry(reg);
+                &gerbil_configured
+            } else {
+                *emitter
+            };
+
         for fw in &ordered_frameworks {
-            let result = emitter
+            let result = active
                 .emit_framework(fw, &out_dir)
                 .with_context(|| format!("failed to emit {} for {}", fw.name, info.id))?;
 
@@ -472,8 +491,8 @@ mod tests {
         // Every registered emitter should produce results without error.
         assert_eq!(
             summaries.len(),
-            2,
-            "should run racket + chez emitters"
+            3,
+            "should run racket + chez + gerbil emitters"
         );
 
         for s in &summaries {
@@ -484,6 +503,59 @@ mod tests {
             );
             assert_eq!(s.total_classes, 5, "{} class count", s.target_id);
         }
+    }
+
+    fn bare_class(name: &str, superclass: &str) -> Class {
+        Class {
+            name: name.into(),
+            superclass: superclass.into(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+        }
+    }
+
+    #[test]
+    fn gerbil_cross_framework_parent_import_resolves_through_registry() {
+        // The end-to-end proof that the CLI pre-pass builds and threads gerbil's
+        // cross-framework ClassRegistry: Foundation owns
+        // NSMutableAttributedString; AppKit's NSTextStorage derives from it.
+        // `emit_framework` sees only AppKit, so it can place that parent
+        // precisely only because the pre-pass built the registry over both.
+        let tmp = tempfile::tempdir().unwrap();
+        let input_dir = tmp.path().join("enriched");
+        let output_dir = tmp.path().join("targets");
+
+        let mut foundation = make_test_framework("Foundation");
+        foundation.classes = vec![bare_class("NSMutableAttributedString", "NSObject")];
+
+        let mut appkit = make_test_framework("AppKit");
+        appkit.depends_on = vec!["Foundation".to_string()];
+        appkit.classes = vec![bare_class("NSTextStorage", "NSMutableAttributedString")];
+
+        write_test_framework(&input_dir, &foundation);
+        write_test_framework(&input_dir, &appkit);
+
+        let registry = EmitterRegistry::new();
+        let targets = vec!["gerbil".to_string()];
+        run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
+
+        // `generated_subdir = "lib"` (the gerbil package root).
+        let storage =
+            std::fs::read_to_string(output_dir.join("gerbil/lib/appkit/nstextstorage.ss")).unwrap();
+        assert!(
+            storage.contains("(defclass (NSTextStorage NSMutableAttributedString)"),
+            "child derives from the cross-framework parent:\n{storage}"
+        );
+        assert!(
+            storage.contains(":gerbil-bindings/foundation/nsmutableattributedstring"),
+            "cross-framework parent import should resolve through the wired registry:\n{storage}"
+        );
     }
 
     #[test]

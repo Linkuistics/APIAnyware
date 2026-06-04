@@ -74,6 +74,14 @@ impl ClassRegistry {
     /// framework. First framework to declare a class owns it (matches the
     /// dependency-ordered load: a base framework is seen before its dependents).
     pub fn from_frameworks(frameworks: &[Framework]) -> Self {
+        let refs: Vec<&Framework> = frameworks.iter().collect();
+        Self::from_framework_refs(&refs)
+    }
+
+    /// Like [`Self::from_frameworks`] but over borrowed frameworks — the shape the
+    /// generate pipeline already holds (`ordered_frameworks: Vec<&Framework>`), so
+    /// the CLI pre-pass builds the registry without cloning every framework.
+    pub fn from_framework_refs(frameworks: &[&Framework]) -> Self {
         let mut owners = HashMap::new();
         for fw in frameworks {
             let fw_low = fw.name.to_ascii_lowercase();
@@ -284,6 +292,19 @@ mod tests {
         let foundation = fw("Foundation", vec![cls("NSObject2", "")]);
         let appkit = fw("AppKit", vec![cls("NSView", "NSObject")]);
         let reg = ClassRegistry::from_frameworks(&[foundation, appkit]);
+        assert_eq!(reg.owner("NSObject2"), Some("foundation"));
+        assert_eq!(reg.owner("NSView"), Some("appkit"));
+        assert_eq!(reg.owner("DoesNotExist"), None);
+    }
+
+    #[test]
+    fn from_framework_refs_matches_owned_variant() {
+        // The borrowed-slice variant the CLI pre-pass uses agrees with the
+        // owned-slice one (same first-owner-wins semantics).
+        let foundation = fw("Foundation", vec![cls("NSObject2", "")]);
+        let appkit = fw("AppKit", vec![cls("NSView", "NSObject")]);
+        let refs = vec![&foundation, &appkit];
+        let reg = ClassRegistry::from_framework_refs(&refs);
         assert_eq!(reg.owner("NSObject2"), Some("foundation"));
         assert_eq!(reg.owner("NSView"), Some("appkit"));
         assert_eq!(reg.owner("DoesNotExist"), None);

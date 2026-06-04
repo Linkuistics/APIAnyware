@@ -52,4 +52,4 @@ pub mod method_filter;
 pub mod naming;
 pub mod shared_signatures;
 
-pub use emit_framework::GerbilEmitter;
+pub use emit_framework::{GerbilEmitter, GERBIL_TARGET_INFO};

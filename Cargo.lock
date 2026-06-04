@@ -254,6 +254,7 @@ dependencies = [
  "apianyware-macos-datalog",
  "apianyware-macos-emit",
  "apianyware-macos-emit-chez",
+ "apianyware-macos-emit-gerbil",
  "apianyware-macos-emit-racket",
  "apianyware-macos-types",
  "clap",
