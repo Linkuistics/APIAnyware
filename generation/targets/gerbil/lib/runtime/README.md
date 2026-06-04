@@ -181,15 +181,20 @@ gxc -O -ld-options "-lobjc native_block.o" \
 gxc -exe -o prog -ld-options "-lobjc -framework Foundation native_block.o" prog.ss
 ```
 
-**Compiler note (load-bearing — see the 060/070 inbox note).** The bottle's gsc
-uses **gcc-15** by default, which compiles the C-safe headers this runtime uses
+**Compiler note (load-bearing — RESOLVED, ADR-0021).** The bottle's gsc uses
+**gcc-15** by default, which compiles the C-safe headers this runtime uses
 (`<objc/runtime.h>`, `<objc/message.h>`) but CANNOT parse the Foundation/AppKit
-umbrella headers the emitted `constants.ss`/`functions.ss` need (resolved by
-node 055). gcc-15 also cannot parse ObjC **block literals** (`^`); the native
-core sidesteps both by staying C-safe and pushing the block literals into the
-**clang-compiled companion** `native_block.c` (step 1). So `60`/`070`'s build
-config must: compile `native_block.c` with `clang -fblocks` and add its `.o` to
-every `-ld-options` link line (runtime modules + each app exe).
+umbrella headers. **Node 055 resolved this: the emitter NEVER `#include`s an
+umbrella header** — it synthesizes the C declaration (`extern`/prototype) for each
+symbol its `constants.ss`/`functions.ss` crossings name, spelling ObjC pointer
+types as `void *` (ADR-0021). So **every emitted module compiles under the default
+gcc-15** — no `-cc clang`, no `-x objective-c`, no SDKROOT contract. gcc-15 also
+cannot parse ObjC **block literals** (`^`); that ONE translation unit stays in the
+**clang-compiled companion** `native_block.c` (step 1). So the ONLY non-default
+compile in the whole build is that companion: `060`/`070`'s build config compiles
+`native_block.c` with `clang -fblocks` and adds its `.o` to every `-ld-options`
+link line (runtime modules + each app exe); everything else uses the default
+compiler with no special flags.
 
 Stale-lock hazard: a killed `gxc` leaves `~/.gerbil/lib/static/<mod>.o.lock`;
 clear `~/.gerbil/lib/static/<mod>*` before retrying.

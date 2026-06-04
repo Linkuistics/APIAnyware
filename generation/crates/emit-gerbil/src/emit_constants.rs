@@ -4,28 +4,33 @@
 //! which resolves symbols by name at link time with `foreign-entry`/`foreign-ref`
 //! and so needs no C declaration — Gambit `define-c-lambda` bodies are **real C**:
 //! reading `NSFontAttributeName` emits C that names the symbol, so the symbol
-//! must be *declared*. We therefore `#include` the framework umbrella header in a
-//! `begin-ffi` block (Objective-C — compiles only because the FFI unit is built
-//! `-x objective-c`, design §4) and read each global through a `%const-<name>`
-//! crossing.
+//! must be *declared*. Rather than `#include` the framework **umbrella header**
+//! (Objective-C, which the bottle's default gcc-15 cannot parse), we **synthesize
+//! the C declaration** per symbol — an `extern` spelling ObjC pointer types as
+//! `void *` — so every crossing compiles under the default compiler with no clang
+//! / `-x objective-c` (**ADR-0021**, superseding design §4). Each global is read
+//! through a `%const-<name>` crossing.
 //!
 //! Four flavours land here:
 //!
-//! 1. **Object-typed pointer globals** (`extern NSString * const Foo`). The C
-//!    expression `Foo` *is* the object pointer (C does the read), so
-//!    `___return((void*)Foo)` hands back the pointer; the outer define
-//!    [`wrap`](crate)s it into a first-class, borrowed object (the framework owns
-//!    the global for the process lifetime — no release will). Wrapping (vs chez's
-//!    raw pointer) is what lets the constant flow through the ADR-0020 object
-//!    model's `->ptr` arg coercion like any other object.
-//! 2. **Struct-typed globals** (`_dispatch_main_q`). The symbol's *address* is the
-//!    value used as the opaque handle (`dispatch_queue_t`); `___return((void*)&Foo)`
-//!    hands back the address as a raw pointer — left unwrapped because these feed
-//!    C functions (`dispatch_async`, `functions.ss`) that take raw `(pointer void)`.
-//! 3. **Scalar globals** (`extern const double Foo`, enum-typed globals). Read by
-//!    value through a typed crossing; the raw scalar is the binding.
+//! 1. **Object-typed pointer globals** (`extern NSString * const Foo`). Declared
+//!    `extern void * const Foo;`. The C expression `Foo` *is* the object pointer
+//!    (C does the read), so `___return((void*)Foo)` hands back the pointer; the
+//!    outer define [`wrap`](crate)s it into a first-class, borrowed object (the
+//!    framework owns the global for the process lifetime — no release will).
+//!    Wrapping (vs chez's raw pointer) is what lets the constant flow through the
+//!    ADR-0020 object model's `->ptr` arg coercion like any other object.
+//! 2. **Struct-typed globals** (`_dispatch_main_q`). Only the symbol's *address*
+//!    is used as the opaque handle, so it is declared `extern const char Foo;` (a
+//!    deliberate type fiction — the linker binds `Foo` to the real symbol) and
+//!    `___return((void*)&Foo)` hands back the address as a raw pointer — left
+//!    unwrapped because these feed C functions (`dispatch_async`, `functions.ss`)
+//!    that take raw `(pointer void)`.
+//! 3. **Scalar globals** (`extern const double Foo`, enum-typed globals). Declared
+//!    `extern <C-type> Foo;` via [`c_type_for_token`]; read by value through a
+//!    typed crossing; the raw scalar is the binding.
 //! 4. **CFSTR macros** — compile-time constant NSStrings the macro expands to. The
-//!    macro target has no exported symbol, so there is nothing to `#include`/read;
+//!    macro target has no exported symbol, so there is nothing to declare/read;
 //!    we build a retained NSString at load via the runtime's `string->nsstring`
 //!    (050) and `wrap` it `#t` (owned). The retain matters: the constant must
 //!    outlive the entry-point autorelease pool (ADR-0019).
@@ -36,8 +41,7 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Constant;
 use apianyware_macos_types::type_ref::TypeRefKind;
 
-use crate::ffi_type_mapping::{GerbilFfiTypeMapper, POINTER};
-use crate::shared_signatures::framework_umbrella_header;
+use crate::ffi_type_mapping::{c_type_for_token, GerbilFfiTypeMapper, POINTER};
 
 /// The runtime module supplying `wrap` (object boxing + lifetime) and
 /// `string->nsstring` (CFSTR construction). Same module the class emitter binds.
@@ -84,6 +88,20 @@ fn crossing_body(name: &str, flavour: &Flavour) -> Option<String> {
         Flavour::StructAddr => Some(format!("___return((void*)&{name});")),
         Flavour::Scalar(tok) if tok == POINTER => Some(format!("___return((void*){name});")),
         Flavour::Scalar(_) => Some(format!("___return({name});")),
+    }
+}
+
+/// The synthesized C `extern` declaration for global `name` of `flavour`
+/// (ADR-0021), or `None` for [`Flavour::CfString`] (no symbol). ObjC pointer
+/// globals collapse to `void * const`; a struct global is declared `const char`
+/// because only its address is taken; a scalar uses its FFI token's C type.
+fn extern_decl(name: &str, flavour: &Flavour) -> Option<String> {
+    match flavour {
+        Flavour::CfString(_) => None,
+        Flavour::Object => Some(format!("extern void * const {name};")),
+        Flavour::StructAddr => Some(format!("extern const char {name};")),
+        Flavour::Scalar(tok) if tok == POINTER => Some(format!("extern void * const {name};")),
+        Flavour::Scalar(tok) => Some(format!("extern {} {name};", c_type_for_token(tok))),
     }
 }
 
@@ -150,9 +168,13 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     }
     w.blank_line();
 
-    // begin-ffi: one global-read crossing per non-CFSTR constant, under the
-    // framework umbrella header so the symbols are declared.
+    // begin-ffi: one global-read crossing per non-CFSTR constant. Each symbol is
+    // declared by a synthesized `extern` (ADR-0021) — never by `#include`-ing the
+    // framework umbrella header — so the block compiles under the default gcc-15.
     if needs_ffi {
+        let needs_stdbool = flavours
+            .iter()
+            .any(|(_, f)| matches!(f, Flavour::Scalar(tok) if tok == "bool"));
         w.line("(begin-ffi (");
         for (c, f) in &flavours {
             if !matches!(f, Flavour::CfString(_)) {
@@ -160,11 +182,14 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
             }
         }
         w.line("            )");
-        write_line!(
-            w,
-            "  (c-declare \"#include {}\")",
-            framework_umbrella_header(framework)
-        );
+        if needs_stdbool {
+            w.line("  (c-declare \"#include <stdbool.h>\")");
+        }
+        for (c, f) in &flavours {
+            if let Some(decl) = extern_decl(&c.name, f) {
+                write_line!(w, "  (c-declare \"{}\")", decl);
+            }
+        }
         w.blank_line();
         for (c, f) in &flavours {
             if let Some(body) = crossing_body(&c.name, f) {
@@ -252,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn object_global_reads_then_wraps_under_umbrella() {
+    fn object_global_reads_then_wraps_via_synth_extern() {
         let consts = vec![c(
             "NSFontAttributeName",
             TypeRefKind::Class {
@@ -263,7 +288,9 @@ mod tests {
         )];
         let out = generate_constants_file(&consts, "AppKit");
         assert!(out.contains(";;; Generated constant definitions for AppKit"));
-        assert!(out.contains("(c-declare \"#include <AppKit/AppKit.h>\")"));
+        // ADR-0021: synthesized extern, no umbrella #include.
+        assert!(out.contains("(c-declare \"extern void * const NSFontAttributeName;\")"));
+        assert!(!out.contains("#include <AppKit/AppKit.h>"));
         assert!(out.contains(
             "(define-c-lambda %const-NSFontAttributeName () (pointer void) \"___return((void*)NSFontAttributeName);\")"
         ));
@@ -281,8 +308,10 @@ mod tests {
             },
         )];
         let out = generate_constants_file(&consts, "libdispatch");
-        // Synthetic pseudo-framework umbrella.
-        assert!(out.contains("(c-declare \"#include <dispatch/dispatch.h>\")"));
+        // ADR-0021: only the address is used, so declare `const char` (the linker
+        // binds the symbol); no <dispatch/dispatch.h> umbrella.
+        assert!(out.contains("(c-declare \"extern const char _dispatch_main_q;\")"));
+        assert!(!out.contains("#include <dispatch/dispatch.h>"));
         assert!(out.contains(
             "(define-c-lambda %const-_dispatch_main_q () (pointer void) \"___return((void*)&_dispatch_main_q);\")"
         ));
@@ -300,6 +329,9 @@ mod tests {
             },
         )];
         let out = generate_constants_file(&consts, "Foundation");
+        // ADR-0021: scalar declared with its C type, no umbrella #include.
+        assert!(out.contains("(c-declare \"extern double NSDefaultTimeout;\")"));
+        assert!(!out.contains("#include <Foundation/Foundation.h>"));
         assert!(out.contains(
             "(define-c-lambda %const-NSDefaultTimeout () double \"___return(NSDefaultTimeout);\")"
         ));

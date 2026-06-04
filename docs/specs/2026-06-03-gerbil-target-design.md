@@ -105,30 +105,45 @@ procedural core, dispatching on one `objc-obj` handle struct (no class graph).**
   A *pure* native-OO foundation would tax every call ~4×; OO is the **veneer, not
   the foundation**.
 
-## 4. C-vs-ObjC FFI compilation
+## 4. C-vs-ObjC FFI compilation — SUPERSEDED by ADR-0021 (+ node 050 outcome)
+
+> **This section's original plan — compile the FFI/runtime unit `-x objective-c`
+> and `#include` framework umbrella headers for symbol declarations — was not
+> adopted.** Two later findings reversed it. Both are recorded below; the live
+> contract is **everything compiles under the bottle's default compiler
+> (gcc-15)**, with the single exception of the block-literal companion.
 
 `gsc` compiles `define-c-lambda` bodies as C by default; framework umbrella
-headers (`<Foundation/Foundation.h>`) are Objective-C and fail (FINDINGS §2). The
-target compiles its FFI/runtime unit **as Objective-C** (`-x objective-c` via
-`gsc`/`gxc` `-cc-options`), because `@autoreleasepool` (§5), blocks/delegates (§6),
-and the ObjC native core (§6) need it anyway. C-safe headers (`<objc/runtime.h>`,
-`<objc/message.h>`, `<CoreGraphics/CGGeometry.h>`) are used directly; real ObjC
-types/selectors are available in the ObjC-compiled unit. `const`-qualified returns
-cast via `___CAST`/`___return` to avoid `cast-qual` warnings (FINDINGS §1).
+headers (`<Foundation/Foundation.h>`) are Objective-C and the bottle's default
+gcc-15 cannot parse them (FINDINGS §2).
 
-**Umbrella headers for symbol *declarations* (constants + functions).** The class
+**(1) The runtime/FFI unit stays C-safe (node 050).** The runtime
+(`ffi.ss`/`native-core.ss`/`objc.ss`) was implemented gcc-15-clean: it uses only
+the C-safe libobjc headers (`<objc/runtime.h>`, `<objc/message.h>`,
+`<CoreGraphics/CGGeometry.h>`) and the C autorelease-pool functions
+(`objc_autoreleasePoolPush/Pop`), **not** `@autoreleasepool`. The ONE thing gcc-15
+genuinely cannot parse — the ObjC **block literals** (`^`) `make-objc-block`
+builds — is isolated into a `clang -fblocks`-compiled companion
+(`native_block.c`) linked into every program. So the FFI unit is **not** compiled
+`-x objective-c`. (See `lib/runtime/README.md`.)
+
+**(2) Symbol declarations are synthesized, not `#include`d (ADR-0021).** The class
 emitter needs no framework header — `objc_msgSend` dispatch is dynamic (selector
-strings), so only `<objc/runtime.h>`/`<objc/message.h>` are required. But the
-`constants.ss`/`functions.ss` emitters read/call C symbols *by name* in
-`define-c-lambda` bodies (chez resolves these at link time with `foreign-entry`
-and needs no declaration; Gambit emits real C that names the symbol). So each
-`begin-ffi` block `#include`s the framework **umbrella header**
-(`<Foundation/Foundation.h>`, `<AppKit/AppKit.h>`, `libdispatch` →
-`<dispatch/dispatch.h>`; `shared_signatures::framework_umbrella_header`). These are
-Objective-C and only compile under `-x objective-c` — a hard dependency of the
-data modules on the build flag above, which 060/070 must apply to every generated
-`.ss` → C compile, and which a first sample-app compile must confirm per framework
-(synthetic pseudo-frameworks beyond libdispatch may need an umbrella-map entry).
+strings). The `constants.ss`/`functions.ss` emitters read/call C symbols *by name*
+in `define-c-lambda` bodies, so Gambit needs the symbol *declared* (chez resolves
+these at link time with `foreign-entry` and needs no declaration — which also
+proves every such symbol is a real linkable extern). Instead of `#include`-ing the
+Objective-C **umbrella header**, the emitter **synthesizes the C declaration** per
+symbol — an `extern` spelling ObjC pointer types as `void *`, a prototype for a
+function, an inline plain-C typedef for a non-C-safe geometry struct. Every emitted
+module then compiles under the default gcc-15 with no `-cc clang` / `-x
+objective-c` / SDKROOT contract. See **ADR-0021** for the full mechanism, the
+token→C-type table, and the rejected alternatives (a clang-configured toolchain;
+brittle runtime `-cc clang`; per-module compiler selection).
+
+**Net for 060/070:** generated `.ss` → C compiles use the **default compiler, no
+special flags**; the only non-default compile is the pre-existing
+`clang -fblocks native_block.c` companion, whose `.o` joins every link line.
 
 ## 5. Lifetime model (→ ADR-0019)
 

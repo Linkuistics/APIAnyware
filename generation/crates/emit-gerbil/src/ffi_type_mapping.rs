@@ -30,6 +30,42 @@ use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 /// pointers all cross as this — a tagged Gambit foreign pointer.
 pub const POINTER: &str = "(pointer void)";
 
+/// The C type spelling a `define-c-lambda` arg/return token reduces to, for a
+/// **synthesized** C declaration (ADR-0021: the emitter declares the symbols its
+/// crossings name with `extern`s / prototypes, never by `#include`-ing a
+/// framework umbrella header). Each pairing is compile-verified under the bottle's
+/// default gcc-15: the synthesized prototype's C types are ABI-compatible with
+/// both Gambit's per-token argument conversions and the real exported symbol
+/// (ObjC pointer types collapse to `void *`, exactly as chez resolves them by
+/// name with no header). `bool` requires `<stdbool.h>` in scope (C-safe); callers
+/// that emit a `bool` slot must add that include once. Geometry tokens are not
+/// handled here — they carry a struct-tag `c-define-type` declared separately
+/// (CoreGraphics header or, for the NS-prefixed structs, an inline plain-C
+/// typedef; [`geometry_decl`]).
+pub fn c_type_for_token(token: &str) -> &'static str {
+    match token {
+        "(pointer void)" => "void *",
+        "char-string" => "const char *",
+        "void" => "void",
+        "bool" => "bool",
+        "int8" => "signed char",
+        "unsigned-int8" => "unsigned char",
+        "int16" => "short",
+        "unsigned-int16" => "unsigned short",
+        "int32" => "int",
+        "unsigned-int32" => "unsigned int",
+        "int64" => "long long",
+        "unsigned-int64" => "unsigned long long",
+        "float" => "float",
+        "double" => "double",
+        // A geometry struct token (CGRect, NSRange, …) carries its own
+        // `c-define-type` tag and is spelled by the caller's prototype directly,
+        // never through this scalar helper; an opaque pointer is the safe default
+        // for any unrecognised token.
+        _ => "void *",
+    }
+}
+
 pub struct GerbilFfiTypeMapper;
 
 fn normalize(name: &str) -> String {
