@@ -36,6 +36,24 @@ pub fn framework_link_arg(framework_name: &str) -> Option<String> {
     Some(format!("-framework {framework_name}"))
 }
 
+/// The framework umbrella header a `begin-ffi` block must `#include` so the C
+/// symbols a constant/function `define-c-lambda` body references (`extern`
+/// globals, C functions) are **declared**. Unlike chez's `foreign-entry`
+/// (link-time symbol lookup, no declaration needed), Gambit emits real C that
+/// calls/reads the symbol by name, so the declaration must be in scope. The
+/// umbrella is Objective-C (`<Foundation/Foundation.h>` etc.), which only
+/// compiles because the whole FFI unit is built `-x objective-c` (design §4,
+/// FINDINGS §2). Most Apple frameworks expose `<Name/Name.h>`; the synthetic
+/// `libdispatch` pseudo-framework's symbols live behind `<dispatch/dispatch.h>`.
+/// Other synthetic pseudo-frameworks that surface here will need an entry (an
+/// inbox item for 060/070, surfaced on first compile).
+pub fn framework_umbrella_header(framework_name: &str) -> String {
+    match framework_name {
+        "libdispatch" => "<dispatch/dispatch.h>".to_string(),
+        name => format!("<{name}/{name}.h>"),
+    }
+}
+
 /// Symbols declared in libdispatch/pthread headers but not exported by the live
 /// `libSystem` on modern macOS — a `define-c-lambda` for these fails to link.
 /// Kept in lockstep with the racket/chez skip lists so all targets defer the

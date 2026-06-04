@@ -108,7 +108,7 @@ use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
-use crate::ffi_type_mapping::{is_known_geometry_alias, GerbilFfiTypeMapper, POINTER};
+use crate::ffi_type_mapping::{geometry_decl, is_known_geometry_alias, GerbilFfiTypeMapper, POINTER};
 use crate::method_filter::{
     is_error_out_method, is_supported_method, is_supported_method_ctx, returns_object_type,
     returns_void,
@@ -841,38 +841,6 @@ fn geometry_decls(sigs: &[Signature]) -> Vec<(&'static str, &'static str, &'stat
         }
     }
     out
-}
-
-/// `(token, c-struct-tag, header)` for a by-value geometry struct token. The
-/// CoreGraphics tokens are confident (spike §4); the NS-prefixed and affine ones
-/// carry their best-known struct tag + header and are an inbox item for 050/070
-/// (the `-x objective-c` unit makes the Foundation/QuartzCore tags available, but
-/// the exact spelling wants a gsc-compile confirmation the VM-verify leaf gives).
-fn geometry_decl(token: &str) -> Option<(&'static str, &'static str, &'static str)> {
-    match token {
-        "CGRect" => Some(("CGRect", "CGRect", "<CoreGraphics/CGGeometry.h>")),
-        "CGPoint" => Some(("CGPoint", "CGPoint", "<CoreGraphics/CGGeometry.h>")),
-        "CGSize" => Some(("CGSize", "CGSize", "<CoreGraphics/CGGeometry.h>")),
-        "CGVector" => Some(("CGVector", "CGVector", "<CoreGraphics/CGGeometry.h>")),
-        "CGAffineTransform" => Some((
-            "CGAffineTransform",
-            "CGAffineTransform",
-            "<CoreGraphics/CGAffineTransform.h>",
-        )),
-        "NSRange" => Some(("NSRange", "_NSRange", "<Foundation/NSRange.h>")),
-        "NSEdgeInsets" => Some(("NSEdgeInsets", "NSEdgeInsets", "<Foundation/NSGeometry.h>")),
-        "NSDirectionalEdgeInsets" => Some((
-            "NSDirectionalEdgeInsets",
-            "NSDirectionalEdgeInsets",
-            "<Foundation/NSGeometry.h>",
-        )),
-        "NSAffineTransformStruct" => Some((
-            "NSAffineTransformStruct",
-            "NSAffineTransformStruct",
-            "<Foundation/NSAffineTransform.h>",
-        )),
-        _ => None,
-    }
 }
 
 // --- emission -------------------------------------------------------------

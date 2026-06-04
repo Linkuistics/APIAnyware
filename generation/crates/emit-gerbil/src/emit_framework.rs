@@ -27,6 +27,9 @@ use apianyware_macos_types::ir::Framework;
 
 use crate::class_graph::{build_class_graph, ClassRegistry, ParentRef};
 use crate::emit_class::{generate_bare_module, generate_class_file_with_parent};
+use crate::emit_constants::{constant_names, generate_constants_file};
+use crate::emit_enums::{enum_value_names, generate_enums_file};
+use crate::emit_functions::{count_emittable, function_emittable_names, generate_functions_file};
 use crate::emit_protocol::{generate_protocol_file, protocol_exports};
 use crate::naming::class_module_stem;
 
@@ -185,6 +188,50 @@ pub fn emit_framework(
         }
     }
 
+    // Data modules: `enums.ss`, `constants.ss`, `functions.ss` — written only
+    // when the framework has that construct family (node 040 brief). Each ensures
+    // the `<fw_low>/` directory exists (a framework may have e.g. constants but no
+    // classes), writes its module, and pushes a `SubModule` so the facade
+    // re-exports it. None is a protocol → no `-protocol` rename.
+    let fw_dir = output_dir.join(&fw_low);
+    let mut emit_data_module =
+        |stem: &str, content: String, exports: Vec<String>| -> io::Result<()> {
+            std::fs::create_dir_all(&fw_dir)?;
+            std::fs::write(fw_dir.join(format!("{stem}.ss")), content)?;
+            files_written += 1;
+            submodules.push(SubModule {
+                import_path: SubModule::import_path(&fw_low, &[stem]),
+                exports,
+                is_protocol: false,
+            });
+            Ok(())
+        };
+
+    let enums_emitted = !fw.enums.is_empty();
+    if enums_emitted {
+        emit_data_module(
+            "enums",
+            generate_enums_file(&fw.enums, &fw.name),
+            enum_value_names(&fw.enums),
+        )?;
+    }
+    let constants_emitted = !fw.constants.is_empty();
+    if constants_emitted {
+        emit_data_module(
+            "constants",
+            generate_constants_file(&fw.constants, &fw.name),
+            constant_names(&fw.constants),
+        )?;
+    }
+    let functions_emitted = count_emittable(&fw.functions) > 0;
+    if functions_emitted {
+        emit_data_module(
+            "functions",
+            generate_functions_file(&fw.functions, &fw.name),
+            function_emittable_names(&fw.functions, &fw.name),
+        )?;
+    }
+
     // Per-framework facade: `<framework>.ss` next to the framework directory.
     let facade = generate_facade_file(&fw.name, &submodules);
     let facade_path = output_dir.join(format!("{fw_low}.ss"));
@@ -194,9 +241,9 @@ pub fn emit_framework(
         files_written: files_written + 1,
         classes_emitted: fw.classes.len(),
         protocols_emitted: delegate_protocols.len(),
-        enums_emitted: 0,
-        functions_emitted: 0,
-        constants_emitted: 0,
+        enums_emitted: if enums_emitted { fw.enums.len() } else { 0 },
+        functions_emitted: count_emittable(&fw.functions),
+        constants_emitted: if constants_emitted { fw.constants.len() } else { 0 },
     })
 }
 
@@ -514,6 +561,82 @@ mod tests {
         // The colliding protocol constructor is renamed; the class keeps its name.
         assert!(facade.contains("(make-nsaccessibilityelement make-nsaccessibilityelement-protocol)"));
         assert!(facade.contains("make-nsaccessibilityelement-protocol"));
+    }
+
+    #[test]
+    fn emits_data_modules_and_reexports_them() {
+        use apianyware_macos_types::ir::{Constant, Enum, EnumValue, Function};
+        use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+
+        let tmp = tempfile::tempdir().unwrap();
+        let mut fw = make_minimal_framework("TestKit");
+        fw.enums = vec![Enum {
+            name: "TKState".into(),
+            enum_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive { name: "int64".into() },
+            },
+            values: vec![EnumValue { name: "TKOff".into(), value: 0 }],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+        }];
+        fw.constants = vec![Constant {
+            name: "TKVersionKey".into(),
+            constant_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Id,
+            },
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            macro_value: None,
+        }];
+        fw.functions = vec![Function {
+            name: "TKReset".into(),
+            params: vec![],
+            return_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive { name: "void".into() },
+            },
+            inline: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+        }];
+
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        assert_eq!(res.enums_emitted, 1);
+        assert_eq!(res.constants_emitted, 1);
+        assert_eq!(res.functions_emitted, 1);
+
+        // The three data modules land under the framework directory.
+        assert!(tmp.path().join("testkit/enums.ss").exists());
+        assert!(tmp.path().join("testkit/constants.ss").exists());
+        assert!(tmp.path().join("testkit/functions.ss").exists());
+
+        // The facade imports all three and re-exports their names (the `main`
+        // re-export of CONTEXT.md).
+        let facade = std::fs::read_to_string(tmp.path().join("testkit.ss")).unwrap();
+        assert!(facade.contains(":gerbil-bindings/testkit/enums"));
+        assert!(facade.contains(":gerbil-bindings/testkit/constants"));
+        assert!(facade.contains(":gerbil-bindings/testkit/functions"));
+        assert!(facade.contains("TKOff"));
+        assert!(facade.contains("TKVersionKey"));
+        assert!(facade.contains("TKReset"));
+    }
+
+    #[test]
+    fn data_modules_skipped_when_empty() {
+        let tmp = tempfile::tempdir().unwrap();
+        let fw = make_minimal_framework("TestKit");
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        assert_eq!(res.enums_emitted, 0);
+        assert_eq!(res.constants_emitted, 0);
+        assert_eq!(res.functions_emitted, 0);
+        assert!(!tmp.path().join("testkit/enums.ss").exists());
+        assert!(!tmp.path().join("testkit").exists());
     }
 
     #[test]

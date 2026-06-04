@@ -88,6 +88,42 @@ pub fn is_known_geometry_alias(name: &str) -> bool {
     map_geometry_alias(name).is_some()
 }
 
+/// `(token, c-struct-tag, header)` for a by-value geometry struct token — the
+/// `(c-define-type <token> (struct "<tag>"))` declaration and the `#include`
+/// any `begin-ffi` block referencing that token in an arg/return slot needs.
+/// Shared by the class emitter and the function emitter (both pass geometry
+/// structs by value, FINDINGS §4). The CoreGraphics tokens are confident (spike
+/// §4); the NS-prefixed and affine ones carry their best-known struct tag +
+/// header and are an inbox item for 050/070 (the `-x objective-c` unit makes the
+/// Foundation/QuartzCore tags available, but the exact spelling wants a
+/// gsc-compile confirmation the VM-verify leaf gives).
+pub fn geometry_decl(token: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    match token {
+        "CGRect" => Some(("CGRect", "CGRect", "<CoreGraphics/CGGeometry.h>")),
+        "CGPoint" => Some(("CGPoint", "CGPoint", "<CoreGraphics/CGGeometry.h>")),
+        "CGSize" => Some(("CGSize", "CGSize", "<CoreGraphics/CGGeometry.h>")),
+        "CGVector" => Some(("CGVector", "CGVector", "<CoreGraphics/CGGeometry.h>")),
+        "CGAffineTransform" => Some((
+            "CGAffineTransform",
+            "CGAffineTransform",
+            "<CoreGraphics/CGAffineTransform.h>",
+        )),
+        "NSRange" => Some(("NSRange", "_NSRange", "<Foundation/NSRange.h>")),
+        "NSEdgeInsets" => Some(("NSEdgeInsets", "NSEdgeInsets", "<Foundation/NSGeometry.h>")),
+        "NSDirectionalEdgeInsets" => Some((
+            "NSDirectionalEdgeInsets",
+            "NSDirectionalEdgeInsets",
+            "<Foundation/NSGeometry.h>",
+        )),
+        "NSAffineTransformStruct" => Some((
+            "NSAffineTransformStruct",
+            "NSAffineTransformStruct",
+            "<Foundation/NSAffineTransform.h>",
+        )),
+        _ => None,
+    }
+}
+
 /// The by-value `c-define-type` token for a geometry struct returned (or
 /// passed) by value, e.g. `"CGRect"`. `None` for non-geometry types. Unlike
 /// chez, no hidden leading-buffer convention is involved — Gambit returns the
