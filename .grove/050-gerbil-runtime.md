@@ -155,6 +155,57 @@ over the legacy `objc-obj` handle) still sits *below* the graph block in each
 module until leaf 040/020/040 rewrites it — the runtime must keep the old `objc-obj`
 contract working alongside the new `NSObject` root until then.
 
+### Exact names emitted by leaf 040/020/040 (consumption surfaces) — LANDED
+
+The proc surface is now **re-targeted onto the typed `defclass` graph** (ADR-0020),
+**superseding the transitional `objc-obj`/`wrap-objc-obj`/`objc-obj->ptr` names**
+from leaf 010 — the runtime objc module must export, by these exact spellings:
+
+- **`wrap`** — class-aware wrap of a raw `id` pointer → the **exact bound Gerbil
+  instance** (`object_getClass` + the `register-objc-class!` registry, nearest
+  bound ancestor as fallback), registering the ADR-0019 will. `(wrap p)` for an
+  autoreleased (`+0`) return, `(wrap p #t)` for a retained (`+1`) return
+  (alloc/init, copy, new, `returns_retained`). **Replaces `wrap-objc-obj`** — used
+  for every object-typed method/property/constructor return.
+- **`->ptr`** — coerce an outbound `id` argument: a bound instance → its `ptr`;
+  `#f`/nil → a null pointer. **Replaces `objc-obj->ptr`** — used for every
+  object-typed arg and object-property setter value. The **receiver** is no longer
+  coerced through this: `self` is a typed instance, so the proc core reads its
+  pointer directly as **`(NSObject-ptr self)`** (the runtime root's slot accessor).
+- **The renamed `:std/generic` import** — every class module now emits
+  `(import :std/foreign (rename-in :std/generic (defgeneric g:defgeneric)
+  (defmethod g:defmethod)) … :gerbil-bindings/runtime/objc)`. The runtime must
+  ensure `:std/generic` is available and the built-in `{}` MOP `defmethod` is in
+  scope (default prelude). Both surfaces share one identifier per spike `07`.
+
+**Dual surface shape per instance method / instance property (getter + setter):**
+```
+(declare (inline))                ; module-level — forwarders inline the proc core
+(g:defgeneric <bare-sel>)         ; one per distinct surface selector, up top
+(define (<class>-<sel> self …) (%msg-… (NSObject-ptr self) %sel-… …))   ; proc core
+(defmethod {<bare-sel> <Class>} (lambda (self …) (<class>-<sel> self …)))   ; {} MOP
+(g:defmethod (<bare-sel> (o <Class>) …) (<class>-<sel> o …))                ; generic
+```
+Class methods + class properties stay **proc-only** (no instance receiver to
+dispatch on). The plan is built over the class's **own** methods/properties
+(`cls.methods`/`cls.properties`), **not** the flattened `all_methods` — a subclass
+inherits an ancestor's surface method through the `defclass` chain.
+
+**⚠ Open: `(declare (inline))` form** — emitted as the obvious inlinable-proc-core
+pragma; **confirm gsc honours it** (and that it doesn't fight `begin-ffi`/`defclass`
+above it) at the runtime smoke build / VM-verify, adjust `emit_surface_decls` in
+`emit_class.rs` if a different pragma (or `define-inline`) is needed.
+
+**⚠ Open: cross-module generic unification.** Each class module declares its own
+`(g:defgeneric <sel>)`, so two **unrelated** classes that happen to share a
+selector name (`count`, `title`, `name`, …) export the **same** generic name from
+**different** modules → the framework facade (`emit_framework.rs`) collapses/clashes
+them. The sound fix is a **shared generics-declaration module** (the global selector
+set, declared once and imported everywhere) — the analogue of the cross-framework
+`ClassRegistry`, owned here or by the leaf-060 CLI pre-pass. Until then the facade
+re-export is unsound for coincidentally-shared selectors. (ADR-0019's illustrative
+`wrap-objc-obj` spelling also wants reconciling to `wrap` when the runtime lands.)
+
 ## Notes
 
 The two-toolchain rule (spec §1): develop/measure on the bottled gerbil. Clear

@@ -17,21 +17,40 @@
 //!   - a **procedural surface** — one plain procedure per emitted method,
 //!     constructors, and properties.
 //!
-//! ## Transitional note (leaf 030)
+//! ## Object model (leaf 040 — dual consumption surfaces, ADR-0020)
 //!
-//! Leaf 030 adds the `defclass` graph (above) on top of leaf 010's procedural
-//! surface. That proc surface still threads the legacy single-`objc-obj` handle;
-//! leaf 040 rewrites it onto the typed graph (the proc core + the dual built-in
-//! `{sel obj}` / `:std/generic` `(sel obj)` consumption surfaces) and leaf 050
-//! layers `(values result error)` for trailing-`NSError**` methods. The emitted
-//! module therefore carries *both* object models in this leaf — coherent at the
-//! Rust level (the crate compiles, tests assert on emitted text); the Gerbil
-//! modules are unified at 040 before any VM-verify.
+//! Over the manifest `defclass` graph (030), each emitted method gets an
+//! **inlinable per-class proc core** plus **both** of Gerbil's dispatch surfaces,
+//! sharing one source-level identifier (spike `07-dual-surface.ss`, FINDINGS §7):
+//!
+//! - **Proc core** — `(define (nsstring-length self) (%msg-… (NSObject-ptr self)
+//!   …))`, the single implementation both surfaces forward to and the designated
+//!   fast path (a module-level `(declare (inline))` lets the forwarders compile
+//!   away — ADR-0020). The receiver is the typed `defclass` instance, so `self`'s
+//!   pointer is the direct root-slot read `(NSObject-ptr self)`; `id` arguments
+//!   coerce through the runtime's `->ptr` (instance → its `ptr`, `#f` → null);
+//!   object returns wrap through the class-aware `wrap` (exact bound type via the
+//!   030 registry, retained-aware).
+//! - **Surface 1 — built-in `{}` MOP:** `(defmethod {length NSString} (lambda
+//!   (self) (nsstring-length self)))`, called `{length obj}`. Dispatches by
+//!   method-table symbol; inherits down the `defclass` graph.
+//! - **Surface 2 — `:std/generic`:** `(g:defmethod (length (o NSString))
+//!   (nsstring-length o))`, called `(length obj)`. The `(rename-in :std/generic
+//!   (defgeneric g:defgeneric) (defmethod g:defmethod))` import dodges the
+//!   built-in `defmethod` clash (spike `03b`). **Same identifier** as surface 1.
+//!
+//! Surfaces are emitted only for **instance** methods and **instance** properties
+//! (a receiver to dispatch on); class methods/properties stay proc-only. Because
+//! the `defclass` graph carries inheritance structurally, the plan is built over
+//! the class's **own** methods/properties (`cls.methods`/`cls.properties`), *not*
+//! the inheritance-flattened `all_methods` chez/racket need — a subclass inherits
+//! an ancestor's surface method through the graph rather than re-emitting it.
 //!
 //! The IR-shaping machinery (`build_class_plan`, `collect_exports`,
 //! `dedupe_across_categories`, the property/class-method collision pre-pass) is
 //! ported from `emit-chez/src/emit_class.rs` — it is target-neutral; only the
-//! naming calls and the emitted source forms are Gerbil-specific.
+//! naming calls and the emitted source forms are Gerbil-specific. Leaf 050 layers
+//! `(values result error)` for trailing-`NSError**` methods.
 //!
 //! ## Runtime contract (names owned by leaf 050)
 //!
@@ -45,14 +64,20 @@
 //!   (`object_getClass` → exact bound type, nearest bound ancestor as fallback)
 //!   and the ObjC superclass name the subclassing bridge passes to
 //!   `objc_allocateClassPair`.
-//! - `(defstruct objc-obj (ptr))` ⇒ `make-objc-obj` / `objc-obj-ptr` / `objc-obj?`;
-//!   `wrap-objc-obj` (raw `id` ptr → `objc-obj`, registers a Gambit will;
-//!   `(wrap-objc-obj ptr)` autoreleased, `(wrap-objc-obj ptr #t)` retained — mirrors
-//!   chez `wrap-objc-object`); `objc-obj->ptr` (coerce an `objc-obj` *or* `#f`/nil
-//!   to a raw pointer for an outbound `id` argument). **Transitional** (leaf 040
-//!   folds these into the class-aware `wrap`). Captured to 050's inbox.
+//! - **`(wrap <id-ptr> [retained?])`** — class-aware wrap: a raw `id` pointer →
+//!   the exact bound Gerbil instance (via `object_getClass` + the registry,
+//!   nearest bound ancestor as fallback), registering the ADR-0019 will;
+//!   `(wrap p)` autoreleased, `(wrap p #t)` retained.
+//! - **`(->ptr x)`** — coerce a bound instance *or* `#f`/nil to a raw pointer for
+//!   an outbound `id` argument (instance → its `ptr`, `#f` → null).
+//! - **The `:std/generic` rename import** + cross-module generic unification: each
+//!   class module currently declares its own `(g:defgeneric <sel>)`, so two
+//!   *unrelated* classes sharing a selector name (e.g. `count`, `title`) collide
+//!   at the framework facade. A shared generics-declaration module (the global
+//!   selector set, like the cross-framework `ClassRegistry`) is the fix — owned by
+//!   the runtime/CLI pre-pass. Captured to 050's inbox.
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
@@ -70,8 +95,22 @@ use crate::naming::{
     make_selector_binding_name, make_unique_constructor_name,
 };
 
-/// The runtime module the generated class binds against (objc-obj + lifetime).
+/// The runtime module the generated class binds against (root class + `wrap` /
+/// `->ptr` + lifetime).
 const RUNTIME_OBJC_IMPORT: &str = ":gerbil-bindings/runtime/objc";
+
+/// The `:std/generic` import, renamed so its `defgeneric`/`defmethod` don't clash
+/// with the built-in `{}` MOP `defmethod` (spike `03b`). The generic surface is
+/// emitted with `g:defgeneric` / `g:defmethod`.
+const GENERIC_IMPORT: &str =
+    "(rename-in :std/generic (defgeneric g:defgeneric) (defmethod g:defmethod))";
+
+/// The root-class `ptr` slot accessor — the direct, fast read of a typed
+/// `defclass` instance's pointer (`(NSObject-ptr self)`), used as the receiver in
+/// every instance proc core.
+fn root_ptr_accessor(receiver: &str) -> String {
+    format!("({}-ptr {})", RUNTIME_ROOT, receiver)
+}
 
 /// Generate the full `.ss` module text for one class, rooting its `defclass` on
 /// the runtime [`RUNTIME_ROOT`]. Convenience over
@@ -85,7 +124,7 @@ pub fn generate_class_file(cls: &Class, framework: &str) -> String {
 pub fn class_exports(cls: &Class) -> Vec<String> {
     let mapper = GerbilFfiTypeMapper;
     let plan = build_class_plan(cls, &mapper);
-    merged_exports(cls, plan.exports)
+    merged_exports(cls, &plan)
 }
 
 /// The Gerbil class identifier + subtype predicate this class contributes to the
@@ -99,12 +138,43 @@ fn class_graph_exports(cls: &Class) -> Vec<String> {
     vec![cls.name.clone(), format!("{}?", cls.name)]
 }
 
-/// Merge the proc-surface exports with the class-graph exports, sorted + deduped.
-fn merged_exports(cls: &Class, mut exports: Vec<String>) -> Vec<String> {
+/// Merge the proc-surface exports with the class-graph identifiers and the dual
+/// consumption-surface selectors (ADR-0020), sorted + deduped. The bare surface
+/// selectors are the `{}`/generic method names a caller writes (`{length obj}` /
+/// `(length obj)`).
+fn merged_exports(cls: &Class, plan: &ClassPlan) -> Vec<String> {
+    let mut exports = plan.exports.clone();
     exports.extend(class_graph_exports(cls));
+    exports.extend(instance_surface_selectors(cls, plan));
     exports.sort();
     exports.dedup();
     exports
+}
+
+/// The distinct bare-kebab surface selectors this class emits a `{}`/generic
+/// method for: its instance methods + instance-property getters/setters. Sorted,
+/// deduped — the generic-declaration block and the export list both consume it.
+fn instance_surface_selectors(cls: &Class, plan: &ClassPlan) -> Vec<String> {
+    let mapper = GerbilFfiTypeMapper;
+    let mut sels: BTreeSet<String> = BTreeSet::new();
+    for m in &plan.instance_methods {
+        if is_supported_method(m, &mapper) {
+            let proc = make_method_name(&cls.name, &m.selector);
+            sels.insert(surface_selector(&cls.name, &proc));
+        }
+    }
+    for p in &plan.properties {
+        if p.class_property {
+            continue;
+        }
+        let getter = make_property_getter_name(&cls.name, &p.name);
+        sels.insert(surface_selector(&cls.name, &getter));
+        if !p.readonly {
+            let setter = make_property_setter_name(&cls.name, &p.name);
+            sels.insert(surface_selector(&cls.name, &setter));
+        }
+    }
+    sels.into_iter().collect()
 }
 
 /// Compute exports + render the class module in a single pass, deriving the
@@ -116,7 +186,7 @@ pub fn generate_class_file_with_parent(
 ) -> (String, Vec<String>) {
     let mapper = GerbilFfiTypeMapper;
     let plan = build_class_plan(cls, &mapper);
-    let exports = merged_exports(cls, plan.exports.clone());
+    let exports = merged_exports(cls, &plan);
     let mut w = CodeWriter::new();
 
     let needs_default_constructor =
@@ -126,6 +196,7 @@ pub fn generate_class_file_with_parent(
     emit_class_graph_block(&mut w, &cls.name, &cls.superclass, parent);
     emit_ffi_block(&mut w, cls, &plan, needs_default_constructor, &mapper);
     emit_selector_caches(&mut w, cls, &plan);
+    emit_surface_decls(&mut w, cls, &plan);
 
     if !plan.init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
@@ -366,28 +437,25 @@ fn dedupe_across_categories(
     (kept_props, kept_inst, kept_class, exports)
 }
 
+/// The methods this class emits a surface for: its **own** declared methods, not
+/// the inheritance-flattened `all_methods` chez/racket need. Gerbil's `defclass`
+/// graph (030) carries inheritance structurally — a subclass dispatches to an
+/// ancestor's `{}`/generic method through the chain rather than re-emitting it
+/// (ADR-0020). Deduped by selector.
 fn effective_methods(cls: &Class) -> Vec<&Method> {
-    let methods: Vec<&Method> = if cls.all_methods.is_empty() {
-        cls.methods.iter().collect()
-    } else {
-        cls.all_methods.iter().collect()
-    };
     let mut seen = HashSet::new();
-    methods
-        .into_iter()
+    cls.methods
+        .iter()
         .filter(|m| seen.insert(m.selector.clone()))
         .collect()
 }
 
+/// This class's **own** declared properties (see [`effective_methods`] — the
+/// manifest hierarchy makes flattening redundant). Deduped by name.
 fn effective_properties(cls: &Class) -> Vec<&Property> {
-    let properties: Vec<&Property> = if cls.all_properties.is_empty() {
-        cls.properties.iter().collect()
-    } else {
-        cls.all_properties.iter().collect()
-    };
     let mut seen = HashSet::new();
-    properties
-        .into_iter()
+    cls.properties
+        .iter()
         .filter(|p| seen.insert(make_property_getter_name("", &p.name)))
         .collect()
 }
@@ -715,6 +783,8 @@ fn emit_header(
         framework
     );
     w.line("(import :std/foreign");
+    // `:std/generic` (renamed) backs the generic consumption surface.
+    write_line!(w, "        {}", GENERIC_IMPORT);
     // The parent's module must be in scope for `(defclass (Self Parent) …)`. The
     // runtime root needs no extra import (it lives in the runtime module already
     // imported below); local/cross-framework parents import their sibling/owning
@@ -882,18 +952,41 @@ fn emit_selector_caches(w: &mut CodeWriter, cls: &Class, plan: &ClassPlan) {
     }
 }
 
+/// Declarations shared by the dual consumption surfaces (ADR-0020): the
+/// module-level `(declare (inline))` that lets the surface forwarders inline the
+/// proc core (the designated fast path), then one `(g:defgeneric <sel>)` per
+/// distinct instance surface selector — the `:std/generic` generics the surface
+/// `g:defmethod`s extend. Emitted once, before the procs/surfaces that need them.
+///
+/// Each module declaring its own generics means two *unrelated* classes sharing a
+/// selector name collide at the framework facade; a shared global generics module
+/// is the fix (inbox-noted to 050). The built-in `{}` surface needs no
+/// declaration — it dispatches by method-table symbol.
+fn emit_surface_decls(w: &mut CodeWriter, cls: &Class, plan: &ClassPlan) {
+    let selectors = instance_surface_selectors(cls, plan);
+    if selectors.is_empty() {
+        return;
+    }
+    w.line(";; --- Dispatch surfaces (ADR-0020): inlinable proc core + generics ---");
+    w.line("(declare (inline))");
+    for sel in &selectors {
+        write_line!(w, "(g:defgeneric {})", sel);
+    }
+    w.blank_line();
+}
+
 fn emit_default_constructor(w: &mut CodeWriter, class_name: &str) {
     let fn_name = format!("make-{}", class_name_to_lowercase(class_name));
     let alloc = signature_binding_name(&[], POINTER);
     write_line!(w, "(define ({})", fn_name);
-    w.line("  (wrap-objc-obj");
+    w.line("  (wrap");
     write_line!(
         w,
         "    ({alloc} ({alloc} (objc_getClass \"{cls}\") (sel_registerName \"alloc\"))",
         alloc = alloc,
         cls = class_name
     );
-    w.line("             (sel_registerName \"init\"))");
+    w.line("          (sel_registerName \"init\"))");
     w.line("    #t))");
     w.blank_line();
 }
@@ -931,7 +1024,7 @@ fn emit_constructor(
         format!("({alloc} (objc_getClass \"{class_name}\") (sel_registerName \"alloc\"))");
     write_line!(
         w,
-        "  (wrap-objc-obj ({init} {alloc_call} {sel}{sp}{args}) #t))",
+        "  (wrap ({init} {alloc_call} {sel}{sp}{args}) #t))",
         init = init,
         alloc_call = alloc_call,
         sel = sel_var,
@@ -977,7 +1070,7 @@ fn emit_method(
     let receiver = if is_class_method {
         format!("(objc_getClass \"{class_name}\")")
     } else {
-        "(objc-obj->ptr self)".to_string()
+        root_ptr_accessor("self")
     };
     let coerced: Vec<String> = method
         .params
@@ -991,7 +1084,54 @@ fn emit_method(
         args = coerced.join(" ")
     );
     write_line!(w, "  {})", wrap_return(method, &call, mapper));
+
+    // Both consumption surfaces over the proc core — instance methods only (a
+    // receiver to dispatch on). Class methods are proc-only namespaced functions.
+    // `emit_instance_surfaces` keeps the proc + its surfaces a tight unit and
+    // emits the trailing blank; a class-method proc emits its own.
+    if is_class_method {
+        w.blank_line();
+    } else {
+        emit_instance_surfaces(w, class_name, &fn_name, &param_vars);
+    }
+}
+
+/// Emit the two consumption surfaces (ADR-0020) forwarding to an instance proc
+/// `proc_name` over receiver type `class_name`: the built-in `{}` MOP method and
+/// the `:std/generic` generic method, sharing the bare-kebab surface selector.
+/// `param_vars` are the proc's non-receiver argument names.
+fn emit_instance_surfaces(
+    w: &mut CodeWriter,
+    class_name: &str,
+    proc_name: &str,
+    param_vars: &[String],
+) {
+    let sel = surface_selector(class_name, proc_name);
+    let extra = param_vars.join(" ");
+    let sp = if param_vars.is_empty() { "" } else { " " };
+    // Surface 1 — built-in `{}` MOP: dispatches by method-table symbol.
+    write_line!(
+        w,
+        "(defmethod {{{sel} {class_name}}} (lambda (self{sp}{extra}) ({proc_name} self{sp}{extra})))"
+    );
+    // Surface 2 — `:std/generic`: receiver-specialized generic method (same id).
+    write_line!(
+        w,
+        "(g:defmethod ({sel} (o {class_name}){sp}{extra}) ({proc_name} o{sp}{extra}))"
+    );
     w.blank_line();
+}
+
+/// The bare-kebab surface selector for a class-prefixed proc name: strip the
+/// `<class-lowercase>-` prefix the proc carries (`nsstring-length` → `length`,
+/// `nswindow-set-title!` → `set-title!`). Both surfaces share this identifier;
+/// stripping the proc's own prefix keeps surface and proc in lockstep.
+fn surface_selector(class_name: &str, proc_name: &str) -> String {
+    let prefix = format!("{}-", class_name_to_lowercase(class_name));
+    proc_name
+        .strip_prefix(&prefix)
+        .unwrap_or(proc_name)
+        .to_string()
 }
 
 fn emit_property(
@@ -1015,18 +1155,24 @@ fn emit_property(
     let receiver = if prop.class_property {
         format!("(objc_getClass \"{class_name}\")")
     } else {
-        "(objc-obj->ptr self)".to_string()
+        root_ptr_accessor("self")
     };
 
     let arglist = if prop.class_property { "" } else { " self" };
     write_line!(w, "(define ({getter_name}{arglist})");
     let call = format!("({getter_binding} {receiver} {getter_sel})");
     let wrapped = if mapper.is_object_type(&prop.property_type) {
-        format!("(wrap-objc-obj {call})")
+        format!("(wrap {call})")
     } else {
         call
     };
     write_line!(w, "  {})", wrapped);
+    // Both surfaces over an instance-property getter (a 0-arg method).
+    if !prop.class_property {
+        emit_instance_surfaces(w, class_name, &getter_name, &[]);
+    } else {
+        w.blank_line();
+    }
 
     if !prop.readonly {
         let setter_name = if prop.class_property {
@@ -1048,8 +1194,13 @@ fn emit_property(
             w,
             "  ({setter_binding} {receiver} {setter_sel} {value_expr}))"
         );
+        // Both surfaces over an instance-property setter (a 1-arg method).
+        if !prop.class_property {
+            emit_instance_surfaces(w, class_name, &setter_name, &["value".to_string()]);
+        } else {
+            w.blank_line();
+        }
     }
-    w.blank_line();
 }
 
 // --- per-arg / per-return coercion ----------------------------------------
@@ -1057,7 +1208,7 @@ fn emit_property(
 fn coerce_arg_expr(param: &Param, var: &str) -> String {
     match &param.param_type.kind {
         TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
-            format!("(objc-obj->ptr {var})")
+            format!("(->ptr {var})")
         }
         TypeRefKind::Selector => format!("(sel_registerName {var})"),
         _ => var.to_string(),
@@ -1067,7 +1218,7 @@ fn coerce_arg_expr(param: &Param, var: &str) -> String {
 fn setter_value_expr(t: &TypeRef) -> String {
     match &t.kind {
         TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
-            "(objc-obj->ptr value)".to_string()
+            "(->ptr value)".to_string()
         }
         TypeRefKind::Selector => "(sel_registerName value)".to_string(),
         _ => "value".to_string(),
@@ -1079,9 +1230,9 @@ fn wrap_return(method: &Method, call: &str, mapper: &dyn FfiTypeMapper) -> Strin
         call.to_string()
     } else if returns_object_type(method, mapper) {
         if method_returns_retained(method) {
-            format!("(wrap-objc-obj {call} #t)")
+            format!("(wrap {call} #t)")
         } else {
-            format!("(wrap-objc-obj {call})")
+            format!("(wrap {call})")
         }
     } else {
         call.to_string()
@@ -1231,10 +1382,20 @@ mod tests {
             "(define-c-lambda %msg-v->u64 ((pointer void) (pointer void)) unsigned-int64"
         ));
         assert!(out.contains("((uint64_t (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2)"));
-        // proc core over objc-obj
+        // proc core over the typed defclass instance (root ptr slot read)
         assert!(out.contains("(define (nsstring-length self)"));
-        assert!(out.contains("(%msg-v->u64 (objc-obj->ptr self) %sel-nsstring-length)"));
+        assert!(out.contains("(%msg-v->u64 (NSObject-ptr self) %sel-nsstring-length)"));
         assert!(out.contains("(define %sel-nsstring-length (sel_registerName \"length\"))"));
+        // dual consumption surfaces, shared identifier `length`, forward to proc
+        assert!(out.contains("(declare (inline))"));
+        assert!(out.contains("(g:defgeneric length)"));
+        assert!(out
+            .contains("(defmethod {length NSString} (lambda (self) (nsstring-length self)))"));
+        assert!(out.contains("(g:defmethod (length (o NSString)) (nsstring-length o))"));
+        // the renamed :std/generic import is in scope
+        assert!(out.contains(
+            "(rename-in :std/generic (defgeneric g:defgeneric) (defmethod g:defmethod))"
+        ));
     }
 
     #[test]
@@ -1295,7 +1456,7 @@ mod tests {
         assert!(out.contains("((CGRect (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2)"));
         // a struct return is NOT object-wrapped
         assert!(out.contains("(define (nsview-frame self)"));
-        assert!(out.contains("(%msg-v->cgrect (objc-obj->ptr self) %sel-nsview-frame)"));
+        assert!(out.contains("(%msg-v->cgrect (NSObject-ptr self) %sel-nsview-frame)"));
     }
 
     #[test]
@@ -1311,9 +1472,8 @@ mod tests {
             vec![],
         );
         let out = generate_class_file(&cls, "Foundation");
-        assert!(out.contains(
-            "(wrap-objc-obj (%msg-v->p (objc-obj->ptr self) %sel-nsstring-description))"
-        ));
+        // object return wrapped through the class-aware (registry) `wrap`
+        assert!(out.contains("(wrap (%msg-v->p (NSObject-ptr self) %sel-nsstring-description))"));
     }
 
     #[test]
@@ -1343,7 +1503,8 @@ mod tests {
         assert!(out.contains("(define (make-nsstring-init-with-utf8-string utf8)"));
         // init shape (id, SEL, char-string) -> id → %msg-str->p; alloc → %msg-v->p
         assert!(out.contains("%msg-str->p"));
-        assert!(out.contains("(wrap-objc-obj (%msg-str->p"));
+        // constructor returns a typed instance via the class-aware `wrap`
+        assert!(out.contains("(wrap (%msg-str->p"));
         assert!(out.contains("#t))"));
         // the explicit init selector is cached at module load (not inlined)
         assert!(out
@@ -1363,16 +1524,23 @@ mod tests {
         let out = generate_class_file(&cls, "AppKit");
         assert!(out.contains(";; --- Properties ---"));
         assert!(out.contains("(define (nswindow-title self)"));
-        assert!(
-            out.contains("(wrap-objc-obj (%msg-v->p (objc-obj->ptr self) %sel-nswindow-title))")
-        );
+        assert!(out.contains("(wrap (%msg-v->p (NSObject-ptr self) %sel-nswindow-title))"));
         // The proc name keeps the mutating `!`; the selector cache var is keyed
         // on the raw selector `setTitle:` (no `!`).
         assert!(out.contains("(define (nswindow-set-title! self value)"));
-        assert!(out.contains(
-            "(%msg-p->v (objc-obj->ptr self) %sel-nswindow-set-title (objc-obj->ptr value))"
-        ));
+        assert!(out
+            .contains("(%msg-p->v (NSObject-ptr self) %sel-nswindow-set-title (->ptr value))"));
         assert!(out.contains("(define %sel-nswindow-set-title (sel_registerName \"setTitle:\"))"));
+        // Both surfaces over the getter AND the setter, bare-kebab selectors.
+        assert!(out.contains("(g:defgeneric title)"));
+        assert!(out.contains("(g:defgeneric set-title!)"));
+        assert!(out.contains("(defmethod {title NSWindow} (lambda (self) (nswindow-title self)))"));
+        assert!(out.contains("(g:defmethod (title (o NSWindow)) (nswindow-title o))"));
+        assert!(out.contains(
+            "(defmethod {set-title! NSWindow} (lambda (self value) (nswindow-set-title! self value)))"
+        ));
+        assert!(out
+            .contains("(g:defmethod (set-title! (o NSWindow) value) (nswindow-set-title! o value))"));
     }
 
     #[test]
@@ -1385,9 +1553,12 @@ mod tests {
         let out = generate_class_file(&cls, "Foundation");
         assert!(out.contains(";; --- Class methods ---"));
         assert!(out.contains("(define (nsstring-string)"));
-        assert!(out.contains(
-            "(wrap-objc-obj (%msg-v->p (objc_getClass \"NSString\") %sel-nsstring-string))"
-        ));
+        assert!(out
+            .contains("(wrap (%msg-v->p (objc_getClass \"NSString\") %sel-nsstring-string))"));
+        // Class methods are proc-only — no instance receiver to dispatch on, so
+        // no `{}`/generic surface and no generic declaration.
+        assert!(!out.contains("(defmethod {string NSString}"));
+        assert!(!out.contains("(g:defgeneric string)"));
     }
 
     #[test]
@@ -1429,9 +1600,91 @@ mod tests {
         // sibling/subclass modules (and user subclassing) see them.
         assert!(exports.contains(&"NSString".to_string()));
         assert!(exports.contains(&"NSString?".to_string()));
+        // The bare-kebab surface selector (the `{}`/generic method name) is also
+        // exported alongside the class-prefixed proc.
+        assert!(exports.contains(&"length".to_string()));
         let mut sorted = exports.clone();
         sorted.sort();
         assert_eq!(exports, sorted);
+    }
+
+    // --- dual consumption surfaces (ADR-0020, leaf 040) ------------------
+
+    #[test]
+    fn arg_taking_method_surfaces_thread_args() {
+        // setObject:forKey: shape — both surfaces forward every non-receiver arg,
+        // and an `id` arg coerces through `->ptr` in the proc core.
+        let mut m = make_method(
+            "setObject:forKey:",
+            false,
+            false,
+            ty(TypeRefKind::Primitive {
+                name: "void".into(),
+            }),
+        );
+        m.params = vec![
+            param("object", TypeRefKind::Id),
+            param("key", TypeRefKind::Id),
+        ];
+        let cls = cls_with("NSMutableDictionary", vec![m], vec![]);
+        let out = generate_class_file(&cls, "Foundation");
+        // proc core coerces both id args via ->ptr
+        assert!(out.contains("(define (nsmutabledictionary-set-object-for-key! self object key)"));
+        assert!(out.contains("(->ptr object)"));
+        assert!(out.contains("(->ptr key)"));
+        // built-in {} surface forwards self + both args to the proc
+        assert!(out.contains(
+            "(defmethod {set-object-for-key! NSMutableDictionary} (lambda (self object key) (nsmutabledictionary-set-object-for-key! self object key)))"
+        ));
+        // generic surface, same identifier, receiver specialized, args threaded
+        assert!(out.contains(
+            "(g:defmethod (set-object-for-key! (o NSMutableDictionary) object key) (nsmutabledictionary-set-object-for-key! o object key))"
+        ));
+        assert!(out.contains("(g:defgeneric set-object-for-key!)"));
+    }
+
+    #[test]
+    fn own_methods_only_so_inheritance_dispatches_to_ancestor() {
+        // A subclass that declares NO own methods emits NO surface for an
+        // inherited selector — a subclass instance dispatches to the ancestor's
+        // `{}`/generic method through the defclass graph (ADR-0020). The flattened
+        // `all_methods` chain is deliberately ignored for gerbil.
+        let mut child = cls_with("NSMutableString", vec![], vec![]);
+        child.superclass = "NSString".into();
+        // The inherited `length` lives only in the (flattened) ancestor chain.
+        child.all_methods = vec![make_method(
+            "length",
+            false,
+            false,
+            ty(TypeRefKind::Primitive {
+                name: "uint64".into(),
+            }),
+        )];
+        let out =
+            generate_class_file_with_parent(&child, "Foundation", &ParentRef::Local("NSString".into()))
+                .0;
+        // No own method ⇒ no proc, no surface, no generic decl for `length`.
+        assert!(!out.contains("(define (nsmutablestring-length"));
+        assert!(!out.contains("(defmethod {length NSMutableString}"));
+        assert!(!out.contains("(g:defgeneric length)"));
+        // ...but the defclass link to the ancestor IS present (inheritance path).
+        assert!(out.contains("(defclass (NSMutableString NSString) () transparent: #t)"));
+    }
+
+    #[test]
+    fn object_return_wrapped_to_exact_type_via_registry_wrap() {
+        // An object-returning method wraps through the class-aware `wrap`, which
+        // (030 registry) resolves the exact bound type — not a fixed handle type.
+        let cls = cls_with(
+            "NSArray",
+            vec![make_method("firstObject", false, false, ty(TypeRefKind::Id))],
+            vec![],
+        );
+        let out = generate_class_file(&cls, "Foundation");
+        assert!(out.contains("(wrap (%msg-v->p (NSObject-ptr self) %sel-nsarray-first-object))"));
+        // surfaces present for the instance method
+        assert!(out.contains("(defmethod {first-object NSArray}"));
+        assert!(out.contains("(g:defmethod (first-object (o NSArray))"));
     }
 
     // --- manifest class graph (ADR-0020, leaf 030) -----------------------
