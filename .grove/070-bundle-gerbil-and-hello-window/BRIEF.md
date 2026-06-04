@@ -1,12 +1,33 @@
-# 070-bundle-gerbil-and-hello-window
-
-**Kind:** work
+# 070-bundle-gerbil-and-hello-window — brief
 
 ## Goal
 
 Build the `bundle-gerbil` crate (self-contained `.app` per ADR-0009) and prove the
 whole pipeline end-to-end with a **VM-verified hello-window** — the first sample
 app, doubling as the bundler's verification vehicle.
+
+## Decomposition (lazy, grown 2026-06-04)
+
+What looked like one work leaf is a four-stage pipeline with hard sequential
+dependencies and one explicitly-flagged unknown ("first full-framework gxc
+compile"). Decomposed so each stage is a focused session, and so VM-verify is its
+own leaf per the project rule (every sample-app port carries a dedicated
+TestAnyware/VM-verify leaf; CLI smoke never satisfies the node's done-bar):
+
+- **010** generate full gerbil bindings — regenerate the IR pipeline from scratch
+  (collect → resolve → annotate[merge committed LLM] → enrich), run the first full
+  gerbil emit, compile the hand-written runtime under the bottle toolchain. No app
+  yet; the milestone is *files emitted + runtime compiles clean*.
+- **020** hello-window app + **first full `gxc -exe` compile** (the discovery leaf)
+  — write `apps/hello-window/hello-window.ss` (port the chez one), compile against
+  the **static** distribution toolchain linking the emitted Foundation/AppKit
+  modules + `native_block.o` + frameworks. Shakes out emitter C-correctness at
+  scale. CLI smoke run only (no GUI from CLI).
+- **030** `bundle-gerbil` crate — `.app` assembly (clone `bundle-chez` shape) +
+  openssl@3 dylib vendor/relocate; `otool -L` shows no Homebrew dylib deps;
+  `com.linkuistics.*` bundle id.
+- **040** VM-verify hello-window via TestAnyware — the node's done-bar; window
+  actually draws.
 
 ## Context
 
