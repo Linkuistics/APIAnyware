@@ -75,11 +75,15 @@
 //!   class-graph root (holds the `ptr` slot + the ADR-0019 lifetime will); every
 //!   emitted `defclass` chains up to it. ⇒ `NSObject` / `NSObject?` /
 //!   `NSObject-ptr` / `make-NSObject`.
-//! - **`(register-objc-class! <gerbil-class> "<objc-name>" "<objc-super>")`** —
-//!   records the ObjC-name → Gerbil-type mapping the wrap boundary uses
-//!   (`object_getClass` → exact bound type, nearest bound ancestor as fallback)
-//!   and the ObjC superclass name the subclassing bridge passes to
-//!   `objc_allocateClassPair`.
+//! - **`(register-objc-class! (lambda (p) (make-<Class> ptr: p)) <Class>::t
+//!   "<objc-name>" "<objc-super>")`** — records, against the ObjC class name: a
+//!   POSITIONAL constructor closure (the runtime `wrap` calls `(ctor ptr)`; a
+//!   bare class id is Gerbil *syntax*, not a runtime value, and `make-<Class>`
+//!   is a keyword ctor — hence the adapter closure, settled at leaf 050/010),
+//!   the Gerbil class descriptor `<Class>::t` (for the 030 subclassing bridge),
+//!   and the ObjC superclass name (the wrap-boundary fallback walk +
+//!   `objc_allocateClassPair`). The mapping backs the class-aware wrap
+//!   (`object_getClass` → exact bound type, nearest bound ancestor as fallback).
 //! - **`(wrap <id-ptr> [retained?])`** — class-aware wrap: a raw `id` pointer →
 //!   the exact bound Gerbil instance (via `object_getClass` + the registry,
 //!   nearest bound ancestor as fallback), registering the ADR-0019 will;
@@ -920,9 +924,18 @@ fn emit_class_graph_block(
         class_name,
         parent.gerbil_name()
     );
+    // The runtime registry maps the ObjC class name to a POSITIONAL constructor
+    // closure (the runtime's `wrap` calls `(ctor ptr)`), plus the Gerbil class
+    // descriptor `<Class>::t` (for the 030 subclassing bridge) and the ObjC
+    // superclass name (the wrap-boundary fallback walk + subclass synthesis).
+    // The closure adapts the keyword constructor `make-<Class>` — a bare class
+    // identifier is Gerbil *syntax*, not a runtime value, so it cannot be passed
+    // directly (settled at leaf 050/010). Contract: `(register-objc-class! ctor
+    // descriptor objc-name objc-super)`.
     write_line!(
         w,
-        "(register-objc-class! {} \"{}\" \"{}\")",
+        "(register-objc-class! (lambda (p) (make-{} ptr: p)) {}::t \"{}\" \"{}\")",
+        class_name,
         class_name,
         class_name,
         objc_super
@@ -1908,7 +1921,9 @@ mod tests {
         assert!(out.contains("(defclass (NSView NSObject) () transparent: #t)"));
         // Registration carries the ObjC name + ObjC super name (wrap boundary +
         // subclassing bridge). cls_with leaves superclass empty ⇒ "".
-        assert!(out.contains("(register-objc-class! NSView \"NSView\" \"\")"));
+        assert!(out.contains(
+            "(register-objc-class! (lambda (p) (make-NSView ptr: p)) NSView::t \"NSView\" \"\")"
+        ));
         // The runtime root needs no extra import (it lives in the runtime module).
         assert!(!out.contains(":gerbil-bindings/appkit/nsobject"));
     }
@@ -1929,9 +1944,9 @@ mod tests {
         assert!(out
             .0
             .contains("(defclass (NSButton NSControl) () transparent: #t)"));
-        assert!(out
-            .0
-            .contains("(register-objc-class! NSButton \"NSButton\" \"NSControl\")"));
+        assert!(out.0.contains(
+            "(register-objc-class! (lambda (p) (make-NSButton ptr: p)) NSButton::t \"NSButton\" \"NSControl\")"
+        ));
         // A local parent imports its sibling module under the current framework.
         assert!(out.0.contains(":gerbil-bindings/appkit/nscontrol"));
     }
@@ -1959,7 +1974,8 @@ mod tests {
         let (out, exports) = generate_bare_module("Mid", "Widgets");
         assert!(out.contains("synthesized bare class-graph node"));
         assert!(out.contains("(defclass (Mid NSObject) () transparent: #t)"));
-        assert!(out.contains("(register-objc-class! Mid \"Mid\" \"\")"));
+        assert!(out
+            .contains("(register-objc-class! (lambda (p) (make-Mid ptr: p)) Mid::t \"Mid\" \"\")"));
         // No proc surface, no FFI block.
         assert!(!out.contains("begin-ffi"));
         assert!(!out.contains("(define ("));

@@ -24,6 +24,15 @@ analysis/ir/llm-summaries/
 generation/targets/*/generated/
 generation/targets/chez/apianyware/*
 !generation/targets/chez/apianyware/runtime
+# Gerbil's emitted framework libraries land in lib/<framework>/ (the
+# `gerbil-bindings` package root); the hand-written runtime/ + the static
+# gerbil.pkg live in the same package and are committed. See
+# docs/specs/2026-06-03-gerbil-target-design.md §8 (refined at leaf 050/010:
+# package root is lib/, runtime at lib/runtime/, forced by the emitter's
+# hardcoded :gerbil-bindings/<fw>/<cls> + :gerbil-bindings/runtime/objc imports).
+generation/targets/gerbil/lib/*
+!generation/targets/gerbil/lib/runtime
+!generation/targets/gerbil/lib/gerbil.pkg
 
 # Generated typed native dispatch table (ADR-0013): one @_cdecl objc_msgSend
 # entry per ABI signature, emitted into the APIAnywareRacket Swift target by
