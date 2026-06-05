@@ -203,21 +203,39 @@ a foreign OS thread can safely enter Gambit Scheme, and the activation analogue
 threading ADR is written. Early sample apps (hello-window, ui-controls) are
 main-thread-only, so this does not block early build progress.
 
-## 7. Distribution model (FINDINGS §5 — characterized)
+## 7. Distribution model (FINDINGS §5 — **corrected at leaf 070/020**)
 
-**`gxc -exe` against the `--enable-shared=no` static toolchain + `.app`
-dylib-relocation of the openssl@3 deps.** Realises ADR-0009 self-contained
-distribution on macOS's terms:
+**`gxc -exe` against the bottle (Homebrew) toolchain + `.app` dylib-relocation of
+the openssl@3 deps.** Realises ADR-0009 self-contained distribution on macOS's
+terms:
 
-- `gxc -exe` against the static toolchain embeds the Gerbil/Gambit runtime
-  statically (`otool -L` shows no libgambit/libgerbil dep). Frameworks link via
-  `-ld-options "-framework AppKit"`.
+- **CORRECTION (070/020): the `--enable-shared=no` static source toolchain is
+  NOT required.** FINDINGS §5 concluded a static source build was needed for a
+  runtime-embedded exe, but it only ran `otool -L` on the static-toolchain exe,
+  never the bottle's. In fact `gxc -exe` links `libgambit.a` (which the
+  `--enable-shared` bottle *also* ships) by default, so the **bottle already
+  produces a self-contained, runtime-embedded exe**: `otool -L` shows no
+  libgambit/libgerbil dep, and a trivial exe runs under `env -i` (empty
+  environment, toolchain off PATH). `--enable-shared` only means a `.dylib`
+  *also* exists; exes still embed the `.a`. The bottle's gsc is the fast
+  single-host release build; the static source toolchain's gsc is ~20× slower
+  (a from-source non-single-host build) and pathologically slow on the large
+  `generics.ss` (>1h), so the bottle is the distribution toolchain on **both**
+  speed and self-containment. The `~/.local/gerbil-0.18.2-static` toolchain and
+  its 80-min source build are retired/unused.
 - **`-static` (fully-static) is unsupported on macOS** (`ld: crt0.o not found` —
-  Apple does not allow statically linking libSystem). Do NOT pursue it.
+  Apple does not allow statically linking libSystem). Not needed anyway.
 - **Self-containment gap:** the Gerbil stdlib pulls **openssl@3**
   (libssl/libcrypto) via Homebrew paths. The `.app` bundler must **vendor + relocate**
   these dylibs (`install_name_tool` / `@executable_path`), the same dylib-staging
   chez's bundler does. System `/usr/lib/*` deps need nothing.
+- **Build model (070/020):** an app's binding-library closure (the imported class
+  modules + shared `generics.ss` + runtime) is pre-compiled once with `gxc -O`
+  into a persistent `GERBIL_PATH` cache, then `gxc -exe` links the app —
+  `gxc -exe` does NOT recursively compile imports, so they must be pre-compiled
+  (the spec §3 "compile the binding library once, amortise across apps" model,
+  realised concretely). The clang `native_block.o` companion joins every link
+  line (runtime README "Building").
 - **Bundler crate:** `bundle-gerbil`, paralleling `bundle-chez`.
 
 ## 8. On-disk layout (parallels chez)

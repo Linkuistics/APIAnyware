@@ -78,7 +78,6 @@
 (define (tkbutton-set-label! self value)
   (%msg-p->v (NSObject-ptr self) %sel-tkbutton-set-label (->ptr value)))
 (defmethod {set-label! TKButton} (lambda (self value) (tkbutton-set-label! self value)))
-(g:defmethod (set-label! (o TKButton) value) (tkbutton-set-label! o value))
 
 (define (tkbutton-enabled self)
   (%msg-v->b (NSObject-ptr self) %sel-tkbutton-enabled))
@@ -88,13 +87,11 @@
 (define (tkbutton-set-enabled! self value)
   (%msg-b->v (NSObject-ptr self) %sel-tkbutton-set-enabled value))
 (defmethod {set-enabled! TKButton} (lambda (self value) (tkbutton-set-enabled! self value)))
-(g:defmethod (set-enabled! (o TKButton) value) (tkbutton-set-enabled! o value))
 
 ;; --- Instance methods ---
 (define (tkbutton-set-target-action! self target action)
   (%msg-p-p->v (NSObject-ptr self) %sel-tkbutton-set-target-action (->ptr target) (sel_registerName action)))
 (defmethod {set-target-action! TKButton} (lambda (self target action) (tkbutton-set-target-action! self target action)))
-(g:defmethod (set-target-action! (o TKButton) target action) (tkbutton-set-target-action! o target action))
 
 (define (tkbutton-is-highlighted self)
   (%msg-v->b (NSObject-ptr self) %sel-tkbutton-is-highlighted))

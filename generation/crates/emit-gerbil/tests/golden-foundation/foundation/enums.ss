@@ -1,0 +1,2602 @@
+;;; Generated enum definitions for Foundation — do not edit
+(export
+  NSActivityIdleDisplaySleepDisabled
+  NSActivityIdleSystemSleepDisabled
+  NSActivitySuddenTerminationDisabled
+  NSActivityAutomaticTerminationDisabled
+  NSActivityAnimationTrackingEnabled
+  NSActivityTrackingEnabled
+  NSActivityUserInitiated
+  NSActivityUserInitiatedAllowingIdleSystemSleep
+  NSActivityBackground
+  NSActivityLatencyCritical
+  NSActivityUserInteractive
+  NSAlignMinXInward
+  NSAlignMinYInward
+  NSAlignMaxXInward
+  NSAlignMaxYInward
+  NSAlignWidthInward
+  NSAlignHeightInward
+  NSAlignMinXOutward
+  NSAlignMinYOutward
+  NSAlignMaxXOutward
+  NSAlignMaxYOutward
+  NSAlignWidthOutward
+  NSAlignHeightOutward
+  NSAlignMinXNearest
+  NSAlignMinYNearest
+  NSAlignMaxXNearest
+  NSAlignMaxYNearest
+  NSAlignWidthNearest
+  NSAlignHeightNearest
+  NSAlignAllEdgesInward
+  NSAlignAllEdgesOutward
+  NSAlignAllEdgesNearest
+  NSAppleEventSendNoReply
+  NSAppleEventSendQueueReply
+  NSAppleEventSendWaitForReply
+  NSAppleEventSendNeverInteract
+  NSAppleEventSendCanInteract
+  NSAppleEventSendAlwaysInteract
+  NSAppleEventSendCanSwitchLayer
+  NSAppleEventSendDontRecord
+  NSAppleEventSendDontExecute
+  NSAppleEventSendDontAnnotate
+  NSAppleEventSendDefaultOptions
+  NSAttributedStringEnumerationReverse
+  NSAttributedStringEnumerationLongestEffectiveRangeNotRequired
+  NSAttributedStringFormattingInsertArgumentAttributesWithoutMerging
+  NSAttributedStringFormattingApplyReplacementIndexAttribute
+  NSAttributedStringMarkdownInterpretedSyntaxFull
+  NSAttributedStringMarkdownInterpretedSyntaxInlineOnly
+  NSAttributedStringMarkdownInterpretedSyntaxInlineOnlyPreservingWhitespace
+  NSAttributedStringMarkdownParsingFailureReturnError
+  NSAttributedStringMarkdownParsingFailureReturnPartiallyParsedIfPossible
+  NSBackgroundActivityResultFinished
+  NSBackgroundActivityResultDeferred
+  NSBinarySearchingFirstEqual
+  NSBinarySearchingLastEqual
+  NSBinarySearchingInsertionIndex
+  NSByteCountFormatterCountStyleFile
+  NSByteCountFormatterCountStyleMemory
+  NSByteCountFormatterCountStyleDecimal
+  NSByteCountFormatterCountStyleBinary
+  NSByteCountFormatterUseDefault
+  NSByteCountFormatterUseBytes
+  NSByteCountFormatterUseKB
+  NSByteCountFormatterUseMB
+  NSByteCountFormatterUseGB
+  NSByteCountFormatterUseTB
+  NSByteCountFormatterUsePB
+  NSByteCountFormatterUseEB
+  NSByteCountFormatterUseZB
+  NSByteCountFormatterUseYBOrHigher
+  NSByteCountFormatterUseAll
+  NSCalculationNoError
+  NSCalculationLossOfPrecision
+  NSCalculationUnderflow
+  NSCalculationOverflow
+  NSCalculationDivideByZero
+  NSCalendarWrapComponents
+  NSCalendarMatchStrictly
+  NSCalendarSearchBackwards
+  NSCalendarMatchPreviousTimePreservingSmallerUnits
+  NSCalendarMatchNextTimePreservingSmallerUnits
+  NSCalendarMatchNextTime
+  NSCalendarMatchFirst
+  NSCalendarMatchLast
+  NSCalendarUnitEra
+  NSCalendarUnitYear
+  NSCalendarUnitMonth
+  NSCalendarUnitDay
+  NSCalendarUnitHour
+  NSCalendarUnitMinute
+  NSCalendarUnitSecond
+  NSCalendarUnitWeekday
+  NSCalendarUnitWeekdayOrdinal
+  NSCalendarUnitQuarter
+  NSCalendarUnitWeekOfMonth
+  NSCalendarUnitWeekOfYear
+  NSCalendarUnitYearForWeekOfYear
+  NSCalendarUnitNanosecond
+  NSCalendarUnitDayOfYear
+  NSCalendarUnitCalendar
+  NSCalendarUnitTimeZone
+  NSCalendarUnitIsLeapMonth
+  NSCalendarUnitIsRepeatedDay
+  NSEraCalendarUnit
+  NSYearCalendarUnit
+  NSMonthCalendarUnit
+  NSDayCalendarUnit
+  NSHourCalendarUnit
+  NSMinuteCalendarUnit
+  NSSecondCalendarUnit
+  NSWeekCalendarUnit
+  NSWeekdayCalendarUnit
+  NSWeekdayOrdinalCalendarUnit
+  NSQuarterCalendarUnit
+  NSWeekOfMonthCalendarUnit
+  NSWeekOfYearCalendarUnit
+  NSYearForWeekOfYearCalendarUnit
+  NSCalendarCalendarUnit
+  NSTimeZoneCalendarUnit
+  NSCollectionChangeInsert
+  NSCollectionChangeRemove
+  NSDirectPredicateModifier
+  NSAllPredicateModifier
+  NSAnyPredicateModifier
+  NSCaseInsensitivePredicateOption
+  NSDiacriticInsensitivePredicateOption
+  NSNormalizedPredicateOption
+  NSOrderedAscending
+  NSOrderedSame
+  NSOrderedDescending
+  NSNotPredicateType
+  NSAndPredicateType
+  NSOrPredicateType
+  NSDataBase64DecodingIgnoreUnknownCharacters
+  NSDataBase64Encoding64CharacterLineLength
+  NSDataBase64Encoding76CharacterLineLength
+  NSDataBase64EncodingEndLineWithCarriageReturn
+  NSDataBase64EncodingEndLineWithLineFeed
+  NSDataCompressionAlgorithmLZFSE
+  NSDataCompressionAlgorithmLZ4
+  NSDataCompressionAlgorithmLZMA
+  NSDataCompressionAlgorithmZlib
+  NSDataReadingMappedIfSafe
+  NSDataReadingUncached
+  NSDataReadingMappedAlways
+  NSDataReadingMapped
+  NSMappedRead
+  NSUncachedRead
+  NSDataSearchBackwards
+  NSDataSearchAnchored
+  NSDataWritingAtomic
+  NSDataWritingWithoutOverwriting
+  NSDataWritingFileProtectionNone
+  NSDataWritingFileProtectionComplete
+  NSDataWritingFileProtectionCompleteUnlessOpen
+  NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication
+  NSDataWritingFileProtectionCompleteWhenUserInactive
+  NSDataWritingFileProtectionMask
+  NSAtomicWrite
+  NSDateComponentsFormatterUnitsStylePositional
+  NSDateComponentsFormatterUnitsStyleAbbreviated
+  NSDateComponentsFormatterUnitsStyleShort
+  NSDateComponentsFormatterUnitsStyleFull
+  NSDateComponentsFormatterUnitsStyleSpellOut
+  NSDateComponentsFormatterUnitsStyleBrief
+  NSDateComponentsFormatterZeroFormattingBehaviorNone
+  NSDateComponentsFormatterZeroFormattingBehaviorDefault
+  NSDateComponentsFormatterZeroFormattingBehaviorDropLeading
+  NSDateComponentsFormatterZeroFormattingBehaviorDropMiddle
+  NSDateComponentsFormatterZeroFormattingBehaviorDropTrailing
+  NSDateComponentsFormatterZeroFormattingBehaviorDropAll
+  NSDateComponentsFormatterZeroFormattingBehaviorPad
+  NSDateFormatterBehaviorDefault
+  NSDateFormatterBehavior10_0
+  NSDateFormatterBehavior10_4
+  NSDateFormatterNoStyle
+  NSDateFormatterShortStyle
+  NSDateFormatterMediumStyle
+  NSDateFormatterLongStyle
+  NSDateFormatterFullStyle
+  NSDateIntervalFormatterNoStyle
+  NSDateIntervalFormatterShortStyle
+  NSDateIntervalFormatterMediumStyle
+  NSDateIntervalFormatterLongStyle
+  NSDateIntervalFormatterFullStyle
+  NSDecodingFailurePolicyRaiseException
+  NSDecodingFailurePolicySetErrorAndReturn
+  NSDirectoryEnumerationSkipsSubdirectoryDescendants
+  NSDirectoryEnumerationSkipsPackageDescendants
+  NSDirectoryEnumerationSkipsHiddenFiles
+  NSDirectoryEnumerationIncludesDirectoriesPostOrder
+  NSDirectoryEnumerationProducesRelativePathURLs
+  NSDistributedNotificationDeliverImmediately
+  NSDistributedNotificationPostToAllSessions
+  NSEnergyFormatterUnitJoule
+  NSEnergyFormatterUnitKilojoule
+  NSEnergyFormatterUnitCalorie
+  NSEnergyFormatterUnitKilocalorie
+  NSEnumerationConcurrent
+  NSEnumerationReverse
+  NSConstantValueExpressionType
+  NSEvaluatedObjectExpressionType
+  NSVariableExpressionType
+  NSKeyPathExpressionType
+  NSFunctionExpressionType
+  NSUnionSetExpressionType
+  NSIntersectSetExpressionType
+  NSMinusSetExpressionType
+  NSSubqueryExpressionType
+  NSAggregateExpressionType
+  NSAnyKeyExpressionType
+  NSBlockExpressionType
+  NSConditionalExpressionType
+  NSFileCoordinatorReadingWithoutChanges
+  NSFileCoordinatorReadingResolvesSymbolicLink
+  NSFileCoordinatorReadingImmediatelyAvailableMetadataOnly
+  NSFileCoordinatorReadingForUploading
+  NSFileCoordinatorWritingForDeleting
+  NSFileCoordinatorWritingForMoving
+  NSFileCoordinatorWritingForMerging
+  NSFileCoordinatorWritingForReplacing
+  NSFileCoordinatorWritingContentIndependentMetadataOnly
+  NSFileManagerItemReplacementUsingNewMetadataOnly
+  NSFileManagerItemReplacementWithoutDeletingBackupItem
+  NSFileManagerResumeSyncBehaviorPreserveLocalChanges
+  NSFileManagerResumeSyncBehaviorAfterUploadWithFailOnConflict
+  NSFileManagerResumeSyncBehaviorDropLocalChanges
+  NSFileManagerSupportedSyncControlsPauseSync
+  NSFileManagerSupportedSyncControlsFailUploadOnConflict
+  NSFileManagerUnmountAllPartitionsAndEjectDisk
+  NSFileManagerUnmountWithoutUI
+  NSFileManagerUploadConflictPolicyDefault
+  NSFileManagerUploadConflictPolicyFailOnConflict
+  NSFileVersionAddingByMoving
+  NSFileVersionReplacingByMoving
+  NSFileWrapperReadingImmediate
+  NSFileWrapperReadingWithoutMapping
+  NSFileWrapperWritingAtomic
+  NSFileWrapperWritingWithNameUpdating
+  NSFormattingContextUnknown
+  NSFormattingContextDynamic
+  NSFormattingContextStandalone
+  NSFormattingContextListItem
+  NSFormattingContextBeginningOfSentence
+  NSFormattingContextMiddleOfSentence
+  NSFormattingUnitStyleShort
+  NSFormattingUnitStyleMedium
+  NSFormattingUnitStyleLong
+  NSGrammaticalCaseNotSet
+  NSGrammaticalCaseNominative
+  NSGrammaticalCaseAccusative
+  NSGrammaticalCaseDative
+  NSGrammaticalCaseGenitive
+  NSGrammaticalCasePrepositional
+  NSGrammaticalCaseAblative
+  NSGrammaticalCaseAdessive
+  NSGrammaticalCaseAllative
+  NSGrammaticalCaseElative
+  NSGrammaticalCaseIllative
+  NSGrammaticalCaseEssive
+  NSGrammaticalCaseInessive
+  NSGrammaticalCaseLocative
+  NSGrammaticalCaseTranslative
+  NSGrammaticalDefinitenessNotSet
+  NSGrammaticalDefinitenessIndefinite
+  NSGrammaticalDefinitenessDefinite
+  NSGrammaticalDeterminationNotSet
+  NSGrammaticalDeterminationIndependent
+  NSGrammaticalDeterminationDependent
+  NSGrammaticalGenderNotSet
+  NSGrammaticalGenderFeminine
+  NSGrammaticalGenderMasculine
+  NSGrammaticalGenderNeuter
+  NSGrammaticalNumberNotSet
+  NSGrammaticalNumberSingular
+  NSGrammaticalNumberZero
+  NSGrammaticalNumberPlural
+  NSGrammaticalNumberPluralTwo
+  NSGrammaticalNumberPluralFew
+  NSGrammaticalNumberPluralMany
+  NSGrammaticalPartOfSpeechNotSet
+  NSGrammaticalPartOfSpeechDeterminer
+  NSGrammaticalPartOfSpeechPronoun
+  NSGrammaticalPartOfSpeechLetter
+  NSGrammaticalPartOfSpeechAdverb
+  NSGrammaticalPartOfSpeechParticle
+  NSGrammaticalPartOfSpeechAdjective
+  NSGrammaticalPartOfSpeechAdposition
+  NSGrammaticalPartOfSpeechVerb
+  NSGrammaticalPartOfSpeechNoun
+  NSGrammaticalPartOfSpeechConjunction
+  NSGrammaticalPartOfSpeechNumeral
+  NSGrammaticalPartOfSpeechInterjection
+  NSGrammaticalPartOfSpeechPreposition
+  NSGrammaticalPartOfSpeechAbbreviation
+  NSGrammaticalPersonNotSet
+  NSGrammaticalPersonFirst
+  NSGrammaticalPersonSecond
+  NSGrammaticalPersonThird
+  NSGrammaticalPronounTypeNotSet
+  NSGrammaticalPronounTypePersonal
+  NSGrammaticalPronounTypeReflexive
+  NSGrammaticalPronounTypePossessive
+  NSHTTPCookieAcceptPolicyAlways
+  NSHTTPCookieAcceptPolicyNever
+  NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain
+  NSISO8601DateFormatWithYear
+  NSISO8601DateFormatWithMonth
+  NSISO8601DateFormatWithWeekOfYear
+  NSISO8601DateFormatWithDay
+  NSISO8601DateFormatWithTime
+  NSISO8601DateFormatWithTimeZone
+  NSISO8601DateFormatWithSpaceBetweenDateAndTime
+  NSISO8601DateFormatWithDashSeparatorInDate
+  NSISO8601DateFormatWithColonSeparatorInTime
+  NSISO8601DateFormatWithColonSeparatorInTimeZone
+  NSISO8601DateFormatWithFractionalSeconds
+  NSISO8601DateFormatWithFullDate
+  NSISO8601DateFormatWithFullTime
+  NSISO8601DateFormatWithInternetDateTime
+  NSInlinePresentationIntentEmphasized
+  NSInlinePresentationIntentStronglyEmphasized
+  NSInlinePresentationIntentCode
+  NSInlinePresentationIntentStrikethrough
+  NSInlinePresentationIntentSoftBreak
+  NSInlinePresentationIntentLineBreak
+  NSInlinePresentationIntentInlineHTML
+  NSInlinePresentationIntentBlockHTML
+  NSPositionAfter
+  NSPositionBefore
+  NSPositionBeginning
+  NSPositionEnd
+  NSPositionReplace
+  NSItemProviderUnknownError
+  NSItemProviderItemUnavailableError
+  NSItemProviderUnexpectedValueClassError
+  NSItemProviderUnavailableCoercionError
+  NSItemProviderFileOptionOpenInPlace
+  NSItemProviderRepresentationVisibilityAll
+  NSItemProviderRepresentationVisibilityTeam
+  NSItemProviderRepresentationVisibilityGroup
+  NSItemProviderRepresentationVisibilityOwnProcess
+  NSJSONReadingMutableContainers
+  NSJSONReadingMutableLeaves
+  NSJSONReadingFragmentsAllowed
+  NSJSONReadingJSON5Allowed
+  NSJSONReadingTopLevelDictionaryAssumed
+  NSJSONReadingAllowFragments
+  NSJSONWritingPrettyPrinted
+  NSJSONWritingSortedKeys
+  NSJSONWritingFragmentsAllowed
+  NSJSONWritingWithoutEscapingSlashes
+  NSKeyValueChangeSetting
+  NSKeyValueChangeInsertion
+  NSKeyValueChangeRemoval
+  NSKeyValueChangeReplacement
+  NSKeyValueObservingOptionNew
+  NSKeyValueObservingOptionOld
+  NSKeyValueObservingOptionInitial
+  NSKeyValueObservingOptionPrior
+  NSKeyValueUnionSetMutation
+  NSKeyValueMinusSetMutation
+  NSKeyValueIntersectSetMutation
+  NSKeyValueSetSetMutation
+  NSLengthFormatterUnitMillimeter
+  NSLengthFormatterUnitCentimeter
+  NSLengthFormatterUnitMeter
+  NSLengthFormatterUnitKilometer
+  NSLengthFormatterUnitInch
+  NSLengthFormatterUnitFoot
+  NSLengthFormatterUnitYard
+  NSLengthFormatterUnitMile
+  NSLinguisticTaggerOmitWords
+  NSLinguisticTaggerOmitPunctuation
+  NSLinguisticTaggerOmitWhitespace
+  NSLinguisticTaggerOmitOther
+  NSLinguisticTaggerJoinNames
+  NSLinguisticTaggerUnitWord
+  NSLinguisticTaggerUnitSentence
+  NSLinguisticTaggerUnitParagraph
+  NSLinguisticTaggerUnitDocument
+  NSLocaleLanguageDirectionUnknown
+  NSLocaleLanguageDirectionLeftToRight
+  NSLocaleLanguageDirectionRightToLeft
+  NSLocaleLanguageDirectionTopToBottom
+  NSLocaleLanguageDirectionBottomToTop
+  NSMachPortDeallocateNone
+  NSMachPortDeallocateSendRight
+  NSMachPortDeallocateReceiveRight
+  NSMassFormatterUnitGram
+  NSMassFormatterUnitKilogram
+  NSMassFormatterUnitOunce
+  NSMassFormatterUnitPound
+  NSMassFormatterUnitStone
+  NSMatchingProgress
+  NSMatchingCompleted
+  NSMatchingHitEnd
+  NSMatchingRequiredEnd
+  NSMatchingInternalError
+  NSMatchingReportProgress
+  NSMatchingReportCompletion
+  NSMatchingAnchored
+  NSMatchingWithTransparentBounds
+  NSMatchingWithoutAnchoringBounds
+  NSMeasurementFormatterUnitOptionsProvidedUnit
+  NSMeasurementFormatterUnitOptionsNaturalScale
+  NSMeasurementFormatterUnitOptionsTemperatureWithoutUnit
+  NSNetServiceNoAutoRename
+  NSNetServiceListenForConnections
+  NSNetServicesUnknownError
+  NSNetServicesCollisionError
+  NSNetServicesNotFoundError
+  NSNetServicesActivityInProgress
+  NSNetServicesBadArgumentError
+  NSNetServicesCancelledError
+  NSNetServicesInvalidError
+  NSNetServicesTimeoutError
+  NSNetServicesMissingRequiredConfigurationError
+  NSNotificationNoCoalescing
+  NSNotificationCoalescingOnName
+  NSNotificationCoalescingOnSender
+  NSNotificationSuspensionBehaviorDrop
+  NSNotificationSuspensionBehaviorCoalesce
+  NSNotificationSuspensionBehaviorHold
+  NSNotificationSuspensionBehaviorDeliverImmediately
+  NSNumberFormatterBehaviorDefault
+  NSNumberFormatterBehavior10_0
+  NSNumberFormatterBehavior10_4
+  NSNumberFormatterPadBeforePrefix
+  NSNumberFormatterPadAfterPrefix
+  NSNumberFormatterPadBeforeSuffix
+  NSNumberFormatterPadAfterSuffix
+  NSNumberFormatterRoundCeiling
+  NSNumberFormatterRoundFloor
+  NSNumberFormatterRoundDown
+  NSNumberFormatterRoundUp
+  NSNumberFormatterRoundHalfEven
+  NSNumberFormatterRoundHalfDown
+  NSNumberFormatterRoundHalfUp
+  NSNumberFormatterNoStyle
+  NSNumberFormatterDecimalStyle
+  NSNumberFormatterCurrencyStyle
+  NSNumberFormatterPercentStyle
+  NSNumberFormatterScientificStyle
+  NSNumberFormatterSpellOutStyle
+  NSNumberFormatterOrdinalStyle
+  NSNumberFormatterCurrencyISOCodeStyle
+  NSNumberFormatterCurrencyPluralStyle
+  NSNumberFormatterCurrencyAccountingStyle
+  NSOperationQueuePriorityVeryLow
+  NSOperationQueuePriorityLow
+  NSOperationQueuePriorityNormal
+  NSOperationQueuePriorityHigh
+  NSOperationQueuePriorityVeryHigh
+  NSOrderedCollectionDifferenceCalculationOmitInsertedObjects
+  NSOrderedCollectionDifferenceCalculationOmitRemovedObjects
+  NSOrderedCollectionDifferenceCalculationInferMoves
+  NSPersonNameComponentsFormatterPhonetic
+  NSPersonNameComponentsFormatterStyleDefault
+  NSPersonNameComponentsFormatterStyleShort
+  NSPersonNameComponentsFormatterStyleMedium
+  NSPersonNameComponentsFormatterStyleLong
+  NSPersonNameComponentsFormatterStyleAbbreviated
+  NSPointerFunctionsStrongMemory
+  NSPointerFunctionsZeroingWeakMemory
+  NSPointerFunctionsOpaqueMemory
+  NSPointerFunctionsMallocMemory
+  NSPointerFunctionsMachVirtualMemory
+  NSPointerFunctionsWeakMemory
+  NSPointerFunctionsObjectPersonality
+  NSPointerFunctionsOpaquePersonality
+  NSPointerFunctionsObjectPointerPersonality
+  NSPointerFunctionsCStringPersonality
+  NSPointerFunctionsStructPersonality
+  NSPointerFunctionsIntegerPersonality
+  NSPointerFunctionsCopyIn
+  NSPostWhenIdle
+  NSPostASAP
+  NSPostNow
+  NSLessThanPredicateOperatorType
+  NSLessThanOrEqualToPredicateOperatorType
+  NSGreaterThanPredicateOperatorType
+  NSGreaterThanOrEqualToPredicateOperatorType
+  NSEqualToPredicateOperatorType
+  NSNotEqualToPredicateOperatorType
+  NSMatchesPredicateOperatorType
+  NSLikePredicateOperatorType
+  NSBeginsWithPredicateOperatorType
+  NSEndsWithPredicateOperatorType
+  NSInPredicateOperatorType
+  NSCustomSelectorPredicateOperatorType
+  NSContainsPredicateOperatorType
+  NSBetweenPredicateOperatorType
+  NSPresentationIntentKindParagraph
+  NSPresentationIntentKindHeader
+  NSPresentationIntentKindOrderedList
+  NSPresentationIntentKindUnorderedList
+  NSPresentationIntentKindListItem
+  NSPresentationIntentKindCodeBlock
+  NSPresentationIntentKindBlockQuote
+  NSPresentationIntentKindThematicBreak
+  NSPresentationIntentKindTable
+  NSPresentationIntentKindTableHeaderRow
+  NSPresentationIntentKindTableRow
+  NSPresentationIntentKindTableCell
+  NSPresentationIntentTableColumnAlignmentLeft
+  NSPresentationIntentTableColumnAlignmentCenter
+  NSPresentationIntentTableColumnAlignmentRight
+  NSProcessInfoThermalStateNominal
+  NSProcessInfoThermalStateFair
+  NSProcessInfoThermalStateSerious
+  NSProcessInfoThermalStateCritical
+  NSPropertyListOpenStepFormat
+  NSPropertyListXMLFormat_v1_0
+  NSPropertyListBinaryFormat_v1_0
+  NSPropertyListImmutable
+  NSPropertyListMutableContainers
+  NSPropertyListMutableContainersAndLeaves
+  NSQualityOfServiceUserInteractive
+  NSQualityOfServiceUserInitiated
+  NSQualityOfServiceUtility
+  NSQualityOfServiceBackground
+  NSQualityOfServiceDefault
+  NSRectEdgeMinX
+  NSRectEdgeMinY
+  NSRectEdgeMaxX
+  NSRectEdgeMaxY
+  NSMinXEdge
+  NSMinYEdge
+  NSMaxXEdge
+  NSMaxYEdge
+  NSRegularExpressionCaseInsensitive
+  NSRegularExpressionAllowCommentsAndWhitespace
+  NSRegularExpressionIgnoreMetacharacters
+  NSRegularExpressionDotMatchesLineSeparators
+  NSRegularExpressionAnchorsMatchLines
+  NSRegularExpressionUseUnixLineSeparators
+  NSRegularExpressionUseUnicodeWordBoundaries
+  NSRelativeDateTimeFormatterStyleNumeric
+  NSRelativeDateTimeFormatterStyleNamed
+  NSRelativeDateTimeFormatterUnitsStyleFull
+  NSRelativeDateTimeFormatterUnitsStyleSpellOut
+  NSRelativeDateTimeFormatterUnitsStyleShort
+  NSRelativeDateTimeFormatterUnitsStyleAbbreviated
+  NSRelativeAfter
+  NSRelativeBefore
+  NSRoundPlain
+  NSRoundDown
+  NSRoundUp
+  NSRoundBankers
+  NSSaveOptionsYes
+  NSSaveOptionsNo
+  NSSaveOptionsAsk
+  NSApplicationDirectory
+  NSDemoApplicationDirectory
+  NSDeveloperApplicationDirectory
+  NSAdminApplicationDirectory
+  NSLibraryDirectory
+  NSDeveloperDirectory
+  NSUserDirectory
+  NSDocumentationDirectory
+  NSDocumentDirectory
+  NSCoreServiceDirectory
+  NSAutosavedInformationDirectory
+  NSDesktopDirectory
+  NSCachesDirectory
+  NSApplicationSupportDirectory
+  NSDownloadsDirectory
+  NSInputMethodsDirectory
+  NSMoviesDirectory
+  NSMusicDirectory
+  NSPicturesDirectory
+  NSPrinterDescriptionDirectory
+  NSSharedPublicDirectory
+  NSPreferencePanesDirectory
+  NSApplicationScriptsDirectory
+  NSItemReplacementDirectory
+  NSAllApplicationsDirectory
+  NSAllLibrariesDirectory
+  NSTrashDirectory
+  NSUserDomainMask
+  NSLocalDomainMask
+  NSNetworkDomainMask
+  NSSystemDomainMask
+  NSAllDomainsMask
+  NSSortConcurrent
+  NSSortStable
+  NSStreamEventNone
+  NSStreamEventOpenCompleted
+  NSStreamEventHasBytesAvailable
+  NSStreamEventHasSpaceAvailable
+  NSStreamEventErrorOccurred
+  NSStreamEventEndEncountered
+  NSStreamStatusNotOpen
+  NSStreamStatusOpening
+  NSStreamStatusOpen
+  NSStreamStatusReading
+  NSStreamStatusWriting
+  NSStreamStatusAtEnd
+  NSStreamStatusClosed
+  NSStreamStatusError
+  NSCaseInsensitiveSearch
+  NSLiteralSearch
+  NSBackwardsSearch
+  NSAnchoredSearch
+  NSNumericSearch
+  NSDiacriticInsensitiveSearch
+  NSWidthInsensitiveSearch
+  NSForcedOrderingSearch
+  NSRegularExpressionSearch
+  NSStringEncodingConversionAllowLossy
+  NSStringEncodingConversionExternalRepresentation
+  NSStringEnumerationByLines
+  NSStringEnumerationByParagraphs
+  NSStringEnumerationByComposedCharacterSequences
+  NSStringEnumerationByWords
+  NSStringEnumerationBySentences
+  NSStringEnumerationByCaretPositions
+  NSStringEnumerationByDeletionClusters
+  NSStringEnumerationReverse
+  NSStringEnumerationSubstringNotRequired
+  NSStringEnumerationLocalized
+  NSTaskTerminationReasonExit
+  NSTaskTerminationReasonUncaughtSignal
+  NSEqualToComparison
+  NSLessThanOrEqualToComparison
+  NSLessThanComparison
+  NSGreaterThanOrEqualToComparison
+  NSGreaterThanComparison
+  NSBeginsWithComparison
+  NSEndsWithComparison
+  NSContainsComparison
+  NSTextCheckingTypeOrthography
+  NSTextCheckingTypeSpelling
+  NSTextCheckingTypeGrammar
+  NSTextCheckingTypeDate
+  NSTextCheckingTypeAddress
+  NSTextCheckingTypeLink
+  NSTextCheckingTypeQuote
+  NSTextCheckingTypeDash
+  NSTextCheckingTypeReplacement
+  NSTextCheckingTypeCorrection
+  NSTextCheckingTypeRegularExpression
+  NSTextCheckingTypePhoneNumber
+  NSTextCheckingTypeTransitInformation
+  NSTimeZoneNameStyleStandard
+  NSTimeZoneNameStyleShortStandard
+  NSTimeZoneNameStyleDaylightSaving
+  NSTimeZoneNameStyleShortDaylightSaving
+  NSTimeZoneNameStyleGeneric
+  NSTimeZoneNameStyleShortGeneric
+  NSURLBookmarkCreationPreferFileIDResolution
+  NSURLBookmarkCreationMinimalBookmark
+  NSURLBookmarkCreationSuitableForBookmarkFile
+  NSURLBookmarkCreationWithSecurityScope
+  NSURLBookmarkCreationSecurityScopeAllowOnlyReadAccess
+  NSURLBookmarkCreationWithoutImplicitSecurityScope
+  NSURLBookmarkResolutionWithoutUI
+  NSURLBookmarkResolutionWithoutMounting
+  NSURLBookmarkResolutionWithSecurityScope
+  NSURLBookmarkResolutionWithoutImplicitStartAccessing
+  NSURLCacheStorageAllowed
+  NSURLCacheStorageAllowedInMemoryOnly
+  NSURLCacheStorageNotAllowed
+  NSURLCredentialPersistenceNone
+  NSURLCredentialPersistenceForSession
+  NSURLCredentialPersistencePermanent
+  NSURLCredentialPersistenceSynchronizable
+  NSURLErrorNetworkUnavailableReasonCellular
+  NSURLErrorNetworkUnavailableReasonExpensive
+  NSURLErrorNetworkUnavailableReasonConstrained
+  NSURLErrorNetworkUnavailableReasonUltraConstrained
+  NSURLHandleNotLoaded
+  NSURLHandleLoadSucceeded
+  NSURLHandleLoadInProgress
+  NSURLHandleLoadFailed
+  NSURLRelationshipContains
+  NSURLRelationshipSame
+  NSURLRelationshipOther
+  NSURLRequestAttributionDeveloper
+  NSURLRequestAttributionUser
+  NSURLRequestUseProtocolCachePolicy
+  NSURLRequestReloadIgnoringLocalCacheData
+  NSURLRequestReloadIgnoringLocalAndRemoteCacheData
+  NSURLRequestReloadIgnoringCacheData
+  NSURLRequestReturnCacheDataElseLoad
+  NSURLRequestReturnCacheDataDontLoad
+  NSURLRequestReloadRevalidatingCacheData
+  NSURLNetworkServiceTypeDefault
+  NSURLNetworkServiceTypeVoIP
+  NSURLNetworkServiceTypeVideo
+  NSURLNetworkServiceTypeBackground
+  NSURLNetworkServiceTypeVoice
+  NSURLNetworkServiceTypeResponsiveData
+  NSURLNetworkServiceTypeAVStreaming
+  NSURLNetworkServiceTypeResponsiveAV
+  NSURLNetworkServiceTypeCallSignaling
+  NSURLSessionAuthChallengeUseCredential
+  NSURLSessionAuthChallengePerformDefaultHandling
+  NSURLSessionAuthChallengeCancelAuthenticationChallenge
+  NSURLSessionAuthChallengeRejectProtectionSpace
+  NSURLSessionDelayedRequestContinueLoading
+  NSURLSessionDelayedRequestUseNewRequest
+  NSURLSessionDelayedRequestCancel
+  NSURLSessionMultipathServiceTypeNone
+  NSURLSessionMultipathServiceTypeHandover
+  NSURLSessionMultipathServiceTypeInteractive
+  NSURLSessionMultipathServiceTypeAggregate
+  NSURLSessionResponseCancel
+  NSURLSessionResponseAllow
+  NSURLSessionResponseBecomeDownload
+  NSURLSessionResponseBecomeStream
+  NSURLSessionTaskMetricsDomainResolutionProtocolUnknown
+  NSURLSessionTaskMetricsDomainResolutionProtocolUDP
+  NSURLSessionTaskMetricsDomainResolutionProtocolTCP
+  NSURLSessionTaskMetricsDomainResolutionProtocolTLS
+  NSURLSessionTaskMetricsDomainResolutionProtocolHTTPS
+  NSURLSessionTaskMetricsResourceFetchTypeUnknown
+  NSURLSessionTaskMetricsResourceFetchTypeNetworkLoad
+  NSURLSessionTaskMetricsResourceFetchTypeServerPush
+  NSURLSessionTaskMetricsResourceFetchTypeLocalCache
+  NSURLSessionTaskStateRunning
+  NSURLSessionTaskStateSuspended
+  NSURLSessionTaskStateCanceling
+  NSURLSessionTaskStateCompleted
+  NSURLSessionWebSocketCloseCodeInvalid
+  NSURLSessionWebSocketCloseCodeNormalClosure
+  NSURLSessionWebSocketCloseCodeGoingAway
+  NSURLSessionWebSocketCloseCodeProtocolError
+  NSURLSessionWebSocketCloseCodeUnsupportedData
+  NSURLSessionWebSocketCloseCodeNoStatusReceived
+  NSURLSessionWebSocketCloseCodeAbnormalClosure
+  NSURLSessionWebSocketCloseCodeInvalidFramePayloadData
+  NSURLSessionWebSocketCloseCodePolicyViolation
+  NSURLSessionWebSocketCloseCodeMessageTooBig
+  NSURLSessionWebSocketCloseCodeMandatoryExtensionMissing
+  NSURLSessionWebSocketCloseCodeInternalServerError
+  NSURLSessionWebSocketCloseCodeTLSHandshakeFailure
+  NSURLSessionWebSocketMessageTypeData
+  NSURLSessionWebSocketMessageTypeString
+  NSUserNotificationActivationTypeNone
+  NSUserNotificationActivationTypeContentsClicked
+  NSUserNotificationActivationTypeActionButtonClicked
+  NSUserNotificationActivationTypeReplied
+  NSUserNotificationActivationTypeAdditionalActionClicked
+  NSVolumeEnumerationSkipHiddenVolumes
+  NSVolumeEnumerationProduceFileReferenceURLs
+  NSIndexSubelement
+  NSEverySubelement
+  NSMiddleSubelement
+  NSRandomSubelement
+  NSNoSubelement
+  NSXMLEntityGeneralKind
+  NSXMLEntityParsedKind
+  NSXMLEntityUnparsedKind
+  NSXMLEntityParameterKind
+  NSXMLEntityPredefined
+  NSXMLAttributeCDATAKind
+  NSXMLAttributeIDKind
+  NSXMLAttributeIDRefKind
+  NSXMLAttributeIDRefsKind
+  NSXMLAttributeEntityKind
+  NSXMLAttributeEntitiesKind
+  NSXMLAttributeNMTokenKind
+  NSXMLAttributeNMTokensKind
+  NSXMLAttributeEnumerationKind
+  NSXMLAttributeNotationKind
+  NSXMLElementDeclarationUndefinedKind
+  NSXMLElementDeclarationEmptyKind
+  NSXMLElementDeclarationAnyKind
+  NSXMLElementDeclarationMixedKind
+  NSXMLElementDeclarationElementKind
+  NSXMLDocumentXMLKind
+  NSXMLDocumentXHTMLKind
+  NSXMLDocumentHTMLKind
+  NSXMLDocumentTextKind
+  NSXMLInvalidKind
+  NSXMLDocumentKind
+  NSXMLElementKind
+  NSXMLAttributeKind
+  NSXMLNamespaceKind
+  NSXMLProcessingInstructionKind
+  NSXMLCommentKind
+  NSXMLTextKind
+  NSXMLDTDKind
+  NSXMLEntityDeclarationKind
+  NSXMLAttributeDeclarationKind
+  NSXMLElementDeclarationKind
+  NSXMLNotationDeclarationKind
+  NSXMLNodeOptionsNone
+  NSXMLNodeIsCDATA
+  NSXMLNodeExpandEmptyElement
+  NSXMLNodeCompactEmptyElement
+  NSXMLNodeUseSingleQuotes
+  NSXMLNodeUseDoubleQuotes
+  NSXMLNodeNeverEscapeContents
+  NSXMLDocumentTidyHTML
+  NSXMLDocumentTidyXML
+  NSXMLDocumentValidate
+  NSXMLNodeLoadExternalEntitiesAlways
+  NSXMLNodeLoadExternalEntitiesSameOriginOnly
+  NSXMLNodeLoadExternalEntitiesNever
+  NSXMLDocumentXInclude
+  NSXMLNodePrettyPrint
+  NSXMLDocumentIncludeContentTypeDeclaration
+  NSXMLNodePreserveNamespaceOrder
+  NSXMLNodePreserveAttributeOrder
+  NSXMLNodePreserveEntities
+  NSXMLNodePreservePrefixes
+  NSXMLNodePreserveCDATA
+  NSXMLNodePreserveWhitespace
+  NSXMLNodePreserveDTD
+  NSXMLNodePreserveCharacterReferences
+  NSXMLNodePromoteSignificantWhitespace
+  NSXMLNodePreserveEmptyElements
+  NSXMLNodePreserveQuotes
+  NSXMLNodePreserveAll
+  NSXMLParserInternalError
+  NSXMLParserOutOfMemoryError
+  NSXMLParserDocumentStartError
+  NSXMLParserEmptyDocumentError
+  NSXMLParserPrematureDocumentEndError
+  NSXMLParserInvalidHexCharacterRefError
+  NSXMLParserInvalidDecimalCharacterRefError
+  NSXMLParserInvalidCharacterRefError
+  NSXMLParserInvalidCharacterError
+  NSXMLParserCharacterRefAtEOFError
+  NSXMLParserCharacterRefInPrologError
+  NSXMLParserCharacterRefInEpilogError
+  NSXMLParserCharacterRefInDTDError
+  NSXMLParserEntityRefAtEOFError
+  NSXMLParserEntityRefInPrologError
+  NSXMLParserEntityRefInEpilogError
+  NSXMLParserEntityRefInDTDError
+  NSXMLParserParsedEntityRefAtEOFError
+  NSXMLParserParsedEntityRefInPrologError
+  NSXMLParserParsedEntityRefInEpilogError
+  NSXMLParserParsedEntityRefInInternalSubsetError
+  NSXMLParserEntityReferenceWithoutNameError
+  NSXMLParserEntityReferenceMissingSemiError
+  NSXMLParserParsedEntityRefNoNameError
+  NSXMLParserParsedEntityRefMissingSemiError
+  NSXMLParserUndeclaredEntityError
+  NSXMLParserUnparsedEntityError
+  NSXMLParserEntityIsExternalError
+  NSXMLParserEntityIsParameterError
+  NSXMLParserUnknownEncodingError
+  NSXMLParserEncodingNotSupportedError
+  NSXMLParserStringNotStartedError
+  NSXMLParserStringNotClosedError
+  NSXMLParserNamespaceDeclarationError
+  NSXMLParserEntityNotStartedError
+  NSXMLParserEntityNotFinishedError
+  NSXMLParserLessThanSymbolInAttributeError
+  NSXMLParserAttributeNotStartedError
+  NSXMLParserAttributeNotFinishedError
+  NSXMLParserAttributeHasNoValueError
+  NSXMLParserAttributeRedefinedError
+  NSXMLParserLiteralNotStartedError
+  NSXMLParserLiteralNotFinishedError
+  NSXMLParserCommentNotFinishedError
+  NSXMLParserProcessingInstructionNotStartedError
+  NSXMLParserProcessingInstructionNotFinishedError
+  NSXMLParserNotationNotStartedError
+  NSXMLParserNotationNotFinishedError
+  NSXMLParserAttributeListNotStartedError
+  NSXMLParserAttributeListNotFinishedError
+  NSXMLParserMixedContentDeclNotStartedError
+  NSXMLParserMixedContentDeclNotFinishedError
+  NSXMLParserElementContentDeclNotStartedError
+  NSXMLParserElementContentDeclNotFinishedError
+  NSXMLParserXMLDeclNotStartedError
+  NSXMLParserXMLDeclNotFinishedError
+  NSXMLParserConditionalSectionNotStartedError
+  NSXMLParserConditionalSectionNotFinishedError
+  NSXMLParserExternalSubsetNotFinishedError
+  NSXMLParserDOCTYPEDeclNotFinishedError
+  NSXMLParserMisplacedCDATAEndStringError
+  NSXMLParserCDATANotFinishedError
+  NSXMLParserMisplacedXMLDeclarationError
+  NSXMLParserSpaceRequiredError
+  NSXMLParserSeparatorRequiredError
+  NSXMLParserNMTOKENRequiredError
+  NSXMLParserNAMERequiredError
+  NSXMLParserPCDATARequiredError
+  NSXMLParserURIRequiredError
+  NSXMLParserPublicIdentifierRequiredError
+  NSXMLParserLTRequiredError
+  NSXMLParserGTRequiredError
+  NSXMLParserLTSlashRequiredError
+  NSXMLParserEqualExpectedError
+  NSXMLParserTagNameMismatchError
+  NSXMLParserUnfinishedTagError
+  NSXMLParserStandaloneValueError
+  NSXMLParserInvalidEncodingNameError
+  NSXMLParserCommentContainsDoubleHyphenError
+  NSXMLParserInvalidEncodingError
+  NSXMLParserExternalStandaloneEntityError
+  NSXMLParserInvalidConditionalSectionError
+  NSXMLParserEntityValueRequiredError
+  NSXMLParserNotWellBalancedError
+  NSXMLParserExtraContentError
+  NSXMLParserInvalidCharacterInEntityError
+  NSXMLParserParsedEntityRefInInternalError
+  NSXMLParserEntityRefLoopError
+  NSXMLParserEntityBoundaryError
+  NSXMLParserInvalidURIError
+  NSXMLParserURIFragmentError
+  NSXMLParserNoDTDError
+  NSXMLParserDelegateAbortedParseError
+  NSXMLParserResolveExternalEntitiesNever
+  NSXMLParserResolveExternalEntitiesNoNetwork
+  NSXMLParserResolveExternalEntitiesSameOriginOnly
+  NSXMLParserResolveExternalEntitiesAlways
+  NSXPCConnectionPrivileged
+  NSFileNoSuchFileError
+  NSFileLockingError
+  NSFileReadUnknownError
+  NSFileReadNoPermissionError
+  NSFileReadInvalidFileNameError
+  NSFileReadCorruptFileError
+  NSFileReadNoSuchFileError
+  NSFileReadInapplicableStringEncodingError
+  NSFileReadUnsupportedSchemeError
+  NSFileReadTooLargeError
+  NSFileReadUnknownStringEncodingError
+  NSFileWriteUnknownError
+  NSFileWriteNoPermissionError
+  NSFileWriteInvalidFileNameError
+  NSFileWriteFileExistsError
+  NSFileWriteInapplicableStringEncodingError
+  NSFileWriteUnsupportedSchemeError
+  NSFileWriteOutOfSpaceError
+  NSFileWriteVolumeReadOnlyError
+  NSFileManagerUnmountUnknownError
+  NSFileManagerUnmountBusyError
+  NSKeyValueValidationError
+  NSFormattingError
+  NSUserCancelledError
+  NSFeatureUnsupportedError
+  NSExecutableNotLoadableError
+  NSExecutableArchitectureMismatchError
+  NSExecutableRuntimeMismatchError
+  NSExecutableLoadError
+  NSExecutableLinkError
+  NSFileErrorMinimum
+  NSFileErrorMaximum
+  NSValidationErrorMinimum
+  NSValidationErrorMaximum
+  NSExecutableErrorMinimum
+  NSExecutableErrorMaximum
+  NSFormattingErrorMinimum
+  NSFormattingErrorMaximum
+  NSPropertyListReadCorruptError
+  NSPropertyListReadUnknownVersionError
+  NSPropertyListReadStreamError
+  NSPropertyListWriteStreamError
+  NSPropertyListWriteInvalidError
+  NSPropertyListErrorMinimum
+  NSPropertyListErrorMaximum
+  NSXPCConnectionInterrupted
+  NSXPCConnectionInvalid
+  NSXPCConnectionReplyInvalid
+  NSXPCConnectionCodeSigningRequirementFailure
+  NSXPCConnectionErrorMinimum
+  NSXPCConnectionErrorMaximum
+  NSUbiquitousFileUnavailableError
+  NSUbiquitousFileNotUploadedDueToQuotaError
+  NSUbiquitousFileUbiquityServerNotAvailable
+  NSUbiquitousFileErrorMinimum
+  NSUbiquitousFileErrorMaximum
+  NSUserActivityHandoffFailedError
+  NSUserActivityConnectionUnavailableError
+  NSUserActivityRemoteApplicationTimedOutError
+  NSUserActivityHandoffUserInfoTooLargeError
+  NSUserActivityErrorMinimum
+  NSUserActivityErrorMaximum
+  NSCoderReadCorruptError
+  NSCoderValueNotFoundError
+  NSCoderInvalidValueError
+  NSCoderErrorMinimum
+  NSCoderErrorMaximum
+  NSBundleErrorMinimum
+  NSBundleErrorMaximum
+  NSBundleOnDemandResourceOutOfSpaceError
+  NSBundleOnDemandResourceExceededMaximumSizeError
+  NSBundleOnDemandResourceInvalidTagError
+  NSCloudSharingNetworkFailureError
+  NSCloudSharingQuotaExceededError
+  NSCloudSharingTooManyParticipantsError
+  NSCloudSharingConflictError
+  NSCloudSharingNoPermissionError
+  NSCloudSharingOtherError
+  NSCloudSharingErrorMinimum
+  NSCloudSharingErrorMaximum
+  NSCompressionFailedError
+  NSDecompressionFailedError
+  NSCompressionErrorMinimum
+  NSCompressionErrorMaximum
+  NSBundleExecutableArchitectureI386
+  NSBundleExecutableArchitecturePPC
+  NSBundleExecutableArchitectureX86_64
+  NSBundleExecutableArchitecturePPC64
+  NSBundleExecutableArchitectureARM64
+  NS_UnknownByteOrder
+  NS_LittleEndian
+  NS_BigEndian
+  NSWrapCalendarComponents
+  NSDateComponentUndefined
+  NSUndefinedDateComponent
+  NSOpenStepUnicodeReservedBase
+  NSWindowsNTOperatingSystem
+  NSWindows95OperatingSystem
+  NSSolarisOperatingSystem
+  NSHPUXOperatingSystem
+  NSMACHOperatingSystem
+  NSSunOSOperatingSystem
+  NSOSF1OperatingSystem
+  NSNoScriptError
+  NSReceiverEvaluationScriptError
+  NSKeySpecifierEvaluationScriptError
+  NSArgumentEvaluationScriptError
+  NSReceiversCantHandleCommandScriptError
+  NSRequiredArgumentsMissingScriptError
+  NSArgumentsWrongScriptError
+  NSUnknownKeyScriptError
+  NSInternalScriptError
+  NSOperationNotSupportedForKeyScriptError
+  NSCannotCreateScriptCommandError
+  NSNoSpecifierError
+  NSNoTopLevelContainersSpecifierError
+  NSContainerSpecifierError
+  NSUnknownKeySpecifierError
+  NSInvalidIndexSpecifierError
+  NSInternalSpecifierError
+  NSOperationNotSupportedForKeySpecifierError
+  NSProprietaryStringEncoding
+  NSASCIIStringEncoding
+  NSNEXTSTEPStringEncoding
+  NSJapaneseEUCStringEncoding
+  NSUTF8StringEncoding
+  NSISOLatin1StringEncoding
+  NSSymbolStringEncoding
+  NSNonLossyASCIIStringEncoding
+  NSShiftJISStringEncoding
+  NSISOLatin2StringEncoding
+  NSUnicodeStringEncoding
+  NSWindowsCP1251StringEncoding
+  NSWindowsCP1252StringEncoding
+  NSWindowsCP1253StringEncoding
+  NSWindowsCP1254StringEncoding
+  NSWindowsCP1250StringEncoding
+  NSISO2022JPStringEncoding
+  NSMacOSRomanStringEncoding
+  NSUTF16StringEncoding
+  NSUTF16BigEndianStringEncoding
+  NSUTF16LittleEndianStringEncoding
+  NSUTF32StringEncoding
+  NSUTF32BigEndianStringEncoding
+  NSUTF32LittleEndianStringEncoding
+  NSTextCheckingAllSystemTypes
+  NSURLErrorUnknown
+  NSURLErrorCancelled
+  NSURLErrorBadURL
+  NSURLErrorTimedOut
+  NSURLErrorUnsupportedURL
+  NSURLErrorCannotFindHost
+  NSURLErrorCannotConnectToHost
+  NSURLErrorNetworkConnectionLost
+  NSURLErrorDNSLookupFailed
+  NSURLErrorHTTPTooManyRedirects
+  NSURLErrorResourceUnavailable
+  NSURLErrorNotConnectedToInternet
+  NSURLErrorRedirectToNonExistentLocation
+  NSURLErrorBadServerResponse
+  NSURLErrorUserCancelledAuthentication
+  NSURLErrorUserAuthenticationRequired
+  NSURLErrorZeroByteResource
+  NSURLErrorCannotDecodeRawData
+  NSURLErrorCannotDecodeContentData
+  NSURLErrorCannotParseResponse
+  NSURLErrorAppTransportSecurityRequiresSecureConnection
+  NSURLErrorFileDoesNotExist
+  NSURLErrorFileIsDirectory
+  NSURLErrorNoPermissionsToReadFile
+  NSURLErrorDataLengthExceedsMaximum
+  NSURLErrorFileOutsideSafeArea
+  NSURLErrorSecureConnectionFailed
+  NSURLErrorServerCertificateHasBadDate
+  NSURLErrorServerCertificateUntrusted
+  NSURLErrorServerCertificateHasUnknownRoot
+  NSURLErrorServerCertificateNotYetValid
+  NSURLErrorClientCertificateRejected
+  NSURLErrorClientCertificateRequired
+  NSURLErrorCannotLoadFromNetwork
+  NSURLErrorCannotCreateFile
+  NSURLErrorCannotOpenFile
+  NSURLErrorCannotCloseFile
+  NSURLErrorCannotWriteToFile
+  NSURLErrorCannotRemoveFile
+  NSURLErrorCannotMoveFile
+  NSURLErrorDownloadDecodingFailedMidStream
+  NSURLErrorDownloadDecodingFailedToComplete
+  NSURLErrorInternationalRoamingOff
+  NSURLErrorCallIsActive
+  NSURLErrorDataNotAllowed
+  NSURLErrorRequestBodyStreamExhausted
+  NSURLErrorBackgroundSessionRequiresSharedContainer
+  NSURLErrorBackgroundSessionInUseByAnotherProcess
+  NSURLErrorBackgroundSessionWasDisconnected
+  NSURLErrorCancelledReasonUserForceQuitApplication
+  NSURLErrorCancelledReasonBackgroundUpdatesDisabled
+  NSURLErrorCancelledReasonInsufficientSystemResources
+  NSUbiquitousKeyValueStoreServerChange
+  NSUbiquitousKeyValueStoreInitialSyncChange
+  NSUbiquitousKeyValueStoreQuotaViolationChange
+  NSUbiquitousKeyValueStoreAccountChange
+  NSScannedOption
+  NSCollectorDisabledOption
+  automatic
+  explicit
+  forward
+  reverse
+  termsOfAddress
+  localizedPhrase
+  )
+
+;; NSActivityOptions
+(define NSActivityIdleDisplaySleepDisabled 1099511627776)
+(define NSActivityIdleSystemSleepDisabled 1048576)
+(define NSActivitySuddenTerminationDisabled 16384)
+(define NSActivityAutomaticTerminationDisabled 32768)
+(define NSActivityAnimationTrackingEnabled 35184372088832)
+(define NSActivityTrackingEnabled 70368744177664)
+(define NSActivityUserInitiated 16777215)
+(define NSActivityUserInitiatedAllowingIdleSystemSleep 15728639)
+(define NSActivityBackground 255)
+(define NSActivityLatencyCritical 1095216660480)
+(define NSActivityUserInteractive 1095233437695)
+
+;; NSAlignmentOptions
+(define NSAlignMinXInward 1)
+(define NSAlignMinYInward 2)
+(define NSAlignMaxXInward 4)
+(define NSAlignMaxYInward 8)
+(define NSAlignWidthInward 16)
+(define NSAlignHeightInward 32)
+(define NSAlignMinXOutward 256)
+(define NSAlignMinYOutward 512)
+(define NSAlignMaxXOutward 1024)
+(define NSAlignMaxYOutward 2048)
+(define NSAlignWidthOutward 4096)
+(define NSAlignHeightOutward 8192)
+(define NSAlignMinXNearest 65536)
+(define NSAlignMinYNearest 131072)
+(define NSAlignMaxXNearest 262144)
+(define NSAlignMaxYNearest 524288)
+(define NSAlignWidthNearest 1048576)
+(define NSAlignHeightNearest 2097152)
+(define NSAlignAllEdgesInward 15)
+(define NSAlignAllEdgesOutward 3840)
+(define NSAlignAllEdgesNearest 983040)
+
+;; NSAppleEventSendOptions
+(define NSAppleEventSendNoReply 1)
+(define NSAppleEventSendQueueReply 2)
+(define NSAppleEventSendWaitForReply 3)
+(define NSAppleEventSendNeverInteract 16)
+(define NSAppleEventSendCanInteract 32)
+(define NSAppleEventSendAlwaysInteract 48)
+(define NSAppleEventSendCanSwitchLayer 64)
+(define NSAppleEventSendDontRecord 4096)
+(define NSAppleEventSendDontExecute 8192)
+(define NSAppleEventSendDontAnnotate 65536)
+(define NSAppleEventSendDefaultOptions 35)
+
+;; NSAttributedStringEnumerationOptions
+(define NSAttributedStringEnumerationReverse 2)
+(define NSAttributedStringEnumerationLongestEffectiveRangeNotRequired 1048576)
+
+;; NSAttributedStringFormattingOptions
+(define NSAttributedStringFormattingInsertArgumentAttributesWithoutMerging 1)
+(define NSAttributedStringFormattingApplyReplacementIndexAttribute 2)
+
+;; NSAttributedStringMarkdownInterpretedSyntax
+(define NSAttributedStringMarkdownInterpretedSyntaxFull 0)
+(define NSAttributedStringMarkdownInterpretedSyntaxInlineOnly 1)
+(define NSAttributedStringMarkdownInterpretedSyntaxInlineOnlyPreservingWhitespace 2)
+
+;; NSAttributedStringMarkdownParsingFailurePolicy
+(define NSAttributedStringMarkdownParsingFailureReturnError 0)
+(define NSAttributedStringMarkdownParsingFailureReturnPartiallyParsedIfPossible 1)
+
+;; NSBackgroundActivityResult
+(define NSBackgroundActivityResultFinished 1)
+(define NSBackgroundActivityResultDeferred 2)
+
+;; NSBinarySearchingOptions
+(define NSBinarySearchingFirstEqual 256)
+(define NSBinarySearchingLastEqual 512)
+(define NSBinarySearchingInsertionIndex 1024)
+
+;; NSByteCountFormatterCountStyle
+(define NSByteCountFormatterCountStyleFile 0)
+(define NSByteCountFormatterCountStyleMemory 1)
+(define NSByteCountFormatterCountStyleDecimal 2)
+(define NSByteCountFormatterCountStyleBinary 3)
+
+;; NSByteCountFormatterUnits
+(define NSByteCountFormatterUseDefault 0)
+(define NSByteCountFormatterUseBytes 1)
+(define NSByteCountFormatterUseKB 2)
+(define NSByteCountFormatterUseMB 4)
+(define NSByteCountFormatterUseGB 8)
+(define NSByteCountFormatterUseTB 16)
+(define NSByteCountFormatterUsePB 32)
+(define NSByteCountFormatterUseEB 64)
+(define NSByteCountFormatterUseZB 128)
+(define NSByteCountFormatterUseYBOrHigher 65280)
+(define NSByteCountFormatterUseAll 65535)
+
+;; NSCalculationError
+(define NSCalculationNoError 0)
+(define NSCalculationLossOfPrecision 1)
+(define NSCalculationUnderflow 2)
+(define NSCalculationOverflow 3)
+(define NSCalculationDivideByZero 4)
+
+;; NSCalendarOptions
+(define NSCalendarWrapComponents 1)
+(define NSCalendarMatchStrictly 2)
+(define NSCalendarSearchBackwards 4)
+(define NSCalendarMatchPreviousTimePreservingSmallerUnits 256)
+(define NSCalendarMatchNextTimePreservingSmallerUnits 512)
+(define NSCalendarMatchNextTime 1024)
+(define NSCalendarMatchFirst 4096)
+(define NSCalendarMatchLast 8192)
+
+;; NSCalendarUnit
+(define NSCalendarUnitEra 2)
+(define NSCalendarUnitYear 4)
+(define NSCalendarUnitMonth 8)
+(define NSCalendarUnitDay 16)
+(define NSCalendarUnitHour 32)
+(define NSCalendarUnitMinute 64)
+(define NSCalendarUnitSecond 128)
+(define NSCalendarUnitWeekday 512)
+(define NSCalendarUnitWeekdayOrdinal 1024)
+(define NSCalendarUnitQuarter 2048)
+(define NSCalendarUnitWeekOfMonth 4096)
+(define NSCalendarUnitWeekOfYear 8192)
+(define NSCalendarUnitYearForWeekOfYear 16384)
+(define NSCalendarUnitNanosecond 32768)
+(define NSCalendarUnitDayOfYear 65536)
+(define NSCalendarUnitCalendar 1048576)
+(define NSCalendarUnitTimeZone 2097152)
+(define NSCalendarUnitIsLeapMonth 1073741824)
+(define NSCalendarUnitIsRepeatedDay 2147483648)
+(define NSEraCalendarUnit 2)
+(define NSYearCalendarUnit 4)
+(define NSMonthCalendarUnit 8)
+(define NSDayCalendarUnit 16)
+(define NSHourCalendarUnit 32)
+(define NSMinuteCalendarUnit 64)
+(define NSSecondCalendarUnit 128)
+(define NSWeekCalendarUnit 256)
+(define NSWeekdayCalendarUnit 512)
+(define NSWeekdayOrdinalCalendarUnit 1024)
+(define NSQuarterCalendarUnit 2048)
+(define NSWeekOfMonthCalendarUnit 4096)
+(define NSWeekOfYearCalendarUnit 8192)
+(define NSYearForWeekOfYearCalendarUnit 16384)
+(define NSCalendarCalendarUnit 1048576)
+(define NSTimeZoneCalendarUnit 2097152)
+
+;; NSCollectionChangeType
+(define NSCollectionChangeInsert 0)
+(define NSCollectionChangeRemove 1)
+
+;; NSComparisonPredicateModifier
+(define NSDirectPredicateModifier 0)
+(define NSAllPredicateModifier 1)
+(define NSAnyPredicateModifier 2)
+
+;; NSComparisonPredicateOptions
+(define NSCaseInsensitivePredicateOption 1)
+(define NSDiacriticInsensitivePredicateOption 2)
+(define NSNormalizedPredicateOption 4)
+
+;; NSComparisonResult
+(define NSOrderedAscending -1)
+(define NSOrderedSame 0)
+(define NSOrderedDescending 1)
+
+;; NSCompoundPredicateType
+(define NSNotPredicateType 0)
+(define NSAndPredicateType 1)
+(define NSOrPredicateType 2)
+
+;; NSDataBase64DecodingOptions
+(define NSDataBase64DecodingIgnoreUnknownCharacters 1)
+
+;; NSDataBase64EncodingOptions
+(define NSDataBase64Encoding64CharacterLineLength 1)
+(define NSDataBase64Encoding76CharacterLineLength 2)
+(define NSDataBase64EncodingEndLineWithCarriageReturn 16)
+(define NSDataBase64EncodingEndLineWithLineFeed 32)
+
+;; NSDataCompressionAlgorithm
+(define NSDataCompressionAlgorithmLZFSE 0)
+(define NSDataCompressionAlgorithmLZ4 1)
+(define NSDataCompressionAlgorithmLZMA 2)
+(define NSDataCompressionAlgorithmZlib 3)
+
+;; NSDataReadingOptions
+(define NSDataReadingMappedIfSafe 1)
+(define NSDataReadingUncached 2)
+(define NSDataReadingMappedAlways 8)
+(define NSDataReadingMapped 1)
+(define NSMappedRead 1)
+(define NSUncachedRead 2)
+
+;; NSDataSearchOptions
+(define NSDataSearchBackwards 1)
+(define NSDataSearchAnchored 2)
+
+;; NSDataWritingOptions
+(define NSDataWritingAtomic 1)
+(define NSDataWritingWithoutOverwriting 2)
+(define NSDataWritingFileProtectionNone 268435456)
+(define NSDataWritingFileProtectionComplete 536870912)
+(define NSDataWritingFileProtectionCompleteUnlessOpen 805306368)
+(define NSDataWritingFileProtectionCompleteUntilFirstUserAuthentication 1073741824)
+(define NSDataWritingFileProtectionCompleteWhenUserInactive 1342177280)
+(define NSDataWritingFileProtectionMask 4026531840)
+(define NSAtomicWrite 1)
+
+;; NSDateComponentsFormatterUnitsStyle
+(define NSDateComponentsFormatterUnitsStylePositional 0)
+(define NSDateComponentsFormatterUnitsStyleAbbreviated 1)
+(define NSDateComponentsFormatterUnitsStyleShort 2)
+(define NSDateComponentsFormatterUnitsStyleFull 3)
+(define NSDateComponentsFormatterUnitsStyleSpellOut 4)
+(define NSDateComponentsFormatterUnitsStyleBrief 5)
+
+;; NSDateComponentsFormatterZeroFormattingBehavior
+(define NSDateComponentsFormatterZeroFormattingBehaviorNone 0)
+(define NSDateComponentsFormatterZeroFormattingBehaviorDefault 1)
+(define NSDateComponentsFormatterZeroFormattingBehaviorDropLeading 2)
+(define NSDateComponentsFormatterZeroFormattingBehaviorDropMiddle 4)
+(define NSDateComponentsFormatterZeroFormattingBehaviorDropTrailing 8)
+(define NSDateComponentsFormatterZeroFormattingBehaviorDropAll 14)
+(define NSDateComponentsFormatterZeroFormattingBehaviorPad 65536)
+
+;; NSDateFormatterBehavior
+(define NSDateFormatterBehaviorDefault 0)
+(define NSDateFormatterBehavior10_0 1000)
+(define NSDateFormatterBehavior10_4 1040)
+
+;; NSDateFormatterStyle
+(define NSDateFormatterNoStyle 0)
+(define NSDateFormatterShortStyle 1)
+(define NSDateFormatterMediumStyle 2)
+(define NSDateFormatterLongStyle 3)
+(define NSDateFormatterFullStyle 4)
+
+;; NSDateIntervalFormatterStyle
+(define NSDateIntervalFormatterNoStyle 0)
+(define NSDateIntervalFormatterShortStyle 1)
+(define NSDateIntervalFormatterMediumStyle 2)
+(define NSDateIntervalFormatterLongStyle 3)
+(define NSDateIntervalFormatterFullStyle 4)
+
+;; NSDecodingFailurePolicy
+(define NSDecodingFailurePolicyRaiseException 0)
+(define NSDecodingFailurePolicySetErrorAndReturn 1)
+
+;; NSDirectoryEnumerationOptions
+(define NSDirectoryEnumerationSkipsSubdirectoryDescendants 1)
+(define NSDirectoryEnumerationSkipsPackageDescendants 2)
+(define NSDirectoryEnumerationSkipsHiddenFiles 4)
+(define NSDirectoryEnumerationIncludesDirectoriesPostOrder 8)
+(define NSDirectoryEnumerationProducesRelativePathURLs 16)
+
+;; NSDistributedNotificationOptions
+(define NSDistributedNotificationDeliverImmediately 1)
+(define NSDistributedNotificationPostToAllSessions 2)
+
+;; NSEnergyFormatterUnit
+(define NSEnergyFormatterUnitJoule 11)
+(define NSEnergyFormatterUnitKilojoule 14)
+(define NSEnergyFormatterUnitCalorie 1793)
+(define NSEnergyFormatterUnitKilocalorie 1794)
+
+;; NSEnumerationOptions
+(define NSEnumerationConcurrent 1)
+(define NSEnumerationReverse 2)
+
+;; NSExpressionType
+(define NSConstantValueExpressionType 0)
+(define NSEvaluatedObjectExpressionType 1)
+(define NSVariableExpressionType 2)
+(define NSKeyPathExpressionType 3)
+(define NSFunctionExpressionType 4)
+(define NSUnionSetExpressionType 5)
+(define NSIntersectSetExpressionType 6)
+(define NSMinusSetExpressionType 7)
+(define NSSubqueryExpressionType 13)
+(define NSAggregateExpressionType 14)
+(define NSAnyKeyExpressionType 15)
+(define NSBlockExpressionType 19)
+(define NSConditionalExpressionType 20)
+
+;; NSFileCoordinatorReadingOptions
+(define NSFileCoordinatorReadingWithoutChanges 1)
+(define NSFileCoordinatorReadingResolvesSymbolicLink 2)
+(define NSFileCoordinatorReadingImmediatelyAvailableMetadataOnly 4)
+(define NSFileCoordinatorReadingForUploading 8)
+
+;; NSFileCoordinatorWritingOptions
+(define NSFileCoordinatorWritingForDeleting 1)
+(define NSFileCoordinatorWritingForMoving 2)
+(define NSFileCoordinatorWritingForMerging 4)
+(define NSFileCoordinatorWritingForReplacing 8)
+(define NSFileCoordinatorWritingContentIndependentMetadataOnly 16)
+
+;; NSFileManagerItemReplacementOptions
+(define NSFileManagerItemReplacementUsingNewMetadataOnly 1)
+(define NSFileManagerItemReplacementWithoutDeletingBackupItem 2)
+
+;; NSFileManagerResumeSyncBehavior
+(define NSFileManagerResumeSyncBehaviorPreserveLocalChanges 0)
+(define NSFileManagerResumeSyncBehaviorAfterUploadWithFailOnConflict 1)
+(define NSFileManagerResumeSyncBehaviorDropLocalChanges 2)
+
+;; NSFileManagerSupportedSyncControls
+(define NSFileManagerSupportedSyncControlsPauseSync 1)
+(define NSFileManagerSupportedSyncControlsFailUploadOnConflict 2)
+
+;; NSFileManagerUnmountOptions
+(define NSFileManagerUnmountAllPartitionsAndEjectDisk 1)
+(define NSFileManagerUnmountWithoutUI 2)
+
+;; NSFileManagerUploadLocalVersionConflictPolicy
+(define NSFileManagerUploadConflictPolicyDefault 0)
+(define NSFileManagerUploadConflictPolicyFailOnConflict 1)
+
+;; NSFileVersionAddingOptions
+(define NSFileVersionAddingByMoving 1)
+
+;; NSFileVersionReplacingOptions
+(define NSFileVersionReplacingByMoving 1)
+
+;; NSFileWrapperReadingOptions
+(define NSFileWrapperReadingImmediate 1)
+(define NSFileWrapperReadingWithoutMapping 2)
+
+;; NSFileWrapperWritingOptions
+(define NSFileWrapperWritingAtomic 1)
+(define NSFileWrapperWritingWithNameUpdating 2)
+
+;; NSFormattingContext
+(define NSFormattingContextUnknown 0)
+(define NSFormattingContextDynamic 1)
+(define NSFormattingContextStandalone 2)
+(define NSFormattingContextListItem 3)
+(define NSFormattingContextBeginningOfSentence 4)
+(define NSFormattingContextMiddleOfSentence 5)
+
+;; NSFormattingUnitStyle
+(define NSFormattingUnitStyleShort 1)
+(define NSFormattingUnitStyleMedium 2)
+(define NSFormattingUnitStyleLong 3)
+
+;; NSGrammaticalCase
+(define NSGrammaticalCaseNotSet 0)
+(define NSGrammaticalCaseNominative 1)
+(define NSGrammaticalCaseAccusative 2)
+(define NSGrammaticalCaseDative 3)
+(define NSGrammaticalCaseGenitive 4)
+(define NSGrammaticalCasePrepositional 5)
+(define NSGrammaticalCaseAblative 6)
+(define NSGrammaticalCaseAdessive 7)
+(define NSGrammaticalCaseAllative 8)
+(define NSGrammaticalCaseElative 9)
+(define NSGrammaticalCaseIllative 10)
+(define NSGrammaticalCaseEssive 11)
+(define NSGrammaticalCaseInessive 12)
+(define NSGrammaticalCaseLocative 13)
+(define NSGrammaticalCaseTranslative 14)
+
+;; NSGrammaticalDefiniteness
+(define NSGrammaticalDefinitenessNotSet 0)
+(define NSGrammaticalDefinitenessIndefinite 1)
+(define NSGrammaticalDefinitenessDefinite 2)
+
+;; NSGrammaticalDetermination
+(define NSGrammaticalDeterminationNotSet 0)
+(define NSGrammaticalDeterminationIndependent 1)
+(define NSGrammaticalDeterminationDependent 2)
+
+;; NSGrammaticalGender
+(define NSGrammaticalGenderNotSet 0)
+(define NSGrammaticalGenderFeminine 1)
+(define NSGrammaticalGenderMasculine 2)
+(define NSGrammaticalGenderNeuter 3)
+
+;; NSGrammaticalNumber
+(define NSGrammaticalNumberNotSet 0)
+(define NSGrammaticalNumberSingular 1)
+(define NSGrammaticalNumberZero 2)
+(define NSGrammaticalNumberPlural 3)
+(define NSGrammaticalNumberPluralTwo 4)
+(define NSGrammaticalNumberPluralFew 5)
+(define NSGrammaticalNumberPluralMany 6)
+
+;; NSGrammaticalPartOfSpeech
+(define NSGrammaticalPartOfSpeechNotSet 0)
+(define NSGrammaticalPartOfSpeechDeterminer 1)
+(define NSGrammaticalPartOfSpeechPronoun 2)
+(define NSGrammaticalPartOfSpeechLetter 3)
+(define NSGrammaticalPartOfSpeechAdverb 4)
+(define NSGrammaticalPartOfSpeechParticle 5)
+(define NSGrammaticalPartOfSpeechAdjective 6)
+(define NSGrammaticalPartOfSpeechAdposition 7)
+(define NSGrammaticalPartOfSpeechVerb 8)
+(define NSGrammaticalPartOfSpeechNoun 9)
+(define NSGrammaticalPartOfSpeechConjunction 10)
+(define NSGrammaticalPartOfSpeechNumeral 11)
+(define NSGrammaticalPartOfSpeechInterjection 12)
+(define NSGrammaticalPartOfSpeechPreposition 13)
+(define NSGrammaticalPartOfSpeechAbbreviation 14)
+
+;; NSGrammaticalPerson
+(define NSGrammaticalPersonNotSet 0)
+(define NSGrammaticalPersonFirst 1)
+(define NSGrammaticalPersonSecond 2)
+(define NSGrammaticalPersonThird 3)
+
+;; NSGrammaticalPronounType
+(define NSGrammaticalPronounTypeNotSet 0)
+(define NSGrammaticalPronounTypePersonal 1)
+(define NSGrammaticalPronounTypeReflexive 2)
+(define NSGrammaticalPronounTypePossessive 3)
+
+;; NSHTTPCookieAcceptPolicy
+(define NSHTTPCookieAcceptPolicyAlways 0)
+(define NSHTTPCookieAcceptPolicyNever 1)
+(define NSHTTPCookieAcceptPolicyOnlyFromMainDocumentDomain 2)
+
+;; NSISO8601DateFormatOptions
+(define NSISO8601DateFormatWithYear 1)
+(define NSISO8601DateFormatWithMonth 2)
+(define NSISO8601DateFormatWithWeekOfYear 4)
+(define NSISO8601DateFormatWithDay 16)
+(define NSISO8601DateFormatWithTime 32)
+(define NSISO8601DateFormatWithTimeZone 64)
+(define NSISO8601DateFormatWithSpaceBetweenDateAndTime 128)
+(define NSISO8601DateFormatWithDashSeparatorInDate 256)
+(define NSISO8601DateFormatWithColonSeparatorInTime 512)
+(define NSISO8601DateFormatWithColonSeparatorInTimeZone 1024)
+(define NSISO8601DateFormatWithFractionalSeconds 2048)
+(define NSISO8601DateFormatWithFullDate 275)
+(define NSISO8601DateFormatWithFullTime 1632)
+(define NSISO8601DateFormatWithInternetDateTime 1907)
+
+;; NSInlinePresentationIntent
+(define NSInlinePresentationIntentEmphasized 1)
+(define NSInlinePresentationIntentStronglyEmphasized 2)
+(define NSInlinePresentationIntentCode 4)
+(define NSInlinePresentationIntentStrikethrough 32)
+(define NSInlinePresentationIntentSoftBreak 64)
+(define NSInlinePresentationIntentLineBreak 128)
+(define NSInlinePresentationIntentInlineHTML 256)
+(define NSInlinePresentationIntentBlockHTML 512)
+
+;; NSInsertionPosition
+(define NSPositionAfter 0)
+(define NSPositionBefore 1)
+(define NSPositionBeginning 2)
+(define NSPositionEnd 3)
+(define NSPositionReplace 4)
+
+;; NSItemProviderErrorCode
+(define NSItemProviderUnknownError -1)
+(define NSItemProviderItemUnavailableError -1000)
+(define NSItemProviderUnexpectedValueClassError -1100)
+(define NSItemProviderUnavailableCoercionError -1200)
+
+;; NSItemProviderFileOptions
+(define NSItemProviderFileOptionOpenInPlace 1)
+
+;; NSItemProviderRepresentationVisibility
+(define NSItemProviderRepresentationVisibilityAll 0)
+(define NSItemProviderRepresentationVisibilityTeam 1)
+(define NSItemProviderRepresentationVisibilityGroup 2)
+(define NSItemProviderRepresentationVisibilityOwnProcess 3)
+
+;; NSJSONReadingOptions
+(define NSJSONReadingMutableContainers 1)
+(define NSJSONReadingMutableLeaves 2)
+(define NSJSONReadingFragmentsAllowed 4)
+(define NSJSONReadingJSON5Allowed 8)
+(define NSJSONReadingTopLevelDictionaryAssumed 16)
+(define NSJSONReadingAllowFragments 4)
+
+;; NSJSONWritingOptions
+(define NSJSONWritingPrettyPrinted 1)
+(define NSJSONWritingSortedKeys 2)
+(define NSJSONWritingFragmentsAllowed 4)
+(define NSJSONWritingWithoutEscapingSlashes 8)
+
+;; NSKeyValueChange
+(define NSKeyValueChangeSetting 1)
+(define NSKeyValueChangeInsertion 2)
+(define NSKeyValueChangeRemoval 3)
+(define NSKeyValueChangeReplacement 4)
+
+;; NSKeyValueObservingOptions
+(define NSKeyValueObservingOptionNew 1)
+(define NSKeyValueObservingOptionOld 2)
+(define NSKeyValueObservingOptionInitial 4)
+(define NSKeyValueObservingOptionPrior 8)
+
+;; NSKeyValueSetMutationKind
+(define NSKeyValueUnionSetMutation 1)
+(define NSKeyValueMinusSetMutation 2)
+(define NSKeyValueIntersectSetMutation 3)
+(define NSKeyValueSetSetMutation 4)
+
+;; NSLengthFormatterUnit
+(define NSLengthFormatterUnitMillimeter 8)
+(define NSLengthFormatterUnitCentimeter 9)
+(define NSLengthFormatterUnitMeter 11)
+(define NSLengthFormatterUnitKilometer 14)
+(define NSLengthFormatterUnitInch 1281)
+(define NSLengthFormatterUnitFoot 1282)
+(define NSLengthFormatterUnitYard 1283)
+(define NSLengthFormatterUnitMile 1284)
+
+;; NSLinguisticTaggerOptions
+(define NSLinguisticTaggerOmitWords 1)
+(define NSLinguisticTaggerOmitPunctuation 2)
+(define NSLinguisticTaggerOmitWhitespace 4)
+(define NSLinguisticTaggerOmitOther 8)
+(define NSLinguisticTaggerJoinNames 16)
+
+;; NSLinguisticTaggerUnit
+(define NSLinguisticTaggerUnitWord 0)
+(define NSLinguisticTaggerUnitSentence 1)
+(define NSLinguisticTaggerUnitParagraph 2)
+(define NSLinguisticTaggerUnitDocument 3)
+
+;; NSLocaleLanguageDirection
+(define NSLocaleLanguageDirectionUnknown 0)
+(define NSLocaleLanguageDirectionLeftToRight 1)
+(define NSLocaleLanguageDirectionRightToLeft 2)
+(define NSLocaleLanguageDirectionTopToBottom 3)
+(define NSLocaleLanguageDirectionBottomToTop 4)
+
+;; NSMachPortOptions
+(define NSMachPortDeallocateNone 0)
+(define NSMachPortDeallocateSendRight 1)
+(define NSMachPortDeallocateReceiveRight 2)
+
+;; NSMassFormatterUnit
+(define NSMassFormatterUnitGram 11)
+(define NSMassFormatterUnitKilogram 14)
+(define NSMassFormatterUnitOunce 1537)
+(define NSMassFormatterUnitPound 1538)
+(define NSMassFormatterUnitStone 1539)
+
+;; NSMatchingFlags
+(define NSMatchingProgress 1)
+(define NSMatchingCompleted 2)
+(define NSMatchingHitEnd 4)
+(define NSMatchingRequiredEnd 8)
+(define NSMatchingInternalError 16)
+
+;; NSMatchingOptions
+(define NSMatchingReportProgress 1)
+(define NSMatchingReportCompletion 2)
+(define NSMatchingAnchored 4)
+(define NSMatchingWithTransparentBounds 8)
+(define NSMatchingWithoutAnchoringBounds 16)
+
+;; NSMeasurementFormatterUnitOptions
+(define NSMeasurementFormatterUnitOptionsProvidedUnit 1)
+(define NSMeasurementFormatterUnitOptionsNaturalScale 2)
+(define NSMeasurementFormatterUnitOptionsTemperatureWithoutUnit 4)
+
+;; NSNetServiceOptions
+(define NSNetServiceNoAutoRename 1)
+(define NSNetServiceListenForConnections 2)
+
+;; NSNetServicesError
+(define NSNetServicesUnknownError -72000)
+(define NSNetServicesCollisionError -72001)
+(define NSNetServicesNotFoundError -72002)
+(define NSNetServicesActivityInProgress -72003)
+(define NSNetServicesBadArgumentError -72004)
+(define NSNetServicesCancelledError -72005)
+(define NSNetServicesInvalidError -72006)
+(define NSNetServicesTimeoutError -72007)
+(define NSNetServicesMissingRequiredConfigurationError -72008)
+
+;; NSNotificationCoalescing
+(define NSNotificationNoCoalescing 0)
+(define NSNotificationCoalescingOnName 1)
+(define NSNotificationCoalescingOnSender 2)
+
+;; NSNotificationSuspensionBehavior
+(define NSNotificationSuspensionBehaviorDrop 1)
+(define NSNotificationSuspensionBehaviorCoalesce 2)
+(define NSNotificationSuspensionBehaviorHold 3)
+(define NSNotificationSuspensionBehaviorDeliverImmediately 4)
+
+;; NSNumberFormatterBehavior
+(define NSNumberFormatterBehaviorDefault 0)
+(define NSNumberFormatterBehavior10_0 1000)
+(define NSNumberFormatterBehavior10_4 1040)
+
+;; NSNumberFormatterPadPosition
+(define NSNumberFormatterPadBeforePrefix 0)
+(define NSNumberFormatterPadAfterPrefix 1)
+(define NSNumberFormatterPadBeforeSuffix 2)
+(define NSNumberFormatterPadAfterSuffix 3)
+
+;; NSNumberFormatterRoundingMode
+(define NSNumberFormatterRoundCeiling 0)
+(define NSNumberFormatterRoundFloor 1)
+(define NSNumberFormatterRoundDown 2)
+(define NSNumberFormatterRoundUp 3)
+(define NSNumberFormatterRoundHalfEven 4)
+(define NSNumberFormatterRoundHalfDown 5)
+(define NSNumberFormatterRoundHalfUp 6)
+
+;; NSNumberFormatterStyle
+(define NSNumberFormatterNoStyle 0)
+(define NSNumberFormatterDecimalStyle 1)
+(define NSNumberFormatterCurrencyStyle 2)
+(define NSNumberFormatterPercentStyle 3)
+(define NSNumberFormatterScientificStyle 4)
+(define NSNumberFormatterSpellOutStyle 5)
+(define NSNumberFormatterOrdinalStyle 6)
+(define NSNumberFormatterCurrencyISOCodeStyle 8)
+(define NSNumberFormatterCurrencyPluralStyle 9)
+(define NSNumberFormatterCurrencyAccountingStyle 10)
+
+;; NSOperationQueuePriority
+(define NSOperationQueuePriorityVeryLow -8)
+(define NSOperationQueuePriorityLow -4)
+(define NSOperationQueuePriorityNormal 0)
+(define NSOperationQueuePriorityHigh 4)
+(define NSOperationQueuePriorityVeryHigh 8)
+
+;; NSOrderedCollectionDifferenceCalculationOptions
+(define NSOrderedCollectionDifferenceCalculationOmitInsertedObjects 1)
+(define NSOrderedCollectionDifferenceCalculationOmitRemovedObjects 2)
+(define NSOrderedCollectionDifferenceCalculationInferMoves 4)
+
+;; NSPersonNameComponentsFormatterOptions
+(define NSPersonNameComponentsFormatterPhonetic 2)
+
+;; NSPersonNameComponentsFormatterStyle
+(define NSPersonNameComponentsFormatterStyleDefault 0)
+(define NSPersonNameComponentsFormatterStyleShort 1)
+(define NSPersonNameComponentsFormatterStyleMedium 2)
+(define NSPersonNameComponentsFormatterStyleLong 3)
+(define NSPersonNameComponentsFormatterStyleAbbreviated 4)
+
+;; NSPointerFunctionsOptions
+(define NSPointerFunctionsStrongMemory 0)
+(define NSPointerFunctionsZeroingWeakMemory 1)
+(define NSPointerFunctionsOpaqueMemory 2)
+(define NSPointerFunctionsMallocMemory 3)
+(define NSPointerFunctionsMachVirtualMemory 4)
+(define NSPointerFunctionsWeakMemory 5)
+(define NSPointerFunctionsObjectPersonality 0)
+(define NSPointerFunctionsOpaquePersonality 256)
+(define NSPointerFunctionsObjectPointerPersonality 512)
+(define NSPointerFunctionsCStringPersonality 768)
+(define NSPointerFunctionsStructPersonality 1024)
+(define NSPointerFunctionsIntegerPersonality 1280)
+(define NSPointerFunctionsCopyIn 65536)
+
+;; NSPostingStyle
+(define NSPostWhenIdle 1)
+(define NSPostASAP 2)
+(define NSPostNow 3)
+
+;; NSPredicateOperatorType
+(define NSLessThanPredicateOperatorType 0)
+(define NSLessThanOrEqualToPredicateOperatorType 1)
+(define NSGreaterThanPredicateOperatorType 2)
+(define NSGreaterThanOrEqualToPredicateOperatorType 3)
+(define NSEqualToPredicateOperatorType 4)
+(define NSNotEqualToPredicateOperatorType 5)
+(define NSMatchesPredicateOperatorType 6)
+(define NSLikePredicateOperatorType 7)
+(define NSBeginsWithPredicateOperatorType 8)
+(define NSEndsWithPredicateOperatorType 9)
+(define NSInPredicateOperatorType 10)
+(define NSCustomSelectorPredicateOperatorType 11)
+(define NSContainsPredicateOperatorType 99)
+(define NSBetweenPredicateOperatorType 100)
+
+;; NSPresentationIntentKind
+(define NSPresentationIntentKindParagraph 0)
+(define NSPresentationIntentKindHeader 1)
+(define NSPresentationIntentKindOrderedList 2)
+(define NSPresentationIntentKindUnorderedList 3)
+(define NSPresentationIntentKindListItem 4)
+(define NSPresentationIntentKindCodeBlock 5)
+(define NSPresentationIntentKindBlockQuote 6)
+(define NSPresentationIntentKindThematicBreak 7)
+(define NSPresentationIntentKindTable 8)
+(define NSPresentationIntentKindTableHeaderRow 9)
+(define NSPresentationIntentKindTableRow 10)
+(define NSPresentationIntentKindTableCell 11)
+
+;; NSPresentationIntentTableColumnAlignment
+(define NSPresentationIntentTableColumnAlignmentLeft 0)
+(define NSPresentationIntentTableColumnAlignmentCenter 1)
+(define NSPresentationIntentTableColumnAlignmentRight 2)
+
+;; NSProcessInfoThermalState
+(define NSProcessInfoThermalStateNominal 0)
+(define NSProcessInfoThermalStateFair 1)
+(define NSProcessInfoThermalStateSerious 2)
+(define NSProcessInfoThermalStateCritical 3)
+
+;; NSPropertyListFormat
+(define NSPropertyListOpenStepFormat 1)
+(define NSPropertyListXMLFormat_v1_0 100)
+(define NSPropertyListBinaryFormat_v1_0 200)
+
+;; NSPropertyListMutabilityOptions
+(define NSPropertyListImmutable 0)
+(define NSPropertyListMutableContainers 1)
+(define NSPropertyListMutableContainersAndLeaves 2)
+
+;; NSQualityOfService
+(define NSQualityOfServiceUserInteractive 33)
+(define NSQualityOfServiceUserInitiated 25)
+(define NSQualityOfServiceUtility 17)
+(define NSQualityOfServiceBackground 9)
+(define NSQualityOfServiceDefault -1)
+
+;; NSRectEdge
+(define NSRectEdgeMinX 0)
+(define NSRectEdgeMinY 1)
+(define NSRectEdgeMaxX 2)
+(define NSRectEdgeMaxY 3)
+(define NSMinXEdge 0)
+(define NSMinYEdge 1)
+(define NSMaxXEdge 2)
+(define NSMaxYEdge 3)
+
+;; NSRegularExpressionOptions
+(define NSRegularExpressionCaseInsensitive 1)
+(define NSRegularExpressionAllowCommentsAndWhitespace 2)
+(define NSRegularExpressionIgnoreMetacharacters 4)
+(define NSRegularExpressionDotMatchesLineSeparators 8)
+(define NSRegularExpressionAnchorsMatchLines 16)
+(define NSRegularExpressionUseUnixLineSeparators 32)
+(define NSRegularExpressionUseUnicodeWordBoundaries 64)
+
+;; NSRelativeDateTimeFormatterStyle
+(define NSRelativeDateTimeFormatterStyleNumeric 0)
+(define NSRelativeDateTimeFormatterStyleNamed 1)
+
+;; NSRelativeDateTimeFormatterUnitsStyle
+(define NSRelativeDateTimeFormatterUnitsStyleFull 0)
+(define NSRelativeDateTimeFormatterUnitsStyleSpellOut 1)
+(define NSRelativeDateTimeFormatterUnitsStyleShort 2)
+(define NSRelativeDateTimeFormatterUnitsStyleAbbreviated 3)
+
+;; NSRelativePosition
+(define NSRelativeAfter 0)
+(define NSRelativeBefore 1)
+
+;; NSRoundingMode
+(define NSRoundPlain 0)
+(define NSRoundDown 1)
+(define NSRoundUp 2)
+(define NSRoundBankers 3)
+
+;; NSSaveOptions
+(define NSSaveOptionsYes 0)
+(define NSSaveOptionsNo 1)
+(define NSSaveOptionsAsk 2)
+
+;; NSSearchPathDirectory
+(define NSApplicationDirectory 1)
+(define NSDemoApplicationDirectory 2)
+(define NSDeveloperApplicationDirectory 3)
+(define NSAdminApplicationDirectory 4)
+(define NSLibraryDirectory 5)
+(define NSDeveloperDirectory 6)
+(define NSUserDirectory 7)
+(define NSDocumentationDirectory 8)
+(define NSDocumentDirectory 9)
+(define NSCoreServiceDirectory 10)
+(define NSAutosavedInformationDirectory 11)
+(define NSDesktopDirectory 12)
+(define NSCachesDirectory 13)
+(define NSApplicationSupportDirectory 14)
+(define NSDownloadsDirectory 15)
+(define NSInputMethodsDirectory 16)
+(define NSMoviesDirectory 17)
+(define NSMusicDirectory 18)
+(define NSPicturesDirectory 19)
+(define NSPrinterDescriptionDirectory 20)
+(define NSSharedPublicDirectory 21)
+(define NSPreferencePanesDirectory 22)
+(define NSApplicationScriptsDirectory 23)
+(define NSItemReplacementDirectory 99)
+(define NSAllApplicationsDirectory 100)
+(define NSAllLibrariesDirectory 101)
+(define NSTrashDirectory 102)
+
+;; NSSearchPathDomainMask
+(define NSUserDomainMask 1)
+(define NSLocalDomainMask 2)
+(define NSNetworkDomainMask 4)
+(define NSSystemDomainMask 8)
+(define NSAllDomainsMask 65535)
+
+;; NSSortOptions
+(define NSSortConcurrent 1)
+(define NSSortStable 16)
+
+;; NSStreamEvent
+(define NSStreamEventNone 0)
+(define NSStreamEventOpenCompleted 1)
+(define NSStreamEventHasBytesAvailable 2)
+(define NSStreamEventHasSpaceAvailable 4)
+(define NSStreamEventErrorOccurred 8)
+(define NSStreamEventEndEncountered 16)
+
+;; NSStreamStatus
+(define NSStreamStatusNotOpen 0)
+(define NSStreamStatusOpening 1)
+(define NSStreamStatusOpen 2)
+(define NSStreamStatusReading 3)
+(define NSStreamStatusWriting 4)
+(define NSStreamStatusAtEnd 5)
+(define NSStreamStatusClosed 6)
+(define NSStreamStatusError 7)
+
+;; NSStringCompareOptions
+(define NSCaseInsensitiveSearch 1)
+(define NSLiteralSearch 2)
+(define NSBackwardsSearch 4)
+(define NSAnchoredSearch 8)
+(define NSNumericSearch 64)
+(define NSDiacriticInsensitiveSearch 128)
+(define NSWidthInsensitiveSearch 256)
+(define NSForcedOrderingSearch 512)
+(define NSRegularExpressionSearch 1024)
+
+;; NSStringEncodingConversionOptions
+(define NSStringEncodingConversionAllowLossy 1)
+(define NSStringEncodingConversionExternalRepresentation 2)
+
+;; NSStringEnumerationOptions
+(define NSStringEnumerationByLines 0)
+(define NSStringEnumerationByParagraphs 1)
+(define NSStringEnumerationByComposedCharacterSequences 2)
+(define NSStringEnumerationByWords 3)
+(define NSStringEnumerationBySentences 4)
+(define NSStringEnumerationByCaretPositions 5)
+(define NSStringEnumerationByDeletionClusters 6)
+(define NSStringEnumerationReverse 256)
+(define NSStringEnumerationSubstringNotRequired 512)
+(define NSStringEnumerationLocalized 1024)
+
+;; NSTaskTerminationReason
+(define NSTaskTerminationReasonExit 1)
+(define NSTaskTerminationReasonUncaughtSignal 2)
+
+;; NSTestComparisonOperation
+(define NSEqualToComparison 0)
+(define NSLessThanOrEqualToComparison 1)
+(define NSLessThanComparison 2)
+(define NSGreaterThanOrEqualToComparison 3)
+(define NSGreaterThanComparison 4)
+(define NSBeginsWithComparison 5)
+(define NSEndsWithComparison 6)
+(define NSContainsComparison 7)
+
+;; NSTextCheckingType
+(define NSTextCheckingTypeOrthography 1)
+(define NSTextCheckingTypeSpelling 2)
+(define NSTextCheckingTypeGrammar 4)
+(define NSTextCheckingTypeDate 8)
+(define NSTextCheckingTypeAddress 16)
+(define NSTextCheckingTypeLink 32)
+(define NSTextCheckingTypeQuote 64)
+(define NSTextCheckingTypeDash 128)
+(define NSTextCheckingTypeReplacement 256)
+(define NSTextCheckingTypeCorrection 512)
+(define NSTextCheckingTypeRegularExpression 1024)
+(define NSTextCheckingTypePhoneNumber 2048)
+(define NSTextCheckingTypeTransitInformation 4096)
+
+;; NSTimeZoneNameStyle
+(define NSTimeZoneNameStyleStandard 0)
+(define NSTimeZoneNameStyleShortStandard 1)
+(define NSTimeZoneNameStyleDaylightSaving 2)
+(define NSTimeZoneNameStyleShortDaylightSaving 3)
+(define NSTimeZoneNameStyleGeneric 4)
+(define NSTimeZoneNameStyleShortGeneric 5)
+
+;; NSURLBookmarkCreationOptions
+(define NSURLBookmarkCreationPreferFileIDResolution 256)
+(define NSURLBookmarkCreationMinimalBookmark 512)
+(define NSURLBookmarkCreationSuitableForBookmarkFile 1024)
+(define NSURLBookmarkCreationWithSecurityScope 2048)
+(define NSURLBookmarkCreationSecurityScopeAllowOnlyReadAccess 4096)
+(define NSURLBookmarkCreationWithoutImplicitSecurityScope 536870912)
+
+;; NSURLBookmarkResolutionOptions
+(define NSURLBookmarkResolutionWithoutUI 256)
+(define NSURLBookmarkResolutionWithoutMounting 512)
+(define NSURLBookmarkResolutionWithSecurityScope 1024)
+(define NSURLBookmarkResolutionWithoutImplicitStartAccessing 32768)
+
+;; NSURLCacheStoragePolicy
+(define NSURLCacheStorageAllowed 0)
+(define NSURLCacheStorageAllowedInMemoryOnly 1)
+(define NSURLCacheStorageNotAllowed 2)
+
+;; NSURLCredentialPersistence
+(define NSURLCredentialPersistenceNone 0)
+(define NSURLCredentialPersistenceForSession 1)
+(define NSURLCredentialPersistencePermanent 2)
+(define NSURLCredentialPersistenceSynchronizable 3)
+
+;; NSURLErrorNetworkUnavailableReason
+(define NSURLErrorNetworkUnavailableReasonCellular 0)
+(define NSURLErrorNetworkUnavailableReasonExpensive 1)
+(define NSURLErrorNetworkUnavailableReasonConstrained 2)
+(define NSURLErrorNetworkUnavailableReasonUltraConstrained 3)
+
+;; NSURLHandleStatus
+(define NSURLHandleNotLoaded 0)
+(define NSURLHandleLoadSucceeded 1)
+(define NSURLHandleLoadInProgress 2)
+(define NSURLHandleLoadFailed 3)
+
+;; NSURLRelationship
+(define NSURLRelationshipContains 0)
+(define NSURLRelationshipSame 1)
+(define NSURLRelationshipOther 2)
+
+;; NSURLRequestAttribution
+(define NSURLRequestAttributionDeveloper 0)
+(define NSURLRequestAttributionUser 1)
+
+;; NSURLRequestCachePolicy
+(define NSURLRequestUseProtocolCachePolicy 0)
+(define NSURLRequestReloadIgnoringLocalCacheData 1)
+(define NSURLRequestReloadIgnoringLocalAndRemoteCacheData 4)
+(define NSURLRequestReloadIgnoringCacheData 1)
+(define NSURLRequestReturnCacheDataElseLoad 2)
+(define NSURLRequestReturnCacheDataDontLoad 3)
+(define NSURLRequestReloadRevalidatingCacheData 5)
+
+;; NSURLRequestNetworkServiceType
+(define NSURLNetworkServiceTypeDefault 0)
+(define NSURLNetworkServiceTypeVoIP 1)
+(define NSURLNetworkServiceTypeVideo 2)
+(define NSURLNetworkServiceTypeBackground 3)
+(define NSURLNetworkServiceTypeVoice 4)
+(define NSURLNetworkServiceTypeResponsiveData 6)
+(define NSURLNetworkServiceTypeAVStreaming 8)
+(define NSURLNetworkServiceTypeResponsiveAV 9)
+(define NSURLNetworkServiceTypeCallSignaling 11)
+
+;; NSURLSessionAuthChallengeDisposition
+(define NSURLSessionAuthChallengeUseCredential 0)
+(define NSURLSessionAuthChallengePerformDefaultHandling 1)
+(define NSURLSessionAuthChallengeCancelAuthenticationChallenge 2)
+(define NSURLSessionAuthChallengeRejectProtectionSpace 3)
+
+;; NSURLSessionDelayedRequestDisposition
+(define NSURLSessionDelayedRequestContinueLoading 0)
+(define NSURLSessionDelayedRequestUseNewRequest 1)
+(define NSURLSessionDelayedRequestCancel 2)
+
+;; NSURLSessionMultipathServiceType
+(define NSURLSessionMultipathServiceTypeNone 0)
+(define NSURLSessionMultipathServiceTypeHandover 1)
+(define NSURLSessionMultipathServiceTypeInteractive 2)
+(define NSURLSessionMultipathServiceTypeAggregate 3)
+
+;; NSURLSessionResponseDisposition
+(define NSURLSessionResponseCancel 0)
+(define NSURLSessionResponseAllow 1)
+(define NSURLSessionResponseBecomeDownload 2)
+(define NSURLSessionResponseBecomeStream 3)
+
+;; NSURLSessionTaskMetricsDomainResolutionProtocol
+(define NSURLSessionTaskMetricsDomainResolutionProtocolUnknown 0)
+(define NSURLSessionTaskMetricsDomainResolutionProtocolUDP 1)
+(define NSURLSessionTaskMetricsDomainResolutionProtocolTCP 2)
+(define NSURLSessionTaskMetricsDomainResolutionProtocolTLS 3)
+(define NSURLSessionTaskMetricsDomainResolutionProtocolHTTPS 4)
+
+;; NSURLSessionTaskMetricsResourceFetchType
+(define NSURLSessionTaskMetricsResourceFetchTypeUnknown 0)
+(define NSURLSessionTaskMetricsResourceFetchTypeNetworkLoad 1)
+(define NSURLSessionTaskMetricsResourceFetchTypeServerPush 2)
+(define NSURLSessionTaskMetricsResourceFetchTypeLocalCache 3)
+
+;; NSURLSessionTaskState
+(define NSURLSessionTaskStateRunning 0)
+(define NSURLSessionTaskStateSuspended 1)
+(define NSURLSessionTaskStateCanceling 2)
+(define NSURLSessionTaskStateCompleted 3)
+
+;; NSURLSessionWebSocketCloseCode
+(define NSURLSessionWebSocketCloseCodeInvalid 0)
+(define NSURLSessionWebSocketCloseCodeNormalClosure 1000)
+(define NSURLSessionWebSocketCloseCodeGoingAway 1001)
+(define NSURLSessionWebSocketCloseCodeProtocolError 1002)
+(define NSURLSessionWebSocketCloseCodeUnsupportedData 1003)
+(define NSURLSessionWebSocketCloseCodeNoStatusReceived 1005)
+(define NSURLSessionWebSocketCloseCodeAbnormalClosure 1006)
+(define NSURLSessionWebSocketCloseCodeInvalidFramePayloadData 1007)
+(define NSURLSessionWebSocketCloseCodePolicyViolation 1008)
+(define NSURLSessionWebSocketCloseCodeMessageTooBig 1009)
+(define NSURLSessionWebSocketCloseCodeMandatoryExtensionMissing 1010)
+(define NSURLSessionWebSocketCloseCodeInternalServerError 1011)
+(define NSURLSessionWebSocketCloseCodeTLSHandshakeFailure 1015)
+
+;; NSURLSessionWebSocketMessageType
+(define NSURLSessionWebSocketMessageTypeData 0)
+(define NSURLSessionWebSocketMessageTypeString 1)
+
+;; NSUserNotificationActivationType
+(define NSUserNotificationActivationTypeNone 0)
+(define NSUserNotificationActivationTypeContentsClicked 1)
+(define NSUserNotificationActivationTypeActionButtonClicked 2)
+(define NSUserNotificationActivationTypeReplied 3)
+(define NSUserNotificationActivationTypeAdditionalActionClicked 4)
+
+;; NSVolumeEnumerationOptions
+(define NSVolumeEnumerationSkipHiddenVolumes 2)
+(define NSVolumeEnumerationProduceFileReferenceURLs 4)
+
+;; NSWhoseSubelementIdentifier
+(define NSIndexSubelement 0)
+(define NSEverySubelement 1)
+(define NSMiddleSubelement 2)
+(define NSRandomSubelement 3)
+(define NSNoSubelement 4)
+
+;; NSXMLDTDNodeKind
+(define NSXMLEntityGeneralKind 1)
+(define NSXMLEntityParsedKind 2)
+(define NSXMLEntityUnparsedKind 3)
+(define NSXMLEntityParameterKind 4)
+(define NSXMLEntityPredefined 5)
+(define NSXMLAttributeCDATAKind 6)
+(define NSXMLAttributeIDKind 7)
+(define NSXMLAttributeIDRefKind 8)
+(define NSXMLAttributeIDRefsKind 9)
+(define NSXMLAttributeEntityKind 10)
+(define NSXMLAttributeEntitiesKind 11)
+(define NSXMLAttributeNMTokenKind 12)
+(define NSXMLAttributeNMTokensKind 13)
+(define NSXMLAttributeEnumerationKind 14)
+(define NSXMLAttributeNotationKind 15)
+(define NSXMLElementDeclarationUndefinedKind 16)
+(define NSXMLElementDeclarationEmptyKind 17)
+(define NSXMLElementDeclarationAnyKind 18)
+(define NSXMLElementDeclarationMixedKind 19)
+(define NSXMLElementDeclarationElementKind 20)
+
+;; NSXMLDocumentContentKind
+(define NSXMLDocumentXMLKind 0)
+(define NSXMLDocumentXHTMLKind 1)
+(define NSXMLDocumentHTMLKind 2)
+(define NSXMLDocumentTextKind 3)
+
+;; NSXMLNodeKind
+(define NSXMLInvalidKind 0)
+(define NSXMLDocumentKind 1)
+(define NSXMLElementKind 2)
+(define NSXMLAttributeKind 3)
+(define NSXMLNamespaceKind 4)
+(define NSXMLProcessingInstructionKind 5)
+(define NSXMLCommentKind 6)
+(define NSXMLTextKind 7)
+(define NSXMLDTDKind 8)
+(define NSXMLEntityDeclarationKind 9)
+(define NSXMLAttributeDeclarationKind 10)
+(define NSXMLElementDeclarationKind 11)
+(define NSXMLNotationDeclarationKind 12)
+
+;; NSXMLNodeOptions
+(define NSXMLNodeOptionsNone 0)
+(define NSXMLNodeIsCDATA 1)
+(define NSXMLNodeExpandEmptyElement 2)
+(define NSXMLNodeCompactEmptyElement 4)
+(define NSXMLNodeUseSingleQuotes 8)
+(define NSXMLNodeUseDoubleQuotes 16)
+(define NSXMLNodeNeverEscapeContents 32)
+(define NSXMLDocumentTidyHTML 512)
+(define NSXMLDocumentTidyXML 1024)
+(define NSXMLDocumentValidate 8192)
+(define NSXMLNodeLoadExternalEntitiesAlways 16384)
+(define NSXMLNodeLoadExternalEntitiesSameOriginOnly 32768)
+(define NSXMLNodeLoadExternalEntitiesNever 524288)
+(define NSXMLDocumentXInclude 65536)
+(define NSXMLNodePrettyPrint 131072)
+(define NSXMLDocumentIncludeContentTypeDeclaration 262144)
+(define NSXMLNodePreserveNamespaceOrder 1048576)
+(define NSXMLNodePreserveAttributeOrder 2097152)
+(define NSXMLNodePreserveEntities 4194304)
+(define NSXMLNodePreservePrefixes 8388608)
+(define NSXMLNodePreserveCDATA 16777216)
+(define NSXMLNodePreserveWhitespace 33554432)
+(define NSXMLNodePreserveDTD 67108864)
+(define NSXMLNodePreserveCharacterReferences 134217728)
+(define NSXMLNodePromoteSignificantWhitespace 268435456)
+(define NSXMLNodePreserveEmptyElements 6)
+(define NSXMLNodePreserveQuotes 24)
+(define NSXMLNodePreserveAll 4293918750)
+
+;; NSXMLParserError
+(define NSXMLParserInternalError 1)
+(define NSXMLParserOutOfMemoryError 2)
+(define NSXMLParserDocumentStartError 3)
+(define NSXMLParserEmptyDocumentError 4)
+(define NSXMLParserPrematureDocumentEndError 5)
+(define NSXMLParserInvalidHexCharacterRefError 6)
+(define NSXMLParserInvalidDecimalCharacterRefError 7)
+(define NSXMLParserInvalidCharacterRefError 8)
+(define NSXMLParserInvalidCharacterError 9)
+(define NSXMLParserCharacterRefAtEOFError 10)
+(define NSXMLParserCharacterRefInPrologError 11)
+(define NSXMLParserCharacterRefInEpilogError 12)
+(define NSXMLParserCharacterRefInDTDError 13)
+(define NSXMLParserEntityRefAtEOFError 14)
+(define NSXMLParserEntityRefInPrologError 15)
+(define NSXMLParserEntityRefInEpilogError 16)
+(define NSXMLParserEntityRefInDTDError 17)
+(define NSXMLParserParsedEntityRefAtEOFError 18)
+(define NSXMLParserParsedEntityRefInPrologError 19)
+(define NSXMLParserParsedEntityRefInEpilogError 20)
+(define NSXMLParserParsedEntityRefInInternalSubsetError 21)
+(define NSXMLParserEntityReferenceWithoutNameError 22)
+(define NSXMLParserEntityReferenceMissingSemiError 23)
+(define NSXMLParserParsedEntityRefNoNameError 24)
+(define NSXMLParserParsedEntityRefMissingSemiError 25)
+(define NSXMLParserUndeclaredEntityError 26)
+(define NSXMLParserUnparsedEntityError 28)
+(define NSXMLParserEntityIsExternalError 29)
+(define NSXMLParserEntityIsParameterError 30)
+(define NSXMLParserUnknownEncodingError 31)
+(define NSXMLParserEncodingNotSupportedError 32)
+(define NSXMLParserStringNotStartedError 33)
+(define NSXMLParserStringNotClosedError 34)
+(define NSXMLParserNamespaceDeclarationError 35)
+(define NSXMLParserEntityNotStartedError 36)
+(define NSXMLParserEntityNotFinishedError 37)
+(define NSXMLParserLessThanSymbolInAttributeError 38)
+(define NSXMLParserAttributeNotStartedError 39)
+(define NSXMLParserAttributeNotFinishedError 40)
+(define NSXMLParserAttributeHasNoValueError 41)
+(define NSXMLParserAttributeRedefinedError 42)
+(define NSXMLParserLiteralNotStartedError 43)
+(define NSXMLParserLiteralNotFinishedError 44)
+(define NSXMLParserCommentNotFinishedError 45)
+(define NSXMLParserProcessingInstructionNotStartedError 46)
+(define NSXMLParserProcessingInstructionNotFinishedError 47)
+(define NSXMLParserNotationNotStartedError 48)
+(define NSXMLParserNotationNotFinishedError 49)
+(define NSXMLParserAttributeListNotStartedError 50)
+(define NSXMLParserAttributeListNotFinishedError 51)
+(define NSXMLParserMixedContentDeclNotStartedError 52)
+(define NSXMLParserMixedContentDeclNotFinishedError 53)
+(define NSXMLParserElementContentDeclNotStartedError 54)
+(define NSXMLParserElementContentDeclNotFinishedError 55)
+(define NSXMLParserXMLDeclNotStartedError 56)
+(define NSXMLParserXMLDeclNotFinishedError 57)
+(define NSXMLParserConditionalSectionNotStartedError 58)
+(define NSXMLParserConditionalSectionNotFinishedError 59)
+(define NSXMLParserExternalSubsetNotFinishedError 60)
+(define NSXMLParserDOCTYPEDeclNotFinishedError 61)
+(define NSXMLParserMisplacedCDATAEndStringError 62)
+(define NSXMLParserCDATANotFinishedError 63)
+(define NSXMLParserMisplacedXMLDeclarationError 64)
+(define NSXMLParserSpaceRequiredError 65)
+(define NSXMLParserSeparatorRequiredError 66)
+(define NSXMLParserNMTOKENRequiredError 67)
+(define NSXMLParserNAMERequiredError 68)
+(define NSXMLParserPCDATARequiredError 69)
+(define NSXMLParserURIRequiredError 70)
+(define NSXMLParserPublicIdentifierRequiredError 71)
+(define NSXMLParserLTRequiredError 72)
+(define NSXMLParserGTRequiredError 73)
+(define NSXMLParserLTSlashRequiredError 74)
+(define NSXMLParserEqualExpectedError 75)
+(define NSXMLParserTagNameMismatchError 76)
+(define NSXMLParserUnfinishedTagError 77)
+(define NSXMLParserStandaloneValueError 78)
+(define NSXMLParserInvalidEncodingNameError 79)
+(define NSXMLParserCommentContainsDoubleHyphenError 80)
+(define NSXMLParserInvalidEncodingError 81)
+(define NSXMLParserExternalStandaloneEntityError 82)
+(define NSXMLParserInvalidConditionalSectionError 83)
+(define NSXMLParserEntityValueRequiredError 84)
+(define NSXMLParserNotWellBalancedError 85)
+(define NSXMLParserExtraContentError 86)
+(define NSXMLParserInvalidCharacterInEntityError 87)
+(define NSXMLParserParsedEntityRefInInternalError 88)
+(define NSXMLParserEntityRefLoopError 89)
+(define NSXMLParserEntityBoundaryError 90)
+(define NSXMLParserInvalidURIError 91)
+(define NSXMLParserURIFragmentError 92)
+(define NSXMLParserNoDTDError 94)
+(define NSXMLParserDelegateAbortedParseError 512)
+
+;; NSXMLParserExternalEntityResolvingPolicy
+(define NSXMLParserResolveExternalEntitiesNever 0)
+(define NSXMLParserResolveExternalEntitiesNoNetwork 1)
+(define NSXMLParserResolveExternalEntitiesSameOriginOnly 2)
+(define NSXMLParserResolveExternalEntitiesAlways 3)
+
+;; NSXPCConnectionOptions
+(define NSXPCConnectionPrivileged 4096)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/FoundationErrors.h:11:1)
+(define NSFileNoSuchFileError 4)
+(define NSFileLockingError 255)
+(define NSFileReadUnknownError 256)
+(define NSFileReadNoPermissionError 257)
+(define NSFileReadInvalidFileNameError 258)
+(define NSFileReadCorruptFileError 259)
+(define NSFileReadNoSuchFileError 260)
+(define NSFileReadInapplicableStringEncodingError 261)
+(define NSFileReadUnsupportedSchemeError 262)
+(define NSFileReadTooLargeError 263)
+(define NSFileReadUnknownStringEncodingError 264)
+(define NSFileWriteUnknownError 512)
+(define NSFileWriteNoPermissionError 513)
+(define NSFileWriteInvalidFileNameError 514)
+(define NSFileWriteFileExistsError 516)
+(define NSFileWriteInapplicableStringEncodingError 517)
+(define NSFileWriteUnsupportedSchemeError 518)
+(define NSFileWriteOutOfSpaceError 640)
+(define NSFileWriteVolumeReadOnlyError 642)
+(define NSFileManagerUnmountUnknownError 768)
+(define NSFileManagerUnmountBusyError 769)
+(define NSKeyValueValidationError 1024)
+(define NSFormattingError 2048)
+(define NSUserCancelledError 3072)
+(define NSFeatureUnsupportedError 3328)
+(define NSExecutableNotLoadableError 3584)
+(define NSExecutableArchitectureMismatchError 3585)
+(define NSExecutableRuntimeMismatchError 3586)
+(define NSExecutableLoadError 3587)
+(define NSExecutableLinkError 3588)
+(define NSFileErrorMinimum 0)
+(define NSFileErrorMaximum 1023)
+(define NSValidationErrorMinimum 1024)
+(define NSValidationErrorMaximum 2047)
+(define NSExecutableErrorMinimum 3584)
+(define NSExecutableErrorMaximum 3839)
+(define NSFormattingErrorMinimum 2048)
+(define NSFormattingErrorMaximum 2559)
+(define NSPropertyListReadCorruptError 3840)
+(define NSPropertyListReadUnknownVersionError 3841)
+(define NSPropertyListReadStreamError 3842)
+(define NSPropertyListWriteStreamError 3851)
+(define NSPropertyListWriteInvalidError 3852)
+(define NSPropertyListErrorMinimum 3840)
+(define NSPropertyListErrorMaximum 4095)
+(define NSXPCConnectionInterrupted 4097)
+(define NSXPCConnectionInvalid 4099)
+(define NSXPCConnectionReplyInvalid 4101)
+(define NSXPCConnectionCodeSigningRequirementFailure 4102)
+(define NSXPCConnectionErrorMinimum 4096)
+(define NSXPCConnectionErrorMaximum 4224)
+(define NSUbiquitousFileUnavailableError 4353)
+(define NSUbiquitousFileNotUploadedDueToQuotaError 4354)
+(define NSUbiquitousFileUbiquityServerNotAvailable 4355)
+(define NSUbiquitousFileErrorMinimum 4352)
+(define NSUbiquitousFileErrorMaximum 4607)
+(define NSUserActivityHandoffFailedError 4608)
+(define NSUserActivityConnectionUnavailableError 4609)
+(define NSUserActivityRemoteApplicationTimedOutError 4610)
+(define NSUserActivityHandoffUserInfoTooLargeError 4611)
+(define NSUserActivityErrorMinimum 4608)
+(define NSUserActivityErrorMaximum 4863)
+(define NSCoderReadCorruptError 4864)
+(define NSCoderValueNotFoundError 4865)
+(define NSCoderInvalidValueError 4866)
+(define NSCoderErrorMinimum 4864)
+(define NSCoderErrorMaximum 4991)
+(define NSBundleErrorMinimum 4992)
+(define NSBundleErrorMaximum 5119)
+(define NSBundleOnDemandResourceOutOfSpaceError 4992)
+(define NSBundleOnDemandResourceExceededMaximumSizeError 4993)
+(define NSBundleOnDemandResourceInvalidTagError 4994)
+(define NSCloudSharingNetworkFailureError 5120)
+(define NSCloudSharingQuotaExceededError 5121)
+(define NSCloudSharingTooManyParticipantsError 5122)
+(define NSCloudSharingConflictError 5123)
+(define NSCloudSharingNoPermissionError 5124)
+(define NSCloudSharingOtherError 5375)
+(define NSCloudSharingErrorMinimum 5120)
+(define NSCloudSharingErrorMaximum 5375)
+(define NSCompressionFailedError 5376)
+(define NSDecompressionFailedError 5377)
+(define NSCompressionErrorMinimum 5376)
+(define NSCompressionErrorMaximum 5503)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSBundle.h:127:1)
+(define NSBundleExecutableArchitectureI386 7)
+(define NSBundleExecutableArchitecturePPC 18)
+(define NSBundleExecutableArchitectureX86_64 16777223)
+(define NSBundleExecutableArchitecturePPC64 16777234)
+(define NSBundleExecutableArchitectureARM64 16777228)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSByteOrder.h:10:1)
+(define NS_UnknownByteOrder 0)
+(define NS_LittleEndian 1)
+(define NS_BigEndian 2)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSCalendar.h:113:1)
+(define NSWrapCalendarComponents 1)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSCalendar.h:423:1)
+(define NSDateComponentUndefined 9223372036854775807)
+(define NSUndefinedDateComponent 9223372036854775807)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSCharacterSet.h:14:1)
+(define NSOpenStepUnicodeReservedBase 62464)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSProcessInfo.h:11:1)
+(define NSWindowsNTOperatingSystem 1)
+(define NSWindows95OperatingSystem 2)
+(define NSSolarisOperatingSystem 3)
+(define NSHPUXOperatingSystem 4)
+(define NSMACHOperatingSystem 5)
+(define NSSunOSOperatingSystem 6)
+(define NSOSF1OperatingSystem 7)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSScriptCommand.h:13:1)
+(define NSNoScriptError 0)
+(define NSReceiverEvaluationScriptError 1)
+(define NSKeySpecifierEvaluationScriptError 2)
+(define NSArgumentEvaluationScriptError 3)
+(define NSReceiversCantHandleCommandScriptError 4)
+(define NSRequiredArgumentsMissingScriptError 5)
+(define NSArgumentsWrongScriptError 6)
+(define NSUnknownKeyScriptError 7)
+(define NSInternalScriptError 8)
+(define NSOperationNotSupportedForKeyScriptError 9)
+(define NSCannotCreateScriptCommandError 10)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSScriptObjectSpecifiers.h:13:1)
+(define NSNoSpecifierError 0)
+(define NSNoTopLevelContainersSpecifierError 1)
+(define NSContainerSpecifierError 2)
+(define NSUnknownKeySpecifierError 3)
+(define NSInvalidIndexSpecifierError 4)
+(define NSInternalSpecifierError 5)
+(define NSOperationNotSupportedForKeySpecifierError 6)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSString.h:548:1)
+(define NSProprietaryStringEncoding 65536)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSString.h:68:1)
+(define NSASCIIStringEncoding 1)
+(define NSNEXTSTEPStringEncoding 2)
+(define NSJapaneseEUCStringEncoding 3)
+(define NSUTF8StringEncoding 4)
+(define NSISOLatin1StringEncoding 5)
+(define NSSymbolStringEncoding 6)
+(define NSNonLossyASCIIStringEncoding 7)
+(define NSShiftJISStringEncoding 8)
+(define NSISOLatin2StringEncoding 9)
+(define NSUnicodeStringEncoding 10)
+(define NSWindowsCP1251StringEncoding 11)
+(define NSWindowsCP1252StringEncoding 12)
+(define NSWindowsCP1253StringEncoding 13)
+(define NSWindowsCP1254StringEncoding 14)
+(define NSWindowsCP1250StringEncoding 15)
+(define NSISO2022JPStringEncoding 21)
+(define NSMacOSRomanStringEncoding 30)
+(define NSUTF16StringEncoding 10)
+(define NSUTF16BigEndianStringEncoding 2415919360)
+(define NSUTF16LittleEndianStringEncoding 2483028224)
+(define NSUTF32StringEncoding 2348810496)
+(define NSUTF32BigEndianStringEncoding 2550137088)
+(define NSUTF32LittleEndianStringEncoding 2617245952)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSTextCheckingResult.h:32:1)
+(define NSTextCheckingAllSystemTypes 4294967295)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSURLError.h:101:1)
+(define NSURLErrorUnknown -1)
+(define NSURLErrorCancelled -999)
+(define NSURLErrorBadURL -1000)
+(define NSURLErrorTimedOut -1001)
+(define NSURLErrorUnsupportedURL -1002)
+(define NSURLErrorCannotFindHost -1003)
+(define NSURLErrorCannotConnectToHost -1004)
+(define NSURLErrorNetworkConnectionLost -1005)
+(define NSURLErrorDNSLookupFailed -1006)
+(define NSURLErrorHTTPTooManyRedirects -1007)
+(define NSURLErrorResourceUnavailable -1008)
+(define NSURLErrorNotConnectedToInternet -1009)
+(define NSURLErrorRedirectToNonExistentLocation -1010)
+(define NSURLErrorBadServerResponse -1011)
+(define NSURLErrorUserCancelledAuthentication -1012)
+(define NSURLErrorUserAuthenticationRequired -1013)
+(define NSURLErrorZeroByteResource -1014)
+(define NSURLErrorCannotDecodeRawData -1015)
+(define NSURLErrorCannotDecodeContentData -1016)
+(define NSURLErrorCannotParseResponse -1017)
+(define NSURLErrorAppTransportSecurityRequiresSecureConnection -1022)
+(define NSURLErrorFileDoesNotExist -1100)
+(define NSURLErrorFileIsDirectory -1101)
+(define NSURLErrorNoPermissionsToReadFile -1102)
+(define NSURLErrorDataLengthExceedsMaximum -1103)
+(define NSURLErrorFileOutsideSafeArea -1104)
+(define NSURLErrorSecureConnectionFailed -1200)
+(define NSURLErrorServerCertificateHasBadDate -1201)
+(define NSURLErrorServerCertificateUntrusted -1202)
+(define NSURLErrorServerCertificateHasUnknownRoot -1203)
+(define NSURLErrorServerCertificateNotYetValid -1204)
+(define NSURLErrorClientCertificateRejected -1205)
+(define NSURLErrorClientCertificateRequired -1206)
+(define NSURLErrorCannotLoadFromNetwork -2000)
+(define NSURLErrorCannotCreateFile -3000)
+(define NSURLErrorCannotOpenFile -3001)
+(define NSURLErrorCannotCloseFile -3002)
+(define NSURLErrorCannotWriteToFile -3003)
+(define NSURLErrorCannotRemoveFile -3004)
+(define NSURLErrorCannotMoveFile -3005)
+(define NSURLErrorDownloadDecodingFailedMidStream -3006)
+(define NSURLErrorDownloadDecodingFailedToComplete -3007)
+(define NSURLErrorInternationalRoamingOff -1018)
+(define NSURLErrorCallIsActive -1019)
+(define NSURLErrorDataNotAllowed -1020)
+(define NSURLErrorRequestBodyStreamExhausted -1021)
+(define NSURLErrorBackgroundSessionRequiresSharedContainer -995)
+(define NSURLErrorBackgroundSessionInUseByAnotherProcess -996)
+(define NSURLErrorBackgroundSessionWasDisconnected -997)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSURLError.h:69:1)
+(define NSURLErrorCancelledReasonUserForceQuitApplication 0)
+(define NSURLErrorCancelledReasonBackgroundUpdatesDisabled 1)
+(define NSURLErrorCancelledReasonInsufficientSystemResources 2)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSUbiquitousKeyValueStore.h:47:1)
+(define NSUbiquitousKeyValueStoreServerChange 0)
+(define NSUbiquitousKeyValueStoreInitialSyncChange 1)
+(define NSUbiquitousKeyValueStoreQuotaViolationChange 2)
+(define NSUbiquitousKeyValueStoreAccountChange 3)
+
+;; enum (unnamed at System/Library/Frameworks/Foundation.framework/Headers/NSZone.h:32:1)
+(define NSScannedOption 1)
+(define NSCollectorDisabledOption 2)
+
+;; InflectionRule
+(define automatic 0)
+(define explicit 1)
+
+;; AttributeDynamicLookup
+
+;; AttributeScopes
+
+;; PredicateExpressions
+
+;; NumberFormatStyleConfiguration
+
+;; CurrencyFormatStyleConfiguration
+
+;; DescriptiveNumberFormatConfiguration
+
+;; SortOrder
+(define forward 0)
+(define reverse 1)
+
+;; InflectionConcept
+(define termsOfAddress 0)
+(define localizedPhrase 1)
+
+;; ComparisonResult
+

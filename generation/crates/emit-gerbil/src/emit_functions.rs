@@ -331,7 +331,7 @@ mod tests {
         )];
         let out = generate_functions_file(&fs, "TestKit");
         assert!(out.contains(
-            "(c-declare \"struct _NSRange { unsigned long location; unsigned long length; };\")"
+            "(c-declare \"typedef struct _NSRange { unsigned long location; unsigned long length; } NSRange;\")"
         ));
         assert!(out.contains("(c-define-type NSRange (struct \"_NSRange\"))"));
         assert!(!out.contains("#include <Foundation/"));

@@ -31,13 +31,15 @@ TestAnyware/VM-verify leaf; CLI smoke never satisfies the node's done-bar):
 
 ## Context
 
-Distribution recipe is CHARACTERIZED (FINDINGS §5, spec §7): `gxc -exe` against the
-`--enable-shared=no` static toolchain (`~/.local/gerbil-0.18.2-static`) embeds the
-runtime statically; `-static` (fully-static) is UNSUPPORTED on macOS; the only gap
-is vendoring + relocating the Gerbil stdlib's **openssl@3** dylib dep into the
-`.app` (`install_name_tool` / `@executable_path`), chez-style. Reference:
-`generation/crates/bundle-chez/`. This leaf APPLIES the recipe — it no longer needs
-to discover it.
+Distribution recipe (spec §7, **corrected at 070/020**): `gxc -exe` against the
+**bottle** (Homebrew) toolchain already embeds the Gerbil/Gambit runtime statically
+(links `libgambit.a` by default; `otool -L` shows no libgambit/libgerbil dep; a
+trivial exe runs under `env -i`). The `--enable-shared=no` static source toolchain
+that FINDINGS §5 prescribed is **NOT needed** — its gsc is ~20× slower and chokes on
+`generics.ss` (>1h); the bottle wins on both speed and self-containment. The only
+self-containment gap is vendoring + relocating the Gerbil stdlib's **openssl@3**
+dylib dep into the `.app` (`install_name_tool` / `@executable_path`), chez-style.
+Reference: `generation/crates/bundle-chez/`. This node APPLIES the recipe.
 
 ## Done when
 
@@ -68,7 +70,8 @@ SDKROOT-for-clang. The ONLY non-default compile in the whole build is the
 `SDKROOT=$(xcrun --sdk macosx --show-sdk-path)` is still exported — gambit needs it
 for the SDK framework paths — but it does not select a compiler.
 
-⚠️ Two-toolchain perf caveat (spec §1, FINDINGS §3b): the static toolchain's `-O`
-Scheme codegen ran ~10× slower than the bottle's. If hello-window feels sluggish,
-that is the prelude-optimisation gap, not the binding — investigate whether the
-static prelude can be rebuilt at the bottle's `-O` level (open item).
+⚠️ Toolchain (RESOLVED at 070/020): use the **bottle** for everything (dev AND
+distribution). It produces self-contained exes (runtime embedded) AND its gsc is
+the fast single-host build. The static source toolchain is retired/unused — its
+slow gsc made the two-toolchain perf caveat (spec §3b) moot by being unusable for
+real builds, and the bottle's `-O` codegen is the good one anyway.

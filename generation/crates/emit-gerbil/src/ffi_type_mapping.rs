@@ -23,7 +23,7 @@
 //! they are `#include`d directly; the four NS-prefixed geometry structs
 //! (`NSRange`, `NSEdgeInsets`, `NSDirectionalEdgeInsets`,
 //! `NSAffineTransformStruct`) have Objective-C headers, so the emitter declares
-//! an **ABI-exact plain-C tagged struct inline** instead ([`GeometryCScope`]).
+//! an **ABI-exact plain-C typedef'd struct inline** instead ([`GeometryCScope`]).
 
 use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
@@ -146,12 +146,18 @@ pub fn is_known_geometry_alias(name: &str) -> bool {
 /// How a geometry struct's C tag is brought into a `begin-ffi` block's scope
 /// (ADR-0021). CoreGraphics struct headers are C-safe under the default gcc-15,
 /// so they are `#include`d; the NS-prefixed structs have Objective-C headers, so
-/// the emitter declares an ABI-exact plain-C tagged struct inline instead.
+/// the emitter declares an ABI-exact plain-C typedef'd struct inline instead.
 #[derive(Clone, Copy)]
 pub enum GeometryCScope {
     /// `#include` this C-safe CoreGraphics header to bring the struct tag in.
     Header(&'static str),
-    /// Emit this inline plain-C `struct <tag> { … };` (the NS structs).
+    /// Emit this inline plain-C `typedef struct <tag> { … } <token>;` (the NS
+    /// structs). The typedef is load-bearing: `(c-define-type <token> (struct
+    /// "<tag>"))` needs the `struct <tag>` form, while the hand-written
+    /// `define-c-lambda` cast bodies spell the type as the bare `<token>` — only
+    /// the typedef satisfies both. CoreGraphics headers already ship the typedef;
+    /// these inline structs must declare their own (found at the first
+    /// full-framework gxc compile, leaf 070/020).
     InlineStruct(&'static str),
 }
 
@@ -190,27 +196,29 @@ pub fn geometry_decl(token: &str) -> Option<GeometryDecl> {
         "NSRange" => (
             "NSRange",
             "_NSRange",
-            InlineStruct("struct _NSRange { unsigned long location; unsigned long length; };"),
+            InlineStruct(
+                "typedef struct _NSRange { unsigned long location; unsigned long length; } NSRange;",
+            ),
         ),
         "NSEdgeInsets" => (
             "NSEdgeInsets",
             "NSEdgeInsets",
             InlineStruct(
-                "struct NSEdgeInsets { double top; double left; double bottom; double right; };",
+                "typedef struct NSEdgeInsets { double top; double left; double bottom; double right; } NSEdgeInsets;",
             ),
         ),
         "NSDirectionalEdgeInsets" => (
             "NSDirectionalEdgeInsets",
             "NSDirectionalEdgeInsets",
             InlineStruct(
-                "struct NSDirectionalEdgeInsets { double top; double leading; double bottom; double trailing; };",
+                "typedef struct NSDirectionalEdgeInsets { double top; double leading; double bottom; double trailing; } NSDirectionalEdgeInsets;",
             ),
         ),
         "NSAffineTransformStruct" => (
             "NSAffineTransformStruct",
             "NSAffineTransformStruct",
             InlineStruct(
-                "struct NSAffineTransformStruct { double m11; double m12; double m21; double m22; double tX; double tY; };",
+                "typedef struct NSAffineTransformStruct { double m11; double m12; double m21; double m22; double tX; double tY; } NSAffineTransformStruct;",
             ),
         ),
         _ => return None,

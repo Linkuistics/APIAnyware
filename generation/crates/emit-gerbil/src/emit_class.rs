@@ -1254,10 +1254,24 @@ fn emit_method(
     }
 }
 
-/// Emit the two consumption surfaces (ADR-0020) forwarding to an instance proc
-/// `proc_name` over receiver type `class_name`: the built-in `{}` MOP method and
-/// the `:std/generic` generic method, sharing the bare-kebab surface selector.
-/// `param_vars` are the proc's non-receiver argument names.
+/// Emit the consumption surfaces (ADR-0020) forwarding to an instance proc
+/// `proc_name` over receiver type `class_name`, sharing the bare-kebab surface
+/// selector. `param_vars` are the proc's non-receiver argument names.
+///
+/// **The two surfaces are not equally expressive (discovered at the first
+/// full-framework gxc compile, leaf 070/020).** The built-in `{}` MOP keys
+/// dispatch on the receiver class via the method-table symbol, so its lambda
+/// takes the remaining args *free* (untyped) — it expresses every method. The
+/// `:std/generic` `defmethod` macro instead requires *every* formal to be a
+/// typed `(arg type)` pair and dispatches on all of them, so it can only
+/// express receiver-only (zero-extra-arg) methods safely; an untyped extra arg
+/// is a syntax error, and typing an object arg would mis-dispatch on `#f`/nil.
+/// So the `{}` MOP surface is emitted for every instance method, and the
+/// `:std/generic` surface only for receiver-only methods (getters, zero-arg
+/// actions) — exactly where generic-function dispatch reads idiomatically
+/// (`(length obj)`, `(title obj)`). Arg-taking methods use the proc core or the
+/// `{}` surface; the shared `(g:defgeneric sel)` stays declared (harmless if
+/// some selectors carry no `:std/generic` method).
 fn emit_instance_surfaces(
     w: &mut CodeWriter,
     class_name: &str,
@@ -1267,16 +1281,18 @@ fn emit_instance_surfaces(
     let sel = surface_selector(class_name, proc_name);
     let extra = param_vars.join(" ");
     let sp = if param_vars.is_empty() { "" } else { " " };
-    // Surface 1 — built-in `{}` MOP: dispatches by method-table symbol.
+    // Surface 1 — built-in `{}` MOP: dispatches by method-table symbol; the
+    // remaining args ride free, so this surface covers every instance method.
     write_line!(
         w,
         "(defmethod {{{sel} {class_name}}} (lambda (self{sp}{extra}) ({proc_name} self{sp}{extra})))"
     );
     // Surface 2 — `:std/generic`: receiver-specialized generic method (same id).
-    write_line!(
-        w,
-        "(g:defmethod ({sel} (o {class_name}){sp}{extra}) ({proc_name} o{sp}{extra}))"
-    );
+    // Only valid for receiver-only methods (see the doc comment): the macro
+    // requires every formal typed, which cannot express free extra args.
+    if param_vars.is_empty() {
+        write_line!(w, "(g:defmethod ({sel} (o {class_name})) ({proc_name} o))");
+    }
     w.blank_line();
 }
 
@@ -1699,13 +1715,15 @@ mod tests {
         assert!(!out.contains("(g:defgeneric title)"));
         assert!(!out.contains("(g:defgeneric set-title!)"));
         assert!(out.contains(":gerbil-bindings/generics"));
+        // Getter is receiver-only: both surfaces.
         assert!(out.contains("(defmethod {title NSWindow} (lambda (self) (nswindow-title self)))"));
         assert!(out.contains("(g:defmethod (title (o NSWindow)) (nswindow-title o))"));
+        // Setter takes an arg: `{}` MOP only — `:std/generic` cannot express a
+        // receiver-only method with a free extra arg (leaf 070/020).
         assert!(out.contains(
             "(defmethod {set-title! NSWindow} (lambda (self value) (nswindow-set-title! self value)))"
         ));
-        assert!(out
-            .contains("(g:defmethod (set-title! (o NSWindow) value) (nswindow-set-title! o value))"));
+        assert!(!out.contains("(g:defmethod (set-title! "));
     }
 
     #[test]
@@ -1803,10 +1821,9 @@ mod tests {
         assert!(out.contains(
             "(defmethod {set-object-for-key! NSMutableDictionary} (lambda (self object key) (nsmutabledictionary-set-object-for-key! self object key)))"
         ));
-        // generic surface, same identifier, receiver specialized, args threaded
-        assert!(out.contains(
-            "(g:defmethod (set-object-for-key! (o NSMutableDictionary) object key) (nsmutabledictionary-set-object-for-key! o object key))"
-        ));
+        // No `:std/generic` surface for an arg-taking method (leaf 070/020):
+        // the macro requires every formal typed, so a free extra arg is invalid.
+        assert!(!out.contains("(g:defmethod (set-object-for-key! "));
         // The generic is declared once in the shared module, not here.
         assert!(!out.contains("(g:defgeneric set-object-for-key!)"));
         assert!(out.contains(":gerbil-bindings/generics"));
@@ -1912,13 +1929,12 @@ mod tests {
         assert!(out.contains(
             "(define %sel-nsdata-write-to-file-error (sel_registerName \"writeToFile:error:\"))"
         ), "selector cache:\n{out}");
-        // Both surfaces forward the visible-arity proc (so they return two values too).
+        // The `{}` MOP surface forwards the visible-arity proc (returns two
+        // values too); the arg-taking method gets no `:std/generic` surface.
         assert!(out.contains(
             "(defmethod {write-to-file-error NSData} (lambda (self path) (nsdata-write-to-file-error self path)))"
         ), "{{}} surface:\n{out}");
-        assert!(out.contains(
-            "(g:defmethod (write-to-file-error (o NSData) path) (nsdata-write-to-file-error o path))"
-        ), "generic surface:\n{out}");
+        assert!(!out.contains("(g:defmethod (write-to-file-error "), "no generic surface for arg-taking method:\n{out}");
     }
 
     /// The same trailing-pointer shape, but NOT an enrichment error method,

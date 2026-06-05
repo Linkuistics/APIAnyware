@@ -110,7 +110,6 @@
 (define (tkview-set-title! self value)
   (%msg-p->v (NSObject-ptr self) %sel-tkview-set-title (->ptr value)))
 (defmethod {set-title! TKView} (lambda (self value) (tkview-set-title! self value)))
-(g:defmethod (set-title! (o TKView) value) (tkview-set-title! o value))
 
 (define (tkview-hidden self)
   (%msg-v->b (NSObject-ptr self) %sel-tkview-hidden))
@@ -120,7 +119,6 @@
 (define (tkview-set-hidden! self value)
   (%msg-b->v (NSObject-ptr self) %sel-tkview-set-hidden value))
 (defmethod {set-hidden! TKView} (lambda (self value) (tkview-set-hidden! self value)))
-(g:defmethod (set-hidden! (o TKView) value) (tkview-set-hidden! o value))
 
 (define (tkview-tag self)
   (%msg-v->i64 (NSObject-ptr self) %sel-tkview-tag))
@@ -130,7 +128,6 @@
 (define (tkview-set-tag! self value)
   (%msg-i64->v (NSObject-ptr self) %sel-tkview-set-tag value))
 (defmethod {set-tag! TKView} (lambda (self value) (tkview-set-tag! self value)))
-(g:defmethod (set-tag! (o TKView) value) (tkview-set-tag! o value))
 
 (define (tkview-frame self)
   (%msg-v->cgrect (NSObject-ptr self) %sel-tkview-frame))
@@ -140,7 +137,6 @@
 (define (tkview-set-frame! self value)
   (%msg-cgrect->v (NSObject-ptr self) %sel-tkview-set-frame value))
 (defmethod {set-frame! TKView} (lambda (self value) (tkview-set-frame! self value)))
-(g:defmethod (set-frame! (o TKView) value) (tkview-set-frame! o value))
 
 ;; --- Instance methods ---
 (define (tkview-set-needs-display! self)
@@ -151,7 +147,6 @@
 (define (tkview-animate-with-duration-animations self duration animations)
   (%msg-d-p->v (NSObject-ptr self) %sel-tkview-animate-with-duration-animations duration animations))
 (defmethod {animate-with-duration-animations TKView} (lambda (self duration animations) (tkview-animate-with-duration-animations self duration animations)))
-(g:defmethod (animate-with-duration-animations (o TKView) duration animations) (tkview-animate-with-duration-animations o duration animations))
 
 ;; --- Class methods ---
 (define (tkview-appearance)

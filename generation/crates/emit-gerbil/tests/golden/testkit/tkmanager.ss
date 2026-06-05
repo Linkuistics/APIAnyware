@@ -59,12 +59,10 @@
     (lambda (%err-cell)
       (%msg-p-pp->b-e (NSObject-ptr self) %sel-tkmanager-load-resource-error (->ptr name) %err-cell))))
 (defmethod {load-resource-error TKManager} (lambda (self name) (tkmanager-load-resource-error self name)))
-(g:defmethod (load-resource-error (o TKManager) name) (tkmanager-load-resource-error o name))
 
 (define (tkmanager-resource-named self name)
   (wrap (%msg-p->p (NSObject-ptr self) %sel-tkmanager-resource-named (->ptr name))))
 (defmethod {resource-named TKManager} (lambda (self name) (tkmanager-resource-named self name)))
-(g:defmethod (resource-named (o TKManager) name) (tkmanager-resource-named o name))
 
 ;; --- Class methods ---
 (define (tkmanager-shared-manager)
