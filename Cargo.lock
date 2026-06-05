@@ -133,6 +133,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-macos-bundle-gerbil"
+version = "0.1.0"
+dependencies = [
+ "apianyware-macos-stub-launcher",
+ "plist",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "apianyware-macos-bundle-racket"
 version = "0.1.0"
 dependencies = [

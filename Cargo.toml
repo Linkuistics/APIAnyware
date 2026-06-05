@@ -23,6 +23,7 @@ members = [
     "generation/crates/stub-launcher",
     "generation/crates/bundle-racket",
     "generation/crates/bundle-chez",
+    "generation/crates/bundle-gerbil",
 ]
 
 [workspace.package]
