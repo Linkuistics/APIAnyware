@@ -250,10 +250,10 @@
             NXReadNSObjectFromCoder
             )
   (c-declare "#include <stdbool.h>")
-  (c-declare "#include <CoreGraphics/CGGeometry.h>")
+  (c-declare "typedef struct CGRect { struct { double x; double y; } origin; struct { double width; double height; } size; } CGRect;")
   (c-declare "typedef struct NSEdgeInsets { double top; double left; double bottom; double right; } NSEdgeInsets;")
-  (c-declare "#include <CoreGraphics/CGGeometry.h>")
-  (c-declare "#include <CoreGraphics/CGGeometry.h>")
+  (c-declare "typedef struct CGPoint { double x; double y; } CGPoint;")
+  (c-declare "typedef struct CGSize { double width; double height; } CGSize;")
   (c-declare "typedef struct _NSRange { unsigned long location; unsigned long length; } NSRange;")
   (c-define-type CGRect (struct "CGRect"))
   (c-define-type NSEdgeInsets (struct "NSEdgeInsets"))

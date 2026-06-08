@@ -17,7 +17,7 @@
             TKGetName
             TKRegisterCallback
             )
-  (c-declare "#include <CoreGraphics/CGGeometry.h>")
+  (c-declare "typedef struct CGPoint { double x; double y; } CGPoint;")
   (c-define-type CGPoint (struct "CGPoint"))
   (c-declare "extern double TKComputeDistance(double, double);")
   (c-declare "extern struct CGPoint TKTransformPoint(struct CGPoint);")

@@ -91,21 +91,30 @@
   ;; --- NSString marshalling (constants contract: +1-retained, caller owns) --
   ;; `+[NSString stringWithUTF8String:]` is +0 autoreleased; retain so the caller
   ;; owns +1 (the runtime `wrap … #t` then registers the balancing release will).
-  (define-c-lambda string->nsstring (char-string) (pointer void)
+  ;;
+  ;; The string slots use Gambit's `UTF-8-string`, NOT `char-string`: `char-string`
+  ;; marshals through the C locale (ISO-8859-1), so any non-ASCII codepoint — e.g.
+  ;; the `…` in a "Color…" button title — fails conversion ("Can't convert to C
+  ;; char-string", found at leaf 100/030). `UTF-8-string` encodes the Scheme string
+  ;; as UTF-8 bytes (which `stringWithUTF8String:` decodes) and decodes a returned
+  ;; `UTF8String` as UTF-8, so the round trip is codepoint-exact for the full
+  ;; Unicode range. (ASCII-only class/selector/type-encoding crossings keep
+  ;; `char-string` — those are ASCII by construction.)
+  (define-c-lambda string->nsstring (UTF-8-string) (pointer void)
     "Class cls = objc_getClass(\"NSString\");
      SEL sel = sel_registerName(\"stringWithUTF8String:\");
      id (*send)(Class, SEL, const char*) =
        (id (*)(Class, SEL, const char*))objc_msgSend;
      id ns = send(cls, sel, ___arg1);
      ___return((void*)objc_retain(ns));")
-  (define-c-lambda nsstring->string ((pointer void)) char-string
+  (define-c-lambda nsstring->string ((pointer void)) UTF-8-string
     "SEL sel = sel_registerName(\"UTF8String\");
      const char* (*send)(id, SEL) = (const char* (*)(id, SEL))objc_msgSend;
      ___return((char*)send((id)___arg1, sel));")
   ;; A raw `char*` (delivered to a callback as an opaque pointer) → Scheme
   ;; string — the C-string analogue of `nsstring->string`, used by the native
-  ;; callback bridge's `char-string` param coercion.
-  (define-c-lambda cstr->string ((pointer void)) char-string
+  ;; callback bridge's string param coercion. UTF-8 to match the NSString path.
+  (define-c-lambda cstr->string ((pointer void)) UTF-8-string
     "___return((char*)___arg1);")
 
   ;; --- pointer helpers ------------------------------------------------------

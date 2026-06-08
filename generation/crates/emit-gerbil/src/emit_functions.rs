@@ -34,7 +34,7 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Function;
 
 use crate::ffi_type_mapping::{
-    c_proto_type, emit_geometry_decls, geometry_decl, GeometryDecl, GerbilFfiTypeMapper,
+    c_proto_type, emit_geometry_decls, geometry_decl_no_header, GeometryDecl, GerbilFfiTypeMapper,
 };
 use crate::shared_signatures::is_libdispatch_unexported;
 
@@ -98,7 +98,7 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
             if tok == "bool" {
                 needs_stdbool = true;
             }
-            if let Some(decl) = geometry_decl(tok) {
+            if let Some(decl) = geometry_decl_no_header(tok) {
                 if seen.insert(decl.token) {
                     geo.push(decl);
                 }
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn by_value_cg_geometry_includes_header_and_struct_proto() {
+    fn by_value_cg_geometry_inlines_struct_not_header() {
         let fs = vec![func(
             "TKBounds",
             vec![param(
@@ -311,8 +311,14 @@ mod tests {
         let out = generate_functions_file(&fs, "TestKit");
         assert!(out.contains("(c-define-type CGRect (struct \"CGRect\"))"));
         assert!(out.contains("(c-define-type CGPoint (struct \"CGPoint\"))"));
-        // CoreGraphics headers are C-safe — kept.
-        assert!(out.contains("(c-declare \"#include <CoreGraphics/CGGeometry.h>\")"));
+        // functions.ss synthesizes `extern` prototypes, so it must NOT `#include`
+        // a CoreGraphics header — the real CG prototypes would conflict with the
+        // synthesized ones (leaf 100/030). CG structs are declared inline instead.
+        assert!(!out.contains("#include <CoreGraphics/CGGeometry.h>"));
+        assert!(out.contains("typedef struct CGPoint { double x; double y; } CGPoint;"));
+        assert!(out.contains(
+            "typedef struct CGRect { struct { double x; double y; } origin; struct { double width; double height; } size; } CGRect;"
+        ));
         // The prototype spells the by-value structs as `struct <tag>`.
         assert!(out.contains("(c-declare \"extern struct CGPoint TKBounds(struct CGRect);\")"));
         assert!(out.contains("(define-c-lambda TKBounds (CGRect) CGPoint \"TKBounds\")"));

@@ -16,6 +16,7 @@
         :gerbil-bindings/runtime/objc)
 (export make-rect make-point make-size
         rect-x rect-y rect-width rect-height
+        point-x point-y
         install-standard-app-menu!)
 
 ;; --- geometry (by value) --------------------------------------------------
@@ -23,7 +24,8 @@
 ;; `(c-define-type CGRect (struct "CGRect"))` crossing — both spell the same C
 ;; struct, so Gambit passes it across the module boundary unchanged.
 (begin-ffi (make-rect make-point make-size
-            rect-x rect-y rect-width rect-height)
+            rect-x rect-y rect-width rect-height
+            point-x point-y)
   (c-declare "#include <CoreGraphics/CGGeometry.h>")
   (c-define-type CGRect  (struct "CGRect"))
   (c-define-type CGPoint (struct "CGPoint"))
@@ -37,7 +39,12 @@
   (define-c-lambda rect-x      (CGRect) double "___return(___arg1.origin.x);")
   (define-c-lambda rect-y      (CGRect) double "___return(___arg1.origin.y);")
   (define-c-lambda rect-width  (CGRect) double "___return(___arg1.size.width);")
-  (define-c-lambda rect-height (CGRect) double "___return(___arg1.size.height);"))
+  (define-c-lambda rect-height (CGRect) double "___return(___arg1.size.height);")
+  ;; CGPoint accessors — the mouse handlers extract x/y from the by-value point
+  ;; that `nsview-convert-point-from-view` returns. Same `(struct "CGPoint")`
+  ;; tag as nsevent.ss/nsview.ss, so the value crosses module boundaries intact.
+  (define-c-lambda point-x     (CGPoint) double "___return(___arg1.x);")
+  (define-c-lambda point-y     (CGPoint) double "___return(___arg1.y);"))
 
 ;; --- standard application menu --------------------------------------------
 ;; About <App> / Hide <App> ⌘H / Hide Others ⌥⌘H / Show All / Quit <App> ⌘Q.

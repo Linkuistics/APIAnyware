@@ -180,6 +180,63 @@ pub struct GeometryDecl {
     pub scope: GeometryCScope,
 }
 
+/// Self-contained, ABI-exact inline `typedef` for a CoreGraphics geometry
+/// struct — for the one emission context that must NOT `#include` a CoreGraphics
+/// header: the function-binding module (`functions.ss`).
+///
+/// `functions.ss` both declares geometry structs (for by-value crossings) AND
+/// synthesizes `extern <ret> NAME(args);` prototypes for every C function
+/// (ADR-0021). If it `#include`s `<CoreGraphics/CGGeometry.h>` for the struct
+/// layout, that header ALSO brings the real CG function prototypes — which
+/// *conflict* with the synthesized `extern`s for the handful of functions whose
+/// unmodelled types (`CGAffineTransformComponents`, `CFDictionaryRef`, `CGRect *`
+/// out-params, `CGRectEdge`) fall back to `void *`, a hard `gxc -O` error (found
+/// at leaf 100/030, the first app to compile CoreGraphics). Declaring the structs
+/// inline removes the header — and thus the conflict — entirely. The class
+/// modules keep the header (they synthesize no function prototypes, so nothing
+/// collides).
+///
+/// The typedefs are self-contained — `CGRect` uses anonymous inner structs rather
+/// than naming `CGPoint`/`CGSize`, so emission order is irrelevant — and
+/// ABI-identical to the SDK (`CGFloat` = `double` on arm64; field order matches
+/// `<CoreGraphics/CGGeometry.h>` / `CGAffineTransform.h`).
+fn cg_inline_typedef(tag: &str) -> Option<&'static str> {
+    match tag {
+        "CGPoint" => Some("typedef struct CGPoint { double x; double y; } CGPoint;"),
+        "CGSize" => Some("typedef struct CGSize { double width; double height; } CGSize;"),
+        "CGVector" => Some("typedef struct CGVector { double dx; double dy; } CGVector;"),
+        "CGRect" => Some(
+            "typedef struct CGRect { struct { double x; double y; } origin; struct { double width; double height; } size; } CGRect;",
+        ),
+        "CGAffineTransform" => Some(
+            "typedef struct CGAffineTransform { double a; double b; double c; double d; double tx; double ty; } CGAffineTransform;",
+        ),
+        _ => None,
+    }
+}
+
+/// Like [`geometry_decl`] but for the **function-binding module**: any geometry
+/// struct that `geometry_decl` would bring in via a CoreGraphics header
+/// `#include` is instead declared with a self-contained inline `typedef`
+/// ([`cg_inline_typedef`]), so `functions.ss` carries no CoreGraphics header and
+/// its synthesized `extern` function prototypes cannot conflict with the real
+/// ones (leaf 100/030). The inline NS structs pass through unchanged.
+pub fn geometry_decl_no_header(token: &str) -> Option<GeometryDecl> {
+    let d = geometry_decl(token)?;
+    match d.scope {
+        GeometryCScope::Header(_) => {
+            let inline = cg_inline_typedef(d.tag)
+                .expect("CoreGraphics geometry struct must have a self-contained inline typedef");
+            Some(GeometryDecl {
+                token: d.token,
+                tag: d.tag,
+                scope: GeometryCScope::InlineStruct(inline),
+            })
+        }
+        GeometryCScope::InlineStruct(_) => Some(d),
+    }
+}
+
 pub fn geometry_decl(token: &str) -> Option<GeometryDecl> {
     use GeometryCScope::{Header, InlineStruct};
     let cg = "<CoreGraphics/CGGeometry.h>";

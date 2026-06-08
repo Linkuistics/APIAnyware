@@ -146,6 +146,11 @@ pub fn compile_app(
     // Order matters: shards → facade (imports them) → the `-O` closure (class
     // modules import the facade). Shards have no cross-shard deps, so the shard
     // pass runs in **parallel** — the lever that keeps the build fast.
+    // Framework `-framework <Name>` args derived from the closure. Needed at the
+    // exe link AND on the `-O` closure pass (2c), where `functions.ss`'s
+    // dynamically-loadable `.oN` makes direct framework C calls (leaf 100/030).
+    let frameworks = framework_link_args(closure, lib_root);
+
     let generics_dir = lib_root.join(GENERICS_MODULE_STEM);
     let generics_facade = lib_root.join(format!("{GENERICS_MODULE_STEM}.ss"));
     let mut shards: Vec<PathBuf> = Vec::new();
@@ -169,6 +174,8 @@ pub fn compile_app(
     //     `-j` and serialises only its cache-metadata write on a build lock, so
     //     the heavy compilation still overlaps. Parallelism is *required* to hit
     //     the `< 15 min` budget (serial cold is ~18 min).
+    //     The generics shards/facade reference no framework symbols, so they
+    //     link with `-lobjc` alone (extra_ld = "").
     let t = Instant::now();
     compile_shards_parallel(&shards, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
     eprintln!(
@@ -178,15 +185,16 @@ pub fn compile_app(
     );
     // 2b. generics facade — no `-O` (depends on the shards just compiled).
     let t = Instant::now();
-    gxc_compile(&facade, false, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    gxc_compile(&facade, false, "", &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
     eprintln!(
         "[bundle-gerbil] generics facade (no -O) in {:.1}s",
         t.elapsed().as_secs_f64()
     );
     // 2c. the rest of the closure — `-O`, deps-first (order preserved above;
-    //     generics is already cached, so its importers resolve).
+    //     generics is already cached, so its importers resolve). The frameworks
+    //     go here: `functions.ss`'s loadable `.oN` calls framework C symbols.
     let t = Instant::now();
-    gxc_compile(&optimized, true, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    gxc_compile(&optimized, true, &frameworks, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
     eprintln!(
         "[bundle-gerbil] closure: {} modules (-O) in {:.1}s",
         optimized.len(),
@@ -199,7 +207,6 @@ pub fn compile_app(
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_else(|| "app".to_string());
     let exe = build_dir.join(&script_stem);
-    let frameworks = framework_link_args(closure, lib_root);
     let ld_options = format!("-lobjc {frameworks} {blk}");
     let t = Instant::now();
     let out = gerbil_command("gxc", &bin_dir, lib_root, cache_dir, &sdkroot)?
@@ -231,9 +238,19 @@ pub fn compile_app(
 /// Run one `gxc` invocation over `modules` (in the given, deps-first order),
 /// optionally with `-O`. A no-op when `modules` is empty. Used for the generics
 /// facade (no `-O`) and the optimized closure passes.
+///
+/// `extra_ld` is appended to the `-ld-options` after `-lobjc` — the closure pass
+/// passes the `-framework <Name>` args here. `gxc -O` does **not** merely compile
+/// to `.o`; it also links each module's dynamically-loadable `.oN`, so a module
+/// that makes **direct C calls** to a framework symbol (the generated
+/// `functions.ss`: `CGContextStrokePath` et al., vs class modules that only call
+/// `objc_msgSend` via `-lobjc`) needs that framework on the pre-compile link line
+/// too, not just at the final `-exe` link (leaf 100/030 — `functions.ss` is the
+/// first closure member with direct framework symbol references).
 fn gxc_compile(
     modules: &[PathBuf],
     optimize: bool,
+    extra_ld: &str,
     bin_dir: &Path,
     lib_root: &Path,
     cache_dir: &Path,
@@ -249,7 +266,7 @@ fn gxc_compile(
     }
     let out = cmd
         .arg("-ld-options")
-        .arg(format!("-lobjc {blk}"))
+        .arg(format!("-lobjc {extra_ld} {blk}"))
         .args(modules)
         .output()
         .map_err(|source| BundleError::ToolNotAvailable {
@@ -272,6 +289,17 @@ fn gxc_compile(
 /// effective speedup is below the core count but still large. The shards are
 /// round-robined into `workers` groups, each compiled sequentially by one scoped
 /// thread (one `gxc` per shard); the first failure is reported.
+///
+/// **Cold-cache warmup (leaf 100/030).** `gxc`'s per-module `compile-module`
+/// does a check-then-`create-directory` of the cache subdirs (`gerbil-cache/lib`,
+/// `…/gerbil-bindings/generics`) under a build lock that does NOT cover the
+/// directory tree. Against an empty cache all `workers` processes start at once
+/// and race to create the shared `lib` dir — the loser aborts with
+/// `*** ERROR IN __with-lock -- File exists`. (`ui-controls`, same code, only
+/// won the race by timing.) So we compile the **first shard serially** to warm
+/// the shared directory tree + cache metadata, *then* fan out the rest: by the
+/// parallel pass every shared parent dir already exists, so no two processes
+/// ever create the same directory.
 fn compile_shards_parallel(
     shards: &[PathBuf],
     bin_dir: &Path,
@@ -283,12 +311,28 @@ fn compile_shards_parallel(
     if shards.is_empty() {
         return Ok(());
     }
+    // Serial warmup: one shard creates `gerbil-cache/lib`, the shard output dir,
+    // and the cache metadata, so the parallel fan-out never races on a mkdir.
+    let (warm, rest) = shards.split_first().unwrap();
+    gxc_compile(
+        std::slice::from_ref(warm),
+        false,
+        "",
+        bin_dir,
+        lib_root,
+        cache_dir,
+        sdkroot,
+        blk,
+    )?;
+    if rest.is_empty() {
+        return Ok(());
+    }
     let workers = std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(4)
-        .min(shards.len());
+        .min(rest.len());
     let mut groups: Vec<Vec<PathBuf>> = vec![Vec::new(); workers];
-    for (i, shard) in shards.iter().enumerate() {
+    for (i, shard) in rest.iter().enumerate() {
         groups[i % workers].push(shard.clone());
     }
 
@@ -305,6 +349,7 @@ fn compile_shards_parallel(
                     if let Err(e) = gxc_compile(
                         std::slice::from_ref(shard),
                         false,
+                        "",
                         bin_dir,
                         lib_root,
                         cache_dir,
