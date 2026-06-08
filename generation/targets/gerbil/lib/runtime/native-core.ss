@@ -115,7 +115,7 @@
 
 ;; --- the native core (C-safe: <objc/runtime.h>/<objc/message.h> only) -------
 (begin-ffi (allocate-class-pair register-class-pair class-add-method
-            class-new-instance make-block)
+            class-new-instance make-block register-imp-inner!)
   (c-declare "#include <objc/runtime.h>")
   (c-declare "#include <objc/message.h>")
 
@@ -172,15 +172,34 @@
      ___return((void*)objc_allocateClassPair(sup, ___arg1, 0));")
   (define-c-lambda register-class-pair ((pointer void)) void
     "objc_registerClassPair((Class)___arg1);")
+  ;; The IMP we install is the clang companion's main-thread-bouncing OUTER
+  ;; trampoline (`aw_imp_*_tramp`, native_block.c), NOT the inner `aw_imp_*`
+  ;; `c-define` above — single-VM Gambit corrupts under off-main entry, so a
+  ;; foreign-thread IMP call must hop to main before re-entering Scheme
+  ;; (ADR-0022). On main it calls inward directly (no overhead). The companion
+  ;; holds the inner dispatchers as REGISTERED pointers (it must stay self-
+  ;; contained — it is linked into every module's object); `register-imp-inner!`
+  ;; below pushes them in at load.
+  (c-declare "extern void aw_register_imp_inner(void*,void*,void*,void*);")
+  (c-declare "extern void  aw_imp_void_tramp(void*,void*,void*,void*,void*,void*);")
+  (c-declare "extern void* aw_imp_id_tramp  (void*,void*,void*,void*,void*,void*);")
+  (c-declare "extern bool  aw_imp_bool_tramp(void*,void*,void*,void*,void*,void*);")
+  (c-declare "extern long  aw_imp_long_tramp(void*,void*,void*,void*,void*,void*);")
+  ;; Push the inner `aw_imp_*` c-define addresses into the companion (called once
+  ;; at module load, below the begin-ffi). Same translation unit as the inner
+  ;; c-defines, so their C symbols are in scope here.
+  (define-c-lambda register-imp-inner! () void
+    "aw_register_imp_inner((void*)aw_imp_void,(void*)aw_imp_id,
+                           (void*)aw_imp_bool,(void*)aw_imp_long);")
   ;; Install one selector's IMP, choosing the trampoline by return kind. `types`
   ;; is the ObjC @encode signature string (objc.ss builds it from the tokens).
   (define-c-lambda class-add-method ((pointer void) char-string char-string int) bool
     "IMP imp;
      switch (___arg4) {
-       case 0:  imp = (IMP)aw_imp_void; break;
-       case 1:  imp = (IMP)aw_imp_id;   break;
-       case 2:  imp = (IMP)aw_imp_bool; break;
-       default: imp = (IMP)aw_imp_long; break;
+       case 0:  imp = (IMP)aw_imp_void_tramp; break;
+       case 1:  imp = (IMP)aw_imp_id_tramp;   break;
+       case 2:  imp = (IMP)aw_imp_bool_tramp; break;
+       default: imp = (IMP)aw_imp_long_tramp; break;
      }
      ___return(class_addMethod((Class)___arg1, sel_registerName(___arg2), imp, ___arg3));")
   ;; alloc+init a fresh instance of a registered class.
@@ -207,3 +226,8 @@
        default: b = aw_make_block_long(___arg1, (void*)aw_blk_long); break;
      }
      ___return(b);"))
+
+;; Load-time: hand the companion the inner IMP-dispatcher addresses so its
+;; bouncing `aw_imp_*_tramp` outer trampolines (ADR-0022) can call inward.
+;; Runs once when this module loads, before any callback can fire.
+(register-imp-inner!)
