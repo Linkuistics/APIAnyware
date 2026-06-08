@@ -1,8 +1,9 @@
 # Gerbil: compile the shared `generics.ss` module without optimization
 
-**Status:** accepted (probe-gated — the durable remedy is confirmed by the
-cold-build re-measure in grove leaf `090-generics-compile-cost/010`; if it
-misses the budget, splitting `generics.ss` follows and this ADR is amended).
+**Status:** accepted, but **necessary-not-sufficient** — the cold-build
+re-measure (grove leaf `090/010`, below) proved no-`-O` alone misses the budget;
+the durable fix is **no-`-O` + splitting `generics.ss`** (grove leaf `090/020`).
+This change is kept because it composes with and is required by the split.
 
 ## Context
 
@@ -55,6 +56,29 @@ generated module whose content is optimization-inert.
 - **Closure-scoped / per-framework generics.** Architecturally right for
   scaling to the full-macOS binding set, but does not shrink today's
   2-framework cost (an app pulls both frameworks regardless). Out of scope here.
+
+## Measured outcome (grove leaf 090/010, 2026-06-08)
+
+Implemented the no-`-O` generics pass in `compile.rs` and re-measured a cold
+hello-window build (`build/` wiped, BOTTLE 0.18.2, `SDKROOT` exported). Findings:
+
+- **No-`-O` helped but did not solve it.** Gambit's expansion of `generics.ss`
+  shrank (`generics~1.scm` 60 MB → 37.8 MB) and peak RSS fell 9.7 GB → ~4.8 GB
+  (the swap thrash is gone). But `gsc -target C` on the 37.8 MB unit ran **>67
+  min and had still not finished** (build killed at 73 min, never reaching gcc).
+- **`gsc` itself is superlinear in module size, independent of `-O`.** The
+  Scheme→C stage — not just `gcc -O1` — chokes on one giant macro-expanded unit.
+  Removing `-O` attacks the *optimizer*; it cannot fix the raw *size*.
+- **It's a size threshold.** Gambit auto-split the module into `generics~0`
+  (16.9 MB, compiled fine) + `generics~1` (37.8 MB, pathological). Bounded units
+  are the fix.
+
+**Conclusion:** keep no-`-O` (strict improvement, composes with the split) and
+**split `generics.ss` into many small modules** (leaf `090/020`) — bounded,
+parallelizable `gsc` invocations. Compiling each small shard *also* without
+`-O` is the intended end state (small + unoptimized = fast). The true
+non-generics residual is still unmeasured (the build never got past generics);
+leaf `090/020` is the first chance to measure it against the `< 15 min` budget.
 
 ## Consequences
 

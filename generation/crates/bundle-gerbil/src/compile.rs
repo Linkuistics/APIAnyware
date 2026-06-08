@@ -40,6 +40,12 @@ use crate::bundle::BundleError;
 /// Environment variable overriding gerbil bottle bin-dir discovery.
 pub const DEFAULT_GERBIL_BIN_ENV: &str = "AW_GERBIL_BIN_DIR";
 
+/// On-disk stem of the shared generics declaration module at the package root
+/// (`lib/generics.ss`). Must track `emit_generics::GENERICS_MODULE_STEM` in the
+/// emitter; kept as a local literal so the bundler does not depend on the
+/// emitter crate. Compiled without `-O` (ADR-0023) — see [`compile_app`] step 2.
+const GENERICS_MODULE_STEM: &str = "generics";
+
 /// Locate the bottle gerbil's `bin/` directory (the one holding the `gxc`
 /// multicall symlink). Honours [`DEFAULT_GERBIL_BIN_ENV`]; otherwise globs
 /// the Homebrew Cellar for a `gerbil-scheme/<ver>/bin/gxc`.
@@ -123,13 +129,49 @@ pub fn compile_app(
 
     let blk = native_block_o.to_string_lossy().into_owned();
 
-    // 2. gxc -O the closure into the GERBIL_PATH cache, deps-first.
-    if !closure.is_empty() {
+    // 2. Compile the closure into the GERBIL_PATH cache, deps-first.
+    //
+    // The shared `generics.ss` declaration module is compiled on its own pass
+    // **without `-O`** (ADR-0023). It is pure `(g:defgeneric …)` declarations —
+    // empty generic objects, no methods, no hot code — so optimizing it buys no
+    // runtime speed, yet at full-framework scale (6,496 generics → a 94 MB C
+    // translation unit) `-O` dominates a *cold* build by hours: both Gambit's
+    // `gsc -target C` flow analysis and `gcc -O1` are superlinear in unit size,
+    // and `gxc -O` drives both. Compiling it un-optimized first leaves its
+    // `.ssi` available for the `-O` importers that follow — mixed-opt linking is
+    // sound because the interface is optimization-independent.
+    let generics_module = lib_root.join(format!("{GENERICS_MODULE_STEM}.ss"));
+    let (generics, optimized): (Vec<PathBuf>, Vec<PathBuf>) = closure
+        .iter()
+        .cloned()
+        .partition(|m| *m == generics_module);
+
+    // 2a. generics.ss — no `-O`.
+    if !generics.is_empty() {
+        let out = gerbil_command("gxc", &bin_dir, lib_root, cache_dir, &sdkroot)?
+            .arg("-ld-options")
+            .arg(format!("-lobjc {blk}"))
+            .args(&generics)
+            .output()
+            .map_err(|source| BundleError::ToolNotAvailable {
+                tool: "gxc",
+                source,
+            })?;
+        if !out.status.success() {
+            return Err(BundleError::ClosureCompileFailed {
+                stderr: stderr_or_stdout(&out),
+            });
+        }
+    }
+
+    // 2b. the rest of the closure — `-O`, deps-first (order preserved by
+    // `partition`; generics is already cached, so its importers resolve).
+    if !optimized.is_empty() {
         let out = gerbil_command("gxc", &bin_dir, lib_root, cache_dir, &sdkroot)?
             .arg("-O")
             .arg("-ld-options")
             .arg(format!("-lobjc {blk}"))
-            .args(closure)
+            .args(&optimized)
             .output()
             .map_err(|source| BundleError::ToolNotAvailable {
                 tool: "gxc",
