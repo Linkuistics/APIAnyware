@@ -26,6 +26,12 @@ echo "== compiling clang companion (native_block.c, -fblocks) =="
 BLK_O="$OUT/native_block.o"
 clang -fblocks -isysroot "$SDKROOT" -c "$RT/native_block.c" -o "$BLK_O"
 
+# The background-callback smoke (smoke-dispatch, ADR-0022) has its own clang
+# harness (dispatch/CFRunLoop/^blocks) linked into that smoke only.
+echo "== compiling smoke-dispatch harness (smoke_dispatch.c, -fblocks) =="
+DISP_O="$OUT/smoke_dispatch.o"
+clang -fblocks -isysroot "$SDKROOT" -c "$HERE/smoke_dispatch.c" -o "$DISP_O"
+
 # AppKit (transitively Foundation) — smoke-subclass synthesizes an NSView subclass
 # and drives it through NSWindow/NSApplication; the others only need Foundation,
 # but linking AppKit everywhere is harmless.
@@ -39,11 +45,13 @@ gxc -O -ld-options "-lobjc $BLK_O" \
     "$RT/ffi.ss" "$RT/native-core.ss" "$RT/objc.ss" "$RT/subclass.ss"
 
 rc=0
-for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges smoke-subclass smoke-geometry; do
+for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges smoke-subclass smoke-geometry smoke-dispatch; do
   echo "== $smoke =="
-  gxc -exe -o "$OUT/$smoke" -ld-options "$LD" "$HERE/$smoke.ss"
+  # smoke-dispatch links its own clang harness (the background-callback driver).
+  ld="$LD"; [ "$smoke" = "smoke-dispatch" ] && ld="$LD $DISP_O"
+  gxc -exe -o "$OUT/$smoke" -ld-options "$ld" "$HERE/$smoke.ss"
   if "$OUT/$smoke" | sed 's/^/   /'; then :; fi
-  if ! "$OUT/$smoke" | grep -qE 'SMOKE-OK|DUAL-OK|BRIDGES-OK|SUBCLASS-OK|GEOMETRY-OK'; then
+  if ! "$OUT/$smoke" | grep -qE 'SMOKE-OK|DUAL-OK|BRIDGES-OK|SUBCLASS-OK|GEOMETRY-OK|DISPATCH-OK'; then
     echo "   !! $smoke did not report OK"; rc=1
   fi
 done
