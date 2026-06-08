@@ -37,12 +37,23 @@ use apianyware_macos_emit::enrichment::class_error_selectors;
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::{class_surface_selectors, GENERIC_IMPORT};
+use crate::emit_class::{class_surface_selectors, GENERIC_IMPORT, GENERICS_MODULE_IMPORT};
 
-/// The on-disk stem + import-path tail of the shared generics module. Lives at the
-/// package root next to the framework facades, so its import path is
-/// `:gerbil-bindings/generics` (see `emit_class::GENERICS_MODULE_IMPORT`).
+/// The on-disk stem + import-path tail of the shared generics module. The facade
+/// lives at the package root next to the framework facades (`generics.ss`, import
+/// path `:gerbil-bindings/generics`), and its shards live in the sibling
+/// `generics/` directory (`generics/NNN.ss`, import path
+/// `:gerbil-bindings/generics/NNN`). See `emit_class::GENERICS_MODULE_IMPORT`.
 pub const GENERICS_MODULE_STEM: &str = "generics";
+
+/// Selectors per generics **shard** module. The monolithic `generics.ss`
+/// (6,496 selectors → a ~54 MB macro-expanded Scheme unit) made Gambit's
+/// `gsc -target C` pathologically slow — **superlinear in module size,
+/// independent of `-O`** (a 37.8 MB unit ran >67 min unfinished; ADR-0023).
+/// Sharding into bounded modules keeps each `gsc` unit small *and* lets the
+/// shards compile in parallel (they have no cross-shard deps). Tunable: lower it
+/// if a shard's `gsc` time is still too high (`gsc` may be worse than O(n²)).
+pub const GENERICS_SHARD_SIZE: usize = 256;
 
 /// The union of every distinct instance-surface selector across all loaded
 /// frameworks, sorted and deduped — one `g:defgeneric` per entry. Computed with
@@ -61,20 +72,15 @@ pub fn collect_global_surface_selectors(frameworks: &[&Framework]) -> Vec<String
     set.into_iter().collect()
 }
 
-/// Render the shared `generics.ss` module text: import `:std/generic` (renamed),
-/// declare one `(g:defgeneric <sel>)` per global selector, and export them all.
-/// An empty selector set yields `None` — there is nothing to declare and no class
-/// will import the module (so it must not be written, or the import would dangle).
-pub fn generate_generics_module(selectors: &[String]) -> Option<String> {
-    if selectors.is_empty() {
-        return None;
-    }
+/// Render one generics **shard** module: import `:std/generic` (renamed), declare
+/// one `(g:defgeneric <sel>)` per selector in this shard's slice, and export them.
+/// A shard is never empty (callers chunk a non-empty selector set).
+pub fn generate_shard_module(selectors: &[String]) -> String {
     let mut w = CodeWriter::new();
-    w.line(";;; Generated gerbil-bindings global generics — do not edit");
-    w.line(";; One :std/generic generic per distinct instance-surface selector across");
-    w.line(";; every framework, declared ONCE so a selector shared by unrelated classes");
-    w.line(";; is a single generic they all extend — not N colliding per-module generics");
-    w.line(";; that clash at the framework facade.");
+    w.line(";;; Generated gerbil-bindings generics shard — do not edit");
+    w.line(";; One :std/generic generic per selector in this shard's slice of the");
+    w.line(";; global instance-surface selector set. Sharded to bound each gsc unit");
+    w.line(";; (ADR-0023); the facade :gerbil-bindings/generics re-exports every shard.");
     write_line!(w, "(import {})", GENERIC_IMPORT);
 
     w.line("(export");
@@ -87,25 +93,71 @@ pub fn generate_generics_module(selectors: &[String]) -> Option<String> {
     for sel in selectors {
         write_line!(w, "(g:defgeneric {})", sel);
     }
-    Some(w.finish())
+    w.finish()
 }
 
-/// Compute the global selector set and write `generics.ss` into the gerbil package
-/// root (`output_dir`). Called once by the generate pipeline, before/independent of
-/// the per-framework loop. A no-op when no framework has an instance surface.
+/// Render the facade `generics.ss`: import every shard and re-export it, so the
+/// single import path `:gerbil-bindings/generics` presents the full global
+/// generic set unchanged for class modules. Each selector is declared in exactly
+/// one shard, so re-exporting all shards yields one generic per selector — the
+/// cross-module unification invariant (ADR-0020) the monolith provided.
+pub fn generate_facade_module(shard_count: usize) -> String {
+    let mut w = CodeWriter::new();
+    w.line(";;; Generated gerbil-bindings generics facade — do not edit");
+    w.line(";; Re-exports every sharded generics module so :gerbil-bindings/generics");
+    w.line(";; presents the full global generic set as one import. The shards");
+    w.line(";; (generics/NNN.ss) bound each gsc compilation unit (ADR-0023).");
+
+    w.line("(import");
+    for i in 0..shard_count {
+        write_line!(w, "  {GENERICS_MODULE_IMPORT}/{i:03}");
+    }
+    w.line("  )");
+
+    w.line("(export");
+    for i in 0..shard_count {
+        write_line!(w, "  (import: {GENERICS_MODULE_IMPORT}/{i:03})");
+    }
+    w.line("  )");
+    w.finish()
+}
+
+/// Compute the global selector set and write the sharded generics into the gerbil
+/// package root (`output_dir`): the facade `generics.ss` plus `generics/NNN.ss`
+/// shards of [`GENERICS_SHARD_SIZE`] selectors each. Called once by the generate
+/// pipeline, before/independent of the per-framework loop. A no-op (returns
+/// `false`, writes nothing) when no framework has an instance surface.
+///
+/// The `generics/` shard directory is cleared first so a regeneration with fewer
+/// shards leaves no stale `generics/NNN.ss` behind.
 pub fn write_global_generics_module(
     frameworks: &[&Framework],
     output_dir: &Path,
 ) -> io::Result<bool> {
     let selectors = collect_global_surface_selectors(frameworks);
-    match generate_generics_module(&selectors) {
-        None => Ok(false),
-        Some(content) => {
-            std::fs::create_dir_all(output_dir)?;
-            std::fs::write(output_dir.join(format!("{GENERICS_MODULE_STEM}.ss")), content)?;
-            Ok(true)
-        }
+    if selectors.is_empty() {
+        return Ok(false);
     }
+
+    let shard_dir = output_dir.join(GENERICS_MODULE_STEM);
+    if shard_dir.exists() {
+        std::fs::remove_dir_all(&shard_dir)?;
+    }
+    std::fs::create_dir_all(&shard_dir)?;
+
+    let chunks: Vec<&[String]> = selectors.chunks(GENERICS_SHARD_SIZE).collect();
+    for (i, chunk) in chunks.iter().enumerate() {
+        std::fs::write(
+            shard_dir.join(format!("{i:03}.ss")),
+            generate_shard_module(chunk),
+        )?;
+    }
+
+    std::fs::write(
+        output_dir.join(format!("{GENERICS_MODULE_STEM}.ss")),
+        generate_facade_module(chunks.len()),
+    )?;
+    Ok(true)
 }
 
 #[cfg(test)]
@@ -174,11 +226,28 @@ mod tests {
         }
     }
 
+    /// Read every shard file under `<root>/generics/` concatenated — the union of
+    /// what all shards declare/export.
+    fn read_all_shards(root: &Path) -> String {
+        let mut all = String::new();
+        let dir = root.join("generics");
+        let mut entries: Vec<_> = std::fs::read_dir(&dir)
+            .unwrap()
+            .flatten()
+            .map(|e| e.path())
+            .collect();
+        entries.sort();
+        for p in entries {
+            all.push_str(&std::fs::read_to_string(&p).unwrap());
+        }
+        all
+    }
+
     #[test]
     fn shared_selector_declared_once_across_unrelated_classes() {
         // Two unrelated classes in two frameworks both expose `count` (a method
         // whose kebab surface selector is `count`). The global set must hold a
-        // SINGLE `count`, declared once.
+        // SINGLE `count`, declared once — across ALL shards, not per-module.
         let foundation = fw_with(
             "Foundation",
             vec![class_with_methods("NSArray", vec![method("count", "uint64")])],
@@ -198,16 +267,16 @@ mod tests {
             "the shared selector is unified to a single global entry: {selectors:?}"
         );
 
-        let module = generate_generics_module(&selectors).unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        assert!(write_global_generics_module(&refs, tmp.path()).unwrap());
+        let shards = read_all_shards(tmp.path());
         assert_eq!(
-            module.matches("(g:defgeneric count)").count(),
+            shards.matches("(g:defgeneric count)").count(),
             1,
-            "exactly one declaration site for the shared generic:\n{module}"
+            "exactly one declaration site for the shared generic across shards:\n{shards}"
         );
-        // The module imports :std/generic (renamed) and exports the generic name.
-        assert!(module.contains("(rename-in :std/generic"));
-        assert!(module.contains("(export"));
-        assert!(module.contains("count"));
+        // Each shard imports :std/generic (renamed).
+        assert!(shards.contains("(rename-in :std/generic"));
     }
 
     #[test]
@@ -215,25 +284,65 @@ mod tests {
         let fw = fw_with("Empty", vec![]);
         let refs = vec![&fw];
         assert!(collect_global_surface_selectors(&refs).is_empty());
-        assert!(generate_generics_module(&[]).is_none());
 
         let tmp = tempfile::tempdir().unwrap();
         let wrote = write_global_generics_module(&refs, tmp.path()).unwrap();
         assert!(!wrote);
         assert!(!tmp.path().join("generics.ss").exists());
+        assert!(!tmp.path().join("generics").exists());
     }
 
     #[test]
-    fn write_emits_generics_file() {
-        let foundation = fw_with(
-            "Foundation",
-            vec![class_with_methods("NSArray", vec![method("count", "uint64")])],
-        );
+    fn write_emits_facade_and_shards() {
+        // Enough distinct selectors to span more than one shard, so the facade's
+        // re-export of multiple shards is exercised.
+        let n = GENERICS_SHARD_SIZE + 5;
+        let methods: Vec<Method> = (0..n).map(|i| method(&format!("sel{i:04}"), "uint64")).collect();
+        let foundation = fw_with("Foundation", vec![class_with_methods("NSThing", methods)]);
         let refs = vec![&foundation];
         let tmp = tempfile::tempdir().unwrap();
-        let wrote = write_global_generics_module(&refs, tmp.path()).unwrap();
-        assert!(wrote);
-        let body = std::fs::read_to_string(tmp.path().join("generics.ss")).unwrap();
-        assert!(body.contains("(g:defgeneric count)"));
+        assert!(write_global_generics_module(&refs, tmp.path()).unwrap());
+
+        // Two shards (n = SHARD_SIZE + 5): generics/000.ss and generics/001.ss.
+        assert!(tmp.path().join("generics/000.ss").is_file());
+        assert!(tmp.path().join("generics/001.ss").is_file());
+        assert!(!tmp.path().join("generics/002.ss").exists());
+
+        // The facade imports and re-exports exactly those two shards.
+        let facade = std::fs::read_to_string(tmp.path().join("generics.ss")).unwrap();
+        assert!(facade.contains(":gerbil-bindings/generics/000"));
+        assert!(facade.contains(":gerbil-bindings/generics/001"));
+        assert!(facade.contains("(import:"));
+
+        // Every selector is declared exactly once across the shards.
+        let shards = read_all_shards(tmp.path());
+        assert_eq!(shards.matches("(g:defgeneric sel0000)").count(), 1);
+        assert_eq!(
+            shards.matches("(g:defgeneric ").count(),
+            n,
+            "all {n} selectors declared once across the shards"
+        );
+    }
+
+    #[test]
+    fn regeneration_clears_stale_shards() {
+        let tmp = tempfile::tempdir().unwrap();
+        // First gen: many selectors -> several shards.
+        let many: Vec<Method> = (0..GENERICS_SHARD_SIZE * 2 + 1)
+            .map(|i| method(&format!("a{i:04}"), "uint64"))
+            .collect();
+        let big = fw_with("Foundation", vec![class_with_methods("NSBig", many)]);
+        write_global_generics_module(&[&big], tmp.path()).unwrap();
+        assert!(tmp.path().join("generics/002.ss").is_file());
+
+        // Second gen: few selectors -> one shard. Stale 001/002 must be gone.
+        let small = fw_with(
+            "Foundation",
+            vec![class_with_methods("NSSmall", vec![method("count", "uint64")])],
+        );
+        write_global_generics_module(&[&small], tmp.path()).unwrap();
+        assert!(tmp.path().join("generics/000.ss").is_file());
+        assert!(!tmp.path().join("generics/001.ss").exists());
+        assert!(!tmp.path().join("generics/002.ss").exists());
     }
 }

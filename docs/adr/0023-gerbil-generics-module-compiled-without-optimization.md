@@ -1,9 +1,10 @@
 # Gerbil: compile the shared `generics.ss` module without optimization
 
-**Status:** accepted, but **necessary-not-sufficient** — the cold-build
-re-measure (grove leaf `090/010`, below) proved no-`-O` alone misses the budget;
-the durable fix is **no-`-O` + splitting `generics.ss`** (grove leaf `090/020`).
-This change is kept because it composes with and is required by the split.
+**Status:** accepted, **confirmed**. The durable fix is three compounding levers
+— **shard** `generics.ss` into many small modules behind a re-export facade,
+compile the shards **without `-O`**, and compile them **in parallel**. Cold
+hello-window build: **~5h 7min → 8.4 min** (under the `< 15 min` budget). See
+"Resolution" below.
 
 ## Context
 
@@ -79,6 +80,45 @@ parallelizable `gsc` invocations. Compiling each small shard *also* without
 `-O` is the intended end state (small + unoptimized = fast). The true
 non-generics residual is still unmeasured (the build never got past generics);
 leaf `090/020` is the first chance to measure it against the `< 15 min` budget.
+
+## Resolution (grove leaf 090/010-split, 2026-06-08)
+
+No-`-O` alone was insufficient (above), so `generics.ss` is **sharded**: the
+emitter (`emit_generics.rs`, `GENERICS_SHARD_SIZE = 256`) writes the global
+selector set into `generics/NNN.ss` shards (~256 `g:defgeneric` each) plus a
+facade `generics.ss` that re-exports every shard via `(export (import: …))`. The
+import path class modules use — `:gerbil-bindings/generics` — is unchanged, and
+each selector is still declared exactly once (across shards), preserving the
+ADR-0020 unification invariant. 6,521 selectors → **26 shards**. The build driver
+(`compile.rs`) compiles the shards without `-O` and **in parallel** (scoped
+threads, one `gxc` per shard), then the facade (no `-O`), then the `-O` closure,
+then the `-exe -O` link.
+
+**Measured cold (hello-window, BOTTLE 0.18.2, `build/` wiped):**
+
+| phase | time |
+|---|---|
+| generics — 26 shards, no `-O`, parallel | 216.5s |
+| generics facade, no `-O` | 11.9s |
+| closure — 12 class modules, `-O` | 45.8s |
+| exe link, `-exe -O` | 229.5s |
+| **total** | **505s ≈ 8.4 min** |
+
+- **Sharding** is what makes it possible: each shard is a small `gsc` unit, so
+  the size-superlinearity never triggers.
+- **Parallelism** is what makes it fast enough: serial cold generics = 809s,
+  parallel = 216s (~3.7×, ~30 concurrent `gsc`). `gxc` has no `-j` and serialises
+  only its cache-metadata write, so the heavy compilation overlaps. Parallelism
+  is *required* to hit budget (serial cold total ≈ 18 min).
+- Peak RSS 7.4 GB at the link (no swap thrash — the monolith's 9.7 GB is gone).
+- The two remaining costs are generics (216s) and the `-exe -O` link (229s);
+  both are future levers (true >3.7× parallelism via isolated caches; link
+  optimization) if a tighter budget than 15 min is ever wanted. Not pursued —
+  the budget is met.
+
+A one-line link-args bug surfaced and was fixed: `generics` becoming a
+*directory* made `framework_link_args` emit `-framework Generics`; it now skips
+`generics` like `runtime`.
 
 ## Consequences
 

@@ -34,6 +34,8 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
+use std::time::Instant;
 
 use crate::bundle::BundleError;
 
@@ -129,60 +131,67 @@ pub fn compile_app(
 
     let blk = native_block_o.to_string_lossy().into_owned();
 
-    // 2. Compile the closure into the GERBIL_PATH cache, deps-first.
+    // 2. Compile the closure into the GERBIL_PATH cache, in three passes.
     //
-    // The shared `generics.ss` declaration module is compiled on its own pass
-    // **without `-O`** (ADR-0023). It is pure `(g:defgeneric …)` declarations —
-    // empty generic objects, no methods, no hot code — so optimizing it buys no
-    // runtime speed, yet at full-framework scale (6,496 generics → a 94 MB C
-    // translation unit) `-O` dominates a *cold* build by hours: both Gambit's
-    // `gsc -target C` flow analysis and `gcc -O1` are superlinear in unit size,
-    // and `gxc -O` drives both. Compiling it un-optimized first leaves its
-    // `.ssi` available for the `-O` importers that follow — mixed-opt linking is
-    // sound because the interface is optimization-independent.
-    let generics_module = lib_root.join(format!("{GENERICS_MODULE_STEM}.ss"));
-    let (generics, optimized): (Vec<PathBuf>, Vec<PathBuf>) = closure
-        .iter()
-        .cloned()
-        .partition(|m| *m == generics_module);
-
-    // 2a. generics.ss — no `-O`.
-    if !generics.is_empty() {
-        let out = gerbil_command("gxc", &bin_dir, lib_root, cache_dir, &sdkroot)?
-            .arg("-ld-options")
-            .arg(format!("-lobjc {blk}"))
-            .args(&generics)
-            .output()
-            .map_err(|source| BundleError::ToolNotAvailable {
-                tool: "gxc",
-                source,
-            })?;
-        if !out.status.success() {
-            return Err(BundleError::ClosureCompileFailed {
-                stderr: stderr_or_stdout(&out),
-            });
+    // The generics declaration modules are compiled **without `-O`** (ADR-0023):
+    // they are pure `(g:defgeneric …)` declarations — no methods, no hot code —
+    // so optimizing them buys no runtime speed, yet `gsc -target C` is
+    // *superlinear in module size* (independent of `-O`), so a large generics
+    // unit dominates a cold build by hours. The fix is two-fold: declarations
+    // are **sharded** into many small modules (`generics/NNN.ss`, the emitter's
+    // `GENERICS_SHARD_SIZE`), each a small `gsc` unit, behind a re-export facade
+    // `generics.ss`; and they are compiled un-optimized. Mixed-opt linking is
+    // sound — a module's `.ssi` interface is optimization-independent.
+    //
+    // Order matters: shards → facade (imports them) → the `-O` closure (class
+    // modules import the facade). Shards have no cross-shard deps, so the shard
+    // pass runs in **parallel** — the lever that keeps the build fast.
+    let generics_dir = lib_root.join(GENERICS_MODULE_STEM);
+    let generics_facade = lib_root.join(format!("{GENERICS_MODULE_STEM}.ss"));
+    let mut shards: Vec<PathBuf> = Vec::new();
+    let mut facade: Vec<PathBuf> = Vec::new();
+    let mut optimized: Vec<PathBuf> = Vec::new();
+    for m in closure {
+        if *m == generics_facade {
+            facade.push(m.clone());
+        } else if m.starts_with(&generics_dir) {
+            shards.push(m.clone());
+        } else {
+            optimized.push(m.clone());
         }
     }
 
-    // 2b. the rest of the closure — `-O`, deps-first (order preserved by
-    // `partition`; generics is already cached, so its importers resolve).
-    if !optimized.is_empty() {
-        let out = gerbil_command("gxc", &bin_dir, lib_root, cache_dir, &sdkroot)?
-            .arg("-O")
-            .arg("-ld-options")
-            .arg(format!("-lobjc {blk}"))
-            .args(&optimized)
-            .output()
-            .map_err(|source| BundleError::ToolNotAvailable {
-                tool: "gxc",
-                source,
-            })?;
-        if !out.status.success() {
-            return Err(BundleError::ClosureCompileFailed {
-                stderr: stderr_or_stdout(&out),
-            });
-        }
-    }
+    // 2a. generics shards — no `-O`, **in parallel**. Two levers compound here
+    //     (ADR-0023): *sharding* makes each a small `gsc` unit (sidestepping the
+    //     size-superlinearity that made the monolith pathological), and
+    //     *parallelism* overlaps the shards' independent `gsc`/`gcc` work.
+    //     Measured cold: serial 809s vs parallel 224s (~3.6×) — `gxc` has no
+    //     `-j` and serialises only its cache-metadata write on a build lock, so
+    //     the heavy compilation still overlaps. Parallelism is *required* to hit
+    //     the `< 15 min` budget (serial cold is ~18 min).
+    let t = Instant::now();
+    compile_shards_parallel(&shards, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    eprintln!(
+        "[bundle-gerbil] generics: {} shards (no -O, parallel) in {:.1}s",
+        shards.len(),
+        t.elapsed().as_secs_f64()
+    );
+    // 2b. generics facade — no `-O` (depends on the shards just compiled).
+    let t = Instant::now();
+    gxc_compile(&facade, false, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    eprintln!(
+        "[bundle-gerbil] generics facade (no -O) in {:.1}s",
+        t.elapsed().as_secs_f64()
+    );
+    // 2c. the rest of the closure — `-O`, deps-first (order preserved above;
+    //     generics is already cached, so its importers resolve).
+    let t = Instant::now();
+    gxc_compile(&optimized, true, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    eprintln!(
+        "[bundle-gerbil] closure: {} modules (-O) in {:.1}s",
+        optimized.len(),
+        t.elapsed().as_secs_f64()
+    );
 
     // 3. gxc -exe -O — link the app exe.
     let script_stem = entry
@@ -192,6 +201,7 @@ pub fn compile_app(
     let exe = build_dir.join(&script_stem);
     let frameworks = framework_link_args(closure, lib_root);
     let ld_options = format!("-lobjc {frameworks} {blk}");
+    let t = Instant::now();
     let out = gerbil_command("gxc", &bin_dir, lib_root, cache_dir, &sdkroot)?
         .arg("-exe")
         .arg("-O")
@@ -210,8 +220,111 @@ pub fn compile_app(
             stderr: stderr_or_stdout(&out),
         });
     }
+    eprintln!(
+        "[bundle-gerbil] exe link (-exe -O) in {:.1}s",
+        t.elapsed().as_secs_f64()
+    );
 
     Ok(exe)
+}
+
+/// Run one `gxc` invocation over `modules` (in the given, deps-first order),
+/// optionally with `-O`. A no-op when `modules` is empty. Used for the generics
+/// facade (no `-O`) and the optimized closure passes.
+fn gxc_compile(
+    modules: &[PathBuf],
+    optimize: bool,
+    bin_dir: &Path,
+    lib_root: &Path,
+    cache_dir: &Path,
+    sdkroot: &Path,
+    blk: &str,
+) -> Result<(), BundleError> {
+    if modules.is_empty() {
+        return Ok(());
+    }
+    let mut cmd = gerbil_command("gxc", bin_dir, lib_root, cache_dir, sdkroot)?;
+    if optimize {
+        cmd.arg("-O");
+    }
+    let out = cmd
+        .arg("-ld-options")
+        .arg(format!("-lobjc {blk}"))
+        .args(modules)
+        .output()
+        .map_err(|source| BundleError::ToolNotAvailable {
+            tool: "gxc",
+            source,
+        })?;
+    if !out.status.success() {
+        return Err(BundleError::ClosureCompileFailed {
+            stderr: stderr_or_stdout(&out),
+        });
+    }
+    Ok(())
+}
+
+/// Compile the generics **shards** without `-O`, **in parallel**. Shards have no
+/// cross-shard deps (each imports only `:std/generic`), so their `gsc`/`gcc` work
+/// overlaps — measured ~3.6× over a sequential pass (809s → 224s cold), the lever
+/// that brings the sharded-generics build under budget (ADR-0023). `gxc` has no
+/// `-j` and serialises only its cache-metadata write on a build lock, so the
+/// effective speedup is below the core count but still large. The shards are
+/// round-robined into `workers` groups, each compiled sequentially by one scoped
+/// thread (one `gxc` per shard); the first failure is reported.
+fn compile_shards_parallel(
+    shards: &[PathBuf],
+    bin_dir: &Path,
+    lib_root: &Path,
+    cache_dir: &Path,
+    sdkroot: &Path,
+    blk: &str,
+) -> Result<(), BundleError> {
+    if shards.is_empty() {
+        return Ok(());
+    }
+    let workers = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
+        .min(shards.len());
+    let mut groups: Vec<Vec<PathBuf>> = vec![Vec::new(); workers];
+    for (i, shard) in shards.iter().enumerate() {
+        groups[i % workers].push(shard.clone());
+    }
+
+    let first_err: Mutex<Option<BundleError>> = Mutex::new(None);
+    let first_err_ref = &first_err;
+    std::thread::scope(|scope| {
+        for group in &groups {
+            scope.spawn(move || {
+                for shard in group {
+                    // Stop early if a sibling thread already failed.
+                    if first_err_ref.lock().unwrap().is_some() {
+                        return;
+                    }
+                    if let Err(e) = gxc_compile(
+                        std::slice::from_ref(shard),
+                        false,
+                        bin_dir,
+                        lib_root,
+                        cache_dir,
+                        sdkroot,
+                        blk,
+                    ) {
+                        let mut slot = first_err_ref.lock().unwrap();
+                        if slot.is_none() {
+                            *slot = Some(e);
+                        }
+                        return;
+                    }
+                }
+            });
+        }
+    });
+    match first_err.into_inner().unwrap() {
+        Some(e) => Err(e),
+        None => Ok(()),
+    }
 }
 
 /// A `Command` for `<bin_dir>/<tool>` with the bottle toolchain environment
@@ -293,7 +406,13 @@ fn framework_link_args(closure: &[PathBuf], lib_root: &Path) -> String {
 /// are added.
 fn framework_link_name(dir: &OsStr) -> Option<String> {
     match dir.to_string_lossy().as_ref() {
-        "runtime" => None,
+        // Non-framework package dirs: the hand-written runtime, and the sharded
+        // generics modules (`generics/NNN.ss`). Both are Gerbil modules, not
+        // macOS frameworks — emitting `-framework Generics` makes `ld` fail
+        // ("framework 'Generics' not found"). The facade `generics.ss` is a
+        // top-level *file* (one path component) and is already skipped upstream;
+        // this guards the shard *directory*.
+        "runtime" | "generics" => None,
         "appkit" => Some("AppKit".to_string()),
         "foundation" => Some("Foundation".to_string()),
         "coregraphics" => Some("CoreGraphics".to_string()),

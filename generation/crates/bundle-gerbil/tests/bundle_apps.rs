@@ -66,8 +66,15 @@ fn computes_hello_window_closure() {
         })
         .collect();
 
+    // Sharded generics (ADR-0023): the closure pulls the facade `generics` plus
+    // its `generics/NNN` shards (count tracks selector count — brittle to pin).
+    // Partition them out and check the rest exactly.
+    let (generics_mods, rest): (Vec<&str>, Vec<&str>) = rels
+        .iter()
+        .map(String::as_str)
+        .partition(|r| *r == "generics" || r.starts_with("generics/"));
+
     let expected: std::collections::HashSet<&str> = [
-        "generics",
         "runtime/ffi",
         "runtime/native-core",
         "runtime/objc",
@@ -83,8 +90,15 @@ fn computes_hello_window_closure() {
     ]
     .into_iter()
     .collect();
-    let got: std::collections::HashSet<&str> = rels.iter().map(String::as_str).collect();
-    assert_eq!(got, expected, "closure module set drifted:\n{rels:#?}");
+    let got: std::collections::HashSet<&str> = rest.into_iter().collect();
+    assert_eq!(got, expected, "non-generics closure set drifted:\n{rels:#?}");
+
+    // The facade and at least one shard are in the closure.
+    assert!(generics_mods.contains(&"generics"), "generics facade in closure");
+    assert!(
+        generics_mods.iter().any(|m| m.starts_with("generics/")),
+        "≥1 generics shard in closure: {generics_mods:?}"
+    );
 
     // Topological spot-checks: each module appears after its dependencies.
     let pos = |rel: &str| rels.iter().position(|r| r == rel).unwrap();
@@ -95,6 +109,17 @@ fn computes_hello_window_closure() {
     assert!(pos("appkit/nsview") < pos("appkit/nscontrol"));
     assert!(pos("appkit/nscontrol") < pos("appkit/nstextfield"));
     assert!(pos("appkit/nsresponder") < pos("appkit/nswindow"));
+    // Sharded generics ordering: shards precede the facade (it re-exports them),
+    // and the facade precedes the class modules (they import it).
+    let first_shard = rels
+        .iter()
+        .position(|r| r.starts_with("generics/"))
+        .expect("a generics shard in the closure");
+    assert!(first_shard < pos("generics"), "shards before facade");
+    assert!(
+        pos("generics") < pos("appkit/nsresponder"),
+        "facade before class modules"
+    );
 }
 
 /// A script name with no matching `apps/<script>/<script>.ss` entry fails

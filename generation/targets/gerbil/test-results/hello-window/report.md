@@ -72,4 +72,27 @@ small modules (bounded, parallelizable units), compiling generics at `-O0`/`-d` 
 Gambit's per-module C-opt control, or committing/persisting a warm cache. This is a
 build-time concern only — the shipped `.app` runs fine and launches instantly.
 
+### Resolved (grove node 090-generics-compile-cost, 2026-06-08): ~5h 7min → 8.4 min
+
+Root cause confirmed: `gsc -target C` (Gambit's Scheme→C compiler), not just
+`gcc`, is **superlinear in module size** — a single giant macro-expanded
+`generics` unit is pathological *regardless of `-O`* (a 37.8 MB unit ran >67 min
+unfinished even with `-O` removed). Fix (ADR-0023), three compounding levers:
+
+1. **Shard** `generics.ss` into 26 small `generics/NNN.ss` modules (~256
+   generics each) behind a re-export facade — each a small `gsc` unit, so the
+   superlinearity never triggers. Import path `:gerbil-bindings/generics`
+   unchanged; one generic per selector preserved (ADR-0020).
+2. Compile the shards **without `-O`** — they are pure declarations, nothing to
+   optimize.
+3. Compile the shards **in parallel** (~3.7×; ~30 concurrent `gsc`).
+
+Cold hello-window build now **8.4 min** (generics 216s · facade 12s · class
+modules `-O` 46s · `-exe -O` link 230s), peak RSS 7.4 GB (swap thrash gone),
+exe dylib-clean as before. The earlier "~23 min residual" was pure swap-thrash
+contamination — the real class-module compile is 46s. This unblocks the per-app
+portfolio (node `100-sample-apps`): 6 apps ≈ 50 min. Build-time only; the shipped
+`.app` is unchanged (the facade re-exports the identical generics), so this 070
+VM-verification still stands without a re-run.
+
 See [[feedback-use-testanyware]], [[reference-testanyware-cli]].
