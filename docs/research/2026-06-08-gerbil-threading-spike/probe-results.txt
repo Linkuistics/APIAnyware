@@ -1,0 +1,104 @@
+== clang probe.m (-fblocks for the GCD ^block) ==
+== gxc -exe link ==
+/Users/antony/Development/APIAnyware-MacOS/.grove-worktrees/add-gerbil-scheme-target/docs/research/2026-06-08-gerbil-threading-spike/build/gerbil/lib/static/callback.scm:
+/Users/antony/Development/APIAnyware-MacOS/.grove-worktrees/add-gerbil-scheme-target/docs/research/2026-06-08-gerbil-threading-spike/build/probe__exe.scm:
+
+########## stage: direct ##########
+  [C] direct: isMainThread=1
+  direct SURVIVED
+stage=direct
+  [SCM] callback ran; list length=100000
+stage=direct : scheme reached end
+(exit code: 0)
+
+########## stage: pthread ##########
+  [C] pthread: isMainThread=0
+  pthread SURVIVED
+stage=pthread
+  [SCM] callback ran; list length=100000
+stage=pthread : scheme reached end
+(exit code: 0)
+
+########## stage: gcd ##########
+  [C] gcd-async: isMainThread=0
+  gcd SURVIVED
+stage=gcd
+  [SCM] callback ran; list length=100000
+stage=gcd : scheme reached end
+(exit code: 0)
+
+########## stage: concurrent (x30 — race) ##########
+--- run 1: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 2: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 3: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 4: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 5: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 6: CRASH rc=70 ---
+  [C] concurrent-worker: isMainThread=0
+*** FATAL ERROR -- Heap overflow
+--- run 7: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 8: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 9: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 10: CRASH rc=70 ---
+  [C] concurrent-worker: isMainThread=0
+*** FATAL ERROR -- Heap overflow
+*** FATAL ERROR -- Heap overflow
+--- run 11: CRASH rc=70 ---
+  [C] concurrent-worker: isMainThread=0
+*** FATAL ERROR -- Heap overflow
+--- run 12: CRASH rc=70 ---
+  [C] concurrent-worker: isMainThread=0
+*** FATAL ERROR -- Heap overflow
+*** FATAL ERROR -- Heap overflow
+--- run 13: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 14: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 15: CRASH rc=70 ---
+  [C] concurrent-worker: isMainThread=0
+*** FATAL ERROR -- Heap overflow
+--- run 16: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 17: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 18: CRASH rc=138 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 19: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 20: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 21: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+*** FATAL ERROR -- Heap overflow
+--- run 22: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 23: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 24: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 25: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 26: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 27: CRASH rc=138 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 28: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 29: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+--- run 30: CRASH rc=139 ---
+  [C] concurrent-worker: isMainThread=0
+concurrent: 30/30 runs crashed (nonzero exit)
+
+=== one verbose concurrent run for the record ===
+  [C] concurrent-worker: isMainThread=0
+docs/research/2026-06-08-gerbil-threading-spike/build-and-run.sh: line 44:  9018 Segmentation fault: 11     "$BUILD/probe" concurrent
+(exit code: 139)
