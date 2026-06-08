@@ -1,4 +1,4 @@
-# 060-note-editor
+# 060-mini-browser
 
 **Kind:** work
 

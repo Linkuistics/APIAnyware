@@ -18,17 +18,22 @@ matter), not merely compile+open.
 
 ## Decomposition & build order
 
-Decomposed into one leaf per app (010–060). Order encodes risk — simplest first,
-WebKit pair (heaviest threading lean) last:
+Decomposed into one leaf per app. Order encodes risk — simplest first, WebKit
+pair (heaviest threading lean) last:
 
-- **010 ui-controls-gallery** — pure AppKit; many controls + target-action
-  callbacks (→ blocks). Re-establishes the per-app build/bundle recipe post-070.
-- **020 drawing-canvas** — CoreGraphics; custom NSView subclass with `drawRect:`
+- **010 ui-controls-gallery** — DONE 2026-06-08 (VM-verified PASS). Pure AppKit;
+  many controls + target-action callbacks. Re-established the per-app
+  build/bundle recipe post-070.
+- **020 generate-frameworks** — PREREQUISITE discovered at 010: 070/010 emitted
+  only AppKit + Foundation, so CoreGraphics/PDFKit/SceneKit/WebKit have no gerbil
+  bindings. Regenerate all four upfront (one pipeline pass; LLM annotations for
+  PDFKit/SceneKit/WebKit already committed). Gates 030–070.
+- **030 drawing-canvas** — CoreGraphics; custom NSView subclass with `drawRect:`
   override. Hardest test of 050 subclass synthesis.
-- **030 pdfkit-viewer** — PDFKit; NSOpenPanel file load.
-- **040 scenekit-viewer** — SceneKit; 3D scene, programmatic geometry.
-- **050 mini-browser** — WebKit; WKWebView + navigation delegate (080 threading).
-- **060 note-editor** — capstone (~603 lines chez); AppKit + WebKit preview.
+- **040 pdfkit-viewer** — PDFKit; NSOpenPanel file load.
+- **050 scenekit-viewer** — SceneKit; 3D scene, programmatic geometry.
+- **060 mini-browser** — WebKit; WKWebView + navigation delegate (080 threading).
+- **070 note-editor** — capstone (~603 lines chez); AppKit + WebKit preview.
 
 Each leaf = port (.ss + build.sh, mirroring chez one control at a time) + bundle
 (`bundle-gerbil`) + VM-verify. Decompose a leaf further only if an app proves too
