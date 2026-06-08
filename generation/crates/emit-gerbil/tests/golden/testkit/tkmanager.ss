@@ -33,7 +33,7 @@
   (define-c-lambda %msg-p->p ((pointer void) (pointer void) (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
   (define-c-lambda %msg-p-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer (pointer void))) bool
-    "___return( ((BOOL (*)(id, SEL, id, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (NSError**)___arg4) );")
+    "___return( ((BOOL (*)(id, SEL, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (id*)___arg4) );")
   (define-c-lambda %msg-v->p ((pointer void) (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   )

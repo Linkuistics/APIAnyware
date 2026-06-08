@@ -723,17 +723,22 @@ fn c_cast_type(token: &str) -> &str {
 /// `01-reachability.ss` shape). `arg_tokens` includes the leading `id`/`SEL`.
 ///
 /// When `error_out`, the trailing arg is the [`NSERROR_CELL`]: the cast
-/// prototype's last type is `NSError**` and the trailing actual is cast
-/// `(NSError**)___argN`, so the method writes the `NSError*` through it
-/// (ADR-0006; the in-Gerbil out-param crossing, ADR-0017).
+/// prototype's last type is `id*` and the trailing actual is cast `(id*)___argN`,
+/// so the method writes the `NSError*` through it (ADR-0006; the in-Gerbil
+/// out-param crossing, ADR-0017). The cell is spelled `id*`, NOT `NSError**`:
+/// ADR-0021 includes no Foundation header, so `NSError` is an undeclared type
+/// (a hard `gxc -O` error — found at leaf 100/050, the first imported class with
+/// an error-out method, SCNScene's `sceneWithURL:options:error:`). `id` is
+/// libobjc's `void *` (declared by the `<objc/*>` headers every module includes),
+/// so `id*` is ABI-identical to `NSError**` and always in scope.
 fn msgsend_body(arg_tokens: &[String], ret_token: &str, error_out: bool) -> String {
     let n = arg_tokens.len();
     // Cast prototype: id, SEL, then each extra param's C type (the trailing
-    // error cell, if any, spelled `NSError**`).
+    // error cell, if any, spelled `id*`).
     let mut proto = vec!["id".to_string(), "SEL".to_string()];
     for (idx, t) in arg_tokens.iter().enumerate().skip(2) {
         if error_out && idx == n - 1 {
-            proto.push("NSError**".to_string());
+            proto.push("id*".to_string());
         } else {
             proto.push(c_cast_type(t).to_string());
         }
@@ -741,11 +746,11 @@ fn msgsend_body(arg_tokens: &[String], ret_token: &str, error_out: bool) -> Stri
     let proto = proto.join(", ");
 
     // Call actuals: ___arg1 (receiver), (SEL)___arg2, then ___arg3… (the
-    // trailing error cell, if any, cast `(NSError**)`).
+    // trailing error cell, if any, cast `(id*)`).
     let mut actuals = vec!["___arg1".to_string(), "(SEL)___arg2".to_string()];
     for i in 2..n {
         if error_out && i == n - 1 {
-            actuals.push(format!("(NSError**)___arg{}", i + 1));
+            actuals.push(format!("(id*)___arg{}", i + 1));
         } else {
             actuals.push(format!("___arg{}", i + 1));
         }
@@ -1996,10 +2001,12 @@ mod tests {
         assert!(out.contains(
             "(define-c-lambda %msg-p-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer (pointer void))) bool"
         ), "missing -e crossing decl:\n{out}");
-        // The body casts the trailing actual to NSError**.
+        // The body casts the trailing actual to id* (NOT NSError**: ADR-0021
+        // includes no Foundation header, so NSError is undeclared; id* is the
+        // ABI-identical, always-in-scope spelling — leaf 100/050).
         assert!(out.contains(
-            "((BOOL (*)(id, SEL, id, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (NSError**)___arg4)"
-        ), "missing NSError** cast body:\n{out}");
+            "((BOOL (*)(id, SEL, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (id*)___arg4)"
+        ), "missing id* cast body:\n{out}");
         // The proc drops the trailing error param (visible arity = self + path)
         // and returns two values via the runtime helper.
         assert!(out.contains("(define (nsdata-write-to-file-error self path)"), "proc arity:\n{out}");

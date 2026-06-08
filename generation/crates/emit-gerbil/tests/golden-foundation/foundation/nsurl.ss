@@ -162,19 +162,19 @@
   (define-c-lambda %msg-p-p->v ((pointer void) (pointer void) (pointer void) (pointer void)) void
     "((void (*)(id, SEL, id, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4);")
   (define-c-lambda %msg-p-p-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer void) (pointer (pointer void))) bool
-    "___return( ((BOOL (*)(id, SEL, id, id, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (NSError**)___arg5) );")
+    "___return( ((BOOL (*)(id, SEL, id, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (id*)___arg5) );")
   (define-c-lambda %msg-p-p-u64-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer void) unsigned-int64 (pointer (pointer void))) bool
-    "___return( ((BOOL (*)(id, SEL, id, id, uint64_t, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5, (NSError**)___arg6) );")
+    "___return( ((BOOL (*)(id, SEL, id, id, uint64_t, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5, (id*)___arg6) );")
   (define-c-lambda %msg-p-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer (pointer void))) bool
-    "___return( ((BOOL (*)(id, SEL, id, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (NSError**)___arg4) );")
+    "___return( ((BOOL (*)(id, SEL, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (id*)___arg4) );")
   (define-c-lambda %msg-p-pp->p-e ((pointer void) (pointer void) (pointer void) (pointer (pointer void))) (pointer void)
-    "___return( ((id (*)(id, SEL, id, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (NSError**)___arg4) );")
+    "___return( ((id (*)(id, SEL, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (id*)___arg4) );")
   (define-c-lambda %msg-p-u64-pp->p-e ((pointer void) (pointer void) (pointer void) unsigned-int64 (pointer (pointer void))) (pointer void)
-    "___return( ((id (*)(id, SEL, id, uint64_t, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (NSError**)___arg5) );")
+    "___return( ((id (*)(id, SEL, id, uint64_t, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (id*)___arg5) );")
   (define-c-lambda %msg-str-b-p->p ((pointer void) (pointer void) char-string bool (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL, const char*, BOOL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5) );")
   (define-c-lambda %msg-u64-p-p-pp->p-e ((pointer void) (pointer void) unsigned-int64 (pointer void) (pointer void) (pointer (pointer void))) (pointer void)
-    "___return( ((id (*)(id, SEL, uint64_t, id, id, NSError**))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5, (NSError**)___arg6) );")
+    "___return( ((id (*)(id, SEL, uint64_t, id, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5, (id*)___arg6) );")
   (define-c-lambda %msg-v->b ((pointer void) (pointer void)) bool
     "___return( ((BOOL (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   (define-c-lambda %msg-v->p ((pointer void) (pointer void)) (pointer void)
