@@ -1300,12 +1300,66 @@ fn emit_instance_surfaces(
 /// `<class-lowercase>-` prefix the proc carries (`nsstring-length` → `length`,
 /// `nswindow-set-title!` → `set-title!`). Both surfaces share this identifier;
 /// stripping the proc's own prefix keeps surface and proc in lockstep.
+///
+/// The bare name becomes a top-level binding (`(g:defgeneric <name>)`) in the
+/// shared generics module, re-exported into every class module. If it collides
+/// with a Gerbil/Gambit **syntactic keyword** it shadows that special form for
+/// every importer — e.g. WebKit's `DOMHTMLObjectElement.declare` property yields
+/// a generic `declare` that masks the `(declare (inline))` every class module
+/// emits, turning it into a call to the generic (`inline` then unbound). The
+/// proc core is unaffected (it keeps its class prefix), so only the veneer name
+/// is escaped (suffixed `*`); the escape is deterministic per selector, so the
+/// cross-class generic unification (one generic per shared selector) is
+/// preserved.
 fn surface_selector(class_name: &str, proc_name: &str) -> String {
     let prefix = format!("{}-", class_name_to_lowercase(class_name));
-    proc_name
-        .strip_prefix(&prefix)
-        .unwrap_or(proc_name)
-        .to_string()
+    let bare = proc_name.strip_prefix(&prefix).unwrap_or(proc_name);
+    if is_reserved_surface_name(bare) {
+        format!("{bare}*")
+    } else {
+        bare.to_string()
+    }
+}
+
+/// Gerbil/Gambit syntactic keywords a generic surface name must not shadow: a
+/// shadow breaks any emitted module that uses the form at head position. Only
+/// `declare` bites today (the emitted `(declare (inline))`), but the set guards
+/// the whole class so a future framework selector spelling `define`, `lambda`,
+/// etc. cannot silently break emission. Procedures (`values`, `not`) are *not*
+/// listed — shadowing a procedure binding is harmless unless called, and the
+/// emitter never calls them by bare name in a class module.
+fn is_reserved_surface_name(name: &str) -> bool {
+    matches!(
+        name,
+        "declare"
+            | "define"
+            | "define-values"
+            | "define-syntax"
+            | "lambda"
+            | "let"
+            | "let*"
+            | "letrec"
+            | "letrec*"
+            | "if"
+            | "cond"
+            | "case"
+            | "when"
+            | "unless"
+            | "and"
+            | "or"
+            | "begin"
+            | "do"
+            | "quote"
+            | "quasiquote"
+            | "set!"
+            | "delay"
+            | "else"
+            | "import"
+            | "export"
+            | "defclass"
+            | "defmethod"
+            | "defgeneric"
+    )
 }
 
 fn emit_property(
@@ -1467,6 +1521,35 @@ mod tests {
     use super::*;
     use apianyware_macos_types::ir::{Method, Param};
     use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+
+    #[test]
+    fn surface_selector_strips_class_prefix() {
+        assert_eq!(surface_selector("NSString", "nsstring-length"), "length");
+        assert_eq!(
+            surface_selector("NSWindow", "nswindow-set-title!"),
+            "set-title!"
+        );
+    }
+
+    #[test]
+    fn surface_selector_escapes_syntactic_keyword_collisions() {
+        // WebKit's DOMHTMLObjectElement.declare property — the generic name would
+        // shadow Gambit's `declare` special form and break every class module's
+        // `(declare (inline))`. The proc core keeps its prefix; only the bare
+        // veneer name is escaped, deterministically (so cross-class generic
+        // unification is preserved).
+        assert_eq!(
+            surface_selector("DOMHTMLObjectElement", "domhtmlobjectelement-declare"),
+            "declare*"
+        );
+        // A non-colliding name is untouched.
+        assert_eq!(
+            surface_selector("DOMHTMLObjectElement", "domhtmlobjectelement-declare-types-owner"),
+            "declare-types-owner"
+        );
+        assert!(is_reserved_surface_name("set!"));
+        assert!(!is_reserved_surface_name("set-title!"));
+    }
 
     fn ty(kind: TypeRefKind) -> TypeRef {
         TypeRef {

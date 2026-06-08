@@ -417,6 +417,12 @@ fn framework_link_name(dir: &OsStr) -> Option<String> {
         "foundation" => Some("Foundation".to_string()),
         "coregraphics" => Some("CoreGraphics".to_string()),
         "quartzcore" => Some("QuartzCore".to_string()),
+        // The sample-app frameworks added at grove leaf 100/020. Each has
+        // internal capitalisation the heuristic fallback would mangle
+        // (pdfkit→"Pdfkit" etc.), so `ld -framework <Name>` would fail.
+        "pdfkit" => Some("PDFKit".to_string()),
+        "scenekit" => Some("SceneKit".to_string()),
+        "webkit" => Some("WebKit".to_string()),
         // Fallback: a single-component lowercase framework dir not yet in the
         // table. Capitalise the first letter; warn so it can be added.
         other => {
@@ -476,5 +482,10 @@ mod tests {
             Some("Foundation")
         );
         assert_eq!(framework_link_name(OsStr::new("runtime")), None);
+        // Sample-app frameworks (leaf 100/020) — internal capitalisation the
+        // heuristic fallback would get wrong.
+        assert_eq!(framework_link_name(OsStr::new("pdfkit")).as_deref(), Some("PDFKit"));
+        assert_eq!(framework_link_name(OsStr::new("scenekit")).as_deref(), Some("SceneKit"));
+        assert_eq!(framework_link_name(OsStr::new("webkit")).as_deref(), Some("WebKit"));
     }
 }
