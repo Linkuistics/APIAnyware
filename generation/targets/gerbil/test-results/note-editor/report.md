@@ -1,10 +1,10 @@
 # Note Editor — Gerbil Test Report
 
-**Date:** 2026-06-09
-**Status:** PARTIAL PASS — built; core capstone features VM-verified on the final
-fixed build; two checks (New-clear post-fix, Save completion-block sheet) blocked
-by a TestAnyware VM-agent infrastructure failure. **Leaf 070 held LIVE** pending a
-clean VM-verify of the two remaining items (operator decision, 2026-06-09).
+**Date:** 2026-06-09 (core); 2026-06-10 (remaining two checks)
+**Status:** PASS — built; **all** capstone features VM-verified on the final fixed
+build. The two checks held over on 2026-06-09 (New-clear post-fix, Save
+completion-block sheet) were VM-verified on 2026-06-10 after rebuilding the missing
+macOS golden image; both PASS. Leaf 070 retired (node 100 complete).
 
 The widest feature surface of any gerbil sample and the first to cross a
 **block bridge** (`make-objc-block` for NSSavePanel's completion handler). Markdown
@@ -60,25 +60,37 @@ fixed build** (delegate-pin + string-wrap):
       if you continue." / Discard + Cancel) — `make-nsalert` +
       message/informative/`add-button-with-title!` + `run-modal`.
 
-### Blocked (VM-agent infrastructure failure)
+### The two held-over checks — VM-verified 2026-06-10 (both PASS)
 
-After ~8 VM clones this session, TestAnyware's in-VM agent stopped registering on
-fresh clones ("Agent not reachable at 192.168.64.x:8648"); the first six VMs were
-fine, and a cooldown + clean restart did not recover it — a host-side degradation,
-not an app/build problem. The two remaining checks could not be visually completed
-on the fixed build:
+On 2026-06-09 these were blocked: after ~8 VM clones the in-VM agent stopped
+registering on fresh clones. The deeper cause surfaced on 2026-06-10 — the macOS
+golden image was gone entirely (not a transient agent failure). Rebuilding it
+(`testanyware vm create-golden --platform macos`, 5-boot provisioning, both TCC
+grants verified) restored a clean VM, on which both checks PASS on the same fixed
+build:
 
-- [ ] **New → Discard → clears without crash** — the `string->nsstring` fix
-      target. The crash WAS reproduced on the pre-fix build (the error named exactly
-      `nstext-set-string!` with a `""` string), and the fix wraps both call sites,
-      so confidence is high; visual confirmation pending a working VM.
-- [ ] **Save completion-block sheet** (`make-objc-block` → NSSavePanel
-      `beginSheetModalForWindow:completionHandler:`) — the block bridge is built and
-      smoke-tested at leaf 050/020; the in-app save path is unverified live.
+- [x] **New → Discard → clears without crash** — the `string->nsstring` fix target.
+      With a dirty document (`# Draft Note…`, title "Untitled — edited"), clicking
+      New raised the NSAlert; clicking **Discard** cleared the editor, reverted the
+      preview to the styled placeholder, set the status line to "New document", and
+      reset the title to "Untitled — Note Editor" — **no crash** (process stayed
+      ALIVE; app log clean). Pre-fix this crashed on `nstext-set-string!` with a
+      `""` string. (`note-editor-new-discard.png`)
+- [x] **Save completion-block sheet** (`make-objc-block` → NSSavePanel
+      `beginSheetModalForWindow:completionHandler:`) — clicking **Save…** slid down
+      a real NSSavePanel sheet (Save As / Tags / Where: Documents / Cancel + Save).
+      Naming the file `gerbil-verify-note.md` and clicking **Save** wrote
+      `/Users/admin/Documents/gerbil-verify-note.md` (contents `# Saved Note`), set
+      the status line to "Saved /Users/admin/Documents/gerbil-verify-note.md", and
+      retitled the window to "gerbil-verify-note.md — Note Editor" (dirty cleared).
+      **The completion block ran on sheet dismiss** — Gambit re-entered from AppKit's
+      runloop through the block IMP trampoline, received the NSModalResponse + chosen
+      URL, and ran the Gerbil file-write. End-to-end block bridge confirmed in-app.
+      (`note-editor-save-sheet.png`, `note-editor-saved.png`)
 
 **Done-bar status:** the firm VM-verify bar ([[feedback-vm-verify-every-app]]) is
-met for the core (live preview, Undo, NSAlert) but NOT for New-clear / Save. Leaf
-070 stays LIVE until those two are VM-verified on a working agent.
+**met in full** — live preview, Undo, NSAlert, New-clear, and Save all visually
+verified on the fixed build.
 
 See [[feedback-use-testanyware]], [[reference-testanyware-cli]],
 [[feedback-sample-apps-perfect]].

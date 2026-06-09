@@ -1,11 +1,16 @@
 # note-editor x gerbil
 
-**2026-06-09 (standalone, grove leaf `100/070` — PARTIAL, leaf held LIVE):**
-- 🟡 Built and **core features VM-verified** on the final fixed build in a no-Gerbil
-  VM; two checks (New-clear post-fix, Save completion-block sheet) blocked by a
-  TestAnyware VM-agent infrastructure failure (agent stopped registering on fresh
-  clones after ~8 this session). Leaf 070 stays LIVE pending those two on a working
-  agent. See `generation/targets/gerbil/test-results/note-editor/report.md`.
+**2026-06-09 → 2026-06-10 (standalone, grove leaf `100/070` — ✅ PASS, leaf retired):**
+- ✅ Built and **fully VM-verified** on the final fixed build in a no-Gerbil VM. The
+  core features were verified 2026-06-09; the two held-over checks (New-clear
+  post-fix, Save completion-block sheet) were VM-verified 2026-06-10 after rebuilding
+  the missing macOS golden image (`create-golden`). Both PASS. node 100 complete.
+  See `generation/targets/gerbil/test-results/note-editor/report.md`.
+- **New → Discard:** dirty doc cleared with **no crash** (the `string->nsstring`
+  fix); preview→placeholder, status "New document", title reset. **Save…:** real
+  NSSavePanel sheet slid down; saved to `~/Documents/gerbil-verify-note.md` (file
+  written, title/status updated, dirty cleared) — the `make-objc-block` completion
+  handler ran on sheet dismiss (Gambit re-entered from AppKit's runloop end-to-end).
 - The capstone: NSTextView+NSScrollView editor + WKWebView preview in an NSSplitView,
   live Markdown→HTML on NSTextDidChangeNotification; NSUndoManager; NSAlert; NSOpenPanel;
   and the first **`make-objc-block` block bridge** (NSSavePanel completion handler).
