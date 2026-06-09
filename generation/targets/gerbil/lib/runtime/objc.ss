@@ -262,11 +262,22 @@
 ;; `make-delegate` (ADR-0017 §6, contract from emit_protocol). One arg: a list
 ;; of `(selector-string proc (param-token …) return-token)` specs. Synthesizes a
 ;; fresh ObjC class, installs an IMP per selector dispatching into `proc`, and
-;; returns a +1-retained instance. The caller MUST keep the returned object
-;; reachable: AppKit `setDelegate:` does not retain (ADR-0019); the will then
-;; releases the +1 on GC. The synthesized class + its closures live for the
-;; process (one class per call) — acceptable for the bounded delegate set.
+;; returns a +1-retained instance. The synthesized class + its closures live for
+;; the process (one class per call) — acceptable for the bounded delegate set.
+;;
+;; The returned instance is PINNED for the process in `*delegate-roots*` (leaf
+;; 100/070). AppKit `setDelegate:` / NSNotificationCenter observers hold the
+;; delegate WEAKLY (ADR-0019), so the only strong reference is the Gerbil wrapper;
+;; relying on the caller keeping it reachable across the `nsapplication-run` FFI
+;; boundary is fragile — under GC pressure (e.g. note-editor rebuilding its HTML
+;; preview on every keystroke) the wrapper is collected, its release-will fires,
+;; the ObjC delegate deallocates, and callbacks silently stop. Pinning the wrapper
+;; in a module-global root keeps the will from ever firing, so the delegate lives
+;; for the process — the same strong-table discipline `subclass.ss` uses for
+;; synthesized instances. Delegates are a small, app-lifetime set, so never freeing
+;; them is correct, not a leak.
 (def *delegate-class-counter* 0)
+(def *delegate-roots* '())
 (def (make-delegate specs)
   (let* ((n *delegate-class-counter*)
          (class-name (string-append "AWGerbilDelegate_" (number->string n)))
@@ -289,7 +300,9 @@
                            (return-kind-int ret-tok))))
      specs)
     (register-class-pair cls)
-    (wrap (class-new-instance cls) #t)))
+    (let (obj (wrap (class-new-instance cls) #t))
+      (set! *delegate-roots* (cons obj *delegate-roots*))   ; pin for the process
+      obj)))
 
 ;; `make-objc-block` (ADR-0017 §6). Wraps a Gerbil proc as an ObjC block usable
 ;; as a block-typed argument. `param-toks`/`ret-tok` are the inner block
