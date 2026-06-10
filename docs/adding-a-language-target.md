@@ -40,7 +40,8 @@ plausibly stand up a third.
 
 > **Knowledge system:** after building a target, populate
 > `knowledge/targets/<id>.md` with target-wide learnings (FFI patterns, runtime
-> quirks, distribution). `racket.md` and `chez.md` are the two worked examples.
+> quirks, distribution). `racket.md`, `chez.md`, and `gerbil.md` are the worked
+> examples.
 
 ## Prerequisites
 
@@ -285,8 +286,8 @@ existing reports for the format and the no-Chez-VM recipe in `chez.md` §9.
 ## Step 8: Bundling / distribution
 
 Sample apps must be packaged as `.app` bundles for a correct menu-bar name
-(`CFBundleName`) and a per-app TCC identity (a unique CDHash). The two targets
-take **different** approaches — pick what fits the language:
+(`CFBundleName`) and a per-app TCC identity (a unique CDHash). The existing
+targets take **different** approaches — pick what fits the language:
 
 - **racket** (`bundle-racket`, knowledge/targets/racket.md §9) — a Swift
   **stub-launcher** + the source tree staged under `Resources/`, exec'ing the
@@ -297,6 +298,11 @@ take **different** approaches — pick what fits the language:
   whole-program boot, so it needs no runtime installed on the target machine.
   Build: `cargo run --example bundle_app -p apianyware-macos-bundle-chez --
   <script>`.
+- **gerbil** (`bundle-gerbil`, knowledge/targets/gerbil.md §8) — the language's
+  own **`gxc -exe` static-runtime binary** (the toolchain already embeds the
+  Gambit runtime) + vendoring/relocating the one Homebrew dylib dependency
+  (openssl@3) into `Contents/Frameworks/`. Build: `cargo run --example
+  bundle_app -p apianyware-macos-bundle-gerbil -- <script>`.
 
 The language-agnostic `apianyware-macos-stub-launcher` crate provides the `.app`
 skeleton + codesigning; per-target bundler crates do dependency discovery and
@@ -317,8 +323,13 @@ the H1 of `knowledge/apps/<app>/spec.md`.
 - **chez** — `generation/crates/emit-chez/`, `generation/targets/chez/`,
   `knowledge/targets/chez.md`. Idiomatic Scheme; self-contained standalone
   distribution (ADR-0009).
+- **gerbil** — `generation/crates/emit-gerbil/`, `generation/targets/gerbil/`,
+  `knowledge/targets/gerbil.md`. Compiled-FFI OO Scheme (manifest `defclass`
+  graph, dual dispatch surface, ADR-0020); ObjC-in-gsc native core, no Swift
+  dylib (ADR-0017); self-contained `gxc -exe` distribution.
 - **Shared framework** — `generation/crates/emit/`.
-- **Swift helpers** — `swift/Sources/APIAnywareCommon/`.
+- **Swift helpers** — `swift/Sources/APIAnyware{Racket,Chez}/` (per-target, no
+  shared substrate — ADR-0011; gerbil has none, ADR-0017).
 
 ## Checklist
 

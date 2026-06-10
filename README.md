@@ -8,22 +8,20 @@ Part of the [APIAnyware](https://linkuistics.com) family by [Linkuistics](https:
 
 ## Current Status
 
-The full three-phase pipeline (Collection, Analysis, Generation) is implemented and working end-to-end. The first language target, **Racket**, is substantially complete:
+The full three-phase pipeline (Collection, Analysis, Generation) is implemented and working end-to-end. Three language targets are complete: **Racket**, **Chez Scheme**, and **Gerbil Scheme**.
 
 - **Collection** extracts 218 ObjC frameworks and 151 Swift modules from the macOS SDK, merging ObjC and Swift declarations into a unified IR. Cross-import overlay frameworks (`_RealityKit_SwiftUI`, `_AppIntents_SwiftUI`, …) correctly retain the bridged classes that form their API surface.
 - **Analysis** runs Datalog-based inheritance resolution, heuristic + LLM semantic annotation (block lifecycle, ownership, threading, error patterns), API pattern recognition (10 stereotype categories, 36+ pattern instances in Foundation alone), and enrichment with verification.
-- **Generation** produces Racket bindings for all 284 discovered frameworks (~6,979 files total), with an 18-file Racket runtime library and a Swift helper dylib providing C-callable ObjC runtime access.
-- **All 7 active sample apps** in the portfolio (per `knowledge/apps/_index.md`) are implemented for Racket. Sample apps can be packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via `apianyware-macos-bundle-racket`.
-- **Racket Functional** emitter crate exists as a registered stub; not yet implemented.
-- **Snapshot tests** use a synthetic TestKit framework plus a curated Foundation subset for regression testing.
-- **634 Rust tests** and **67 Swift tests** cover the pipeline.
+- **Generation** produces bindings per target — Racket for all 284 discovered frameworks (~6,979 files), Chez and Gerbil for the frameworks the sample-app portfolio exercises — each with its own hand-written runtime library and per-target native binding layer (a Swift helper dylib for racket/chez; an ObjC-in-gsc native core for gerbil).
+- **All active sample apps** in the portfolio (per `knowledge/apps/_index.md`) are implemented and VM-verified for each completed target. Sample apps are packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via the per-target bundler crates (`bundle-racket`, `bundle-chez`, `bundle-gerbil`); chez and gerbil bundles are fully self-contained native binaries needing no runtime install.
+- **Snapshot tests** use a synthetic TestKit framework plus a curated Foundation subset for regression testing; Rust and Swift test suites cover the pipeline.
 
-All other language targets (Chez Scheme, Gerbil, Common Lisp, Haskell, Idris2, OCaml, Prolog/Mercury, Rhombus, Pharo Smalltalk, Zig) are planned but not yet started.
+All other language targets (Common Lisp, Haskell, Idris2, OCaml, Prolog/Mercury, Rhombus, Pharo Smalltalk, Zig) are planned but not yet started.
 
 ## Goals
 
 - **Idiomatic, not mechanical.** Each target language gets bindings that feel native -- not a lowest-common-denominator C wrapper. A Haskell user gets monadic error handling; a Smalltalk user gets message-passing objects; an OCaml user gets modules and variants.
-- **Multiple binding styles per language.** Languages with both OO and functional idioms (e.g., Common Lisp, OCaml, Racket) can produce both an object-oriented API and a functional/procedural API from the same enriched IR.
+- **One binding style per target.** Each target commits to a single idiomatic shape, implicit in the target (ADR-0004 retired the per-target style dimension). A language wanting two shapes registers two targets — and language *implementations* are separate targets too (chez and gerbil are siblings, not flavours of "Scheme").
 - **Full API coverage.** Every framework in the macOS SDK, not just Foundation and AppKit. Both ObjC and Swift-only APIs.
 - **API pattern recognition.** Many APIs implement stereotypical patterns -- builder sequences, open/use/close lifecycles, observer registration/removal pairs, begin/commit transactions. The analysis phase recognizes these cross-method behavioral contracts and encodes them in the IR, enabling emitters to produce idiomatic wrappers like `with-path` (Lisp/Scheme), `withCGContext` (Haskell), or RAII guards (Zig) automatically.
 - **Auto-generated with human-quality results.** The enriched IR carries enough semantic information (ownership, threading, block lifecycle, error patterns, API usage patterns) for emitters to make intelligent wrapping decisions without per-method human intervention.
@@ -40,7 +38,7 @@ Collection ──► Analysis ──► Generation
 
 **Analysis** resolves inheritance via Datalog (ascent crate), adds semantic annotations (block invocation style, parameter ownership, threading constraints, error patterns, API usage patterns) via heuristics and LLM analysis, then enriches with Datalog-derived relations for generation. API pattern recognition identifies stereotypical multi-method contracts (builder sequences, resource lifecycles, observer pairs) by analyzing Apple's guides and tutorials in addition to API reference documentation. Includes verification rules that flag annotation inconsistencies.
 
-**Generation** emits per-language bindings with runtime support libraries and Swift helper dylibs. Each emitter reads the same enriched IR but produces output shaped to the target language's idioms and conventions. Currently produces Racket bindings for all 283 frameworks.
+**Generation** emits per-target bindings with runtime support libraries and per-target native binding layers. Each emitter reads the same enriched IR but produces output shaped to the target language's idioms and conventions. Currently produces bindings for the racket, chez, and gerbil targets.
 
 ## Pipeline & Checkpoints
 
@@ -96,7 +94,7 @@ cargo run -p apianyware-macos-generate -- --target racket
 cargo run -p apianyware-macos-generate -- --list-targets    # show available emitters
 ```
 
-Output goes to `generation/targets/{lang}/generated/{style}/`.
+Output goes to `generation/targets/{target}/` — under the target's library-root convention (`racket/generated/`, `chez/apianyware/`, `gerbil/lib/`).
 
 ### LLM annotation (Claude Code)
 
@@ -373,28 +371,33 @@ APIAnyware-MacOS/
   generation/
     crates/
       emit/                # apianyware-macos-emit              — shared emitter framework
-      emit-racket/      # apianyware-macos-emit-racket    — Racket emitter
+      emit-racket/         # apianyware-macos-emit-racket       — Racket emitter
+      emit-chez/           # apianyware-macos-emit-chez         — Chez emitter
+      emit-gerbil/         # apianyware-macos-emit-gerbil       — Gerbil emitter
       cli/                 # apianyware-macos-generate          — generation CLI
       stub-launcher/       # apianyware-macos-stub-launcher     — Swift stub + Info.plist + .app skeleton (language-agnostic)
-      bundle-racket/    # apianyware-macos-bundle-racket  — racket bundling: require walker + resource layout
+      bundle-racket/       # apianyware-macos-bundle-racket     — racket bundling: require walker + resource layout
+      bundle-chez/         # apianyware-macos-bundle-chez       — chez bundling: self-contained kernel-embed binary
+      bundle-gerbil/       # apianyware-macos-bundle-gerbil     — gerbil bundling: gxc -exe + dylib relocation
     targets/
-      racket/           # Racket: runtime, generated bindings, sample apps, tests
+      racket/              # Racket: runtime, generated bindings, sample apps, tests
+      chez/                # Chez: runtime, generated bindings, sample apps, tests
+      gerbil/              # Gerbil: runtime + ObjC-in-gsc native core, generated bindings, sample apps, tests
 
-  swift/                   # Swift helper dylibs (C-callable ObjC runtime interface)
+  swift/                   # Swift helper dylibs (C-callable ObjC runtime interface; per-target — no shared substrate, ADR-0011)
     Sources/
-      APIAnywareCommon/    # shared: message send, memory mgmt, string conversion, struct marshal
       APIAnywareRacket/    # Racket-specific: GC prevention, block bridge, delegate bridge
-      APIAnywareChez/      # stub
-      APIAnywareGerbil/    # stub
+      APIAnywareChez/      # Chez-specific: foreign-callable trampolines, block/delegate/dynamic-class bridges
+                           # (gerbil has NO Swift dylib — its native core is ObjC compiled by gsc into the exe, ADR-0017)
 ```
 
 ### Target Languages
 
-| Language | Style(s) | Status |
+| Target | Binding style | Status |
 |---|---|---|
-| Racket | OO (classes) | Emitter complete, 283 frameworks generated, 8/8 sample apps, snapshot tests, app bundling |
-| Chez Scheme | Functional | Planned (Swift dylib stub exists) |
-| Gerbil Scheme | OO + functional | Planned (Swift dylib stub exists) |
+| Racket | OO (classes, dynamic `tell` dispatch) | **Complete** — emitter, 283 frameworks generated, 8/8 sample apps, snapshot tests, app bundling |
+| Chez Scheme | Procedural (per-class proc namespaces, guardian lifetime) | **Complete** — emitter, runtime, 7/7 sample apps VM-verified, self-contained `.app` bundling (ADR-0009); see `knowledge/targets/chez.md` |
+| Gerbil Scheme | OO (manifest `defclass` graph, `{}` + `:std/generic` dual surface, transparent ObjC subclassing) | **Complete** — emitter, runtime + ObjC-in-gsc native core, 7/7 sample apps VM-verified, self-contained `.app` bundling; see `knowledge/targets/gerbil.md` |
 | Common Lisp (SBCL, CCL) | CLOS + functional | Planned |
 | Haskell | Monadic + lens-based | Planned |
 | Idris2 | Dependently-typed wrappers | Planned |
@@ -404,7 +407,7 @@ APIAnyware-MacOS/
 | Pharo Smalltalk | Message-passing OO | Planned |
 | Zig | Low-level procedural | Planned |
 
-Languages with both OO and functional paradigms produce multiple binding styles from the same enriched IR -- for example, Common Lisp gets both CLOS wrappers and a `defun`-based procedural API.
+Each target has exactly one binding style, implicit in the target (ADR-0004); a language wanting a second shape registers a second target. Targets are hermetically isolated -- they share the API analysis and nothing downstream of it (ADR-0011).
 
 ## Documentation
 
