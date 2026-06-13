@@ -38,6 +38,7 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
 use crate::emit_class::{class_surface_selectors, GENERIC_IMPORT, GENERICS_MODULE_IMPORT};
+use crate::protocol_registry::ProtocolRegistry;
 
 /// The on-disk stem + import-path tail of the shared generics module. The facade
 /// lives at the package root next to the framework facades (`generics.ss`, import
@@ -57,14 +58,17 @@ pub const GENERICS_SHARD_SIZE: usize = 256;
 
 /// The union of every distinct instance-surface selector across all loaded
 /// frameworks, sorted and deduped — one `g:defgeneric` per entry. Computed with
-/// each class's enrichment error-selectors so it stays in lock-step with what the
-/// per-class surface emits.
+/// each class's enrichment error-selectors **and** the cross-framework
+/// [`ProtocolRegistry`] (built here over the same framework set the per-class
+/// emission sees) so it stays in lock-step with what the per-class surface
+/// emits — including conformed-protocol methods (leaf 120).
 pub fn collect_global_surface_selectors(frameworks: &[&Framework]) -> Vec<String> {
+    let protocols = ProtocolRegistry::from_framework_refs(frameworks);
     let mut set: BTreeSet<String> = BTreeSet::new();
     for fw in frameworks {
         for cls in &fw.classes {
             let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
-            for sel in class_surface_selectors(cls, &error_selectors) {
+            for sel in class_surface_selectors(cls, &error_selectors, &protocols) {
                 set.insert(sel);
             }
         }
@@ -277,6 +281,45 @@ mod tests {
         );
         // Each shard imports :std/generic (renamed).
         assert!(shards.contains("(rename-in :std/generic"));
+    }
+
+    #[test]
+    fn protocol_contributed_selectors_join_the_global_set() {
+        // A conformed-protocol method flattened into all_methods (leaf 120)
+        // gets a `{}`/generic surface, so its selector must be declared in the
+        // shared generics module too — the registry is built from the same
+        // framework set inside collect_global_surface_selectors.
+        let mut cls = class_with_methods("SCNNode", vec![]);
+        cls.protocols = vec!["SCNActionable".into()];
+        let mut run_action = method("runAction:", "void");
+        run_action.origin = Some("SCNActionable".into());
+        run_action.params = vec![apianyware_macos_types::ir::Param {
+            name: "action".into(),
+            param_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Id,
+            },
+        }];
+        cls.all_methods = vec![run_action];
+
+        let mut fw = fw_with("SceneKit", vec![cls]);
+        fw.protocols = vec![apianyware_macos_types::ir::Protocol {
+            name: "SCNActionable".into(),
+            inherits: vec!["NSObject".into()],
+            required_methods: vec![],
+            optional_methods: vec![],
+            properties: vec![],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+        }];
+
+        let refs = vec![&fw];
+        let selectors = collect_global_surface_selectors(&refs);
+        assert!(
+            selectors.contains(&"run-action".to_string()),
+            "protocol-contributed surface selector in the global set: {selectors:?}"
+        );
     }
 
     #[test]

@@ -338,13 +338,22 @@ chez's ~4.5 MB whole-program-tree-shaken boot). Cold bundle build ≈ 8.4 min
 
 ## 9. Known gaps (as of grove close, 2026-06-10)
 
-- 🔴 **Protocol-method flattening** (grove leaf 120, pending): the emitter
-  emits a class's *own* methods/properties but not those declared on conformed
-  protocols — `SCNNode`'s `runAction:` (SCNActionable) and `SCNView`'s
-  `autoenablesDefaultLighting` (SCNSceneRenderer) are unreachable through
-  generated bindings. racket and chez flatten these; gerbil does not yet.
-  Workaround: an app-local `begin-ffi` raw-`objc_msgSend` shim
-  (scenekit-viewer carries one).
+- ✅ **Protocol-method flattening** (grove leaf 120, CLOSED 2026-06-10): the
+  emitter now flattens conformed-protocol instance methods/properties onto
+  each bound class — `SCNNode.runAction:` (SCNActionable) and
+  `SCNView.autoenablesDefaultLighting` (SCNSceneRenderer) come straight from
+  the generated bindings, and scenekit-viewer's app-local raw-`objc_msgSend`
+  shim is gone. Gerbil-specific shape (unlike chez/racket's wholesale
+  `all_methods`): only the class's **own** conformance closure is flattened
+  (`Class.protocols` closed over protocol `inherits` via the cross-framework
+  `ProtocolRegistry`, the `ClassRegistry` analogue) — ancestor conformances
+  ride the manifest `defclass` hierarchy; protocols unknown to the loaded set
+  are skipped (their `all_methods` entries are wrong-arity stubs); the
+  `NSObject` protocol is excluded (name-collides with the root class); a
+  protocol `initWithCoder:` never suppresses the synthesized `make-<cls>`
+  (default-ctor check is own-inits-only). Protocol *properties* need no
+  separate path — their accessors arrive as protocol methods. ~5.1k methods
+  added across the 6 frameworks (+37 generics shards, was 26).
 - 🟡 **Generic-trampoline marshalling limits** (runtime README): IMP/block
   callbacks cannot deliver `float`/`double` or by-value struct args (the
   bridge raises on those tokens; `drawRect:`'s override is `(self)` — draw

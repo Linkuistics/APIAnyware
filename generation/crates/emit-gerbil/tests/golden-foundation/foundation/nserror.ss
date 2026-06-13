@@ -8,14 +8,17 @@
   NSError?
   code
   domain
+  encode-with-coder
   help-anchor
   localized-description
   localized-failure-reason
   localized-recovery-options
   localized-recovery-suggestion
+  make-nserror-init-with-coder
   make-nserror-init-with-domain-code-user-info
   nserror-code
   nserror-domain
+  nserror-encode-with-coder
   nserror-error-with-domain-code-user-info
   nserror-help-anchor
   nserror-localized-description
@@ -24,6 +27,7 @@
   nserror-localized-recovery-suggestion
   nserror-recovery-attempter
   nserror-set-user-info-value-provider-for-domain-provider!
+  nserror-supports-secure-coding
   nserror-underlying-errors
   nserror-user-info
   recovery-attempter
@@ -36,8 +40,11 @@
 (register-objc-class! (lambda (p) (make-NSError ptr: p)) NSError::t "NSError" "NSObject")
 
 (begin-ffi (objc_getClass sel_registerName
+            %msg-p->p
+            %msg-p->v
             %msg-p-i64-p->p
             %msg-p-p->v
+            %msg-v->b
             %msg-v->i64
             %msg-v->p
             )
@@ -47,10 +54,16 @@
 
   (define-c-lambda objc_getClass (char-string) (pointer void) "objc_getClass")
   (define-c-lambda sel_registerName (char-string) (pointer void) "sel_registerName")
+  (define-c-lambda %msg-p->p ((pointer void) (pointer void) (pointer void)) (pointer void)
+    "___return( ((id (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
+  (define-c-lambda %msg-p->v ((pointer void) (pointer void) (pointer void)) void
+    "((void (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3);")
   (define-c-lambda %msg-p-i64-p->p ((pointer void) (pointer void) (pointer void) int64 (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL, id, int64_t, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5) );")
   (define-c-lambda %msg-p-p->v ((pointer void) (pointer void) (pointer void) (pointer void)) void
     "((void (*)(id, SEL, id, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4);")
+  (define-c-lambda %msg-v->b ((pointer void) (pointer void)) bool
+    "___return( ((BOOL (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   (define-c-lambda %msg-v->i64 ((pointer void) (pointer void)) int64
     "___return( ((int64_t (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   (define-c-lambda %msg-v->p ((pointer void) (pointer void)) (pointer void)
@@ -58,8 +71,11 @@
   )
 
 (define %sel-nserror-init-with-domain-code-user-info (sel_registerName "initWithDomain:code:userInfo:"))
+(define %sel-nserror-init-with-coder (sel_registerName "initWithCoder:"))
+(define %sel-nserror-encode-with-coder (sel_registerName "encodeWithCoder:"))
 (define %sel-nserror-error-with-domain-code-user-info (sel_registerName "errorWithDomain:code:userInfo:"))
 (define %sel-nserror-set-user-info-value-provider-for-domain-provider (sel_registerName "setUserInfoValueProviderForDomain:provider:"))
+(define %sel-nserror-supports-secure-coding (sel_registerName "supportsSecureCoding"))
 (define %sel-nserror-domain (sel_registerName "domain"))
 (define %sel-nserror-code (sel_registerName "code"))
 (define %sel-nserror-user-info (sel_registerName "userInfo"))
@@ -78,6 +94,9 @@
 ;; --- Constructors ---
 (define (make-nserror-init-with-domain-code-user-info domain code dict)
   (wrap (%msg-p-i64-p->p (%msg-v->p (objc_getClass "NSError") (sel_registerName "alloc")) %sel-nserror-init-with-domain-code-user-info (->ptr domain) code (->ptr dict)) #t))
+
+(define (make-nserror-init-with-coder coder)
+  (wrap (%msg-p->p (%msg-v->p (objc_getClass "NSError") (sel_registerName "alloc")) %sel-nserror-init-with-coder (->ptr coder)) #t))
 
 ;; --- Properties ---
 (define (nserror-domain self)
@@ -130,10 +149,18 @@
 (defmethod {underlying-errors NSError} (lambda (self) (nserror-underlying-errors self)))
 (g:defmethod (underlying-errors (o NSError)) (nserror-underlying-errors o))
 
+;; --- Instance methods ---
+(define (nserror-encode-with-coder self coder)
+  (%msg-p->v (NSObject-ptr self) %sel-nserror-encode-with-coder (->ptr coder)))
+(defmethod {encode-with-coder NSError} (lambda (self coder) (nserror-encode-with-coder self coder)))
+
 ;; --- Class methods ---
 (define (nserror-error-with-domain-code-user-info domain code dict)
   (wrap (%msg-p-i64-p->p (objc_getClass "NSError") %sel-nserror-error-with-domain-code-user-info (->ptr domain) code (->ptr dict))))
 
 (define (nserror-set-user-info-value-provider-for-domain-provider! error-domain provider)
   (%msg-p-p->v (objc_getClass "NSError") %sel-nserror-set-user-info-value-provider-for-domain-provider (->ptr error-domain) provider))
+
+(define (nserror-supports-secure-coding)
+  (%msg-v->b (objc_getClass "NSError") %sel-nserror-supports-secure-coding))
 

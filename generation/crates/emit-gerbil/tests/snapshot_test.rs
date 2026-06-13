@@ -23,7 +23,20 @@ use std::path::PathBuf;
 use apianyware_macos_emit::snapshot_testing::GoldenTest;
 use apianyware_macos_emit::target_emitter::TargetEmitter;
 use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
+use apianyware_macos_emit_gerbil::class_graph::ClassRegistry;
+use apianyware_macos_emit_gerbil::protocol_registry::ProtocolRegistry;
 use apianyware_macos_emit_gerbil::{write_global_generics_module, GerbilEmitter};
+
+/// Build the emitter exactly as the CLI pre-pass does (leaf 060/120): with the
+/// whole-program class + protocol registries over the frameworks under test, so
+/// the goldens capture what the real pipeline emits (cross-framework parents +
+/// conformed-protocol method flattening).
+fn pipeline_emitter(frameworks: &[&apianyware_macos_types::ir::Framework]) -> GerbilEmitter {
+    GerbilEmitter::with_registries(
+        ClassRegistry::from_framework_refs(frameworks),
+        ProtocolRegistry::from_framework_refs(frameworks),
+    )
+}
 
 /// Root of this crate (for locating golden files relative to source).
 fn crate_root() -> PathBuf {
@@ -62,7 +75,7 @@ fn snapshot_gerbil_testkit() {
     let framework = build_snapshot_test_framework();
 
     let temp_dir = tempfile::tempdir().unwrap();
-    let emitter = GerbilEmitter::new();
+    let emitter = pipeline_emitter(&[&framework]);
     let result = emitter
         .emit_framework(&framework, temp_dir.path())
         .expect("Gerbil emitter should succeed");
@@ -130,7 +143,7 @@ fn snapshot_gerbil_foundation_subset() {
     }
 
     let temp_dir = tempfile::tempdir().unwrap();
-    let emitter = GerbilEmitter::new();
+    let emitter = pipeline_emitter(&[&framework]);
     let result = emitter
         .emit_framework(&framework, temp_dir.path())
         .expect("Foundation emission should succeed");

@@ -12,6 +12,7 @@
   bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
   custom-playground-quick-look
   data-representation
+  encode-with-coder
   file-path-url
   file-reference-url
   file-system-representation
@@ -27,7 +28,10 @@
   init-file-url-with-path-relative-to-url
   is-file-reference-url
   is-file-url
+  item-provider-visibility-for-representation-with-type-identifier
   last-path-component
+  load-data-with-type-identifier-for-item-provider-completion-handler
+  make-nsurl-init-with-coder
   make-nsurl-init-with-data-representation-relative-to-url
   make-nsurl-init-with-string
   make-nsurl-init-with-string-encoding-invalid-characters
@@ -40,6 +44,7 @@
   nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
   nsurl-custom-playground-quick-look
   nsurl-data-representation
+  nsurl-encode-with-coder
   nsurl-file-path-url
   nsurl-file-reference-url
   nsurl-file-system-representation
@@ -60,7 +65,10 @@
   nsurl-init-file-url-with-path-relative-to-url
   nsurl-is-file-reference-url
   nsurl-is-file-url
+  nsurl-item-provider-visibility-for-representation-with-type-identifier
   nsurl-last-path-component
+  nsurl-load-data-with-type-identifier-for-item-provider-completion-handler
+  nsurl-object-with-item-provider-data-type-identifier-error
   nsurl-parameter-string
   nsurl-password
   nsurl-path
@@ -68,6 +76,7 @@
   nsurl-path-extension
   nsurl-port
   nsurl-query
+  nsurl-readable-type-identifiers-for-item-provider
   nsurl-relative-path
   nsurl-relative-string
   nsurl-remove-all-cached-resource-values!
@@ -82,6 +91,7 @@
   nsurl-standardized-url
   nsurl-start-accessing-security-scoped-resource
   nsurl-stop-accessing-security-scoped-resource
+  nsurl-supports-secure-coding
   nsurl-url-by-deleting-last-path-component
   nsurl-url-by-deleting-path-extension
   nsurl-url-by-resolving-alias-file-at-url-options-error
@@ -92,6 +102,7 @@
   nsurl-url-with-string-encoding-invalid-characters
   nsurl-url-with-string-relative-to-url
   nsurl-user
+  nsurl-writable-type-identifiers-for-item-provider
   nsurl-write-bookmark-data-to-url-options-error
   parameter-string
   password
@@ -118,6 +129,7 @@
   url-by-resolving-symlinks-in-path
   url-by-standardizing-path
   user
+  writable-type-identifiers-for-item-provider
   )
 
 ;; --- Class graph (ADR-0020) ---
@@ -125,6 +137,7 @@
 (register-objc-class! (lambda (p) (make-NSURL ptr: p)) NSURL::t "NSURL" "NSObject")
 
 (begin-ffi (objc_getClass sel_registerName
+            %msg-p->i64
             %msg-p->p
             %msg-p->v
             %msg-p-b->p
@@ -132,6 +145,7 @@
             %msg-p-p->p
             %msg-p-p->v
             %msg-p-p-pp->b-e
+            %msg-p-p-pp->p-e
             %msg-p-p-u64-pp->b-e
             %msg-p-pp->b-e
             %msg-p-pp->p-e
@@ -149,6 +163,8 @@
 
   (define-c-lambda objc_getClass (char-string) (pointer void) "objc_getClass")
   (define-c-lambda sel_registerName (char-string) (pointer void) "sel_registerName")
+  (define-c-lambda %msg-p->i64 ((pointer void) (pointer void) (pointer void)) int64
+    "___return( ((int64_t (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
   (define-c-lambda %msg-p->p ((pointer void) (pointer void) (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
   (define-c-lambda %msg-p->v ((pointer void) (pointer void) (pointer void)) void
@@ -163,6 +179,8 @@
     "((void (*)(id, SEL, id, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4);")
   (define-c-lambda %msg-p-p-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer void) (pointer (pointer void))) bool
     "___return( ((BOOL (*)(id, SEL, id, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (id*)___arg5) );")
+  (define-c-lambda %msg-p-p-pp->p-e ((pointer void) (pointer void) (pointer void) (pointer void) (pointer (pointer void))) (pointer void)
+    "___return( ((id (*)(id, SEL, id, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (id*)___arg5) );")
   (define-c-lambda %msg-p-p-u64-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer void) unsigned-int64 (pointer (pointer void))) bool
     "___return( ((BOOL (*)(id, SEL, id, id, uint64_t, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5, (id*)___arg6) );")
   (define-c-lambda %msg-p-pp->b-e ((pointer void) (pointer void) (pointer void) (pointer (pointer void))) bool
@@ -189,6 +207,7 @@
 (define %sel-nsurl-init-with-string-relative-to-url (sel_registerName "initWithString:relativeToURL:"))
 (define %sel-nsurl-init-with-string-encoding-invalid-characters (sel_registerName "initWithString:encodingInvalidCharacters:"))
 (define %sel-nsurl-init-with-data-representation-relative-to-url (sel_registerName "initWithDataRepresentation:relativeToURL:"))
+(define %sel-nsurl-init-with-coder (sel_registerName "initWithCoder:"))
 (define %sel-nsurl-init-file-url-with-path-is-directory-relative-to-url (sel_registerName "initFileURLWithPath:isDirectory:relativeToURL:"))
 (define %sel-nsurl-init-file-url-with-path-relative-to-url (sel_registerName "initFileURLWithPath:relativeToURL:"))
 (define %sel-nsurl-init-file-url-with-path-is-directory (sel_registerName "initFileURLWithPath:isDirectory:"))
@@ -207,6 +226,10 @@
 (define %sel-nsurl-start-accessing-security-scoped-resource (sel_registerName "startAccessingSecurityScopedResource"))
 (define %sel-nsurl-stop-accessing-security-scoped-resource (sel_registerName "stopAccessingSecurityScopedResource"))
 (define %sel-nsurl-is-file-url (sel_registerName "isFileURL"))
+(define %sel-nsurl-encode-with-coder (sel_registerName "encodeWithCoder:"))
+(define %sel-nsurl-item-provider-visibility-for-representation-with-type-identifier (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:"))
+(define %sel-nsurl-load-data-with-type-identifier-for-item-provider-completion-handler (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:"))
+(define %sel-nsurl-writable-type-identifiers-for-item-provider (sel_registerName "writableTypeIdentifiersForItemProvider"))
 (define %sel-nsurl-file-url-with-path-is-directory-relative-to-url (sel_registerName "fileURLWithPath:isDirectory:relativeToURL:"))
 (define %sel-nsurl-file-url-with-path-relative-to-url (sel_registerName "fileURLWithPath:relativeToURL:"))
 (define %sel-nsurl-file-url-with-path-is-directory (sel_registerName "fileURLWithPath:isDirectory:"))
@@ -221,6 +244,9 @@
 (define %sel-nsurl-write-bookmark-data-to-url-options-error (sel_registerName "writeBookmarkData:toURL:options:error:"))
 (define %sel-nsurl-bookmark-data-with-contents-of-url-error (sel_registerName "bookmarkDataWithContentsOfURL:error:"))
 (define %sel-nsurl-url-by-resolving-alias-file-at-url-options-error (sel_registerName "URLByResolvingAliasFileAtURL:options:error:"))
+(define %sel-nsurl-object-with-item-provider-data-type-identifier-error (sel_registerName "objectWithItemProviderData:typeIdentifier:error:"))
+(define %sel-nsurl-readable-type-identifiers-for-item-provider (sel_registerName "readableTypeIdentifiersForItemProvider"))
+(define %sel-nsurl-supports-secure-coding (sel_registerName "supportsSecureCoding"))
 (define %sel-nsurl-data-representation (sel_registerName "dataRepresentation"))
 (define %sel-nsurl-absolute-string (sel_registerName "absoluteString"))
 (define %sel-nsurl-relative-string (sel_registerName "relativeString"))
@@ -267,6 +293,9 @@
 
 (define (make-nsurl-init-with-data-representation-relative-to-url data base-url)
   (wrap (%msg-p-p->p (%msg-v->p (objc_getClass "NSURL") (sel_registerName "alloc")) %sel-nsurl-init-with-data-representation-relative-to-url (->ptr data) (->ptr base-url)) #t))
+
+(define (make-nsurl-init-with-coder coder)
+  (wrap (%msg-p->p (%msg-v->p (objc_getClass "NSURL") (sel_registerName "alloc")) %sel-nsurl-init-with-coder (->ptr coder)) #t))
 
 ;; --- Properties ---
 (define (nsurl-data-representation self)
@@ -501,6 +530,23 @@
 (defmethod {is-file-url NSURL} (lambda (self) (nsurl-is-file-url self)))
 (g:defmethod (is-file-url (o NSURL)) (nsurl-is-file-url o))
 
+(define (nsurl-encode-with-coder self coder)
+  (%msg-p->v (NSObject-ptr self) %sel-nsurl-encode-with-coder (->ptr coder)))
+(defmethod {encode-with-coder NSURL} (lambda (self coder) (nsurl-encode-with-coder self coder)))
+
+(define (nsurl-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
+  (%msg-p->i64 (NSObject-ptr self) %sel-nsurl-item-provider-visibility-for-representation-with-type-identifier (->ptr type-identifier)))
+(defmethod {item-provider-visibility-for-representation-with-type-identifier NSURL} (lambda (self type-identifier) (nsurl-item-provider-visibility-for-representation-with-type-identifier self type-identifier)))
+
+(define (nsurl-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
+  (wrap (%msg-p-p->p (NSObject-ptr self) %sel-nsurl-load-data-with-type-identifier-for-item-provider-completion-handler (->ptr type-identifier) completion-handler)))
+(defmethod {load-data-with-type-identifier-for-item-provider-completion-handler NSURL} (lambda (self type-identifier completion-handler) (nsurl-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)))
+
+(define (nsurl-writable-type-identifiers-for-item-provider self)
+  (wrap (%msg-v->p (NSObject-ptr self) %sel-nsurl-writable-type-identifiers-for-item-provider)))
+(defmethod {writable-type-identifiers-for-item-provider NSURL} (lambda (self) (nsurl-writable-type-identifiers-for-item-provider self)))
+(g:defmethod (writable-type-identifiers-for-item-provider (o NSURL)) (nsurl-writable-type-identifiers-for-item-provider o))
+
 ;; --- Class methods ---
 (define (nsurl-file-url-with-path-is-directory-relative-to-url path is-dir base-url)
   (wrap (%msg-p-b-p->p (objc_getClass "NSURL") %sel-nsurl-file-url-with-path-is-directory-relative-to-url (->ptr path) is-dir (->ptr base-url))))
@@ -549,4 +595,15 @@
   (call-with-nserror-out
     (lambda (%err-cell)
       (wrap (%msg-p-u64-pp->p-e (objc_getClass "NSURL") %sel-nsurl-url-by-resolving-alias-file-at-url-options-error (->ptr url) options %err-cell)))))
+
+(define (nsurl-object-with-item-provider-data-type-identifier-error data type-identifier)
+  (call-with-nserror-out
+    (lambda (%err-cell)
+      (wrap (%msg-p-p-pp->p-e (objc_getClass "NSURL") %sel-nsurl-object-with-item-provider-data-type-identifier-error (->ptr data) (->ptr type-identifier) %err-cell)))))
+
+(define (nsurl-readable-type-identifiers-for-item-provider)
+  (wrap (%msg-v->p (objc_getClass "NSURL") %sel-nsurl-readable-type-identifiers-for-item-provider)))
+
+(define (nsurl-supports-secure-coding)
+  (%msg-v->b (objc_getClass "NSURL") %sel-nsurl-supports-secure-coding))
 

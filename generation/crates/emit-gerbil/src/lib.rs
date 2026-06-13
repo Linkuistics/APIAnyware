@@ -51,6 +51,7 @@ pub mod emit_protocol;
 pub mod ffi_type_mapping;
 pub mod method_filter;
 pub mod naming;
+pub mod protocol_registry;
 pub mod shared_signatures;
 
 pub use emit_framework::{GerbilEmitter, GERBIL_TARGET_INFO};

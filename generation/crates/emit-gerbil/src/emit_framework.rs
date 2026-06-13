@@ -26,6 +26,7 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
 use crate::class_graph::{build_class_graph, ClassRegistry, ParentRef};
+use crate::protocol_registry::ProtocolRegistry;
 use crate::emit_class::{generate_bare_module, generate_class_file_with_parent};
 use crate::emit_constants::{constant_names, generate_constants_file};
 use crate::emit_enums::{enum_value_names, generate_enums_file};
@@ -49,14 +50,17 @@ pub const GERBIL_TARGET_INFO: TargetInfo = TargetInfo {
 };
 
 /// The Gerbil emitter. Carries the cross-framework [`ClassRegistry`] used to
-/// resolve manifest-graph parents that live in another framework (ADR-0020).
-/// Default-constructed the registry is empty — same-framework parents still
-/// resolve from each framework's own class set; the CLI pre-pass (leaf 060)
-/// builds the global registry via [`ClassRegistry::from_frameworks`] and
-/// constructs the emitter with [`GerbilEmitter::with_registry`].
+/// resolve manifest-graph parents that live in another framework (ADR-0020),
+/// and the cross-framework [`ProtocolRegistry`] backing conformed-protocol
+/// method flattening (leaf 120). Default-constructed both registries are
+/// empty — same-framework parents still resolve from each framework's own
+/// class set and emission degrades to own-methods-only; the CLI pre-pass
+/// (leaf 060) builds the global registries and constructs the emitter with
+/// [`GerbilEmitter::with_registries`].
 #[derive(Default)]
 pub struct GerbilEmitter {
     class_registry: ClassRegistry,
+    protocol_registry: ProtocolRegistry,
 }
 
 impl GerbilEmitter {
@@ -64,8 +68,14 @@ impl GerbilEmitter {
         Self::default()
     }
 
-    pub fn with_registry(class_registry: ClassRegistry) -> Self {
-        Self { class_registry }
+    pub fn with_registries(
+        class_registry: ClassRegistry,
+        protocol_registry: ProtocolRegistry,
+    ) -> Self {
+        Self {
+            class_registry,
+            protocol_registry,
+        }
     }
 }
 
@@ -75,7 +85,12 @@ impl TargetEmitter for GerbilEmitter {
     }
 
     fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult> {
-        emit_framework(framework, output_dir, &self.class_registry)
+        emit_framework(
+            framework,
+            output_dir,
+            &self.class_registry,
+            &self.protocol_registry,
+        )
     }
 }
 
@@ -107,6 +122,7 @@ pub fn emit_framework(
     fw: &Framework,
     output_dir: &Path,
     registry: &ClassRegistry,
+    protocols: &ProtocolRegistry,
 ) -> io::Result<EmitResult> {
     let fw_low = fw.name.to_ascii_lowercase();
 
@@ -138,7 +154,7 @@ pub fn emit_framework(
             // shared enrichment helper so racket + gerbil key off the same set.
             let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
             let (content, exports) =
-                generate_class_file_with_parent(cls, &fw.name, &parent, &error_selectors);
+                generate_class_file_with_parent(cls, &fw.name, &parent, &error_selectors, protocols);
             std::fs::write(class_dir.join(format!("{cls_low}.ss")), content)?;
             files_written += 1;
             submodules.push(SubModule {
@@ -365,7 +381,7 @@ mod tests {
     fn empty_framework_writes_just_facade() {
         let tmp = tempfile::tempdir().unwrap();
         let fw = make_minimal_framework("TestKit");
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
         assert_eq!(res.files_written, 1);
         let facade = tmp.path().join("testkit.ss");
         assert!(facade.exists());
@@ -431,7 +447,7 @@ mod tests {
         let mut reg = ClassRegistry::new();
         reg.insert("NSMutableAttributedString", "foundation");
 
-        emit_framework(&fw, tmp.path(), &reg).unwrap();
+        emit_framework(&fw, tmp.path(), &reg, &ProtocolRegistry::new()).unwrap();
 
         let responder = std::fs::read_to_string(tmp.path().join("appkit/nsresponder.ss")).unwrap();
         assert!(responder.contains("(defclass (NSResponder NSObject) () transparent: #t)"));
@@ -459,7 +475,7 @@ mod tests {
         let mut fw = make_minimal_framework("Widgets");
         fw.classes = vec![class_with("Leaf", "Mid")];
 
-        emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
 
         let mid = std::fs::read_to_string(tmp.path().join("widgets/mid.ss")).unwrap();
         assert!(mid.contains("synthesized bare class-graph node"));
@@ -518,7 +534,7 @@ mod tests {
         fw.protocols
             .push(protocol("NSWindowDelegate", vec![method("windowWillClose:", "void")]));
 
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
         assert_eq!(res.protocols_emitted, 1);
 
         let module = tmp.path().join("appkit/protocols/nswindowdelegate.ss");
@@ -538,7 +554,7 @@ mod tests {
         let mut fw = make_minimal_framework("AppKit");
         fw.protocols.push(protocol("NSEmptyMarker", vec![]));
 
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
         assert_eq!(res.protocols_emitted, 0);
         assert!(!tmp.path().join("appkit/protocols").exists());
     }
@@ -555,7 +571,7 @@ mod tests {
             vec![method("accessibilityFrame", "void")],
         ));
 
-        emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
 
         let facade = std::fs::read_to_string(tmp.path().join("appkit.ss")).unwrap();
         // The colliding protocol constructor is renamed; the class keeps its name.
@@ -606,7 +622,7 @@ mod tests {
             doc_refs: None,
         }];
 
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
         assert_eq!(res.enums_emitted, 1);
         assert_eq!(res.constants_emitted, 1);
         assert_eq!(res.functions_emitted, 1);
@@ -631,7 +647,7 @@ mod tests {
     fn data_modules_skipped_when_empty() {
         let tmp = tempfile::tempdir().unwrap();
         let fw = make_minimal_framework("TestKit");
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new()).unwrap();
+        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
         assert_eq!(res.enums_emitted, 0);
         assert_eq!(res.constants_emitted, 0);
         assert_eq!(res.functions_emitted, 0);

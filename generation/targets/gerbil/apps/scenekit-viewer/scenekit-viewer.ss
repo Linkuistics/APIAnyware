@@ -9,22 +9,15 @@
 ;;; One `make-delegate` carries three selectors (geometryChanged:, openColor:,
 ;;; colorChanged:), one of which is the NSColorPanel target.
 ;;;
-;;; ## Protocol-method shim (emitter gap, found at leaf 100/050)
-;;;
-;;; The gerbil emitter emits a class's OWN members but NOT the methods declared in
-;;; protocols it conforms to. Two members this app needs live on protocols, so the
-;;; generated bindings don't expose them:
-;;;   - `runAction:` is on **SCNActionable** (SCNNode conforms), not SCNNode.
-;;;   - `setAutoenablesDefaultLighting:` is on **SCNSceneRenderer** (SCNView
-;;;     conforms), not SCNView.
-;;; Until the emitter flattens protocol members onto conforming classes (captured
-;;; as a grove follow-up), this app reaches them through a tiny app-local
-;;; `begin-ffi` raw-`objc_msgSend` shim — the same escape hatch `runtime/cocoa.ss`
-;;; uses for the app menu. Everything else is generated bindings.
+;;; Two members this app needs are declared on conformed protocols, not on the
+;;; classes themselves — `runAction:` on SCNActionable (SCNNode conforms) and
+;;; `setAutoenablesDefaultLighting:` on SCNSceneRenderer (SCNView conforms).
+;;; The emitter flattens conformed-protocol members onto each bound class
+;;; (grove leaf 120), so both come straight from the generated bindings; this
+;;; app once carried an app-local raw-`objc_msgSend` shim for them (100/050).
 ;;;
 ;;; Build via bundle-gerbil; uses the bottle toolchain.
-(import :std/foreign
-        :gerbil-bindings/runtime/objc
+(import :gerbil-bindings/runtime/objc
         :gerbil-bindings/runtime/cocoa
         :gerbil-bindings/appkit/nsapplication
         :gerbil-bindings/appkit/nswindow
@@ -49,21 +42,6 @@
         :gerbil-bindings/scenekit/scncylinder
         :gerbil-bindings/scenekit/scnaction)
 (export main)
-
-;; --- protocol-method shim (see banner) -------------------------------------
-;; Raw objc_msgSend for the two protocol-declared members the generated bindings
-;; don't carry. Object args/receivers cross as raw `(pointer void)` (apps pass
-;; `(->ptr obj)`); BOOL is the C-safe `<stdbool.h>` bool.
-(begin-ffi (scn-node-run-action! scn-view-set-autoenables-default-lighting!)
-  (c-declare "#include <stdbool.h>")
-  (c-declare "#include <objc/runtime.h>")
-  (c-declare "#include <objc/message.h>")
-  ;; -[SCNNode runAction:] (SCNActionable)
-  (define-c-lambda scn-node-run-action! ((pointer void) (pointer void)) void
-    "((void(*)(id,SEL,id))objc_msgSend)((id)___arg1, sel_registerName(\"runAction:\"), (id)___arg2);")
-  ;; -[SCNView setAutoenablesDefaultLighting:] (SCNSceneRenderer)
-  (define-c-lambda scn-view-set-autoenables-default-lighting! ((pointer void) bool) void
-    "((void(*)(id,SEL,BOOL))objc_msgSend)((id)___arg1, sel_registerName(\"setAutoenablesDefaultLighting:\"), ___arg2);"))
 
 ;; Track the current NSColor in Scheme state so geometry swaps re-apply the
 ;; user's choice: SceneKit creates a fresh firstMaterial per geometry, so without
@@ -195,7 +173,7 @@
   (nsview-set-autoresizing-mask! scn-view
     (bitwise-ior NSViewWidthSizable NSViewHeightSizable))
   (scnview-set-allows-camera-control! scn-view #t)
-  (scn-view-set-autoenables-default-lighting! (->ptr scn-view) #t)   ; shim
+  (scnview-set-autoenables-default-lighting! scn-view #t)   ; via SCNSceneRenderer
   (scnview-set-background-color! scn-view (nscolor-dark-gray-color))
   (nsview-add-subview! content-view scn-view)
 
@@ -203,7 +181,7 @@
   (scnview-set-scene! scn-view scene)
   (scnnode-add-child-node! root-node geometry-node)
   (apply-current-color!)
-  (scn-node-run-action! (->ptr geometry-node) (->ptr spin-action))   ; shim
+  (scnnode-run-action geometry-node spin-action)   ; via SCNActionable
 
   ;; Target-action wiring (popup + button inherit set-target!/action! from NSControl)
   (nscontrol-set-target! geometry-picker toolbar-target)

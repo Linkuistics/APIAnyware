@@ -113,6 +113,14 @@ pub fn run_generation(
                 let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
                     &ordered_frameworks,
                 );
+                // Protocol-inheritance registry (leaf 120): the same whole-program
+                // shape, backing conformed-protocol method flattening — a class's
+                // conformance closure follows protocol `inherits` edges that cross
+                // frameworks.
+                let protos =
+                    apianyware_macos_emit_gerbil::protocol_registry::ProtocolRegistry::from_framework_refs(
+                        &ordered_frameworks,
+                    );
                 // Same whole-program shape: the shared global generics module
                 // (`generics.ss`) holds one `:std/generic` generic per distinct
                 // instance-surface selector across every framework, so a selector
@@ -122,7 +130,8 @@ pub fn run_generation(
                     &ordered_frameworks,
                     &out_dir,
                 )?;
-                gerbil_configured = apianyware_macos_emit_gerbil::GerbilEmitter::with_registry(reg);
+                gerbil_configured =
+                    apianyware_macos_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
                 &gerbil_configured
             } else {
                 *emitter
@@ -627,11 +636,21 @@ mod tests {
         run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         let lib = output_dir.join("gerbil/lib");
-        let generics = std::fs::read_to_string(lib.join("generics.ss")).unwrap();
+        // The facade re-exports the sharded declarations (ADR-0023): the
+        // `(g:defgeneric …)` forms live in `generics/NNN.ss`, one site total.
+        let facade = std::fs::read_to_string(lib.join("generics.ss")).unwrap();
+        assert!(
+            facade.contains(":gerbil-bindings/generics/000"),
+            "facade re-exports the shards:\n{facade}"
+        );
+        let mut shards = String::new();
+        for entry in std::fs::read_dir(lib.join("generics")).unwrap().flatten() {
+            shards.push_str(&std::fs::read_to_string(entry.path()).unwrap());
+        }
         assert_eq!(
-            generics.matches("(g:defgeneric count)").count(),
+            shards.matches("(g:defgeneric count)").count(),
             1,
-            "single declaration site for the shared generic:\n{generics}"
+            "single declaration site for the shared generic across shards:\n{shards}"
         );
 
         // Both class modules import the shared module and do NOT declare the generic.

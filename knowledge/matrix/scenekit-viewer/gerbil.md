@@ -14,11 +14,16 @@
   `NSError` is undeclared (`gxc -O`: `unknown type name 'NSError'`). Fix in
   `emit_class.rs::msgsend_body`: spell it `id*` (= `void *` via `<objc/*>`,
   ABI-identical, always in scope). Goldens re-blessed; bindings regenerated.
-- **Protocol-flattening gap (filed to inbox for a follow-up leaf):** the emitter
-  emits a class's OWN members but not protocol-declared ones. `runAction:`
-  (SCNActionable) and `setAutoenablesDefaultLighting:` (SCNSceneRenderer) are
-  unreachable via generated bindings, so the app uses an app-local `begin-ffi`
-  raw-`objc_msgSend` shim (the `runtime/cocoa.ss` menu escape hatch). [[project_gerbil_grove]]
+- **Protocol-flattening gap (found here; CLOSED by grove leaf 120, 2026-06-10):**
+  the emitter originally emitted a class's OWN members but not protocol-declared
+  ones — `runAction:` (SCNActionable) and `setAutoenablesDefaultLighting:`
+  (SCNSceneRenderer) were unreachable, and the app carried an app-local
+  `begin-ffi` raw-`objc_msgSend` shim. The emitter now flattens conformed-protocol
+  members onto each bound class (own protocols only — the manifest hierarchy
+  carries ancestor conformances; `ProtocolRegistry` resolves cross-framework
+  protocol inheritance); the shim is removed and the app calls
+  `scnnode-run-action` / `scnview-set-autoenables-default-lighting!` directly.
+  [[project_gerbil_grove]]
 - Idiom: popup/button target wired via inherited `nscontrol-set-target!`/`-action!`;
   `make-delegate` instance passed straight to setters; SceneKit geometry factories
   are class methods (`scnbox-box-with-…` etc.); `wrap`→#f makes nil checks plain

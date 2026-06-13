@@ -9,6 +9,7 @@
   count
   custom-mirror
   description
+  encode-with-coder
   first-object
   last-object
   make-iterator
@@ -16,11 +17,13 @@
   nsarray-count
   nsarray-custom-mirror
   nsarray-description
+  nsarray-encode-with-coder
   nsarray-first-object
   nsarray-last-object
   nsarray-make-iterator
   nsarray-object-at-index
   nsarray-sorted-array-hint
+  nsarray-supports-secure-coding
   nsarray-underestimated-count
   object-at-index
   sorted-array-hint
@@ -33,7 +36,9 @@
 
 (begin-ffi (objc_getClass sel_registerName
             %msg-p->p
+            %msg-p->v
             %msg-u64->p
+            %msg-v->b
             %msg-v->i64
             %msg-v->p
             %msg-v->u64
@@ -46,8 +51,12 @@
   (define-c-lambda sel_registerName (char-string) (pointer void) "sel_registerName")
   (define-c-lambda %msg-p->p ((pointer void) (pointer void) (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
+  (define-c-lambda %msg-p->v ((pointer void) (pointer void) (pointer void)) void
+    "((void (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3);")
   (define-c-lambda %msg-u64->p ((pointer void) (pointer void) unsigned-int64) (pointer void)
     "___return( ((id (*)(id, SEL, uint64_t))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
+  (define-c-lambda %msg-v->b ((pointer void) (pointer void)) bool
+    "___return( ((BOOL (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   (define-c-lambda %msg-v->i64 ((pointer void) (pointer void)) int64
     "___return( ((int64_t (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   (define-c-lambda %msg-v->p ((pointer void) (pointer void)) (pointer void)
@@ -59,6 +68,8 @@
 (define %sel-nsarray-init-with-coder (sel_registerName "initWithCoder:"))
 (define %sel-nsarray-object-at-index (sel_registerName "objectAtIndex:"))
 (define %sel-nsarray-make-iterator (sel_registerName "makeIterator"))
+(define %sel-nsarray-encode-with-coder (sel_registerName "encodeWithCoder:"))
+(define %sel-nsarray-supports-secure-coding (sel_registerName "supportsSecureCoding"))
 (define %sel-nsarray-count (sel_registerName "count"))
 (define %sel-nsarray-description (sel_registerName "description"))
 (define %sel-nsarray-first-object (sel_registerName "firstObject"))
@@ -120,4 +131,12 @@
   (wrap (%msg-v->p (NSObject-ptr self) %sel-nsarray-make-iterator)))
 (defmethod {make-iterator NSArray} (lambda (self) (nsarray-make-iterator self)))
 (g:defmethod (make-iterator (o NSArray)) (nsarray-make-iterator o))
+
+(define (nsarray-encode-with-coder self coder)
+  (%msg-p->v (NSObject-ptr self) %sel-nsarray-encode-with-coder (->ptr coder)))
+(defmethod {encode-with-coder NSArray} (lambda (self coder) (nsarray-encode-with-coder self coder)))
+
+;; --- Class methods ---
+(define (nsarray-supports-secure-coding)
+  (%msg-v->b (objc_getClass "NSArray") %sel-nsarray-supports-secure-coding))
 

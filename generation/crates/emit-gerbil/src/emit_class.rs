@@ -45,9 +45,14 @@
 //! Surfaces are emitted only for **instance** methods and **instance** properties
 //! (a receiver to dispatch on); class methods/properties stay proc-only. Because
 //! the `defclass` graph carries inheritance structurally, the plan is built over
-//! the class's **own** methods/properties (`cls.methods`/`cls.properties`), *not*
-//! the inheritance-flattened `all_methods` chez/racket need — a subclass inherits
-//! an ancestor's surface method through the graph rather than re-emitting it.
+//! the class's **own** methods/properties (`cls.methods`/`cls.properties`) plus
+//! the **conformed-protocol** methods flattened from `all_methods` (leaf 120;
+//! see [`effective_methods`] and [`crate::protocol_registry`]) — *not* the full
+//! inheritance-flattened set chez/racket need: a subclass inherits an ancestor's
+//! surface method through the graph rather than re-emitting it, but a conformed
+//! protocol's methods live on no ancestor class and must be emitted here.
+//! Protocol properties need no separate path — the collector surfaces their
+//! accessors as protocol *methods*, so they ride the same flattening.
 //!
 //! The IR-shaping machinery (`build_class_plan`, `collect_exports`,
 //! `dedupe_across_categories`, the property/class-method collision pre-pass) is
@@ -116,6 +121,7 @@ use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
+use crate::protocol_registry::ProtocolRegistry;
 use crate::ffi_type_mapping::{
     emit_geometry_decls, geometry_decl, is_known_geometry_alias, GeometryDecl, GerbilFfiTypeMapper,
     POINTER,
@@ -159,20 +165,28 @@ fn root_ptr_accessor(receiver: &str) -> String {
 /// the runtime [`RUNTIME_ROOT`]. Convenience over
 /// [`generate_class_file_with_parent`] for the common root case (and tests).
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
-    generate_class_file_with_parent(cls, framework, &ParentRef::RuntimeRoot, &HashSet::new()).0
+    generate_class_file_with_parent(
+        cls,
+        framework,
+        &ParentRef::RuntimeRoot,
+        &HashSet::new(),
+        &ProtocolRegistry::new(),
+    )
+    .0
 }
 
 /// Compute the exported names for one class, in sorted order, without rendering
 /// the body. Used by `emit_framework` to build the facade re-export list.
 ///
-/// Computed with an empty error-selector set — the real pipeline reads exports
-/// from [`generate_class_file_with_parent`]'s return value (which threads the
-/// class's enrichment error selectors), so this convenience never gates the
-/// facade; error methods would be excluded here exactly as they are with no
-/// enrichment.
+/// Computed with an empty error-selector set and an empty protocol registry —
+/// the real pipeline reads exports from [`generate_class_file_with_parent`]'s
+/// return value (which threads the class's enrichment error selectors and the
+/// cross-framework [`ProtocolRegistry`]), so this convenience never gates the
+/// facade; error and protocol-contributed methods would be excluded here
+/// exactly as they are with no enrichment/registry.
 pub fn class_exports(cls: &Class) -> Vec<String> {
     let mapper = GerbilFfiTypeMapper;
-    let plan = build_class_plan(cls, &mapper, &HashSet::new());
+    let plan = build_class_plan(cls, &mapper, &HashSet::new(), &BTreeSet::new());
     merged_exports(cls, &plan)
 }
 
@@ -205,9 +219,14 @@ fn merged_exports(cls: &Class, plan: &ClassPlan) -> Vec<String> {
 /// from a [`Class`] + its error selectors (building the plan internally). Used by
 /// [`crate::emit_generics`] to union the global selector set across frameworks so
 /// the per-class surface and the global declarations stay in lock-step.
-pub(crate) fn class_surface_selectors(cls: &Class, error_selectors: &HashSet<String>) -> Vec<String> {
+pub(crate) fn class_surface_selectors(
+    cls: &Class,
+    error_selectors: &HashSet<String>,
+    protocols: &ProtocolRegistry,
+) -> Vec<String> {
     let mapper = GerbilFfiTypeMapper;
-    let plan = build_class_plan(cls, &mapper, error_selectors);
+    let conformed = protocols.conformance_closure(&cls.protocols);
+    let plan = build_class_plan(cls, &mapper, error_selectors, &conformed);
     instance_surface_selectors(cls, &plan)
 }
 
@@ -244,9 +263,11 @@ pub fn generate_class_file_with_parent(
     framework: &str,
     parent: &ParentRef,
     error_selectors: &HashSet<String>,
+    protocols: &ProtocolRegistry,
 ) -> (String, Vec<String>) {
     let mapper = GerbilFfiTypeMapper;
-    let plan = build_class_plan(cls, &mapper, error_selectors);
+    let conformed = protocols.conformance_closure(&cls.protocols);
+    let plan = build_class_plan(cls, &mapper, error_selectors, &conformed);
     let exports = merged_exports(cls, &plan);
     let mut w = CodeWriter::new();
 
@@ -341,8 +362,12 @@ fn build_class_plan(
     cls: &Class,
     mapper: &dyn FfiTypeMapper,
     error_selectors: &HashSet<String>,
+    conformed: &BTreeSet<String>,
 ) -> ClassPlan {
-    let methods_owned: Vec<Method> = effective_methods(cls).into_iter().cloned().collect();
+    let methods_owned: Vec<Method> = effective_methods(cls, conformed)
+        .into_iter()
+        .cloned()
+        .collect();
     let mut properties_owned: Vec<Property> = effective_properties(cls)
         .into_iter()
         // Block-typed and unsupported-struct property bodies are deferred (their
@@ -511,15 +536,28 @@ fn dedupe_across_categories(
     (kept_props, kept_inst, kept_class, exports)
 }
 
-/// The methods this class emits a surface for: its **own** declared methods, not
-/// the inheritance-flattened `all_methods` chez/racket need. Gerbil's `defclass`
-/// graph (030) carries inheritance structurally — a subclass dispatches to an
-/// ancestor's `{}`/generic method through the chain rather than re-emitting it
-/// (ADR-0020). Deduped by selector.
-fn effective_methods(cls: &Class) -> Vec<&Method> {
+/// The methods this class emits a surface for: its **own** declared methods
+/// plus the **conformed-protocol** methods the resolve phase flattened into
+/// `all_methods` (leaf 120) — but *not* the full inheritance-flattened set
+/// chez/racket need. Gerbil's `defclass` graph (030) carries class inheritance
+/// structurally — a subclass dispatches to an ancestor's `{}`/generic method
+/// through the chain rather than re-emitting it (ADR-0020) — but a conformed
+/// protocol's methods (`SCNNode`'s `runAction:` from `SCNActionable`) live on
+/// no ancestor class, so this class is the place to emit them. `conformed` is
+/// the class's own conformance closure
+/// ([`ProtocolRegistry::conformance_closure`]); `all_methods` entries whose
+/// `origin` is in it are exactly the protocol-contributed set (superclass-
+/// inherited entries carry an ancestor-class origin and stay filtered out).
+/// Own methods win ties; deduped by selector.
+fn effective_methods<'a>(cls: &'a Class, conformed: &BTreeSet<String>) -> Vec<&'a Method> {
     let mut seen = HashSet::new();
     cls.methods
         .iter()
+        .chain(cls.all_methods.iter().filter(|m| {
+            m.origin
+                .as_deref()
+                .is_some_and(|origin| conformed.contains(origin))
+        }))
         .filter(|m| seen.insert(m.selector.clone()))
         .collect()
 }
@@ -590,10 +628,15 @@ fn collect_exports(
     exports
 }
 
+/// Whether the class's **own** init methods include a bindable explicit
+/// constructor. Keyed off `origin: None` (a protocol-contributed init like
+/// `NSCoding`'s `initWithCoder:` carries its protocol as origin): conforming
+/// to a protocol must not suppress the synthesized default `make-<cls>` —
+/// the protocol init is emitted as an *additional* constructor (leaf 120).
 fn has_explicit_constructor(init_methods: &[&Method], mapper: &dyn FfiTypeMapper) -> bool {
     init_methods
         .iter()
-        .any(|m| is_supported_method(m, mapper) && m.selector != "init")
+        .any(|m| m.origin.is_none() && is_supported_method(m, mapper) && m.selector != "init")
 }
 
 fn is_unsupported_struct_property(t: &TypeRef, mapper: &dyn FfiTypeMapper) -> bool {
@@ -1696,6 +1739,115 @@ mod tests {
         assert!(out.contains("(define (nsarray-length self)"));
     }
 
+    /// Build a protocol-origin `all_methods` entry (what the resolve phase
+    /// produces for a method declared on a conformed protocol).
+    fn flattened(sel: &str, origin: &str, params: Vec<Param>, ret: TypeRef) -> Method {
+        let mut m = make_method(sel, false, false, ret);
+        m.params = params;
+        m.origin = Some(origin.into());
+        m
+    }
+
+    #[test]
+    fn conformed_protocol_methods_flatten_onto_class() {
+        // The SCNNode shape (leaf 120): `runAction:` is declared on the
+        // SCNActionable protocol the class conforms to, not on the class — the
+        // resolve phase lands it in `all_methods` with the protocol as origin.
+        // The emitter must give it the full own-method treatment: proc core,
+        // `{}` surface, export. Superclass-inherited entries (ancestor-class
+        // origin) and methods from a protocol unknown to the registry (stub
+        // metadata only) must both stay out.
+        let mut cls = cls_with(
+            "SCNNode",
+            vec![make_method(
+                "position",
+                false,
+                false,
+                ty(TypeRefKind::Primitive {
+                    name: "uint64".into(),
+                }),
+            )],
+            vec![],
+        );
+        cls.protocols = vec!["SCNActionable".into(), "CALayerDelegate".into()];
+        cls.all_methods = vec![
+            flattened(
+                "runAction:",
+                "SCNActionable",
+                vec![param("action", TypeRefKind::Id)],
+                TypeRef::void(),
+            ),
+            // Superclass-inherited (class origin) — the manifest graph carries it.
+            flattened("frame", "NSView", vec![], TypeRef::void()),
+            // Unknown protocol (unloaded framework) — stub metadata, deferred.
+            flattened("displayLayer:", "CALayerDelegate", vec![], TypeRef::void()),
+        ];
+
+        let mut registry = ProtocolRegistry::new();
+        registry.insert("SCNActionable", vec!["NSObject".into()]);
+
+        let (out, exports) = generate_class_file_with_parent(
+            &cls,
+            "SceneKit",
+            &ParentRef::RuntimeRoot,
+            &HashSet::new(),
+            &registry,
+        );
+
+        // The protocol-provided method is a first-class citizen: proc core +
+        // `{}` MOP surface + selector cache + export.
+        assert!(out.contains("(define (scnnode-run-action self action)"));
+        assert!(out.contains(
+            "(defmethod {run-action SCNNode} (lambda (self action) (scnnode-run-action self action)))"
+        ));
+        assert!(out.contains("(define %sel-scnnode-run-action (sel_registerName \"runAction:\"))"));
+        assert!(exports.contains(&"scnnode-run-action".to_string()));
+
+        // Superclass-inherited stays structural (no re-emission)…
+        assert!(!out.contains("scnnode-frame"));
+        // …and the unknown protocol's stub method is deferred.
+        assert!(!out.contains("display-layer"));
+    }
+
+    #[test]
+    fn own_method_wins_over_protocol_duplicate() {
+        // A class that re-declares a protocol method keeps its own (richer)
+        // declaration; the flattened duplicate is dropped by selector dedup.
+        let mut cls = cls_with(
+            "SCNNode",
+            vec![make_method(
+                "hasActions",
+                false,
+                false,
+                ty(TypeRefKind::Primitive {
+                    name: "bool".into(),
+                }),
+            )],
+            vec![],
+        );
+        cls.protocols = vec!["SCNActionable".into()];
+        cls.all_methods = vec![flattened(
+            "hasActions",
+            "SCNActionable",
+            vec![],
+            TypeRef::void(),
+        )];
+        let mut registry = ProtocolRegistry::new();
+        registry.insert("SCNActionable", vec![]);
+
+        let (out, _) = generate_class_file_with_parent(
+            &cls,
+            "SceneKit",
+            &ParentRef::RuntimeRoot,
+            &HashSet::new(),
+            &registry,
+        );
+        assert_eq!(out.matches("(define (scnnode-has-actions self)").count(), 1);
+        // The own declaration's bool return survives (a void-returning proc
+        // would have no `%msg-v->b` crossing).
+        assert!(out.contains("%msg-v->b"));
+    }
+
     #[test]
     fn struct_returning_method_uses_by_value_cgrect() {
         let cls = cls_with(
@@ -1940,6 +2092,7 @@ mod tests {
                 "Foundation",
                 &ParentRef::Local("NSString".into()),
                 &HashSet::new(),
+                &ProtocolRegistry::new(),
             )
             .0;
         // No own method ⇒ no proc, no surface, no g:defmethod for `length`, and
@@ -1995,7 +2148,7 @@ mod tests {
         let cls = cls_with("NSData", vec![m], vec![]);
         let errs = error_selectors("writeToFile:error:");
         let out =
-            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs).0;
+            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs, &ProtocolRegistry::new()).0;
 
         // The `-e` crossing: visible (pointer void) arg + trailing NSError** cell.
         assert!(out.contains(
@@ -2039,7 +2192,7 @@ mod tests {
         let cls = cls_with("NSData", vec![m], vec![]);
         // Empty error set ⇒ not error-routed ⇒ deferred.
         let out =
-            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &HashSet::new())
+            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &HashSet::new(), &ProtocolRegistry::new())
                 .0;
         assert!(!out.contains("nsdata-get-bytes-error"), "should be deferred:\n{out}");
         assert!(!out.contains("-e ("), "no -e crossing:\n{out}");
@@ -2057,7 +2210,7 @@ mod tests {
         let cls = cls_with("NSData", vec![m], vec![]);
         let errs = error_selectors("dataWithContentsOfURL:error:");
         let out =
-            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs).0;
+            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs, &ProtocolRegistry::new()).0;
         // Object return ⇒ the crossing call is wrapped; that wrapped value is the
         // thunk's single result, which call-with-nserror-out pairs with the error.
         assert!(out.contains(
@@ -2096,6 +2249,7 @@ mod tests {
                 "AppKit",
                 &ParentRef::Local("NSControl".into()),
                 &HashSet::new(),
+                &ProtocolRegistry::new(),
             );
         assert!(out
             .0
@@ -2115,7 +2269,7 @@ mod tests {
             name: "NSMutableAttributedString".into(),
             fw_low: "foundation".into(),
         };
-        let out = generate_class_file_with_parent(&cls, "AppKit", &parent, &HashSet::new());
+        let out = generate_class_file_with_parent(&cls, "AppKit", &parent, &HashSet::new(), &ProtocolRegistry::new());
         assert!(out
             .0
             .contains("(defclass (NSTextStorage NSMutableAttributedString) () transparent: #t)"));

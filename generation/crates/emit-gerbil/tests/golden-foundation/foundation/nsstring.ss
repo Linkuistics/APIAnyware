@@ -15,14 +15,17 @@
   decomposed-string-with-compatibility-mapping
   description
   double-value
+  encode-with-coder
   fastest-encoding
   file-system-representation
   float-value
   hash
   int-value
   integer-value
+  item-provider-visibility-for-representation-with-type-identifier
   last-path-component
   length
+  load-data-with-type-identifier-for-item-provider-completion-handler
   localized-capitalized-string
   localized-lowercase-string
   localized-uppercase-string
@@ -40,23 +43,28 @@
   nsstring-default-c-string-encoding
   nsstring-description
   nsstring-double-value
+  nsstring-encode-with-coder
   nsstring-fastest-encoding
   nsstring-file-system-representation
   nsstring-float-value
   nsstring-hash
   nsstring-int-value
   nsstring-integer-value
+  nsstring-item-provider-visibility-for-representation-with-type-identifier
   nsstring-last-path-component
   nsstring-length
+  nsstring-load-data-with-type-identifier-for-item-provider-completion-handler
   nsstring-localized-capitalized-string
   nsstring-localized-lowercase-string
   nsstring-localized-uppercase-string
   nsstring-long-long-value
   nsstring-lowercase-string
+  nsstring-object-with-item-provider-data-type-identifier-error
   nsstring-path-components
   nsstring-path-extension
   nsstring-precomposed-string-with-canonical-mapping
   nsstring-precomposed-string-with-compatibility-mapping
+  nsstring-readable-type-identifiers-for-item-provider
   nsstring-smallest-encoding
   nsstring-string-by-abbreviating-with-tilde-in-path
   nsstring-string-by-deleting-last-path-component
@@ -65,8 +73,10 @@
   nsstring-string-by-removing-percent-encoding
   nsstring-string-by-resolving-symlinks-in-path
   nsstring-string-by-standardizing-path
+  nsstring-supports-secure-coding
   nsstring-uppercase-string
   nsstring-utf8-string
+  nsstring-writable-type-identifiers-for-item-provider
   path-components
   path-extension
   precomposed-string-with-canonical-mapping
@@ -81,6 +91,7 @@
   string-by-standardizing-path
   uppercase-string
   utf8-string
+  writable-type-identifiers-for-item-provider
   )
 
 ;; --- Class graph (ADR-0020) ---
@@ -88,7 +99,11 @@
 (register-objc-class! (lambda (p) (make-NSString ptr: p)) NSString::t "NSString" "NSObject")
 
 (begin-ffi (objc_getClass sel_registerName
+            %msg-p->i64
             %msg-p->p
+            %msg-p->v
+            %msg-p-p->p
+            %msg-p-p-pp->p-e
             %msg-u64->u16
             %msg-v->b
             %msg-v->d
@@ -105,8 +120,16 @@
 
   (define-c-lambda objc_getClass (char-string) (pointer void) "objc_getClass")
   (define-c-lambda sel_registerName (char-string) (pointer void) "sel_registerName")
+  (define-c-lambda %msg-p->i64 ((pointer void) (pointer void) (pointer void)) int64
+    "___return( ((int64_t (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
   (define-c-lambda %msg-p->p ((pointer void) (pointer void) (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
+  (define-c-lambda %msg-p->v ((pointer void) (pointer void) (pointer void)) void
+    "((void (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3);")
+  (define-c-lambda %msg-p-p->p ((pointer void) (pointer void) (pointer void) (pointer void)) (pointer void)
+    "___return( ((id (*)(id, SEL, id, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4) );")
+  (define-c-lambda %msg-p-p-pp->p-e ((pointer void) (pointer void) (pointer void) (pointer void) (pointer (pointer void))) (pointer void)
+    "___return( ((id (*)(id, SEL, id, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (id*)___arg5) );")
   (define-c-lambda %msg-u64->u16 ((pointer void) (pointer void) unsigned-int64) unsigned-int16
     "___return( ((uint16_t (*)(id, SEL, uint64_t))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
   (define-c-lambda %msg-v->b ((pointer void) (pointer void)) bool
@@ -129,6 +152,13 @@
 
 (define %sel-nsstring-init-with-coder (sel_registerName "initWithCoder:"))
 (define %sel-nsstring-character-at-index (sel_registerName "characterAtIndex:"))
+(define %sel-nsstring-encode-with-coder (sel_registerName "encodeWithCoder:"))
+(define %sel-nsstring-item-provider-visibility-for-representation-with-type-identifier (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:"))
+(define %sel-nsstring-load-data-with-type-identifier-for-item-provider-completion-handler (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:"))
+(define %sel-nsstring-writable-type-identifiers-for-item-provider (sel_registerName "writableTypeIdentifiersForItemProvider"))
+(define %sel-nsstring-object-with-item-provider-data-type-identifier-error (sel_registerName "objectWithItemProviderData:typeIdentifier:error:"))
+(define %sel-nsstring-readable-type-identifiers-for-item-provider (sel_registerName "readableTypeIdentifiersForItemProvider"))
+(define %sel-nsstring-supports-secure-coding (sel_registerName "supportsSecureCoding"))
 (define %sel-nsstring-length (sel_registerName "length"))
 (define %sel-nsstring-double-value (sel_registerName "doubleValue"))
 (define %sel-nsstring-float-value (sel_registerName "floatValue"))
@@ -362,4 +392,32 @@
   (%msg-u64->u16 (NSObject-ptr self) %sel-nsstring-character-at-index index))
 (defmethod {character-at-index NSString} (lambda (self index) (nsstring-character-at-index self index)))
 
+(define (nsstring-encode-with-coder self coder)
+  (%msg-p->v (NSObject-ptr self) %sel-nsstring-encode-with-coder (->ptr coder)))
+(defmethod {encode-with-coder NSString} (lambda (self coder) (nsstring-encode-with-coder self coder)))
+
+(define (nsstring-item-provider-visibility-for-representation-with-type-identifier self type-identifier)
+  (%msg-p->i64 (NSObject-ptr self) %sel-nsstring-item-provider-visibility-for-representation-with-type-identifier (->ptr type-identifier)))
+(defmethod {item-provider-visibility-for-representation-with-type-identifier NSString} (lambda (self type-identifier) (nsstring-item-provider-visibility-for-representation-with-type-identifier self type-identifier)))
+
+(define (nsstring-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)
+  (wrap (%msg-p-p->p (NSObject-ptr self) %sel-nsstring-load-data-with-type-identifier-for-item-provider-completion-handler (->ptr type-identifier) completion-handler)))
+(defmethod {load-data-with-type-identifier-for-item-provider-completion-handler NSString} (lambda (self type-identifier completion-handler) (nsstring-load-data-with-type-identifier-for-item-provider-completion-handler self type-identifier completion-handler)))
+
+(define (nsstring-writable-type-identifiers-for-item-provider self)
+  (wrap (%msg-v->p (NSObject-ptr self) %sel-nsstring-writable-type-identifiers-for-item-provider)))
+(defmethod {writable-type-identifiers-for-item-provider NSString} (lambda (self) (nsstring-writable-type-identifiers-for-item-provider self)))
+(g:defmethod (writable-type-identifiers-for-item-provider (o NSString)) (nsstring-writable-type-identifiers-for-item-provider o))
+
 ;; --- Class methods ---
+(define (nsstring-object-with-item-provider-data-type-identifier-error data type-identifier)
+  (call-with-nserror-out
+    (lambda (%err-cell)
+      (wrap (%msg-p-p-pp->p-e (objc_getClass "NSString") %sel-nsstring-object-with-item-provider-data-type-identifier-error (->ptr data) (->ptr type-identifier) %err-cell)))))
+
+(define (nsstring-readable-type-identifiers-for-item-provider)
+  (wrap (%msg-v->p (objc_getClass "NSString") %sel-nsstring-readable-type-identifiers-for-item-provider)))
+
+(define (nsstring-supports-secure-coding)
+  (%msg-v->b (objc_getClass "NSString") %sel-nsstring-supports-secure-coding))
+

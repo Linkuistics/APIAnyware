@@ -8,15 +8,19 @@
   NSData?
   bytes
   description
+  encode-with-coder
   end-index
   length
   make-nsdata
+  make-nsdata-init-with-coder
   nsdata-bytes
   nsdata-description
+  nsdata-encode-with-coder
   nsdata-end-index
   nsdata-length
   nsdata-regions
   nsdata-start-index
+  nsdata-supports-secure-coding
   regions
   start-index
   )
@@ -26,6 +30,9 @@
 (register-objc-class! (lambda (p) (make-NSData ptr: p)) NSData::t "NSData" "NSObject")
 
 (begin-ffi (objc_getClass sel_registerName
+            %msg-p->p
+            %msg-p->v
+            %msg-v->b
             %msg-v->i64
             %msg-v->p
             %msg-v->u64
@@ -36,6 +43,12 @@
 
   (define-c-lambda objc_getClass (char-string) (pointer void) "objc_getClass")
   (define-c-lambda sel_registerName (char-string) (pointer void) "sel_registerName")
+  (define-c-lambda %msg-p->p ((pointer void) (pointer void) (pointer void)) (pointer void)
+    "___return( ((id (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3) );")
+  (define-c-lambda %msg-p->v ((pointer void) (pointer void) (pointer void)) void
+    "((void (*)(id, SEL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3);")
+  (define-c-lambda %msg-v->b ((pointer void) (pointer void)) bool
+    "___return( ((BOOL (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   (define-c-lambda %msg-v->i64 ((pointer void) (pointer void)) int64
     "___return( ((int64_t (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   (define-c-lambda %msg-v->p ((pointer void) (pointer void)) (pointer void)
@@ -44,6 +57,9 @@
     "___return( ((uint64_t (*)(id, SEL))objc_msgSend)(___arg1, (SEL)___arg2) );")
   )
 
+(define %sel-nsdata-init-with-coder (sel_registerName "initWithCoder:"))
+(define %sel-nsdata-encode-with-coder (sel_registerName "encodeWithCoder:"))
+(define %sel-nsdata-supports-secure-coding (sel_registerName "supportsSecureCoding"))
 (define %sel-nsdata-length (sel_registerName "length"))
 (define %sel-nsdata-bytes (sel_registerName "bytes"))
 (define %sel-nsdata-description (sel_registerName "description"))
@@ -61,6 +77,9 @@
     (%msg-v->p (%msg-v->p (objc_getClass "NSData") (sel_registerName "alloc"))
           (sel_registerName "init"))
     #t))
+
+(define (make-nsdata-init-with-coder coder)
+  (wrap (%msg-p->p (%msg-v->p (objc_getClass "NSData") (sel_registerName "alloc")) %sel-nsdata-init-with-coder (->ptr coder)) #t))
 
 ;; --- Properties ---
 (define (nsdata-length self)
@@ -94,3 +113,11 @@
 (g:defmethod (regions (o NSData)) (nsdata-regions o))
 
 ;; --- Instance methods ---
+(define (nsdata-encode-with-coder self coder)
+  (%msg-p->v (NSObject-ptr self) %sel-nsdata-encode-with-coder (->ptr coder)))
+(defmethod {encode-with-coder NSData} (lambda (self coder) (nsdata-encode-with-coder self coder)))
+
+;; --- Class methods ---
+(define (nsdata-supports-secure-coding)
+  (%msg-v->b (objc_getClass "NSData") %sel-nsdata-supports-secure-coding))
+

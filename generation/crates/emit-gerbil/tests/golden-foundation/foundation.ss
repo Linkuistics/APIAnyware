@@ -3192,6 +3192,7 @@
   base-url
   become-current
   become-current-with-pending-unit-count
+  begin-content-access!
   begin-undo-grouping!
   bitmap-representation
   bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
@@ -3469,6 +3470,8 @@
   dictionary-for-key
   dictionary-representation
   difference-by-transforming-changes-with-block
+  dimension-encode-with-coder
+  dimension-supports-secure-coding
   direct-parameter
   directory
   directory-attributes
@@ -3477,6 +3480,7 @@
   disable-sudden-termination
   disable-undo-registration
   disable-updates
+  discard-content-if-possible
   discardable
   discreteformatstyle-selectors
   discretionary
@@ -3535,11 +3539,13 @@
   encode-object-for-key
   encode-port-object
   encode-root-object
+  encode-with-coder
   encode-xpc-object-for-key
   encoded-data
   encoded-host
   end-column
   end-column!
+  end-content-access!
   end-date
   end-date!
   end-index
@@ -3582,6 +3588,7 @@
   event-id
   evict-ubiquitous-item-at-url-error
   evicts-objects-with-discarded-content
+  exception-during-operation-error-left-operand-right-operand
   executable-architectures
   executable-path
   executable-url
@@ -3628,9 +3635,11 @@
   file-url-value
   file-wrappers
   filehandle-bytes
+  filehandle-encode-with-coder
   filehandle-offset
   filehandle-read-to-end
   filehandle-seek-to-end
+  filehandle-supports-secure-coding
   filename
   finalize
   finish-decoding
@@ -3825,6 +3834,7 @@
   is-concurrent
   is-conflict
   is-constrained
+  is-content-discarded
   is-date-equal-to-date-to-unit-granularity
   is-date-in-same-day-as-date
   is-date-in-today
@@ -3910,6 +3920,7 @@
   item-at-url-did-move-to-url
   item-at-url-will-move-to-url
   item-formatter
+  item-provider-visibility-for-representation-with-type-identifier
   jsondecoder-allows-json5
   jsondecoder-assumes-top-level-dictionary
   jsondecoder-data-decoding-strategy
@@ -3972,6 +3983,7 @@
   load
   load-and-return-error
   load-data-representation-for-type-identifier-completion-handler
+  load-data-with-type-identifier-for-item-provider-completion-handler
   load-file-representation-for-type-identifier-completion-handler
   load-in-place-file-representation-for-type-identifier-completion-handler
   load-item-for-type-identifier-options-completion-handler
@@ -4005,6 +4017,7 @@
   localized-uppercase-string
   localizedPhrase
   localizes-format
+  lock
   lock-before-date
   lock-date
   lock-when-condition
@@ -4028,10 +4041,12 @@
   make-decodableattributedstringkey
   make-decodablewithconfiguration
   make-dimension
+  make-dimension-init-with-coder
   make-discreteformatstyle
   make-encodableattributedstringkey
   make-encodablewithconfiguration
   make-filehandle
+  make-filehandle-init-with-coder
   make-filemanager
   make-formatstyle
   make-httpcookiestorage
@@ -4040,9 +4055,12 @@
   make-jsonencoder
   make-markdowndecodableattributedstringkey
   make-measurementformatter
+  make-measurementformatter-init-with-coder
   make-mutabledataprotocol
   make-notificationcenter
+  make-nsaffinetransform-init-with-coder
   make-nsaffinetransform-init-with-transform
+  make-nsappleeventdescriptor-init-with-coder
   make-nsappleeventdescriptor-init-with-descriptor-type-data
   make-nsappleeventdescriptor-init-with-event-class-event-id-target-descriptor-return-id-transaction-id
   make-nsappleeventmanager
@@ -4051,7 +4069,9 @@
   make-nsarray-init-with-coder
   make-nsassertionhandler
   make-nsattributedstring
+  make-nsattributedstring-init-with-coder
   make-nsattributedstringmarkdownparsingoptions
+  make-nsattributedstringmarkdownsourceposition-init-with-coder
   make-nsattributedstringmarkdownsourceposition-init-with-start-line-start-column-end-line-end-column
   make-nsautoreleasepool
   make-nsbackgroundactivityscheduler-init-with-identifier
@@ -4061,9 +4081,11 @@
   make-nsbytecountformatter
   make-nscache
   make-nscachedelegate
+  make-nscachedurlresponse-init-with-coder
   make-nscachedurlresponse-init-with-response-data
   make-nscachedurlresponse-init-with-response-data-user-info-storage-policy
   make-nscalendar-init-with-calendar-identifier
+  make-nscalendar-init-with-coder
   make-nscalendardate
   make-nscharacterset-init-with-coder
   make-nsclassdescription
@@ -4088,10 +4110,12 @@
   make-nscountedset-init-with-set
   make-nscreatecommand
   make-nsdata
+  make-nsdata-init-with-coder
   make-nsdatadetector
   make-nsdate-init-with-coder
   make-nsdate-init-with-time-interval-since-reference-date
   make-nsdatecomponents
+  make-nsdatecomponents-init-with-coder
   make-nsdatecomponentsformatter
   make-nsdateformatter
   make-nsdateinterval-init-with-coder
@@ -4102,9 +4126,11 @@
   make-nsdecimalnumber-init-with-string
   make-nsdecimalnumber-init-with-string-locale
   make-nsdecimalnumberbehaviors
+  make-nsdecimalnumberhandler-init-with-coder
   make-nsdecimalnumberhandler-init-with-rounding-mode-scale-raise-on-exactness-raise-on-overflow-raise-on-underflow-raise-on-divide-by-zero
   make-nsdeletecommand
   make-nsdictionary-init-with-coder
+  make-nsdimension-init-with-coder
   make-nsdimension-init-with-symbol-converter
   make-nsdirectoryenumerator
   make-nsdiscardablecontent
@@ -4116,13 +4142,16 @@
   make-nsdistributednotificationcenter
   make-nsenergyformatter
   make-nsenumerator
+  make-nserror-init-with-coder
   make-nserror-init-with-domain-code-user-info
+  make-nsexception-init-with-coder
   make-nsexception-init-with-name-reason-user-info
   make-nsexistscommand
   make-nsexpression-init-with-coder
   make-nsexpression-init-with-expression-type
   make-nsextensioncontext
   make-nsextensionitem
+  make-nsextensionitem-init-with-coder
   make-nsextensionrequesthandling
   make-nsfastenumeration
   make-nsfileaccessintent
@@ -4138,20 +4167,25 @@
   make-nsfilewrapper-init-with-coder
   make-nsfilewrapper-init-with-serialized-representation
   make-nsformatter
+  make-nsformatter-init-with-coder
   make-nsgarbagecollector
   make-nsgetcommand
+  make-nshashtable-init-with-coder
   make-nshashtable-init-with-options-capacity
   make-nshashtable-init-with-pointer-functions-capacity
   make-nshost
   make-nshttpcookie-init-with-properties
   make-nshttpcookiestorage
   make-nshttpurlresponse-init-with-url-status-code-http-version-header-fields
+  make-nsindexpath-init-with-coder
   make-nsindexpath-init-with-index
+  make-nsindexset-init-with-coder
   make-nsindexset-init-with-index
   make-nsindexset-init-with-index-set
   make-nsindexset-init-with-indexes-in-range
   make-nsindexspecifier-init-with-container-class-description-container-specifier-key-index
   make-nsinflectionrule
+  make-nsinflectionrule-init-with-coder
   make-nsinflectionruleexplicit-init-with-morphology
   make-nsinputstream-init-with-data
   make-nsinputstream-init-with-url
@@ -4159,6 +4193,7 @@
   make-nsinvocationoperation-init-with-invocation
   make-nsinvocationoperation-init-with-target-selector-object
   make-nsiso8601dateformatter
+  make-nsiso8601dateformatter-init-with-coder
   make-nsitemprovider-init-with-contents-of-url
   make-nsitemprovider-init-with-item-type-identifier
   make-nsitemprovider-init-with-object
@@ -4179,6 +4214,7 @@
   make-nslocale-init-with-coder
   make-nslocale-init-with-locale-identifier
   make-nslocalizednumberformatrule
+  make-nslocalizednumberformatrule-init-with-coder
   make-nslock
   make-nslocking
   make-nslogicaltest
@@ -4186,11 +4222,14 @@
   make-nsmachport-init-with-mach-port
   make-nsmachport-init-with-mach-port-options
   make-nsmachportdelegate
+  make-nsmaptable-init-with-coder
   make-nsmaptable-init-with-key-options-value-options-capacity
   make-nsmaptable-init-with-key-pointer-functions-value-pointer-functions-capacity
   make-nsmassformatter
+  make-nsmeasurement-init-with-coder
   make-nsmeasurement-init-with-double-value-unit
   make-nsmeasurementformatter
+  make-nsmeasurementformatter-init-with-coder
   make-nsmessageport
   make-nsmessageportnameserver
   make-nsmetadataitem-init-with-url
@@ -4201,13 +4240,17 @@
   make-nsmethodsignature
   make-nsmiddlespecifier
   make-nsmorphology
+  make-nsmorphology-init-with-coder
   make-nsmorphologycustompronoun
+  make-nsmorphologycustompronoun-init-with-coder
+  make-nsmorphologypronoun-init-with-coder
   make-nsmorphologypronoun-init-with-pronoun-morphology-dependent-morphology
   make-nsmovecommand
   make-nsmutablearray-init-with-capacity
   make-nsmutablearray-init-with-coder
   make-nsmutableattributedstring
   make-nsmutablecharacterset
+  make-nsmutablecharacterset-init-with-coder
   make-nsmutablecopying
   make-nsmutabledata
   make-nsmutabledictionary-init-with-capacity
@@ -4218,6 +4261,7 @@
   make-nsmutableset-init-with-capacity
   make-nsmutableset-init-with-coder
   make-nsmutablestring
+  make-nsmutablestring-init-with-coder
   make-nsmutableurlrequest
   make-nsnamespecifier-init-with-coder
   make-nsnamespecifier-init-with-container-class-description-container-specifier-key-name
@@ -4231,6 +4275,7 @@
   make-nsnotificationcenter
   make-nsnotificationqueue-init-with-notification-center
   make-nsnull
+  make-nsnull-init-with-coder
   make-nsnumber-init-with-bool
   make-nsnumber-init-with-char
   make-nsnumber-init-with-coder
@@ -4260,20 +4305,25 @@
   make-nsorthography-init-with-dominant-script-language-map
   make-nsoutputstream-init-with-url-append
   make-nspersonnamecomponents
+  make-nspersonnamecomponents-init-with-coder
   make-nspersonnamecomponentsformatter
   make-nspipe
+  make-nspointerarray-init-with-coder
   make-nspointerarray-init-with-options
   make-nspointerarray-init-with-pointer-functions
   make-nspointerfunctions-init-with-options
   make-nsport
+  make-nsport-init-with-coder
   make-nsportcoder
   make-nsportdelegate
   make-nsportmessage-init-with-send-port-receive-port-components
   make-nsportnameserver
   make-nspositionalspecifier-init-with-position-object-specifier
   make-nspredicate
+  make-nspredicate-init-with-coder
   make-nspredicatevalidating
   make-nspresentationintent
+  make-nspresentationintent-init-with-coder
   make-nsprocessinfo
   make-nsprogress-init-with-parent-user-info
   make-nsprogressreporting
@@ -4288,6 +4338,7 @@
   make-nsrangespecifier-init-with-container-class-description-container-specifier-key-start-specifier-end-specifier
   make-nsrecursivelock
   make-nsregularexpression
+  make-nsregularexpression-init-with-coder
   make-nsrelativedatetimeformatter
   make-nsrelativespecifier-init-with-coder
   make-nsrelativespecifier-init-with-container-class-description-container-specifier-key-relative-position-base-specifier
@@ -4327,48 +4378,77 @@
   make-nsstring-init-with-coder
   make-nstask
   make-nstermofaddress
+  make-nstermofaddress-init-with-coder
   make-nstextcheckingresult
+  make-nstextcheckingresult-init-with-coder
   make-nsthread-init-with-block
   make-nsthread-init-with-target-selector-object
   make-nstimer-init-with-fire-date-interval-repeats-block
   make-nstimer-init-with-fire-date-interval-target-selector-user-info-repeats
   make-nstimezone
+  make-nstimezone-init-with-coder
   make-nsubiquitouskeyvaluestore
   make-nsunarchiver
   make-nsundomanager
   make-nsuniqueidspecifier-init-with-coder
   make-nsuniqueidspecifier-init-with-container-class-description-container-specifier-key-unique-id
+  make-nsunit-init-with-coder
   make-nsunit-init-with-symbol
   make-nsunitacceleration
+  make-nsunitacceleration-init-with-coder
   make-nsunitangle
+  make-nsunitangle-init-with-coder
   make-nsunitarea
+  make-nsunitarea-init-with-coder
   make-nsunitconcentrationmass
+  make-nsunitconcentrationmass-init-with-coder
   make-nsunitconverter
+  make-nsunitconverterlinear-init-with-coder
   make-nsunitconverterlinear-init-with-coefficient
   make-nsunitconverterlinear-init-with-coefficient-constant
   make-nsunitdispersion
+  make-nsunitdispersion-init-with-coder
   make-nsunitduration
+  make-nsunitduration-init-with-coder
   make-nsunitelectriccharge
+  make-nsunitelectriccharge-init-with-coder
   make-nsunitelectriccurrent
+  make-nsunitelectriccurrent-init-with-coder
   make-nsunitelectricpotentialdifference
+  make-nsunitelectricpotentialdifference-init-with-coder
   make-nsunitelectricresistance
+  make-nsunitelectricresistance-init-with-coder
   make-nsunitenergy
+  make-nsunitenergy-init-with-coder
   make-nsunitfrequency
+  make-nsunitfrequency-init-with-coder
   make-nsunitfuelefficiency
+  make-nsunitfuelefficiency-init-with-coder
   make-nsunitilluminance
+  make-nsunitilluminance-init-with-coder
   make-nsunitinformationstorage
+  make-nsunitinformationstorage-init-with-coder
   make-nsunitlength
+  make-nsunitlength-init-with-coder
   make-nsunitmass
+  make-nsunitmass-init-with-coder
   make-nsunitpower
+  make-nsunitpower-init-with-coder
   make-nsunitpressure
+  make-nsunitpressure-init-with-coder
   make-nsunitspeed
+  make-nsunitspeed-init-with-coder
   make-nsunittemperature
+  make-nsunittemperature-init-with-coder
   make-nsunitvolume
+  make-nsunitvolume-init-with-coder
+  make-nsurl-init-with-coder
   make-nsurl-init-with-data-representation-relative-to-url
   make-nsurl-init-with-string
   make-nsurl-init-with-string-encoding-invalid-characters
   make-nsurl-init-with-string-relative-to-url
   make-nsurlauthenticationchallenge-init-with-authentication-challenge-sender
+  make-nsurlauthenticationchallenge-init-with-coder
   make-nsurlauthenticationchallenge-init-with-protection-space-proposed-credential-previous-failure-count-failure-response-error-sender
   make-nsurlauthenticationchallengesender
   make-nsurlcache-init-with-memory-capacity-disk-capacity-directory-url
@@ -4381,18 +4461,23 @@
   make-nsurlconnectiondelegate
   make-nsurlconnectiondownloaddelegate
   make-nsurlcredential
+  make-nsurlcredential-init-with-coder
   make-nsurlcredentialstorage
   make-nsurldownload
   make-nsurldownloaddelegate
   make-nsurlhandle
   make-nsurlhandleclient
+  make-nsurlprotectionspace-init-with-coder
   make-nsurlprotectionspace-init-with-host-port-protocol-realm-authentication-method
   make-nsurlprotectionspace-init-with-proxy-host-port-type-realm-authentication-method
   make-nsurlprotocol-init-with-request-cached-response-client
   make-nsurlprotocolclient
+  make-nsurlqueryitem-init-with-coder
   make-nsurlqueryitem-init-with-name-value
+  make-nsurlrequest-init-with-coder
   make-nsurlrequest-init-with-url
   make-nsurlrequest-init-with-url-cache-policy-timeout-interval
+  make-nsurlresponse-init-with-coder
   make-nsurlresponse-init-with-url-mime-type-expected-content-length-text-encoding-name
   make-nsurlsession
   make-nsurlsessionconfiguration
@@ -4423,6 +4508,7 @@
   make-nsusernotificationcenterdelegate
   make-nsuserscripttask
   make-nsuserunixtask
+  make-nsuuid-init-with-coder
   make-nsuuid-init-with-uuid-string
   make-nsvalue-init-with-coder
   make-nsvaluetransformer
@@ -4450,12 +4536,14 @@
   make-nsxpclistener-init-with-mach-service-name
   make-nsxpclistenerdelegate
   make-nsxpclistenerendpoint
+  make-nsxpclistenerendpoint-init-with-coder
   make-nsxpcproxycreating
   make-objectivecconvertibleattributedstringkey
   make-operationqueue
   make-parseableformatstyle
   make-parsestrategy
   make-port
+  make-port-init-with-coder
   make-predicateexpression
   make-process
   make-processinfo
@@ -4469,12 +4557,19 @@
   make-timer
   make-undomanager
   make-unitenergy
+  make-unitenergy-init-with-coder
   make-unitlength
+  make-unitlength-init-with-coder
   make-unitmass
+  make-unitmass-init-with-coder
   make-unitpressure
+  make-unitpressure-init-with-coder
   make-unitspeed
+  make-unitspeed-init-with-coder
   make-unittemperature
+  make-unittemperature-init-with-coder
   make-unitvolume
+  make-unitvolume-init-with-coder
   make-urlcache
   make-urlsession
   make-urlsessiontasktransactionmetrics
@@ -4494,6 +4589,8 @@
   measurement-by-adding-measurement
   measurement-by-converting-to-unit
   measurement-by-subtracting-measurement
+  measurementformatter-encode-with-coder
+  measurementformatter-supports-secure-coding
   member
   memory-capacity
   method-return-length
@@ -4564,6 +4661,7 @@
   notification-batching-interval
   now
   nsaffinetransform-append-transform
+  nsaffinetransform-encode-with-coder
   nsaffinetransform-invert
   nsaffinetransform-prepend-transform
   nsaffinetransform-rotate-by-degrees
@@ -4571,6 +4669,7 @@
   nsaffinetransform-scale-by
   nsaffinetransform-scale-x-by-y-by
   nsaffinetransform-set-transform-struct!
+  nsaffinetransform-supports-secure-coding
   nsaffinetransform-transform
   nsaffinetransform-transform-point
   nsaffinetransform-transform-size
@@ -4600,6 +4699,7 @@
   nsappleeventdescriptor-descriptor-with-string
   nsappleeventdescriptor-descriptor-with-type-code
   nsappleeventdescriptor-double-value
+  nsappleeventdescriptor-encode-with-coder
   nsappleeventdescriptor-enum-code-value
   nsappleeventdescriptor-event-class
   nsappleeventdescriptor-event-id
@@ -4624,6 +4724,7 @@
   nsappleeventdescriptor-set-descriptor-for-keyword!
   nsappleeventdescriptor-set-param-descriptor-for-keyword!
   nsappleeventdescriptor-string-value
+  nsappleeventdescriptor-supports-secure-coding
   nsappleeventdescriptor-transaction-id
   nsappleeventdescriptor-type-code-value
   nsappleeventmanager-current-apple-event
@@ -4646,15 +4747,19 @@
   nsarray-count
   nsarray-custom-mirror
   nsarray-description
+  nsarray-encode-with-coder
   nsarray-first-object
   nsarray-last-object
   nsarray-make-iterator
   nsarray-object-at-index
   nsarray-sorted-array-hint
+  nsarray-supports-secure-coding
   nsarray-underestimated-count
   nsassertionhandler-current-handler
+  nsattributedstring-encode-with-coder
   nsattributedstring-length
   nsattributedstring-string
+  nsattributedstring-supports-secure-coding
   nsattributedstringmarkdownparsingoptions-allows-extended-attributes
   nsattributedstringmarkdownparsingoptions-applies-source-position-attributes
   nsattributedstringmarkdownparsingoptions-failure-policy
@@ -4665,6 +4770,7 @@
   nsattributedstringmarkdownparsingoptions-set-failure-policy!
   nsattributedstringmarkdownparsingoptions-set-interpreted-syntax!
   nsattributedstringmarkdownparsingoptions-set-language-code!
+  nsattributedstringmarkdownsourceposition-encode-with-coder
   nsattributedstringmarkdownsourceposition-end-column
   nsattributedstringmarkdownsourceposition-end-column!
   nsattributedstringmarkdownsourceposition-end-line
@@ -4672,6 +4778,7 @@
   nsattributedstringmarkdownsourceposition-range-in-string
   nsattributedstringmarkdownsourceposition-start-column
   nsattributedstringmarkdownsourceposition-start-line
+  nsattributedstringmarkdownsourceposition-supports-secure-coding
   nsautoreleasepool-add-object!
   nsautoreleasepool-drain
   nsbackgroundactivityscheduler-identifier
@@ -4787,8 +4894,10 @@
   nscache-total-cost-limit
   nscachedelegate-selectors
   nscachedurlresponse-data
+  nscachedurlresponse-encode-with-coder
   nscachedurlresponse-response
   nscachedurlresponse-storage-policy
+  nscachedurlresponse-supports-secure-coding
   nscachedurlresponse-user-info
   nscalendar-am-symbol
   nscalendar-autoupdating-current-calendar
@@ -4809,6 +4918,7 @@
   nscalendar-date-matches-components
   nscalendar-date-with-era-year-for-week-of-year-week-of-year-weekday-hour-minute-second-nanosecond
   nscalendar-date-with-era-year-month-day-hour-minute-second-nanosecond
+  nscalendar-encode-with-coder
   nscalendar-enumerate-dates-starting-after-date-matching-components-options-using-block
   nscalendar-era-symbols
   nscalendar-first-weekday
@@ -4845,6 +4955,7 @@
   nscalendar-standalone-quarter-symbols
   nscalendar-standalone-weekday-symbols
   nscalendar-start-of-day-for-date
+  nscalendar-supports-secure-coding
   nscalendar-time-zone
   nscalendar-very-short-month-symbols
   nscalendar-very-short-standalone-month-symbols
@@ -4862,6 +4973,7 @@
   nscharacterset-control-character-set
   nscharacterset-decimal-digit-character-set
   nscharacterset-decomposable-character-set
+  nscharacterset-encode-with-coder
   nscharacterset-has-member-in-plane
   nscharacterset-illegal-character-set
   nscharacterset-inverted-set
@@ -4872,6 +4984,7 @@
   nscharacterset-newline-character-set
   nscharacterset-non-base-character-set
   nscharacterset-punctuation-character-set
+  nscharacterset-supports-secure-coding
   nscharacterset-symbol-character-set
   nscharacterset-uppercase-letter-character-set
   nscharacterset-url-fragment-allowed-character-set
@@ -4917,12 +5030,15 @@
   nscompoundpredicate-or-predicate-with-subpredicates
   nscompoundpredicate-subpredicates
   nscondition-broadcast
+  nscondition-lock
   nscondition-name
   nscondition-set-name!
   nscondition-signal
+  nscondition-unlock
   nscondition-wait
   nscondition-wait-until-date
   nsconditionlock-condition
+  nsconditionlock-lock
   nsconditionlock-lock-before-date
   nsconditionlock-lock-when-condition
   nsconditionlock-lock-when-condition-before-date
@@ -4930,6 +5046,7 @@
   nsconditionlock-set-name!
   nsconditionlock-try-lock
   nsconditionlock-try-lock-when-condition
+  nsconditionlock-unlock
   nsconditionlock-unlock-with-condition
   nsconnection-add-request-mode!
   nsconnection-add-run-loop!
@@ -4980,17 +5097,21 @@
   nscreatecommand-resolved-key-dictionary
   nsdata-bytes
   nsdata-description
+  nsdata-encode-with-coder
   nsdata-end-index
   nsdata-length
   nsdata-regions
   nsdata-start-index
+  nsdata-supports-secure-coding
   nsdatadetector-checking-types
   nsdatadetector-data-detector-with-types-error
   nsdate-custom-playground-quick-look
   nsdate-description
   nsdate-distant-future
   nsdate-distant-past
+  nsdate-encode-with-coder
   nsdate-now
+  nsdate-supports-secure-coding
   nsdate-time-interval-since-now
   nsdate-time-interval-since-reference-date
   nsdate-time-interval-since1970
@@ -4998,6 +5119,7 @@
   nsdatecomponents-date
   nsdatecomponents-day
   nsdatecomponents-day-of-year
+  nsdatecomponents-encode-with-coder
   nsdatecomponents-era
   nsdatecomponents-hour
   nsdatecomponents-is-leap-month
@@ -5031,6 +5153,7 @@
   nsdatecomponents-set-weekday-ordinal!
   nsdatecomponents-set-year!
   nsdatecomponents-set-year-for-week-of-year!
+  nsdatecomponents-supports-secure-coding
   nsdatecomponents-time-zone
   nsdatecomponents-valid-date
   nsdatecomponents-value-for-component
@@ -5146,12 +5269,14 @@
   nsdateinterval-compare
   nsdateinterval-contains-date
   nsdateinterval-duration
+  nsdateinterval-encode-with-coder
   nsdateinterval-end-date
   nsdateinterval-end-date!
   nsdateinterval-intersection-with-date-interval
   nsdateinterval-intersects-date-interval
   nsdateinterval-is-equal-to-date-interval
   nsdateinterval-start-date
+  nsdateinterval-supports-secure-coding
   nsdateintervalformatter-calendar
   nsdateintervalformatter-date-style
   nsdateintervalformatter-date-template
@@ -5196,6 +5321,10 @@
   nsdecimalnumberbehaviors-selectors
   nsdecimalnumberhandler-decimal-number-handler-with-rounding-mode-scale-raise-on-exactness-raise-on-overflow-raise-on-underflow-raise-on-divide-by-zero
   nsdecimalnumberhandler-default-decimal-number-handler
+  nsdecimalnumberhandler-encode-with-coder
+  nsdecimalnumberhandler-exception-during-operation-error-left-operand-right-operand
+  nsdecimalnumberhandler-rounding-mode
+  nsdecimalnumberhandler-scale
   nsdeletecommand-key-specifier
   nsdeletecommand-set-receivers-specifier!
   nsdictionary-all-keys
@@ -5204,12 +5333,16 @@
   nsdictionary-custom-mirror
   nsdictionary-description
   nsdictionary-description-in-strings-file-format
+  nsdictionary-encode-with-coder
   nsdictionary-key-enumerator
   nsdictionary-make-iterator
   nsdictionary-object-for-key
+  nsdictionary-supports-secure-coding
   nsdictionary-underestimated-count
   nsdimension-base-unit
   nsdimension-converter
+  nsdimension-encode-with-coder
+  nsdimension-supports-secure-coding
   nsdirectoryenumerator-directory-attributes
   nsdirectoryenumerator-file-attributes
   nsdirectoryenumerator-is-enumerating-directory-post-order
@@ -5218,6 +5351,7 @@
   nsdirectoryenumerator-skip-descendents
   nsdiscardablecontent-selectors
   nsdistantobject-connection-for-proxy
+  nsdistantobject-encode-with-coder
   nsdistantobject-proxy-with-local-connection
   nsdistantobject-proxy-with-target-connection
   nsdistantobject-set-protocol-for-proxy!
@@ -5256,6 +5390,7 @@
   nsenumerator-next-object
   nserror-code
   nserror-domain
+  nserror-encode-with-coder
   nserror-error-with-domain-code-user-info
   nserror-help-anchor
   nserror-localized-description
@@ -5264,19 +5399,23 @@
   nserror-localized-recovery-suggestion
   nserror-recovery-attempter
   nserror-set-user-info-value-provider-for-domain-provider!
+  nserror-supports-secure-coding
   nserror-underlying-errors
   nserror-user-info
   nsexception-call-stack-return-addresses
   nsexception-call-stack-symbols
+  nsexception-encode-with-coder
   nsexception-exception-with-name-reason-user-info
   nsexception-name
   nsexception-raise
   nsexception-reason
+  nsexception-supports-secure-coding
   nsexception-user-info
   nsexpression-allow-evaluation
   nsexpression-arguments
   nsexpression-collection
   nsexpression-constant-value
+  nsexpression-encode-with-coder
   nsexpression-expression-for-aggregate
   nsexpression-expression-for-any-key
   nsexpression-expression-for-block-arguments
@@ -5301,6 +5440,7 @@
   nsexpression-operand
   nsexpression-predicate
   nsexpression-right-expression
+  nsexpression-supports-secure-coding
   nsexpression-true-expression
   nsexpression-variable
   nsextensioncontext-cancel-request-with-error
@@ -5310,10 +5450,12 @@
   nsextensionitem-attachments
   nsextensionitem-attributed-content-text
   nsextensionitem-attributed-title
+  nsextensionitem-encode-with-coder
   nsextensionitem-set-attachments!
   nsextensionitem-set-attributed-content-text!
   nsextensionitem-set-attributed-title!
   nsextensionitem-set-user-info!
+  nsextensionitem-supports-secure-coding
   nsextensionitem-user-info
   nsextensionrequesthandling-selectors
   nsfastenumeration-selectors
@@ -5332,6 +5474,7 @@
   nsfilecoordinator-set-purpose-identifier!
   nsfilehandle-available-data
   nsfilehandle-close-and-return-error!
+  nsfilehandle-encode-with-coder
   nsfilehandle-file-descriptor
   nsfilehandle-file-handle-with-null-device
   nsfilehandle-file-handle-with-standard-error
@@ -5341,6 +5484,7 @@
   nsfilehandle-read-data-to-end-of-file-and-return-error
   nsfilehandle-read-data-up-to-length-error
   nsfilehandle-seek-to-offset-error
+  nsfilehandle-supports-secure-coding
   nsfilehandle-synchronize-and-return-error
   nsfilehandle-truncate-at-offset-error
   nsfilehandle-write-data-error
@@ -5405,6 +5549,8 @@
   nsfilepresenter-selectors
   nsfileproviderservice-get-file-provider-connection-with-completion-handler
   nsfileproviderservice-name
+  nsfilesecurity-encode-with-coder
+  nsfilesecurity-supports-secure-coding
   nsfileversion-add-version-of-item-at-url-with-contents-of-url-options-error!
   nsfileversion-conflict
   nsfileversion-current-version-of-item-at-url
@@ -5434,6 +5580,7 @@
   nsfilewrapper-add-file-wrapper!
   nsfilewrapper-add-regular-file-with-contents-preferred-filename!
   nsfilewrapper-directory
+  nsfilewrapper-encode-with-coder
   nsfilewrapper-file-attributes
   nsfilewrapper-file-wrappers
   nsfilewrapper-filename
@@ -5454,11 +5601,13 @@
   nsfilewrapper-set-file-attributes!
   nsfilewrapper-set-filename!
   nsfilewrapper-set-preferred-filename!
+  nsfilewrapper-supports-secure-coding
   nsfilewrapper-symbolic-link
   nsfilewrapper-symbolic-link-destination-url
   nsfilewrapper-write-to-url-options-original-contents-url-error
   nsformatter-attributed-string-for-object-value-with-default-attributes
   nsformatter-editing-string-for-object-value
+  nsformatter-encode-with-coder
   nsformatter-string-for-object-value
   nsgarbagecollector-collect-exhaustively
   nsgarbagecollector-collect-if-needed
@@ -5471,6 +5620,7 @@
   nshashtable-any-object
   nshashtable-contains-object
   nshashtable-count
+  nshashtable-encode-with-coder
   nshashtable-hash-table-with-options
   nshashtable-intersect-hash-table
   nshashtable-intersects-hash-table
@@ -5484,6 +5634,7 @@
   nshashtable-remove-object!
   nshashtable-set-representation
   nshashtable-set-representation!
+  nshashtable-supports-secure-coding
   nshashtable-union-hash-table
   nshashtable-weak-objects-hash-table
   nshost-address
@@ -5533,16 +5684,19 @@
   nshttpurlresponse-status-code
   nshttpurlresponse-value-for-http-header-field
   nsindexpath-compare
+  nsindexpath-encode-with-coder
   nsindexpath-index-at-position
   nsindexpath-index-path-by-adding-index
   nsindexpath-index-path-by-removing-last-index
   nsindexpath-index-path-with-index
   nsindexpath-length
+  nsindexpath-supports-secure-coding
   nsindexset-contains-index
   nsindexset-contains-indexes
   nsindexset-contains-indexes-in-range
   nsindexset-count
   nsindexset-count-of-indexes-in-range
+  nsindexset-encode-with-coder
   nsindexset-enumerate-indexes-in-range-options-using-block
   nsindexset-enumerate-indexes-using-block
   nsindexset-enumerate-indexes-with-options-using-block
@@ -5564,11 +5718,14 @@
   nsindexset-is-equal-to-index-set
   nsindexset-last-index
   nsindexset-make-iterator
+  nsindexset-supports-secure-coding
   nsindexset-underestimated-count
   nsindexspecifier-index
   nsindexspecifier-set-index!
   nsinflectionrule-automatic-rule
   nsinflectionrule-can-inflect-preferred-localization
+  nsinflectionrule-encode-with-coder
+  nsinflectionrule-supports-secure-coding
   nsinflectionruleexplicit-morphology
   nsinputstream-has-bytes-available
   nsinvocation-arguments-retained
@@ -5584,11 +5741,13 @@
   nsinvocationoperation-invocation
   nsinvocationoperation-result
   nsiso8601dateformatter-date-from-string
+  nsiso8601dateformatter-encode-with-coder
   nsiso8601dateformatter-format-options
   nsiso8601dateformatter-set-format-options!
   nsiso8601dateformatter-set-time-zone!
   nsiso8601dateformatter-string-from-date
   nsiso8601dateformatter-string-from-date-time-zone-format-options
+  nsiso8601dateformatter-supports-secure-coding
   nsiso8601dateformatter-time-zone
   nsitemprovider-can-load-object-of-class
   nsitemprovider-has-item-conforming-to-type-identifier
@@ -5707,6 +5866,7 @@
   nslocale-current-locale
   nslocale-decimal-separator
   nslocale-display-name-for-key-value!
+  nslocale-encode-with-coder
   nslocale-exemplar-character-set
   nslocale-grouping-separator
   nslocale-iso-country-codes
@@ -5721,15 +5881,20 @@
   nslocale-quotation-end-delimiter
   nslocale-region-code
   nslocale-script-code
+  nslocale-supports-secure-coding
   nslocale-system-locale
   nslocale-uses-metric-system
   nslocale-variant-code
   nslocalizednumberformatrule-automatic
+  nslocalizednumberformatrule-encode-with-coder
   nslocalizednumberformatrule-new
+  nslocalizednumberformatrule-supports-secure-coding
+  nslock-lock
   nslock-lock-before-date
   nslock-name
   nslock-set-name!
   nslock-try-lock
+  nslock-unlock
   nslocking-selectors
   nslogicaltest-init-and-test-with-tests
   nslogicaltest-init-not-test-with-test
@@ -5749,6 +5914,7 @@
   nsmachportdelegate-selectors
   nsmaptable-count
   nsmaptable-dictionary-representation
+  nsmaptable-encode-with-coder
   nsmaptable-key-enumerator
   nsmaptable-key-pointer-functions
   nsmaptable-map-table-with-key-options-value-options
@@ -5759,6 +5925,7 @@
   nsmaptable-set-object-for-key!
   nsmaptable-strong-to-strong-objects-map-table
   nsmaptable-strong-to-weak-objects-map-table
+  nsmaptable-supports-secure-coding
   nsmaptable-value-pointer-functions
   nsmaptable-weak-to-strong-objects-map-table
   nsmaptable-weak-to-weak-objects-map-table
@@ -5774,10 +5941,13 @@
   nsmassformatter-unit-style
   nsmeasurement-can-be-converted-to-unit
   nsmeasurement-double-value
+  nsmeasurement-encode-with-coder
   nsmeasurement-measurement-by-adding-measurement
   nsmeasurement-measurement-by-converting-to-unit
   nsmeasurement-measurement-by-subtracting-measurement
+  nsmeasurement-supports-secure-coding
   nsmeasurement-unit
+  nsmeasurementformatter-encode-with-coder
   nsmeasurementformatter-locale
   nsmeasurementformatter-number-formatter
   nsmeasurementformatter-set-locale!
@@ -5786,6 +5956,7 @@
   nsmeasurementformatter-set-unit-style!
   nsmeasurementformatter-string-from-measurement
   nsmeasurementformatter-string-from-unit
+  nsmeasurementformatter-supports-secure-coding
   nsmeasurementformatter-unit-options
   nsmeasurementformatter-unit-style
   nsmessageportnameserver-port-for-name
@@ -5850,6 +6021,7 @@
   nsmethodsignature-signature-with-obj-c-types
   nsmorphology-definiteness
   nsmorphology-determination
+  nsmorphology-encode-with-coder
   nsmorphology-grammatical-case
   nsmorphology-grammatical-gender
   nsmorphology-grammatical-person
@@ -5864,8 +6036,10 @@
   nsmorphology-set-number!
   nsmorphology-set-part-of-speech!
   nsmorphology-set-pronoun-type!
+  nsmorphology-supports-secure-coding
   nsmorphology-unspecified
   nsmorphology-user-morphology
+  nsmorphologycustompronoun-encode-with-coder
   nsmorphologycustompronoun-is-supported-for-language
   nsmorphologycustompronoun-object-form
   nsmorphologycustompronoun-possessive-adjective-form
@@ -5878,10 +6052,13 @@
   nsmorphologycustompronoun-set-reflexive-form!
   nsmorphologycustompronoun-set-subject-form!
   nsmorphologycustompronoun-subject-form
+  nsmorphologycustompronoun-supports-secure-coding
   nsmorphologypronoun-dependent-morphology
+  nsmorphologypronoun-encode-with-coder
   nsmorphologypronoun-morphology
   nsmorphologypronoun-new
   nsmorphologypronoun-pronoun
+  nsmorphologypronoun-supports-secure-coding
   nsmovecommand-key-specifier
   nsmovecommand-set-receivers-specifier!
   nsmutablearray-add-object!
@@ -5903,6 +6080,7 @@
   nsmutablecharacterset-control-character-set
   nsmutablecharacterset-decimal-digit-character-set
   nsmutablecharacterset-decomposable-character-set
+  nsmutablecharacterset-encode-with-coder
   nsmutablecharacterset-form-intersection-with-character-set
   nsmutablecharacterset-form-union-with-character-set
   nsmutablecharacterset-illegal-character-set
@@ -5914,6 +6092,7 @@
   nsmutablecharacterset-punctuation-character-set
   nsmutablecharacterset-remove-characters-in-range!
   nsmutablecharacterset-remove-characters-in-string!
+  nsmutablecharacterset-supports-secure-coding
   nsmutablecharacterset-symbol-character-set
   nsmutablecharacterset-uppercase-letter-character-set
   nsmutablecharacterset-whitespace-and-newline-character-set
@@ -5922,8 +6101,10 @@
   nsmutabledata-length
   nsmutabledata-mutable-bytes
   nsmutabledata-set-length!
+  nsmutabledictionary-encode-with-coder
   nsmutabledictionary-remove-object-for-key!
   nsmutabledictionary-set-object-for-key!
+  nsmutabledictionary-supports-secure-coding
   nsmutableindexset-add-index!
   nsmutableindexset-add-indexes!
   nsmutableindexset-add-indexes-in-range!
@@ -5937,7 +6118,14 @@
   nsmutableorderedset-replace-object-at-index-with-object!
   nsmutableset-add-object!
   nsmutableset-remove-object!
+  nsmutablestring-encode-with-coder
+  nsmutablestring-item-provider-visibility-for-representation-with-type-identifier
+  nsmutablestring-load-data-with-type-identifier-for-item-provider-completion-handler
+  nsmutablestring-object-with-item-provider-data-type-identifier-error
+  nsmutablestring-readable-type-identifiers-for-item-provider
   nsmutablestring-replace-characters-in-range-with-string!
+  nsmutablestring-supports-secure-coding
+  nsmutablestring-writable-type-identifiers-for-item-provider
   nsmutableurlrequest-all-http-header-fields
   nsmutableurlrequest-allows-cellular-access
   nsmutableurlrequest-allows-constrained-network-access
@@ -6015,6 +6203,7 @@
   nsnetservicebrowser-stop
   nsnetservicebrowserdelegate-selectors
   nsnetservicedelegate-selectors
+  nsnotification-encode-with-coder
   nsnotification-name
   nsnotification-object
   nsnotification-user-info
@@ -6030,12 +6219,15 @@
   nsnotificationqueue-dequeue-notifications-matching-coalesce-mask
   nsnotificationqueue-enqueue-notification-posting-style
   nsnotificationqueue-enqueue-notification-posting-style-coalesce-mask-for-modes
+  nsnull-encode-with-coder
   nsnull-null
+  nsnull-supports-secure-coding
   nsnumber-bool-value
   nsnumber-char-value
   nsnumber-compare
   nsnumber-description-with-locale
   nsnumber-double-value
+  nsnumber-encode-with-coder
   nsnumber-float-value
   nsnumber-int-value
   nsnumber-integer-value
@@ -6044,6 +6236,7 @@
   nsnumber-long-value
   nsnumber-short-value
   nsnumber-string-value
+  nsnumber-supports-secure-coding
   nsnumber-unsigned-char-value
   nsnumber-unsigned-int-value
   nsnumber-unsigned-integer-value
@@ -6254,6 +6447,7 @@
   nsorderedset-array
   nsorderedset-count
   nsorderedset-description
+  nsorderedset-encode-with-coder
   nsorderedset-first-object
   nsorderedset-index-of-object
   nsorderedset-last-object
@@ -6261,14 +6455,18 @@
   nsorderedset-object-at-index
   nsorderedset-reversed-ordered-set
   nsorderedset-set
+  nsorderedset-supports-secure-coding
   nsorderedset-underestimated-count
   nsorthography-all-languages
   nsorthography-all-scripts
   nsorthography-dominant-language
   nsorthography-dominant-script
+  nsorthography-encode-with-coder
   nsorthography-language-map
+  nsorthography-supports-secure-coding
   nsoutputstream-has-space-available
   nsoutputstream-init-to-memory
+  nspersonnamecomponents-encode-with-coder
   nspersonnamecomponents-family-name
   nspersonnamecomponents-given-name
   nspersonnamecomponents-middle-name
@@ -6283,6 +6481,7 @@
   nspersonnamecomponents-set-name-suffix!
   nspersonnamecomponents-set-nickname!
   nspersonnamecomponents-set-phonetic-representation!
+  nspersonnamecomponents-supports-secure-coding
   nspersonnamecomponentsformatter-annotated-string-from-person-name-components
   nspersonnamecomponentsformatter-is-phonetic
   nspersonnamecomponentsformatter-locale
@@ -6300,11 +6499,13 @@
   nspointerarray-all-objects
   nspointerarray-compact
   nspointerarray-count
+  nspointerarray-encode-with-coder
   nspointerarray-pointer-array-with-options
   nspointerarray-pointer-array-with-pointer-functions
   nspointerarray-pointer-functions
   nspointerarray-remove-pointer-at-index!
   nspointerarray-set-count!
+  nspointerarray-supports-secure-coding
   nspointerfunctions-acquire-function
   nspointerfunctions-description-function
   nspointerfunctions-hash-function
@@ -6323,6 +6524,7 @@
   nspointerfunctions-uses-strong-write-barrier
   nspointerfunctions-uses-weak-read-and-write-barriers
   nsport-delegate
+  nsport-encode-with-coder
   nsport-invalidate
   nsport-is-valid
   nsport-port
@@ -6363,6 +6565,7 @@
   nspositionalspecifier-set-insertion-class-description!
   nspredicate-allow-evaluation
   nspredicate-allow-evaluation-with-validator-error
+  nspredicate-encode-with-coder
   nspredicate-evaluate-with-object
   nspredicate-evaluate-with-object-substitution-variables
   nspredicate-predicate-format
@@ -6371,12 +6574,14 @@
   nspredicate-predicate-with-format-argument-array
   nspredicate-predicate-with-substitution-variables
   nspredicate-predicate-with-value
+  nspredicate-supports-secure-coding
   nspredicatevalidating-selectors
   nspresentationintent-block-quote-intent-with-identity-nested-inside-intent
   nspresentationintent-code-block-intent-with-identity-language-hint-nested-inside-intent
   nspresentationintent-column
   nspresentationintent-column-alignments
   nspresentationintent-column-count
+  nspresentationintent-encode-with-coder
   nspresentationintent-header-intent-with-identity-level-nested-inside-intent
   nspresentationintent-header-level
   nspresentationintent-identity
@@ -6390,6 +6595,7 @@
   nspresentationintent-paragraph-intent-with-identity-nested-inside-intent
   nspresentationintent-parent-intent
   nspresentationintent-row
+  nspresentationintent-supports-secure-coding
   nspresentationintent-table-cell-intent-with-identity-column-nested-inside-intent
   nspresentationintent-table-header-row-intent-with-identity-nested-inside-intent
   nspresentationintent-table-intent-with-identity-column-count-alignments-nested-inside-intent
@@ -6496,21 +6702,29 @@
   nsproxy-forward-invocation
   nsproxy-method-signature-for-selector
   nsproxy-responds-to-selector
+  nspurgeabledata-begin-content-access!
+  nspurgeabledata-discard-content-if-possible
+  nspurgeabledata-end-content-access!
+  nspurgeabledata-is-content-discarded
   nsquitcommand-save-options
   nsrangespecifier-end-specifier
   nsrangespecifier-end-specifier!
   nsrangespecifier-set-end-specifier!
   nsrangespecifier-set-start-specifier!
   nsrangespecifier-start-specifier
+  nsrecursivelock-lock
   nsrecursivelock-lock-before-date
   nsrecursivelock-name
   nsrecursivelock-set-name!
   nsrecursivelock-try-lock
+  nsrecursivelock-unlock
+  nsregularexpression-encode-with-coder
   nsregularexpression-escaped-pattern-for-string
   nsregularexpression-number-of-capture-groups
   nsregularexpression-options
   nsregularexpression-pattern
   nsregularexpression-regular-expression-with-pattern-options-error
+  nsregularexpression-supports-secure-coding
   nsrelativedatetimeformatter-calendar
   nsrelativedatetimeformatter-date-time-style
   nsrelativedatetimeformatter-formatting-context
@@ -6574,6 +6788,7 @@
   nsscriptcommand-command-description
   nsscriptcommand-current-command
   nsscriptcommand-direct-parameter
+  nsscriptcommand-encode-with-coder
   nsscriptcommand-evaluated-arguments
   nsscriptcommand-evaluated-receivers
   nsscriptcommand-execute-command
@@ -6602,6 +6817,7 @@
   nsscriptcommanddescription-command-class-name
   nsscriptcommanddescription-command-name
   nsscriptcommanddescription-create-command-instance
+  nsscriptcommanddescription-encode-with-coder
   nsscriptcommanddescription-is-optional-argument-with-name
   nsscriptcommanddescription-return-type
   nsscriptcommanddescription-suite-name
@@ -6619,6 +6835,7 @@
   nsscriptobjectspecifier-container-is-range-container-object
   nsscriptobjectspecifier-container-specifier
   nsscriptobjectspecifier-descriptor
+  nsscriptobjectspecifier-encode-with-coder
   nsscriptobjectspecifier-evaluation-error-number
   nsscriptobjectspecifier-evaluation-error-specifier
   nsscriptobjectspecifier-key
@@ -6648,6 +6865,7 @@
   nsscriptsuiteregistry-shared-script-suite-registry
   nsscriptsuiteregistry-suite-for-apple-event-code
   nsscriptsuiteregistry-suite-names
+  nsscriptwhosetest-encode-with-coder
   nsscriptwhosetest-is-true
   nssecurecoding-selectors
   nssecureunarchivefromdatatransformer-allowed-top-level-classes
@@ -6655,9 +6873,11 @@
   nsset-count
   nsset-custom-mirror
   nsset-description
+  nsset-encode-with-coder
   nsset-make-iterator
   nsset-member
   nsset-object-enumerator
+  nsset-supports-secure-coding
   nsset-underestimated-count
   nssetcommand-key-specifier
   nssetcommand-set-receivers-specifier!
@@ -6681,6 +6901,7 @@
   nssortdescriptor-allow-evaluation
   nssortdescriptor-ascending
   nssortdescriptor-compare-object-to-object
+  nssortdescriptor-encode-with-coder
   nssortdescriptor-key
   nssortdescriptor-key-path
   nssortdescriptor-reversed-sort-descriptor
@@ -6688,6 +6909,7 @@
   nssortdescriptor-sort-descriptor-with-key-ascending
   nssortdescriptor-sort-descriptor-with-key-ascending-comparator
   nssortdescriptor-sort-descriptor-with-key-ascending-selector
+  nssortdescriptor-supports-secure-coding
   nsspellserver-delegate
   nsspellserver-is-word-in-user-dictionaries-case-sensitive
   nsspellserver-register-language-by-vendor
@@ -6716,23 +6938,28 @@
   nsstring-default-c-string-encoding
   nsstring-description
   nsstring-double-value
+  nsstring-encode-with-coder
   nsstring-fastest-encoding
   nsstring-file-system-representation
   nsstring-float-value
   nsstring-hash
   nsstring-int-value
   nsstring-integer-value
+  nsstring-item-provider-visibility-for-representation-with-type-identifier
   nsstring-last-path-component
   nsstring-length
+  nsstring-load-data-with-type-identifier-for-item-provider-completion-handler
   nsstring-localized-capitalized-string
   nsstring-localized-lowercase-string
   nsstring-localized-uppercase-string
   nsstring-long-long-value
   nsstring-lowercase-string
+  nsstring-object-with-item-provider-data-type-identifier-error
   nsstring-path-components
   nsstring-path-extension
   nsstring-precomposed-string-with-canonical-mapping
   nsstring-precomposed-string-with-compatibility-mapping
+  nsstring-readable-type-identifiers-for-item-provider
   nsstring-smallest-encoding
   nsstring-string-by-abbreviating-with-tilde-in-path
   nsstring-string-by-deleting-last-path-component
@@ -6741,8 +6968,10 @@
   nsstring-string-by-removing-percent-encoding
   nsstring-string-by-resolving-symlinks-in-path
   nsstring-string-by-standardizing-path
+  nsstring-supports-secure-coding
   nsstring-uppercase-string
   nsstring-utf8-string
+  nsstring-writable-type-identifiers-for-item-provider
   nstask-arguments
   nstask-current-directory-path
   nstask-current-directory-url
@@ -6777,6 +7006,7 @@
   nstask-termination-reason
   nstask-termination-status
   nstermofaddress-current-user
+  nstermofaddress-encode-with-coder
   nstermofaddress-feminine
   nstermofaddress-language-identifier
   nstermofaddress-localized-for-language-identifier-with-pronouns
@@ -6784,11 +7014,13 @@
   nstermofaddress-neutral
   nstermofaddress-new
   nstermofaddress-pronouns
+  nstermofaddress-supports-secure-coding
   nstextcheckingresult-address-components
   nstextcheckingresult-alternative-strings
   nstextcheckingresult-components
   nstextcheckingresult-date
   nstextcheckingresult-duration
+  nstextcheckingresult-encode-with-coder
   nstextcheckingresult-grammar-details
   nstextcheckingresult-number-of-ranges
   nstextcheckingresult-orthography
@@ -6797,6 +7029,7 @@
   nstextcheckingresult-regular-expression
   nstextcheckingresult-replacement-string
   nstextcheckingresult-result-type
+  nstextcheckingresult-supports-secure-coding
   nstextcheckingresult-time-zone
   nstextcheckingresult-url
   nsthread-call-stack-return-addresses
@@ -6853,6 +7086,7 @@
   nstimezone-daylight-saving-time-offset-for-date
   nstimezone-default-time-zone
   nstimezone-description
+  nstimezone-encode-with-coder
   nstimezone-is-daylight-saving-time-for-date
   nstimezone-known-time-zone-names
   nstimezone-local-time-zone
@@ -6863,6 +7097,7 @@
   nstimezone-seconds-from-gmt-for-date
   nstimezone-set-abbreviation-dictionary!
   nstimezone-set-default-time-zone!
+  nstimezone-supports-secure-coding
   nstimezone-system-time-zone
   nstimezone-time-zone-data-version
   nsubiquitouskeyvaluestore-array-for-key
@@ -6938,17 +7173,24 @@
   nsundomanager-undoing
   nsuniqueidspecifier-set-unique-id!
   nsuniqueidspecifier-unique-id
+  nsunit-encode-with-coder
+  nsunit-supports-secure-coding
   nsunit-symbol
+  nsunitacceleration-encode-with-coder
   nsunitacceleration-gravity
   nsunitacceleration-meters-per-second-squared
+  nsunitacceleration-supports-secure-coding
   nsunitangle-arc-minutes
   nsunitangle-arc-seconds
   nsunitangle-degrees
+  nsunitangle-encode-with-coder
   nsunitangle-gradians
   nsunitangle-radians
   nsunitangle-revolutions
+  nsunitangle-supports-secure-coding
   nsunitarea-acres
   nsunitarea-ares
+  nsunitarea-encode-with-coder
   nsunitarea-hectares
   nsunitarea-square-centimeters
   nsunitarea-square-feet
@@ -6961,14 +7203,22 @@
   nsunitarea-square-millimeters
   nsunitarea-square-nanometers
   nsunitarea-square-yards
+  nsunitarea-supports-secure-coding
+  nsunitconcentrationmass-encode-with-coder
   nsunitconcentrationmass-grams-per-liter
   nsunitconcentrationmass-milligrams-per-deciliter
   nsunitconcentrationmass-millimoles-per-liter-with-grams-per-mole
+  nsunitconcentrationmass-supports-secure-coding
   nsunitconverter-base-unit-value-from-value
   nsunitconverter-value-from-base-unit-value
   nsunitconverterlinear-coefficient
   nsunitconverterlinear-constant
+  nsunitconverterlinear-encode-with-coder
+  nsunitconverterlinear-supports-secure-coding
+  nsunitdispersion-encode-with-coder
   nsunitdispersion-parts-per-million
+  nsunitdispersion-supports-secure-coding
+  nsunitduration-encode-with-coder
   nsunitduration-hours
   nsunitduration-microseconds
   nsunitduration-milliseconds
@@ -6976,32 +7226,44 @@
   nsunitduration-nanoseconds
   nsunitduration-picoseconds
   nsunitduration-seconds
+  nsunitduration-supports-secure-coding
   nsunitelectriccharge-ampere-hours
   nsunitelectriccharge-coulombs
+  nsunitelectriccharge-encode-with-coder
   nsunitelectriccharge-kiloampere-hours
   nsunitelectriccharge-megaampere-hours
   nsunitelectriccharge-microampere-hours
   nsunitelectriccharge-milliampere-hours
+  nsunitelectriccharge-supports-secure-coding
   nsunitelectriccurrent-amperes
+  nsunitelectriccurrent-encode-with-coder
   nsunitelectriccurrent-kiloamperes
   nsunitelectriccurrent-megaamperes
   nsunitelectriccurrent-microamperes
   nsunitelectriccurrent-milliamperes
+  nsunitelectriccurrent-supports-secure-coding
+  nsunitelectricpotentialdifference-encode-with-coder
   nsunitelectricpotentialdifference-kilovolts
   nsunitelectricpotentialdifference-megavolts
   nsunitelectricpotentialdifference-microvolts
   nsunitelectricpotentialdifference-millivolts
+  nsunitelectricpotentialdifference-supports-secure-coding
   nsunitelectricpotentialdifference-volts
+  nsunitelectricresistance-encode-with-coder
   nsunitelectricresistance-kiloohms
   nsunitelectricresistance-megaohms
   nsunitelectricresistance-microohms
   nsunitelectricresistance-milliohms
   nsunitelectricresistance-ohms
+  nsunitelectricresistance-supports-secure-coding
   nsunitenergy-calories
+  nsunitenergy-encode-with-coder
   nsunitenergy-joules
   nsunitenergy-kilocalories
   nsunitenergy-kilojoules
   nsunitenergy-kilowatt-hours
+  nsunitenergy-supports-secure-coding
+  nsunitfrequency-encode-with-coder
   nsunitfrequency-frames-per-second
   nsunitfrequency-gigahertz
   nsunitfrequency-hertz
@@ -7010,13 +7272,19 @@
   nsunitfrequency-microhertz
   nsunitfrequency-millihertz
   nsunitfrequency-nanohertz
+  nsunitfrequency-supports-secure-coding
   nsunitfrequency-terahertz
+  nsunitfuelefficiency-encode-with-coder
   nsunitfuelefficiency-liters-per100-kilometers
   nsunitfuelefficiency-miles-per-gallon
   nsunitfuelefficiency-miles-per-imperial-gallon
+  nsunitfuelefficiency-supports-secure-coding
+  nsunitilluminance-encode-with-coder
   nsunitilluminance-lux
+  nsunitilluminance-supports-secure-coding
   nsunitinformationstorage-bits
   nsunitinformationstorage-bytes
+  nsunitinformationstorage-encode-with-coder
   nsunitinformationstorage-exabits
   nsunitinformationstorage-exabytes
   nsunitinformationstorage-exbibits
@@ -7038,6 +7306,7 @@
   nsunitinformationstorage-pebibytes
   nsunitinformationstorage-petabits
   nsunitinformationstorage-petabytes
+  nsunitinformationstorage-supports-secure-coding
   nsunitinformationstorage-tebibits
   nsunitinformationstorage-tebibytes
   nsunitinformationstorage-terabits
@@ -7054,6 +7323,7 @@
   nsunitlength-centimeters
   nsunitlength-decameters
   nsunitlength-decimeters
+  nsunitlength-encode-with-coder
   nsunitlength-fathoms
   nsunitlength-feet
   nsunitlength-furlongs
@@ -7071,10 +7341,12 @@
   nsunitlength-parsecs
   nsunitlength-picometers
   nsunitlength-scandinavian-miles
+  nsunitlength-supports-secure-coding
   nsunitlength-yards
   nsunitmass-carats
   nsunitmass-centigrams
   nsunitmass-decigrams
+  nsunitmass-encode-with-coder
   nsunitmass-grams
   nsunitmass-kilograms
   nsunitmass-metric-tons
@@ -7088,6 +7360,8 @@
   nsunitmass-short-tons
   nsunitmass-slugs
   nsunitmass-stones
+  nsunitmass-supports-secure-coding
+  nsunitpower-encode-with-coder
   nsunitpower-femtowatts
   nsunitpower-gigawatts
   nsunitpower-horsepower
@@ -7097,9 +7371,11 @@
   nsunitpower-milliwatts
   nsunitpower-nanowatts
   nsunitpower-picowatts
+  nsunitpower-supports-secure-coding
   nsunitpower-terawatts
   nsunitpower-watts
   nsunitpressure-bars
+  nsunitpressure-encode-with-coder
   nsunitpressure-gigapascals
   nsunitpressure-hectopascals
   nsunitpressure-inches-of-mercury
@@ -7109,13 +7385,18 @@
   nsunitpressure-millimeters-of-mercury
   nsunitpressure-newtons-per-meters-squared
   nsunitpressure-pounds-force-per-square-inch
+  nsunitpressure-supports-secure-coding
+  nsunitspeed-encode-with-coder
   nsunitspeed-kilometers-per-hour
   nsunitspeed-knots
   nsunitspeed-meters-per-second
   nsunitspeed-miles-per-hour
+  nsunitspeed-supports-secure-coding
   nsunittemperature-celsius
+  nsunittemperature-encode-with-coder
   nsunittemperature-fahrenheit
   nsunittemperature-kelvin
+  nsunittemperature-supports-secure-coding
   nsunitvolume-acre-feet
   nsunitvolume-bushels
   nsunitvolume-centiliters
@@ -7130,6 +7411,7 @@
   nsunitvolume-cubic-yards
   nsunitvolume-cups
   nsunitvolume-deciliters
+  nsunitvolume-encode-with-coder
   nsunitvolume-fluid-ounces
   nsunitvolume-gallons
   nsunitvolume-imperial-fluid-ounces
@@ -7145,6 +7427,7 @@
   nsunitvolume-milliliters
   nsunitvolume-pints
   nsunitvolume-quarts
+  nsunitvolume-supports-secure-coding
   nsunitvolume-tablespoons
   nsunitvolume-teaspoons
   nsurl-absolute-string
@@ -7155,6 +7438,7 @@
   nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
   nsurl-custom-playground-quick-look
   nsurl-data-representation
+  nsurl-encode-with-coder
   nsurl-file-path-url
   nsurl-file-reference-url
   nsurl-file-system-representation
@@ -7175,7 +7459,10 @@
   nsurl-init-file-url-with-path-relative-to-url
   nsurl-is-file-reference-url
   nsurl-is-file-url
+  nsurl-item-provider-visibility-for-representation-with-type-identifier
   nsurl-last-path-component
+  nsurl-load-data-with-type-identifier-for-item-provider-completion-handler
+  nsurl-object-with-item-provider-data-type-identifier-error
   nsurl-parameter-string
   nsurl-password
   nsurl-path
@@ -7183,6 +7470,7 @@
   nsurl-path-extension
   nsurl-port
   nsurl-query
+  nsurl-readable-type-identifiers-for-item-provider
   nsurl-relative-path
   nsurl-relative-string
   nsurl-remove-all-cached-resource-values!
@@ -7197,6 +7485,7 @@
   nsurl-standardized-url
   nsurl-start-accessing-security-scoped-resource
   nsurl-stop-accessing-security-scoped-resource
+  nsurl-supports-secure-coding
   nsurl-url-by-deleting-last-path-component
   nsurl-url-by-deleting-path-extension
   nsurl-url-by-resolving-alias-file-at-url-options-error
@@ -7207,13 +7496,16 @@
   nsurl-url-with-string-encoding-invalid-characters
   nsurl-url-with-string-relative-to-url
   nsurl-user
+  nsurl-writable-type-identifiers-for-item-provider
   nsurl-write-bookmark-data-to-url-options-error
+  nsurlauthenticationchallenge-encode-with-coder
   nsurlauthenticationchallenge-error
   nsurlauthenticationchallenge-failure-response
   nsurlauthenticationchallenge-previous-failure-count
   nsurlauthenticationchallenge-proposed-credential
   nsurlauthenticationchallenge-protection-space
   nsurlauthenticationchallenge-sender
+  nsurlauthenticationchallenge-supports-secure-coding
   nsurlauthenticationchallengesender-selectors
   nsurlcache-cached-response-for-request
   nsurlcache-current-disk-usage
@@ -7288,10 +7580,12 @@
   nsurlconnectiondelegate-selectors
   nsurlconnectiondownloaddelegate-selectors
   nsurlcredential-certificates
+  nsurlcredential-encode-with-coder
   nsurlcredential-has-password
   nsurlcredential-identity
   nsurlcredential-password
   nsurlcredential-persistence
+  nsurlcredential-supports-secure-coding
   nsurlcredential-user
   nsurlcredentialstorage-all-credentials
   nsurlcredentialstorage-credentials-for-protection-space
@@ -7312,6 +7606,7 @@
   nsurlhandleclient-selectors
   nsurlprotectionspace-authentication-method
   nsurlprotectionspace-distinguished-names
+  nsurlprotectionspace-encode-with-coder
   nsurlprotectionspace-host
   nsurlprotectionspace-is-proxy
   nsurlprotectionspace-port
@@ -7320,6 +7615,7 @@
   nsurlprotectionspace-realm
   nsurlprotectionspace-receives-credential-securely
   nsurlprotectionspace-server-trust
+  nsurlprotectionspace-supports-secure-coding
   nsurlprotocol-cached-response
   nsurlprotocol-can-init-with-request
   nsurlprotocol-canonical-request-for-request
@@ -7335,8 +7631,10 @@
   nsurlprotocol-task
   nsurlprotocol-unregister-class
   nsurlprotocolclient-selectors
+  nsurlqueryitem-encode-with-coder
   nsurlqueryitem-name
   nsurlqueryitem-query-item-with-name-value
+  nsurlqueryitem-supports-secure-coding
   nsurlqueryitem-value
   nsurlrequest-all-http-header-fields
   nsurlrequest-allows-cellular-access
@@ -7348,6 +7646,7 @@
   nsurlrequest-attribution
   nsurlrequest-cache-policy
   nsurlrequest-cookie-partition-identifier
+  nsurlrequest-encode-with-coder
   nsurlrequest-http-body
   nsurlrequest-http-body-stream
   nsurlrequest-http-method
@@ -7361,9 +7660,11 @@
   nsurlrequest-supports-secure-coding
   nsurlrequest-timeout-interval
   nsurlrequest-url
+  nsurlresponse-encode-with-coder
   nsurlresponse-expected-content-length
   nsurlresponse-mime-type
   nsurlresponse-suggested-filename
+  nsurlresponse-supports-secure-coding
   nsurlresponse-text-encoding-name
   nsurlresponse-url
   nsurlsession-configuration
@@ -7706,9 +8007,12 @@
   nsuserunixtask-standard-input
   nsuserunixtask-standard-output
   nsuuid-compare
+  nsuuid-encode-with-coder
+  nsuuid-supports-secure-coding
   nsuuid-uuid
   nsuuid-uuid-string
   nsvalue-edge-insets-value
+  nsvalue-encode-with-coder
   nsvalue-nonretained-object-value
   nsvalue-obj-c-type
   nsvalue-point-value
@@ -7716,6 +8020,7 @@
   nsvalue-range-value
   nsvalue-rect-value
   nsvalue-size-value
+  nsvalue-supports-secure-coding
   nsvaluetransformer-allows-reverse-transformation
   nsvaluetransformer-reverse-transformed-value
   nsvaluetransformer-set-value-transformer-for-name!
@@ -7927,6 +8232,8 @@
   nsxpclistener-set-delegate!
   nsxpclistener-suspend
   nsxpclistenerdelegate-selectors
+  nsxpclistenerendpoint-encode-with-coder
+  nsxpclistenerendpoint-supports-secure-coding
   nsxpcproxycreating-selectors
   number
   number-formatter
@@ -8027,6 +8334,7 @@
   pointer-functions
   pointer-value
   port
+  port-encode-with-coder
   port-for-name
   port-for-name-host
   port-for-name-host-name-server-port-number
@@ -8303,6 +8611,7 @@
   running
   same-site-policy
   save-options
+  scale
   scale-by
   scale-x-by-y-by
   scan-character
@@ -9050,7 +9359,21 @@
   unit-options
   unit-string-from-value-unit
   unit-style
+  unitenergy-encode-with-coder
+  unitenergy-supports-secure-coding
+  unitlength-encode-with-coder
+  unitlength-supports-secure-coding
+  unitmass-encode-with-coder
+  unitmass-supports-secure-coding
+  unitpressure-encode-with-coder
+  unitpressure-supports-secure-coding
   units-style
+  unitspeed-encode-with-coder
+  unitspeed-supports-secure-coding
+  unittemperature-encode-with-coder
+  unittemperature-supports-secure-coding
+  unitvolume-encode-with-coder
+  unitvolume-supports-secure-coding
   unload
   unlock
   unlock-with-condition
@@ -9144,6 +9467,7 @@
   weekday-ordinal
   weekday-symbols
   well-formed
+  writable-type-identifiers-for-item-provider
   write-data-error
   write-data-timeout-completion-handler
   write-to-url-options-original-contents-url-error

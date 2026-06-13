@@ -76,3 +76,28 @@ under whole-program `-O` in a no-Gerbil VM.
 
 See [[feedback-use-testanyware]], [[reference-testanyware-cli]],
 [[feedback-sample-apps-perfect]].
+
+## Re-verified 2026-06-10 — shim removed (grove leaf 120)
+
+**Status: PASS.** The emitter now flattens conformed-protocol instance
+methods/properties onto each bound class (leaf 120), so the app-local
+raw-`objc_msgSend` shim documented above is **gone**: the app calls the
+generated `scnnode-run-action` (SCNActionable) and
+`scnview-set-autoenables-default-lighting!` (SCNSceneRenderer) directly.
+Bindings regenerated (+~5.1k protocol-flattened methods across the 6
+frameworks; generics 26 → 37 shards); app rebuilt on the bottle toolchain
+(generics 149.7 s parallel + closure 82.6 s + link 256.0 s ≈ 8.3 min cold)
+and re-verified in the no-Gerbil VM (golden `testanyware-golden-macos-tahoe`,
+md5-verified upload, `open -n`, empty stderr log):
+
+- [x] Lit red cube renders with directional shading — proves the **generated**
+      `setAutoenablesDefaultLighting:` installs SceneKit's default lights.
+- [x] Cube spins (two shots ~2 s apart at clearly different angles) — proves
+      the **generated** `runAction:` drives the repeat-forever rotate action.
+- [x] Popup swap to Sphere (`geometryChanged:`) — lit red sphere, colour
+      persisted across the swap.
+- [x] Color… → NSColorPanel → pick cyan on the wheel (`colorChanged:`) — the
+      sphere recoloured live; panel closed cleanly.
+
+Screenshots refreshed in place (`scenekit-viewer-cube.png` mid-spin,
+`scenekit-viewer-sphere.png`, `scenekit-viewer-recolored.png` cyan).
