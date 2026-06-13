@@ -239,6 +239,26 @@ runtime root while preserving the true ObjC super in the registration.
 _Avoid_: reconstructing the chain from `ancestors` ordering; re-defining a
 cross-framework ancestor locally (import it from its owner instead).
 
+**Conformed-protocol method flattening / `ProtocolRegistry` (gerbil, emitter)**:
+The protocol analogue of `ClassRegistry` (leaf 120). The emitter flattens
+instance methods/properties declared on the protocols a class conforms to onto
+that class, so e.g. `SCNNode.runAction:` (declared on `SCNActionable`) is a
+first-class generated binding. It flattens **only the class's own conformance
+closure** — `Class.protocols` closed over protocol `inherits` edges — *not* the
+wholesale `all_methods` chez/racket flatten: ancestor conformances ride the
+`defclass` graph structurally (ADR-0020). `ProtocolRegistry` maps protocol-name →
+`inherits`, built once over all loaded frameworks by the CLI pre-pass, because
+those edges cross frameworks (`NSSecureCoding` → `NSCoding`). The closure
+**excludes the `NSObject` protocol** (name-collides with the root class) and
+**skips registry-unknown protocols** (their `all_methods` entries are
+minimal wrong-arity stubs that would emit broken `objc_msgSend` crossings). Own
+methods win selector ties; a protocol `initWithCoder:` never suppresses the
+synthesized `make-<cls>` (the default-ctor check is own-inits-only). Protocol
+*properties* need no separate path — their accessors arrive as protocol methods.
+_Avoid_: flattening the full `all_methods` set for gerbil (re-emits ancestor
+surfaces the manifest graph already carries); emitting an unknown protocol's
+stub methods.
+
 **Generated `define-c-lambda` dispatch (gerbil)**:
 The gerbil outbound-dispatch mechanism: the emitter open-codes one typed
 `define-c-lambda` per distinct method ABI signature into the binding library,
