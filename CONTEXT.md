@@ -308,6 +308,32 @@ purpose-built native core) in the language gsc speaks. See ADR-0017.
 _Avoid_: "Swift dylib"/`libAPIAnywareGerbil.dylib` (that is the
 racket/chez shape; gerbil compiles ObjC inline via gsc).
 
+## Documentation structure
+
+**Main docs / main tier**:
+The cross-cutting documentation that applies to the project as a whole or to the
+shared `collect → analyse → generate` pipeline — not to any one target.
+Consolidated under a single top-level **`docs/`** tree: `adr/` (the central
+decision log, all targets), `pipeline/`, `specs/`, `research/`, `apps/`
+(language-agnostic app portfolio specs), `testing/` (TestAnyware methodology),
+`guides/`, and `docs/README.md` as the map. `README.md` and `CONTEXT.md` remain
+at the repo root. The former `knowledge/` tree is dissolved into this.
+_Avoid_: "knowledge base" (the `knowledge/` tree is retired); treating `docs/`
+as holding per-target material (ADRs are the sole per-target-flavoured content
+kept central — see below).
+
+**Per-language docs / co-located target docs**:
+Target-specific documentation, co-located inside the target's own on-disk unit
+`generation/targets/<lang>/` (ADR-0011 hermetic isolation extended to docs):
+`docs/reference.md`, `docs/developer-guide.md`, `docs/design/`,
+`docs/research/`, and per-app `apps/<app>/learnings.md` +
+`test-results/<app>/report.md`. The **one exception** is ADRs: the decision log
+is a connected graph crossing target boundaries (supersession chains;
+later targets cite earlier ones), so *all* ADRs stay central in `docs/adr/` with
+global numbering.
+_Avoid_: a central `docs/targets/<lang>/` tree (re-centralizes what isolation
+separates); per-target ADR renumbering (breaks the cross-target decision graph).
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
