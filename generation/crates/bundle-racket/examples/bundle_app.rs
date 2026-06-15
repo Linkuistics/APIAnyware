@@ -33,10 +33,7 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    let source_root = workspace
-        .join("generation")
-        .join("targets")
-        .join("racket");
+    let source_root = workspace.join("generation").join("targets").join("racket");
     let knowledge_apps = workspace.join("knowledge").join("apps");
 
     let scripts: Vec<String> = if arg == "--all" {

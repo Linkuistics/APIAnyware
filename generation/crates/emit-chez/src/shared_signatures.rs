@@ -52,7 +52,10 @@ mod tests {
 
     #[test]
     fn framework_path_for_libdispatch() {
-        assert_eq!(framework_shared_object_arg("libdispatch"), "libSystem.dylib");
+        assert_eq!(
+            framework_shared_object_arg("libdispatch"),
+            "libSystem.dylib"
+        );
     }
 
     #[test]

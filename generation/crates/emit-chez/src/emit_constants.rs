@@ -100,7 +100,11 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     let fw_low = framework.to_ascii_lowercase();
     let mut w = CodeWriter::new();
 
-    write_line!(w, ";; Generated constant definitions for {} — do not edit", framework);
+    write_line!(
+        w,
+        ";; Generated constant definitions for {} — do not edit",
+        framework
+    );
     write_line!(w, "(library (apianyware {} constants)", fw_low);
 
     let exports = constant_names(constants);
@@ -193,6 +197,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         }
     }
 
@@ -207,6 +212,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: Some(value.into()),
+            objc_exposed: true,
         }
     }
 

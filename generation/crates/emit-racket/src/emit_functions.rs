@@ -298,6 +298,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }
     }
 
@@ -1152,6 +1153,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }];
         let output = generate_functions_file(&functions, "CoreGraphics");
         assert!(

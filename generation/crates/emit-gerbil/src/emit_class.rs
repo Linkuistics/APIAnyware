@@ -121,7 +121,6 @@ use apianyware_macos_types::ir::{Class, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
-use crate::protocol_registry::ProtocolRegistry;
 use crate::ffi_type_mapping::{
     emit_geometry_decls, geometry_decl, is_known_geometry_alias, GeometryDecl, GerbilFfiTypeMapper,
     POINTER,
@@ -135,6 +134,7 @@ use crate::naming::{
     make_method_name, make_property_getter_name, make_property_setter_name,
     make_selector_binding_name, make_unique_constructor_name,
 };
+use crate::protocol_registry::ProtocolRegistry;
 
 /// The runtime module the generated class binds against (root class + `wrap` /
 /// `->ptr` + lifetime).
@@ -679,7 +679,11 @@ const NSERROR_CELL: &str = "(pointer (pointer void))";
 fn error_out_arg_tokens(params: &[Param], mapper: &dyn FfiTypeMapper) -> Vec<String> {
     let mut toks = vec![POINTER.to_string(), POINTER.to_string()];
     let visible = &params[..params.len().saturating_sub(1)];
-    toks.extend(visible.iter().map(|p| mapper.map_type(&p.param_type, false)));
+    toks.extend(
+        visible
+            .iter()
+            .map(|p| mapper.map_type(&p.param_type, false)),
+    );
     toks.push(NSERROR_CELL.to_string());
     toks
 }
@@ -1592,7 +1596,10 @@ mod tests {
         );
         // A non-colliding name is untouched.
         assert_eq!(
-            surface_selector("DOMHTMLObjectElement", "domhtmlobjectelement-declare-types-owner"),
+            surface_selector(
+                "DOMHTMLObjectElement",
+                "domhtmlobjectelement-declare-types-owner"
+            ),
             "declare-types-owner"
         );
         assert!(is_reserved_surface_name("set!"));
@@ -1623,6 +1630,7 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
         }
     }
 
@@ -1638,6 +1646,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 
@@ -1660,6 +1669,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             origin: None,
+            objc_exposed: true,
         }
     }
 
@@ -1698,8 +1708,9 @@ mod tests {
         // extends via g:defmethod.
         assert!(!out.contains("(g:defgeneric length)"));
         assert!(out.contains(":gerbil-bindings/generics"));
-        assert!(out
-            .contains("(defmethod {length NSString} (lambda (self) (nsstring-length self)))"));
+        assert!(
+            out.contains("(defmethod {length NSString} (lambda (self) (nsstring-length self)))")
+        );
         assert!(out.contains("(g:defmethod (length (o NSString)) (nsstring-length o))"));
         // the renamed :std/generic import is in scope
         assert!(out.contains(
@@ -1946,8 +1957,9 @@ mod tests {
         // The proc name keeps the mutating `!`; the selector cache var is keyed
         // on the raw selector `setTitle:` (no `!`).
         assert!(out.contains("(define (nswindow-set-title! self value)"));
-        assert!(out
-            .contains("(%msg-p->v (NSObject-ptr self) %sel-nswindow-set-title (->ptr value))"));
+        assert!(
+            out.contains("(%msg-p->v (NSObject-ptr self) %sel-nswindow-set-title (->ptr value))")
+        );
         assert!(out.contains("(define %sel-nswindow-set-title (sel_registerName \"setTitle:\"))"));
         // Both surfaces over the getter AND the setter, bare-kebab selectors. The
         // generics are declared once in the shared module (imported here), not
@@ -1976,8 +1988,9 @@ mod tests {
         let out = generate_class_file(&cls, "Foundation");
         assert!(out.contains(";; --- Class methods ---"));
         assert!(out.contains("(define (nsstring-string)"));
-        assert!(out
-            .contains("(wrap (%msg-v->p (objc_getClass \"NSString\") %sel-nsstring-string))"));
+        assert!(
+            out.contains("(wrap (%msg-v->p (objc_getClass \"NSString\") %sel-nsstring-string))")
+        );
         // Class methods are proc-only — no instance receiver to dispatch on, so
         // no `{}`/generic surface, no g:defmethod, and (no instance surface at all)
         // the class does not even import the shared generics module.
@@ -2086,15 +2099,14 @@ mod tests {
                 name: "uint64".into(),
             }),
         )];
-        let out =
-            generate_class_file_with_parent(
-                &child,
-                "Foundation",
-                &ParentRef::Local("NSString".into()),
-                &HashSet::new(),
-                &ProtocolRegistry::new(),
-            )
-            .0;
+        let out = generate_class_file_with_parent(
+            &child,
+            "Foundation",
+            &ParentRef::Local("NSString".into()),
+            &HashSet::new(),
+            &ProtocolRegistry::new(),
+        )
+        .0;
         // No own method ⇒ no proc, no surface, no g:defmethod for `length`, and
         // (no instance surface at all) no import of the shared generics module.
         assert!(!out.contains("(define (nsmutablestring-length"));
@@ -2111,7 +2123,12 @@ mod tests {
         // (030 registry) resolves the exact bound type — not a fixed handle type.
         let cls = cls_with(
             "NSArray",
-            vec![make_method("firstObject", false, false, ty(TypeRefKind::Id))],
+            vec![make_method(
+                "firstObject",
+                false,
+                false,
+                ty(TypeRefKind::Id),
+            )],
             vec![],
         );
         let out = generate_class_file(&cls, "Foundation");
@@ -2147,8 +2164,14 @@ mod tests {
         ];
         let cls = cls_with("NSData", vec![m], vec![]);
         let errs = error_selectors("writeToFile:error:");
-        let out =
-            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs, &ProtocolRegistry::new()).0;
+        let out = generate_class_file_with_parent(
+            &cls,
+            "Foundation",
+            &ParentRef::RuntimeRoot,
+            &errs,
+            &ProtocolRegistry::new(),
+        )
+        .0;
 
         // The `-e` crossing: visible (pointer void) arg + trailing NSError** cell.
         assert!(out.contains(
@@ -2162,9 +2185,18 @@ mod tests {
         ), "missing id* cast body:\n{out}");
         // The proc drops the trailing error param (visible arity = self + path)
         // and returns two values via the runtime helper.
-        assert!(out.contains("(define (nsdata-write-to-file-error self path)"), "proc arity:\n{out}");
-        assert!(out.contains("(call-with-nserror-out"), "no call-with-nserror-out:\n{out}");
-        assert!(out.contains("(lambda (%err-cell)"), "no err-cell thunk:\n{out}");
+        assert!(
+            out.contains("(define (nsdata-write-to-file-error self path)"),
+            "proc arity:\n{out}"
+        );
+        assert!(
+            out.contains("(call-with-nserror-out"),
+            "no call-with-nserror-out:\n{out}"
+        );
+        assert!(
+            out.contains("(lambda (%err-cell)"),
+            "no err-cell thunk:\n{out}"
+        );
         assert!(out.contains(
             "(%msg-p-pp->b-e (NSObject-ptr self) %sel-nsdata-write-to-file-error (->ptr path) %err-cell)"
         ), "crossing call site:\n{out}");
@@ -2177,7 +2209,10 @@ mod tests {
         assert!(out.contains(
             "(defmethod {write-to-file-error NSData} (lambda (self path) (nsdata-write-to-file-error self path)))"
         ), "{{}} surface:\n{out}");
-        assert!(!out.contains("(g:defmethod (write-to-file-error "), "no generic surface for arg-taking method:\n{out}");
+        assert!(
+            !out.contains("(g:defmethod (write-to-file-error "),
+            "no generic surface for arg-taking method:\n{out}"
+        );
     }
 
     /// The same trailing-pointer shape, but NOT an enrichment error method,
@@ -2191,10 +2226,18 @@ mod tests {
         ];
         let cls = cls_with("NSData", vec![m], vec![]);
         // Empty error set ⇒ not error-routed ⇒ deferred.
-        let out =
-            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &HashSet::new(), &ProtocolRegistry::new())
-                .0;
-        assert!(!out.contains("nsdata-get-bytes-error"), "should be deferred:\n{out}");
+        let out = generate_class_file_with_parent(
+            &cls,
+            "Foundation",
+            &ParentRef::RuntimeRoot,
+            &HashSet::new(),
+            &ProtocolRegistry::new(),
+        )
+        .0;
+        assert!(
+            !out.contains("nsdata-get-bytes-error"),
+            "should be deferred:\n{out}"
+        );
         assert!(!out.contains("-e ("), "no -e crossing:\n{out}");
     }
 
@@ -2202,15 +2245,26 @@ mod tests {
     /// error half comes from `call-with-nserror-out`.
     #[test]
     fn nserror_object_return_wraps_result_inside_thunk() {
-        let mut m = make_method("dataWithContentsOfURL:error:", false, false, ty(TypeRefKind::Id));
+        let mut m = make_method(
+            "dataWithContentsOfURL:error:",
+            false,
+            false,
+            ty(TypeRefKind::Id),
+        );
         m.params = vec![
             param("url", TypeRefKind::Id),
             param("error", TypeRefKind::Pointer),
         ];
         let cls = cls_with("NSData", vec![m], vec![]);
         let errs = error_selectors("dataWithContentsOfURL:error:");
-        let out =
-            generate_class_file_with_parent(&cls, "Foundation", &ParentRef::RuntimeRoot, &errs, &ProtocolRegistry::new()).0;
+        let out = generate_class_file_with_parent(
+            &cls,
+            "Foundation",
+            &ParentRef::RuntimeRoot,
+            &errs,
+            &ProtocolRegistry::new(),
+        )
+        .0;
         // Object return ⇒ the crossing call is wrapped; that wrapped value is the
         // thunk's single result, which call-with-nserror-out pairs with the error.
         assert!(out.contains(
@@ -2243,14 +2297,13 @@ mod tests {
         // verbatim from the IR — even when the Gerbil parent resolves elsewhere.
         let mut cls = cls_with("NSButton", vec![], vec![]);
         cls.superclass = "NSControl".into();
-        let out =
-            generate_class_file_with_parent(
-                &cls,
-                "AppKit",
-                &ParentRef::Local("NSControl".into()),
-                &HashSet::new(),
-                &ProtocolRegistry::new(),
-            );
+        let out = generate_class_file_with_parent(
+            &cls,
+            "AppKit",
+            &ParentRef::Local("NSControl".into()),
+            &HashSet::new(),
+            &ProtocolRegistry::new(),
+        );
         assert!(out
             .0
             .contains("(defclass (NSButton NSControl) () transparent: #t)"));
@@ -2269,7 +2322,13 @@ mod tests {
             name: "NSMutableAttributedString".into(),
             fw_low: "foundation".into(),
         };
-        let out = generate_class_file_with_parent(&cls, "AppKit", &parent, &HashSet::new(), &ProtocolRegistry::new());
+        let out = generate_class_file_with_parent(
+            &cls,
+            "AppKit",
+            &parent,
+            &HashSet::new(),
+            &ProtocolRegistry::new(),
+        );
         assert!(out
             .0
             .contains("(defclass (NSTextStorage NSMutableAttributedString) () transparent: #t)"));

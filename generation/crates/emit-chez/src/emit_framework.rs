@@ -15,18 +15,16 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
 use crate::emit_class::{class_exports, generate_class_file};
 use crate::emit_constants::{constant_names, generate_constants_file};
 use crate::emit_enums::{enum_value_names, generate_enums_file};
-use crate::emit_functions::{
-    count_emittable, function_emittable_names, generate_functions_file,
-};
+use crate::emit_functions::{count_emittable, function_emittable_names, generate_functions_file};
 use crate::emit_protocol::{generate_protocol_file, protocol_exports};
 
 pub const CHEZ_TARGET_INFO: TargetInfo = TargetInfo {
@@ -321,12 +319,14 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.classes_emitted, 1);
@@ -356,6 +356,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.enums_emitted, 1);
@@ -383,6 +384,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.constants_emitted, 1);
@@ -418,6 +420,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.functions_emitted, 1);
@@ -445,6 +448,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.functions_emitted, 0);
@@ -480,11 +484,13 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
             }],
             properties: vec![],
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.protocols_emitted, 1);
@@ -510,6 +516,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.protocols_emitted, 0);

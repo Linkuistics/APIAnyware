@@ -129,7 +129,10 @@ mod tests {
 
         let value = PlistValue::from_file(&path).unwrap();
         let d = value.as_dictionary().unwrap();
-        assert_eq!(d.get("CFBundleName").unwrap().as_string(), Some("Hello Window"));
+        assert_eq!(
+            d.get("CFBundleName").unwrap().as_string(),
+            Some("Hello Window")
+        );
         assert_eq!(
             d.get("CFBundleIdentifier").unwrap().as_string(),
             Some("com.linkuistics.HelloWindow")
@@ -138,7 +141,10 @@ mod tests {
             d.get("CFBundleExecutable").unwrap().as_string(),
             Some("hello-window")
         );
-        assert_eq!(d.get("CFBundlePackageType").unwrap().as_string(), Some("APPL"));
+        assert_eq!(
+            d.get("CFBundlePackageType").unwrap().as_string(),
+            Some("APPL")
+        );
     }
 
     #[test]

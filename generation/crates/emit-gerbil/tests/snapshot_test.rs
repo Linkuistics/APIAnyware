@@ -80,7 +80,10 @@ fn snapshot_gerbil_testkit() {
         .emit_framework(&framework, temp_dir.path())
         .expect("Gerbil emitter should succeed");
 
-    assert!(result.files_written > 0, "should generate at least one file");
+    assert!(
+        result.files_written > 0,
+        "should generate at least one file"
+    );
     assert_eq!(result.classes_emitted, 5, "TestKit has 5 classes");
     assert_eq!(result.protocols_emitted, 2, "TestKit has 2 protocols");
     assert_eq!(result.enums_emitted, 1, "TestKit has 1 enum");

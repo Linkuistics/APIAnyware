@@ -31,6 +31,7 @@ fn func(name: &str, params: Vec<Param>, ret: TypeRefKind) -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     }
 }
 
@@ -49,7 +50,12 @@ fn main() {
         // NSString *NSStringFromRange(NSRange) — NS-geometry struct by-value ARG.
         func(
             "NSStringFromRange",
-            vec![param("range", TypeRefKind::Struct { name: "NSRange".into() })],
+            vec![param(
+                "range",
+                TypeRefKind::Struct {
+                    name: "NSRange".into(),
+                },
+            )],
             TypeRefKind::Id,
         ),
         // NSRange NSRangeFromString(NSString *) — NS-geometry struct by-value RETURN.

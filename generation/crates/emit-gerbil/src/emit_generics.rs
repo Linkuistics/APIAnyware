@@ -37,7 +37,7 @@ use apianyware_macos_emit::enrichment::class_error_selectors;
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::{class_surface_selectors, GENERIC_IMPORT, GENERICS_MODULE_IMPORT};
+use crate::emit_class::{class_surface_selectors, GENERICS_MODULE_IMPORT, GENERIC_IMPORT};
 use crate::protocol_registry::ProtocolRegistry;
 
 /// The on-disk stem + import-path tail of the shared generics module. The facade
@@ -190,6 +190,7 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
         }
     }
 
@@ -205,6 +206,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 
@@ -254,7 +256,10 @@ mod tests {
         // SINGLE `count`, declared once — across ALL shards, not per-module.
         let foundation = fw_with(
             "Foundation",
-            vec![class_with_methods("NSArray", vec![method("count", "uint64")])],
+            vec![class_with_methods(
+                "NSArray",
+                vec![method("count", "uint64")],
+            )],
         );
         let coredata = fw_with(
             "CoreData",
@@ -312,6 +317,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }];
 
         let refs = vec![&fw];
@@ -340,7 +346,9 @@ mod tests {
         // Enough distinct selectors to span more than one shard, so the facade's
         // re-export of multiple shards is exercised.
         let n = GENERICS_SHARD_SIZE + 5;
-        let methods: Vec<Method> = (0..n).map(|i| method(&format!("sel{i:04}"), "uint64")).collect();
+        let methods: Vec<Method> = (0..n)
+            .map(|i| method(&format!("sel{i:04}"), "uint64"))
+            .collect();
         let foundation = fw_with("Foundation", vec![class_with_methods("NSThing", methods)]);
         let refs = vec![&foundation];
         let tmp = tempfile::tempdir().unwrap();
@@ -381,7 +389,10 @@ mod tests {
         // Second gen: few selectors -> one shard. Stale 001/002 must be gone.
         let small = fw_with(
             "Foundation",
-            vec![class_with_methods("NSSmall", vec![method("count", "uint64")])],
+            vec![class_with_methods(
+                "NSSmall",
+                vec![method("count", "uint64")],
+            )],
         );
         write_global_generics_module(&[&small], tmp.path()).unwrap();
         assert!(tmp.path().join("generics/000.ss").is_file());

@@ -55,10 +55,8 @@ pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String
     let needs_dispatch = plan_uses_block_bridge(&plan, &mapper);
     emit_header(&mut w, cls, framework, &plan.exports, needs_dispatch);
 
-    let needs_default_constructor = !has_explicit_constructor(
-        &plan.init_methods.iter().collect::<Vec<&Method>>(),
-        &mapper,
-    );
+    let needs_default_constructor =
+        !has_explicit_constructor(&plan.init_methods.iter().collect::<Vec<&Method>>(), &mapper);
 
     if !plan.init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
@@ -241,8 +239,13 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
         mapper,
     );
 
-    let (filtered_props, filtered_inst, filtered_class, exports) =
-        dedupe_across_categories(cls, properties_owned, instance_methods, class_methods, raw_exports);
+    let (filtered_props, filtered_inst, filtered_class, exports) = dedupe_across_categories(
+        cls,
+        properties_owned,
+        instance_methods,
+        class_methods,
+        raw_exports,
+    );
 
     ClassPlan {
         properties: filtered_props,
@@ -311,10 +314,7 @@ fn dedupe_across_categories(
     // touches anything else).
     let exports: Vec<String> = raw_exports
         .into_iter()
-        .filter(|n| {
-            n.starts_with("make-")
-                || seen.contains(n)
-        })
+        .filter(|n| n.starts_with("make-") || seen.contains(n))
         .collect();
 
     (kept_props, kept_inst, kept_class, exports)
@@ -509,12 +509,7 @@ fn emit_msg_binding(
 
 fn emit_selector_cache(w: &mut CodeWriter, class_name: &str, selector: &str) -> String {
     let sel_var = make_selector_binding_name(class_name, selector);
-    write_line!(
-        w,
-        "  (define {} (sel-register \"{}\"))",
-        sel_var,
-        selector
-    );
+    write_line!(w, "  (define {} (sel-register \"{}\"))", sel_var, selector);
     sel_var
 }
 
@@ -531,9 +526,10 @@ fn coerce_arg_expr(param: &Param, var: &str, mapper: &dyn FfiTypeMapper) -> Stri
         // record itself is discarded — async APIs (Block_copy/dispose) own
         // its lifetime; the chez-side code object's bounded retention
         // mirrors emit-racket (see runtime/dispatch.sls).
-        TypeRefKind::Block { params, return_type } => {
-            block_make_expr(var, params, return_type, mapper)
-        }
+        TypeRefKind::Block {
+            params,
+            return_type,
+        } => block_make_expr(var, params, return_type, mapper),
         _ => var.to_string(),
     }
 }
@@ -598,7 +594,11 @@ fn emit_method(
         .collect();
 
     let indirect_ftype = return_needs_indirect_result(&method.return_type);
-    let leading_arg = if indirect_ftype.is_some() { "%result-buf " } else { "" };
+    let leading_arg = if indirect_ftype.is_some() {
+        "%result-buf "
+    } else {
+        ""
+    };
 
     let call = format!(
         "({} {}{} {}{}{})",
@@ -649,19 +649,10 @@ fn emit_method(
 fn emit_default_constructor(w: &mut CodeWriter, class_name: &str) {
     let fn_name = format!("make-{}", class_name_to_lowercase(class_name));
     write_line!(w, "  (define ({})", fn_name);
-    write_line!(
-        w,
-        "    (let ([alloc-sel (sel-register \"alloc\")]"
-    );
+    write_line!(w, "    (let ([alloc-sel (sel-register \"alloc\")]");
     w.line("          [init-sel  (sel-register \"init\")])");
-    write_line!(
-        w,
-        "      (wrap-objc-object",
-    );
-    write_line!(
-        w,
-        "        (objc_msgSend",
-    );
+    write_line!(w, "      (wrap-objc-object",);
+    write_line!(w, "        (objc_msgSend",);
     write_line!(
         w,
         "          (objc_msgSend (objc_getClass \"{}\") alloc-sel)",
@@ -704,11 +695,7 @@ fn emit_constructor(
     sig.push(')');
     write_line!(w, "  {}", sig);
 
-    write_line!(
-        w,
-        "    (let ([{} (sel-register \"alloc\")])",
-        alloc_sel
-    );
+    write_line!(w, "    (let ([{} (sel-register \"alloc\")])", alloc_sel);
 
     let coerced_args: Vec<String> = method
         .params
@@ -774,16 +761,29 @@ fn emit_property(
         getter_binding,
         ret_ty
     );
-    write_line!(w, "  (define {} (sel-register \"{}\"))", getter_sel, prop.name);
+    write_line!(
+        w,
+        "  (define {} (sel-register \"{}\"))",
+        getter_sel,
+        prop.name
+    );
 
     let receiver_expr = if prop.class_property {
         format!("(objc_getClass \"{}\")", class_name)
     } else {
         "(coerce-arg self)".to_string()
     };
-    let getter_arglist = if prop.class_property { String::new() } else { " self".into() };
+    let getter_arglist = if prop.class_property {
+        String::new()
+    } else {
+        " self".into()
+    };
     write_line!(w, "  (define ({}{})", getter_name, getter_arglist);
-    let leading_arg = if indirect_ftype.is_some() { "%result-buf " } else { "" };
+    let leading_arg = if indirect_ftype.is_some() {
+        "%result-buf "
+    } else {
+        ""
+    };
     let call = format!(
         "({} {}{} {})",
         getter_binding, leading_arg, receiver_expr, getter_sel
@@ -830,9 +830,18 @@ fn emit_property(
             setter_binding,
             value_ty
         );
-        write_line!(w, "  (define {} (sel-register \"{}\"))", setter_sel, setter_selector_str);
+        write_line!(
+            w,
+            "  (define {} (sel-register \"{}\"))",
+            setter_sel,
+            setter_selector_str
+        );
 
-        let setter_arglist: &str = if prop.class_property { "value" } else { "self value" };
+        let setter_arglist: &str = if prop.class_property {
+            "value"
+        } else {
+            "self value"
+        };
         write_line!(w, "  (define ({} {})", setter_name, setter_arglist);
 
         let value_expr = match &prop.property_type.kind {
@@ -910,7 +919,10 @@ mod tests {
     use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
     fn ty(kind: TypeRefKind) -> TypeRef {
-        TypeRef { nullable: false, kind }
+        TypeRef {
+            nullable: false,
+            kind,
+        }
     }
 
     fn make_method(sel: &str, class_method: bool, init: bool, ret: TypeRef) -> Method {
@@ -930,6 +942,7 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
         }
     }
 
@@ -940,12 +953,20 @@ mod tests {
             superclass: String::new(),
             protocols: vec![],
             properties: vec![],
-            methods: vec![make_method("length", false, false, ty(TypeRefKind::Primitive { name: "uint64".into() }))],
+            methods: vec![make_method(
+                "length",
+                false,
+                false,
+                ty(TypeRefKind::Primitive {
+                    name: "uint64".into(),
+                }),
+            )],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "Foundation");
         assert!(output.contains("(library (apianyware foundation nsstring)"));
@@ -961,12 +982,20 @@ mod tests {
             superclass: String::new(),
             protocols: vec![],
             properties: vec![],
-            methods: vec![make_method("length", false, false, ty(TypeRefKind::Primitive { name: "uint64".into() }))],
+            methods: vec![make_method(
+                "length",
+                false,
+                false,
+                ty(TypeRefKind::Primitive {
+                    name: "uint64".into(),
+                }),
+            )],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "Foundation");
         assert!(output.contains(
@@ -998,6 +1027,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "AppKit");
         // Per Chez `foreign-procedure` docs (`(& ftype)` return), the
@@ -1051,6 +1081,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "AppKit");
         // The declared `param-types` list stays `(void* void*)`; the buffer
@@ -1097,22 +1128,32 @@ mod tests {
             methods: vec![method_with_params(
                 "beginSheetModalForWindow:completionHandler:",
                 vec![
-                    Param { name: "window".into(), param_type: ty(TypeRefKind::Id) },
+                    Param {
+                        name: "window".into(),
+                        param_type: ty(TypeRefKind::Id),
+                    },
                     Param {
                         name: "handler".into(),
                         param_type: block(
-                            vec![ty(TypeRefKind::Primitive { name: "int64".into() })],
-                            ty(TypeRefKind::Primitive { name: "void".into() }),
+                            vec![ty(TypeRefKind::Primitive {
+                                name: "int64".into(),
+                            })],
+                            ty(TypeRefKind::Primitive {
+                                name: "void".into(),
+                            }),
                         ),
                     },
                 ],
-                ty(TypeRefKind::Primitive { name: "void".into() }),
+                ty(TypeRefKind::Primitive {
+                    name: "void".into(),
+                }),
             )],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "AppKit");
         // The method binds (not deferred) and its wrapper boxes the handler.
@@ -1161,16 +1202,21 @@ mod tests {
                             framework: None,
                             underlying_primitive: None,
                         })],
-                        ty(TypeRefKind::Primitive { name: "void".into() }),
+                        ty(TypeRefKind::Primitive {
+                            name: "void".into(),
+                        }),
                     ),
                 }],
-                ty(TypeRefKind::Primitive { name: "void".into() }),
+                ty(TypeRefKind::Primitive {
+                    name: "void".into(),
+                }),
             )],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "AppKit");
         assert!(
@@ -1198,6 +1244,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "Foundation");
         assert!(output.contains("(define (nsstring-string)"));
@@ -1205,4 +1252,3 @@ mod tests {
         assert!(output.contains("wrap-objc-object"));
     }
 }
-

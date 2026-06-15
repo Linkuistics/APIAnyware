@@ -154,6 +154,19 @@ pub struct Class {
     /// Inheritance-flattened properties (populated by resolve step).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub all_properties: Vec<Property>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }
 
 /// Methods contributed by a category from another framework.
@@ -233,6 +246,19 @@ pub struct Method {
     /// Protocol whose requirement this method satisfies.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub satisfies_protocol: Option<String>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }
 
 /// Named parameter in a method or function signature.
@@ -294,6 +320,19 @@ pub struct Property {
     /// Framework that originally declared this property (for inherited properties).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origin: Option<String>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -333,6 +372,19 @@ pub struct Protocol {
     /// Documentation references.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doc_refs: Option<DocRefs>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -364,6 +416,19 @@ pub struct Enum {
     /// Documentation references.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doc_refs: Option<DocRefs>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }
 
 /// Single value in an enumeration.
@@ -400,6 +465,19 @@ pub struct Struct {
     /// Documentation references.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doc_refs: Option<DocRefs>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }
 
 /// Field within a C struct.
@@ -448,6 +526,19 @@ pub struct Function {
     /// Documentation references.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doc_refs: Option<DocRefs>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -480,4 +571,17 @@ pub struct Constant {
     /// runtime-constructed CFString instead of a `get-ffi-obj` / `dlsym` lookup.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub macro_value: Option<String>,
+
+    /// Whether this declaration is reachable through the ObjC/C runtime without
+    /// crossing the Swift ABI (clang `c:`/`So` USR cursor, or an `@objc` Swift
+    /// decl). False for genuinely Swift-native declarations (`s:` USR) that need
+    /// a trampoline. Drives the per-target direct-vs-trampoline boundary
+    /// (ADR-0026). Defaults true (the fully-elided ObjC limit) and is omitted
+    /// from JSON when true, so the golden diff audits exactly the trampoline
+    /// residual.
+    #[serde(
+        default = "crate::serde_helpers::default_true",
+        skip_serializing_if = "crate::serde_helpers::is_true"
+    )]
+    pub objc_exposed: bool,
 }

@@ -138,6 +138,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         }
     }
 
@@ -152,6 +153,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         }
     }
 
@@ -476,6 +478,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: Some(value.to_string()),
+            objc_exposed: true,
         }
     }
 

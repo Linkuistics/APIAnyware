@@ -168,6 +168,7 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
         }
     }
 
@@ -248,7 +249,14 @@ mod tests {
     }
 
     fn error_method(selector: &str, visible: Vec<Param>) -> Method {
-        let mut m = method("x", false, false, ty(TypeRefKind::Primitive { name: "bool".into() }));
+        let mut m = method(
+            "x",
+            false,
+            false,
+            ty(TypeRefKind::Primitive {
+                name: "bool".into(),
+            }),
+        );
         m.selector = selector.into();
         // Visible args, then the trailing NSError** cell (a raw pointer).
         m.params = visible;
@@ -265,7 +273,14 @@ mod tests {
         // Selector not in the set ⇒ not error-routed even with a trailing pointer.
         assert!(!is_error_out_method(&m, &HashSet::new()));
         // In the set but no trailing pointer ⇒ not error-routed.
-        let no_ptr = method("writeToFile:error:", false, false, ty(TypeRefKind::Primitive { name: "bool".into() }));
+        let no_ptr = method(
+            "writeToFile:error:",
+            false,
+            false,
+            ty(TypeRefKind::Primitive {
+                name: "bool".into(),
+            }),
+        );
         assert!(!is_error_out_method(&no_ptr, &errs));
     }
 

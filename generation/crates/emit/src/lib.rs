@@ -6,7 +6,6 @@
 //! emitter crates (`emit-racket`, `emit-chez`). It has no dependency on any
 //! specific target target.
 
-pub mod target_emitter;
 pub mod code_writer;
 pub mod doc_rendering;
 pub mod enrichment;
@@ -15,4 +14,5 @@ pub mod framework_ordering;
 pub mod naming;
 pub mod pattern_dispatch;
 pub mod snapshot_testing;
+pub mod target_emitter;
 pub mod test_fixtures;

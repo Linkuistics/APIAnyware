@@ -866,7 +866,10 @@ mod tests {
             ffi_unsafe_to_ffi2("_NSAffineTransformStruct"),
             "NSAffineTransformStruct_t"
         );
-        assert_eq!(ffi_unsafe_to_ffi2("_CGAffineTransform"), "CGAffineTransform_t");
+        assert_eq!(
+            ffi_unsafe_to_ffi2("_CGAffineTransform"),
+            "CGAffineTransform_t"
+        );
         assert_eq!(ffi_unsafe_to_ffi2("_CGVector"), "CGVector_t");
     }
 
@@ -878,11 +881,36 @@ mod tests {
         let unsafe_m = RacketFfiTypeMapper;
         let ffi2_m = RacketFfi2TypeMapper;
         let cases: Vec<(TypeRef, bool)> = vec![
-            (make_type(TypeRefKind::Primitive { name: "void".into() }), true),
-            (make_type(TypeRefKind::Primitive { name: "void".into() }), false),
-            (make_type(TypeRefKind::Primitive { name: "uint64".into() }), false),
-            (make_type(TypeRefKind::Primitive { name: "double".into() }), false),
-            (make_type(TypeRefKind::Primitive { name: "bool".into() }), false),
+            (
+                make_type(TypeRefKind::Primitive {
+                    name: "void".into(),
+                }),
+                true,
+            ),
+            (
+                make_type(TypeRefKind::Primitive {
+                    name: "void".into(),
+                }),
+                false,
+            ),
+            (
+                make_type(TypeRefKind::Primitive {
+                    name: "uint64".into(),
+                }),
+                false,
+            ),
+            (
+                make_type(TypeRefKind::Primitive {
+                    name: "double".into(),
+                }),
+                false,
+            ),
+            (
+                make_type(TypeRefKind::Primitive {
+                    name: "bool".into(),
+                }),
+                false,
+            ),
             (make_type(TypeRefKind::Id), false),
             (
                 make_type(TypeRefKind::Class {
@@ -895,7 +923,12 @@ mod tests {
             (make_type(TypeRefKind::CString), false),
             (make_type(TypeRefKind::Pointer), false),
             (make_type(TypeRefKind::Selector), false),
-            (make_type(TypeRefKind::Struct { name: "NSRect".into() }), false),
+            (
+                make_type(TypeRefKind::Struct {
+                    name: "NSRect".into(),
+                }),
+                false,
+            ),
             (
                 make_type(TypeRefKind::Alias {
                     name: "AXValueType".into(),
@@ -940,19 +973,28 @@ mod tests {
             "ptr_t"
         );
         assert_eq!(
-            m.map_type(&make_type(TypeRefKind::Struct { name: "CGRect".into() }), false),
+            m.map_type(
+                &make_type(TypeRefKind::Struct {
+                    name: "CGRect".into()
+                }),
+                false
+            ),
             "NSRect_t"
         );
         assert_eq!(
             m.map_type(
-                &make_type(TypeRefKind::Primitive { name: "void".into() }),
+                &make_type(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
                 true
             ),
             "void_t"
         );
         assert_eq!(
             m.map_type(
-                &make_type(TypeRefKind::Primitive { name: "void".into() }),
+                &make_type(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
                 false
             ),
             "ptr_t"

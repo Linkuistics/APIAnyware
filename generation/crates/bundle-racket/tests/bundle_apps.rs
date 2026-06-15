@@ -156,7 +156,10 @@ fn bundles_hello_window_into_app_directory() {
         "nsopenpanel.rkt leaked: hello-window has no open dialog"
     );
     assert!(
-        !generated.join("foundation").join("nsfilemanager.rkt").exists(),
+        !generated
+            .join("foundation")
+            .join("nsfilemanager.rkt")
+            .exists(),
         "nsfilemanager.rkt leaked: hello-window doesn't touch the filesystem"
     );
 
@@ -297,11 +300,7 @@ fn bundle_lib_copy_excludes_compiled_subdirectory() {
         return;
     }
     let real_racket = racket_root();
-    if !real_racket
-        .join("runtime")
-        .join("objc-base.rkt")
-        .is_file()
-    {
+    if !real_racket.join("runtime").join("objc-base.rkt").is_file() {
         eprintln!("SKIPPED: racket source tree not present");
         return;
     }
@@ -406,9 +405,7 @@ fn bundle_dylib_install_name_is_bundle_relative() {
         eprintln!("SKIPPED: hello-window source not present");
         return;
     }
-    let dylib_source = racket_root()
-        .join("lib")
-        .join("libAPIAnywareRacket.dylib");
+    let dylib_source = racket_root().join("lib").join("libAPIAnywareRacket.dylib");
     if !dylib_source.exists() {
         eprintln!("SKIPPED: libAPIAnywareRacket.dylib not built");
         return;

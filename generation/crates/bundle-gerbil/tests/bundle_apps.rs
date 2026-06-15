@@ -34,7 +34,11 @@ fn gerbil_root() -> PathBuf {
 }
 
 fn gerbil_tree_present() -> bool {
-    gerbil_root().join("lib").join("runtime").join("objc.ss").is_file()
+    gerbil_root()
+        .join("lib")
+        .join("runtime")
+        .join("objc.ss")
+        .is_file()
         && gerbil_root()
             .join("apps")
             .join("hello-window")
@@ -53,7 +57,10 @@ fn computes_hello_window_closure() {
     }
     let root = gerbil_root();
     let lib = root.join("lib");
-    let entry = root.join("apps").join("hello-window").join("hello-window.ss");
+    let entry = root
+        .join("apps")
+        .join("hello-window")
+        .join("hello-window.ss");
 
     let closure = collect_closure(&entry, &lib).expect("closure walk");
     let rels: Vec<String> = closure
@@ -91,10 +98,16 @@ fn computes_hello_window_closure() {
     .into_iter()
     .collect();
     let got: std::collections::HashSet<&str> = rest.into_iter().collect();
-    assert_eq!(got, expected, "non-generics closure set drifted:\n{rels:#?}");
+    assert_eq!(
+        got, expected,
+        "non-generics closure set drifted:\n{rels:#?}"
+    );
 
     // The facade and at least one shard are in the closure.
-    assert!(generics_mods.contains(&"generics"), "generics facade in closure");
+    assert!(
+        generics_mods.contains(&"generics"),
+        "generics facade in closure"
+    );
     assert!(
         generics_mods.iter().any(|m| m.starts_with("generics/")),
         "≥1 generics shard in closure: {generics_mods:?}"

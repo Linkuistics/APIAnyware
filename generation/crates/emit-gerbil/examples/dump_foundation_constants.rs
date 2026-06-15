@@ -24,6 +24,7 @@ fn obj(name: &str) -> Constant {
         provenance: None,
         doc_refs: None,
         macro_value: None,
+        objc_exposed: true,
     }
 }
 
@@ -38,6 +39,7 @@ fn scalar(name: &str, prim: &str) -> Constant {
         provenance: None,
         doc_refs: None,
         macro_value: None,
+        objc_exposed: true,
     }
 }
 

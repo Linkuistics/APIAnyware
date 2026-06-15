@@ -5,6 +5,7 @@
 //! default and round-trip guarantee in one pass — no on-disk SDK fixtures.
 
 use apianyware_macos_types::ir::Framework;
+use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Minimal modern document: the absolute-minimum set of fields a valid
 /// checkpoint must carry, with every post-minimum field omitted so the
@@ -62,4 +63,84 @@ fn minimal_round_trip_preserves_semantics() {
     assert_eq!(reparsed.format_version, original.format_version);
     assert_eq!(reparsed.name, original.name);
     assert_eq!(reparsed.depends_on, original.depends_on);
+}
+
+// ---------------------------------------------------------------------------
+// objc_exposed checkpoint contract (ADR-0026)
+//
+// The field defaults to `true` and is omitted from JSON when true, so the
+// every-stage checkpoint diff audits exactly the trampoline residual. These
+// tests pin that contract — it is what lets `objc_exposed` ride additively
+// through collect → resolve → annotate → enrich (each stage round-trips the
+// checkpoint via this same serde behaviour).
+// ---------------------------------------------------------------------------
+
+fn cstring_type() -> TypeRef {
+    TypeRef {
+        nullable: false,
+        kind: TypeRefKind::Primitive {
+            name: "int32".to_string(),
+        },
+    }
+}
+
+/// A pre-objc_exposed checkpoint (field absent) deserialises as ObjC-exposed.
+#[test]
+fn objc_exposed_defaults_true_when_absent() {
+    // A constant with no `objc_exposed` key — exactly how every existing ObjC
+    // golden looks.
+    let json = r#"{
+        "format_version": "1.0", "name": "F",
+        "constants": [{ "name": "kFoo", "type": { "kind": "primitive", "name": "int32" } }]
+    }"#;
+    let fw: Framework = serde_json::from_str(json).unwrap();
+    assert!(
+        fw.constants[0].objc_exposed,
+        "absent objc_exposed must default to true (the ObjC-exposed limit)"
+    );
+}
+
+/// `objc_exposed: true` is omitted on serialisation; `false` is written.
+#[test]
+fn objc_exposed_skipped_when_true_emitted_when_false() {
+    let exposed = apianyware_macos_types::ir::Constant {
+        name: "kObjc".to_string(),
+        constant_type: cstring_type(),
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        macro_value: None,
+        objc_exposed: true,
+    };
+    let native = apianyware_macos_types::ir::Constant {
+        name: "kSwift".to_string(),
+        objc_exposed: false,
+        ..exposed.clone()
+    };
+
+    let exposed_json = serde_json::to_string(&exposed).unwrap();
+    assert!(
+        !exposed_json.contains("objc_exposed"),
+        "true must be omitted; got {exposed_json}"
+    );
+    let native_json = serde_json::to_string(&native).unwrap();
+    assert!(
+        native_json.contains("\"objc_exposed\":false"),
+        "false must be serialised; got {native_json}"
+    );
+}
+
+/// The Swift-native residual survives a full serialise → deserialise checkpoint
+/// boundary (the operation every pipeline stage performs).
+#[test]
+fn objc_exposed_false_survives_checkpoint_round_trip() {
+    let json = r#"{
+        "format_version": "1.0", "name": "F",
+        "functions": [{ "name": "swiftFn", "return_type": { "kind": "primitive", "name": "void" }, "objc_exposed": false }],
+        "constants": [{ "name": "kSwift", "type": { "kind": "primitive", "name": "int32" }, "objc_exposed": false }]
+    }"#;
+    let fw: Framework = serde_json::from_str(json).unwrap();
+    let reparsed: Framework = serde_json::from_str(&serde_json::to_string(&fw).unwrap()).unwrap();
+    assert!(!reparsed.functions[0].objc_exposed);
+    assert!(!reparsed.constants[0].objc_exposed);
 }

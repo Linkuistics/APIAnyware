@@ -1696,6 +1696,7 @@ mod tests {
             overrides: None,
             returns_retained: retained,
             satisfies_protocol: None,
+            objc_exposed: true,
         };
 
         // IR value takes precedence
@@ -1756,12 +1757,14 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "Foundation", None);
         assert!(output.contains("#lang racket/base"));
@@ -1817,6 +1820,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let enrichment = EnrichmentData {
             convenience_error_methods: vec![ClassSelectorEntry {
@@ -1889,6 +1893,7 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
         }
     }
 
@@ -1907,6 +1912,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             origin: None,
+            objc_exposed: true,
         }
     }
 
@@ -1925,6 +1931,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             origin: None,
+            objc_exposed: true,
         }
     }
 
@@ -1981,6 +1988,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "Foundation", None);
         assert!(
@@ -2012,6 +2020,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "Foundation", None);
         // Instance method: receiver uses the class-specific predicate, not the generic objc-object?
@@ -2043,6 +2052,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Object getter: receiver uses class-specific predicate
@@ -2074,6 +2084,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2114,6 +2125,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2151,6 +2163,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2184,6 +2197,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Object setter: receiver uses class-specific predicate; value union stays as-is.
@@ -2228,6 +2242,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
 
@@ -2294,6 +2309,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
 
@@ -2334,6 +2350,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2369,6 +2386,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Receiver uses class-specific predicate; typed param unchanged.
@@ -2412,6 +2430,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Block param → (or/c procedure? #f); receiver uses class-specific predicate.
@@ -2450,6 +2469,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Constructor: (-> param-contracts... any/c) — returns wrapped object
@@ -2481,6 +2501,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2513,6 +2534,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2557,6 +2579,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2591,6 +2614,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2744,6 +2768,7 @@ mod tests {
                 type_void(),
             )],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", None);
 
@@ -2791,6 +2816,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let props = effective_properties(&cls);
         assert_eq!(
@@ -2829,6 +2855,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "AppKit", None);
         let count = output
@@ -2890,6 +2917,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "AppKit", None);
 
@@ -2947,6 +2975,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "AppKit", None);
         let count = output.matches("(define (nsfont-system-font-size").count();
@@ -2992,6 +3021,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let enrichment = EnrichmentData {
             async_block_methods: vec![BlockMethodEntry {
@@ -3045,6 +3075,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let output = generate_class_file(&cls, "TestKit", Some(&EnrichmentData::default()));
         assert!(
@@ -3074,6 +3105,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let enrichment = EnrichmentData {
             main_thread_classes: vec!["TKView".to_string()],
@@ -3144,6 +3176,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         // ffi2 header + native binding + routed body.
@@ -3185,6 +3218,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -3228,6 +3262,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -3273,6 +3308,7 @@ mod tests {
                 provenance: None,
                 doc_refs: None,
                 origin: None,
+                objc_exposed: true,
             }],
             methods: vec![],
             category_methods: vec![],
@@ -3280,6 +3316,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let out = generate_class_file(&cls, "TestKit", None);
 
@@ -3342,6 +3379,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         assert!(

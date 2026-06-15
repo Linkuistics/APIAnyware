@@ -71,35 +71,62 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
             }
             "Func" => {
                 if child.kind == "Function" {
-                    if let Some(reason) = non_c_linkable_skip_reason(child) {
-                        // Record with the printed name (e.g. `pointwiseMin(_:_:)`)
-                        // so that Swift overloads with identical simple names become
-                        // distinct `skipped_symbols` entries. Mirrors how extract-objc
-                        // qualifies methods with their owner class.
-                        skipped_symbols.push(ir::SkippedSymbol {
-                            name: child.printed_name.clone(),
-                            kind: "function".to_string(),
-                            reason: reason.to_string(),
-                        });
-                    } else if let Some(f) = map_top_level_function(child) {
-                        functions.push(f);
+                    match classify_usr(child) {
+                        // Additive change (ADR-0026): Swift-native top-level
+                        // functions are now RETAINED (carrying objc_exposed:
+                        // false) so they reach the emitter to be trampolined,
+                        // rather than being dropped under SWIFT_NATIVE.
+                        // `map_top_level_function` stamps objc_exposed from the
+                        // node's USR, so the Direct and SwiftNative arms coincide
+                        // here — both retain.
+                        UsrDisposition::Direct | UsrDisposition::SwiftNative => {
+                            if let Some(f) = map_top_level_function(child) {
+                                functions.push(f);
+                            }
+                        }
+                        UsrDisposition::Skip(reason) => {
+                            // Record with the printed name (e.g. `pointwiseMin(_:_:)`)
+                            // so that Swift overloads with identical simple names become
+                            // distinct `skipped_symbols` entries. Mirrors how extract-objc
+                            // qualifies methods with their owner class.
+                            skipped_symbols.push(ir::SkippedSymbol {
+                                name: child.printed_name.clone(),
+                                kind: "function".to_string(),
+                                reason: reason.to_string(),
+                            });
+                        }
                     }
                 }
             }
             "Var" => {
                 if child.kind == "Var" && !child.children.is_empty() {
-                    if let Some(reason) = non_c_linkable_skip_reason(child) {
-                        skipped_symbols.push(ir::SkippedSymbol {
-                            name: child.name.clone(),
-                            kind: "constant".to_string(),
-                            reason: reason.to_string(),
-                        });
-                    } else if let Some(c) = map_top_level_constant(child) {
-                        constants.push(c);
+                    match classify_usr(child) {
+                        UsrDisposition::Direct | UsrDisposition::SwiftNative => {
+                            if let Some(c) = map_top_level_constant(child) {
+                                constants.push(c);
+                            }
+                        }
+                        UsrDisposition::Skip(reason) => {
+                            skipped_symbols.push(ir::SkippedSymbol {
+                                name: child.name.clone(),
+                                kind: "constant".to_string(),
+                                reason: reason.to_string(),
+                            });
+                        }
                     }
                 }
             }
-            // Skip Import, Macro, TypeAlias, AssociatedType
+            // Deferred ABI kinds (ADR-0026/D2): not yet walked, but recorded in
+            // skipped_symbols so the drop is auditable rather than silent.
+            // Recovery is a later frontier leaf.
+            "Macro" | "TypeAlias" | "AssociatedType" => {
+                skipped_symbols.push(ir::SkippedSymbol {
+                    name: child.name.clone(),
+                    kind: child.decl_kind.clone().unwrap_or_default().to_lowercase(),
+                    reason: skipped_symbol_reason::DEFERRED_ABI_KIND.to_string(),
+                });
+            }
+            // Import (and any other kind) is still ignored.
             _ => {}
         }
     }
@@ -125,53 +152,78 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
     }
 }
 
-/// Classify a top-level declaration node by its USR prefix and return a skip
-/// reason if the node is not reachable via `dlsym` from the framework dylib.
+/// Three-way disposition of an ABI node, derived from its USR prefix. This is
+/// the single classifier that subsumes the old `non_c_linkable_skip_reason()`
+/// (ADR-0026): it decides retain-vs-skip **and** yields the `objc_exposed`
+/// fact, so the USR-prefix knowledge lives in exactly one place.
+enum UsrDisposition {
+    /// Directly reachable through the ObjC/C runtime (clang `c:@F@`, `c:@`,
+    /// `So…` cursors, or a missing USR). Retain with `objc_exposed: true`.
+    Direct,
+    /// Swift-native (`s:` USR): reachable only via the Swift ABI. Retain with
+    /// `objc_exposed: false` so the emitter trampolines it downstream.
+    SwiftNative,
+    /// Unrepresentable: no dylib symbol exists. Do not retain; record in
+    /// `skipped_symbols` with `reason`.
+    Skip(&'static str),
+}
+
+/// Classify a declaration node by its USR prefix.
 ///
 /// The Swift API digester stamps declarations with Unified Symbol Resolution
 /// identifiers whose prefix identifies the producing cursor:
 ///
 /// - `s:…` — Swift-mangled USR: declaration native to the Swift module,
-///   reachable only via the Swift ABI. **Not C-linkable.**
+///   reachable only via the Swift ABI. **Swift-native** → retain & trampoline.
+///   (An `@objc`-annotated Swift declaration instead carries a clang `c:` USR
+///   such as `c:@M@Probe@objc(cs)Foo` — so it classifies as `Direct`, ADR-0026.)
 /// - `c:@F@<name>` — clang `FunctionDecl` cursor: a real C function
-///   re-exported from the clang-imported module. Linkable.
-/// - `c:@<Name>` — clang `VarDecl` / enum cursor. Linkable.
+///   re-exported from the clang-imported module. **Direct.**
+/// - `c:@<Name>` — clang `VarDecl` / enum cursor. **Direct.**
 /// - `c:@macro@…` — clang preprocessor macro cursor. The C compiler inlines
 ///   `#define` values at use sites and emits no dylib symbol, so any FFI
 ///   binding that references the name will fail at load time with
-///   `get-ffi-obj: could not find export from foreign library`. **Not
-///   C-linkable.**
+///   `get-ffi-obj: could not find export from foreign library`. **Skip.**
 /// - `c:@Ea@<dummy>@<Member>` — member of an *anonymous* enum. The second
 ///   USR segment is libclang's synthetic disambiguator for enums with no
-///   tag (conventionally the first member's name). **Not C-linkable.** The
-///   C compiler inlines enum members' integer values at every use site, so
-///   they never receive a dylib symbol. Members of *named* enums use the
+///   tag (conventionally the first member's name). **Skip.** The C compiler
+///   inlines enum members' integer values at every use site, so they never
+///   receive a dylib symbol. Members of *named* enums use the
 ///   `c:@E@<Enum>@<Member>` shape and reach the IR through the dedicated
 ///   `Enum` → `EnumElement` mapping path, not the top-level `Var` / `Func`
-///   cursors filtered here.
+///   cursors classified here.
 /// - `c:@EA@<typedef>@<Member>` — same as above for the typedef'd anonymous
 ///   enum shape (`typedef enum { … } Name_t`). The second segment is the
-///   typedef name. **Not C-linkable** for the same reason.
-/// - `So<mangled>` — clang-imported Obj-C declaration. Linkable via the
-///   Obj-C runtime (not handled here; Obj-C extraction lives in
-///   `extract-objc`).
+///   typedef name. **Skip** for the same reason.
+/// - `So<mangled>` — clang-imported Obj-C declaration. **Direct** (linkable via
+///   the Obj-C runtime; Obj-C extraction itself lives in `extract-objc`).
 ///
-/// Nodes without a USR are treated as linkable — missing metadata is not
+/// Nodes without a USR are treated as `Direct` — missing metadata is not
 /// evidence of non-linkability, and every real digester node carries one.
 /// New USR families discovered in future SDK releases should be added here
-/// so that the filter remains the single source of truth for "is this
-/// `dlsym`-able from the framework dylib?".
-fn non_c_linkable_skip_reason(node: &AbiNode) -> Option<&'static str> {
-    let usr = node.usr.as_deref()?;
+/// so that this stays the single source of truth for both the skip filter and
+/// the `objc_exposed` fact.
+fn classify_usr(node: &AbiNode) -> UsrDisposition {
+    let Some(usr) = node.usr.as_deref() else {
+        return UsrDisposition::Direct;
+    };
     if usr.starts_with("s:") {
-        Some(skipped_symbol_reason::SWIFT_NATIVE)
+        UsrDisposition::SwiftNative
     } else if usr.starts_with("c:@macro@") {
-        Some(skipped_symbol_reason::PREPROCESSOR_MACRO)
+        UsrDisposition::Skip(skipped_symbol_reason::PREPROCESSOR_MACRO)
     } else if usr.starts_with("c:@Ea@") || usr.starts_with("c:@EA@") {
-        Some(skipped_symbol_reason::ANONYMOUS_ENUM_MEMBER)
+        UsrDisposition::Skip(skipped_symbol_reason::ANONYMOUS_ENUM_MEMBER)
     } else {
-        None
+        UsrDisposition::Direct
     }
+}
+
+/// The `objc_exposed` fact for a node: true unless the node is Swift-native
+/// (`s:` USR). `Direct` and `Skip` nodes are both ObjC/C-cursor'd; only
+/// `SwiftNative` is `false`. (Skip nodes are never retained, so their value is
+/// moot — but computing it uniformly keeps the rule in one place.)
+fn objc_exposed_of(node: &AbiNode) -> bool {
+    !matches!(classify_usr(node), UsrDisposition::SwiftNative)
 }
 
 /// True iff `framework_name` follows Apple's cross-import overlay convention
@@ -268,6 +320,7 @@ fn map_class(node: &AbiNode) -> Option<ir::Class> {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -324,6 +377,7 @@ fn map_protocol(node: &AbiNode) -> Option<ir::Protocol> {
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -360,6 +414,7 @@ fn map_enum(node: &AbiNode) -> Option<ir::Enum> {
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -386,6 +441,7 @@ fn map_struct(node: &AbiNode) -> Option<ir::Struct> {
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -422,6 +478,7 @@ fn map_method(node: &AbiNode) -> Option<ir::Method> {
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -453,6 +510,7 @@ fn map_constructor(node: &AbiNode) -> Option<ir::Method> {
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -517,6 +575,7 @@ fn map_property(node: &AbiNode) -> Option<ir::Property> {
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
         origin: None,
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -555,6 +614,7 @@ fn map_top_level_function(node: &AbiNode) -> Option<ir::Function> {
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -571,6 +631,7 @@ fn map_top_level_constant(node: &AbiNode) -> Option<ir::Constant> {
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
         macro_value: None,
+        objc_exposed: objc_exposed_of(node),
     })
 }
 

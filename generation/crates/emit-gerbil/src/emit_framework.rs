@@ -26,13 +26,13 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
 use crate::class_graph::{build_class_graph, ClassRegistry, ParentRef};
-use crate::protocol_registry::ProtocolRegistry;
 use crate::emit_class::{generate_bare_module, generate_class_file_with_parent};
 use crate::emit_constants::{constant_names, generate_constants_file};
 use crate::emit_enums::{enum_value_names, generate_enums_file};
 use crate::emit_functions::{count_emittable, function_emittable_names, generate_functions_file};
 use crate::emit_protocol::{generate_protocol_file, protocol_exports};
 use crate::naming::class_module_stem;
+use crate::protocol_registry::ProtocolRegistry;
 
 /// The Gerbil package every emitted module lives under: an app imports a class
 /// as `:gerbil-bindings/<framework>/<class>` and a whole framework as
@@ -153,8 +153,13 @@ pub fn emit_framework(
             // The class's NSError out-param selectors (ADR-0006), from the
             // shared enrichment helper so racket + gerbil key off the same set.
             let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
-            let (content, exports) =
-                generate_class_file_with_parent(cls, &fw.name, &parent, &error_selectors, protocols);
+            let (content, exports) = generate_class_file_with_parent(
+                cls,
+                &fw.name,
+                &parent,
+                &error_selectors,
+                protocols,
+            );
             std::fs::write(class_dir.join(format!("{cls_low}.ss")), content)?;
             files_written += 1;
             submodules.push(SubModule {
@@ -259,7 +264,11 @@ pub fn emit_framework(
         protocols_emitted: delegate_protocols.len(),
         enums_emitted: if enums_emitted { fw.enums.len() } else { 0 },
         functions_emitted: count_emittable(&fw.functions),
-        constants_emitted: if constants_emitted { fw.constants.len() } else { 0 },
+        constants_emitted: if constants_emitted {
+            fw.constants.len()
+        } else {
+            0
+        },
     })
 }
 
@@ -381,7 +390,13 @@ mod tests {
     fn empty_framework_writes_just_facade() {
         let tmp = tempfile::tempdir().unwrap();
         let fw = make_minimal_framework("TestKit");
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
+        let res = emit_framework(
+            &fw,
+            tmp.path(),
+            &ClassRegistry::new(),
+            &ProtocolRegistry::new(),
+        )
+        .unwrap();
         assert_eq!(res.files_written, 1);
         let facade = tmp.path().join("testkit.ss");
         assert!(facade.exists());
@@ -430,6 +445,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 
@@ -475,7 +491,13 @@ mod tests {
         let mut fw = make_minimal_framework("Widgets");
         fw.classes = vec![class_with("Leaf", "Mid")];
 
-        emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
+        emit_framework(
+            &fw,
+            tmp.path(),
+            &ClassRegistry::new(),
+            &ProtocolRegistry::new(),
+        )
+        .unwrap();
 
         let mid = std::fs::read_to_string(tmp.path().join("widgets/mid.ss")).unwrap();
         assert!(mid.contains("synthesized bare class-graph node"));
@@ -508,6 +530,7 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
         }
     }
 
@@ -522,6 +545,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }
     }
 
@@ -531,10 +555,18 @@ mod tests {
     fn framework_with_protocol_writes_under_protocols_subdir() {
         let tmp = tempfile::tempdir().unwrap();
         let mut fw = make_minimal_framework("AppKit");
-        fw.protocols
-            .push(protocol("NSWindowDelegate", vec![method("windowWillClose:", "void")]));
+        fw.protocols.push(protocol(
+            "NSWindowDelegate",
+            vec![method("windowWillClose:", "void")],
+        ));
 
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
+        let res = emit_framework(
+            &fw,
+            tmp.path(),
+            &ClassRegistry::new(),
+            &ProtocolRegistry::new(),
+        )
+        .unwrap();
         assert_eq!(res.protocols_emitted, 1);
 
         let module = tmp.path().join("appkit/protocols/nswindowdelegate.ss");
@@ -554,7 +586,13 @@ mod tests {
         let mut fw = make_minimal_framework("AppKit");
         fw.protocols.push(protocol("NSEmptyMarker", vec![]));
 
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
+        let res = emit_framework(
+            &fw,
+            tmp.path(),
+            &ClassRegistry::new(),
+            &ProtocolRegistry::new(),
+        )
+        .unwrap();
         assert_eq!(res.protocols_emitted, 0);
         assert!(!tmp.path().join("appkit/protocols").exists());
     }
@@ -571,11 +609,19 @@ mod tests {
             vec![method("accessibilityFrame", "void")],
         ));
 
-        emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
+        emit_framework(
+            &fw,
+            tmp.path(),
+            &ClassRegistry::new(),
+            &ProtocolRegistry::new(),
+        )
+        .unwrap();
 
         let facade = std::fs::read_to_string(tmp.path().join("appkit.ss")).unwrap();
         // The colliding protocol constructor is renamed; the class keeps its name.
-        assert!(facade.contains("(make-nsaccessibilityelement make-nsaccessibilityelement-protocol)"));
+        assert!(
+            facade.contains("(make-nsaccessibilityelement make-nsaccessibilityelement-protocol)")
+        );
         assert!(facade.contains("make-nsaccessibilityelement-protocol"));
     }
 
@@ -590,12 +636,18 @@ mod tests {
             name: "TKState".into(),
             enum_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Primitive { name: "int64".into() },
+                kind: TypeRefKind::Primitive {
+                    name: "int64".into(),
+                },
             },
-            values: vec![EnumValue { name: "TKOff".into(), value: 0 }],
+            values: vec![EnumValue {
+                name: "TKOff".into(),
+                value: 0,
+            }],
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }];
         fw.constants = vec![Constant {
             name: "TKVersionKey".into(),
@@ -607,22 +659,32 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         }];
         fw.functions = vec![Function {
             name: "TKReset".into(),
             params: vec![],
             return_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Primitive { name: "void".into() },
+                kind: TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
             },
             inline: false,
             variadic: false,
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }];
 
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
+        let res = emit_framework(
+            &fw,
+            tmp.path(),
+            &ClassRegistry::new(),
+            &ProtocolRegistry::new(),
+        )
+        .unwrap();
         assert_eq!(res.enums_emitted, 1);
         assert_eq!(res.constants_emitted, 1);
         assert_eq!(res.functions_emitted, 1);
@@ -647,7 +709,13 @@ mod tests {
     fn data_modules_skipped_when_empty() {
         let tmp = tempfile::tempdir().unwrap();
         let fw = make_minimal_framework("TestKit");
-        let res = emit_framework(&fw, tmp.path(), &ClassRegistry::new(), &ProtocolRegistry::new()).unwrap();
+        let res = emit_framework(
+            &fw,
+            tmp.path(),
+            &ClassRegistry::new(),
+            &ProtocolRegistry::new(),
+        )
+        .unwrap();
         assert_eq!(res.enums_emitted, 0);
         assert_eq!(res.constants_emitted, 0);
         assert_eq!(res.functions_emitted, 0);

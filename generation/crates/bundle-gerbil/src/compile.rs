@@ -185,7 +185,9 @@ pub fn compile_app(
     );
     // 2b. generics facade — no `-O` (depends on the shards just compiled).
     let t = Instant::now();
-    gxc_compile(&facade, false, "", &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    gxc_compile(
+        &facade, false, "", &bin_dir, lib_root, cache_dir, &sdkroot, &blk,
+    )?;
     eprintln!(
         "[bundle-gerbil] generics facade (no -O) in {:.1}s",
         t.elapsed().as_secs_f64()
@@ -194,7 +196,16 @@ pub fn compile_app(
     //     generics is already cached, so its importers resolve). The frameworks
     //     go here: `functions.ss`'s loadable `.oN` calls framework C symbols.
     let t = Instant::now();
-    gxc_compile(&optimized, true, &frameworks, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    gxc_compile(
+        &optimized,
+        true,
+        &frameworks,
+        &bin_dir,
+        lib_root,
+        cache_dir,
+        &sdkroot,
+        &blk,
+    )?;
     eprintln!(
         "[bundle-gerbil] closure: {} modules (-O) in {:.1}s",
         optimized.len(),
@@ -521,7 +532,10 @@ mod tests {
 
     #[test]
     fn framework_link_name_known_and_runtime() {
-        assert_eq!(framework_link_name(OsStr::new("appkit")).as_deref(), Some("AppKit"));
+        assert_eq!(
+            framework_link_name(OsStr::new("appkit")).as_deref(),
+            Some("AppKit")
+        );
         assert_eq!(
             framework_link_name(OsStr::new("foundation")).as_deref(),
             Some("Foundation")
@@ -529,8 +543,17 @@ mod tests {
         assert_eq!(framework_link_name(OsStr::new("runtime")), None);
         // Sample-app frameworks (leaf 100/020) — internal capitalisation the
         // heuristic fallback would get wrong.
-        assert_eq!(framework_link_name(OsStr::new("pdfkit")).as_deref(), Some("PDFKit"));
-        assert_eq!(framework_link_name(OsStr::new("scenekit")).as_deref(), Some("SceneKit"));
-        assert_eq!(framework_link_name(OsStr::new("webkit")).as_deref(), Some("WebKit"));
+        assert_eq!(
+            framework_link_name(OsStr::new("pdfkit")).as_deref(),
+            Some("PDFKit")
+        );
+        assert_eq!(
+            framework_link_name(OsStr::new("scenekit")).as_deref(),
+            Some("SceneKit")
+        );
+        assert_eq!(
+            framework_link_name(OsStr::new("webkit")).as_deref(),
+            Some("WebKit")
+        );
     }
 }

@@ -25,8 +25,11 @@ pub const PLATFORM_UNAVAILABLE_MACOS: &str =
     "platform_unavailable_macos: API_UNAVAILABLE(macos); no dylib export or \
      objc runtime implementation in the macOS framework variant";
 
-/// Applied by `extract-swift` to top-level declarations whose USR starts with
-/// `s:` — Swift-native APIs reachable only via the Swift ABI, not `dlsym`.
+/// **Retired from the drop path (ADR-0026).** Formerly applied by
+/// `extract-swift` to top-level declarations whose USR starts with `s:`. Such
+/// Swift-native declarations are now *retained* carrying `objc_exposed: false`
+/// (trampoline residual) rather than dropped, so this reason is no longer
+/// emitted. Kept defined for one release for changelog/audit clarity.
 pub const SWIFT_NATIVE: &str =
     "swift_native: swift-native top-level declaration (not c-linkable; only \
      reachable via Swift ABI)";
@@ -44,3 +47,11 @@ pub const PREPROCESSOR_MACRO: &str =
 pub const ANONYMOUS_ENUM_MEMBER: &str =
     "anonymous_enum_member: anonymous enum member (c:@Ea@ / c:@EA@ USR; \
      integer value inlined by the C compiler, no dylib export)";
+
+/// Applied by `extract-swift` to ABI nodes of kind `Macro` / `TypeAlias` /
+/// `AssociatedType` that are not yet walked. Recovery is deferred to a later
+/// frontier leaf (ADR-0025/ADR-0026, D2); recording them here makes the drop
+/// auditable instead of silent rather than the former silent `_ => {}` drop.
+pub const DEFERRED_ABI_KIND: &str =
+    "deferred_abi_kind: Macro/TypeAlias/AssociatedType ABI node not yet walked \
+     (recovery deferred to a later frontier leaf)";

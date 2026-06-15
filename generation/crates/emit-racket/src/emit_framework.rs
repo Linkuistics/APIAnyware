@@ -6,9 +6,9 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
@@ -248,12 +248,14 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.classes_emitted, 1);
@@ -286,6 +288,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.enums_emitted, 1);
@@ -321,11 +324,13 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
             }],
             properties: vec![],
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.protocols_emitted, 1);
@@ -361,6 +366,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.functions_emitted, 1);
@@ -389,6 +395,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.functions_emitted, 0);

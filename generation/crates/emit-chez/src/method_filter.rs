@@ -53,7 +53,9 @@ pub fn returns_void(method: &Method, mapper: &dyn FfiTypeMapper) -> bool {
 }
 
 pub fn has_block_params(params: &[Param]) -> bool {
-    params.iter().any(|p| matches!(p.param_type.kind, TypeRefKind::Block { .. }))
+    params
+        .iter()
+        .any(|p| matches!(p.param_type.kind, TypeRefKind::Block { .. }))
 }
 
 /// True when the method takes a block parameter the trampoline cannot
@@ -61,9 +63,10 @@ pub fn has_block_params(params: &[Param]) -> bool {
 /// whose block params are all bridgeable is *supported*.
 fn has_unbridgeable_block_param(params: &[Param], mapper: &dyn FfiTypeMapper) -> bool {
     params.iter().any(|p| match &p.param_type.kind {
-        TypeRefKind::Block { params, return_type } => {
-            !is_bridgeable_block(params, return_type, mapper)
-        }
+        TypeRefKind::Block {
+            params,
+            return_type,
+        } => !is_bridgeable_block(params, return_type, mapper),
         _ => false,
     })
 }
@@ -73,7 +76,9 @@ fn returns_block(t: &TypeRef) -> bool {
 }
 
 fn has_unsupported_struct_param(params: &[Param], mapper: &dyn FfiTypeMapper) -> bool {
-    params.iter().any(|p| is_unsupported_struct(&p.param_type, mapper))
+    params
+        .iter()
+        .any(|p| is_unsupported_struct(&p.param_type, mapper))
 }
 
 fn returns_unsupported_struct(t: &TypeRef, mapper: &dyn FfiTypeMapper) -> bool {
@@ -108,5 +113,8 @@ fn returns_unsupported_pointer_alias(t: &TypeRef) -> bool {
 }
 
 fn is_unsupported_pointer(t: &TypeRef) -> bool {
-    matches!(t.kind, TypeRefKind::FunctionPointer { .. } | TypeRefKind::Pointer)
+    matches!(
+        t.kind,
+        TypeRefKind::FunctionPointer { .. } | TypeRefKind::Pointer
+    )
 }

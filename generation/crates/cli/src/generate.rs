@@ -4,8 +4,8 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::framework_ordering::topological_sort;
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 
 use crate::registry::EmitterRegistry;
 
@@ -108,34 +108,35 @@ pub fn run_generation(
         // same whole-program shape as racket's native-dispatch pass. Every
         // other target uses the registry instance unchanged.
         let gerbil_configured;
-        let active: &dyn TargetEmitter =
-            if info.id == apianyware_macos_emit_gerbil::GERBIL_TARGET_INFO.id {
-                let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
-                    &ordered_frameworks,
-                );
-                // Protocol-inheritance registry (leaf 120): the same whole-program
-                // shape, backing conformed-protocol method flattening — a class's
-                // conformance closure follows protocol `inherits` edges that cross
-                // frameworks.
-                let protos =
+        let active: &dyn TargetEmitter = if info.id
+            == apianyware_macos_emit_gerbil::GERBIL_TARGET_INFO.id
+        {
+            let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
+                &ordered_frameworks,
+            );
+            // Protocol-inheritance registry (leaf 120): the same whole-program
+            // shape, backing conformed-protocol method flattening — a class's
+            // conformance closure follows protocol `inherits` edges that cross
+            // frameworks.
+            let protos =
                     apianyware_macos_emit_gerbil::protocol_registry::ProtocolRegistry::from_framework_refs(
                         &ordered_frameworks,
                     );
-                // Same whole-program shape: the shared global generics module
-                // (`generics.ss`) holds one `:std/generic` generic per distinct
-                // instance-surface selector across every framework, so a selector
-                // shared by unrelated classes is one generic they all extend
-                // (cross-module unification fix). Written once, here.
-                apianyware_macos_emit_gerbil::write_global_generics_module(
-                    &ordered_frameworks,
-                    &out_dir,
-                )?;
-                gerbil_configured =
-                    apianyware_macos_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
-                &gerbil_configured
-            } else {
-                *emitter
-            };
+            // Same whole-program shape: the shared global generics module
+            // (`generics.ss`) holds one `:std/generic` generic per distinct
+            // instance-surface selector across every framework, so a selector
+            // shared by unrelated classes is one generic they all extend
+            // (cross-module unification fix). Written once, here.
+            apianyware_macos_emit_gerbil::write_global_generics_module(
+                &ordered_frameworks,
+                &out_dir,
+            )?;
+            gerbil_configured =
+                apianyware_macos_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
+            &gerbil_configured
+        } else {
+            *emitter
+        };
 
         for fw in &ordered_frameworks {
             let result = active
@@ -195,8 +196,7 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
         std::fs::create_dir_all(parent)
             .with_context(|| format!("creating {}", parent.display()))?;
     }
-    std::fs::write(swift_out, swift)
-        .with_context(|| format!("writing {}", swift_out.display()))?;
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
 
     tracing::info!(
         entries = sigs.len(),
@@ -246,12 +246,14 @@ mod tests {
                     overrides: None,
                     returns_retained: None,
                     satisfies_protocol: None,
+                    objc_exposed: true,
                 }],
                 category_methods: vec![],
                 swift_attributes: vec![],
                 ancestors: vec![],
                 all_methods: vec![],
                 all_properties: vec![],
+                objc_exposed: true,
             }],
             protocols: vec![],
             enums: vec![],
@@ -334,9 +336,7 @@ mod tests {
 
         // Both frameworks generated
         assert_eq!(summaries[0].frameworks_generated, 2);
-        assert!(output_dir
-            .join("racket/generated/foundation")
-            .exists());
+        assert!(output_dir.join("racket/generated/foundation").exists());
         assert!(output_dir.join("racket/generated/appkit").exists());
     }
 
@@ -535,6 +535,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 
@@ -603,12 +604,14 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 

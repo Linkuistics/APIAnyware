@@ -49,7 +49,11 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
     let fw_low = framework.to_ascii_lowercase();
     let mut w = CodeWriter::new();
 
-    write_line!(w, ";; Generated C function bindings for {} — do not edit", framework);
+    write_line!(
+        w,
+        ";; Generated C function bindings for {} — do not edit",
+        framework
+    );
     write_line!(w, "(library (apianyware {} functions)", fw_low);
 
     let exports = function_emittable_names(functions, framework);
@@ -150,6 +154,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }
     }
 
@@ -268,7 +273,10 @@ mod tests {
         let fs = vec![
             func(
                 "dispatch_async",
-                vec![param("q", TypeRefKind::Id), param("blk", TypeRefKind::Pointer)],
+                vec![
+                    param("q", TypeRefKind::Id),
+                    param("blk", TypeRefKind::Pointer),
+                ],
                 TypeRefKind::Primitive {
                     name: "void".into(),
                 },
@@ -293,13 +301,7 @@ mod tests {
 
     #[test]
     fn function_returning_id_maps_to_void_ptr() {
-        let fs = vec![func(
-            "TKMakeWidget",
-            vec![],
-            TypeRefKind::Id,
-            false,
-            false,
-        )];
+        let fs = vec![func("TKMakeWidget", vec![], TypeRefKind::Id, false, false)];
         let out = generate_functions_file(&fs, "TestKit");
         assert!(out.contains("(define TKMakeWidget (foreign-procedure \"TKMakeWidget\" () void*))"));
     }

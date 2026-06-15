@@ -204,6 +204,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }
     }
 
@@ -212,10 +213,22 @@ mod tests {
         let fs = vec![func(
             "TKComputeDistance",
             vec![
-                param("x", TypeRefKind::Primitive { name: "double".into() }),
-                param("y", TypeRefKind::Primitive { name: "double".into() }),
+                param(
+                    "x",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                ),
+                param(
+                    "y",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                ),
             ],
-            TypeRefKind::Primitive { name: "double".into() },
+            TypeRefKind::Primitive {
+                name: "double".into(),
+            },
             false,
             false,
         )];
@@ -234,7 +247,9 @@ mod tests {
         let fs = vec![func(
             "TKReset",
             vec![],
-            TypeRefKind::Primitive { name: "void".into() },
+            TypeRefKind::Primitive {
+                name: "void".into(),
+            },
             false,
             false,
         )];
@@ -248,8 +263,15 @@ mod tests {
     fn bool_slot_pulls_in_stdbool() {
         let fs = vec![func(
             "TKToggle",
-            vec![param("on", TypeRefKind::Primitive { name: "bool".into() })],
-            TypeRefKind::Primitive { name: "bool".into() },
+            vec![param(
+                "on",
+                TypeRefKind::Primitive {
+                    name: "bool".into(),
+                },
+            )],
+            TypeRefKind::Primitive {
+                name: "bool".into(),
+            },
             false,
             false,
         )];
@@ -264,14 +286,18 @@ mod tests {
             func(
                 "TKFastHash",
                 vec![param("d", TypeRefKind::Pointer)],
-                TypeRefKind::Primitive { name: "uint64".into() },
+                TypeRefKind::Primitive {
+                    name: "uint64".into(),
+                },
                 true,
                 false,
             ),
             func(
                 "TKLog",
                 vec![param("fmt", TypeRefKind::CString)],
-                TypeRefKind::Primitive { name: "void".into() },
+                TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
                 false,
                 true,
             ),
@@ -288,9 +314,7 @@ mod tests {
         let out = generate_functions_file(&fs, "TestKit");
         // ObjC pointer return collapses to `void *` in the synthesized prototype.
         assert!(out.contains("(c-declare \"extern void * TKMakeWidget(void);\")"));
-        assert!(out.contains(
-            "(define-c-lambda TKMakeWidget () (pointer void) \"TKMakeWidget\")"
-        ));
+        assert!(out.contains("(define-c-lambda TKMakeWidget () (pointer void) \"TKMakeWidget\")"));
         // Raw FFI surface — no wrapping, no runtime import.
         assert!(!out.contains(":gerbil-bindings/runtime/objc"));
         assert!(!out.contains("wrap"));
@@ -302,9 +326,13 @@ mod tests {
             "TKBounds",
             vec![param(
                 "r",
-                TypeRefKind::Struct { name: "CGRect".into() },
+                TypeRefKind::Struct {
+                    name: "CGRect".into(),
+                },
             )],
-            TypeRefKind::Struct { name: "CGPoint".into() },
+            TypeRefKind::Struct {
+                name: "CGPoint".into(),
+            },
             false,
             false,
         )];
@@ -330,8 +358,15 @@ mod tests {
         // never the non-C-safe Foundation/AppKit header.
         let fs = vec![func(
             "TKMakeRange",
-            vec![param("len", TypeRefKind::Primitive { name: "uint64".into() })],
-            TypeRefKind::Struct { name: "NSRange".into() },
+            vec![param(
+                "len",
+                TypeRefKind::Primitive {
+                    name: "uint64".into(),
+                },
+            )],
+            TypeRefKind::Struct {
+                name: "NSRange".into(),
+            },
             false,
             false,
         )];
@@ -341,9 +376,9 @@ mod tests {
         ));
         assert!(out.contains("(c-define-type NSRange (struct \"_NSRange\"))"));
         assert!(!out.contains("#include <Foundation/"));
-        assert!(out.contains(
-            "(c-declare \"extern struct _NSRange TKMakeRange(unsigned long long);\")"
-        ));
+        assert!(
+            out.contains("(c-declare \"extern struct _NSRange TKMakeRange(unsigned long long);\")")
+        );
     }
 
     #[test]
@@ -351,15 +386,22 @@ mod tests {
         let fs = vec![
             func(
                 "dispatch_async",
-                vec![param("q", TypeRefKind::Id), param("blk", TypeRefKind::Pointer)],
-                TypeRefKind::Primitive { name: "void".into() },
+                vec![
+                    param("q", TypeRefKind::Id),
+                    param("blk", TypeRefKind::Pointer),
+                ],
+                TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
                 false,
                 false,
             ),
             func(
                 "dispatch_cancel",
                 vec![param("q", TypeRefKind::Id)],
-                TypeRefKind::Primitive { name: "void".into() },
+                TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
                 false,
                 false,
             ),
@@ -382,8 +424,24 @@ mod tests {
     #[test]
     fn emittable_names_skip_inline_variadic_and_unexported() {
         let fs = vec![
-            func("dispatch_async", vec![], TypeRefKind::Primitive { name: "void".into() }, false, false),
-            func("dispatch_cancel", vec![], TypeRefKind::Primitive { name: "void".into() }, false, false),
+            func(
+                "dispatch_async",
+                vec![],
+                TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
+                false,
+                false,
+            ),
+            func(
+                "dispatch_cancel",
+                vec![],
+                TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
+                false,
+                false,
+            ),
         ];
         assert_eq!(
             function_emittable_names(&fs, "libdispatch"),

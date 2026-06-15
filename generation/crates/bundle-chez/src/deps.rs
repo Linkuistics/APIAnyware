@@ -92,10 +92,8 @@ pub fn collect_dependencies_with_chez(
         });
     }
 
-    let stdout = String::from_utf8(output.stdout).map_err(|e| {
-        BundleError::DepsExtractFailed {
-            stderr: format!("non-utf8 path in chez stdout: {e}"),
-        }
+    let stdout = String::from_utf8(output.stdout).map_err(|e| BundleError::DepsExtractFailed {
+        stderr: format!("non-utf8 path in chez stdout: {e}"),
     })?;
 
     let mut deps = HashSet::new();
@@ -324,7 +322,11 @@ mod tests {
         let deps = collect_dependencies(&entry, root).unwrap();
         assert_eq!(
             rel_names(&deps, root),
-            vec!["a.sls".to_string(), "b.sls".to_string(), "main.sls".to_string()]
+            vec![
+                "a.sls".to_string(),
+                "b.sls".to_string(),
+                "main.sls".to_string()
+            ]
         );
     }
 
@@ -350,12 +352,9 @@ mod tests {
         let root = dir.path();
         let entry = write(root, "main.sls", "(import (chezscheme))");
 
-        let err = collect_dependencies_with_chez(
-            &entry,
-            root,
-            "definitely-not-a-binary-on-this-machine",
-        )
-        .unwrap_err();
+        let err =
+            collect_dependencies_with_chez(&entry, root, "definitely-not-a-binary-on-this-machine")
+                .unwrap_err();
         match err {
             BundleError::ChezNotAvailable { .. } => {}
             other => panic!("expected ChezNotAvailable, got {other:?}"),

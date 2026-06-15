@@ -259,6 +259,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         }
     }
 
@@ -273,6 +274,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: Some(value.into()),
+            objc_exposed: true,
         }
     }
 
@@ -344,9 +346,9 @@ mod tests {
     fn cfstr_constant_builds_retained_nsstring() {
         let consts = vec![cfstr("kAXWindowsAttribute", "AXWindows")];
         let out = generate_constants_file(&consts, "ApplicationServices");
-        assert!(out.contains(
-            "(define kAXWindowsAttribute (wrap (string->nsstring \"AXWindows\") #t))"
-        ));
+        assert!(
+            out.contains("(define kAXWindowsAttribute (wrap (string->nsstring \"AXWindows\") #t))")
+        );
         // Pure CFSTR module: no symbol to read → no begin-ffi / :std/foreign.
         assert!(!out.contains("begin-ffi"));
         assert!(!out.contains(":std/foreign"));
