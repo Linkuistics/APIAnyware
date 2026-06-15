@@ -38,10 +38,49 @@ plausibly stand up a third.
 > emitted), **not** at the source-form level. Do not aim for "portable R6RS that
 > any Scheme loads".
 
-> **Knowledge system:** after building a target, populate
-> `generation/targets/<id>/docs/reference.md` with target-wide learnings (FFI patterns, runtime
-> quirks, distribution). `racket.md`, `chez.md`, and `gerbil.md` are the worked
-> examples.
+> **Docs co-locate with the target (ADR-0024):** the project's documentation is
+> split into a **main tier** (cross-cutting, under the top-level `docs/` tree) and
+> a **per-language tier** co-located inside `generation/targets/<id>/`. You
+> **read** the main tier and **produce** the per-language tier; doing so is a
+> sequenced step of authoring, not an afterthought (Step 9), and a target is not
+> *done* until its docs exist in the canonical structure. See **"Documentation"**
+> immediately below for the read-vs-produce split. `racket`, `chez`, and `gerbil`
+> are the worked examples (`generation/targets/<id>/docs/reference.md`).
+
+## Documentation: read the main tier, produce the per-language tier
+
+Per **ADR-0024**, documentation co-locates with code on the same axis ADR-0011
+uses for the binding itself. Before you start, know which docs you *read* and
+which you *produce* — and treat the ones you produce as deliverables, not notes.
+
+**Read (the main tier — shared, you do not edit these to add a target):**
+
+| Doc | Why you read it |
+|---|---|
+| `docs/pipeline/` (`collection.md`, `analysis.md`, `type-mapping.md`, `emitter-contract.md`, …) | how `collect → analyse → generate` feeds your emitter; the contract your `TargetEmitter` must satisfy |
+| `docs/apps/` (`_index.md` + per-app `spec.md`) | the language-agnostic sample-app portfolio you must implement and VM-verify |
+| `docs/testing/` | the TestAnyware VM-verification methodology every app is held to |
+| ADR-0010, ADR-0011 | the north star (native library *is* the binding) and hermetic isolation — why you build standalone |
+| ADR-0004, ADR-0005 | one binding style per target; maximally idiomatic, not a portable subset |
+| ADR-0024 | this read-vs-produce split and the canonical per-target doc layout |
+| `docs/prd/2026-06-14-docs-restructure-main-and-per-language.md` | the full doc structure and move-map |
+
+**Produce (the per-language tier — co-located in `generation/targets/<id>/`):**
+
+| Slot | Contents | Produced during |
+|---|---|---|
+| `README.md` | target overview / index — the entry point to the unit | Step 9 (as the build settles) |
+| `docs/reference.md` | the deep target reference: FFI patterns, dispatch, memory model, runtime quirks, distribution | Steps 3–8, consolidated in Step 9 |
+| `docs/developer-guide.md` | user-facing app-writing guide — **where warranted** (racket has one; chez/gerbil rely on `reference.md`) | Step 9 |
+| `docs/design/` | the per-target design spec(s) raised while building (`YYYY-MM-DD-<id>-design.md`, distribution design, native-binding design) | Step 1 onward |
+| `docs/research/` | per-target spikes and their evidence (dispatch, threading, standalone-distribution probes) | whenever a spike is run |
+| `apps/<app>/learnings.md` | per-app realization notes — what this target had to do to make that app work | Step 7, per app |
+| `test-results/<app>/report.md` | the VM-verification report (+ screenshots) for each app — already co-located | Step 7, per app |
+
+ADRs are **the one exception**: target-flavoured decisions still land in the
+central `docs/adr/` log with global numbering (the decision graph crosses target
+boundaries — gerbil ADRs cite chez ADRs, supersession chains span targets), per
+ADR-0024. Raise ADRs there as you make them, not under the target unit.
 
 ## Prerequisites
 
@@ -60,8 +99,10 @@ inherits is **ADR-0005** — read it first.
 1. **Brainstorm** the design — FFI mechanism, naming conventions, dispatch
    strategy, memory model, block bridging, error handling, and (crucially) the
    *one* idiomatic shape this target emits.
-2. **Write a design spec** to `docs/specs/YYYY-MM-DD-<id>-design.md` recording at
-   minimum:
+2. **Write a design spec** to the target's own co-located design dir —
+   `generation/targets/<id>/docs/design/YYYY-MM-DD-<id>-design.md` (per-target
+   docs co-locate, ADR-0024; central `docs/specs/` is for cross-cutting specs
+   only) — recording at minimum:
    - **Language / display name** — e.g. "Chez Scheme".
    - **Target id** — the CLI `--target` value and on-disk dir name (`racket`,
      `chez`). A plain language id; no `{lang}-{paradigm}` slug.
@@ -76,10 +117,11 @@ inherits is **ADR-0005** — read it first.
    - **Distribution model** — how a sample app ships (racket: stub-launcher +
      system runtime; chez: self-contained standalone binary, ADR-0009).
 
-   Two concrete design specs exist to model yours on:
-   `docs/specs/2026-05-27-chez-target-design.md` (the target) and
-   `docs/specs/2026-05-29-chez-standalone-distribution-design.md` (its
-   distribution).
+   Two concrete design specs exist to model yours on, both now co-located in the
+   chez unit: `generation/targets/chez/docs/design/2026-05-27-chez-target-design.md`
+   (the target) and
+   `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`
+   (its distribution).
 3. For a long build, drive it as a **grove** (see the `grove` skill) rather than
    a single up-front plan — the chez target was built that way.
 
@@ -280,9 +322,9 @@ runtime piece and a regression localises to the newest one.
 **Every app gets a dedicated TestAnyware VM-verification, and CLI smoke never
 satisfies the bar** — a window must actually draw and behave. Record each app's
 result under `generation/targets/{id}/test-results/<app>/report.md` (+
-screenshots) and `generation/targets/{id}/apps/<app>/learnings.md`. See the
-`generation/targets/<id>/docs/reference.md` existing reports for the format and the
-no-Chez-VM recipe in `chez.md` §9.
+screenshots) and `generation/targets/{id}/apps/<app>/learnings.md`. See the existing reports under
+`generation/targets/<id>/docs/reference.md` for the format and the no-Chez-VM
+recipe in `generation/targets/chez/docs/reference.md` §9.
 
 ## Step 8: Bundling / distribution
 
@@ -310,12 +352,76 @@ skeleton + codesigning; per-target bundler crates do dependency discovery and
 staging. Bundle ids are `com.linkuistics.<NoSpaceTitle>`; display names come from
 the H1 of `docs/apps/<app>/spec.md`.
 
-## Step 9: Validate and review
+## Step 9: Document the target
+
+A target is **not done until its docs exist in the canonical structure**
+(ADR-0024). Some of these docs you have been writing all along — the design spec
+since Step 1, per-app `learnings.md` and `test-results/` reports since Step 7.
+This step is where you fill **every** remaining slot of the per-language tier and
+confirm the unit is self-describing. Do not invent a layout; fill the one below.
+
+The canonical per-target doc layout — create each slot that applies:
+
+```text
+generation/targets/<id>/
+  README.md                       # target overview / index: what this target is,
+                                  #   how it's built, where the pieces live,
+                                  #   pointers into docs/ and apps/. The entry point.
+  docs/
+    reference.md                  # the deep reference: FFI patterns, naming, dispatch,
+                                  #   memory model, block/delegate bridging, runtime
+                                  #   quirks, a distribution section (§ like chez §9).
+                                  #   This is the doc a future maintainer reads first.
+    developer-guide.md            # OPTIONAL — a user-facing "how to write an app in
+                                  #   <lang>" guide. Write one only where it earns its
+                                  #   place (racket has one; chez/gerbil fold this into
+                                  #   reference.md). Don't create an empty stub.
+    design/
+      YYYY-MM-DD-<id>-design.md   # the design spec(s) from Step 1 onward — the target
+      ...                         #   design, distribution design, native-binding design
+    research/
+      YYYY-MM-DD-<topic>-spike/   # per-target spikes + their evidence (scripts,
+      ...                         #   transcripts, screenshots, FINDINGS.md)
+  apps/<app>/
+    README.md                     # per-app overview
+    learnings.md                  # what THIS target had to do to make THIS app work
+  test-results/<app>/report.md    # the VM-verification report (+ screenshots)
+```
+
+For each slot:
+
+1. **`README.md`** — write the target's index: a paragraph on what the target is
+   and its idiom posture, the on-disk map (emitter crate, runtime, dylib if any,
+   bundler), and links into `docs/` and `apps/`. Model it on
+   `generation/targets/gerbil/README.md`.
+2. **`docs/reference.md`** — consolidate the target-wide learnings accumulated
+   across Steps 3–8: FFI mechanism, naming, dispatch, memory model, block/delegate
+   bridging, error handling, runtime quirks, and a **distribution** section. This
+   is the worked-example doc the next target's author reads; `racket`, `chez`, and
+   `gerbil`'s `reference.md` are the templates.
+3. **`docs/developer-guide.md`** — only **where warranted**. If app authors need
+   a narrative "how to write an app in this language" beyond the reference, write
+   it (see `generation/targets/racket/docs/developer-guide.md`); otherwise skip it
+   and let `reference.md` carry that weight.
+4. **`docs/design/`** — ensure every design spec you wrote during the build lives
+   here (not in central `docs/specs/`), per Step 1 and ADR-0024.
+5. **`docs/research/`** — move any spike directories you ran into here, with their
+   evidence intact, so the *why* behind a non-obvious choice is recoverable.
+6. **`apps/<app>/learnings.md`** + **`test-results/<app>/report.md`** — one of
+   each per sample app, from Step 7. Confirm all seven exist.
+
+ADRs are the **exception** and do **not** go under the target unit — target
+decisions land in the central `docs/adr/` log with global numbering (ADR-0024).
+
+## Step 10: Validate and review
 
 - Rust tests pass (`cargo test`); any snapshot/golden tests pass.
 - Every sample app passes its TestAnyware VM verification.
-- `generation/targets/{id}/docs/reference.md` populated with learnings + distribution.
-- `README.md` Current Status updated with the target.
+- **Docs exist in the canonical structure (Step 9)** — `README.md`,
+  `docs/reference.md`, `docs/design/`, `docs/research/` (if any spikes), and per
+  app a `learnings.md` + `test-results/.../report.md`. This is part of the
+  target's definition of done, not optional polish (ADR-0024).
+- `README.md` (the repo-root one) Current Status updated with the target.
 
 ## Reference implementations
 
@@ -335,7 +441,8 @@ the H1 of `docs/apps/<app>/spec.md`.
 ## Checklist
 
 ```text
-[ ] Design spec written (docs/specs/YYYY-MM-DD-<id>-design.md); ADR-0005 idiom posture understood
+Build
+[ ] Design spec written (generation/targets/<id>/docs/design/YYYY-MM-DD-<id>-design.md); ADR-0005 idiom posture understood
 [ ] emit-<id> crate created, compiles, tests pass
 [ ] TargetInfo {id, display_name, generated_subdir} + TargetEmitter::emit_framework implemented
 [ ] Runtime library written, loads in the target language
@@ -343,8 +450,17 @@ the H1 of `docs/apps/<app>/spec.md`.
 [ ] Registered in EmitterRegistry::new() (cli/src/registry.rs); --target <id> works
 [ ] Snapshot/golden or inline emission tests in place (target's choice)
 [ ] All 7 sample apps built
-[ ] All 7 sample apps pass TestAnyware VM verification (one report each)
+[ ] All 7 sample apps pass TestAnyware VM verification
 [ ] Bundler integration: apps package as .app (stub-launcher or standalone)
+
+Document the target (Step 9 — canonical per-language structure, ADR-0024)
+[ ] generation/targets/<id>/README.md (target overview / index)
 [ ] generation/targets/<id>/docs/reference.md populated (incl. a distribution section)
-[ ] README.md Current Status updated
+[ ] generation/targets/<id>/docs/developer-guide.md — where warranted (racket has one; else skip)
+[ ] generation/targets/<id>/docs/design/ holds every build-time design spec
+[ ] generation/targets/<id>/docs/research/ holds every spike + its evidence
+[ ] apps/<app>/learnings.md for each of the 7 apps
+[ ] test-results/<app>/report.md for each of the 7 apps
+[ ] Target ADRs raised in the central docs/adr/ log (NOT under the target unit)
+[ ] README.md (repo root) Current Status updated
 ```
