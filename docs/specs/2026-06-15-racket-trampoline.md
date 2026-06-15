@@ -44,8 +44,13 @@ under-determined, the build leaf resolves it and kicks back to update this spec
   shape) — reconstructible per-emitter without a global counter (ADR-0013
   content-addressing precedent).
 - Constant trampolines: `aw_racket_swift_const_<Framework>_<name>`.
-- Handle accessors: `aw_racket_box_<Type>_<field>`, `aw_racket_box_<Type>_free`,
-  `aw_racket_box_<Type>_tag` (payload-enum discriminant).
+- Handle accessors: `aw_racket_box_<Type>_<field>`, `aw_racket_box_<Type>_tag`
+  (payload-enum discriminant). **Free is a single uniform entry**
+  `aw_racket_box_free(handle)`, **not** per-type — see §3 (resolved in leaf
+  040/010: every boxed value rides one `AwValueBox` rep, so one free suffices and
+  opaque `some P` returns that cannot be *named* at a free site are still
+  freeable). Per-type field/tag accessors stay per-type — they need the concrete
+  nameable type to read a field.
 
 ## 3. The marshalling taxonomy (Swift type → C-ABI rep → racket coercion)
 
@@ -59,24 +64,81 @@ boundary, and what the racket binding coerces.
 | `String` | `id` (`x as NSString`) | `aw_racket_nsstring_to_string` (existing) |
 | `Array<T>` | `id` (`x as NSArray`) | `aw_racket_nsarray_get_all` (existing) + per-elem coercion |
 | `Dictionary<K,V>` | `id` (`as NSDictionary`) | `aw_racket_nsdictionary_get_all` (existing) |
-| `Set<T>` | `id` (`as NSSet`) | NSSet→list (extend runtime if absent) |
+| `Set<T>` | `id` (`as NSSet`) | `aw_racket_nsset_get_all` (added 040/010) + per-elem coercion |
 | `Optional<T>` | `T`'s rep, nil = NULL/`#f` | nullable coercion |
-| tuple | opaque boxed handle | field accessors |
-| Swift `struct` (non-bridged) | opaque boxed handle | `aw_racket_box_<T>_*` accessors + free |
-| `enum` with payload | opaque boxed handle + tag | tag accessor + per-case field accessors |
-| class instance / existential / `some P` | opaque retained handle (`Unmanaged.toOpaque`) | cpointer, dynamic dispatch through the lib |
+| tuple | opaque boxed handle (`AwValueBox`) | `awRacketBox` + field accessors + `aw_racket_box_free` |
+| Swift `struct` (non-bridged) | opaque boxed handle (`AwValueBox`) | `awRacketBox` + `aw_racket_box_<T>_*` accessors + `aw_racket_box_free` |
+| `enum` with payload | opaque boxed handle + tag (`AwValueBox`) | `awRacketBox` + `aw_racket_box_<T>_tag` + per-case field accessors |
+| value-backed existential / opaque `some P` | opaque boxed handle (`AwValueBox`) | `awRacketBox` + `aw_racket_box_free` (no field accessors when the type is unnameable — handle is pass-through only) |
+| **class** instance (identity) | opaque retained handle (`Unmanaged.passRetained`) | cpointer, freed by existing `aw_racket_release` |
 | pointer-valued constant | constant trampoline → opaque ptr | cpointer |
-| `throws` | trailing `NSError**` out-param | racket checks + raises |
-| `async` | completion-callback trampoline | callback bridge (main-thread aware) |
+| `throws` | trailing `NSError**` out-param | `awRacketWriteError` / `awRacketTry`; racket checks + raises |
+| `async` | completion-callback trampoline | `awRacketAsyncDispatch` (+ `AwAsyncOutcome` for `async throws`); main-thread aware |
+
+**Box rep — resolved in leaf 040/010 (refines the rows above).** The spec's
+first draft listed `struct` / payload-`enum` / tuple / existential / `some P` as
+separate handle rows each with a per-type `_free`, and lumped class +
+existential + `some P` under `Unmanaged`. Two corrections, now reflected above:
+
+1. *One value-box rep, not many.* Every non-class value (struct, payload-enum,
+   tuple, value-backed existential, opaque `some P`) is wrapped in
+   `final class AwValueBox { let value: Any }` and `Unmanaged.passRetained`-ed.
+   This gives **one** uniform free (`aw_racket_box_free`), works for types that
+   cannot be named at a free site (`some P`), and rides the existing
+   `Unmanaged`/finalizer lifetime — no new lifetime model. `awRacketBox<T>` /
+   `awRacketUnbox<T>` are the generic engine; per-type accessors call
+   `awRacketUnbox(h, as: T.self).<field>` where `T` is nameable.
+2. *`Unmanaged` is for classes only.* A value-backed existential cannot be
+   `Unmanaged`-boxed (not `AnyObject`); only genuine **class instances** (where
+   reference identity must survive) take `Unmanaged.passRetained` + the existing
+   `aw_racket_release`. 020 picks the path from the static type; swiftc enforces
+   it (a wrong pick won't compile).
 
 Foundation-bridged value types deliberately reuse the **existing** runtime
 exports (`StringConversion.swift`, `CollectionMarshal.swift`); only the
 non-bridged box/handle/async/throws infra is new. Geometry structs already have
 `StructMarshal.swift` pack/unpack and stay on that path.
 
-Lifetime: handles are heap-boxed / `Unmanaged`-retained by the trampoline and
-freed by the generated `_free` (the racket side wraps them so finalization calls
-it — reuse the existing GC/will machinery, not a new one).
+Lifetime: value handles are `AwValueBox`-wrapped (`Unmanaged`-retained) by the
+trampoline and freed by the uniform `aw_racket_box_free`; class handles are
+`Unmanaged`-retained and freed by `aw_racket_release`. Either way the racket side
+wraps them so finalization calls the right free — reuse the existing GC/will
+machinery, not a new one.
+
+### 3a. Runtime exports landed by 040/010 (what 020 binds against)
+
+The native marshalling-runtime layer is built (leaf 040/010); 020 binds these
+mechanically. New `swift/Sources/APIAnywareRacket/` files + exports:
+
+- **`OpaqueHandle.swift`** — `AwValueBox`; generic `awRacketBox<T>(_:)` /
+  `awRacketUnbox<T>(_:as:)` (same-module, called by generated trampolines +
+  accessors); `@_cdecl aw_racket_box_free(handle)` (the one uniform value-handle
+  free).
+- **`ThrowsBridge.swift`** — `awRacketWriteError(errOut:_:)` (the primitive,
+  mirrors the dispatch `error_out` write byte-for-byte) and
+  `awRacketTry(errOut:fallback:body:)` (ergonomic do/catch wrapper; the generated
+  body supplies its concrete `fallback` — `nil` for a pointer rep, `0` for a
+  scalar).
+- **`AsyncBridge.swift`** — `awRacketAsyncDispatch<P: Sendable>(operation:completion:)`
+  (runs the async op on the cooperative pool, delivers a Sendable payload to
+  `completion` **on the main thread** via `MainActor.run` so the racket
+  `_cprocedure` doesn't SIGILL), plus `AwAsyncOutcome` (`@unchecked Sendable`
+  value/error pointer carrier; `.failure(_:)` marshals a thrown error like the
+  sync bridge). **Consequence to honour in 020:** the generated `operation`
+  closure must be `@Sendable` and must **marshal the result to its C rep inside
+  the closure** (on the cooperative thread) — only Sendable C reps (a scalar, or
+  `AwAsyncOutcome` for pointer/throwing results) may cross the hop. Async results
+  are therefore marshalled off-main; safe for value/Foundation reps, revisit only
+  for a main-thread-only return object.
+- **`CollectionMarshal.swift`** (extended) — Set bridge:
+  `aw_racket_list_to_nsset` / `aw_racket_nsset_count` / `aw_racket_nsset_get_all`,
+  same +1-retained-constructor / unretained-`get_all` ownership as the NSArray
+  path.
+
+Already present and reused as-is: `StringConversion.swift`,
+`CollectionMarshal.swift` (list/dict), `StructMarshal.swift` geometry pack/unpack,
+`MemoryManagement.swift` (`aw_racket_retain`/`_release`), and the GC/will
+finalization machinery.
 
 ## 4. Emitter wiring (`emit_functions.rs`, `emit_constants.rs`)
 
