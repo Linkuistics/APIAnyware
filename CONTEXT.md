@@ -154,6 +154,78 @@ a Gerbil configured `--enable-shared=no`; foreign-framework linkage is passed vi
 distribution model (ADR-0009) for the `gerbil` target.
 _Avoid_: "stub-launcher" (that is racket's distribution model, not gerbil's).
 
+## SBCL target toolchain
+
+**`sbcl` target**:
+The fourth target — **Steel Bank Common Lisp** with a **CLOS** binding style.
+The on-disk unit is `generation/targets/sbcl/`; CLI `--target sbcl`; emitter
+crate `emit-sbcl`. The id is a **plain language id** (no `{lang}-{paradigm}`
+slug), matching racket/chez/gerbil — CLOS is this target's *one* binding style
+(the gerbil analogue: its `defclass`+generics object model is gerbil's single
+style), not a reified paradigm axis. No `sbcl-functional` sibling is planned; if
+one is ever wanted, register it then (per the retired **Paradigm** guidance).
+_Avoid_: `sbcl-clos` as the target id (that is the *grove* name, emphasizing the
+headline idiom — the id stays plain `sbcl`); "Common Lisp" as the display name
+(the target is pinned to the SBCL *implementation*, not portable CL — ADR-0005).
+
+**`sb-alien`**:
+SBCL's compiler-integrated native FFI and the `sbcl` target's FFI layer —
+`define-alien-routine` / `alien-funcall` (typed C calls), `with-alien` (stack
+aliens), `alien-sap` (pointer↔SAP), `define-alien-callable` (callbacks). The
+idiomatic SBCL way to reach `objc_msgSend` / libobjc; the analogue of chez's
+`foreign-procedure`, gerbil's `:std/foreign`/`define-c-lambda`, and racket's
+ffi2 + `ffi/unsafe/objc`. Chosen over **CFFI** (the portable-across-Lisps FFI
+library) per ADR-0005 — CFFI is the "portable subset" the chez-vs-R6RS rule
+rejects. Makes `sbcl` a **compiled-FFI** target (ADR-0015), like chez and
+gerbil, unlike interpreted-FFI racket: the emitter open-codes one typed alien
+signature per method ABI, casting away arm64 variadic `objc_msgSend`.
+_Avoid_: "CFFI" / "the FFI" (name it `sb-alien`); "libffi" (sb-alien generates
+direct native call sites, not libffi thunks).
+
+**MOP projection / `objc-class` metaclass (sbcl)**:
+The `sbcl` object model (provisional, to be settled in the object-model leaf):
+ObjC's class system is **projected into CLOS via the Metaobject Protocol**, not
+mirrored as plain `defclass`. An `objc-class` metaclass (subclass of
+`standard-class`) backs every bound ObjC class; each ObjC class is a CLOS class
+of that metaclass carrying the ObjC `Class` pointer; ObjC methods are
+`defgeneric`/`defmethod` (native CLOS **multiple dispatch** + method combination);
+instance ivars/slots route through MOP hooks (`slot-value-using-class`,
+`allocate-instance`); `make-instance` trampolines to `alloc`/`init`; deriving
+`(defclass my-view (ns:ns-view) … (:metaclass objc-class))` synthesizes a real
+ObjC subclass via `objc_allocateClassPair`. The **emitter statically generates
+the class graph** (per ADR-0010 / the shared-IR model); the **MOP machinery
+lives in the runtime** — diverging from Clozure CL, whose bridge synthesizes
+classes dynamically from the live ObjC runtime. The MOP is the *mechanism*; the
+class graph stays statically emitted.
+_Avoid_: a single `objc-object` wrapper class with generics (gerbil pre-rejected
+as "vacuous" — receiver-only dispatch over one type, ADR-0018→0020); "manifest
+`defclass` graph" *without* the MOP (that is gerbil's shape, ADR-0020 — sbcl goes
+further); "dynamic synthesis from the ObjC runtime" as sbcl's mechanism (that is
+CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks).
+
+**CL-family interface contract** _(provisional — to be settled in the contract leaf)_:
+The **documented, specification-level interface that all Common Lisp targets share**,
+even though each compiles to a different FFI under the hood. The shared surface:
+the `ns:` package, class names, generic-function names, the `objc-class`
+metaclass / MOP protocol, and the **condition hierarchy** (CL's idiom for
+`NSError**` — errors are *signalled conditions*, not `(values result error)`;
+this is part of the contract). What is **not** shared: the binding implementation
+(emitter FFI output, callback/block bridges, threading, distribution) — those stay
+per-impl and idiomatic (SBCL: `sb-alien` + `save-lisp-and-die`). Application
+source written against the contract is **portable across CL impls**; binding
+source is not. This is a **spec-level** share, never shared binding code — so it
+does **not** reopen the CFFI question (`sb-alien` stays, ADR-0005) and does **not**
+breach ADR-0011's *substrate* isolation; it adds a new **family-level
+interface-sharing axis** that ADR-0011 (justified for *paradigmatically-alien*
+targets) never considered — two CL impls are the same language. Likely aligned
+with Clozure CL's existing Cocoa-bridge API for de-facto portability with the
+existing CL-Cocoa codebase.
+_Avoid_: "shared binding / portable CFFI layer" (that is the rejected code-level
+share — different FFI per impl, contract is spec-only); treating the contract as
+overturning ADR-0011 (it scopes an *exception*, native substrate stays isolated);
+placing the contract spec in a per-target unit (it is *cross-target* within the CL
+family — main-tier doc).
+
 ## Native binding mechanism
 
 **Generated typed dispatch**:
