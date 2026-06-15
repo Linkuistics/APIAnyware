@@ -13,7 +13,7 @@ racket fat-dispatch model (**ADR-0013**) and the 020 spike's own headline by
 
 ## Context — settled on BOTH axes
 
-The 020 spike (`docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md`)
+The 020 spike (`generation/targets/gerbil/docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md`)
 recommended "go fat-native" but flagged that precompilation might reframe it.
 ADR-0015 weighed only runtime; this ADR records both axes, as the grove required.
 

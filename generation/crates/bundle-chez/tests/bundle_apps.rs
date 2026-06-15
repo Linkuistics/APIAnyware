@@ -2,7 +2,7 @@
 //!
 //! chez apps ship as self-contained binaries that embed the Chez kernel
 //! (ADR-0009; design spec
-//! `docs/specs/2026-05-29-chez-standalone-distribution-design.md`). The
+//! `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). The
 //! source-exec / system-Chez path it replaced is gone, so these tests
 //! cover only what is cheap and deterministic to assert in a unit run:
 //! the entry-point/dylib prechecks [`bundle_app`] performs *before* any
@@ -10,7 +10,7 @@
 //!
 //! The heavy end-to-end path — whole-program compile → `make-boot-file` →
 //! `cc`-link → assemble + codesign, then *launch* — is proven by the 060/010
-//! spike (`docs/research/2026-05-29-chez-standalone-spike.md`) and re-verified
+//! spike (`generation/targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`) and re-verified
 //! per app on a no-Chez VM in node-leaf 050. It is not re-run here: a single
 //! standalone build is ~160 s for an AppKit app and needs `cc`, the Chez
 //! kernel artifacts, and codesign — environment a default `cargo test` should

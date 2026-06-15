@@ -11,7 +11,7 @@ framework umbrella header** (`<Foundation/Foundation.h>`, `<AppKit/AppKit.h>`, โ
 Every emitted module therefore compiles under the bottle's **default C compiler
 (gcc-15)** with **no** `-cc clang`, **no** `-x objective-c`, **no** SDKROOT
 contract, and **no** per-module compiler selection. This supersedes design-spec ยง4
-(`docs/specs/2026-06-03-gerbil-target-design.md`), which had the emitter `#include`
+(`generation/targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md`), which had the emitter `#include`
 the umbrella and compile the FFI unit `-x objective-c`.
 
 ## Context

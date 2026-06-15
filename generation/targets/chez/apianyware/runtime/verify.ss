@@ -6,7 +6,7 @@
 ;;
 ;; The `--libdirs` flag tells Chez to resolve `(apianyware ...)`
 ;; library names against `generation/targets/chez/apianyware/...`
-;; (see docs/specs/2026-05-27-chez-target-design.md §8). No
+;; (see generation/targets/chez/docs/design/2026-05-27-chez-target-design.md §8). No
 ;; explicit `(load ...)` is needed — Chez walks the import graph
 ;; and pulls each library in dependency order.
 

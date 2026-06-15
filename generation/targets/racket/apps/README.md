@@ -9,8 +9,8 @@ complex.
 2. Read app-universal learnings: `{{PROJECT}}/docs/apps/{app}/learnings.md`
 3. Read the test strategy: `{{PROJECT}}/docs/apps/{app}/test-strategy.md`
 4. Read matrix learnings: `{{PROJECT}}/generation/targets/racket/apps/{app}/learnings.md` (if it exists)
-5. Check the target plan: `{{PROJECT}}/docs/specs/2026-05-22-racket-completion-design.md`
-   and `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-completion.md`
+5. Check the target plan: `{{PROJECT}}/generation/targets/racket/docs/design/2026-05-22-racket-oo-completion-design.md`
+   and `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-oo-completion.md`
 
 ## All GUI testing uses TestAnyware
 

@@ -12,8 +12,8 @@ the runtime compiler, `eval`, and `load` are present), which is the **single
 chez bundle shape**. A second, **closed-world** mode (`compile-whole-program`
 sealed against a `petite`-only boot) was proven by the spike but **not adopted**.
 
-Evidence: `docs/research/2026-05-29-chez-standalone-spike.md`. Design:
-`docs/specs/2026-05-29-chez-standalone-distribution-design.md`.
+Evidence: `generation/targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`. Design:
+`generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`.
 
 ## Considered options
 

@@ -14,7 +14,7 @@ structurally unavailable on this toolchain.
 
 ## Context — the spike settled it
 
-`docs/research/2026-06-08-gerbil-threading-spike/FINDINGS.md` (the 080 spike,
+`generation/targets/gerbil/docs/research/2026-06-08-gerbil-threading-spike/FINDINGS.md` (the 080 spike,
 spike-gated by 030 decision D4) characterized the biggest chez→gerbil divergence:
 
 - The Homebrew bottle's Gambit (v4.9.7, the toolchain the grove standardized on,

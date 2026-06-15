@@ -3,7 +3,7 @@
 //! A chez `.app` is a **standalone open-world** binary that embeds the
 //! Chez kernel and a whole-program boot image — it launches on a machine
 //! with no Chez Scheme installed (ADR-0009; design spec
-//! `docs/specs/2026-05-29-chez-standalone-distribution-design.md`). The
+//! `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). The
 //! host Chez is a *build-time* dependency only (the kernel artifacts are
 //! discovered from it). There is no source-exec / system-Chez path.
 //!

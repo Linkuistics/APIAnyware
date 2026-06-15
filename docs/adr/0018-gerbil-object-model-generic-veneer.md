@@ -19,7 +19,7 @@ model fork 010-plan deferred to the 020 spike).
 
 ## Context — measured
 
-`docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md` §3 and §3b,
+`generation/targets/gerbil/docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md` §3 and §3b,
 `-[NSString length]`, 30M calls, bottled-gerbil `-O`:
 
 | layer | ns/call | tax over proc core |

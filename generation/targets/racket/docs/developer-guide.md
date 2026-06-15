@@ -243,7 +243,7 @@ What it does for you:
 
 For unsupported arg/return types (packed struct literals, unions, bit
 fields), pass `#:arg-types` and `#:ret-type` explicitly. See
-`docs/specs/2026-04-19-racket-class-system-analysis.md` for the
+`generation/targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md` for the
 design rationale.
 
 Constructor synthesis (`make-<class>`) is deliberately absent from
@@ -812,7 +812,7 @@ Real-world details discovered while building the sample apps:
 
 - `generation/targets/racket/docs/reference.md` — concise target-specific learnings
   (internal notes, not a user guide).
-- `docs/specs/2026-04-19-racket-class-system-analysis.md` — full
+- `generation/targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md` — full
   analysis of why the target does not use `racket/class`, and the
   design rationale for `define-objc-subclass`.
 - `docs/specs/2026-04-16-sample-app-portfolio-design.md` — the app

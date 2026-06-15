@@ -10,7 +10,7 @@ and a 🔴/🟡/🟢 priority.
 
 Companion design + decisions:
 
-- Design spec: `docs/specs/2026-05-27-chez-target-design.md`.
+- Design spec: `generation/targets/chez/docs/design/2026-05-27-chez-target-design.md`.
 - ADR-0005 — chez emits idiomatic Chez, not portable R6RS.
 - ADR-0006 — `NSError**` surfaces as `(values result error)`.
 - ADR-0007 — `objc-object` lifetime = guardian + entry-point autoreleasepool.
@@ -284,7 +284,7 @@ objects, no version coupling.** The two entries below (the bundle-time `.sls`
 guarded against cross-version `.so` loads) described the **retired source-exec
 bundle**. chez `.app`s now ship as self-contained binaries that embed the Chez
 kernel and a whole-program boot image (design spec
-`docs/specs/2026-05-29-chez-standalone-distribution-design.md`): the app's
+`generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`): the app's
 entire import closure is `compile-whole-program`-baked into the boot at build
 time, so there are no per-bundle `.so` siblings, no `--script`/`launch.ss`
 indirection, no `skip_precompile` knob, and no runtime Chez whose version could
@@ -353,7 +353,7 @@ it launches on a machine with **no Chez installed** — no `brew install
 chezscheme`, no stub-launcher exec into a system `chez`. This is the *only* chez
 bundle shape; the source-exec / precompile model it replaced is retired
 (**ADR-0009**, `docs/adr/0009-chez-self-contained-bundle.md`). The deep design
-rationale lives in `docs/specs/2026-05-29-chez-standalone-distribution-design.md`;
+rationale lives in `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`;
 this section is the operational reproduction recipe. Racket's stub-launcher path
 (§ racket.md 9) is untouched — only chez changed.
 

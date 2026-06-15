@@ -56,6 +56,6 @@ ABI) are deleted when the dylib becomes mandatory.
   (ADR-0013).
 - Foreign-thread callbacks remain a *native* concern (bounce to main); no Racket
   code runs on an unregistered OS thread.
-- Evidence: `docs/research/2026-05-31-racket-ffi2-spike/FINDINGS.md`; design:
-  `docs/specs/2026-05-31-racket-native-binding-design.md`. Target-local under
+- Evidence: `generation/targets/racket/docs/research/2026-05-31-racket-ffi2-spike/FINDINGS.md`; design:
+  `generation/targets/racket/docs/design/2026-05-31-racket-native-binding-design.md`. Target-local under
   **ADR-0011** (`APIAnywareRacket`).

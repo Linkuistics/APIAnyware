@@ -1,7 +1,7 @@
 # Chez runtime — `(apianyware runtime …)`
 
 Five-library cluster layout that supports the chez target. Reference:
-`docs/specs/2026-05-27-chez-target-design.md` §2.
+`generation/targets/chez/docs/design/2026-05-27-chez-target-design.md` §2.
 
 This is the **runtime build-out**. Scaffold landed in
 `.grove/done/050-chez-target/020-runtime-scaffold.md`; `ffi.sls` and
@@ -55,7 +55,7 @@ flowchart TD
 
 From the repository root, with `--libdirs` pointing at the target root
 so Chez's library-name resolution finds the `apianyware/` namespace
-(see `docs/specs/2026-05-27-chez-target-design.md` §8):
+(see `generation/targets/chez/docs/design/2026-05-27-chez-target-design.md` §8):
 
 ```bash
 LIBDIRS=generation/targets/chez

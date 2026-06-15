@@ -57,7 +57,7 @@ build:
 
 ## 1. FFI reachability (✅ PASS)
 
-`docs/research/2026-06-03-gerbil-ffi-dispatch-spike/01-reachability.ss`. A
+`01-reachability.ss`. A
 `begin-ffi` block with `c-declare`'d `<objc/runtime.h>`+`<objc/message.h>` and
 `define-c-lambda`s for `objc_getClass`, `sel_registerName`, and two
 signature-cast `objc_msgSend` wrappers round-trips a string through

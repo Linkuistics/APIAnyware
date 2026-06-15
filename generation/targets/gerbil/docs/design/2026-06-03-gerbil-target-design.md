@@ -4,7 +4,7 @@
 **Status:** design agreed; build subtree decomposed from here.
 
 Settles the design of the third language target, `gerbil`, armed with the 020
-spike (`docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md`) and a
+spike (`generation/targets/gerbil/docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md`) and a
 030 follow-up that resolved precompilation and the OO-veneer dispatch mechanism.
 Written per `docs/adding-a-language-target.md` Step 1.
 

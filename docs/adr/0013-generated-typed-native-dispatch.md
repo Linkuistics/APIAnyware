@@ -69,8 +69,8 @@ the Racket wrapper trends toward a single coercion-free ffi2 call.
   architectural (thin scripting seam, ADR-0010); the 2–8× speedup is a guaranteed
   by-product. The choice is justified on the architecture + zero-maintenance
   grounds, with performance confirming rather than driving it.
-- Evidence and repro: `docs/research/2026-05-31-racket-ffi2-spike/FINDINGS.md`;
-  full rationale: `docs/specs/2026-05-31-racket-native-binding-design.md`.
+- Evidence and repro: `generation/targets/racket/docs/research/2026-05-31-racket-ffi2-spike/FINDINGS.md`;
+  full rationale: `generation/targets/racket/docs/design/2026-05-31-racket-native-binding-design.md`.
 - Applies the **ADR-0010** economics (generated bespoke native code per target)
   and is **target-local** under **ADR-0011** (lives in `APIAnywareRacket`).
 

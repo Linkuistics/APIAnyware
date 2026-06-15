@@ -4,7 +4,7 @@
 //!
 //! The bundle *pipeline* itself lives in [`crate::standalone`] — gerbil apps
 //! ship as self-contained `gxc -exe` binaries that embed the Gerbil/Gambit
-//! runtime (ADR-0009; `docs/specs/2026-06-03-gerbil-target-design.md` §7).
+//! runtime (ADR-0009; `generation/targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md` §7).
 //! This module holds only the types and helpers that pipeline drives.
 
 use std::collections::HashMap;

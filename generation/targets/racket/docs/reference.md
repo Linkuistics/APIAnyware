@@ -27,7 +27,7 @@ the typed native dispatch table (ADR-0013, `runtime/ffi2-dispatch.rkt`) with
 values crossing the seam via `id->ffi2-ptr`/`ffi2-ptr->id`; `ffi/unsafe`/
 `ffi/unsafe/objc` is retained only where ffi2 has no equivalent (ObjC message
 dispatch boundary). See `CONTEXT.md` "ffi2" and
-`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
+`generation/targets/racket/docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
 
 - **Three-way `->` conflict (new, 2026-05-31).** `ffi2` *also* exports `->`
   (its arrow type). A module that requires both `ffi2` and `ffi/unsafe` fails
@@ -533,7 +533,7 @@ canonical short name of the optional Swift helper dylib is
   deliberately absent — inferring inherited init FFI signatures at expansion
   time would drift per superclass. `drawing-canvas.rkt` is the canonical
   consumer; design rationale is in
-  `docs/specs/2026-04-19-racket-class-system-analysis.md`.
+  `generation/targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md`.
 - **Encoding parser.** ObjC encoding strings interleave stack-offset *digits*
   between type tokens (e.g. `q8@0:4`); the parser in `objc-subclass.rkt` must
   skip numeric characters explicitly between tokens. Struct and union tokens

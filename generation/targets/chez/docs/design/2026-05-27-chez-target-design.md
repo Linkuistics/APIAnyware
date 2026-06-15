@@ -332,7 +332,7 @@ app's TestAnyware run is green.
 ## 8. Bundle-chez crate surface
 
 > **⚠️ Superseded (2026-05-29) by
-> `docs/specs/2026-05-29-chez-standalone-distribution-design.md` + ADR-0009.**
+> `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md` + ADR-0009.**
 > The source-exec / precompile bundling model described in this section is
 > **retired**. Chez apps now ship as self-contained open-world standalone
 > binaries with no system-Chez dependency: there is no stub-launcher `execv`

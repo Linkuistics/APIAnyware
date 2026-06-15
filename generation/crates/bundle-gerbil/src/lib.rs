@@ -2,7 +2,7 @@
 //!
 //! A gerbil `.app` is built by **driving the bottle (Homebrew) gerbil
 //! toolchain** end-to-end and then packaging the resulting native binary
-//! (ADR-0009; design spec `docs/specs/2026-06-03-gerbil-target-design.md` §7,
+//! (ADR-0009; design spec `generation/targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md` §7,
 //! corrected at grove leaf 070/020). The pipeline, per app:
 //!
 //! 1. **Walk the import closure** ([`deps`]) — parse the app's `.ss`

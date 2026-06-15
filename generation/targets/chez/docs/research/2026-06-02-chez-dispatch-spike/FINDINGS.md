@@ -4,7 +4,7 @@
 **Date:** 2026-06-02. **Host:** macOS arm64, Chez Scheme 10.4.1 (Homebrew,
 **threaded** build), Apple clang / Swift 6.3.2.
 **Status:** throwaway spike. The durable record is this file plus the design
-spec (`docs/specs/2026-06-02-chez-native-binding-design.md`) and ADR-0015 /
+spec (`generation/targets/chez/docs/design/2026-06-02-chez-native-binding-design.md`) and ADR-0015 /
 ADR-0016. Reproduce with `./build.sh && chez --script bench.ss` and
 `for s in direct pthread pthread-act gcd gcd-act; do chez --script callback-thread.ss $s; done`.
 

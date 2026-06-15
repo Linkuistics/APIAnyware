@@ -412,7 +412,7 @@ Each target has exactly one binding style, implicit in the target (ADR-0004); a 
 ## Documentation
 
 - [Design Spec](docs/specs/2026-03-26-macos-workspace-design.md) -- full architecture and checkpoint format
-- [Plan Restructure](docs/specs/2026-03-27-plan-restructure-design.md) -- language target milestone structure and template
+- [Adding a Language Target](docs/guides/adding-a-language-target.md) -- the new-target authoring guide: what to read, what to build, and the per-language docs to produce
 - [Memory Architecture](docs/pipeline/memory-architecture.md) -- ObjC/Swift ownership model, block/delegate lifecycles, GC prevention, verification rules
 - [Annotation Workflow](docs/pipeline/annotation-workflow.md) -- when and how to run each pipeline step, LLM annotation options, merge precedence
 - [Enrichment Rules](docs/pipeline/enrich-rules.md) -- what each Datalog-derived relation means and how emitters use it
