@@ -78,6 +78,28 @@ reachability is per-target in the limit); reusing `DeclarationSource`
 `SwiftInterface` yet `objc_exposed`); re-parsing the raw USR prefix in emitters
 (the classifier lives once, in collection).
 
+**Opaque handle**:
+The trampoline rep (ADR-0027) for a Swift value/reference that has no flat C-ABI
+form and is not Foundation-bridgeable — a non-bridged Swift `struct`, a payload
+`enum`, a class instance, an existential, an opaque `some P` return. The
+trampoline heap-boxes (value) or `Unmanaged`-retains (reference) it and returns
+an opaque pointer; generated `_field` / `_tag` accessor + `_free` trampolines
+read and release it. Distinct from a **direct** ObjC object cpointer (that one is
+a live `id` the runtime knows); a handle is a Swift thing reachable only through
+its accessors.
+_Avoid_: "box" alone (overloaded with NSNumber boxing); "wrapper".
+
+**Unbindable residual**:
+Swift-native declarations that cannot be trampolined *at all* — chiefly **generic
+free functions** (no concrete symbol exists without monomorphization; `@_cdecl`
+cannot be generic). Under the "defer nothing" directive these are **recorded with
+a reason and their count surfaced** by the trampoline pass, never silently
+dropped; revisited only when a real API needs one. The honest floor of "complete
+marshalling to the limit of the C ABI".
+_Avoid_: conflating with **trampoline elision** (that is *directly reachable*, not
+unbindable) or with `deferred_abi_kind` (Macro/TypeAlias/AssociatedType — a
+deferred *frontier*, not a hard limit).
+
 ## Language
 
 **Target**:
