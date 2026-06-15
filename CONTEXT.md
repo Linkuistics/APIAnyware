@@ -25,6 +25,41 @@ analysis is per-target. (Future targets — Prolog, Haskell, Idris2, TypeScript 
 are paradigmatically alien; a shared substrate would be the wrong abstraction.)
 See **ADR-0010** and **ADR-0011**.
 
+## Complete-API binding model
+
+**Complete-API binding model**:
+The pure form of the design goal (ADR-0025, refining ADR-0010): each target's
+binding is *abstractly* a **complete C-ABI re-export of the entire macOS API** —
+every Objective-C **and** Swift declaration — surfaced to the target language. A
+per-target native (Swift) library vends the whole API behind a flat C ABI, with a
+thin target-language surface over it. The library *is* the API.
+_Avoid_: "ObjC-only binding" (the current targets are not ObjC-only by design —
+they are the fully-elided limit of this model; see **Trampoline elision**);
+"Swift bridge" (too narrow — the model covers the whole API, not just the Swift
+delta).
+
+**Trampoline**:
+A C-ABI entry in a target's native (Swift) library that **re-exports a macOS API
+the target cannot reach directly**, making it `dlsym`-able. The paradigm case is a
+**Swift-native API** (USR `s:` — only reachable via the Swift ABI): the library
+calls it across the Swift ABI and re-exports it as a C-linkable entry. Also covers
+pointer-valued constants (a runtime address can't be a target-language literal).
+_Avoid_: "shim" (overloaded); "wrapper" (a trampoline is specifically the
+C-ABI-re-export-of-an-otherwise-unreachable-API kind of wrapper).
+
+**Trampoline elision** _(the direct-binding optimisation)_:
+Binding a macOS API **directly** from the target, skipping the trampoline, wherever
+the target can reach it without one: ObjC methods via `objc_msgSend`; constants as
+native target-language literals (**except** pointer-valued constants). The current
+targets (racket, chez, gerbil) are the **fully-elided limit** — all-ObjC, all
+directly reachable, trampoline library ~empty — which is why they look "ObjC-only"
+though they are really the optimised case of the complete-API model. The residual
+that genuinely needs a trampoline is the **Swift-native delta** plus pointer
+constants.
+_Avoid_: framing elision as a deviation from ADR-0010 (it is the optimisation
+*of* it); "skip Swift" (elision is about what's reachable *directly*, not about
+dropping Swift).
+
 ## Language
 
 **Target**:
