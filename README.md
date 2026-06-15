@@ -162,9 +162,10 @@ extraction time -- this is critical for correct FFI signatures downstream.
 verification), `cli/`.
 
 **Generation** -- `generation/crates/emit/` (shared framework: `FfiTypeMapper`
-trait, `CodeWriter`, naming utils, snapshot testing, pattern dispatch),
-`emit-racket/` (Racket emission), `cli/` (emitter registry,
-orchestration).
+trait, `CodeWriter`, naming utils, snapshot testing, pattern dispatch), one
+`emit-{target}/` crate per target (`emit-racket/`, `emit-chez/`, `emit-gerbil/`),
+`cli/` (emitter registry, orchestration). Per-target emission specifics live in
+each target's own `generation/targets/{target}/docs/reference.md`.
 
 **Tooling** -- `generation/crates/stub-launcher/`
 (`apianyware-macos-stub-launcher`): generates per-app Swift stub binaries
@@ -172,25 +173,28 @@ for TCC-compatible `.app` bundles. Each stub `execv`s into the language
 runtime, giving it a unique CDHash so macOS TCC grants permissions per-app
 rather than per-runtime. See [App Bundling](#app-bundling) below.
 
-**Swift dylibs** -- `swift/` contains `APIAnywareCommon` (C-callable ObjC
-runtime: message sending, memory management, struct marshaling) and
-per-language bridges (`APIAnywareRacket` adds block/delegate bridging with
-GC prevention).
+**Swift dylibs** -- `swift/` contains the per-target C-callable bridges
+(`APIAnywareRacket`, `APIAnywareChez`) that handle message sending, memory
+management, struct marshaling, and block/delegate bridging. There is **no shared
+native substrate** — each target's bridge is self-contained (ADR-0011); gerbil
+has no Swift dylib at all (its ObjC core is compiled into the exe by `gsc`,
+ADR-0017).
 
 ### Key Patterns
+
+These are the cross-cutting patterns in the shared emitter framework; how each
+target dispatches, coerces arguments, and tests emission is target-specific and
+documented in that target's `generation/targets/{target}/docs/reference.md`.
 
 - **`effective_methods()`/`effective_properties()`** in emitters: choose
   between direct and inherited method lists, with deduplication by
   selector/name.
-- **`DispatchStrategy`** in emit-racket: methods dispatch via either
-  `tell` (Racket's ObjC FFI macro) or typed `_msg-N` bindings depending on
-  parameter/return types.
-- **`coerce-arg`** in Racket runtime: auto-converts strings -> NSString,
-  objc-object -> _id pointer. All generated property setters use it.
-- **Snapshot tests**: golden files at `emit-{lang}/tests/golden/{style}/`.
-  `GoldenTest::assert_matches()` does directory comparison with unified
-  diffs. `assert_subset_matches()` checks only files present in the golden
-  dir.
+- **Pattern dispatch**: the enriched IR's recognized API patterns (builder
+  sequences, resource lifecycles, observer pairs) drive emitter decisions
+  uniformly across targets.
+- **`GoldenTest`** (`emit::snapshot_testing`): directory-comparison snapshot
+  harness with unified diffs; targets opt into external golden files or inline
+  `#[test]`s as suits them.
 - **`test_fixtures::build_snapshot_test_framework()`**: deterministic
   synthetic `TestKit` framework exercising all emitter code paths.
 
@@ -210,136 +214,54 @@ reasons:
    under `/opt/homebrew/bin/racket`.
 
 The bundling story is layered: a language-agnostic primitive
-(`stub-launcher`) plus a per-language convention crate
-(`bundle-racket` for Racket).
+(`stub-launcher`) plus a **per-target convention crate** that knows how that
+language's apps are assembled — `bundle-racket`, `bundle-chez`, `bundle-gerbil`.
 
-#### Per-language convention: `apianyware-macos-bundle-racket`
+#### Per-target convention crates
 
-For racket sample apps, use `apianyware-macos-bundle-racket`. It
-walks the entry script's transitive `(require ...)` tree to discover
-exactly which runtime modules and generated bindings are needed, and
-copies that subset into the bundle's `Resources/` preserving the source
-layout so the script's relative `../../runtime` and `../../generated/oo/...`
-paths still resolve at runtime.
+Each target ships its own bundler that handles the language-specific assembly —
+racket's `bundle-racket` walks the entry script's transitive `(require ...)`
+tree and stages only the needed runtime/generated files; chez's `bundle-chez`
+and gerbil's `bundle-gerbil` instead produce self-contained native binaries that
+need no runtime install. The invocation is uniform:
 
 ```sh
-cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window
-# → generation/targets/racket/apps/hello-window/build/Hello Window.app
+cargo run --example bundle_app -p apianyware-macos-bundle-<target> -- <app>
+# → generation/targets/<target>/apps/<app>/build/<App Name>.app
 ```
 
-The `hello-window` argument is the script name (the `apps/<name>/<name>.rkt`
-identifier). Display name (`Hello Window`) and bundle id
-(`com.linkuistics.HelloWindow`) are derived from the kebab-case form. Full
-API:
-
-```rust
-use apianyware_macos_bundle_racket::{bundle_app, AppSpec};
-
-let spec = AppSpec::from_script_name("hello-window");
-let source_root = Path::new("generation/targets/racket");
-let output_dir = Path::new("generation/targets/racket/apps/hello-window/build");
-let app_path = bundle_app(&spec, source_root, output_dir)?;
-```
-
-Resulting bundle layout (Resources mirrors the source tree so relative
-requires keep working):
-
-```
-Hello Window.app/
-  Contents/
-    MacOS/Hello Window                <- Swift stub, execvs into racket
-    Info.plist                        <- CFBundleName = "Hello Window"
-    Resources/racket-app/
-      apps/hello-window/hello-window.rkt
-      runtime/*.rkt                   <- only files the entry transitively requires
-      generated/oo/appkit/...         <- only the appkit classes hello-window requires
-      lib/libAPIAnywareRacket.dylib   <- if present in the source tree
-```
-
-The walker only copies what the script actually requires — frameworks
-the script doesn't import (CoreText, WebKit, etc.) stay out of the
-bundle. Built bundles live under `apps/<name>/build/` and are
-gitignored.
+Display name and `com.linkuistics.<NoSpaceTitle>` bundle id are derived from the
+kebab-case app name; built bundles live under `apps/<app>/build/` and are
+gitignored. The per-target bundling mechanics (require-walking, kernel embedding,
+`gxc -exe` + dylib relocation, resulting bundle layout) are documented in each
+target's `generation/targets/<target>/docs/reference.md`.
 
 #### Language-agnostic primitive: `apianyware-macos-stub-launcher`
 
-The lower-level crate handles the parts that are not Racket-specific:
-generating the Swift launcher source, compiling it via `swiftc`,
-producing `Info.plist`, and assembling the `.app` skeleton. New language
-targets get their own bundle convention crate that wraps it.
-
-```rust
-use apianyware_macos_stub_launcher::{StubConfig, create_app_bundle};
-
-let config = StubConfig {
-    app_name: "Hello Window".into(),                       // Bundle and binary name
-    runtime_path: "/opt/homebrew/bin/racket".into(),       // Baked in at compile time
-    runtime_args: vec![],                                  // Extra args before script path
-    script_resource_name: "main".into(),                   // Script filename (no ext)
-    script_resource_type: "rkt".into(),                    // Script extension
-    script_resource_dir: "racket-app".into(),              // Subdir in Resources/
-    bundle_identifier: "com.example.HelloWindow".into(),   // CFBundleIdentifier
-};
-let app_path = create_app_bundle(&config, Path::new("output/"))?;
-// Caller populates: output/Hello Window.app/Contents/Resources/racket-app/
-// (Use bundle-racket to do this automatically for Racket apps.)
-```
-
-Lower-level API: `generate_stub_source()` and `compile_stub()` for custom
-workflows, `generate_info_plist()` for standalone plist generation.
+The lower-level crate handles the target-neutral parts: generating the Swift
+launcher source, compiling it via `swiftc`, producing `Info.plist`, and
+assembling the `.app` skeleton. A `StubConfig` parameterizes the app name,
+the runtime path baked in at compile time, the script resource, and the bundle
+identifier; `create_app_bundle()` emits the skeleton and each per-target bundler
+crate wraps it. New language targets get their own convention crate that does the
+same. (`generate_stub_source()` / `compile_stub()` / `generate_info_plist()` are
+exposed for custom workflows.)
 
 ### GUI Testing with TestAnyware
 
-Sample apps are tested in a macOS VM via `{{DEV_ROOT}}/TestAnyware/`
-(the unified successor to Redraw and TestAnywareRedux). Never run GUI
-apps directly from the CLI -- always use the VM for visual verification.
-Two channels per VM:
+Every sample app, for every target, is verified visually in a macOS VM via
+TestAnyware — a window must actually draw and behave; CLI smoke never satisfies
+the bar. **Never run GUI apps directly from the host CLI.** Each VM exposes an
+Agent channel (exec, file transfer, accessibility snapshot/inspect, UI actions)
+and a VNC channel (screenshots, OCR `find-text`, input). Results are recorded per
+app under `generation/targets/<target>/test-results/<app>/report.md`.
 
-- **Agent** (HTTP on port 8648): exec, file upload/download, accessibility
-  snapshot/inspect, UI actions
-- **VNC**: screenshots, OCR via `find-text`, keyboard/mouse input
-
-Key workflow:
-
-```bash
-TA={{DEV_ROOT}}/TestAnyware
-TA_BIN=$TA/cli/.build/release/testanyware
-
-# Boot a fresh VM with a viewer attached. vm-start.sh runs as a normal
-# subprocess (no `source` needed) and prints the VM id on stdout.
-vmid=$($TA/provisioner/scripts/vm-start.sh --viewer)
-
-# Drive the VM via --vm <id> (the CLI reads the per-VM spec written by
-# vm-start.sh from $XDG_STATE_HOME/testanyware/vms/<id>.json), or via
-# the explicit env vars $TESTANYWARE_AGENT / $TESTANYWARE_VNC.
-
-# Install Racket once per fresh clone (~5 min cold)
-$TA_BIN exec --vm "$vmid" "/opt/homebrew/bin/brew install minimal-racket"
-
-# Build and ship a sample app as a .app bundle
-cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window
-APP="generation/targets/racket/apps/hello-window/build/Hello Window.app"
-tar -C "$(dirname "$APP")" -czf /tmp/app.tgz "$(basename "$APP")"
-$TA_BIN upload --vm "$vmid" /tmp/app.tgz /Users/admin/app.tgz
-$TA_BIN exec --vm "$vmid" "tar -xzf /Users/admin/app.tgz -C /Users/admin/ && open '/Users/admin/Hello Window.app'"
-
-# Verify visually
-$TA_BIN agent snapshot --vm "$vmid" --window "Hello Window"
-$TA_BIN screenshot --vm "$vmid" -o /tmp/screen.png
-$TA_BIN find-text --vm "$vmid" "Hello Window"
-
-# Always kill before relaunch
-$TA_BIN exec --vm "$vmid" "pkill -9 -f racket"
-
-# Tear down
-$TA/provisioner/scripts/vm-stop.sh "$vmid"
-```
-
-App specs at `docs/apps/{app}/spec.md`, validation checklists at
-`docs/apps/{app}/test-strategy.md`. The bundling step is required
-for menu-bar app names and per-app TCC permissions — running the script
-directly via `racket hello-window.rkt` shows up as "racket" in the menu
-bar.
+The full step-by-step QA workflow (boot a VM, stage the bundle, launch, verify,
+tear down) and the report format live in **[docs/testing/general.md](docs/testing/general.md)**.
+App specs and validation checklists are at `docs/apps/<app>/spec.md` and
+`docs/apps/<app>/test-strategy.md`. Bundling is required before testing: an
+unbundled script shows up under the runtime's name (e.g. "racket") in the menu
+bar and shares one TCC identity.
 
 ## Workspace Structure
 
