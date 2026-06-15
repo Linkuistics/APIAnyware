@@ -14,8 +14,12 @@ lifetime / dispatch decisions warrant.
 
 ## Context
 
-Read first: `010-plan` running log (D1–D5), the 020 research doc + its
-"Synthesis for 030", `CONTEXT.md` "SBCL target toolchain", and the precedent ADRs
+Read first: `010-plan` running log (D1–D5), the 020 research doc
+(`docs/research/cl-cocoa-bridges-across-the-family.md`) + its
+"Synthesis for 030" (§7) + the gaps it flags as **not** de-risked (C2 conditions,
+D1 lifetime, D2 threading, SBCL's own AMOP conformance — budget first-hand CCL
+source reading + in-repo ADRs for these), `CONTEXT.md` "SBCL target toolchain",
+and the precedent ADRs
 (0005, 0009, 0010, 0011, 0015, 0017, 0020). The chez/gerbil design specs are the
 worked models (`generation/targets/{chez,gerbil}/docs/design/`).
 
