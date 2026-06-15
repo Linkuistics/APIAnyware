@@ -54,3 +54,4 @@ docs/apps/*/artifacts/
 # Claude Code scheduled-task lock file (per-session tooling state)
 .claude/scheduled_tasks.lock
 spike-scratch/
+/.grove-meta
