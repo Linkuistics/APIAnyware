@@ -11,8 +11,18 @@ core, the 7-app sample ladder (VM-verified), bundler, and co-located docs.
 Distinctive to this target: the object model is a **MOP projection of ObjC into
 CLOS**, and the target is designed as the first member of a **CL family** that
 shares a spec-level CLOS **interface contract** (so application source is portable
-across future CL impls), while keeping each impl's binding implementation isolated
-and idiomatic.
+across CL impls), while keeping each impl's binding implementation isolated and
+idiomatic.
+
+**CL family roster (D5, refined):** the contract is designed against four
+confirmed members — **SBCL, CCL, AllegroCL, LispWorks** (two open-source, two
+commercial) — with a usage/landscape survey (020) to confirm membership and catch
+any others (ECL, ABCL, Clasp). Only **SBCL is built in this grove** (D5a posture:
+portability-ready, not portability-abstracted); the other three inform what the
+contract must abstract over. Risk to resolve in design: AMOP conformance and ObjC-
+bridge maturity vary across the four (esp. the commercial impls' own MOPs/FFIs),
+so the MOP-based contract's viability across all four — and whether a fallback is
+needed — is a 020-research / 030-design question, not yet settled.
 
 ## Done when
 
@@ -32,10 +42,11 @@ Foundational decisions (D1–D5) settled in `010-plan` (see its running log).
 Coarse, lazy skeleton — design/build leaves decompose further when picked:
 
 - **010-plan** — foundational grilling (this; D1–D5). *(retires after session)*
-- **020-research-ccl-cocoa-bridge** — research leaf: Clozure CL's Cocoa bridge +
-  objective-cl as prior art for the MOP object model *and* the CL-family contract
-  (adopt CCL's `ns:`/metaclass conventions vs define our own). Load-bearing for
-  030 + 040.
+- **020-research-cl-cocoa-bridges** — research leaf: CL-Cocoa bridge prior art
+  **across the family** (CCL deepest; LispWorks + AllegroCL where bridges exist) +
+  a usage/landscape survey confirming the roster, + AMOP-conformance-per-impl.
+  Prior art for the MOP object model *and* the CL-family contract (adopt CCL's
+  `ns:`/metaclass conventions vs define our own). Load-bearing for 030 + 040.
 - **030-design** — planning: author the **CL-family interface contract** spec +
   the **new ADR** for the family interface-sharing axis; then the **SBCL MOP
   realization** (metaclass impl, static-emit-vs-runtime split, dispatch,

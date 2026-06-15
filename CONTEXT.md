@@ -205,7 +205,12 @@ CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks
 
 **CL-family interface contract** _(provisional — to be settled in the contract leaf)_:
 The **documented, specification-level interface that all Common Lisp targets share**,
-even though each compiles to a different FFI under the hood. The shared surface:
+even though each compiles to a different FFI under the hood. The family roster is
+four confirmed members — **SBCL, CCL, AllegroCL, LispWorks** (two open-source, two
+commercial; usage survey in 020 may add ECL/ABCL/Clasp) — though **only `sbcl` is
+built** in the add-sbcl-clos-target grove; the others shape what the contract must
+abstract over (each has its own FFI — `sb-alien` / CCL bridge / Allegro `ff:` /
+LispWorks `fli:` — and its own MOP with varying AMOP conformance). The shared surface:
 the `ns:` package, class names, generic-function names, the `objc-class`
 metaclass / MOP protocol, and the **condition hierarchy** (CL's idiom for
 `NSError**` — errors are *signalled conditions*, not `(values result error)`;

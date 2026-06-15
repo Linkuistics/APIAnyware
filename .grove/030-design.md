@@ -24,7 +24,14 @@ worked models (`generation/targets/{chez,gerbil}/docs/design/`).
 1. **Contract authoring** — adopt CCL's `ns:`/metaclass/`#/` conventions vs
    define our own; what exactly is normative in the contract (packages, class
    names, generic-fn naming, metaclass protocol, condition hierarchy); where the
-   spec doc lives (main-tier, since it spans the CL family — D5a).
+   spec doc lives (main-tier, since it spans the CL family — D5a). The contract is
+   designed against the **four-member roster (SBCL, CCL, AllegroCL, LispWorks)**,
+   not just SBCL+CCL.
+   - **Risk to resolve:** AMOP conformance and ObjC-bridge maturity vary across
+     the four (esp. commercial AllegroCL/LispWorks with their own MOPs + FFIs
+     `ff:`/`fli:`). Decide from the 020 findings whether a single MOP-based
+     contract is viable across all four, or whether a non-MOP fallback / tiered
+     conformance is needed. Build still targets **SBCL only** (D5a).
 2. **New ADR for the CL-family interface-sharing axis** (D5) — scopes an
    exception to ADR-0011 for same-language families.
 3. **MOP realization** — the `objc-class` metaclass design; the **static-emit
