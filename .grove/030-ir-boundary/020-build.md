@@ -9,21 +9,34 @@ carry the **facts** that make the direct-vs-trampoline boundary derivable, and
 **stop dropping** the residual D1 intends to bind. No emitter changes here (that is
 040); this leaf only makes the IR carry what the contract needs.
 
-## Scope (from the node BRIEF; confirm against 010-design's ADR/spec)
+## Scope (settled by 010-design — ADR-0026 + `docs/specs/2026-06-15-ir-objc-exposure-boundary.md`)
 
-- **Recover the additive residual.** Stop routing top-level `s:` `Func`/`Var` to
-  `skipped_symbols` (`declaration_mapping.rs:164-175`); retain them as regular
-  `Func`/`Var` nodes carrying their facts (`DeclarationSource`, `s:` USR).
-- **Carry the corrective fact.** Whatever `010-design` decides distinguishes
-  `@objc`-bridged from genuinely Swift-native types (e.g. an `objc_exposed` fact on
-  `Class`) — add it to the IR and populate it in collection.
-- **Pointer-constant fact.** Carry the pointer-ness fact per the rule from
-  `010-design`, so emitters can route pointer-valued constants to a trampoline.
+The spec is the authority; these bullets summarise it.
+
+- **Add `objc_exposed: bool`** to the eight IR decl structs (`Class`, `Method`,
+  `Property`, `Protocol`, `Enum`, `Struct`, `Function`, `Constant`) — default
+  `true`, `skip_serializing_if` true. Per-member granularity (not just `Class`):
+  an `s:` method merged onto an ObjC class carries its own `false`. Every
+  `ir::* { … }` literal across `collection/` + `analysis/` + tests must add the
+  field (the bulk of the mechanical churn).
+- **One shared classifier in collection.** Replace `non_c_linkable_skip_reason()`
+  (`declaration_mapping.rs:164`) with the three-way `classify_usr` (Direct /
+  SwiftNative / Skip(reason)); derive `objc_exposed` from it. `extract-objc`
+  sets `objc_exposed: true` unconditionally.
+- **Recover the additive residual.** Top-level `s:` `Func`/`Var` → retain as
+  `Function`/`Constant` with `objc_exposed: false` (no longer `skipped_symbols`).
+  `c:@macro@` / `c:@Ea@` / `c:@EA@` → still skip. `SWIFT_NATIVE` skip reason
+  retired from the drop path.
+- **Pointer-ness is DERIVED, not a new field** — emitters compute
+  `is_pointer_valued(constant_type)` per the spec's type list. 020-build adds no
+  pointer field.
 - **Deferred kinds recorded, not silently dropped.** `Macro`/`TypeAlias`/
-  `AssociatedType` (the un-walked `_ => {}` at `declaration_mapping.rs:~102`) get an
-  explicit `skipped_symbols` entry with a clear reason, rather than vanishing.
-- **Goldens / snapshot tests.** Update `collected` goldens and the synthetic-TestKit
-  snapshot expectations; the recovered residual and new facts change the IR.
+  `AssociatedType` (the `_ => {}` at `declaration_mapping.rs:~102`) → a
+  `skipped_symbols` entry with the new `DEFERRED_ABI_KIND` reason.
+- **Goldens / snapshot tests.** Collected goldens gain `objc_exposed: false` on
+  newly-retained `s:` funcs/constants AND already-retained Swift-native types;
+  `skipped_symbols` loses `SWIFT_NATIVE`, gains `deferred_abi_kind`; update the
+  synthetic-TestKit snapshot expectations.
 
 ## Done when
 

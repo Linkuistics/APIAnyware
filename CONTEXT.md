@@ -60,6 +60,24 @@ _Avoid_: framing elision as a deviation from ADR-0010 (it is the optimisation
 *of* it); "skip Swift" (elision is about what's reachable *directly*, not about
 dropping Swift).
 
+**`objc_exposed` (ObjC-exposure fact)**:
+The single derived IR fact (ADR-0026) that makes the **direct-vs-trampoline
+boundary** explicit — a `bool` on every declaration node with a USR (`Class`,
+`Method`, `Property`, `Protocol`, `Enum`, `Struct`, `Function`, `Constant`)
+recording *is this reachable through the ObjC/C runtime without crossing the
+Swift ABI?* Derived once in collection by one shared USR-prefix classifier: `s:`
+USR → `false` (Swift-native, trampoline/skip); clang `c:`/`So` cursor (incl.
+`@objc` Swift decls) → `true` (bind directly). It is a **fact, not a
+classification** — each emitter derives Direct|Trampoline|Skip from it locally
+(ADR-0025/D1), combined with pointer-ness (derived from `constant_type`, not
+carried). Defaults `true` (the fully-elided ObjC limit) and is omitted from JSON
+when true, so the golden diff audits exactly the trampoline residual.
+_Avoid_: a shared `reachability: Direct|Trampoline` field (D1 forbids it —
+reachability is per-target in the limit); reusing `DeclarationSource`
+(`ObjcHeader|SwiftInterface`) as the boundary (an `@objc` Swift class is
+`SwiftInterface` yet `objc_exposed`); re-parsing the raw USR prefix in emitters
+(the classifier lives once, in collection).
+
 ## Language
 
 **Target**:
