@@ -38,4 +38,4 @@ does not raise; the error path is in-band.
   spec.
 - Procedures that previously returned `id` now return `(values id
   nserror)`; this is observable to sample-app authors and must be called
-  out in `knowledge/targets/chez.md`.
+  out in `generation/targets/chez/docs/reference.md`.

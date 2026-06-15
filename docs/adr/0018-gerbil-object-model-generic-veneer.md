@@ -60,5 +60,5 @@ lookup by type+name each call), halving the opt-in tax over the proc core.
   loops); the layering lets a programmer drop to the proc core where it bites. The
   built-in `{}` mechanism is rejected purely on the measured cost; this divergence
   from a "use the built-in object system" default is the record's point.
-- Knowledge: `knowledge/targets/gerbil.md` documents both layers and when to drop
+- Knowledge: `generation/targets/gerbil/docs/reference.md` documents both layers and when to drop
   down.

@@ -16,4 +16,4 @@
   the app's top-level types import; `compile-whole-program` de-registers
   libraries so a runtime import fails too). Fix: `dispatch.sls` re-`define-ftype`s
   the geometry structs directly into the interaction-environment. See the report's
-  standalone section + `knowledge/targets/chez.md` gotchas.
+  standalone section + `generation/targets/chez/docs/reference.md` gotchas.

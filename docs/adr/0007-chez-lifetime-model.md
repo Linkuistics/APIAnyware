@@ -45,7 +45,7 @@ Two mechanisms intentionally combined:
   loop in `(with-autorelease-pool ...)` themselves, otherwise transient
   autoreleased objects accumulate until the process exits. This is the
   same rule Cocoa imposes on Objective-C command-line tools and is
-  called out in `knowledge/targets/chez.md`.
+  called out in `generation/targets/chez/docs/reference.md`.
 - Hard to reverse: every entry point in every sample app, every
   delegate method, and every block callback inherits the pool-wrap
   convention from the runtime macros. Changing the model later

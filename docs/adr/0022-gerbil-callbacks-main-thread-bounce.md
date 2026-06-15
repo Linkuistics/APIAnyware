@@ -77,7 +77,7 @@ invoke.
   safe and so had to). The bounce *removes* the hazard rather than tolerating it.
 - **Run-loop dependency.** The bounce drains only when the main thread services
   the main queue — true under `[NSApp run]`. Documented in
-  `knowledge/targets/gerbil.md`; sample-app authors doing long main-thread work
+  `generation/targets/gerbil/docs/reference.md`; sample-app authors doing long main-thread work
   must let the run loop turn.
 - **Deadlock caveat.** A `dispatch_sync`-bouncing (value-returning) callback whose
   result the main thread is synchronously blocked waiting for would deadlock — the

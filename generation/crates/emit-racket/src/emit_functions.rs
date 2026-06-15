@@ -222,7 +222,7 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
                 // to _id via OS_OBJECT_USE_OBJC, but no wrapper classes exist.
                 // Emit _pointer so consumers can pass raw cpointers (e.g. from
                 // ffi-obj-ref) without a (cast ... _pointer _id) ceremony. New
-                // target emitters: see generation/docs/emitter-contract.md
+                // target emitters: see docs/pipeline/emitter-contract.md
                 // ("OS_OBJECT_USE_OBJC bridged types") for the cross-language
                 // contract.
                 if is_libdispatch && t == "_id" {

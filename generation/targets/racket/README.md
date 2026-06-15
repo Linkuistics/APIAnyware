@@ -5,7 +5,7 @@ Racket object-oriented interaction with macOS APIs.
 
 ## Before working here
 
-1. Read `{{PROJECT}}/knowledge/targets/racket.md` for target-wide learnings
+1. Read `{{PROJECT}}/generation/targets/racket/docs/reference.md` for target-wide learnings
 2. Check `{{PROJECT}}/docs/specs/2026-05-22-racket-completion-design.md` and
    `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-completion.md` for the
    target's design and implementation plan

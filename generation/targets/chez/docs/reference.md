@@ -5,7 +5,7 @@ captured at the close of the `050-chez-target` grove node (leaves 020–140). It
 is opinionated and deliberately shorter than `racket.md`: where the two targets
 agree (pipeline, IR, framework set, sample-app portfolio, TestAnyware bar) read
 the racket reference; this file covers only what is *chez-specific* and was
-*surprising in practice*. Per `knowledge/README.md`, gotcha entries carry a date
+*surprising in practice*. Per project convention, gotcha entries carry a date
 and a 🔴/🟡/🟢 priority.
 
 Companion design + decisions:
@@ -321,7 +321,7 @@ CLI smoke (`chez --libdirs … --script …`) reaching `[NSApp run]` proves
 `[[feedback-use-testanyware]]` every sample-app port carries a dedicated
 TestAnyware/VM-verify step, and the leaf does not retire until that run is green
 (reports + screenshots under `generation/targets/chez/test-results/<app>/`,
-matrix notes under `knowledge/matrix/<app>/chez.md`). Several latent runtime
+matrix notes under `generation/targets/chez/apps/<app>/learnings.md`). Several latent runtime
 defects (bundled dylib lookup, the all-sizes struct-return buffer) were
 **invisible to CLI smoke and surfaced only in the VM**. RSS-flat-at-idle over
 20–30 s of interaction is the standard leak check; async-callback apps
@@ -445,7 +445,7 @@ cargo run --release --example bundle_app -p apianyware-macos-bundle-chez -- <scr
 # → generation/targets/chez/apps/<script>/build/<App Name>.app
 ```
 
-The display name comes from the H1 of `knowledge/apps/<script>/spec.md`; the
+The display name comes from the H1 of `docs/apps/<script>/spec.md`; the
 bundle id is `com.linkuistics.<NoSpaceTitle>`. Prereqs: a host Chez install
 (kernel artifacts), `cc`, `codesign`, and the generated runtime tree +
 `lib/libAPIAnywareChez.dylib` present under `generation/targets/chez/`.

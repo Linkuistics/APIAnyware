@@ -1,4 +1,4 @@
-//! Read canonical sample-app metadata from `knowledge/apps/<script>/spec.md`.
+//! Read canonical sample-app metadata from `docs/apps/<script>/spec.md`.
 //!
 //! Each sample app has a spec file whose first markdown H1 is the
 //! human-readable display name — `# UI Controls Gallery` for the

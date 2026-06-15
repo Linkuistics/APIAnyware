@@ -5,7 +5,7 @@
 ;;; `define-c-lambda` crossings compiled straight into the exe. This unit uses
 ;;; ONLY C-safe headers (`<objc/runtime.h>`, `<objc/message.h>`), so it builds
 ;;; under the bottle's default C compiler (gcc-15) with NO `-x objective-c`
-;;; — see `knowledge/targets/gerbil.md` toolchain note (gcc-15 cannot parse the
+;;; — see `generation/targets/gerbil/docs/reference.md` toolchain note (gcc-15 cannot parse the
 ;;; Foundation/AppKit umbrella headers; blocks + `@autoreleasepool` ObjC syntax
 ;;; are deferred to the native-core unit, leaf 050/020).
 ;;;

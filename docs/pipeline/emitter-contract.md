@@ -57,7 +57,7 @@ The same library exposes the well-known `_dispatch_main_q` *struct global*:
 So the global lives as `TypeRefKind::Struct` (correct — it is a struct
 allocated in the dylib's data segment, and consumers need its *address*
 via the `is_struct_data_symbol` path; see
-[`emit_constants.rs`](../crates/emit-racket/src/emit_constants.rs) and
+[`emit_constants.rs`](../../generation/crates/emit-racket/src/emit_constants.rs) and
 the "Struct globals need address-of; pointer globals need dereference"
 project memory).
 
@@ -91,7 +91,7 @@ A new emitter should add the equivalent override gated on
 `framework == "libdispatch"`, picking whatever the target language's
 "raw native pointer" type is (Haskell `Ptr ()`, OCaml `Ctypes.ptr void`,
 Zig `*anyopaque`, Idris2 `AnyPtr`, etc.). Regression tests:
-[`test_libdispatch_id_params_emit_pointer`](../crates/emit-racket/src/emit_functions.rs)
+[`test_libdispatch_id_params_emit_pointer`](../../generation/crates/emit-racket/src/emit_functions.rs)
 and `test_libdispatch_id_return_emits_pointer`.
 
 **(B) Emit an explicit cast at every call site.** Acceptable when the

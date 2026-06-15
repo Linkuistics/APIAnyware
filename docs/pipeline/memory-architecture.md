@@ -2,7 +2,7 @@
 
 This document defines the memory management model that all APIAnyware language projections must implement. It is the authoritative reference for how ObjC reference counting maps to garbage-collected languages, how callback lifetimes are managed bidirectionally, and how the Swift helper dylib participates in the ownership model.
 
-**Audience:** Developers implementing or maintaining a language projection (Racket, Chez Scheme, Gerbil Scheme, Common Lisp, Haskell, OCaml, Zig, or other targets). This document is language-independent. For language-specific implementation details, see the per-language docs in `generation/docs/`.
+**Audience:** Developers implementing or maintaining a language projection (Racket, Chez Scheme, Gerbil Scheme, Common Lisp, Haskell, OCaml, Zig, or other targets). This document is language-independent. For language-specific implementation details, see the per-language docs in `generation/targets/<lang>/docs/`.
 
 **Companion documents:**
 - `annotation-workflow.md` — how to run the annotation pipeline (LLM analysis + heuristic merge)

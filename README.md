@@ -13,7 +13,7 @@ The full three-phase pipeline (Collection, Analysis, Generation) is implemented 
 - **Collection** extracts 218 ObjC frameworks and 151 Swift modules from the macOS SDK, merging ObjC and Swift declarations into a unified IR. Cross-import overlay frameworks (`_RealityKit_SwiftUI`, `_AppIntents_SwiftUI`, …) correctly retain the bridged classes that form their API surface.
 - **Analysis** runs Datalog-based inheritance resolution, heuristic + LLM semantic annotation (block lifecycle, ownership, threading, error patterns), API pattern recognition (10 stereotype categories, 36+ pattern instances in Foundation alone), and enrichment with verification.
 - **Generation** produces bindings per target — Racket for all 284 discovered frameworks (~6,979 files), Chez and Gerbil for the frameworks the sample-app portfolio exercises — each with its own hand-written runtime library and per-target native binding layer (a Swift helper dylib for racket/chez; an ObjC-in-gsc native core for gerbil).
-- **All active sample apps** in the portfolio (per `knowledge/apps/_index.md`) are implemented and VM-verified for each completed target. Sample apps are packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via the per-target bundler crates (`bundle-racket`, `bundle-chez`, `bundle-gerbil`); chez and gerbil bundles are fully self-contained native binaries needing no runtime install.
+- **All active sample apps** in the portfolio (per `docs/apps/_index.md`) are implemented and VM-verified for each completed target. Sample apps are packaged as proper macOS `.app` bundles (correct `CFBundleName`, signed with a persistent local code-signing identity so the CDHash is stable and TCC grants survive rebuilds) via the per-target bundler crates (`bundle-racket`, `bundle-chez`, `bundle-gerbil`); chez and gerbil bundles are fully self-contained native binaries needing no runtime install.
 - **Snapshot tests** use a synthetic TestKit framework plus a curated Foundation subset for regression testing; Rust and Swift test suites cover the pipeline.
 
 All other language targets (Common Lisp, Haskell, Idris2, OCaml, Prolog/Mercury, Rhombus, Pharo Smalltalk, Zig) are planned but not yet started.
@@ -335,8 +335,8 @@ $TA_BIN exec --vm "$vmid" "pkill -9 -f racket"
 $TA/provisioner/scripts/vm-stop.sh "$vmid"
 ```
 
-App specs at `knowledge/apps/{app}/spec.md`, validation checklists at
-`knowledge/apps/{app}/test-strategy.md`. The bundling step is required
+App specs at `docs/apps/{app}/spec.md`, validation checklists at
+`docs/apps/{app}/test-strategy.md`. The bundling step is required
 for menu-bar app names and per-app TCC permissions — running the script
 directly via `racket hello-window.rkt` shows up as "racket" in the menu
 bar.
@@ -396,8 +396,8 @@ APIAnyware-MacOS/
 | Target | Binding style | Status |
 |---|---|---|
 | Racket | OO (classes, dynamic `tell` dispatch) | **Complete** — emitter, 283 frameworks generated, 8/8 sample apps, snapshot tests, app bundling |
-| Chez Scheme | Procedural (per-class proc namespaces, guardian lifetime) | **Complete** — emitter, runtime, 7/7 sample apps VM-verified, self-contained `.app` bundling (ADR-0009); see `knowledge/targets/chez.md` |
-| Gerbil Scheme | OO (manifest `defclass` graph, `{}` + `:std/generic` dual surface, transparent ObjC subclassing) | **Complete** — emitter, runtime + ObjC-in-gsc native core, 7/7 sample apps VM-verified, self-contained `.app` bundling; see `knowledge/targets/gerbil.md` |
+| Chez Scheme | Procedural (per-class proc namespaces, guardian lifetime) | **Complete** — emitter, runtime, 7/7 sample apps VM-verified, self-contained `.app` bundling (ADR-0009); see `generation/targets/chez/docs/reference.md` |
+| Gerbil Scheme | OO (manifest `defclass` graph, `{}` + `:std/generic` dual surface, transparent ObjC subclassing) | **Complete** — emitter, runtime + ObjC-in-gsc native core, 7/7 sample apps VM-verified, self-contained `.app` bundling; see `generation/targets/gerbil/docs/reference.md` |
 | Common Lisp (SBCL, CCL) | CLOS + functional | Planned |
 | Haskell | Monadic + lens-based | Planned |
 | Idris2 | Dependently-typed wrappers | Planned |
@@ -413,11 +413,11 @@ Each target has exactly one binding style, implicit in the target (ADR-0004); a 
 
 - [Design Spec](docs/specs/2026-03-26-macos-workspace-design.md) -- full architecture and checkpoint format
 - [Plan Restructure](docs/specs/2026-03-27-plan-restructure-design.md) -- language target milestone structure and template
-- [Memory Architecture](analysis/docs/memory-architecture.md) -- ObjC/Swift ownership model, block/delegate lifecycles, GC prevention, verification rules
-- [Annotation Workflow](analysis/docs/annotation-workflow.md) -- when and how to run each pipeline step, LLM annotation options, merge precedence
-- [Enrichment Rules](analysis/docs/enrich-rules.md) -- what each Datalog-derived relation means and how emitters use it
-- [API Pattern Catalog](analysis/docs/api-pattern-catalog.md) -- 10 stereotypical API patterns with detection rules and per-language translation templates
-- [Emitter Contract](generation/docs/emitter-contract.md) -- cross-language conventions every target emitter must implement (e.g. OS_OBJECT_USE_OBJC handling)
+- [Memory Architecture](docs/pipeline/memory-architecture.md) -- ObjC/Swift ownership model, block/delegate lifecycles, GC prevention, verification rules
+- [Annotation Workflow](docs/pipeline/annotation-workflow.md) -- when and how to run each pipeline step, LLM annotation options, merge precedence
+- [Enrichment Rules](docs/pipeline/enrich-rules.md) -- what each Datalog-derived relation means and how emitters use it
+- [API Pattern Catalog](docs/pipeline/api-pattern-catalog.md) -- 10 stereotypical API patterns with detection rules and per-language translation templates
+- [Emitter Contract](docs/pipeline/emitter-contract.md) -- cross-language conventions every target emitter must implement (e.g. OS_OBJECT_USE_OBJC handling)
 
 ## License
 

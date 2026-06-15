@@ -92,7 +92,7 @@ promoted from out-of-scope to central.
   finalizing; separate top-level `defmethod`s may force lazy or post-registration
   method-add) is a runtime wrinkle 050 must settle.
 - **Hard to reverse:** the hierarchy + dual surface + subclassing shape is baked
-  into every generated binding and every sample app. `knowledge/targets/gerbil.md`
+  into every generated binding and every sample app. `generation/targets/gerbil/docs/reference.md`
   documents both surfaces, the fast-path layering, and the transparent-subclass
   idiom.
 - Leaf 010's FFI crossings + selector caches survive untouched; its single-

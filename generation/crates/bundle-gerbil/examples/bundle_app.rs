@@ -12,7 +12,7 @@
 //! The build drives the bottle gerbil toolchain: clang the block companion,
 //! `gxc -O` the binding closure into a persistent cache, `gxc -exe -O` the
 //! app, then vendor + relocate openssl@3. Display name comes from
-//! `knowledge/apps/<script>/spec.md`'s first H1 when present.
+//! `docs/apps/<script>/spec.md`'s first H1 when present.
 
 use std::path::PathBuf;
 use std::process::ExitCode;

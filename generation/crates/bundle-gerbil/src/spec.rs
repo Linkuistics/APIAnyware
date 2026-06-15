@@ -1,4 +1,4 @@
-//! Read canonical sample-app metadata from `knowledge/apps/<script>/spec.md`.
+//! Read canonical sample-app metadata from `docs/apps/<script>/spec.md`.
 //!
 //! Identical to bundle-racket's / bundle-chez's spec reader — the spec.md
 //! file is target-agnostic, so the gerbil bundler reuses the same

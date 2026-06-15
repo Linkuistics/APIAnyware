@@ -7,7 +7,7 @@ captured at the close of the `add-gerbil-scheme-target` grove (2026-06). Like
 racket reference; where the two Schemes agree (idiom posture, `(values result
 error)`, entry-point pools, self-contained `.app`s) read the chez reference.
 This file covers only what is *gerbil-specific* and was *surprising in
-practice*. Per `knowledge/README.md`, gotcha entries carry a date and a
+practice*. Per project convention, gotcha entries carry a date and a
 🔴/🟡/🟢 priority.
 
 Companion design + decisions:
@@ -370,7 +370,7 @@ resolution, **never** that the GUI works. Every sample app was VM-verified as
 a self-contained `.app` in a **no-Gerbil VM** via TestAnyware (no
 provisioning needed — the runtime is embedded); reports + screenshots under
 `generation/targets/gerbil/test-results/<app>/`, per-app notes under
-`knowledge/matrix/<app>/gerbil.md`. Defects invisible to CLI smoke that only
+`generation/targets/gerbil/apps/<app>/learnings.md`. Defects invisible to CLI smoke that only
 the VM caught: the `char-string` UTF-8 crash (§3) and the weak-delegate GC
 reaping (§4) — the latter needed *sustained interaction* (typing) to trip,
 which is exactly what the VM-verify bar exists to exercise.

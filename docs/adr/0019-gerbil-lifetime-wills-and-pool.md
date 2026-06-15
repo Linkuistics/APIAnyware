@@ -45,7 +45,7 @@ Two mechanisms intentionally combined, exactly as ADR-0007:
   macros. Sample-app authors writing loops *outside* the run-loop's entry-point
   wrapping must wrap them in `with-autorelease-pool` themselves (the same rule
   Cocoa imposes on ObjC command-line tools) — documented in
-  `knowledge/targets/gerbil.md`.
+  `generation/targets/gerbil/docs/reference.md`.
 - **Threading interaction is deferred:** whether wills/pools fire correctly on
   foreign OS threads entering Gambit depends on Gambit's green-thread model and is
   resolved by the spike-gated threading leaf (cf. chez ADR-0016's per-thread pool

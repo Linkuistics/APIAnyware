@@ -60,7 +60,7 @@ ADR-0015 weighed only runtime; this ADR records both axes, as the grove required
   would cost idiom and self-containment.
 - **Binding-regeneration cost is real but bounded** (~70 s clean for a large
   binding, incremental per-module otherwise) and is a development-loop concern,
-  not borne by app builds. Recorded in `knowledge/targets/gerbil.md`.
+  not borne by app builds. Recorded in `generation/targets/gerbil/docs/reference.md`.
 - **The native core stays small** — only what genuinely cannot be a thin call,
   per ADR-0010's reserved-concerns boundary (cf. ADR-0015's identical reservation
   for chez).

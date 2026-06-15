@@ -39,7 +39,7 @@ plausibly stand up a third.
 > any Scheme loads".
 
 > **Knowledge system:** after building a target, populate
-> `knowledge/targets/<id>.md` with target-wide learnings (FFI patterns, runtime
+> `generation/targets/<id>/docs/reference.md` with target-wide learnings (FFI patterns, runtime
 > quirks, distribution). `racket.md`, `chez.md`, and `gerbil.md` are the worked
 > examples.
 
@@ -271,7 +271,7 @@ way.
 
 ## Step 7: Build and VM-verify the sample apps
 
-Implement the standard sample apps (`knowledge/apps/_index.md`) under
+Implement the standard sample apps (`docs/apps/_index.md`) under
 `generation/targets/{id}/apps/<app>/`. The runtime-feature ladder
 (`hello-window` → `ui-controls-gallery` → `scenekit-viewer` → `pdfkit-viewer` →
 `mini-browser` → `note-editor` → `drawing-canvas`) is ordered so each app adds one
@@ -280,8 +280,9 @@ runtime piece and a regression localises to the newest one.
 **Every app gets a dedicated TestAnyware VM-verification, and CLI smoke never
 satisfies the bar** — a window must actually draw and behave. Record each app's
 result under `generation/targets/{id}/test-results/<app>/report.md` (+
-screenshots) and `knowledge/matrix/<app>/{id}.md`. See `knowledge/targets/`
-existing reports for the format and the no-Chez-VM recipe in `chez.md` §9.
+screenshots) and `generation/targets/{id}/apps/<app>/learnings.md`. See the
+`generation/targets/<id>/docs/reference.md` existing reports for the format and the
+no-Chez-VM recipe in `chez.md` §9.
 
 ## Step 8: Bundling / distribution
 
@@ -289,16 +290,16 @@ Sample apps must be packaged as `.app` bundles for a correct menu-bar name
 (`CFBundleName`) and a per-app TCC identity (a unique CDHash). The existing
 targets take **different** approaches — pick what fits the language:
 
-- **racket** (`bundle-racket`, knowledge/targets/racket.md §9) — a Swift
+- **racket** (`bundle-racket`, generation/targets/racket/docs/reference.md §9) — a Swift
   **stub-launcher** + the source tree staged under `Resources/`, exec'ing the
   system runtime. Build: `cargo run --example bundle_app -p
   apianyware-macos-bundle-racket -- <script>`.
-- **chez** (`bundle-chez`, knowledge/targets/chez.md §9, ADR-0009) — a
+- **chez** (`bundle-chez`, generation/targets/chez/docs/reference.md §9, ADR-0009) — a
   **self-contained standalone binary** that embeds the language kernel +
   whole-program boot, so it needs no runtime installed on the target machine.
   Build: `cargo run --example bundle_app -p apianyware-macos-bundle-chez --
   <script>`.
-- **gerbil** (`bundle-gerbil`, knowledge/targets/gerbil.md §8) — the language's
+- **gerbil** (`bundle-gerbil`, generation/targets/gerbil/docs/reference.md §8) — the language's
   own **`gxc -exe` static-runtime binary** (the toolchain already embeds the
   Gambit runtime) + vendoring/relocating the one Homebrew dylib dependency
   (openssl@3) into `Contents/Frameworks/`. Build: `cargo run --example
@@ -307,24 +308,24 @@ targets take **different** approaches — pick what fits the language:
 The language-agnostic `apianyware-macos-stub-launcher` crate provides the `.app`
 skeleton + codesigning; per-target bundler crates do dependency discovery and
 staging. Bundle ids are `com.linkuistics.<NoSpaceTitle>`; display names come from
-the H1 of `knowledge/apps/<app>/spec.md`.
+the H1 of `docs/apps/<app>/spec.md`.
 
 ## Step 9: Validate and review
 
 - Rust tests pass (`cargo test`); any snapshot/golden tests pass.
 - Every sample app passes its TestAnyware VM verification.
-- `knowledge/targets/{id}.md` populated with learnings + distribution.
+- `generation/targets/{id}/docs/reference.md` populated with learnings + distribution.
 - `README.md` Current Status updated with the target.
 
 ## Reference implementations
 
 - **racket** — `generation/crates/emit-racket/`, `generation/targets/racket/`,
-  `knowledge/targets/racket.md`. Stdlib-rich; stub-launcher distribution.
+  `generation/targets/racket/docs/reference.md`. Stdlib-rich; stub-launcher distribution.
 - **chez** — `generation/crates/emit-chez/`, `generation/targets/chez/`,
-  `knowledge/targets/chez.md`. Idiomatic Scheme; self-contained standalone
+  `generation/targets/chez/docs/reference.md`. Idiomatic Scheme; self-contained standalone
   distribution (ADR-0009).
 - **gerbil** — `generation/crates/emit-gerbil/`, `generation/targets/gerbil/`,
-  `knowledge/targets/gerbil.md`. Compiled-FFI OO Scheme (manifest `defclass`
+  `generation/targets/gerbil/docs/reference.md`. Compiled-FFI OO Scheme (manifest `defclass`
   graph, dual dispatch surface, ADR-0020); ObjC-in-gsc native core, no Swift
   dylib (ADR-0017); self-contained `gxc -exe` distribution.
 - **Shared framework** — `generation/crates/emit/`.
@@ -344,6 +345,6 @@ the H1 of `knowledge/apps/<app>/spec.md`.
 [ ] All 7 sample apps built
 [ ] All 7 sample apps pass TestAnyware VM verification (one report each)
 [ ] Bundler integration: apps package as .app (stub-launcher or standalone)
-[ ] knowledge/targets/<id>.md populated (incl. a distribution section)
+[ ] generation/targets/<id>/docs/reference.md populated (incl. a distribution section)
 [ ] README.md Current Status updated
 ```

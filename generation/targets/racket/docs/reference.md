@@ -759,7 +759,7 @@ polish.
 `cargo run --example bundle_app -p apianyware-macos-bundle-racket -- <script>`
 (or `-- --all`). Built bundles land at `apps/<name>/build/<App Name>.app`
 (gitignored). The display name is read from the H1 of
-`knowledge/apps/<name>/spec.md` — a kebab→title conversion produces wrong
+`docs/apps/<name>/spec.md` — a kebab→title conversion produces wrong
 capitalisation for acronyms (e.g. "Ui Controls Gallery"). The bundle id is
 `com.linkuistics.<NoSpaceTitle>`.
 
@@ -768,7 +768,7 @@ capitalisation for acronyms (e.g. "Ui Controls Gallery"). The bundle id is
 `generated/oo/<framework>/`, and an optional `lib/` directory.
 
 **A new app needs `spec.md` only.** Create `apps/<name>/<name>.rkt` and
-`knowledge/apps/<name>/spec.md` with `# <Display Name>` as the first heading.
+`docs/apps/<name>/spec.md` with `# <Display Name>` as the first heading.
 The `bundle-racket` integration test auto-discovers apps via a directory
 walk, so no test edits are needed for a new app. (The runtime-load harness's
 `APPS` array is separate and *does* need the manual append — §8.)
