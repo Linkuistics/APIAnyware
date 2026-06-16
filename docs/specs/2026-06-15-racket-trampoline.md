@@ -22,6 +22,26 @@ under-determined, the build leaf resolves it and kicks back to update this spec
 - The mangled **`s:` USR** is in the decl's `doc_refs.usr`; the **bare name** is
   `Function.name` / `Constant.name`; **arg labels** are the `Param.name`s.
 
+### 0a. The IR gap closed by 040/020 (kick-back, resolved in leaf)
+
+The build revealed a real hole in §0's input list. `map_swift_type`
+(extract-swift) **lossily normalizes** Swift types into the ObjC-bridged
+vocabulary — `String`→`Class{NSString}`, `Array`→`Class{NSArray}`, `Int`→
+`Primitive{int64}`, etc. — and `map_top_level_function` discarded the
+`throwing`/`is_async`/generic facts that `AbiNode` carries. The call-by-name
+mechanism (§1) emits `return foo(x)`, which **does not compile** for a `throws`
+or `async` function; and a generic free function (`@_cdecl` cannot be generic)
+cannot even be *recognised* to record it. So the codegen cannot produce a
+compilable `Trampolines.swift` over the real residual without these facts.
+
+**Resolved here (additive, ObjC golden JSON unchanged):** `ir::Function` gains
+`swift_fn: Option<SwiftFnInfo>` (`{ throwing, is_async, is_generic }`),
+`skip_serializing_if = "Option::is_none"`. Populated only by
+`map_top_level_function` from `node.throwing` / `node.is_async` /
+`node.generic_sig.is_some()`; `None` for every ObjC/C function. This is the
+shared-pipeline touch 030 would have made had the need been visible then; it is
+recorded here rather than reopening the retired 030 node.
+
 ## 1. Generated artifact & build wiring
 
 - **Path:** `swift/Sources/APIAnywareRacket/Generated/Trampolines.swift`
@@ -151,25 +171,53 @@ finalization machinery.
 - Unbindable generic free function: emit nothing; record (§5).
 - Contracts/`provide` continue to describe the *racket-visible* type (post-coercion).
 
-## 5. The unbindable residual (defer nothing, but be honest)
+## 5. The unbindable / deferred residual (defer nothing, but be honest)
 
-Generic free functions cannot be trampolined. They are **not** silently skipped:
+Some residual decls cannot be trampolined this leaf. They are **not** silently
+skipped — each is recorded with a reason and the per-reason counts are logged,
+so a clean generate reports e.g. "N trampolined, M unbindable". The reasons:
 
-- The trampoline pass records each as a diagnostic (name + module + reason
-  `unbindable_generic_free_function`) and logs the total count, so a clean
-  generate reports "N Swift-native decls trampolined, M unbindable (generic)".
-- If the residual surfaces a real, wanted generic API, revisit (monomorphization
-  was the rejected option in ADR-0027 — reopen it only with a concrete need).
+- `unbindable_generic_free_function` — a generic free function. `@_cdecl` cannot
+  be generic and no concrete symbol exists without monomorphization (the rejected
+  ADR-0027 option). A **hard** limit; reopen only with a concrete need.
+- `deferred_async` — an `async` function. The runtime (`AsyncBridge.swift`)
+  supports it, but the callback `@_cdecl` shape + racket `_cprocedure`
+  main-thread binding is a follow-up leaf (scope decision below). Recorded, not
+  a hard limit.
+- `deferred_nonbridged_struct_param` — a function with a non-Foundation-bridged
+  Swift `struct`/tuple/existential **parameter**. Calling it by name needs the
+  `@_cdecl` body to *unbox a named Swift type*, which requires spelling that type
+  (and per-field accessors) — the handle-accessor surface deferred below. A
+  non-bridged struct **return** is fine (boxed opaque handle, no naming needed).
+
+**Scope decision (040/020, user-confirmed).** This leaf lands the §6 done-bar
+taxonomy (scalars, Foundation-bridged value types via the existing runtime,
+objects→cpointer, `Optional`, Swift-`struct`-**return**→opaque handle, pointer
+constants) **plus `throws`→trailing `NSError` out-param** (cheap; the
+`ThrowsBridge.swift` runtime is ready). `async`, generic free functions, and
+non-bridged-struct **params** / per-field handle accessors are **recorded with a
+reason and counted** (above), wired in follow-up leaves. "Defer nothing" is
+honoured as *nothing silently dropped*, not *everything wired at once*.
 
 ## 6. Done-bar (the leaf's "resolves and runs")
 
 - `apianyware-macos-generate` writes `Generated/Trampolines.swift`; `swift build`
   is green; `cargo test --workspace` green (incl. updated snapshots).
-- The TestKit synthetic fixture (`generation/crates/emit/src/test_fixtures.rs`)
-  gains Swift-native exemplars (`objc_exposed: false`) covering the taxonomy rows
-  the slice implements — at minimum a scalar function, a `String` function, a
-  Swift-struct return, and a pointer-valued constant — so the snapshot goldens
-  prove the emitter routes them to trampolines, not `_fw-lib`.
+- The emitter routes Swift-native decls (`objc_exposed: false`) to trampolines,
+  not `_fw-lib` — covering at minimum a scalar function, a `String` function, a
+  Swift-struct return, and a pointer-valued constant. **Deviation (040/020):** the
+  spec's first draft put these exemplars in the *shared* TestKit fixture
+  (`generation/crates/emit/src/test_fixtures.rs`), but that fixture is consumed by
+  the chez and gerbil snapshot tests too — whose trampoline support is leaves
+  060/070 — so adding `s:` decls there would make them emit *broken direct
+  bindings* and churn their goldens. The routing is therefore proven by
+  **racket-local assertion tests** (`emit_functions.rs` / `emit_constants.rs`:
+  `direct_and_trampoline_functions_route_to_different_libs`,
+  `swift_string_function_uses_coercers`,
+  `deferred_residual_is_recorded_as_comment_not_dropped`,
+  `swift_native_constant_reads_through_aw_lib`, …) plus the codegen unit tests in
+  `trampoline.rs` — same done-bar evidence, zero cross-target pollution. The shared
+  fixture stays all-direct until chez/gerbil grow their own trampolines.
 - **A real end-to-end smoke**: at least one real macOS Swift-native function and
   one real pointer-valued constant resolve through `libAPIAnywareRacket` and run
   from racket (the candidate real symbols are picked in the build leaf from the

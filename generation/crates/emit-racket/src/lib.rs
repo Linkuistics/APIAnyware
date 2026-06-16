@@ -15,5 +15,6 @@ pub mod method_filter;
 pub mod naming;
 pub mod native_dispatch;
 pub mod shared_signatures;
+pub mod trampoline;
 
 pub use emit_framework::RacketEmitter;

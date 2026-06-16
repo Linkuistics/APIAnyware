@@ -367,6 +367,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             objc_exposed: true,
+            swift_fn: None,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.functions_emitted, 1);
@@ -396,6 +397,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             objc_exposed: true,
+            swift_fn: None,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.functions_emitted, 0);

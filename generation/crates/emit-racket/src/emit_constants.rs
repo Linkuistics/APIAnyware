@@ -15,6 +15,7 @@ use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::emit_functions::map_contract;
 use crate::shared_signatures::{any_struct_type, framework_ffi_lib_arg};
+use crate::trampoline::{classify_constant, ConstTrampoline};
 
 /// Returns true if a constant's declared type is a raw struct (not a
 /// pointer or typedef alias). These globals need `ffi-obj-ref` to get
@@ -23,24 +24,35 @@ fn is_struct_data_symbol(type_ref: &TypeRef) -> bool {
     matches!(type_ref.kind, TypeRefKind::Struct { .. })
 }
 
-/// Returns true if any constant in the list uses a macro-defined value (CFSTR).
-fn has_cfstr_constants(constants: &[Constant]) -> bool {
-    constants.iter().any(|c| c.macro_value.is_some())
-}
-
 /// Generate a Racket constants file for a framework.
+///
+/// Branches each constant on `objc_exposed` (ADR-0026): direct (ObjC-exposed)
+/// constants bind against the framework dylib `_fw-lib` (unchanged); Swift-native
+/// constants (`objc_exposed == false`) bind a generated `aw_racket_swift_const_*`
+/// reader against `libAPIAnywareRacket` (`_aw-lib`), since a Swift-native global
+/// has no C symbol to `get-ffi-obj`/`dlsym` (ADR-0027).
 pub fn generate_constants_file(constants: &[Constant], framework: &str) -> String {
     let mapper = RacketFfiTypeMapper;
+
+    let direct: Vec<&Constant> = constants.iter().filter(|c| c.objc_exposed).collect();
+    let tramps: Vec<ConstTrampoline> = constants
+        .iter()
+        .filter(|c| !c.objc_exposed)
+        .map(|c| classify_constant(framework, c))
+        .collect();
+
     // Struct data symbols use ffi-obj-ref (no FFI type needed), so exclude
     // them from the geometry struct detection that triggers type-mapping.rkt.
+    // Only the direct constants take the `_fw-lib` struct path.
     let needs_structs = any_struct_type(
-        constants
+        direct
             .iter()
             .filter(|c| !is_struct_data_symbol(&c.constant_type))
             .map(|c| &c.constant_type),
         &mapper,
     );
-    let needs_cfstr = has_cfstr_constants(constants);
+    let needs_cfstr = direct.iter().any(|c| c.macro_value.is_some());
+    let needs_trampoline = !tramps.is_empty();
     let mut w = CodeWriter::new();
     w.line("#lang racket/base");
     write_line!(w, ";; Generated constant definitions for {}", framework);
@@ -50,20 +62,30 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     // Rename `racket/contract`'s `->` to `c->` to avoid colliding with
     // `ffi/unsafe`'s `->`. Constants don't use `->` themselves, but the
     // collision is at require-time regardless.
+    let mut extra_requires: Vec<&str> = Vec::new();
     if needs_structs {
-        w.line("         (rename-in racket/contract [-> c->])");
-        w.line("         \"../../runtime/type-mapping.rkt\")");
-    } else {
+        extra_requires.push("\"../../runtime/type-mapping.rkt\"");
+    }
+    if needs_trampoline {
+        extra_requires.push("\"../../runtime/swift-trampoline.rkt\"");
+    }
+    if extra_requires.is_empty() {
         w.line("         (rename-in racket/contract [-> c->]))");
+    } else {
+        w.line("         (rename-in racket/contract [-> c->])");
+        for (i, req) in extra_requires.iter().enumerate() {
+            let close = if i == extra_requires.len() - 1 { ")" } else { "" };
+            write_line!(w, "         {}{}", req, close);
+        }
     }
     w.blank_line();
 
-    // Contract-based provide
-    if constants.is_empty() {
+    // Contract-based provide (direct first, then trampolined).
+    if direct.is_empty() && tramps.is_empty() {
         w.line("(provide)");
     } else {
         w.line("(provide/contract");
-        for constant in constants {
+        for constant in &direct {
             let contract = if constant.macro_value.is_some() {
                 "(or/c cpointer? #f)".to_string()
             } else if is_struct_data_symbol(&constant.constant_type) {
@@ -72,6 +94,9 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
                 map_contract(&constant.constant_type, false)
             };
             write_line!(w, "  [{} {}]", constant.name, contract);
+        }
+        for t in &tramps {
+            write_line!(w, "  {}", t.provide_contract());
         }
         w.line("  )");
     }
@@ -97,7 +122,8 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
         w.blank_line();
     }
 
-    for constant in constants {
+    // Direct (ObjC-exposed) constant definitions (bound against `_fw-lib`).
+    for constant in &direct {
         if let Some(ref value) = constant.macro_value {
             write_line!(w, "(define {} (_make-cfstr \"{}\"))", constant.name, value);
         } else if is_struct_data_symbol(&constant.constant_type) {
@@ -116,6 +142,18 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
                 constant.name,
                 ffi_type
             );
+        }
+    }
+
+    // Swift-native constant readers (bound against `_aw-lib`, ADR-0027).
+    if !tramps.is_empty() {
+        w.blank_line();
+        w.line(";; Swift-native residual constants — read through libAPIAnywareRacket");
+        w.line(";; (_aw-lib); a Swift global has no C symbol to get-ffi-obj (ADR-0027).");
+        for t in &tramps {
+            for line in t.render_racket().lines() {
+                w.line(line);
+            }
         }
     }
 
@@ -555,6 +593,73 @@ mod tests {
             ),
             "Regular constant should use get-ffi-obj. Output was:\n{output}"
         );
+    }
+
+    fn make_swift_constant(name: &str, kind: TypeRefKind) -> Constant {
+        Constant {
+            name: name.to_string(),
+            constant_type: TypeRef {
+                nullable: false,
+                kind,
+            },
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            macro_value: None,
+            objc_exposed: false,
+        }
+    }
+
+    #[test]
+    fn swift_native_constant_reads_through_aw_lib() {
+        // A Swift-native object constant ("pointer-valued") has no C symbol — it is
+        // read through a generated trampoline against _aw-lib, not _fw-lib.
+        let constants = vec![
+            make_constant(
+                "TKVersionString",
+                TypeRefKind::Class {
+                    name: "NSString".into(),
+                    framework: None,
+                    params: vec![],
+                },
+            ),
+            make_swift_constant(
+                "TKSwiftDefaultConfig",
+                TypeRefKind::Class {
+                    name: "TKConfig".into(),
+                    framework: Some("TestKit".into()),
+                    params: vec![],
+                },
+            ),
+        ];
+        let out = generate_constants_file(&constants, "TestKit");
+        assert!(out.contains("\"../../runtime/swift-trampoline.rkt\""), "{out}");
+        // ObjC-exposed constant still binds the framework dylib.
+        assert!(
+            out.contains("(define TKVersionString (get-ffi-obj 'TKVersionString _fw-lib _id))"),
+            "{out}"
+        );
+        // Swift-native object constant reads through the trampoline (handle cpointer).
+        assert!(
+            out.contains("(define TKSwiftDefaultConfig ((get-ffi-obj 'aw_racket_swift_const_TestKit_TKSwiftDefaultConfig _aw-lib"),
+            "{out}"
+        );
+        assert!(out.contains("[TKSwiftDefaultConfig cpointer?]"), "{out}");
+    }
+
+    #[test]
+    fn swift_native_string_constant_is_coerced() {
+        let constants = vec![make_swift_constant(
+            "TKSwiftBuildLabel",
+            TypeRefKind::Class {
+                name: "NSString".into(),
+                framework: Some("Foundation".into()),
+                params: vec![],
+            },
+        )];
+        let out = generate_constants_file(&constants, "TestKit");
+        assert!(out.contains("aw-string-result"), "string constant coerced:\n{out}");
+        assert!(out.contains("[TKSwiftBuildLabel (or/c string? #f)]"), "{out}");
     }
 
     #[test]

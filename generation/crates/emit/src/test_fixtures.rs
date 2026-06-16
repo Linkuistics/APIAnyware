@@ -483,6 +483,7 @@ fn build_tk_compute_distance() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -515,6 +516,7 @@ fn build_tk_transform_point() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -530,6 +532,7 @@ fn build_tk_reset() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -556,6 +559,7 @@ fn build_tk_create_buffer() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -583,6 +587,7 @@ fn build_tk_get_name() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -620,6 +625,7 @@ fn build_tk_register_callback() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -635,6 +641,7 @@ fn build_tk_log_variadic() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -655,6 +662,7 @@ fn build_tk_fast_hash_inline() -> Function {
         provenance: None,
         doc_refs: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 

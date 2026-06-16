@@ -155,6 +155,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             objc_exposed: true,
+            swift_fn: None,
         }
     }
 

@@ -539,6 +539,37 @@ pub struct Function {
         skip_serializing_if = "crate::serde_helpers::is_true"
     )]
     pub objc_exposed: bool,
+
+    /// Swift-native call metadata (ADR-0027, leaf 040/020). Present **only** on
+    /// `objc_exposed == false` top-level functions recovered from the Swift ABI;
+    /// `None` for every ObjC/C function (which binds directly and needs no
+    /// trampoline). Carries the three facts the call-by-name trampoline codegen
+    /// needs but that the lossy Swift→ObjC `TypeRef` normalization
+    /// (`map_swift_type`) would otherwise drop. Skip-serialized when absent so
+    /// the golden JSON of the ObjC-only residual is unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub swift_fn: Option<SwiftFnInfo>,
+}
+
+/// Per-function facts the call-by-name trampoline codegen needs that the lossy
+/// Swift→ObjC `TypeRef` normalization discards (ADR-0027 / leaf 040/020). Only
+/// attached to Swift-native (`objc_exposed == false`) top-level functions.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SwiftFnInfo {
+    /// The Swift function `throws`. The trampoline takes a trailing `NSError **`
+    /// out-param (the dispatch-table `error_out` shape) and runs the call inside
+    /// `awRacketTry`.
+    #[serde(default)]
+    pub throwing: bool,
+    /// The Swift function is `async`. Recorded + counted (`deferred_async`); the
+    /// completion-callback `@_cdecl` shape is a follow-up leaf.
+    #[serde(default)]
+    pub is_async: bool,
+    /// The Swift function is generic (`generic_sig` present). Unbindable —
+    /// `@_cdecl` cannot be generic — recorded + counted
+    /// (`unbindable_generic_free_function`).
+    #[serde(default)]
+    pub is_generic: bool,
 }
 
 // ---------------------------------------------------------------------------

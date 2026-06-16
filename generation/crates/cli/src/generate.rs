@@ -206,6 +206,49 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
     Ok(sigs.len())
 }
 
+/// Generate the racket target's Swift-native **trampolines** (ADR-0027) into the
+/// `APIAnywareRacket` Swift target; `swift build` then compiles them into the dylib.
+///
+/// Like the native dispatch table this is a **global** pass — the trampolines are
+/// collected across every framework and emitted into one file — so it runs once
+/// after [`run_generation`], before `swift build`. Every retained
+/// `objc_exposed == false` declaration is either trampolined or recorded as
+/// deferred (with a reason); the per-reason counts are logged so a clean generate
+/// reports what was bound and what was not (spec §5, "defer nothing, but be
+/// honest"). Returns the number of trampoline entries written.
+pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit_racket::trampoline::{collect_trampolines, generate_trampolines_swift};
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let set = collect_trampolines(&frameworks);
+    let entries = set.functions.len() + set.constants.len();
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        functions = set.functions.len(),
+        constants = set.constants.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated Swift-native trampolines"
+    );
+    Ok(entries)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

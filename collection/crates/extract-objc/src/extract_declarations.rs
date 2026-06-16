@@ -945,6 +945,9 @@ fn extract_function(
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
         objc_exposed: true,
+        // ObjC/C functions bind directly (trampoline-elided); no Swift-native
+        // call metadata (ADR-0027 / leaf 040/020).
+        swift_fn: None,
     })
 }
 

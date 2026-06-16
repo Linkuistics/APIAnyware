@@ -615,6 +615,14 @@ fn map_top_level_function(node: &AbiNode) -> Option<ir::Function> {
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
         objc_exposed: objc_exposed_of(node),
+        // Carry the call-by-name facts the trampoline codegen needs (ADR-0027 /
+        // leaf 040/020) — `throws`/`async`/generic that the Swift→ObjC TypeRef
+        // normalization drops. Only Swift-native top-level functions reach here.
+        swift_fn: Some(ir::SwiftFnInfo {
+            throwing: node.throwing,
+            is_async: node.is_async,
+            is_generic: node.generic_sig.is_some(),
+        }),
     })
 }
 

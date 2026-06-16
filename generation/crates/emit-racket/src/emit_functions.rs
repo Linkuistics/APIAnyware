@@ -17,6 +17,7 @@ use apianyware_macos_types::ir::Function;
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::shared_signatures::{any_struct_type, framework_ffi_lib_arg, is_libdispatch_unexported};
+use crate::trampoline::{classify_function, FnDisposition, FnTrampoline};
 
 /// Returns true if a function can be emitted as a Racket FFI binding.
 ///
@@ -123,16 +124,49 @@ fn is_known_geometry_struct(name: &str) -> bool {
     )
 }
 
-/// Generate a Racket functions file for a framework's C function exports.
+/// Generate a Racket functions file for a framework's function exports.
 ///
-/// Uses `provide/contract` for boundary checking. Each emittable function gets
-/// both a `get-ffi-obj` definition and a contract in the provide form.
+/// Branches each emittable function on `objc_exposed` (ADR-0026):
+/// - **Direct** (`objc_exposed == true`, the trampoline-elided ObjC limit): bound
+///   against the framework dylib `_fw-lib` via `get-ffi-obj` — unchanged.
+/// - **Trampolined** (`objc_exposed == false`, Swift-native residual): bound
+///   against `libAPIAnywareRacket` (`_aw-lib`, from `swift-trampoline.rkt`) via
+///   the generated `aw_racket_swift_*` entry, with racket-side coercion (ADR-0027).
+/// - **Deferred** (async / generic / non-bridged-struct param): emitted as a
+///   recording comment, never silently dropped (spec §5).
+///
+/// Uses `provide/contract` for boundary checking; each bound function gets both a
+/// definition and a (post-coercion, racket-visible) contract.
 pub fn generate_functions_file(functions: &[Function], framework: &str) -> String {
     let mapper = RacketFfiTypeMapper;
-    let emittable_types = functions.iter().filter(|f| is_emittable(f)).flat_map(|f| {
+    let is_libdispatch = framework == "libdispatch";
+
+    // Direct (ObjC-exposed) functions — bound against the framework dylib.
+    let direct: Vec<&Function> = functions
+        .iter()
+        .filter(|f| is_emittable(f))
+        .filter(|f| f.objc_exposed)
+        .filter(|f| !(is_libdispatch && is_libdispatch_unexported(&f.name)))
+        .collect();
+
+    // Swift-native residual — classified into trampolines + deferred recordings.
+    let mut tramps: Vec<FnTrampoline> = Vec::new();
+    let mut deferred: Vec<(&Function, &'static str)> = Vec::new();
+    for func in functions.iter().filter(|f| is_emittable(f) && !f.objc_exposed) {
+        match classify_function(framework, func, functions) {
+            FnDisposition::Trampoline(t) => tramps.push(t),
+            FnDisposition::Deferred(reason) => deferred.push((func, reason.as_str())),
+        }
+    }
+
+    // type-mapping.rkt is needed only by the direct `_fun` geometry-struct types;
+    // trampoline reps are scalar/pointer/string and never pull it in.
+    let direct_types = direct.iter().flat_map(|f| {
         std::iter::once(&f.return_type).chain(f.params.iter().map(|p| &p.param_type))
     });
-    let needs_structs = any_struct_type(emittable_types, &mapper);
+    let needs_structs = any_struct_type(direct_types, &mapper);
+    let needs_trampoline = !tramps.is_empty();
+
     let mut w = CodeWriter::new();
     w.line("#lang racket/base");
     write_line!(w, ";; Generated C function bindings for {}", framework);
@@ -146,27 +180,32 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
     w.line("         ffi/unsafe/objc");
     // Rename `racket/contract`'s `->` to `c->` to avoid colliding with
     // `ffi/unsafe`'s `->` (used as a literal in `(_fun ... -> ...)` below).
+    // Extra runtime requires (type-mapping for geometry structs, swift-trampoline
+    // for the Swift-native residual) extend the block; the last one closes it.
+    let mut extra_requires: Vec<&str> = Vec::new();
     if needs_structs {
-        w.line("         (rename-in racket/contract [-> c->])");
-        w.line("         \"../../runtime/type-mapping.rkt\")");
-    } else {
+        extra_requires.push("\"../../runtime/type-mapping.rkt\"");
+    }
+    if needs_trampoline {
+        extra_requires.push("\"../../runtime/swift-trampoline.rkt\"");
+    }
+    if extra_requires.is_empty() {
         w.line("         (rename-in racket/contract [-> c->]))");
+    } else {
+        w.line("         (rename-in racket/contract [-> c->])");
+        for (i, req) in extra_requires.iter().enumerate() {
+            let close = if i == extra_requires.len() - 1 { ")" } else { "" };
+            write_line!(w, "         {}{}", req, close);
+        }
     }
     w.blank_line();
 
-    let is_libdispatch = framework == "libdispatch";
-    let emittable: Vec<&Function> = functions
-        .iter()
-        .filter(|f| is_emittable(f))
-        .filter(|f| !(is_libdispatch && is_libdispatch_unexported(&f.name)))
-        .collect();
-
-    // Contract-based provide
-    if emittable.is_empty() {
+    // Contract-based provide (direct first, then trampolined — deferred excluded).
+    if direct.is_empty() && tramps.is_empty() {
         w.line("(provide)");
     } else {
         w.line("(provide/contract");
-        for func in &emittable {
+        for func in &direct {
             let param_contracts: Vec<String> = func
                 .params
                 .iter()
@@ -182,11 +221,15 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
 
             write_line!(w, "  [{} {}]", func.name, contract);
         }
+        for t in &tramps {
+            write_line!(w, "  {}", t.provide_contract());
+        }
         w.line("  )");
     }
     w.blank_line();
 
-    // Load framework dylib
+    // Load framework dylib (always — other files in the framework may re-export
+    // this module, and the direct bindings need it).
     write_line!(
         w,
         "(define _fw-lib (ffi-lib \"{}\"))",
@@ -194,8 +237,8 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
     );
     w.blank_line();
 
-    // Function definitions
-    for (i, func) in emittable.iter().enumerate() {
+    // Direct function definitions (bound against `_fw-lib`).
+    for (i, func) in direct.iter().enumerate() {
         // Emit thread-safety warning for functions with callback parameters.
         // _cprocedure callbacks SIGILL when invoked from a non-main OS thread
         // on Racket CS; #:async-apply deadlocks under nsapplication-run.
@@ -256,6 +299,27 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
         );
     }
 
+    // Swift-native trampoline definitions (bound against `_aw-lib`, ADR-0027).
+    if !tramps.is_empty() {
+        w.blank_line();
+        w.line(";; Swift-native residual — trampolined through libAPIAnywareRacket");
+        w.line(";; (_aw-lib) rather than the framework dylib (ADR-0027).");
+        for t in &tramps {
+            for line in t.render_racket().lines() {
+                w.line(line);
+            }
+        }
+    }
+
+    // Deferred residual — recorded, never silently dropped (spec §5).
+    if !deferred.is_empty() {
+        w.blank_line();
+        w.line(";; Deferred Swift-native residual (not trampolined this leaf):");
+        for (func, reason) in &deferred {
+            write_line!(w, ";;   {} — {}", func.name, reason);
+        }
+    }
+
     w.finish()
 }
 
@@ -299,6 +363,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             objc_exposed: true,
+            swift_fn: None,
         }
     }
 
@@ -1154,6 +1219,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             objc_exposed: true,
+            swift_fn: None,
         }];
         let output = generate_functions_file(&functions, "CoreGraphics");
         assert!(
@@ -1163,6 +1229,118 @@ mod tests {
         assert!(
             output.contains("_cprocedure"),
             "Warning should mention _cprocedure. Output was:\n{output}"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Swift-native residual routing (objc_exposed == false → trampolines)
+    // -----------------------------------------------------------------------
+
+    /// A Swift-native (`objc_exposed == false`) function with the given
+    /// `SwiftFnInfo`, the shape `map_top_level_function` produces.
+    fn swift_function(
+        name: &str,
+        params: Vec<Param>,
+        return_kind: TypeRefKind,
+        info: apianyware_macos_types::ir::SwiftFnInfo,
+    ) -> Function {
+        Function {
+            name: name.to_string(),
+            params,
+            return_type: TypeRef {
+                nullable: false,
+                kind: return_kind,
+            },
+            inline: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            objc_exposed: false,
+            swift_fn: Some(info),
+        }
+    }
+
+    fn nsstring_kind() -> TypeRefKind {
+        TypeRefKind::Class {
+            name: "NSString".into(),
+            framework: Some("Foundation".into()),
+            params: vec![],
+        }
+    }
+
+    #[test]
+    fn direct_and_trampoline_functions_route_to_different_libs() {
+        use apianyware_macos_types::ir::SwiftFnInfo;
+        let functions = vec![
+            // Direct ObjC-exposed C function — unchanged, bound against _fw-lib.
+            make_function(
+                "TKComputeDistance",
+                vec![make_param("x", TypeRefKind::Primitive { name: "double".into() })],
+                TypeRefKind::Primitive { name: "double".into() },
+                false,
+                false,
+            ),
+            // Swift-native scalar function — trampolined against _aw-lib.
+            swift_function(
+                "TKSwiftScale",
+                vec![make_param("factor", TypeRefKind::Primitive { name: "double".into() })],
+                TypeRefKind::Primitive { name: "double".into() },
+                SwiftFnInfo::default(),
+            ),
+        ];
+        let out = generate_functions_file(&functions, "TestKit");
+        // The swift-trampoline runtime is required when any residual is present.
+        assert!(out.contains("\"../../runtime/swift-trampoline.rkt\""), "{out}");
+        // Direct function still binds the framework dylib.
+        assert!(
+            out.contains("(define TKComputeDistance (get-ffi-obj 'TKComputeDistance _fw-lib"),
+            "{out}"
+        );
+        // Swift-native function binds the trampoline entry against _aw-lib.
+        assert!(
+            out.contains("(define TKSwiftScale (get-ffi-obj 'aw_racket_swift_TestKit_TKSwiftScale _aw-lib"),
+            "{out}"
+        );
+        // Both appear in the provide/contract block.
+        assert!(out.contains("[TKComputeDistance (c-> real? real?)]"), "{out}");
+        assert!(out.contains("[TKSwiftScale (c-> real? real?)]"), "{out}");
+    }
+
+    #[test]
+    fn swift_string_function_uses_coercers() {
+        use apianyware_macos_types::ir::SwiftFnInfo;
+        let functions = vec![swift_function(
+            "TKSwiftGreeting",
+            vec![make_param("name", nsstring_kind())],
+            nsstring_kind(),
+            SwiftFnInfo::default(),
+        )];
+        let out = generate_functions_file(&functions, "TestKit");
+        assert!(out.contains("aw-string-arg"), "string arg bridged in:\n{out}");
+        assert!(out.contains("aw-string-result"), "string result coerced out:\n{out}");
+        assert!(out.contains("[TKSwiftGreeting (c-> string? (or/c string? #f))]"), "{out}");
+    }
+
+    #[test]
+    fn deferred_residual_is_recorded_as_comment_not_dropped() {
+        use apianyware_macos_types::ir::SwiftFnInfo;
+        let functions = vec![swift_function(
+            "TKSwiftFetch",
+            vec![],
+            TypeRefKind::Primitive { name: "void".into() },
+            SwiftFnInfo {
+                is_async: true,
+                ..Default::default()
+            },
+        )];
+        let out = generate_functions_file(&functions, "TestKit");
+        // Not bound...
+        assert!(!out.contains("aw_racket_swift_TestKit_TKSwiftFetch"), "{out}");
+        // ...but recorded with its reason.
+        assert!(
+            out.contains(";;   TKSwiftFetch — deferred_async"),
+            "deferred residual must be recorded:\n{out}"
         );
     }
 
