@@ -22,9 +22,11 @@
 //!   return type never has to be *named* in generated Swift. Every function whose
 //!   params are bindable is therefore trampolinable.
 //! - **Params** are the constraint: a scalar/`Bool`/`String` param can be
-//!   reconstructed and passed by-value/with the `as String` bridge; any other
-//!   param (a non-bridged Swift struct, tuple, existential, …) would require the
-//!   body to unbox a *named* Swift type, deferred to a follow-up leaf and recorded.
+//!   reconstructed and passed by-value/with the `as String` bridge; a **value
+//!   struct the owning framework defines** (`MLTensor`) is unboxed from the opaque
+//!   handle racket holds (`awRacketUnbox(aN!, as: Name.self)`, leaf 040/040/030);
+//!   a CF/ObjC reference type, a closure, or an `id`/`Any` param still cannot be
+//!   soundly unboxed and is deferred with a reason and counted.
 //! - **`throws`** → a trailing `NSError **` out-param run through `awRacketTry`
 //!   (the `ThrowsBridge.swift` runtime, mirroring the dispatch `error_out` shape).
 //! - **`async`** and **generic free functions** are recorded with a reason + count
@@ -35,9 +37,9 @@
 //! short signature hash appended when a `(module, name)` is overloaded within its
 //! framework; constants are `aw_racket_swift_const_<Fw>_<name>`.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
-use apianyware_macos_types::ir::{Constant, Framework, Function};
+use apianyware_macos_types::ir::{Constant, Framework, Function, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Prefix for a Swift-native **function** trampoline entry.
@@ -67,6 +69,14 @@ enum ArgMarshal {
     /// `Swift.String` ⇄ `NSString`. The `@_cdecl` receives an `id`; the body
     /// reconstructs `… as String` before the call.
     SwiftString,
+    /// A **non-bridged Swift value struct** parameter (`MLTensor`, `MLUntypedColumn`,
+    /// …) that the owning framework defines in `Framework.structs`. Racket holds it
+    /// as the opaque [`OpaqueHandle`]-style handle a prior boxed return handed it;
+    /// the `@_cdecl` receives that raw pointer and the body unboxes the *named* value
+    /// (`awRacketUnbox(aN!, as: Name.self)`) before the by-name call — sound only
+    /// because the name is in the struct set, i.e. a value type the box round-trips,
+    /// not a CF/ObjC reference that would trap (spec §5a, leaf 040/040/030 fork 1).
+    BoxedHandle { name: String },
 }
 
 /// How a **return** value crosses the boundary. Every shape here is producible
@@ -242,7 +252,16 @@ fn scalar_typedef(name: &str) -> Option<Scalar> {
 /// records why it cannot be trampolined this leaf. Both the global pass and the
 /// racket emitter call [`classify_function`], which calls this, so the recorded
 /// reason and the emitted binding always agree.
-fn classify_param(t: &TypeRef) -> Result<ArgMarshal, DeferReason> {
+///
+/// `value_structs` is the owning framework's **own** set of `Framework.structs`
+/// names — a param whose named type is in it is a Swift value struct the box
+/// round-trips, so it rides the [`ArgMarshal::BoxedHandle`] unbox path. The set is
+/// per-framework (not global) on purpose: the `@_cdecl` `import`s only its owning
+/// module, so a cross-module struct type would not be in scope to spell, and a
+/// per-framework set keeps the global pass and the per-framework emitter — which
+/// each build it from the same single `Framework.structs` — classifying identically
+/// (leaf 040/040/030 fork 2: the smallest sound option).
+fn classify_param(t: &TypeRef, value_structs: &HashSet<&str>) -> Result<ArgMarshal, DeferReason> {
     if is_swift_string(t) {
         return Ok(ArgMarshal::SwiftString);
     }
@@ -250,19 +269,25 @@ fn classify_param(t: &TypeRef) -> Result<ArgMarshal, DeferReason> {
         TypeRefKind::Primitive { name } => scalar_of_primitive(name)
             .map(ArgMarshal::Scalar)
             .ok_or(DeferReason::NonBridgedStructParam),
-        // A named type lowered from a non-bridged Swift value: a scalar-backed
-        // typedef (`CGFloat`) marshals by value; anything else (a genuine opaque
-        // value struct, a CF/ObjC reference type, a bridged collection) still needs
-        // the named-type handle-unbox path — deferred to a focused follow-up leaf.
+        // A named type lowered from a non-bridged Swift value. Three sub-cases, most
+        // specific first: a scalar-backed typedef (`CGFloat`) marshals by value; a
+        // value struct the owning framework defines (`MLTensor`) rides the named-type
+        // handle-unbox path; anything else (a CF/ObjC reference type, a bridged
+        // collection) still cannot be soundly unboxed and stays deferred.
         TypeRefKind::Class { name, .. }
         | TypeRefKind::Struct { name }
-        | TypeRefKind::Alias { name, .. } => match scalar_typedef(name) {
-            Some(scalar) => Ok(ArgMarshal::ScalarTypedef {
-                scalar,
-                name: name.clone(),
-            }),
-            None => Err(DeferReason::NonBridgedStructParam),
-        },
+        | TypeRefKind::Alias { name, .. } => {
+            if let Some(scalar) = scalar_typedef(name) {
+                Ok(ArgMarshal::ScalarTypedef {
+                    scalar,
+                    name: name.clone(),
+                })
+            } else if value_structs.contains(name.as_str()) {
+                Ok(ArgMarshal::BoxedHandle { name: name.clone() })
+            } else {
+                Err(DeferReason::NonBridgedStructParam)
+            }
+        }
         // A closure/function-pointer parameter — a distinct, harder case than an
         // unboxable value (it needs a Swift closure synthesised over a C callback),
         // recorded under its own reason so the residual is honestly categorised.
@@ -334,6 +359,12 @@ pub struct FnTrampoline {
     pub module: String,
     /// Bare Swift function name (`Function.name`) used in the by-name call.
     pub swift_name: String,
+    /// The **racket-visible** binding name (the `(define …)` / `provide` identifier).
+    /// Equal to `swift_name`, except a same-module overload carries the same content
+    /// hash its `entry` does (`show_06c0f52a`) — racket has no overloading, so three
+    /// `(define show)` would collide; mirroring the entry's content-addressing keeps
+    /// every overload reachable and deterministic (ADR-0013; leaf 040/040/030).
+    pub binding_name: String,
     /// Content-addressed C entry symbol (`aw_racket_swift_<Fw>_<name>[_<hash>]`).
     pub entry: String,
     /// Per-param argument label (from `Param.name`); `"_"` means no label.
@@ -447,11 +478,25 @@ pub enum FnDisposition {
     Deferred(DeferReason),
 }
 
+/// The owning framework's own value-struct names — the gate for the
+/// [`ArgMarshal::BoxedHandle`] param-unbox path. Built from `Framework.structs`
+/// (every entry there is a Swift value type the `AwValueBox` round-trips); a
+/// CF/ObjC reference type is in `classes` or absent, so it is correctly excluded.
+pub fn value_struct_names(structs: &[Struct]) -> HashSet<&str> {
+    structs.iter().map(|s| s.name.as_str()).collect()
+}
+
 /// Classify a Swift-native (`objc_exposed == false`) function. `siblings` is the
 /// full residual-function set of the *same* module (used only for overload
 /// disambiguation in the entry name) — pass the framework's functions; the
-/// classifier filters them itself.
-pub fn classify_function(module: &str, func: &Function, siblings: &[Function]) -> FnDisposition {
+/// classifier filters them itself. `value_structs` is the owning framework's
+/// [`value_struct_names`] — the gate for unboxing a value-struct parameter.
+pub fn classify_function(
+    module: &str,
+    func: &Function,
+    siblings: &[Function],
+    value_structs: &HashSet<&str>,
+) -> FnDisposition {
     if let Some(info) = &func.swift_fn {
         if info.is_generic {
             return FnDisposition::Deferred(DeferReason::UnbindableGenericFreeFunction);
@@ -463,7 +508,7 @@ pub fn classify_function(module: &str, func: &Function, siblings: &[Function]) -
 
     let mut params = Vec::with_capacity(func.params.len());
     for p in &func.params {
-        match classify_param(&p.param_type) {
+        match classify_param(&p.param_type, value_structs) {
             Ok(m) => params.push(m),
             // The first non-bindable param's reason wins — deterministic, and the
             // most specific category is recorded rather than a blanket umbrella.
@@ -473,11 +518,19 @@ pub fn classify_function(module: &str, func: &Function, siblings: &[Function]) -
     let ret = classify_return(&func.return_type);
     let throwing = func.swift_fn.as_ref().is_some_and(|i| i.throwing);
     let labels = func.params.iter().map(|p| p.name.clone()).collect();
+    // Racket has no overloading: a same-module overload's binding name carries the
+    // same content hash its C entry does, so three `(define show)` don't collide.
+    let binding_name = if is_overloaded(func, siblings) {
+        format!("{}_{}", func.name, overload_hash(func))
+    } else {
+        func.name.clone()
+    };
     let entry = function_entry_name(module, func, siblings);
 
     FnDisposition::Trampoline(FnTrampoline {
         module: module.to_string(),
         swift_name: func.name.clone(),
+        binding_name,
         entry,
         labels,
         params,
@@ -597,11 +650,14 @@ fn constant_entry_name(module: &str, name: &str) -> String {
 pub fn collect_trampolines(frameworks: &[Framework]) -> TrampolineSet {
     let mut set = TrampolineSet::default();
     for fw in frameworks {
+        // The owning framework's own value structs gate the param-unbox path; the
+        // emitter rebuilds the identical set from the same `Framework.structs`.
+        let value_structs = value_struct_names(&fw.structs);
         for func in &fw.functions {
             if func.objc_exposed {
                 continue; // direct-bound (trampoline-elided)
             }
-            match classify_function(&fw.name, func, &fw.functions) {
+            match classify_function(&fw.name, func, &fw.functions, &value_structs) {
                 FnDisposition::Trampoline(t) => set.functions.push(t),
                 FnDisposition::Deferred(reason) => set.deferred.push(Deferred {
                     module: fw.name.clone(),
@@ -638,6 +694,8 @@ fn call_expr(t: &FnTrampoline) -> String {
                 // call binds the real (CGFloat-taking) overload: `CGFloat(a0)`.
                 ArgMarshal::ScalarTypedef { name, .. } => format!("{name}(a{i})"),
                 ArgMarshal::SwiftString => format!("s{i}"),
+                // The prelude unboxed the handle to `u{i}: Name`; pass that value.
+                ArgMarshal::BoxedHandle { .. } => format!("u{i}"),
             };
             if label == "_" || label.is_empty() {
                 value
@@ -669,6 +727,15 @@ fn decl_params_and_prelude(t: &FnTrampoline) -> (Vec<String>, String) {
                 decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
                 prelude.push_str(&format!(
                     "  let s{i} = Unmanaged<NSString>.fromOpaque(a{i}!).takeUnretainedValue() as String\n"
+                ));
+            }
+            // Boundary param is the opaque value handle; unbox the named value the
+            // by-name call needs. Sound because `name` is in the framework's struct
+            // set (an `AwValueBox`-round-trippable value type, not a reference).
+            ArgMarshal::BoxedHandle { name } => {
+                decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
+                prelude.push_str(&format!(
+                    "  let u{i} = awRacketUnbox(a{i}!, as: {name}.self)\n"
                 ));
             }
         }
@@ -905,7 +972,8 @@ impl FnTrampoline {
             .iter()
             .map(|m| match m {
                 ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.ffi(),
-                ArgMarshal::SwiftString => "_pointer",
+                // A boxed value handle and a bridged string both cross as a pointer.
+                ArgMarshal::SwiftString | ArgMarshal::BoxedHandle { .. } => "_pointer",
             })
             .collect();
         if self.throwing {
@@ -926,13 +994,16 @@ impl FnTrampoline {
             .map(|m| match m {
                 ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.contract(),
                 ArgMarshal::SwiftString => "string?",
+                // Racket sees a value handle as an opaque cpointer (the binding
+                // passes it straight to the trampoline, which unboxes it).
+                ArgMarshal::BoxedHandle { .. } => "cpointer?",
             })
             .collect();
         let ret = ret_contract(&self.ret);
         if params.is_empty() {
-            format!("[{} (c-> {ret})]", self.swift_name)
+            format!("[{} (c-> {ret})]", self.binding_name)
         } else {
-            format!("[{} (c-> {} {ret})]", self.swift_name, params.join(" "))
+            format!("[{} (c-> {} {ret})]", self.binding_name, params.join(" "))
         }
     }
 
@@ -951,7 +1022,7 @@ impl FnTrampoline {
             // Bare foreign object — scalars/handle pass straight through.
             return format!(
                 "(define {} (get-ffi-obj '{} _aw-lib {arrow}))",
-                self.swift_name, self.entry
+                self.binding_name, self.entry
             );
         }
 
@@ -964,8 +1035,11 @@ impl FnTrampoline {
             .map(|(m, a)| match m {
                 ArgMarshal::SwiftString => format!("(aw-string-arg {a})"),
                 // Scalars and scalar-backed typedefs pass straight through (racket
-                // hands a number; the `@_cdecl` re-wraps it to the typedef).
-                ArgMarshal::Scalar(_) | ArgMarshal::ScalarTypedef { .. } => a.clone(),
+                // hands a number; the `@_cdecl` re-wraps it to the typedef). A boxed
+                // value handle is already a cpointer — pass it straight through too.
+                ArgMarshal::Scalar(_)
+                | ArgMarshal::ScalarTypedef { .. }
+                | ArgMarshal::BoxedHandle { .. } => a.clone(),
             })
             .collect();
         // Success-path result coercion.
@@ -983,7 +1057,7 @@ impl FnTrampoline {
                  (let ([raw (get-ffi-obj '{entry} _aw-lib {arrow})])\n    \
                  (lambda ({lambda_params})\n      \
                  (aw-call/error raw {ret_coerce}{maybe_space}{args}))))",
-                name = self.swift_name,
+                name = self.binding_name,
                 entry = self.entry,
                 args = call_args.join(" "),
                 maybe_space = if call_args.is_empty() { "" } else { " " },
@@ -1000,7 +1074,7 @@ impl FnTrampoline {
                 "(define {name}\n  \
                  (let ([raw (get-ffi-obj '{entry} _aw-lib {arrow})])\n    \
                  (lambda ({lambda_params})\n      {body})))",
-                name = self.swift_name,
+                name = self.binding_name,
                 entry = self.entry,
             )
         }
@@ -1037,6 +1111,12 @@ impl ConstTrampoline {
 mod tests {
     use super::*;
     use apianyware_macos_types::ir::{Param, SwiftFnInfo};
+
+    /// The empty value-struct set — the default for tests that exercise scalar /
+    /// string / reference-param paths (no framework-owned value struct in play).
+    fn no_structs() -> HashSet<&'static str> {
+        HashSet::new()
+    }
 
     fn prim(name: &str) -> TypeRef {
         TypeRef {
@@ -1097,7 +1177,7 @@ mod tests {
     #[test]
     fn scalar_function_trampolines_directly() {
         let f = plain("compute", vec![param("x", prim("double"))], prim("double"));
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f))
+        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1119,7 +1199,7 @@ mod tests {
     #[test]
     fn string_function_bridges_both_ways() {
         let f = plain("greeting", vec![param("name", nsstring())], nsstring());
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f))
+        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1149,7 +1229,7 @@ mod tests {
             vec![param("x", prim("double")), param("y", prim("double"))],
             swift_class("GeoPoint", "TestKit"),
         );
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f))
+        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1170,7 +1250,7 @@ mod tests {
                 ..Default::default()
             },
         );
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f))
+        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1196,7 +1276,7 @@ mod tests {
                 ..Default::default()
             },
         );
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f))
+        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1222,7 +1302,7 @@ mod tests {
                 deprecated: None,
             }),
         });
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f))
+        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1255,11 +1335,11 @@ mod tests {
             },
         );
         assert!(matches!(
-            classify_function("TestKit", &a, std::slice::from_ref(&a)),
+            classify_function("TestKit", &a, std::slice::from_ref(&a), &no_structs()),
             FnDisposition::Deferred(DeferReason::Async)
         ));
         assert!(matches!(
-            classify_function("TestKit", &g, std::slice::from_ref(&g)),
+            classify_function("TestKit", &g, std::slice::from_ref(&g), &no_structs()),
             FnDisposition::Deferred(DeferReason::UnbindableGenericFreeFunction)
         ));
     }
@@ -1271,9 +1351,76 @@ mod tests {
             vec![param("of", swift_class("GeoRect", "TestKit"))],
             prim("double"),
         );
+        // With no framework-owned value struct of that name, the param cannot be
+        // soundly unboxed → still deferred (a CF/ObjC reference would land here too).
         assert!(matches!(
-            classify_function("TestKit", &f, std::slice::from_ref(&f)),
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs()),
             FnDisposition::Deferred(DeferReason::NonBridgedStructParam)
+        ));
+    }
+
+    #[test]
+    fn value_struct_param_unboxes_through_the_handle() {
+        // `MLUntypedColumn`-style: a param whose named type the owning framework
+        // defines in `Framework.structs` rides the handle-unbox path. The `@_cdecl`
+        // takes the opaque handle and unboxes the named value before the by-name
+        // call; racket passes the cpointer it holds straight through (leaf 040/040/030).
+        let f = plain(
+            "show",
+            vec![param("_", swift_class("MLUntypedColumn", "CreateML"))],
+            swift_class("MLStreamingVisualizable", "CreateML"),
+        );
+        let value_structs: HashSet<&str> = ["MLUntypedColumn"].into_iter().collect();
+        let FnDisposition::Trampoline(t) =
+            classify_function("CreateML", &f, std::slice::from_ref(&f), &value_structs)
+        else {
+            panic!("a framework-owned value-struct param must trampoline, not defer");
+        };
+        let mut s = String::new();
+        emit_fn(&mut s, &t);
+        // The handle crosses as a raw pointer; the body unboxes the named value.
+        assert!(
+            s.contains("public func aw_racket_swift_CreateML_show(_ a0: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer?"),
+            "{s}"
+        );
+        assert!(
+            s.contains("let u0 = awRacketUnbox(a0!, as: MLUntypedColumn.self)"),
+            "{s}"
+        );
+        // The unboxed value feeds the by-name call (label is `_`, so positional).
+        assert!(s.contains("return awRacketBox((CreateML.show(u0)) as MLStreamingVisualizable)"), "{s}");
+        // Racket side: pointer in, pointer out, no coercion wrapper → bare get-ffi-obj.
+        assert_eq!(t.ffi_arrow(), "(_fun _pointer -> _pointer)");
+        assert_eq!(
+            t.render_racket(),
+            "(define show (get-ffi-obj 'aw_racket_swift_CreateML_show _aw-lib (_fun _pointer -> _pointer)))"
+        );
+        assert_eq!(t.provide_contract(), "[show (c-> cpointer? cpointer?)]");
+    }
+
+    #[test]
+    fn mixed_value_struct_and_reference_param_defers_on_the_reference() {
+        // `pointwiseMin(MLTensor, id)`-style: the value-struct param alone would
+        // bind, but a mixed-in unnameable `id` param blocks the whole function —
+        // and the recorded reason is the *actual* blocker, not the struct (fork 3).
+        let f = plain(
+            "pointwiseMin",
+            vec![
+                param("_", swift_class("MLTensor", "CoreML")),
+                param(
+                    "_",
+                    TypeRef {
+                        nullable: false,
+                        kind: TypeRefKind::Id,
+                    },
+                ),
+            ],
+            swift_class("MLTensor", "CoreML"),
+        );
+        let value_structs: HashSet<&str> = ["MLTensor"].into_iter().collect();
+        assert!(matches!(
+            classify_function("CoreML", &f, std::slice::from_ref(&f), &value_structs),
+            FnDisposition::Deferred(DeferReason::UnnameableParam)
         ));
     }
 
@@ -1288,7 +1435,7 @@ mod tests {
             swift_class("CGFloat", "CoreGraphics"),
         );
         let FnDisposition::Trampoline(t) =
-            classify_function("CoreGraphics", &f, std::slice::from_ref(&f))
+            classify_function("CoreGraphics", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("CGFloat param/return must trampoline, not defer");
         };
@@ -1326,7 +1473,7 @@ mod tests {
         };
         let with_block = plain("onEvent", vec![param("handler", block)], prim("void"));
         assert!(matches!(
-            classify_function("TestKit", &with_block, std::slice::from_ref(&with_block)),
+            classify_function("TestKit", &with_block, std::slice::from_ref(&with_block), &no_structs()),
             FnDisposition::Deferred(DeferReason::ClosureParam)
         ));
         let any = TypeRef {
@@ -1335,7 +1482,7 @@ mod tests {
         };
         let with_any = plain("accept", vec![param("value", any)], prim("void"));
         assert!(matches!(
-            classify_function("TestKit", &with_any, std::slice::from_ref(&with_any)),
+            classify_function("TestKit", &with_any, std::slice::from_ref(&with_any), &no_structs()),
             FnDisposition::Deferred(DeferReason::UnnameableParam)
         ));
     }
@@ -1345,19 +1492,37 @@ mod tests {
         let a = plain("scale", vec![param("by", prim("int64"))], prim("int64"));
         let b = plain("scale", vec![param("by", prim("double"))], prim("double"));
         let siblings = vec![a.clone(), b.clone()];
-        let FnDisposition::Trampoline(ta) = classify_function("TestKit", &a, &siblings) else {
+        let FnDisposition::Trampoline(ta) = classify_function("TestKit", &a, &siblings, &no_structs()) else {
             panic!()
         };
-        let FnDisposition::Trampoline(tb) = classify_function("TestKit", &b, &siblings) else {
+        let FnDisposition::Trampoline(tb) = classify_function("TestKit", &b, &siblings, &no_structs()) else {
             panic!()
         };
         assert_ne!(ta.entry, tb.entry, "overloads must not collide");
         assert!(ta.entry.starts_with("aw_racket_swift_TestKit_scale_"));
+        // The racket-visible name is also disambiguated (racket has no overloading,
+        // so a bare `(define scale)` twice would collide) — same hash as the entry.
+        assert_ne!(ta.binding_name, tb.binding_name, "racket names must not collide");
+        assert!(ta.binding_name.starts_with("scale_"), "{}", ta.binding_name);
+        assert!(ta.render_racket().contains("(define scale_"), "{}", ta.render_racket());
+        assert!(ta.provide_contract().starts_with("[scale_"), "{}", ta.provide_contract());
         // Deterministic: recomputing yields the same symbol (no global counter).
-        let FnDisposition::Trampoline(ta2) = classify_function("TestKit", &a, &siblings) else {
+        let FnDisposition::Trampoline(ta2) = classify_function("TestKit", &a, &siblings, &no_structs()) else {
             panic!()
         };
         assert_eq!(ta.entry, ta2.entry);
+        assert_eq!(ta.binding_name, ta2.binding_name);
+    }
+
+    #[test]
+    fn non_overloaded_binding_keeps_the_bare_name() {
+        let f = plain("compute", vec![param("x", prim("double"))], prim("double"));
+        let FnDisposition::Trampoline(t) =
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
+        else {
+            panic!()
+        };
+        assert_eq!(t.binding_name, "compute");
     }
 
     #[test]

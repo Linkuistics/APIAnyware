@@ -81,7 +81,7 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
     let emittable_functions = count_emittable(&fw.functions);
     let has_functions = emittable_functions > 0;
     if has_functions {
-        let content = generate_functions_file(&fw.functions, &fw.name);
+        let content = generate_functions_file(&fw.functions, &fw.name, &fw.structs);
         emitter.write_file("functions.rkt", &content)?;
         files_written += 1;
     }

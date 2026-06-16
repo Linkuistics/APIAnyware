@@ -13,11 +13,11 @@ use apianyware_macos_emit::ffi_type_mapping::{
     is_generic_type_param, FfiTypeMapper, RacketFfiTypeMapper,
 };
 use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Function;
+use apianyware_macos_types::ir::{Function, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::shared_signatures::{any_struct_type, framework_ffi_lib_arg, is_libdispatch_unexported};
-use crate::trampoline::{classify_function, FnDisposition, FnTrampoline};
+use crate::trampoline::{classify_function, value_struct_names, FnDisposition, FnTrampoline};
 
 /// Returns true if a function can be emitted as a Racket FFI binding.
 ///
@@ -137,9 +137,21 @@ fn is_known_geometry_struct(name: &str) -> bool {
 ///
 /// Uses `provide/contract` for boundary checking; each bound function gets both a
 /// definition and a (post-coercion, racket-visible) contract.
-pub fn generate_functions_file(functions: &[Function], framework: &str) -> String {
+///
+/// `structs` is the framework's own `Framework.structs` — the value-struct set
+/// that gates the trampoline param-unbox path (a value-struct param is bound; a
+/// CF/ObjC reference param stays deferred, leaf 040/040/030). It must be the same
+/// slice the global pass sees so the per-framework emitter and the global
+/// `collect_trampolines` classify identically (the entry name is content-addressed,
+/// but trampoline-vs-deferred must agree or a racket binding could dangle).
+pub fn generate_functions_file(
+    functions: &[Function],
+    framework: &str,
+    structs: &[Struct],
+) -> String {
     let mapper = RacketFfiTypeMapper;
     let is_libdispatch = framework == "libdispatch";
+    let value_structs = value_struct_names(structs);
 
     // Direct (ObjC-exposed) functions — bound against the framework dylib.
     let direct: Vec<&Function> = functions
@@ -153,7 +165,7 @@ pub fn generate_functions_file(functions: &[Function], framework: &str) -> Strin
     let mut tramps: Vec<FnTrampoline> = Vec::new();
     let mut deferred: Vec<(&Function, &'static str)> = Vec::new();
     for func in functions.iter().filter(|f| is_emittable(f) && !f.objc_exposed) {
-        match classify_function(framework, func, functions) {
+        match classify_function(framework, func, functions, &value_structs) {
             FnDisposition::Trampoline(t) => tramps.push(t),
             FnDisposition::Deferred(reason) => deferred.push((func, reason.as_str())),
         }
@@ -640,7 +652,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(output.contains("(require ffi/unsafe"));
         assert!(output.contains("(rename-in racket/contract [-> c->])"));
         assert!(output.contains("(provide/contract"));
@@ -661,7 +673,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(output.contains("[TKReset (c-> void?)]"));
         assert!(output.contains("(define TKReset (get-ffi-obj 'TKReset _fw-lib (_fun -> _void)))"));
     }
@@ -686,7 +698,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(output.contains("[TKTransformPoint (c-> any/c any/c)]"));
     }
 
@@ -714,7 +726,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(output.contains(
             "[TKCreateBuffer (c-> cpointer? exact-nonnegative-integer? (or/c cpointer? #f))]"
         ));
@@ -738,7 +750,7 @@ mod tests {
             false,
             true,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(
             !output.contains("TKLog"),
             "Variadic functions should be skipped"
@@ -756,7 +768,7 @@ mod tests {
             true,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(
             !output.contains("TKFastHash"),
             "Inline functions should be skipped"
@@ -808,7 +820,7 @@ mod tests {
 
     #[test]
     fn test_framework_lib_loading() {
-        let output = generate_functions_file(&[], "CoreGraphics");
+        let output = generate_functions_file(&[], "CoreGraphics", &[]);
         assert!(output.contains(
             "(define _fw-lib (ffi-lib \"/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics\"))"
         ));
@@ -816,7 +828,7 @@ mod tests {
 
     #[test]
     fn test_empty_functions_provide() {
-        let output = generate_functions_file(&[], "TestKit");
+        let output = generate_functions_file(&[], "TestKit", &[]);
         assert!(output.contains("(provide)"));
         assert!(!output.contains("provide/contract"));
     }
@@ -843,7 +855,7 @@ mod tests {
                 false,
             ),
         ];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         let alpha_pos = output.find("Alpha").unwrap();
         let beta_pos = output.find("Beta").unwrap();
         assert!(alpha_pos < beta_pos, "Functions should preserve IR order");
@@ -895,7 +907,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "CoreGraphics");
+        let output = generate_functions_file(&functions, "CoreGraphics", &[]);
         assert!(
             output.contains("\"../../runtime/type-mapping.rkt\""),
             "Expected type-mapping.rkt require when a function uses a \
@@ -930,7 +942,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(
             !output.contains("type-mapping.rkt"),
             "Expected no type-mapping.rkt require when no struct types \
@@ -965,7 +977,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "Foundation");
+        let output = generate_functions_file(&functions, "Foundation", &[]);
         assert!(output.contains("\"../../runtime/type-mapping.rkt\""));
     }
 
@@ -989,7 +1001,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "CoreGraphics");
+        let output = generate_functions_file(&functions, "CoreGraphics", &[]);
         assert!(
             output.contains("ffi/unsafe/objc"),
             "functions.rkt must require ffi/unsafe/objc so `_id` is in \
@@ -1018,7 +1030,7 @@ mod tests {
             true,
             false,
         )];
-        let output = generate_functions_file(&functions, "CoreGraphics");
+        let output = generate_functions_file(&functions, "CoreGraphics", &[]);
         assert!(
             !output.contains("type-mapping.rkt"),
             "Skipped (inline) functions must not trigger type-mapping \
@@ -1064,7 +1076,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "libdispatch");
+        let output = generate_functions_file(&functions, "libdispatch", &[]);
         assert!(
             output.contains("(_fun _pointer _pointer _pointer -> _void)"),
             "libdispatch _id params should be emitted as _pointer. Output was:\n{output}"
@@ -1096,7 +1108,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "libdispatch");
+        let output = generate_functions_file(&functions, "libdispatch", &[]);
         assert!(
             output.contains("(_fun _pointer _pointer -> _pointer)"),
             "libdispatch _id returns should be emitted as _pointer. Output was:\n{output}"
@@ -1118,7 +1130,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "CoreGraphics");
+        let output = generate_functions_file(&functions, "CoreGraphics", &[]);
         assert!(
             output.contains("-> _id"),
             "Non-libdispatch _id returns must stay as _id. Output was:\n{output}"
@@ -1148,7 +1160,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "CoreFoundation");
+        let output = generate_functions_file(&functions, "CoreFoundation", &[]);
         assert!(
             output.contains("(or/c string? #f)"),
             "CString return contract must include #f for NULL. Output was:\n{output}"
@@ -1167,7 +1179,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(
             output.contains("[TKLookup (c-> string? exact-integer?)]"),
             "CString param contract should be string?. Output was:\n{output}"
@@ -1221,7 +1233,7 @@ mod tests {
             objc_exposed: true,
             swift_fn: None,
         }];
-        let output = generate_functions_file(&functions, "CoreGraphics");
+        let output = generate_functions_file(&functions, "CoreGraphics", &[]);
         assert!(
             output.contains("; WARNING:"),
             "Function with callback param should have a thread-safety warning. Output was:\n{output}"
@@ -1289,7 +1301,7 @@ mod tests {
                 SwiftFnInfo::default(),
             ),
         ];
-        let out = generate_functions_file(&functions, "TestKit");
+        let out = generate_functions_file(&functions, "TestKit", &[]);
         // The swift-trampoline runtime is required when any residual is present.
         assert!(out.contains("\"../../runtime/swift-trampoline.rkt\""), "{out}");
         // Direct function still binds the framework dylib.
@@ -1316,7 +1328,7 @@ mod tests {
             nsstring_kind(),
             SwiftFnInfo::default(),
         )];
-        let out = generate_functions_file(&functions, "TestKit");
+        let out = generate_functions_file(&functions, "TestKit", &[]);
         assert!(out.contains("aw-string-arg"), "string arg bridged in:\n{out}");
         assert!(out.contains("aw-string-result"), "string result coerced out:\n{out}");
         assert!(out.contains("[TKSwiftGreeting (c-> string? (or/c string? #f))]"), "{out}");
@@ -1334,7 +1346,7 @@ mod tests {
                 ..Default::default()
             },
         )];
-        let out = generate_functions_file(&functions, "TestKit");
+        let out = generate_functions_file(&functions, "TestKit", &[]);
         // Not bound...
         assert!(!out.contains("aw_racket_swift_TestKit_TKSwiftFetch"), "{out}");
         // ...but recorded with its reason.
@@ -1342,6 +1354,50 @@ mod tests {
             out.contains(";;   TKSwiftFetch — deferred_async"),
             "deferred residual must be recorded:\n{out}"
         );
+    }
+
+    #[test]
+    fn value_struct_param_routes_through_aw_lib_with_framework_structs() {
+        // A Swift-native function taking a param whose type the framework defines in
+        // `structs` (`MLUntypedColumn`-style) binds the trampoline against _aw-lib
+        // and unboxes the handle. Passing the same `structs` the global pass sees is
+        // what keeps the two sides in agreement (leaf 040/040/030 fork 2).
+        use apianyware_macos_types::ir::{Struct, SwiftFnInfo};
+        let value_struct = Struct {
+            name: "TKColumn".into(),
+            fields: vec![],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            objc_exposed: false,
+        };
+        let functions = vec![swift_function(
+            "summarize",
+            vec![make_param(
+                "_",
+                TypeRefKind::Class {
+                    name: "TKColumn".into(),
+                    framework: Some("TestKit".into()),
+                    params: vec![],
+                },
+            )],
+            TypeRefKind::Primitive { name: "int64".into() },
+            SwiftFnInfo::default(),
+        )];
+        // Without the struct set, the value-struct param defers (recorded).
+        let without = generate_functions_file(&functions, "TestKit", &[]);
+        assert!(
+            without.contains(";;   summarize — deferred_nonbridged_struct_param"),
+            "absent the struct set the param must defer:\n{without}"
+        );
+        // With the framework's structs, it routes to the trampoline against _aw-lib.
+        let with = generate_functions_file(&functions, "TestKit", std::slice::from_ref(&value_struct));
+        assert!(
+            with.contains("(define summarize (get-ffi-obj 'aw_racket_swift_TestKit_summarize _aw-lib"),
+            "value-struct param must bind the trampoline:\n{with}"
+        );
+        assert!(with.contains("[summarize (c-> cpointer? exact-integer?)]"), "{with}");
+        assert!(!with.contains(";;   summarize —"), "must not also be recorded deferred:\n{with}");
     }
 
     #[test]
@@ -1361,7 +1417,7 @@ mod tests {
             false,
             false,
         )];
-        let output = generate_functions_file(&functions, "TestKit");
+        let output = generate_functions_file(&functions, "TestKit", &[]);
         assert!(
             !output.contains("; WARNING:"),
             "Functions without callbacks should have no warning. Output was:\n{output}"

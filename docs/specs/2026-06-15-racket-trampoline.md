@@ -297,6 +297,66 @@ trampoline**. That is a larger frontier (it needs async-method *recovery*, beyon
 the current free-function/constant machinery) and is grown as a new
 planning-gated node, `040-racket-trampoline/050-async-methods`.
 
+### 5c. Kick-back — value-struct **params** wired; the bucket measured again (040/040/030)
+
+The `deferred_nonbridged_struct_param` follow-up leaf wired the genuine
+**nameable value-struct parameter** path the §5a kick-back named. Measuring the
+whole IR first (as §5a/§5b established) refined the 17 residual functions:
+
+| sub-case | count | disposition |
+|---|---|---|
+| all params bindable once value structs unbox | **5** | **recovered** — `CreateML.show` (×3, `MLUntypedColumn`/`MLDataTable`), `CoreML.pointwiseMin`/`pointwiseMax` (`MLTensor`,`MLTensor`) |
+| a value-struct param **mixed** with an `id`/`Any` param | 2 | reclassified `deferred_unnameable_param` (`pointwise{Min,Max}(MLTensor, id)`) |
+| blocked by a genuine **CF/ObjC reference** param (`SecCode`, `SecTask`, `NSDecimalNumber`, `NSBundle`, `BlendTreeNode`, `SecStaticCode`) or an `OS_os_log`/`StaticString`/`UnsafeRawPointer`/`NSArray` param | 10 | stays `deferred_nonbridged_struct_param` |
+
+Net: function trampolines **46 → 51**; the headline bucket **17 → 10**; nothing
+dropped (5 + 2 + 10 = 17, with the 2 moving to a *more specific* reason).
+
+**The gate (fork 1 + 2, resolved in leaf).** A param whose named type the owning
+framework defines in `Framework.structs` is a Swift **value struct** the
+`AwValueBox` round-trips — sound to `awRacketUnbox(aN!, as: Name.self)`. A CF/ObjC
+**reference** type is in `classes` or absent, so "name ∈ the framework's struct
+set" is exactly the soundness oracle. The set is built **per-framework, from the
+function's own `Framework.structs`** (`value_struct_names`), threaded into both
+`collect_trampolines` (global pass) and `generate_functions_file` (per-framework
+emitter) so they classify identically. Per-framework is the *smallest sound
+option*: the `@_cdecl` `import`s only its owning module, so a cross-module struct
+type is not in scope to spell; all 5 real recoveries are same-module, and any
+future cross-module struct param stays soundly deferred. Mixed-param functions
+(fork 3) trampoline only when **every** param binds — `classify_function` defers
+on the first non-bindable param, so the recorded reason is now the *actual*
+blocker, not the value-struct that precedes it.
+
+**Latent bug found + fixed (the real downstream work).** Recovering these params
+exposed a dormant racket-side hole: `CreateML.show` has **three** overloads, all
+now bindable. The C **entry** symbol was already content-addressed (§2 overload
+hash), but the **racket-visible** binding name used the bare `swift_name` — so the
+emitter wrote three `(define show …)` + three `[show …]` provides, which `raco
+make` rejects (racket has no overloading). Dormant only because every overloaded
+Swift-native free function happened to be deferred before this leaf. Fixed by
+giving `FnTrampoline` a `binding_name` that carries the **same** overload hash the
+entry does when `(module, name)` is overloaded (`show_06c0f52a`); one rule —
+racket-name disambiguation mirrors entry disambiguation. Tree-wide check after the
+fix: zero duplicate defines across all 284 frameworks.
+
+**Smoke story (fork 4) — no in-residual producer; swiftc + assertion-test
+evidence.** The residual exposes **no free function returning these value structs
+non-circularly**: `pointwiseMin/Max` return `MLTensor` but *require* `MLTensor`
+inputs, and the only non-`MLTensor` overloads take `id` (deferred); the root
+producers are struct initializers/methods, outside the free-function residual. So
+racket cannot obtain a first handle to feed back, and an end-to-end run is
+unreachable in-residual (as the leaf brief's fork 4 anticipated). The done-bar
+evidence is therefore: **`swift build` green** (the `awRacketUnbox(_, as: T.self)`
++ by-name call type-checks against the real CoreML/CreateML frameworks and links
+into the dylib), the `trampoline.rs` codegen unit tests
+(`value_struct_param_unboxes_through_the_handle`,
+`mixed_value_struct_and_reference_param_defers_on_the_reference`,
+`overloads_get_distinct_content_addressed_entries`), and a racket-local emitter
+assertion (`value_struct_param_routes_through_aw_lib_with_framework_structs`) —
+the §6 deviation pattern, zero cross-target pollution. The handle path waits for
+its first real consumer (a class/instance handle or a constructor trampoline),
+exactly as §5a deferred the per-field accessors.
+
 ## 6. Done-bar (the leaf's "resolves and runs")
 
 - `apianyware-macos-generate` writes `Generated/Trampolines.swift`; `swift build`
