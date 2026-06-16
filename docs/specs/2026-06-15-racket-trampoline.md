@@ -294,8 +294,23 @@ resolves and runs", and there is none. The `AsyncBridge.swift` runtime (the
 continuation core + a blocking `aw-async-await` wrapper were the chosen racket
 surface) stays valid and **ready for its first real consumer: an async *method*
 trampoline**. That is a larger frontier (it needs async-method *recovery*, beyond
-the current free-function/constant machinery) and is grown as a new
+the current free-function/constant machinery) and was first grown as a
 planning-gated node, `040-racket-trampoline/050-async-methods`.
+
+**Scope finalised (040/050 grilling, 2026-06-16, user-confirmed "own grove").**
+That planning node measured the frontier and deferred it to a **dedicated grove**,
+`add-swift-native-method-coverage` (seeded, gates `add-sbcl-clos-target`). The
+measurement: async (445 methods) is one slice of **~3,181 Swift-native methods**
+(`objc_exposed == false` on classes/structs/protocols) that are unbound today —
+they route through `native_dispatch` (ObjC `msgSend`), which has no entry for a
+Swift-native method, so per the founding charter's point #4 they are *latently
+broken*, not merely missing. Reaching them needs **receiver-handle method
+trampolines** (a `@_cdecl` taking an opaque receiver handle, calling
+`receiver.method(labels:)` by name — generalising ADR-0027's free-function
+call-by-name) plus Swift-native *method recovery* in collection/IR, then
+propagation to chez/gerbil. async is the runtime-ready slice of that frontier, not
+a separable task — so this trampoline spec (free functions + constants) is
+complete as-is, and the method frontier is the new grove's charter.
 
 ### 5c. Kick-back — value-struct **params** wired; the bucket measured again (040/040/030)
 
