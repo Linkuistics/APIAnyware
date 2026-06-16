@@ -225,6 +225,30 @@ honoured as *nothing silently dropped*, not *everything wired at once*.
 - Per `feedback-regenerate-pipeline-aggressively`: regenerate rather than trust
   stale checkpoints.
 
+### 6a. Known-good real exemplars (landed by 040/030)
+
+The smoke leaf picked both exemplars from the **CreateML** residual (one module
+keeps the proof focused) and proved them end-to-end. These are the canonical
+known-good symbols for 050 and for future targets (chez 060 / gerbil 070):
+
+| Kind | Swift decl | `s:` USR | Trampoline entry | C-ABI rep | Observed |
+|---|---|---|---|---|---|
+| scalar function | `CreateML.timestampSeed() -> Int` | `s:8CreateML13timestampSeedSiyF` | `aw_racket_swift_CreateML_timestampSeed` | `Int` | positive, time-derived (`1781577508722`) |
+| pointer constant | `CreateML.MLCreateErrorDomain: String` | `s:8CreateML19MLCreateErrorDomainSSvp` | `aw_racket_swift_const_CreateML_MLCreateErrorDomain` | `id` (NSString) | `"com.apple.CreateML"` |
+
+Both carry `objc_exposed: false` and have **no** C symbol in `CreateML.framework`
+(they are reachable only via the trampolines). The repeatable smoke recipe:
+
+```
+SDKROOT=macosx cargo run --release -q -p apianyware-macos-generate -- --target racket
+(cd swift && SDKROOT=macosx swift build)          # compiles Trampolines.swift into the dylib
+racket generation/targets/racket/tests/test-swift-trampoline-smoke.rkt   # 3/3
+```
+
+The smoke is `generation/targets/racket/tests/test-swift-trampoline-smoke.rkt`
+(rackunit; requires the generated `createml/functions.rkt` + `constants.rkt`,
+asserts the raw `_aw-lib` symbols resolve and both decls run).
+
 ## 7. Out of scope (this leaf)
 
 - chez/gerbil trampolines (060/070, their own ADRs).
