@@ -55,6 +55,7 @@ const RUNTIME_FILES: &[&str] = &[
     "objc-subclass.rkt",
     "spi-helpers.rkt",
     "swift-helpers.rkt",
+    "swift-trampoline.rkt",
     "type-mapping.rkt",
     "variadic-helpers.rkt",
 ];
@@ -75,6 +76,10 @@ const REQUIRED_FRAMEWORKS: &[&str] = &[
     "PDFKit",
     "SceneKit",
     "WebKit",
+    // Swift-native trampoline residual (ADR-0027): CreateML vends the two
+    // known-good real exemplars (timestampSeed free function, MLCreateErrorDomain
+    // constant) the swift-native-probe app and the createml load checks exercise.
+    "CreateML",
 ];
 
 const APPS: &[&str] = &[
@@ -85,6 +90,11 @@ const APPS: &[&str] = &[
     "scenekit-viewer",
     "mini-browser",
     "note-editor",
+    // Probe for the Swift-native trampoline residual (ADR-0027): requires
+    // createml/functions.rkt + constants.rkt, which bind through _aw-lib
+    // (swift-trampoline.rkt) rather than the framework dylib. `raco make` over it
+    // exercises the trampoline require shape no ObjC-only app reaches.
+    "swift-native-probe",
 ];
 
 /// Library files exercised via `dynamic-require`. Each entry is a path
@@ -125,6 +135,12 @@ const APPS: &[&str] = &[
 ///     "leak" that turned out to be stale downstream checkpoints
 ///     (CoreSpotlightAPIVersion canary), confirmed clean against fresh IR
 ///     2026-04-13.
+/// 15. `createml/functions.rkt` + `createml/constants.rkt` — the Swift-native
+///     trampoline residual (ADR-0027). These are the only generated files that
+///     bind through `_aw-lib` (swift-trampoline.rkt) instead of the framework
+///     dylib; the load check guards the trampoline require shape and the
+///     `aw_racket_swift_*` entry bindings against drift. `runtime/swift-trampoline.rkt`
+///     is listed too (the standing-rule pairing for a new runtime file).
 const LIBRARY_LOAD_CHECKS: &[&str] = &[
     "generated/foundation/nsstring.rkt",
     "generated/foundation/protocols/nscopying.rkt",
@@ -143,6 +159,9 @@ const LIBRARY_LOAD_CHECKS: &[&str] = &[
     "generated/networkextension/constants.rkt",
     "generated/network/constants.rkt",
     "generated/corespotlight/constants.rkt",
+    "generated/createml/functions.rkt",
+    "generated/createml/constants.rkt",
+    "runtime/swift-trampoline.rkt",
     "runtime/dynamic-class.rkt",
     "runtime/nsevent-helpers.rkt",
     "runtime/nsview-helpers.rkt",

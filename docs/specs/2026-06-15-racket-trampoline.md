@@ -422,6 +422,41 @@ The smoke is `generation/targets/racket/tests/test-swift-trampoline-smoke.rkt`
 (rackunit; requires the generated `createml/functions.rkt` + `constants.rkt`,
 asserts the raw `_aw-lib` symbols resolve and both decls run).
 
+### 6b. Full rerun + VM-verify landed (050)
+
+The racket slice closed in leaf 050 (2026-06-16). The whole pipeline was re-run
+cold from the real SDK and the Swift-native path verified end-to-end in a GUI app,
+not just the in-process smoke:
+
+- **Cold full rerun, clean.** `collect` (284 frameworks, 0 errors) → `analyze`
+  (0 verification failures across 284) → `generate --target racket` → `swift
+  build`. The residual classification **reproduced exactly** from a cold collect:
+  **51 function trampolines, 7 constants**, deferred `6 closure_param /
+  10 nonbridged_struct_param / 4 unnameable_param / 34 unbindable_generic` —
+  i.e. the §5a–c counts are a deterministic function of the SDK, not an artifact
+  of stale local IR. The CLI smoke passed 4/4 against the freshly built dylib.
+- **No ObjC regression.** `cargo test --workspace` 944/0; the runtime-load harness
+  (`RUNTIME_LOAD_TEST=1`) 7/7 — it now carries `CreateML` in `REQUIRED_FRAMEWORKS`,
+  `swift-native-probe` in `APPS`, `swift-trampoline.rkt` in `RUNTIME_FILES`, and
+  `createml/{functions,constants}.rkt` + `runtime/swift-trampoline.rkt` in
+  `LIBRARY_LOAD_CHECKS`, so the trampoline require-shape and the constant-trampoline
+  round-trip (a `dynamic-require` of `constants.rkt` *calls* the constant trampoline
+  at module-init) are now permanent regression guards, not a one-time check.
+- **VM-verified (project done-bar).** The `swift-native-probe` sample app
+  (`apps/swift-native-probe/`, spec `docs/apps/swift-native-probe/`) is a bundled
+  AppKit window showing the §6a exemplars live: `CreateML.timestampSeed()` returned
+  a time-derived `Int` and `MLCreateErrorDomain` rendered `com.apple.CreateML`, both
+  through `libAPIAnywareRacket`'s `@_cdecl` trampolines. Visually confirmed in the
+  TestAnyware macOS VM (golden `macos-tahoe`); screenshot at
+  `generation/targets/racket/test-results/swift-native-probe/screenshot.png`. The
+  bundle's require-tree BFS pulled exactly `createml/{functions,constants}.rkt` +
+  `runtime/swift-trampoline.rkt` + the dylib — the residual reaches a real app with
+  no special bundling beyond what already ships the native-dispatch dylib.
+
+This is the evidence behind ADR-0025's "Consequences": the model ADR stayed stable;
+the mechanism earned its keep on real macOS. The chez (060) / gerbil (070) slices
+reuse these same known-good exemplars.
+
 ## 7. Out of scope (this leaf)
 
 - chez/gerbil trampolines (060/070, their own ADRs).
