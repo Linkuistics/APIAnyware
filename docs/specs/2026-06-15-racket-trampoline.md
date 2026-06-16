@@ -81,6 +81,7 @@ boundary, and what the racket binding coerces.
 | Swift type | C-ABI rep at `@_cdecl` | racket-side coercion |
 |---|---|---|
 | `Int*/UInt*/Float/Double/Bool` | same scalar | direct ffi2 scalar |
+| scalar-backed typedef (`CGFloat`) | underlying scalar (`Double`); body re-wraps `CGFloat(a0)` / converts `Double((call) as CGFloat)` | direct ffi2 scalar (added 040/040/010) |
 | `String` | `id` (`x as NSString`) | `aw_racket_nsstring_to_string` (existing) |
 | `Array<T>` | `id` (`x as NSArray`) | `aw_racket_nsarray_get_all` (existing) + per-elem coercion |
 | `Dictionary<K,V>` | `id` (`as NSDictionary`) | `aw_racket_nsdictionary_get_all` (existing) |
@@ -189,6 +190,55 @@ so a clean generate reports e.g. "N trampolined, M unbindable". The reasons:
   `@_cdecl` body to *unbox a named Swift type*, which requires spelling that type
   (and per-field accessors) — the handle-accessor surface deferred below. A
   non-bridged struct **return** is fine (boxed opaque handle, no naming needed).
+- `deferred_closure_param` — a closure / function-pointer **parameter** (a Swift
+  closure synthesised over a C callback; distinct from an unboxable value).
+- `deferred_unnameable_param` — a parameter that is not a nameable type at all
+  (`id`/`Any`, raw pointer, selector); cannot ride the handle-unbox path even in
+  principle. (Both added 040/040/010, splitting the umbrella below.)
+
+### 5a. Kick-back — the bucket measured (040/040/010)
+
+The `deferred_nonbridged_struct_param` bucket was wired with the **whole IR
+measured first**, and the reality refined the leaf's framing (the spec's first
+draft, written before measuring, assumed all 69 were genuine struct params
+needing handle-unbox + per-field accessors). Across 284 enriched frameworks the
+69 broke down as:
+
+| sub-case | count | disposition |
+|---|---|---|
+| **`CGFloat`-only params** (a `Double` scalar lossily lowered to `Class{CGFloat}`) | **44** | **recovered** — scalar-typedef row above (`Double` boundary, body re-wraps `CGFloat(a0)`) |
+| genuine nameable value-struct / CF / ObjC-reference / bridged-collection params | 17 | still `deferred_nonbridged_struct_param` |
+| closure / function-pointer params | 6 | `deferred_closure_param` |
+| `id`/`Any` params | 2 | `deferred_unnameable_param` |
+
+Net: function trampolines **2 → 46** across the whole API; the headline bucket
+**69 → 17**; nothing dropped (44 recovered + 17 + 6 + 2 = 69). Two return-side
+bugs this newly *exposed* (a function only reaches codegen once its params bind)
+were fixed in the same leaf: an anonymous **tuple** return is lowered to the
+sentinel `Class{name:"Tuple"}` and must box **unnamed** (`as Tuple` does not
+compile — `remquo`/`lgamma`); and a scalar-typedef return must keep the
+disambiguating `as CGFloat` cast *inside* the conversion (`Double((call) as
+CGFloat)`) because `nan` is declared in both CoreGraphics and `_DarwinFoundation1`
+and a bare `Double(...)` accepts either.
+
+**Per-field `aw_racket_box_<T>_<field>` accessors / "construct a handle from
+scalar fields" — deferred, no real consumers yet.** The leaf brief imagined a
+"small concrete struct with scalar/bridged fields"; the measured residual has
+none. The genuine struct params are **opaque framework objects** (`MLTensor`,
+`MLUntypedColumn`, `SecCode`, …) with no public stored scalar properties — racket
+neither constructs them from scalars nor reads their fields; it would only ever
+**pass through** a handle obtained from a prior boxed return. So the handle path
+is `awRacketUnbox(a!, as: T.self)` pass-through, not field accessors. That path is
+its own focused **follow-up leaf** (`…/040-deferred-residual/030-value-struct-handle-params`) because it
+needs design the scalar-typedef recovery did not: (1) a **global struct-name set**
+threaded to *both* the global pass and the per-framework emitter to keep the
+content-addressed entry-name agreement sound while distinguishing a Swift
+**value** struct (`AwValueBox`-safe to unbox) from a CF/ObjC **reference** type
+(would trap) — the emitter only sees one framework at a time; (2) a **handle
+producer** — the residual exposes no free function returning these types, so an
+end-to-end smoke needs the class/instance handle path (or a constructor
+trampoline) first. Per-field accessors reopen only when a transparent
+value-struct consumer actually appears.
 
 **Scope decision (040/020, user-confirmed).** This leaf lands the §6 done-bar
 taxonomy (scalars, Foundation-bridged value types via the existing runtime,

@@ -15,6 +15,12 @@
 ;;       aw_racket_swift_const_CreateML_MLCreateErrorDomain via _aw-lib, the
 ;;       trampoline returning a +1-retained NSString opaque pointer that
 ;;       aw-string-result copies + releases.
+;;   - CoreGraphics.acos(CGFloat) -> CGFloat   (s:12CoreGraphics4acosy…)
+;;       scalar-typedef function (grove leaf 040/040/010): CGFloat is lossily
+;;       lowered to a named type but is a Double scalar at the ABI, so this
+;;       trampolines as a clean `_double -> _double` — the dominant recovery of
+;;       the deferred_nonbridged_struct_param bucket (44 of 69 functions). Proves
+;;       a CGFloat PARAM round-trips (the leaf's target), not just a CGFloat return.
 ;;
 ;; Requiring the generated modules already proves the bindings RESOLVE (a stale
 ;; or mismatched dylib makes get-ffi-obj raise at module load); the test bodies
@@ -23,10 +29,13 @@
 (require rackunit
          rackunit/text-ui
          ffi/unsafe
+         racket/math
          "../runtime/swift-trampoline.rkt"
          ;; Generated CreateML residual bindings (trampolined, not _fw-lib).
          "../generated/createml/functions.rkt"
-         "../generated/createml/constants.rkt")
+         "../generated/createml/constants.rkt"
+         ;; Generated CoreGraphics residual: the CGFloat scalar-typedef exemplar.
+         (only-in "../generated/coregraphics/functions.rkt" acos))
 
 (define trampoline-smoke-tests
   (test-suite
@@ -58,7 +67,18 @@
      ;; address that aw-string-result copies into a Racket string.
      (check-pred string? MLCreateErrorDomain "constant resolves to a string")
      (check-true (> (string-length MLCreateErrorDomain) 0)
-                 "error-domain string is non-empty"))))
+                 "error-domain string is non-empty"))
+
+   (test-case "CoreGraphics.acos(CGFloat) runs through the scalar-typedef trampoline"
+     ;; The leaf's headline: a CGFloat *parameter* round-trips. The @_cdecl takes a
+     ;; Double, re-wraps it as CGFloat for the by-name call, and converts the
+     ;; CGFloat result back to a Double — racket sees a plain `_double -> _double`.
+     ;; acos(1) = 0, acos(0) = π/2: real math through the real CoreGraphics symbol,
+     ;; which has NO C symbol of its own (reachable only via the trampoline).
+     (check-pred real? (acos 1.0) "acos returns a real")
+     (check-= (acos 1.0) 0.0 1e-9 "acos(1) = 0")
+     (check-= (acos 0.0) (/ pi 2) 1e-9 "acos(0) = π/2")
+     (check-= (acos -1.0) pi 1e-9 "acos(-1) = π"))))
 
 (define result (run-tests trampoline-smoke-tests))
 (exit (if (zero? result) 0 1))

@@ -58,6 +58,12 @@ enum ArgMarshal {
     /// `@_cdecl` boundary (`Int`, `Double`, `Int32`, …) — which is also the type
     /// the by-name call receives, so no conversion is generated.
     Scalar(Scalar),
+    /// A **scalar-backed named typedef** (`CGFloat`) that `map_swift_type` lossily
+    /// lowered to a `Class`/`Struct`/`Alias` even though it is a single C scalar at
+    /// the ABI. The `@_cdecl` receives the underlying scalar (`Double` for
+    /// `CGFloat`); the body wraps it as the named type (`CGFloat(a0)`) so the
+    /// by-name call type-checks against the real (non-bridged-struct) parameter.
+    ScalarTypedef { scalar: Scalar, name: String },
     /// `Swift.String` ⇄ `NSString`. The `@_cdecl` receives an `id`; the body
     /// reconstructs `… as String` before the call.
     SwiftString,
@@ -70,6 +76,11 @@ enum ArgMarshal {
 enum RetMarshal {
     Void,
     Scalar(Scalar),
+    /// A scalar-backed named typedef return (`-> CGFloat`): the `@_cdecl` returns
+    /// the underlying scalar; the body converts the call result (`Double(<call>)`).
+    /// Strictly better than boxing a number behind an opaque handle, and what makes
+    /// `acos`/`nan`-style math residual resolve to a plain racket `real?`.
+    ScalarTypedef { scalar: Scalar, name: String },
     /// `Swift.String` → bridged `NSString`, returned +1-retained as an `id`; the
     /// racket side copies to a string and releases.
     SwiftString,
@@ -202,15 +213,65 @@ fn is_swift_string(t: &TypeRef) -> bool {
     matches!(&t.kind, TypeRefKind::Class { name, .. } if name == "NSString")
 }
 
-/// Classify a param `TypeRef`, or `None` if it is not bindable this leaf (the
-/// function is then [`Deferred`] with `deferred_nonbridged_struct_param`).
-fn classify_param(t: &TypeRef) -> Option<ArgMarshal> {
+/// `map_swift_type` lowers an anonymous Swift tuple to `Class { name: "Tuple", … }`
+/// — a sentinel name that cannot be spelled as a Swift type. A tuple return must
+/// therefore box **unnamed** (the opaque `awRacketBox` infers the element types);
+/// emitting `as Tuple` does not compile. (`remquo`/`lgamma` return `(CGFloat, Int)`.)
+fn is_unspellable_type_name(name: &str) -> bool {
+    name == "Tuple"
+}
+
+/// A **scalar-backed named typedef**: a Swift type that `map_swift_type` lowers to
+/// a named `Class`/`Struct`/`Alias` but which is a single C scalar at the ABI, so
+/// it marshals by value as that scalar rather than behind an opaque handle.
+///
+/// `CGFloat` is the dominant case in the real residual (44 of the 69
+/// `deferred_nonbridged_struct_param` functions were CGFloat-only — it is
+/// `Foundation.CGFloat`, a `Double` on every 64-bit Apple platform). Kept a small,
+/// principled allowlist: a member here must be a *single scalar* with a Swift
+/// `init(_:)` from and conversion to that scalar, so the generated `Name(a0)` /
+/// `Double(call)` round-trips type-check.
+fn scalar_typedef(name: &str) -> Option<Scalar> {
+    match name {
+        "CGFloat" => Some(Scalar::Double),
+        _ => None,
+    }
+}
+
+/// Classify a param `TypeRef` into its marshalling, or the [`DeferReason`] that
+/// records why it cannot be trampolined this leaf. Both the global pass and the
+/// racket emitter call [`classify_function`], which calls this, so the recorded
+/// reason and the emitted binding always agree.
+fn classify_param(t: &TypeRef) -> Result<ArgMarshal, DeferReason> {
     if is_swift_string(t) {
-        return Some(ArgMarshal::SwiftString);
+        return Ok(ArgMarshal::SwiftString);
     }
     match &t.kind {
-        TypeRefKind::Primitive { name } => scalar_of_primitive(name).map(ArgMarshal::Scalar),
-        _ => None,
+        TypeRefKind::Primitive { name } => scalar_of_primitive(name)
+            .map(ArgMarshal::Scalar)
+            .ok_or(DeferReason::NonBridgedStructParam),
+        // A named type lowered from a non-bridged Swift value: a scalar-backed
+        // typedef (`CGFloat`) marshals by value; anything else (a genuine opaque
+        // value struct, a CF/ObjC reference type, a bridged collection) still needs
+        // the named-type handle-unbox path — deferred to a focused follow-up leaf.
+        TypeRefKind::Class { name, .. }
+        | TypeRefKind::Struct { name }
+        | TypeRefKind::Alias { name, .. } => match scalar_typedef(name) {
+            Some(scalar) => Ok(ArgMarshal::ScalarTypedef {
+                scalar,
+                name: name.clone(),
+            }),
+            None => Err(DeferReason::NonBridgedStructParam),
+        },
+        // A closure/function-pointer parameter — a distinct, harder case than an
+        // unboxable value (it needs a Swift closure synthesised over a C callback),
+        // recorded under its own reason so the residual is honestly categorised.
+        TypeRefKind::Block { .. } | TypeRefKind::FunctionPointer { .. } => {
+            Err(DeferReason::ClosureParam)
+        }
+        // `id`/`Any`, raw pointers, selectors, … — not a nameable type the body can
+        // unbox to, so they cannot ride the handle path at all.
+        _ => Err(DeferReason::UnnameableParam),
     }
 }
 
@@ -227,11 +288,31 @@ fn classify_return(t: &TypeRef) -> RetMarshal {
             None if normalize_primitive(name) == "void" => RetMarshal::Void,
             None => RetMarshal::Handle(None),
         },
-        // A typedef alias (`CGFloat`, `NSTimeInterval`) or a named class/struct is a
-        // valid in-scope Swift type (via the module `import`) — carry the name so
-        // the by-name call's result type can be pinned with `as <Type>`, which both
-        // disambiguates cross-module return-type overloads (`nan` → `CGFloat`) and
-        // is a harmless identity cast otherwise.
+        // A scalar-backed named typedef (`CGFloat`) returns by value as its scalar,
+        // not boxed behind a handle — `acos`/`nan` resolve to a racket `real?`.
+        TypeRefKind::Alias { name, .. }
+        | TypeRefKind::Class { name, .. }
+        | TypeRefKind::Struct { name }
+            if scalar_typedef(name).is_some() =>
+        {
+            RetMarshal::ScalarTypedef {
+                scalar: scalar_typedef(name).unwrap(),
+                name: name.clone(),
+            }
+        }
+        // An anonymous tuple (sentinel name `Tuple`) cannot be spelled — box unnamed.
+        TypeRefKind::Alias { name, .. }
+        | TypeRefKind::Class { name, .. }
+        | TypeRefKind::Struct { name }
+            if is_unspellable_type_name(name) =>
+        {
+            RetMarshal::Handle(None)
+        }
+        // A typedef alias (`NSTimeInterval`) or a named class/struct is a valid
+        // in-scope Swift type (via the module `import`) — carry the name so the
+        // by-name call's result type can be pinned with `as <Type>`, which both
+        // disambiguates cross-module return-type overloads and is a harmless
+        // identity cast otherwise.
         TypeRefKind::Alias { name, .. } | TypeRefKind::Class { name, .. } => {
             RetMarshal::Handle(Some(name.clone()))
         }
@@ -307,9 +388,17 @@ pub enum DeferReason {
     UnbindableGenericFreeFunction,
     /// `async` function — runtime-ready, codegen is a follow-up leaf.
     Async,
-    /// A non-Foundation-bridged Swift struct/tuple/existential **parameter** —
-    /// needs a named unbox, deferred with the handle-accessor surface.
+    /// A non-Foundation-bridged Swift struct/tuple/existential **parameter** that is
+    /// a *nameable value type* (or CF/ObjC reference, or bridged collection) — needs
+    /// the named-type handle-unbox path (a focused follow-up leaf; see the spec §5
+    /// kick-back). The scalar-backed-typedef subset (`CGFloat`) is recovered here.
     NonBridgedStructParam,
+    /// A closure / function-pointer **parameter** — needs a Swift closure synthesised
+    /// over a C callback, a distinct case from an unboxable value.
+    ClosureParam,
+    /// A parameter that is not a nameable type at all (`id`/`Any`, a raw pointer, a
+    /// selector, …) — cannot ride the handle-unbox path even in principle.
+    UnnameableParam,
 }
 
 impl DeferReason {
@@ -319,6 +408,8 @@ impl DeferReason {
             DeferReason::UnbindableGenericFreeFunction => "unbindable_generic_free_function",
             DeferReason::Async => "deferred_async",
             DeferReason::NonBridgedStructParam => "deferred_nonbridged_struct_param",
+            DeferReason::ClosureParam => "deferred_closure_param",
+            DeferReason::UnnameableParam => "deferred_unnameable_param",
         }
     }
 }
@@ -373,8 +464,10 @@ pub fn classify_function(module: &str, func: &Function, siblings: &[Function]) -
     let mut params = Vec::with_capacity(func.params.len());
     for p in &func.params {
         match classify_param(&p.param_type) {
-            Some(m) => params.push(m),
-            None => return FnDisposition::Deferred(DeferReason::NonBridgedStructParam),
+            Ok(m) => params.push(m),
+            // The first non-bindable param's reason wins — deterministic, and the
+            // most specific category is recorded rather than a blanket umbrella.
+            Err(reason) => return FnDisposition::Deferred(reason),
         }
     }
     let ret = classify_return(&func.return_type);
@@ -541,6 +634,9 @@ fn call_expr(t: &FnTrampoline) -> String {
         .map(|(i, (m, label))| {
             let value = match m {
                 ArgMarshal::Scalar(_) => format!("a{i}"),
+                // Re-wrap the underlying scalar as the named typedef so the by-name
+                // call binds the real (CGFloat-taking) overload: `CGFloat(a0)`.
+                ArgMarshal::ScalarTypedef { name, .. } => format!("{name}(a{i})"),
                 ArgMarshal::SwiftString => format!("s{i}"),
             };
             if label == "_" || label.is_empty() {
@@ -564,6 +660,11 @@ fn decl_params_and_prelude(t: &FnTrampoline) -> (Vec<String>, String) {
     for (i, m) in t.params.iter().enumerate() {
         match m {
             ArgMarshal::Scalar(s) => decl.push(format!("_ a{i}: {}", s.swift())),
+            // Boundary param is the underlying scalar (`Double`); `call_expr` wraps
+            // it back to the typedef.
+            ArgMarshal::ScalarTypedef { scalar, .. } => {
+                decl.push(format!("_ a{i}: {}", scalar.swift()))
+            }
             ArgMarshal::SwiftString => {
                 decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
                 prelude.push_str(&format!(
@@ -589,6 +690,20 @@ fn return_shape(ret: &RetMarshal) -> (String, Marshaller) {
             // Pass the scalar straight back.
             Box::new(|c: &str| c.to_string()),
         ),
+        RetMarshal::ScalarTypedef { scalar, name } => {
+            let conv = scalar.swift(); // e.g. "Double"
+            let name = name.clone();
+            (
+                scalar.swift().to_string(),
+                // Convert the typedef result to the underlying scalar, pinning the
+                // typedef with `as <Type>` first: `Double((call) as CGFloat)`. The
+                // cast disambiguates cross-module return-type overloads (`nan` is
+                // declared in both CoreGraphics and _DarwinFoundation1, returning
+                // CGFloat vs Float) — without it `Double(...)` accepts either and the
+                // call is ambiguous; it is a harmless identity cast otherwise.
+                Box::new(move |c: &str| format!("{conv}(({c}) as {name})")),
+            )
+        }
         RetMarshal::SwiftString => (
             "UnsafeMutableRawPointer?".to_string(),
             // Bridge to NSString, hand racket a +1-retained id.
@@ -614,7 +729,7 @@ fn return_shape(ret: &RetMarshal) -> (String, Marshaller) {
 fn throw_fallback(ret: &RetMarshal) -> &'static str {
     match ret {
         RetMarshal::Void => "()",
-        RetMarshal::Scalar(s) => s.fallback(),
+        RetMarshal::Scalar(s) | RetMarshal::ScalarTypedef { scalar: s, .. } => s.fallback(),
         RetMarshal::SwiftString | RetMarshal::Handle(_) => "nil",
     }
 }
@@ -651,9 +766,12 @@ fn emit_fn(s: &mut String, t: &FnTrampoline) {
         // writes any thrown error through `awErrOut` and returns the fallback.
         let body = match &t.ret {
             RetMarshal::Void => format!("  _ = awRacketTry(awErrOut, ()) {{ try {call} }}\n"),
-            RetMarshal::Scalar(_) => format!(
-                "  return awRacketTry(awErrOut, {fb}) {{ try {call} }}\n",
-                fb = throw_fallback(&t.ret)
+            // A scalar (or scalar-backed typedef, marshalled to its underlying
+            // scalar) returns directly with the scalar fallback — no `Optional`.
+            RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } => format!(
+                "  return awRacketTry(awErrOut, {fb}) {{ {marshalled} }}\n",
+                fb = throw_fallback(&t.ret),
+                marshalled = marshal(&format!("try {call}"))
             ),
             RetMarshal::SwiftString | RetMarshal::Handle(_) => {
                 // The success branch marshals the value to its pointer rep; the
@@ -761,7 +879,7 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
 fn ret_ffi(ret: &RetMarshal) -> &'static str {
     match ret {
         RetMarshal::Void => "_void",
-        RetMarshal::Scalar(s) => s.ffi(),
+        RetMarshal::Scalar(s) | RetMarshal::ScalarTypedef { scalar: s, .. } => s.ffi(),
         RetMarshal::SwiftString | RetMarshal::Handle(_) => "_pointer",
     }
 }
@@ -770,7 +888,7 @@ fn ret_ffi(ret: &RetMarshal) -> &'static str {
 fn ret_contract(ret: &RetMarshal) -> &'static str {
     match ret {
         RetMarshal::Void => "void?",
-        RetMarshal::Scalar(s) => s.contract(),
+        RetMarshal::Scalar(s) | RetMarshal::ScalarTypedef { scalar: s, .. } => s.contract(),
         // `String` returns map NULL → `#f` through the coercion.
         RetMarshal::SwiftString => "(or/c string? #f)",
         // An opaque handle is a raw cpointer on the racket side.
@@ -786,7 +904,7 @@ impl FnTrampoline {
             .params
             .iter()
             .map(|m| match m {
-                ArgMarshal::Scalar(s) => s.ffi(),
+                ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.ffi(),
                 ArgMarshal::SwiftString => "_pointer",
             })
             .collect();
@@ -806,7 +924,7 @@ impl FnTrampoline {
             .params
             .iter()
             .map(|m| match m {
-                ArgMarshal::Scalar(s) => s.contract(),
+                ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.contract(),
                 ArgMarshal::SwiftString => "string?",
             })
             .collect();
@@ -845,7 +963,9 @@ impl FnTrampoline {
             .zip(&arg_names)
             .map(|(m, a)| match m {
                 ArgMarshal::SwiftString => format!("(aw-string-arg {a})"),
-                ArgMarshal::Scalar(_) => a.clone(),
+                // Scalars and scalar-backed typedefs pass straight through (racket
+                // hands a number; the `@_cdecl` re-wraps it to the typedef).
+                ArgMarshal::Scalar(_) | ArgMarshal::ScalarTypedef { .. } => a.clone(),
             })
             .collect();
         // Success-path result coercion.
@@ -1154,6 +1274,69 @@ mod tests {
         assert!(matches!(
             classify_function("TestKit", &f, std::slice::from_ref(&f)),
             FnDisposition::Deferred(DeferReason::NonBridgedStructParam)
+        ));
+    }
+
+    #[test]
+    fn cgfloat_param_and_return_marshal_as_double() {
+        // CGFloat is lossily lowered to `Class { CGFloat }`, but is a `Double`
+        // scalar at the ABI: `acos(_ x: CGFloat) -> CGFloat` trampolines as a clean
+        // `Double -> Double`, the dominant recovery in the residual (44/69).
+        let f = plain(
+            "acos",
+            vec![param("_", swift_class("CGFloat", "CoreGraphics"))],
+            swift_class("CGFloat", "CoreGraphics"),
+        );
+        let FnDisposition::Trampoline(t) =
+            classify_function("CoreGraphics", &f, std::slice::from_ref(&f))
+        else {
+            panic!("CGFloat param/return must trampoline, not defer");
+        };
+        let mut s = String::new();
+        emit_fn(&mut s, &t);
+        // Boundary is Double both ways; the body re-wraps the arg as CGFloat and
+        // converts the CGFloat result back to Double.
+        assert!(
+            s.contains("public func aw_racket_swift_CoreGraphics_acos(_ a0: Double) -> Double"),
+            "{s}"
+        );
+        assert!(
+            s.contains("return Double((CoreGraphics.acos(CGFloat(a0))) as CGFloat)"),
+            "{s}"
+        );
+        // Pure scalar on the racket side — bare get-ffi-obj, no coercion wrapper.
+        assert_eq!(t.ffi_arrow(), "(_fun _double -> _double)");
+        assert_eq!(
+            t.render_racket(),
+            "(define acos (get-ffi-obj 'aw_racket_swift_CoreGraphics_acos _aw-lib (_fun _double -> _double)))"
+        );
+        assert_eq!(t.provide_contract(), "[acos (c-> real? real?)]");
+    }
+
+    #[test]
+    fn closure_and_unnameable_params_get_distinct_reasons() {
+        // A block param and an `id`/`Any` param are recorded under their own reasons
+        // rather than the nonbridged-struct umbrella (spec §5 honest categorisation).
+        let block = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Block {
+                params: vec![],
+                return_type: Box::new(prim("void")),
+            },
+        };
+        let with_block = plain("onEvent", vec![param("handler", block)], prim("void"));
+        assert!(matches!(
+            classify_function("TestKit", &with_block, std::slice::from_ref(&with_block)),
+            FnDisposition::Deferred(DeferReason::ClosureParam)
+        ));
+        let any = TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Id,
+        };
+        let with_any = plain("accept", vec![param("value", any)], prim("void"));
+        assert!(matches!(
+            classify_function("TestKit", &with_any, std::slice::from_ref(&with_any)),
+            FnDisposition::Deferred(DeferReason::UnnameableParam)
         ));
     }
 
