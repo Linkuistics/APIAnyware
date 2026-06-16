@@ -583,6 +583,29 @@ fn map_property(node: &AbiNode) -> Option<ir::Property> {
 // Top-level function / constant mapping
 // ---------------------------------------------------------------------------
 
+/// Detect an `async` function from its Swift **mangled name**, since
+/// `swift-api-digester` (json_format_version 8) does not emit a structured
+/// `async` field (it *does* emit `throwing`). The mangling encodes effect
+/// markers right before the final function operator `F`: async is `Ya`, throws is
+/// `K`, so an async free function's symbol ends in `YaF` (async) or `YaKF` (async
+/// throws) — e.g. `URLSession.data(from:)` is `…tYaKF`. Both the `usr` and
+/// `mangled_name` carry the suffix; check whichever is present.
+///
+/// The check is anchored at the suffix to avoid a stray `Ya` mid-symbol producing
+/// a false positive. It is forward-compatible: if a future digester populates the
+/// `async` field, the caller OR-s that in (see `map_top_level_function`).
+fn mangled_is_async(symbol: &str) -> bool {
+    symbol.ends_with("YaF") || symbol.ends_with("YaKF")
+}
+
+/// True when this node's mangled symbol marks it `async`.
+fn node_is_async(node: &AbiNode) -> bool {
+    node.mangled_name
+        .as_deref()
+        .or(node.usr.as_deref())
+        .is_some_and(mangled_is_async)
+}
+
 fn map_top_level_function(node: &AbiNode) -> Option<ir::Function> {
     if node.children.is_empty() {
         return None;
@@ -620,7 +643,13 @@ fn map_top_level_function(node: &AbiNode) -> Option<ir::Function> {
         // normalization drops. Only Swift-native top-level functions reach here.
         swift_fn: Some(ir::SwiftFnInfo {
             throwing: node.throwing,
-            is_async: node.is_async,
+            // `node.is_async` is the (currently never-emitted) `async` JSON field;
+            // OR it with the mangled-name marker so async is actually detected
+            // (swift-api-digester surfaces async only in the mangling). Without
+            // this an async free function would classify as *bindable* and the
+            // trampoline codegen would emit a synchronous `return foo(…)` call that
+            // does not compile (ADR-0027 / racket-trampoline spec §3a kick-back).
+            is_async: node.is_async || node_is_async(node),
             is_generic: node.generic_sig.is_some(),
         }),
     })
@@ -894,5 +923,59 @@ mod tests {
             class_names.contains(&"IntentParameter"),
             "_AppIntents_SwiftUI overlay must retain foreign Class `IntentParameter`; got {class_names:?}"
         );
+    }
+
+    // ------------------------------------------------------------------
+    // async detection from the mangled name (no digester `async` field)
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn mangled_is_async_recognises_async_effect_suffix() {
+        // Real `URLSession.data(from:)` USR — `async throws`, suffix `YaKF`.
+        assert!(mangled_is_async(
+            "s:So12NSURLSessionC10FoundationE4data4fromAC4DataV_So13NSURLResponseCtAC3URLV_tYaKF"
+        ));
+        // Async, non-throwing: suffix `YaF`.
+        assert!(mangled_is_async("s:8MyModule5fetchSiyYaF"));
+        // Sync throwing (`KF`) and plain sync (`F`) are NOT async.
+        assert!(!mangled_is_async("s:8MyModule4riskySiyKF"));
+        assert!(!mangled_is_async("s:8MyModule4pureSiyF"));
+        // A stray `Ya` mid-symbol must not false-positive (anchored at suffix).
+        assert!(!mangled_is_async("s:8MyModule3YapSiyF"));
+    }
+
+    fn async_func_node(usr: &str) -> AbiNode {
+        // A top-level Swift-native async free function: a Func node with a single
+        // return-type child and an async-marked USR. `swift-api-digester` emits no
+        // `async` field, so detection must come from the mangling.
+        serde_json::from_value(json!({
+            "kind": "Function",
+            "name": "fetch",
+            "printedName": "fetch()",
+            "declKind": "Func",
+            "moduleName": "MyModule",
+            "usr": usr,
+            "children": [
+                { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+            ]
+        }))
+        .expect("build AbiNode")
+    }
+
+    #[test]
+    fn top_level_async_function_sets_is_async_from_mangling() {
+        // No `async` JSON field present (digester never emits one); the mangled USR
+        // suffix `SiyYaF` is the only async signal. The mapped function must carry
+        // `swift_fn.is_async = true` so the trampoline codegen defers it rather than
+        // misclassifying it as a (non-compiling) synchronous call.
+        let f = map_top_level_function(&async_func_node("s:8MyModule5fetchSiyYaF"))
+            .expect("async free function maps");
+        let info = f.swift_fn.expect("swift_fn populated");
+        assert!(info.is_async, "async must be detected from the mangled name");
+
+        // A sync counterpart (same shape, `SiyF`) must stay non-async.
+        let g = map_top_level_function(&async_func_node("s:8MyModule5fetchSiyF"))
+            .expect("sync free function maps");
+        assert!(!g.swift_fn.unwrap().is_async, "sync function is not async");
     }
 }

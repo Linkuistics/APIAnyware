@@ -54,7 +54,13 @@ Three load-bearing forks resolved with the user:
 - **040-deferred-residual** (node) — wire the two non-hard deferred buckets the
   smoke regen quantified: `deferred_nonbridged_struct_param` (69) and
   `deferred_async`. `unbindable_generic_free_function` (34) stays a hard limit,
-  out of scope.
+  out of scope. *(The `deferred_async` free-function bucket measured **empty** —
+  spec §5b; 040/040/020 fixed the latent async-detection bug and spun async to
+  050 below.)*
+- **050-async-methods** (planning, frontier) — async is a *method/actor* effect,
+  outside the free-function residual; bring async APIs into the binding via async
+  *method* recovery + the idle `AsyncBridge.swift` runtime. Scope to be grilled
+  (may extend per-target or become its own grove). Grown by 040/040/020.
 
 ## Notes
 

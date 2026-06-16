@@ -184,7 +184,9 @@ so a clean generate reports e.g. "N trampolined, M unbindable". The reasons:
 - `deferred_async` — an `async` function. The runtime (`AsyncBridge.swift`)
   supports it, but the callback `@_cdecl` shape + racket `_cprocedure`
   main-thread binding is a follow-up leaf (scope decision below). Recorded, not
-  a hard limit.
+  a hard limit. **Measured empty + spun out — see §5b** (040/040/020): there are
+  **zero** async *free functions* in the residual; async is a method-level effect,
+  outside this leaf's top-level-`s:`-`Func` perimeter.
 - `deferred_nonbridged_struct_param` — a function with a non-Foundation-bridged
   Swift `struct`/tuple/existential **parameter**. Calling it by name needs the
   `@_cdecl` body to *unbox a named Swift type*, which requires spelling that type
@@ -248,6 +250,52 @@ constants) **plus `throws`→trailing `NSError` out-param** (cheap; the
 non-bridged-struct **params** / per-field handle accessors are **recorded with a
 reason and counted** (above), wired in follow-up leaves. "Defer nothing" is
 honoured as *nothing silently dropped*, not *everything wired at once*.
+
+### 5b. Kick-back — the `deferred_async` bucket measured empty (040/040/020)
+
+Like §5a, the async leaf measured the **whole IR first**, and the reality
+overturned the leaf's framing (the spec assumed an async bucket to wire). Three
+independent measurements over the 284 enriched frameworks agree:
+
+| measurement | async free functions |
+|---|---|
+| enriched IR `swift_fn.is_async` (105 Swift-native free funcs: 34 generic, 11 throwing) | **0** |
+| resolved IR (pre-enrichment), all 12,046 free functions | **0** |
+| mangled-name `Ya` async-marker scan over every residual `s:` USR | **0** |
+
+This is structural, not incidental: **`async` is a method/actor effect**, and the
+trampoline residual is *top-level free functions + constants* (`s:` `Func`/`Var`)
+only. Apple SDKs essentially have no top-level async free functions (the canonical
+async surface — `URLSession.data(for:)`, etc. — is methods). The 040/030 count
+list already silently carried no `deferred_async` line; it was 0 then too.
+
+**Latent bug found + fixed (the real work this leaf landed).**
+`swift-api-digester` (json_format_version 8, Xcode 16) emits **no structured
+`async` field** — it emits `throwing`, but async is recoverable only from the
+Swift **mangled name** (`Ya` effect marker, e.g. `URLSession.data(from:)` →
+`…tYaKF`). The extractor read `AbiNode.is_async` from a renamed `"async"` JSON key
+that never appears, so `is_async` was *permanently false*. Had an async free
+function ever appeared it would have classified as **bindable**, and the codegen
+would have emitted a synchronous `return Module.foo(…)` that does not compile.
+Never triggered (empty bucket), but a real trap. Fixed in
+`extract-swift/src/declaration_mapping.rs`: `is_async = node.is_async ||
+node_is_async(node)`, where `node_is_async` matches the mangled-name suffix
+`YaF`/`YaKF` (`mangled_is_async`). The OR keeps forward-compatibility if a future
+digester (or an upstream PR) ever populates the field; the mangling is the
+permanent, toolchain-independent floor. We do **not** patch the digester itself —
+it is the Xcode-shipped toolchain binary, and the mangling is the more
+authoritative source regardless (same rationale as §3a preferring ground truth
+over the digester's lossy projection).
+
+**Async codegen NOT built this leaf; spun to a frontier node (user-confirmed).**
+Building the completion-callback `@_cdecl` + racket `_cprocedure` binding now would
+be untestable — the node's done-bar requires "a real recovered async decl
+resolves and runs", and there is none. The `AsyncBridge.swift` runtime (the
+continuation core + a blocking `aw-async-await` wrapper were the chosen racket
+surface) stays valid and **ready for its first real consumer: an async *method*
+trampoline**. That is a larger frontier (it needs async-method *recovery*, beyond
+the current free-function/constant machinery) and is grown as a new
+planning-gated node, `040-racket-trampoline/050-async-methods`.
 
 ## 6. Done-bar (the leaf's "resolves and runs")
 
