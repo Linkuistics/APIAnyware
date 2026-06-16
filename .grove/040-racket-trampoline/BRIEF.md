@@ -47,9 +47,14 @@ Three load-bearing forks resolved with the user:
   wiring (`emit_functions`/`emit_constants` branch on `objc_exposed`), racket-side
   coercers, unbindable-generic recording+count, TestKit fixture exemplars +
   snapshot goldens.
-- **030-smoke-verify** — pick real recovered residual; prove a real Swift-native
+- **030-smoke-verify** — ✅ pick real recovered residual; prove a real Swift-native
   function + a real pointer constant resolve through `libAPIAnywareRacket` and run
-  from racket; whole build green. (Full rerun + VM-verify is 050.)
+  from racket; whole build green. (Full rerun + VM-verify is 050.) Exemplars:
+  `CreateML.timestampSeed`, `CreateML.MLCreateErrorDomain` (spec §6a).
+- **040-deferred-residual** (node) — wire the two non-hard deferred buckets the
+  smoke regen quantified: `deferred_nonbridged_struct_param` (69) and
+  `deferred_async`. `unbindable_generic_free_function` (34) stays a hard limit,
+  out of scope.
 
 ## Notes
 
