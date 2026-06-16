@@ -91,11 +91,22 @@ fn foreign_ref_type(t: &TypeRef, mapper: &dyn FfiTypeMapper) -> &'static str {
 
 /// Names that `constants.sls` exports — every constant in IR order.
 pub fn constant_names(constants: &[Constant]) -> Vec<String> {
-    constants.iter().map(|c| c.name.clone()).collect()
+    // Skip the Swift-native residual (`objc_exposed == false`, ADR-0026) — the
+    // facade re-export list must agree with the module, which also skips it.
+    constants
+        .iter()
+        .filter(|c| c.objc_exposed)
+        .map(|c| c.name.clone())
+        .collect()
 }
 
 /// Generate a Chez `constants.sls` library for one framework.
 pub fn generate_constants_file(constants: &[Constant], framework: &str) -> String {
+    // Skip the Swift-native residual (`objc_exposed == false`, ADR-0026): a `s:`
+    // global has no C symbol to bind. The chez target trampolines it in leaf 060;
+    // until then it is skipped rather than emitted as a broken direct binding.
+    let constants: Vec<Constant> = constants.iter().filter(|c| c.objc_exposed).cloned().collect();
+    let constants = &constants[..];
     let mapper = ChezFfiTypeMapper;
     let fw_low = framework.to_ascii_lowercase();
     let mut w = CodeWriter::new();

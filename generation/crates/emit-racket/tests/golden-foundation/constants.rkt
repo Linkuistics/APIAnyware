@@ -3,7 +3,8 @@
 
 (require ffi/unsafe
          ffi/unsafe/objc
-         (rename-in racket/contract [-> c->]))
+         (rename-in racket/contract [-> c->])
+         "../../runtime/swift-trampoline.rkt")
 
 (provide/contract
   [NSAMPMDesignation cpointer?]
@@ -829,6 +830,8 @@
   [NSZeroPoint cpointer?]
   [NSZeroRect cpointer?]
   [NSZeroSize cpointer?]
+  [kCFStringEncodingASCII exact-nonnegative-integer?]
+  [NSNotFound exact-integer?]
   )
 
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/Foundation.framework/Foundation"))
@@ -1656,3 +1659,8 @@
 (define NSZeroPoint (ffi-obj-ref 'NSZeroPoint _fw-lib))
 (define NSZeroRect (ffi-obj-ref 'NSZeroRect _fw-lib))
 (define NSZeroSize (ffi-obj-ref 'NSZeroSize _fw-lib))
+
+;; Swift-native residual constants — read through libAPIAnywareRacket
+;; (_aw-lib); a Swift global has no C symbol to get-ffi-obj (ADR-0027).
+(define kCFStringEncodingASCII ((get-ffi-obj 'aw_racket_swift_const_Foundation_kCFStringEncodingASCII _aw-lib (_fun -> _uint32))))
+(define NSNotFound ((get-ffi-obj 'aw_racket_swift_const_Foundation_NSNotFound _aw-lib (_fun -> _int64))))

@@ -21,8 +21,15 @@ use crate::ffi_type_mapping::ChezFfiTypeMapper;
 use crate::shared_signatures::{framework_shared_object_arg, is_libdispatch_unexported};
 
 /// True if a function can be emitted as a Chez `foreign-procedure`.
+///
+/// Skips inline (no exported symbol) and variadic functions, and — since the
+/// residual recovery (030, ADR-0026) — the **Swift-native residual**
+/// (`objc_exposed == false`): a `s:` symbol is not a C export of the framework
+/// dylib, so a direct `foreign-procedure` to it would be a dangling bind. The
+/// chez target does not yet vend trampolines for it (that is leaf 060); until
+/// then it skips the residual rather than emit a broken binding.
 fn is_emittable(f: &Function) -> bool {
-    !f.inline && !f.variadic
+    !f.inline && !f.variadic && f.objc_exposed
 }
 
 /// Count emittable functions in a framework — used by the orchestrator to

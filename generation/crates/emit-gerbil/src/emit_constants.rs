@@ -114,13 +114,24 @@ fn crossing_return_token(flavour: &Flavour) -> &str {
     }
 }
 
-/// Names that `constants.ss` exports — every constant in IR order.
+/// Names that `constants.ss` exports — every ObjC-exposed constant in IR order.
+/// Skips the Swift-native residual (`objc_exposed == false`, ADR-0026) so the
+/// facade re-export list agrees with the module (which also skips it).
 pub fn constant_names(constants: &[Constant]) -> Vec<String> {
-    constants.iter().map(|c| c.name.clone()).collect()
+    constants
+        .iter()
+        .filter(|c| c.objc_exposed)
+        .map(|c| c.name.clone())
+        .collect()
 }
 
 /// Generate a Gerbil `constants.ss` module for one framework.
 pub fn generate_constants_file(constants: &[Constant], framework: &str) -> String {
+    // Skip the Swift-native residual (`objc_exposed == false`, ADR-0026): a `s:`
+    // global has no C symbol to bind. The gerbil target trampolines it in leaf
+    // 070; until then it is skipped rather than emitted as a broken direct binding.
+    let constants: Vec<Constant> = constants.iter().filter(|c| c.objc_exposed).cloned().collect();
+    let constants = &constants[..];
     let mapper = GerbilFfiTypeMapper;
     let mut w = CodeWriter::new();
 

@@ -40,7 +40,13 @@ use crate::shared_signatures::is_libdispatch_unexported;
 
 /// True if a function can be emitted as a Gambit `define-c-lambda`.
 fn is_emittable(f: &Function) -> bool {
-    !f.inline && !f.variadic
+    // Skip inline (no exported symbol) and variadic functions, and — since the
+    // residual recovery (030, ADR-0026) — the Swift-native residual
+    // (`objc_exposed == false`): an `s:` symbol is not a C export, so a direct
+    // `define-c-lambda` would be a dangling bind. The gerbil target does not yet
+    // vend trampolines for it (leaf 070); until then it skips rather than emit a
+    // broken binding.
+    !f.inline && !f.variadic && f.objc_exposed
 }
 
 /// Count emittable functions in a framework — used by the orchestrator to decide

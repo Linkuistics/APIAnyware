@@ -74,8 +74,12 @@ enum RetMarshal {
     /// racket side copies to a string and releases.
     SwiftString,
     /// Anything else (non-bridged struct, object, tuple, existential, …) — wrapped
-    /// in the generic `awRacketBox` and returned as an opaque handle pointer.
-    Handle,
+    /// in the generic `awRacketBox` and returned as an opaque handle pointer. The
+    /// optional `String` is a nameable Swift return type (a typedef alias like
+    /// `CGFloat`) used to disambiguate the by-name call (`(call) as CGFloat`) when
+    /// the residual has cross-module return-type overloads (`nan` in CoreGraphics
+    /// and _DarwinFoundation1); `None` when the return type is not safely nameable.
+    Handle(Option<String>),
 }
 
 /// The closed set of C scalar shapes a trampoline param/return can be. The Swift
@@ -221,9 +225,17 @@ fn classify_return(t: &TypeRef) -> RetMarshal {
             Some(s) => RetMarshal::Scalar(s),
             // `void` is the only non-scalar primitive; anything else unknown boxes.
             None if normalize_primitive(name) == "void" => RetMarshal::Void,
-            None => RetMarshal::Handle,
+            None => RetMarshal::Handle(None),
         },
-        _ => RetMarshal::Handle,
+        // A typedef alias (`CGFloat`, `NSTimeInterval`) or a named class/struct is a
+        // valid in-scope Swift type (via the module `import`) — carry the name so
+        // the by-name call's result type can be pinned with `as <Type>`, which both
+        // disambiguates cross-module return-type overloads (`nan` → `CGFloat`) and
+        // is a harmless identity cast otherwise.
+        TypeRefKind::Alias { name, .. } | TypeRefKind::Class { name, .. } => {
+            RetMarshal::Handle(Some(name.clone()))
+        }
+        _ => RetMarshal::Handle(None),
     }
 }
 
@@ -249,6 +261,10 @@ pub struct FnTrampoline {
     ret: RetMarshal,
     /// The Swift function `throws` — the trampoline takes a trailing `NSError **`.
     throwing: bool,
+    /// The macOS version the wrapped API was `introduced:` (from IR provenance),
+    /// emitted as `@available(macOS <v>, *)` on the `@_cdecl` so swiftc accepts a
+    /// call to a version-gated API. `None` when unversioned.
+    availability: Option<String>,
 }
 
 /// A Swift-native constant the racket target trampolines: a `@_cdecl` reader that
@@ -260,6 +276,18 @@ pub struct ConstTrampoline {
     pub swift_name: String,
     pub entry: String,
     ret: RetMarshal,
+    /// `@available(macOS <v>, *)` for a version-gated global; `None` otherwise.
+    availability: Option<String>,
+}
+
+/// The macOS `introduced:` version from a declaration's IR provenance, if any —
+/// the trampoline emits it as `@available(macOS <v>, *)` so swiftc accepts the
+/// call to a version-gated API (the residual is full of them).
+fn introduced_macos(provenance: &Option<apianyware_macos_types::provenance::SourceProvenance>) -> Option<String> {
+    provenance
+        .as_ref()
+        .and_then(|p| p.availability.as_ref())
+        .and_then(|a| a.introduced.clone())
 }
 
 /// A residual declaration that is **not** trampolined this leaf, recorded with a
@@ -362,6 +390,7 @@ pub fn classify_function(module: &str, func: &Function, siblings: &[Function]) -
         params,
         ret,
         throwing,
+        availability: introduced_macos(&func.provenance),
     })
 }
 
@@ -373,6 +402,7 @@ pub fn classify_constant(module: &str, constant: &Constant) -> ConstTrampoline {
         swift_name: constant.name.clone(),
         entry: constant_entry_name(module, &constant.name),
         ret: classify_return(&constant.constant_type),
+        availability: introduced_macos(&constant.provenance),
     }
 }
 
@@ -520,7 +550,11 @@ fn call_expr(t: &FnTrampoline) -> String {
             }
         })
         .collect();
-    format!("{}({})", t.swift_name, args.join(", "))
+    // Module-qualify the call (`CoreGraphics.nan(…)`): the residual has free
+    // functions a second imported module also exports (`nan` in CoreGraphics and
+    // _DarwinFoundation1), so a bare name is ambiguous; the owning module
+    // disambiguates and is always in scope (we `import` it).
+    format!("{}.{}({})", t.module, t.swift_name, args.join(", "))
 }
 
 /// The `@_cdecl` parameter list (named) and the body's reconstruction prelude.
@@ -541,26 +575,37 @@ fn decl_params_and_prelude(t: &FnTrampoline) -> (Vec<String>, String) {
     (decl, prelude)
 }
 
+/// Marshals a call expression (`{call}`) to the `@_cdecl` boundary's C rep —
+/// owned so the boxed-handle arm can capture its disambiguating type name.
+type Marshaller = Box<dyn Fn(&str) -> String>;
+
 /// The C return type spelled at the `@_cdecl` boundary, and the success-path
 /// expression that marshals `<call>` to it (with `{call}` substituted in).
-fn return_shape(ret: &RetMarshal) -> (String, fn(&str) -> String) {
+fn return_shape(ret: &RetMarshal) -> (String, Marshaller) {
     match ret {
-        RetMarshal::Void => ("Void".to_string(), (|c| c.to_string()) as fn(&str) -> String),
+        RetMarshal::Void => ("Void".to_string(), Box::new(|c: &str| c.to_string())),
         RetMarshal::Scalar(s) => (
             s.swift().to_string(),
             // Pass the scalar straight back.
-            (|c| c.to_string()) as fn(&str) -> String,
+            Box::new(|c: &str| c.to_string()),
         ),
         RetMarshal::SwiftString => (
             "UnsafeMutableRawPointer?".to_string(),
             // Bridge to NSString, hand racket a +1-retained id.
-            (|c| format!("Unmanaged.passRetained(({c}) as NSString).toOpaque()"))
-                as fn(&str) -> String,
+            Box::new(|c: &str| format!("Unmanaged.passRetained(({c}) as NSString).toOpaque()")),
         ),
-        RetMarshal::Handle => (
+        RetMarshal::Handle(ty) => (
             "UnsafeMutableRawPointer?".to_string(),
-            // Box any non-bridged value behind the uniform opaque handle.
-            (|c| format!("awRacketBox({c})")) as fn(&str) -> String,
+            // Box any non-bridged value behind the uniform opaque handle, with an
+            // `as <Type>` cast when the return type is nameable (disambiguates a
+            // cross-module return-type overload like `nan`).
+            match ty {
+                Some(name) => {
+                    let name = name.clone();
+                    Box::new(move |c: &str| format!("awRacketBox(({c}) as {name})"))
+                }
+                None => Box::new(|c: &str| format!("awRacketBox({c})")),
+            },
         ),
     }
 }
@@ -570,7 +615,7 @@ fn throw_fallback(ret: &RetMarshal) -> &'static str {
     match ret {
         RetMarshal::Void => "()",
         RetMarshal::Scalar(s) => s.fallback(),
-        RetMarshal::SwiftString | RetMarshal::Handle => "nil",
+        RetMarshal::SwiftString | RetMarshal::Handle(_) => "nil",
     }
 }
 
@@ -583,6 +628,9 @@ fn emit_fn(s: &mut String, t: &FnTrampoline) {
         decl.push("_ awErrOut: UnsafeMutableRawPointer?".to_string());
     }
 
+    if let Some(v) = &t.availability {
+        s.push_str(&format!("@available(macOS {v}, *)\n"));
+    }
     s.push_str(&format!("@_cdecl(\"{}\")\n", t.entry));
     let sig_ret = if cret == "Void" {
         String::new()
@@ -607,7 +655,7 @@ fn emit_fn(s: &mut String, t: &FnTrampoline) {
                 "  return awRacketTry(awErrOut, {fb}) {{ try {call} }}\n",
                 fb = throw_fallback(&t.ret)
             ),
-            RetMarshal::SwiftString | RetMarshal::Handle => {
+            RetMarshal::SwiftString | RetMarshal::Handle(_) => {
                 // The success branch marshals the value to its pointer rep; the
                 // closure result is `UnsafeMutableRawPointer?` so the `nil`
                 // fallback unifies.
@@ -629,6 +677,9 @@ fn emit_fn(s: &mut String, t: &FnTrampoline) {
 fn emit_const(s: &mut String, t: &ConstTrampoline) {
     let (cret, marshal) = return_shape(&t.ret);
     let read = format!("{}.{}", t.module, t.swift_name);
+    if let Some(v) = &t.availability {
+        s.push_str(&format!("@available(macOS {v}, *)\n"));
+    }
     s.push_str(&format!("@_cdecl(\"{}\")\n", t.entry));
     let sig_ret = if cret == "Void" {
         // A `Void` constant is meaningless; treat as a handle of `()` defensively.
@@ -711,7 +762,7 @@ fn ret_ffi(ret: &RetMarshal) -> &'static str {
     match ret {
         RetMarshal::Void => "_void",
         RetMarshal::Scalar(s) => s.ffi(),
-        RetMarshal::SwiftString | RetMarshal::Handle => "_pointer",
+        RetMarshal::SwiftString | RetMarshal::Handle(_) => "_pointer",
     }
 }
 
@@ -723,7 +774,7 @@ fn ret_contract(ret: &RetMarshal) -> &'static str {
         // `String` returns map NULL → `#f` through the coercion.
         RetMarshal::SwiftString => "(or/c string? #f)",
         // An opaque handle is a raw cpointer on the racket side.
-        RetMarshal::Handle => "cpointer?",
+        RetMarshal::Handle(_) => "cpointer?",
     }
 }
 
@@ -935,7 +986,7 @@ mod tests {
         emit_fn(&mut s, &t);
         assert!(s.contains("@_cdecl(\"aw_racket_swift_TestKit_compute\")"), "{s}");
         assert!(s.contains("public func aw_racket_swift_TestKit_compute(_ a0: Double) -> Double"), "{s}");
-        assert!(s.contains("return compute(x: a0)"), "{s}");
+        assert!(s.contains("return TestKit.compute(x: a0)"), "{s}");
         // ffi arrow + racket binding (no coercion → bare get-ffi-obj).
         assert_eq!(t.ffi_arrow(), "(_fun _double -> _double)");
         assert_eq!(
@@ -960,7 +1011,7 @@ mod tests {
             "{s}"
         );
         assert!(
-            s.contains("return Unmanaged.passRetained((greeting(name: s0)) as NSString).toOpaque()"),
+            s.contains("return Unmanaged.passRetained((TestKit.greeting(name: s0)) as NSString).toOpaque()"),
             "{s}"
         );
         assert_eq!(t.ffi_arrow(), "(_fun _pointer -> _pointer)");
@@ -985,7 +1036,7 @@ mod tests {
         let mut s = String::new();
         emit_fn(&mut s, &t);
         assert!(s.contains("-> UnsafeMutableRawPointer?"), "{s}");
-        assert!(s.contains("return awRacketBox(makePoint(x: a0, y: a1))"), "{s}");
+        assert!(s.contains("return awRacketBox((TestKit.makePoint(x: a0, y: a1)) as GeoPoint)"), "{s}");
     }
 
     #[test]
@@ -1006,7 +1057,7 @@ mod tests {
         let mut s = String::new();
         emit_fn(&mut s, &t);
         assert!(s.contains("_ a0: Int, _ awErrOut: UnsafeMutableRawPointer?) -> Int"), "{s}");
-        assert!(s.contains("return awRacketTry(awErrOut, 0) { try risky(input: a0) }"), "{s}");
+        assert!(s.contains("return awRacketTry(awErrOut, 0) { try TestKit.risky(input: a0) }"), "{s}");
         // The arrow carries the trailing error out-buffer pointer; the racket side
         // routes through aw-call/error (raise on error, else identity coerce).
         assert_eq!(t.ffi_arrow(), "(_fun _int64 _pointer -> _int64)");
@@ -1033,9 +1084,33 @@ mod tests {
         emit_fn(&mut s, &t);
         assert!(
             s.contains(
-                "return awRacketTry(awErrOut, nil) { Optional(Unmanaged.passRetained((try load()) as NSString).toOpaque()) }"
+                "return awRacketTry(awErrOut, nil) { Optional(Unmanaged.passRetained((try TestKit.load()) as NSString).toOpaque()) }"
             ),
             "{s}"
+        );
+    }
+
+    #[test]
+    fn version_gated_decl_emits_available_attribute() {
+        use apianyware_macos_types::provenance::{Availability, SourceProvenance};
+        let mut f = plain("newAPI", vec![], prim("int64"));
+        f.provenance = Some(SourceProvenance {
+            header: None,
+            line: None,
+            availability: Some(Availability {
+                introduced: Some("26.0".into()),
+                deprecated: None,
+            }),
+        });
+        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f))
+        else {
+            panic!("expected trampoline");
+        };
+        let mut s = String::new();
+        emit_fn(&mut s, &t);
+        assert!(
+            s.contains("@available(macOS 26.0, *)\n@_cdecl(\"aw_racket_swift_TestKit_newAPI\")"),
+            "version-gated trampoline must carry @available:\n{s}"
         );
     }
 
@@ -1141,7 +1216,7 @@ mod tests {
         let t = classify_constant("TestKit", &c);
         let mut s = String::new();
         emit_const(&mut s, &t);
-        assert!(s.contains("return awRacketBox(TestKit.defaultConfig)"), "{s}");
+        assert!(s.contains("return awRacketBox((TestKit.defaultConfig) as Config)"), "{s}");
         assert_eq!(
             t.render_racket(),
             "(define defaultConfig ((get-ffi-obj 'aw_racket_swift_const_TestKit_defaultConfig _aw-lib (_fun -> _pointer))))"
