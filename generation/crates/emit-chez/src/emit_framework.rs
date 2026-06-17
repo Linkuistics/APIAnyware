@@ -107,16 +107,16 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
         });
     }
 
-    // C functions.
-    let emittable_functions = count_emittable(&fw.functions);
+    // C functions (direct ObjC-exposed + Swift-native trampolined residual).
+    let emittable_functions = count_emittable(&fw.functions, &fw.name, &fw.structs);
     let has_functions = emittable_functions > 0;
     if has_functions {
-        let content = generate_functions_file(&fw.functions, &fw.name);
+        let content = generate_functions_file(&fw.functions, &fw.name, &fw.structs);
         emitter.write_file("functions.sls", &content)?;
         files_written += 1;
         sublibraries.push(SubLibrary {
             library_path: format!("(apianyware {fw_low} functions)"),
-            exports: function_emittable_names(&fw.functions, &fw.name),
+            exports: function_emittable_names(&fw.functions, &fw.name, &fw.structs),
             is_protocol: false,
         });
     }

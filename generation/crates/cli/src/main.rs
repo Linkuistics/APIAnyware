@@ -61,6 +61,19 @@ struct Cli {
     /// Skip generating the racket Swift-native trampolines.
     #[arg(long)]
     no_racket_trampolines: bool,
+
+    /// Output path for the chez target's generated Swift-native trampolines
+    /// (ADR-0027, ported to chez). Written when chez is among the generated
+    /// targets; `swift build` then compiles it into `libAPIAnywareChez`.
+    #[arg(
+        long,
+        default_value = "swift/Sources/APIAnywareChez/Generated/Trampolines.swift"
+    )]
+    chez_trampolines_out: PathBuf,
+
+    /// Skip generating the chez Swift-native trampolines.
+    #[arg(long)]
+    no_chez_trampolines: bool,
 }
 
 fn main() -> Result<()> {
@@ -113,6 +126,19 @@ fn main() -> Result<()> {
             entries,
             output = %cli.racket_trampolines_out.display(),
             "racket Swift-native trampolines generated — run `swift build` to compile them"
+        );
+    }
+
+    // Generate the chez Swift-native trampolines (ADR-0027 ported to chez) when
+    // chez was among the targets — a global pass over all frameworks, same build
+    // order: generate (here) -> swift build compiles them into libAPIAnywareChez.
+    let chez_generated = summaries.iter().any(|s| s.target_id == "chez");
+    if chez_generated && !cli.no_chez_trampolines {
+        let entries = generate::run_chez_trampolines(&cli.input_dir, &cli.chez_trampolines_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.chez_trampolines_out.display(),
+            "chez Swift-native trampolines generated — run `swift build` to compile them"
         );
     }
 

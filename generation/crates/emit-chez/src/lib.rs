@@ -19,5 +19,6 @@ pub mod ffi_type_mapping;
 pub mod method_filter;
 pub mod naming;
 pub mod shared_signatures;
+pub mod trampoline;
 
 pub use emit_framework::ChezEmitter;

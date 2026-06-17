@@ -21,6 +21,7 @@ use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::ChezFfiTypeMapper;
 use crate::shared_signatures::framework_shared_object_arg;
+use crate::trampoline::classify_constant;
 
 /// True if the constant's declared type is a raw struct (the symbol *is*
 /// the struct, not a pointer to one).
@@ -89,24 +90,21 @@ fn foreign_ref_type(t: &TypeRef, mapper: &dyn FfiTypeMapper) -> &'static str {
     }
 }
 
-/// Names that `constants.sls` exports — every constant in IR order.
+/// Names that `constants.sls` exports — every constant in IR order. Direct
+/// (ObjC-exposed) constants and Swift-native residual constants alike: the
+/// residual is trampolined (ADR-0027, leaf 060), so its names are now exported
+/// (previously skipped). The constant binding name equals the constant name.
 pub fn constant_names(constants: &[Constant]) -> Vec<String> {
-    // Skip the Swift-native residual (`objc_exposed == false`, ADR-0026) — the
-    // facade re-export list must agree with the module, which also skips it.
-    constants
-        .iter()
-        .filter(|c| c.objc_exposed)
-        .map(|c| c.name.clone())
-        .collect()
+    constants.iter().map(|c| c.name.clone()).collect()
 }
 
 /// Generate a Chez `constants.sls` library for one framework.
 pub fn generate_constants_file(constants: &[Constant], framework: &str) -> String {
-    // Skip the Swift-native residual (`objc_exposed == false`, ADR-0026): a `s:`
-    // global has no C symbol to bind. The chez target trampolines it in leaf 060;
-    // until then it is skipped rather than emitted as a broken direct binding.
-    let constants: Vec<Constant> = constants.iter().filter(|c| c.objc_exposed).cloned().collect();
-    let constants = &constants[..];
+    // Direct (ObjC-exposed) constants bind against the framework dylib; the
+    // Swift-native residual (`objc_exposed == false`, ADR-0026) has no C symbol so
+    // it routes to constant trampolines in libAPIAnywareChez (ADR-0027, leaf 060).
+    let direct: Vec<&Constant> = constants.iter().filter(|c| c.objc_exposed).collect();
+    let residual: Vec<&Constant> = constants.iter().filter(|c| !c.objc_exposed).collect();
     let mapper = ChezFfiTypeMapper;
     let fw_low = framework.to_ascii_lowercase();
     let mut w = CodeWriter::new();
@@ -129,8 +127,17 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
         w.line("    )");
     }
 
+    // `(apianyware runtime ffi)` loads `libAPIAnywareChez.dylib` (against which the
+    // trampoline entries resolve) and exports the dlsym surface. The trampoline
+    // coercers come from `(apianyware runtime swift-trampoline)`, imported only
+    // when a residual constant is present.
     w.line("  (import (chezscheme)");
-    w.line("          (apianyware runtime ffi))");
+    if residual.is_empty() {
+        w.line("          (apianyware runtime ffi))");
+    } else {
+        w.line("          (apianyware runtime ffi)");
+        w.line("          (apianyware runtime swift-trampoline))");
+    }
     w.blank_line();
 
     // R6RS library bodies require all definitions to come before any
@@ -144,7 +151,7 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     );
     w.blank_line();
 
-    for c in constants {
+    for c in &direct {
         if let Some(v) = &c.macro_value {
             // CFSTR("…") — build a retained NSString at load time. The
             // retain is essential: string->nsstring-ptr returns +0 inside
@@ -168,6 +175,23 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
                 ref_ty,
                 c.name
             );
+        }
+    }
+
+    // Swift-native residual constants — read through the constant trampolines in
+    // libAPIAnywareChez (ADR-0027 ported to chez). Each is a zero-arg reader of
+    // the Swift global, evaluated once at load; String values coerce Scheme-side.
+    if !residual.is_empty() {
+        w.blank_line();
+        w.line("  ;; Swift-native residual — read through libAPIAnywareChez constant");
+        w.line("  ;; trampolines (aw_chez_swift_const_*) rather than a C symbol (ADR-0027).");
+        // Force libAPIAnywareChez to load before the readers below resolve (chez
+        // instantiates lazily; see swift-trampoline.sls). Must precede the readers,
+        // which are evaluated (called) at instantiation.
+        w.line("  (define %aw-lib-ready aw-trampoline-lib-ready)");
+        for c in &residual {
+            let t = classify_constant(framework, c);
+            write_line!(w, "  {}", t.render_chez());
         }
     }
 
@@ -325,5 +349,68 @@ mod tests {
         )];
         let out = generate_constants_file(&consts, "libdispatch");
         assert!(out.contains("(load-shared-object \"libSystem.dylib\")"));
+    }
+
+    /// A Swift-native (`objc_exposed == false`) constant.
+    fn swift_const(name: &str, kind: TypeRefKind) -> Constant {
+        Constant {
+            name: name.into(),
+            constant_type: TypeRef {
+                nullable: false,
+                kind,
+            },
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            macro_value: None,
+            objc_exposed: false,
+        }
+    }
+
+    #[test]
+    fn swift_native_string_constant_reads_through_trampoline() {
+        // MLCreateErrorDomain: a Swift-native String global — no C symbol, so it
+        // reads through the constant trampoline with Scheme-side string coercion.
+        let consts = vec![swift_const(
+            "MLCreateErrorDomain",
+            TypeRefKind::Class {
+                name: "NSString".into(),
+                framework: Some("Foundation".into()),
+                params: vec![],
+            },
+        )];
+        let out = generate_constants_file(&consts, "CreateML");
+        assert!(
+            out.contains("(define MLCreateErrorDomain (aw-string-result ((foreign-procedure \"aw_chez_swift_const_CreateML_MLCreateErrorDomain\" () void*))))"),
+            "{out}"
+        );
+        // Exported and pulls in the coercion runtime; never a direct foreign-ref.
+        assert!(out.contains("    MLCreateErrorDomain"), "{out}");
+        assert!(out.contains("(apianyware runtime swift-trampoline)"), "{out}");
+        assert!(!out.contains("foreign-entry \"MLCreateErrorDomain\""), "{out}");
+    }
+
+    #[test]
+    fn direct_and_residual_constants_coexist() {
+        let consts = vec![
+            c(
+                "TKVersionString",
+                TypeRefKind::Class {
+                    name: "NSString".into(),
+                    framework: None,
+                    params: vec![],
+                },
+            ),
+            swift_const("TKSwiftSeedDomain", TypeRefKind::Class {
+                name: "NSString".into(),
+                framework: Some("Foundation".into()),
+                params: vec![],
+            }),
+        ];
+        let out = generate_constants_file(&consts, "TestKit");
+        // Direct constant still dereferences its C symbol.
+        assert!(out.contains("(foreign-ref 'uptr (foreign-entry \"TKVersionString\") 0)"), "{out}");
+        // Residual constant routes to the trampoline.
+        assert!(out.contains("aw_chez_swift_const_TestKit_TKSwiftSeedDomain"), "{out}");
     }
 }
