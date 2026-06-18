@@ -1,6 +1,19 @@
-# 030-racket
+# 030-racket — brief
 
-**Kind:** work (pioneer — decompose into build + rerun/verify when picked)
+Pioneer node. Decomposed (2026-06-18) into two leaves per D6 / the leaf's own
+Notes:
+
+- **`010-build`** — codegen (`MethodTrampoline`) + runtime (receiver unbox, init
+  producers, mutating write-back, async-via-`await`) + charter-#4 routing fix in
+  `emit_class.rs` + measure-first exemplar pick + in-process smoke. Lands the
+  structural ADR generalising ADR-0027 and extends the design spec.
+- **`020-rerun-verify`** — full cold pipeline rerun (`collect`→`analyze`→
+  `generate --target racket`→`swift build`), `cargo test --workspace` green, CLI
+  smoke, residual-count reproduction, and the §6b-style VM-verify in a bundled app
+  (extend/mirror `swift-native-probe`).
+
+The original leaf's full design (Goal / Context / Done-when / Notes) is retained
+below as the node's contract; the two leaves partition it.
 
 ## Goal
 
