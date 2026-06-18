@@ -47,6 +47,37 @@ pointer-valued constants (a runtime address can't be a target-language literal).
 _Avoid_: "shim" (overloaded); "wrapper" (a trampoline is specifically the
 C-ABI-re-export-of-an-otherwise-unreachable-API kind of wrapper).
 
+**Receiver-handle method trampoline**:
+A **trampoline for a Swift-native *method*** (`objc_exposed == false` on a
+class/struct/protocol) — the method generalisation of the free-function trampoline
+(ADR-0027). The `@_cdecl` takes an **opaque receiver handle** as its first parameter,
+unboxes it to the concrete receiver type, and calls `receiver.method(labels:)` by
+name. The receiver splits by the **exposure of its type**: *population A* — receiver
+type is `objc_exposed` (a live `id` the target already holds, e.g. `URLSession` for
+its Swift-native `async` `data(from:)`), no producer needed; *population B* —
+receiver type is Swift-native (`s:`), obtainable only via a handle some other
+trampoline produced. Both are in scope (grove `add-swift-native-method-coverage`,
+D1). The receiver rides the **same unified handle rep** as boxed returns
+(`AwValueBox`/`Unmanaged`), bidirectionally. A `mutating` method on a value receiver
+**writes the mutated value back** into the (mutable) box (D3). An `async` method
+relies on Swift `await` to hop onto the method's actor — no isolation machinery (D5).
+_Avoid_: "method shim"; conflating the receiver handle with a **direct** ObjC
+object cpointer (population A *is* such a cpointer, but population B is a Swift
+**Opaque handle**); treating the receiver as a distinct "token" type (it is the
+unified handle rep).
+
+**Handle producer / initializer trampoline**:
+The mechanism that *produces* a first **Opaque handle** for a Swift-native (`s:`)
+receiver so population-B methods are usable. The **sole root producer is the
+initializer**: an `init` trampoline `@_cdecl` calls `Type(labels:)` and returns a
+boxed handle (`awRacketBox` value / `Unmanaged.passRetained` class). Everything else
+**chains** off it — a method/property/factory returning a Swift-native type boxes its
+return via the existing return-marshalling taxonomy (spec §3); no separate factory
+design (D2). Soundness gate = the §5c oracle: the produced/unboxed type must be
+nameable & in-module ("name ∈ owning framework's struct/class set").
+_Avoid_: designing standalone factory/`static`-property producers (they fall out of
+return-boxing); a constructor rep distinct from the unified handle rep.
+
 **Trampoline elision** _(the direct-binding optimisation)_:
 Binding a macOS API **directly** from the target, skipping the trampoline, wherever
 the target can reach it without one: ObjC methods via `objc_msgSend`; constants as
