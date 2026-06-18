@@ -82,6 +82,17 @@ chez --libdirs $LIBDIRS \
 #   [smoke-dispatch] 3. Dynamic subclass override OK
 #   [smoke-dispatch] 4. Background dispatch_async callback OK
 #   [smoke-dispatch] all tests passed
+
+# 4. swift-trampoline.sls — the Swift-native residual (ADR-0027/0028) reaches
+#    chez through libAPIAnywareChez's @_cdecl trampolines. Permanent regression
+#    guard for the trampoline require-shape + the constant-trampoline round-trip
+#    (the chez analog of racket's RUNTIME_LOAD_TEST registration; leaf 060/020).
+#    Requires a freshly built dylib: (cd swift && SDKROOT=macosx swift build).
+chez --libdirs $LIBDIRS \
+     --script generation/targets/chez/apianyware/runtime/tests/smoke-swift-trampoline.sls
+# → ok  timestampSeed-is-integer / -is-positive   (CreateML.timestampSeed -> Int)
+#   ok  MLCreateErrorDomain-value                  ("com.apple.CreateML")
+#   swift-trampoline smoke: 3/3 OK
 ```
 
 ## What's not here yet

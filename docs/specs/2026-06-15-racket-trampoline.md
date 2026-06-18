@@ -457,6 +457,43 @@ This is the evidence behind ADR-0025's "Consequences": the model ADR stayed stab
 the mechanism earned its keep on real macOS. The chez (060) / gerbil (070) slices
 reuse these same known-good exemplars.
 
+### 6c. chez slice closed — full rerun + VM-verify landed (060/020)
+
+The chez slice closed in leaf 060/020 (2026-06-18), mirroring the racket §6b close.
+The build leaf 060/010 had already ported the mechanism (ADR-0028); 020 re-ran the
+whole pipeline cold and proved the path in a GUI app:
+
+- **Cold full rerun, clean.** `collect` (284 frameworks, 0 errors) → `analyze`
+  (0 verification failures across 284, LLM annotations replayed from the
+  git-tracked `analysis/ir/llm-annotations/`) → `generate --target chez` →
+  `swift build`. The chez residual classification **reproduced exactly** and is
+  **identical to racket's** (§6b) — **51 function trampolines, 7 constants**,
+  deferred `6 closure_param / 10 nonbridged_struct_param / 4 unnameable_param /
+  34 unbindable_generic`. Same shared IR ⇒ same residual; the counts are a
+  deterministic function of the SDK, not stale local IR.
+- **No ObjC regression.** `cargo test --workspace` 961/0. The chez CLI smoke
+  (`runtime/tests/smoke-swift-trampoline.sls`) passed 3/3 against the freshly built
+  `libAPIAnywareChez.dylib`, and is now registered as the permanent trampoline
+  regression guard in the chez runtime README's "Verifying the runtime" harness —
+  the chez analog of racket's `RUNTIME_LOAD_TEST` registration (chez verifies via
+  `.sls` smoke scripts, not a Rust load test; the *content* of the guard — the
+  trampoline require-shape + the constant-trampoline round-trip at module-init — is
+  the same).
+- **VM-verified (project done-bar).** The chez `swift-native-probe` sample app
+  (`generation/targets/chez/apps/swift-native-probe/`) is a standalone open-world
+  `.app` (ADR-0009) showing the §6a exemplars live: `CreateML.timestampSeed()`
+  returned a time-derived `Int` (`1781740880061`) and `MLCreateErrorDomain` rendered
+  `com.apple.CreateML`, both through `libAPIAnywareChez`'s `@_cdecl` trampolines —
+  the constant Scheme-side coerced (ADR-0015) from the `id` the trampoline returns,
+  not a native string bridge. Visually confirmed in the TestAnyware macOS VM (golden
+  `macos-tahoe`); screenshot at
+  `generation/targets/chez/test-results/swift-native-probe/screenshot.png`. The
+  whole-program standalone compile (closure → `.boot`) is itself the chez
+  load-verification; it caught a real internal-`define` ordering bug during the port,
+  fixed before VM-verify.
+
+Only `070-gerbil-extend` (the hard case — no Swift dylib) remains before grove-finish.
+
 ## 7. Out of scope (this leaf)
 
 - chez/gerbil trampolines (060/070, their own ADRs).
