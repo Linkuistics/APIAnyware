@@ -293,6 +293,53 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
     Ok(entries)
 }
 
+/// Generate the **gerbil** target's Swift-native trampolines (ADR-0027 racket /
+/// ADR-0028 chez, ported to gerbil under ADR-0029, leaf 070) into the
+/// `APIAnywareGerbil` Swift target; `swift build` then compiles them into
+/// `libAPIAnywareGerbil` — the deliberate ADR-0017 deviation (gerbil grows a
+/// `swift build` step) the dylib trampoline requires.
+///
+/// A **global** pass like the racket/chez trampolines: the residual is collected
+/// across every framework into one `Generated/Trampolines.swift`. Per ADR-0011
+/// the gerbil trampoline layer shares no native substrate with racket/chez — only
+/// the classification taxonomy (a property of the shared IR) is duplicated, so the
+/// residual reproduces exactly (51 functions, 7 constants). Every retained
+/// `objc_exposed == false` declaration is either trampolined or recorded as
+/// deferred with a reason; the per-reason counts are logged (spec §5). Returns the
+/// number of trampoline entries written.
+pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit_gerbil::trampoline::{collect_trampolines, generate_trampolines_swift};
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let set = collect_trampolines(&frameworks);
+    let entries = set.functions.len() + set.constants.len();
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        functions = set.functions.len(),
+        constants = set.constants.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated gerbil Swift-native trampolines"
+    );
+    Ok(entries)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

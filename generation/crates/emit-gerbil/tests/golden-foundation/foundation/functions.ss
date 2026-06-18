@@ -506,3 +506,8 @@
   (define-c-lambda NSZoneRealloc ((pointer void) (pointer void) unsigned-int64) (pointer void) "NSZoneRealloc")
   (define-c-lambda NXReadNSObjectFromCoder ((pointer void)) (pointer void) "NXReadNSObjectFromCoder")
   )
+
+
+;; Deferred Swift-native residual (not trampolined this leaf):
+;;   pow — deferred_nonbridged_struct_param
+;;   NSLocalizedString — deferred_nonbridged_struct_param

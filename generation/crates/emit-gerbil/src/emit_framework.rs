@@ -244,12 +244,12 @@ pub fn emit_framework(
             constant_names(&fw.constants),
         )?;
     }
-    let functions_emitted = count_emittable(&fw.functions) > 0;
+    let functions_emitted = count_emittable(&fw.functions, &fw.name, &fw.structs) > 0;
     if functions_emitted {
         emit_data_module(
             "functions",
-            generate_functions_file(&fw.functions, &fw.name),
-            function_emittable_names(&fw.functions, &fw.name),
+            generate_functions_file(&fw.functions, &fw.name, &fw.structs),
+            function_emittable_names(&fw.functions, &fw.name, &fw.structs),
         )?;
     }
 
@@ -263,7 +263,7 @@ pub fn emit_framework(
         classes_emitted: fw.classes.len(),
         protocols_emitted: delegate_protocols.len(),
         enums_emitted: if enums_emitted { fw.enums.len() } else { 0 },
-        functions_emitted: count_emittable(&fw.functions),
+        functions_emitted: count_emittable(&fw.functions, &fw.name, &fw.structs),
         constants_emitted: if constants_emitted {
             fw.constants.len()
         } else {

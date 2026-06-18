@@ -68,5 +68,5 @@ fn main() {
             },
         ),
     ];
-    print!("{}", generate_functions_file(&fs, "Foundation"));
+    print!("{}", generate_functions_file(&fs, "Foundation", &[]));
 }

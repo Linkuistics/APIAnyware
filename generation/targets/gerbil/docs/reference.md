@@ -326,6 +326,20 @@ kernel embed, no whole-program compile, no collision probe.
   exe's `@rpath` load command to `@executable_path/../Frameworks/` — the same
   `install_name_tool` treatment openssl gets. After relocation `otool -L` on the
   bundled exe shows only `/usr/lib/*`, system frameworks, and `@executable_path/..`.
+- **Emitter routing (ADR-0029, leaf 070/020).** A retained Swift-native decl
+  (`objc_exposed == false`) has no C symbol, so `emit_functions` / `emit_constants`
+  route it to a `aw_gerbil_swift_*` trampoline instead of a direct
+  `define-c-lambda`: a per-signature `%swift-…` crossing (synthesized `extern`
+  prototype + `define-c-lambda` against the dylib entry) wrapped Scheme-side. The
+  substantive divergence from chez/racket (which box every non-scalar return) is
+  the **object** return: a trampoline handing back an `id` is `wrap`ped to its
+  exact bound type via the ADR-0020 `register-objc-class!` registry, not a raw
+  pointer (`emit-gerbil/src/trampoline.rs` `RetMarshal::Object` vs `OpaqueBox`).
+  String in/out + the `throws` error-cell ride `runtime/swift-trampoline.ss`; the
+  opaque value box + throws are hermetic Swift (`OpaqueHandle.swift` /
+  `ThrowsBridge.swift`). The residual is a deterministic function of the shared IR,
+  so it reproduces racket/chez **exactly**: 51 function trampolines, 7 constants
+  (deferred 6 closure / 10 nonbridged-struct / 4 unnameable / 34 unbindable-generic).
 - Pipeline per app (`bundle-gerbil/src/lib.rs`): walk the `(import …)`
   closure → clang the block companion → `gxc -O` the closure into the cache →
   `gxc -exe -O` link → assemble `.app` + `Info.plist`
@@ -391,6 +405,16 @@ provisioning needed — the runtime is embedded); reports + screenshots under
 the VM caught: the `char-string` UTF-8 crash (§3) and the weak-delegate GC
 reaping (§4) — the latter needed *sustained interaction* (typing) to trip,
 which is exactly what the VM-verify bar exists to exercise.
+
+The Swift-native trampoline path (ADR-0029) has its own CLI smoke,
+`runtime/tests/run-swift-trampoline-smoke.sh`: it links a gerbil exe against a
+freshly built `libAPIAnywareGerbil.dylib` and proves the §6a exemplars reach
+gerbil through the `@_cdecl` trampolines — `CreateML.timestampSeed()` → a
+time-derived `Int` and `MLCreateErrorDomain` → `"com.apple.CreateML"`, neither of
+which has a C symbol in `CreateML.framework`. Prerequisites:
+`generate --target gerbil` then `swift build --product APIAnywareGerbil`. The
+Swift side is independently covered by `APIAnywareGerbilTests` (`swift test`). The
+VM-verify of a `swift-native-probe` gerbil app is leaf 070/030.
 
 ## 11. When does each target shine?
 

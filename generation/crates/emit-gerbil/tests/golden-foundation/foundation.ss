@@ -1761,6 +1761,7 @@
   NSNonRetainedObjectMapValueCallBacks
   NSNormalizedPredicateOption
   NSNotEqualToPredicateOperatorType
+  NSNotFound
   NSNotPredicateType
   NSNotification
   NSNotification?
@@ -3947,6 +3948,7 @@
   jsonencoder-set-output-formatting!
   jsonencoder-set-user-info!
   jsonencoder-user-info
+  kCFStringEncodingASCII
   key
   key-class-description
   key-decoding-strategy
