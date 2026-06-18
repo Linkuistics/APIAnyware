@@ -1,16 +1,21 @@
 # 030-racket — brief
 
-Pioneer node. Decomposed (2026-06-18) into two leaves per D6 / the leaf's own
-Notes:
+Pioneer node. Decomposed (2026-06-18) per D6 / the leaf's own Notes; the
+measure-first step (in `010-build`) then split async out into its own leaf
+(user-confirmed) — async carries a real undesigned piece (R4, blocking racket
+await) that would muddy the structural ADR. Three leaves:
 
-- **`010-build`** — codegen (`MethodTrampoline`) + runtime (receiver unbox, init
-  producers, mutating write-back, async-via-`await`) + charter-#4 routing fix in
-  `emit_class.rs` + measure-first exemplar pick + in-process smoke. Lands the
-  structural ADR generalising ADR-0027 and extends the design spec.
-- **`020-rerun-verify`** — full cold pipeline rerun (`collect`→`analyze`→
+- **`010-build`** — sync structural core: `MethodTrampoline` codegen + runtime
+  (receiver unbox A/B, init producers D2, mutating write-back D3, object params R1)
+  + charter-#4 routing fix in `emit_class.rs` + IndexSet pop-B in-process smoke.
+  Lands the structural ADR generalising ADR-0027 and extends the design spec.
+  Async classified `deferred_async`.
+- **`020-async-method`** — async-via-`await` (D5) + the blocking racket await
+  surface (R4) + the `URLSession.data(from:)` pop-A headline smoke.
+- **`030-rerun-verify`** — full cold pipeline rerun (`collect`→`analyze`→
   `generate --target racket`→`swift build`), `cargo test --workspace` green, CLI
   smoke, residual-count reproduction, and the §6b-style VM-verify in a bundled app
-  (extend/mirror `swift-native-probe`).
+  (extend/mirror `swift-native-probe`) of both sync and async paths.
 
 The original leaf's full design (Goal / Context / Done-when / Notes) is retained
 below as the node's contract; the two leaves partition it.

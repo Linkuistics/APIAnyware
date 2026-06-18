@@ -4,71 +4,81 @@
 
 ## Goal
 
-Build the **receiver-handle method trampoline** for racket end-to-end in-process:
-codegen + runtime + emitter routing fix + a measure-first exemplar pick + an
-in-process smoke. Land the structural **ADR** (generalising ADR-0027 to methods)
-and extend the design spec. The heavy cold rerun + VM-verify is the sibling leaf
-`020-rerun-verify` — this leaf proves the mechanism compiles and runs in-process.
+Build the **sync receiver-handle method trampoline** for racket end-to-end
+in-process: codegen + runtime + emitter routing fix + an in-process smoke over the
+real `IndexSet` residual. Land the structural **ADR** (generalising ADR-0027 to
+methods) and extend the design spec. This is the pioneer structural core that chez
+(040) and gerbil (050) inherit.
+
+**Scoped (measure-first, user-confirmed 2026-06-18):** `async` methods are split to
+the sibling `020-async-method` leaf — the async path carries a real undesigned
+piece (blocking racket await while the main loop services the callback) that would
+muddy the structural ADR. This leaf classifies async methods as `deferred_async`
+(recorded + counted, per the §5 discipline) and the async leaf wires them.
 
 ## Context
 
 Read first: node `BRIEF.md` (the full D1–D7 design), root `BRIEF.md` (residual
-measurement: 5,620 bindable methods, A 672 : B 4,948, 1,963 inits, 282 async, 259
-mutating value-receivers), and `docs/specs/2026-06-15-racket-trampoline.md` (the
-free-function design this generalises — §2 entry naming, §3 marshalling taxonomy,
-§3a runtime, §5 deferral discipline, §6 done-bar/deviation pattern).
+measurement), and `docs/specs/2026-06-15-racket-trampoline.md` (the free-function
+design this generalises — §2 entry naming, §3 marshalling taxonomy, §3a runtime,
+§5 deferral discipline, §6 done-bar/deviation pattern).
 
-Code map (cite-checked at decompose time, 2026-06-18):
-- Free-function trampoline to generalise: `generation/crates/emit-racket/src/
-  trampoline.rs` (1679 lines — `FnTrampoline`, `classify_function`,
-  `collect_trampolines`, `generate_trampolines_swift`, content-addressed entry +
-  `binding_name`, `Deferred`/`defer_counts`).
-- Latent-broken routing to fix (charter #4 / D4): `generation/crates/emit-racket/
-  src/emit_class.rs:1196+` — every method → `objc_msgSend`, no `objc_exposed`
-  branch.
-- Runtime (reuse, do not redo): `swift/Sources/APIAnywareRacket/` —
-  `OpaqueHandle.swift` (`AwValueBox`, `awRacketBox`/`awRacketUnbox`,
-  `aw_racket_box_free`), `AsyncBridge.swift` (`awRacketAsyncDispatch`,
-  `AwAsyncOutcome`, main-thread delivery), `ThrowsBridge.swift`,
-  `MemoryManagement.swift` (`aw_racket_retain`/`_release`).
-- IR inputs from `020-method-recovery`: `ir::Method.swift_fn`
-  (`{throwing,is_async,is_generic}`), `ir::Struct.methods`, `init_method`,
-  receiver-type exposure reachable by iterating types-then-methods.
+**Exemplar picked (measure-first, this leaf):** pop-B = Foundation **`IndexSet`**
+(value struct, `objc_exposed=false`) — `init(integer:)` (scalar param) → `contains(_:)`
+(non-mutating, `Bool` return) → `update(with:)`/`insert(_:)` (**mutating**, scalar
+param). Exercises every novel pop-B mechanism (init producer D2, value-receiver
+unbox D2, non-mutating method, mutating write-back D3) with only `Int` params. The
+write-back proof: `contains(h,9)`=#f → `update(h,9)` → `contains(h,9)`=#t on the
+*same* handle.
+
+Code map (cite-checked, 2026-06-18):
+- Generalise: `generation/crates/emit-racket/src/trampoline.rs` (`FnTrampoline`,
+  `classify_function`, `classify_param`/`classify_return`, `Scalar`/`ArgMarshal`/
+  `RetMarshal`, content-addressed entry/`binding_name`, `Deferred`/`defer_counts`).
+  Reuse the marshalling taxonomy — keep it in one place.
+- Routing fix (D4): `emit-racket/src/emit_class.rs` `emit_method` (`:1196`) — branch
+  at the top on `!method.objc_exposed` *before* the `objc_msgSend` paths.
+- Global pass: `generation/crates/cli/src/generate.rs` `run_racket_trampolines`
+  (`:219`) collects fn/const trampolines; extend to collect method/init trampolines
+  too (iterate types-then-methods across `classes`+`structs`).
+- Runtime: `swift/Sources/APIAnywareRacket/OpaqueHandle.swift` (`AwValueBox.value`
+  is `let` → make `var` for D3; `awRacketBox`/`awRacketUnbox`); reuse
+  `ThrowsBridge.swift`, `MemoryManagement.swift`.
+- Racket seam: `generation/targets/racket/runtime/swift-trampoline.rkt` (`_aw-lib`,
+  `aw-string-arg/result`, `aw-call/error`); smoke at `tests/test-swift-trampoline-smoke.rkt`.
+- IR inputs (`020-method-recovery`): `ir::Method.swift_fn` (`{throwing,is_async,
+  is_generic,self_kind}`), `ir::Struct.methods`, `init_method`. Owner type's `name`
+  + `objc_exposed` reachable by iterating types-then-methods.
 
 ## Done when
 
-- **`MethodTrampoline`** (sibling to `FnTrampoline`) with a **receiver** first
-  param; `@_cdecl` unboxes the receiver per D2 (`awRacketUnbox(recv, as: T.self)`
-  for value / `Unmanaged<T>.fromOpaque(recv).takeUnretainedValue()` for class) and
-  calls `receiver.method(labels:)`. Both populations (D1): A = objc-exposed
-  receiver (`id`), B = Swift-native receiver (handle).
-- **Initializer producers (D2):** `init` trampolines calling `Type(labels:)`,
-  returning a boxed handle — the population-B root producer.
-- **Mutating write-back (D3):** `AwValueBox.value` → `var`; mutating-value-receiver
-  trampolines write the mutated value back. `consuming self` deferred-with-count.
-- **Async via `await` (D5):** the `@Sendable operation` closure captures the
-  **opaque pointer**, unboxes inside, `await receiver.method(args)` (auto-hops),
-  marshals the result to its Sendable C rep inside the closure. Verify Swift 6
-  Sendable-checking compiles clean over the real frameworks.
-- **Charter-#4 fix (D4):** `emit_class.rs` branches on `objc_exposed` — `true`→
-  msgSend (unchanged); `false`+trampolinable→trampoline entry; `false`+deferred→
-  **suppress + count** (no broken msgSend). Per-blocker deferred reasons surfaced
-  (method analog of `defer_counts`).
-- **Measure-first + exemplar pick (D7):** confirm the headline async symbol
-  (`URLSession.data(from:)`, pop A) resolves + URLSession accepts a deterministic
-  local source (else fall back to another recovered bindable-async method); pick a
-  pop-B exemplar (init → receiver-in → method, + mutating if available) from the
-  actual recovered residual.
-- **In-process smoke:** the picked exemplars resolve through `libAPIAnywareRacket`
-  and run from racket (rackunit, mirroring `test-swift-trampoline-smoke.rkt`).
-- `swift build` green; `cargo test --workspace` green (incl. updated snapshots;
-  ObjC goldens unchanged). Racket-local assertion tests for routing (the §6
-  deviation pattern — no shared-fixture churn into chez/gerbil goldens).
-- **ADR** written (the "0027-for-methods" structural ADR) + the method sections
-  added to the design spec.
+- **`MethodTrampoline`** (sibling to `FnTrampoline`) with a **receiver** first param:
+  `@_cdecl` unboxes the receiver — pop A (objc-exposed owner) = `id` via
+  `Unmanaged.fromOpaque`; pop B value owner = `awRacketUnbox(recv, as: Owner.self)`;
+  pop B class owner = `Unmanaged<Owner>.fromOpaque(recv).takeUnretainedValue()` —
+  then calls `receiver.method(labels:)`.
+- **Object/ObjC-class params (R1, measure-first kick-back):** an `objc_exposed`-class
+  param (e.g. `NSIndexSet`) passes as an `id` cpointer, body `Unmanaged.fromOpaque`
+  + bridges to the Swift param type. Non-objc reference params stay deferred.
+- **Initializer producers (D2):** `init` trampolines call `Owner(labels:)` and box a
+  handle of the **owning type** — *not* the lossy IR return type (R2 kick-back:
+  `init(integer:)` reports `NSIndexSet`, must box `IndexSet`).
+- **Mutating write-back (D3):** `AwValueBox.value` → `var`; a `self_kind=="Mutating"`
+  value-receiver trampoline does `var v = unbox(recv); v.method(...); box.value = v`.
+  `self_kind=="Consuming"` deferred-with-count.
+- **Charter-#4 fix (D4):** `emit_method` branches on `objc_exposed` — `true`→msgSend
+  (unchanged); `false`+trampolinable→trampoline entry via `_aw-lib`; `false`+deferred
+  →**suppress + count** (no broken msgSend). Per-blocker deferred reasons surfaced.
+- **In-process smoke:** the `IndexSet` exemplar resolves through `libAPIAnywareRacket`
+  and runs (rackunit, mirroring `test-swift-trampoline-smoke.rkt`), proving the
+  write-back round-trip.
+- `swift build` green; `cargo test --workspace` green (incl. new codegen unit tests +
+  updated snapshots; ObjC goldens unchanged). Racket-local routing assertion tests
+  (the §6 deviation pattern — no shared-fixture churn into chez/gerbil goldens).
+- **ADR** written (the "0027-for-methods" structural ADR) + the method sections added
+  to the design spec, recording the R1/R2 kick-backs.
 
 ## Notes
 
-Racket-only (ADR-0011). Measure-first before wiring (§5a/b/c discipline). If
-measurement reveals new structure, grow a leaf rather than guess. The full cold
-rerun + residual-count reproduction + VM-verify is `020-rerun-verify`.
+Racket-only (ADR-0011). Async methods → `020-async-method`. Full cold rerun +
+residual reproduction + VM-verify is `030-rerun-verify`.
