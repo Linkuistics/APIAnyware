@@ -536,3 +536,102 @@ All three targets (racket, chez, gerbil) are now re-run and VM-verified — the 
 - Walking/recovering `Macro`/`TypeAlias`/`AssociatedType` ABI kinds (030 records
   them as `deferred_abi_kind`; recovery is a later frontier leaf).
 - Monomorphizing generic free functions (recorded as unbindable; reopen on need).
+
+## 8. The method frontier — receiver-handle method trampolines (ADR-0030)
+
+Implements **ADR-0030** (generalises this spec's free-function trampoline to
+Swift-native methods + initializers). Added by grove
+`add-swift-native-method-coverage`, leaf `030-racket/010-build` (the sync
+structural core; `async` methods are leaf `020-async-method`). Same `emit-racket`
+module (`trampoline.rs`), same global pass, same `Generated/Trampolines.swift`.
+
+### 8.0 Inputs (from `020-method-recovery`)
+
+`ir::Method.swift_fn: Option<SwiftFnInfo>` (now also carrying `self_kind`:
+`"Mutating"`/`"NonMutating"`/`"Consuming"`/…), `ir::Struct.methods` (Swift value
+types now carry their methods), and recovered `init_method`. A method is
+Swift-native iff `swift_fn.is_some()` (⇔ `objc_exposed == false`); the owning type
+is population B iff its `objc_exposed == false`.
+
+### 8.1 New plan types
+
+- `MethodTrampoline { module, owner, swift_name (selector base), entry, recv:
+  SelfMarshal, labels, params, ret, ret_nullable, throwing, availability }`.
+- `InitTrampoline { module, owner, entry, owner_is_class, labels, params, throwing,
+  availability }`.
+- `SelfMarshal::{ ClassRef, ValueBox { mutating } }` — receiver reconstruction by
+  owner kind (class iterated from `Framework.classes` ⇒ `ClassRef`; struct from
+  `Framework.structs` ⇒ `ValueBox`). `TrampolineSet` gains `methods` + `inits`.
+
+### 8.2 `@_cdecl` shape
+
+The receiver is the first C param (`_ awRecv: UnsafeMutableRawPointer?`), then the
+marshalled args (§3 taxonomy unchanged), then the trailing `NSError**` when
+throwing. Receiver prelude:
+
+```swift
+// class owner (objc-exposed or Swift-native class):
+let awSelf = Unmanaged<Module.Owner>.fromOpaque(awRecv!).takeUnretainedValue()
+// value-struct owner, non-mutating:
+let awSelf = awRacketUnbox(awRecv!, as: Module.Owner.self)
+// value-struct owner, mutating (D3 write-back):
+let awBox = Unmanaged<AwValueBox>.fromOpaque(awRecv!).takeUnretainedValue()
+var awSelf = awBox.value as! Module.Owner
+// … let awR = awSelf.method(...) ; awBox.value = awSelf ; return marshal(awR)
+```
+
+The call is `awSelf.<base>(<labels: args>)`. An init is `Module.Owner(<labels:
+args>)` boxed as the owner (`awRacketBox` value / `Unmanaged.passRetained` class) —
+**not** the lossy IR return type (R2).
+
+### 8.3 Method return marshalling (differs from §3 free-function returns)
+
+- A method's non-scalar return always boxes **unnamed** (`Handle(None)`; no `as
+  <Type>` pin — the call is unambiguous and the IR name is often unspellable:
+  `Tuple`, `ProtocolComposition`, `Iterator`, nested types).
+- An **integer** scalar param/return uses `numericCast` (the IR collapses
+  `Int`/`Int64` etc.); `Bool`/`Float`/`Double` pass through. **Init params do not**
+  `numericCast` — the declared width selects the overloaded initializer.
+- **Nullable** String/handle returns map `nil` → NULL/`#f`; a nullable scalar
+  return is deferred (a C scalar can't carry `nil`).
+
+### 8.4 Entry naming
+
+`aw_racket_swift_m_<Fw>_<Owner>_<base>[_<hash>]` (methods),
+`aw_racket_swift_init_<Fw>_<Owner>[_<hash>]` (inits). The content hash (FNV over
+selector + ABI shape) is appended only when `(module, owner, base)` (resp. the
+owner's inits) is overloaded. Duplicate decls collapsing to the same entry are
+deduped (keep first) before emission.
+
+### 8.5 Charter-#4 routing (D4)
+
+`emit_class`'s method emitter branches on `objc_exposed` **before**
+`is_supported_method` (which would otherwise drop the parenthesised Swift
+selector): `false` & trampolinable → `MethodTrampoline::render_racket_method`
+against `_aw-lib` (receiver passed first as `(coerce-arg self)`); `false` &
+deferred → suppress (global pass counts it); `true` → unchanged msgSend. The
+owning framework's `value_struct_names` are threaded into `generate_class_file`
+(forward-compat; value-struct method params are deferred this leaf).
+
+### 8.6 Deferral taxonomy (method-specific, counted)
+
+`unbindable_generic_method`, `deferred_async` (→ leaf 020),
+`deferred_consuming_receiver`, `deferred_static_method`,
+`deferred_non_nameable_method` (operators), `deferred_variadic_method`,
+`deferred_nullable_scalar_return`, plus the inherited param reasons (value-struct
+and object/reference params defer this leaf — object params are the async leaf's
+R1).
+
+### 8.7 Done-bar evidence (the §6 deviation pattern, racket-local)
+
+Codegen unit tests in `trampoline.rs` (receiver A/B, init producer, mutating
+write-back, deferral categorisation, overload disambiguation); a routing assertion
+test in `emit_class.rs` (`swift_native_method_routes_to_trampoline_not_msgsend`);
+the **whole Foundation residual** (68 inits + 92 methods + 2 constants) compiling
+clean against real Foundation in Swift 6 mode (via the `#[ignore]`d
+`generate_foundation_trampolines_to_disk` generator + `swiftc -typecheck`); and an
+**in-process smoke** binding the real `IndexSet` `init(integer:)` / `contains(_:)`
+/ `insert(_:)` `@_cdecl`s raw against the built dylib — proving init producer →
+value-receiver unbox → mutating write-back on one stable handle. Full cold rerun +
+VM-verify is leaf `030-rerun-verify`; `async` methods + the blocking-await surface
+are leaf `020-async-method`.

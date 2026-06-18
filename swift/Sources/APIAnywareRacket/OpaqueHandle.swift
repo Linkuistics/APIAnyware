@@ -44,8 +44,15 @@ import Foundation
 /// Heap box holding an arbitrary Swift value as `Any`. A `final class` so it is
 /// reference-counted: `Unmanaged.passRetained` gives the opaque +1 handle Racket
 /// holds, and the matching release (via `aw_racket_box_free`) frees it.
+///
+/// `value` is a `var` (not `let`) for the **mutating value-receiver write-back**
+/// path (method-frontier D3, spec §method): a `mutating` method on a value-type
+/// receiver mutates a local copy unboxed from the handle; the trampoline writes the
+/// mutated value back into this box so the single handle Racket holds reflects the
+/// mutation (one stable identity). Mutability is a thread-safety note only — handles
+/// are single-threaded under the Racket main-thread model (ADR-0014).
 public final class AwValueBox {
-    public let value: Any
+    public var value: Any
     @inlinable public init(_ value: Any) { self.value = value }
 }
 

@@ -7,6 +7,8 @@
 //! - Property accessors (getters + setters)
 //! - Method wrappers (instance + class methods)
 
+use std::collections::HashSet;
+
 use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::ffi_type_mapping::{FfiTypeMapper, RacketFfiTypeMapper};
 use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
@@ -33,12 +35,31 @@ use crate::shared_signatures::{
     block_ffi_types, class_has_blocks, class_has_struct_types, collect_class_fallback_signatures,
     SignatureMap,
 };
+use crate::trampoline::{classify_method, MethodDisposition};
 
-/// Generate a complete Racket class binding file.
+/// Generate a complete Racket class binding file. Convenience wrapper used by tests
+/// and any caller without the framework's value-struct set — equivalent to having
+/// no in-framework Swift value structs (a value-struct **param** on a Swift-native
+/// method then defers rather than binding, which only affects the method-frontier
+/// routing, not the ObjC paths).
 pub fn generate_class_file(
     cls: &Class,
     framework: &str,
     enrichment: Option<&EnrichmentData>,
+) -> String {
+    generate_class_file_with_structs(cls, framework, enrichment, &HashSet::new())
+}
+
+/// Generate a complete Racket class binding file, given the owning framework's
+/// value-struct name set (`trampoline::value_struct_names(&fw.structs)`). The set is
+/// the soundness gate for unboxing a value-struct **parameter** on a Swift-native
+/// method (D2/§5c), threaded so the `emit_class` routing classifies methods
+/// identically to the global trampoline pass (content-addressed entry agreement).
+pub fn generate_class_file_with_structs(
+    cls: &Class,
+    framework: &str,
+    enrichment: Option<&EnrichmentData>,
+    value_structs: &HashSet<&str>,
 ) -> String {
     let mapper = RacketFfiTypeMapper;
     let mut w = CodeWriter::new();
@@ -255,6 +276,9 @@ pub fn generate_class_file(
                 &mapper,
                 needs_native,
                 &error_selectors,
+                framework,
+                &cls.methods,
+                value_structs,
             );
         }
     }
@@ -276,6 +300,9 @@ pub fn generate_class_file(
                 &mapper,
                 needs_native,
                 &error_selectors,
+                framework,
+                &cls.methods,
+                value_structs,
             );
         }
     }
@@ -1204,7 +1231,42 @@ fn emit_method(
     mapper: &dyn FfiTypeMapper,
     needs_native: bool,
     error_selectors: &std::collections::HashSet<String>,
+    framework: &str,
+    siblings: &[Method],
+    value_structs: &HashSet<&str>,
 ) {
+    // D4 (charter #4): a Swift-native method (`objc_exposed == false`) has NO
+    // registered ObjC selector — dispatching it through `objc_msgSend` below would
+    // crash with `doesNotRecognizeSelector:`, and `is_supported_method` (which
+    // rejects the parenthesised Swift selector) would otherwise silently drop it.
+    // So this branch runs **before** that filter: route the method to a
+    // receiver-handle trampoline binding, or **suppress** it when deferred (the
+    // global trampoline pass records + counts the deferral). Never fall through to
+    // the broken msgSend. `classify_method` owns the variadic/generic/etc. gates so
+    // the emitter and the global pass agree.
+    if !method.objc_exposed {
+        // A class file only emits *class* (reference) receivers — owner_is_class.
+        if let MethodDisposition::Method(t) =
+            classify_method(framework, class_name, true, method, siblings, value_structs)
+        {
+            emit_enrichment_notes(w, notes, &method.selector);
+            let fn_name = if is_class_method {
+                make_class_method_name(class_name, &method.selector, disambiguate)
+            } else {
+                make_method_name(class_name, &method.selector)
+            };
+            let param_names: Vec<String> = method
+                .params
+                .iter()
+                .map(|p| camel_to_kebab(&p.name))
+                .collect();
+            w.line(&t.render_racket_method(&fn_name, &param_names));
+        }
+        // Init producers are vended by the global pass; a deferred method is
+        // suppressed (no broken msgSend, counted globally).
+        return;
+    }
+
     if !is_supported_method(method) {
         return;
     }
@@ -1773,6 +1835,90 @@ mod tests {
         assert!(output.contains("(import-class NSObject)"));
         assert!(output.contains("(define (nsobject-description self)"));
         assert!(output.contains("wrap-objc-object"));
+    }
+
+    /// D4 (charter #4): a Swift-native method routes to a receiver-handle trampoline
+    /// against `_aw-lib`, **not** the broken `objc_msgSend` path; a deferred
+    /// Swift-native method is suppressed (no binding, and crucially no msgSend).
+    #[test]
+    fn swift_native_method_routes_to_trampoline_not_msgsend() {
+        use apianyware_macos_types::ir::SwiftFnInfo;
+        let swift_method = |selector: &str, info: SwiftFnInfo| Method {
+            selector: selector.to_string(),
+            class_method: false,
+            init_method: false,
+            params: vec![Param {
+                name: "by".to_string(),
+                param_type: TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Primitive {
+                        name: "int64".to_string(),
+                    },
+                },
+            }],
+            return_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "int64".to_string(),
+                },
+            },
+            deprecated: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+            category: None,
+            overrides: None,
+            returns_retained: None,
+            satisfies_protocol: None,
+            objc_exposed: false,
+            swift_fn: Some(info),
+        };
+        let cls = Class {
+            name: "TKWidget".to_string(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![
+                swift_method("scaled(by:)", SwiftFnInfo::default()),
+                // Generic Swift-native method → deferred → suppressed.
+                swift_method(
+                    "mapped(by:)",
+                    SwiftFnInfo {
+                        is_generic: true,
+                        ..Default::default()
+                    },
+                ),
+            ],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+            objc_exposed: true,
+        };
+        let out = generate_class_file(&cls, "TestKit", None);
+        // The bindable method routes to the content-addressed trampoline via _aw-lib.
+        assert!(
+            out.contains("aw_racket_swift_m_TestKit_TKWidget_scaled"),
+            "trampoline entry missing:\n{out}"
+        );
+        assert!(out.contains("_aw-lib"), "binding not against _aw-lib:\n{out}");
+        assert!(
+            out.contains("(coerce-arg self)"),
+            "receiver not passed:\n{out}"
+        );
+        // The broken msgSend path must NOT be emitted for the Swift-native method.
+        assert!(
+            !out.contains("\"scaled:\"") && !out.contains("sel_registerName \"scaled"),
+            "Swift-native method must not msgSend a synthesized selector:\n{out}"
+        );
+        // The deferred generic method is suppressed entirely (no binding, no msgSend).
+        assert!(
+            !out.contains("mapped"),
+            "deferred Swift-native method should be suppressed:\n{out}"
+        );
     }
 
     #[test]

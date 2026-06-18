@@ -12,7 +12,7 @@ use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInf
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::generate_class_file;
+use crate::emit_class::generate_class_file_with_structs;
 use crate::emit_constants::generate_constants_file;
 use crate::emit_enums::generate_enums_file;
 use crate::emit_functions::{count_emittable, generate_functions_file};
@@ -51,11 +51,19 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
 
     let mut files_written: usize = 0;
 
-    // Class files
+    // Class files. The owning framework's value-struct set is the soundness gate for
+    // unboxing value-struct params on Swift-native methods (threaded so emit_class
+    // classifies identically to the global trampoline pass).
+    let value_structs = crate::trampoline::value_struct_names(&fw.structs);
     let mut class_files: Vec<(String, String)> = Vec::new();
     for cls in &fw.classes {
         let filename = format!("{}.rkt", class_name_to_lowercase(&cls.name));
-        let content = generate_class_file(cls, &fw.name, fw.enrichment.as_ref());
+        let content = generate_class_file_with_structs(
+            cls,
+            &fw.name,
+            fw.enrichment.as_ref(),
+            &value_structs,
+        );
         emitter.write_file(&filename, &content)?;
         class_files.push((cls.name.clone(), filename));
         files_written += 1;
