@@ -310,6 +310,22 @@ kernel embed, no whole-program compile, no collision probe.
   `@executable_path/../Frameworks/<name>` via `install_name_tool` — including
   the **exe's and inter-dylib** `-change` commands, not just each dylib's
   `-id`. After relocation `otool -L` shows no Homebrew path.
+- **The Swift-native trampoline dylib `libAPIAnywareGerbil` (ADR-0029).** For
+  Swift-native API coverage gerbil grows a **`swift build` step** — the
+  deliberate ADR-0017 deviation (only Swift can call the Swift ABI; `gsc`
+  structurally cannot). The build order becomes **`generate → swift build →
+  gxc`**: `generate` emits `swift/Sources/APIAnywareGerbil/Generated/
+  Trampolines.swift`, `swift build` compiles it into `libAPIAnywareGerbil.dylib`,
+  and the app `gxc -exe` links it (`-lAPIAnywareGerbil`). Unlike chez (which
+  *dlopens* its dylib), gerbil *links* it, so the exe records an
+  `@rpath/libAPIAnywareGerbil.dylib` load command. **Self-containment is upheld
+  by the existing relocation path, not a new mechanism** (ADR-0029 §3): the Swift
+  runtime is OS-resident (`/usr/lib/swift/`, via the dyld shared cache — not
+  vendored), and `bundle-gerbil` (`relocate::relocate_swift_dylib`) vendors the
+  built dylib into `Contents/Frameworks/` alongside openssl@3 and rewrites the
+  exe's `@rpath` load command to `@executable_path/../Frameworks/` — the same
+  `install_name_tool` treatment openssl gets. After relocation `otool -L` on the
+  bundled exe shows only `/usr/lib/*`, system frameworks, and `@executable_path/..`.
 - Pipeline per app (`bundle-gerbil/src/lib.rs`): walk the `(import …)`
   closure → clang the block companion → `gxc -O` the closure into the cache →
   `gxc -exe -O` link → assemble `.app` + `Info.plist`
@@ -318,10 +334,11 @@ kernel embed, no whole-program compile, no collision probe.
 
 ```text
 <App>.app/Contents/
-  MacOS/<App>            ← gxc -exe binary (embeds the Gambit runtime)
-  Info.plist             ← CFBundleName = "<App>"
+  MacOS/<App>                  ← gxc -exe binary (embeds the Gambit runtime)
+  Info.plist                   ← CFBundleName = "<App>"
   Frameworks/
-    libssl.3.dylib       ← vendored + relocated to @executable_path
+    libAPIAnywareGerbil.dylib  ← Swift-native trampoline (ADR-0029), relocated
+    libssl.3.dylib             ← vendored + relocated to @executable_path
     libcrypto.3.dylib
 ```
 

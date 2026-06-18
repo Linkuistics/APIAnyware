@@ -29,6 +29,13 @@ use crate::bundle::BundleError;
 /// The Homebrew prefix every vendored dependency lives under.
 const HOMEBREW_PREFIX: &str = "/opt/homebrew/";
 
+/// The Swift-native trampoline dylib's basename (ADR-0029). Built by
+/// `swift build` from the `APIAnywareGerbil` SwiftPM target; the gerbil app exe
+/// links it (`-lAPIAnywareGerbil`), so it appears in the exe's `otool -L` under
+/// its `@rpath/libAPIAnywareGerbil.dylib` install name — matched by basename
+/// (there is no on-disk path in the load command to key on, unlike Homebrew).
+pub const SWIFT_DYLIB_NAME: &str = "libAPIAnywareGerbil.dylib";
+
 /// The bundle subdirectory (under `Contents/`) vendored dylibs are copied
 /// into. `@executable_path` is `Contents/MacOS/`, so a sibling reference is
 /// `@executable_path/../Frameworks/<name>`.
@@ -131,6 +138,85 @@ pub fn relocate_homebrew_deps(
     }
 
     Ok(vendored)
+}
+
+/// Find the exe's load-command string that references the Swift trampoline
+/// dylib, matched by `dylib_name` basename. Returns `None` when the exe does
+/// not link it (every current sample app — relocation is then a no-op).
+///
+/// Unlike [`homebrew_deps_of`], this cannot key on a path prefix: the dylib is
+/// recorded by its `@rpath/<name>` install name, which carries no filesystem
+/// path. The header line (the binary's own path, unindented) is skipped so a
+/// dylib bundled under its own name never matches itself.
+pub fn swift_dylib_load_command(otool_output: &str, dylib_name: &str) -> Option<String> {
+    otool_output
+        .lines()
+        .filter(|line| line.starts_with([' ', '\t']))
+        .find_map(|line| {
+            let trimmed = line.trim();
+            let path = trimmed.split(" (").next().unwrap_or(trimmed);
+            let is_match = Path::new(path)
+                .file_name()
+                .map(|n| n.to_string_lossy())
+                .as_deref()
+                == Some(dylib_name);
+            is_match.then(|| path.to_string())
+        })
+}
+
+/// Vendor the built Swift trampoline dylib at `dylib_src` into `frameworks_dir`
+/// and rewrite `exe`'s `@rpath/<name>` load command to
+/// `@executable_path/../Frameworks/<name>` — the gerbil counterpart to
+/// [`relocate_homebrew_deps`] for the one dylib that is *linked* rather than
+/// dlopen'd (ADR-0029 §3: self-containment via the existing relocation path, no
+/// new mechanism). The vendored dylib's own `-id` is reset to the same relative
+/// install name and it is re-signed.
+///
+/// A no-op (returns `Ok(None)`) when the exe does not link the dylib — so it is
+/// safe to call unconditionally for apps with no Swift-native trampoline. When
+/// it *does* link it, `dylib_src` must exist (the `swift build` artifact).
+///
+/// The exe itself is re-signed by the caller when the whole bundle is signed
+/// (after this rewrote its load command), exactly as [`relocate_homebrew_deps`].
+pub fn relocate_swift_dylib(
+    exe: &Path,
+    dylib_src: &Path,
+    frameworks_dir: &Path,
+    identity: &str,
+) -> Result<Option<PathBuf>, BundleError> {
+    let base = dylib_src
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| SWIFT_DYLIB_NAME.to_string());
+
+    // Only act if the exe actually links the dylib.
+    let old = match swift_dylib_load_command(&otool_l(exe)?, &base) {
+        Some(old) => old,
+        None => return Ok(None),
+    };
+    if !dylib_src.exists() {
+        return Err(BundleError::DylibSourceMissing(dylib_src.to_path_buf()));
+    }
+
+    // Copy into the bundle, made writable so install_name_tool can edit it
+    // (the .build dylib may ship read-only).
+    fs::create_dir_all(frameworks_dir)?;
+    let dst = frameworks_dir.join(&base);
+    fs::copy(dylib_src, &dst)?;
+    let mut perms = fs::metadata(&dst)?.permissions();
+    perms.set_mode(0o644);
+    fs::set_permissions(&dst, perms)?;
+
+    // Reset the vendored dylib's own install name, then re-sign it
+    // (install_name_tool invalidated the signature).
+    let new_name = relocated_install_name(&base);
+    run_install_name_tool(&dst, &["-id".to_string(), new_name.clone()])?;
+    codesign_path(&dst, identity)?;
+
+    // Rewrite the exe's @rpath load command to point at the vendored copy.
+    run_install_name_tool(exe, &["-change".to_string(), old, new_name])?;
+
+    Ok(Some(dst))
 }
 
 /// Rewrite every Homebrew load command in `binary` to its
@@ -250,5 +336,51 @@ generation/targets/gerbil/apps/hello-window/build/hello-window:
             relocated_install_name("/opt/homebrew/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib"),
             "@executable_path/../Frameworks/libcrypto.3.dylib"
         );
+        // The Swift trampoline dylib is referenced by its @rpath install name,
+        // not a filesystem path — relocation keys on the basename all the same.
+        assert_eq!(
+            relocated_install_name("@rpath/libAPIAnywareGerbil.dylib"),
+            "@executable_path/../Frameworks/libAPIAnywareGerbil.dylib"
+        );
+    }
+
+    /// Real `otool -L` of the leaf-070/010 probe exe: the Swift dylib is the
+    /// `@rpath` line, openssl is the Homebrew lines, everything else is system.
+    const PROBE_OTOOL: &str = "\
+/tmp/gerbil-swift-probe.XXX/probe-smoke:
+\t@rpath/libAPIAnywareGerbil.dylib (compatibility version 0.0.0, current version 0.0.0)
+\t/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib (compatibility version 3.0.0, current version 3.0.0)
+\t/opt/homebrew/opt/openssl@3/lib/libcrypto.3.dylib (compatibility version 3.0.0, current version 3.0.0)
+\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)
+";
+
+    #[test]
+    fn swift_dylib_load_command_matches_by_basename() {
+        // The exe records the dylib by its @rpath install name, so we match on
+        // basename rather than a path prefix (there is no on-disk path here).
+        assert_eq!(
+            swift_dylib_load_command(PROBE_OTOOL, SWIFT_DYLIB_NAME).as_deref(),
+            Some("@rpath/libAPIAnywareGerbil.dylib")
+        );
+    }
+
+    #[test]
+    fn swift_dylib_load_command_absent_when_not_linked() {
+        // An app that links no Swift trampoline (every current sample app today)
+        // has no such load command — relocation must be a clean no-op for it.
+        let no_swift = "\
+/path/exe:
+\t/opt/homebrew/opt/openssl@3/lib/libssl.3.dylib (compatibility version 3.0.0)
+\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0)
+";
+        assert_eq!(swift_dylib_load_command(no_swift, SWIFT_DYLIB_NAME), None);
+    }
+
+    #[test]
+    fn swift_dylib_load_command_skips_header_line() {
+        // The unindented first line is the binary's own path; even if its
+        // basename matched it is not a dependency load command.
+        let out = "/build/libAPIAnywareGerbil.dylib:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0)\n";
+        assert_eq!(swift_dylib_load_command(out, SWIFT_DYLIB_NAME), None);
     }
 }

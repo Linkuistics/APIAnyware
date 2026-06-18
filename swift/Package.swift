@@ -12,11 +12,17 @@ let package = Package(
         // the last real consumer — de-shared.
         .library(name: "APIAnywareRacket", type: .dynamic, targets: ["APIAnywareRacket"]),
         .library(name: "APIAnywareChez", type: .dynamic, targets: ["APIAnywareChez"]),
+        // Gerbil's Swift-native trampoline dylib (ADR-0029): the deliberate
+        // ADR-0017 deviation. Gerbil's ObjC native core stays in `gsc`; this
+        // dylib carries ONLY the Swift-native trampoline + hermetic helpers.
+        .library(name: "APIAnywareGerbil", type: .dynamic, targets: ["APIAnywareGerbil"]),
     ],
     targets: [
         .target(name: "APIAnywareRacket"),
         .target(name: "APIAnywareChez"),
+        .target(name: "APIAnywareGerbil"),
         .testTarget(name: "APIAnywareRacketTests", dependencies: ["APIAnywareRacket"]),
         .testTarget(name: "APIAnywareChezTests", dependencies: ["APIAnywareChez"]),
+        .testTarget(name: "APIAnywareGerbilTests", dependencies: ["APIAnywareGerbil"]),
     ]
 )

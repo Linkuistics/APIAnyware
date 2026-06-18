@@ -75,6 +75,9 @@ mod standalone;
 pub use bundle::{resolve_signing_identity, AppSpec, BundleError, LOCAL_SIGNING_IDENTITY};
 pub use compile::{discover_gerbil_bin_dir, DEFAULT_GERBIL_BIN_ENV};
 pub use deps::collect_closure;
-pub use relocate::{homebrew_deps_of, relocated_install_name};
+pub use relocate::{
+    homebrew_deps_of, relocate_swift_dylib, relocated_install_name, swift_dylib_load_command,
+    SWIFT_DYLIB_NAME,
+};
 pub use spec::read_display_name_from_spec;
 pub use standalone::bundle_app;
