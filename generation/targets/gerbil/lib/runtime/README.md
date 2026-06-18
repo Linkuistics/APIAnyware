@@ -245,5 +245,17 @@ companion and links it into every smoke). The suite, consolidated at leaf 050/04
   typed `self`, installed in an `NSWindow`.
 - `smoke-geometry.ss` (leaf 040) — by-value round-trip of the CoreGraphics geometry
   structs (incl. a real `-[NSScreen frame]` CGRect return), see above.
+- `smoke-swift-trampoline.ss` (leaf 070, ADR-0029) — **the permanent Swift-native
+  trampoline regression guard.** Resolves the §6a exemplars through
+  `libAPIAnywareGerbil`'s `@_cdecl` entries via `define-c-lambda`:
+  `CreateML.timestampSeed()` returns a time-derived `Int`, and reading
+  `CreateML.MLCreateErrorDomain` exercises the **constant-trampoline round-trip at
+  module init** (`= "com.apple.CreateML"`, Scheme-side coerced per ADR-0015). It has
+  its **own** runner, `run-swift-trampoline-smoke.sh`, because it links the extra
+  `-lAPIAnywareGerbil` line the pure-ObjC smokes do not; `run-smokes.sh` chains to it
+  (skipping with a build instruction when the generated bindings / dylib are absent).
+  This is the gerbil analog of racket's `RUNTIME_LOAD_TEST` / chez's smoke
+  registration — the require-shape + constant round-trip are now a standing guard,
+  not a one-time check.
 
-CLI smoke only — VM-verify of real apps is node 070/090.
+CLI smoke only — VM-verify of real apps is node 070/030.

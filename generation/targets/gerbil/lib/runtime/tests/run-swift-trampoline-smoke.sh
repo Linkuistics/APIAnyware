@@ -18,11 +18,20 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"      # .../lib/runtime/test
 LIB="$(cd "$HERE/../.." && pwd)"                           # .../lib  (package root)
 RT="$LIB/runtime"
 REPO="$(cd "$LIB/../../../.." && pwd)"                     # repo root
-DYLIB_DIR="$REPO/swift/.build/arm64-apple-macosx/debug"
+# Locate the swift build artifact — prefer release over debug (the bundler ships
+# release; ADR-0029). Scan per-triple build dirs so the host triple resolves.
+DYLIB_DIR=""
+for triple_dir in "$REPO"/swift/.build/*/; do
+  for profile in release debug; do
+    if [ -f "$triple_dir$profile/libAPIAnywareGerbil.dylib" ]; then
+      DYLIB_DIR="$triple_dir$profile"; break 2
+    fi
+  done
+done
 
-if [ ! -f "$DYLIB_DIR/libAPIAnywareGerbil.dylib" ]; then
-  echo "!! libAPIAnywareGerbil.dylib not found under $DYLIB_DIR" >&2
-  echo "   build it: (cd swift && SDKROOT=macosx swift build --product APIAnywareGerbil)" >&2
+if [ -z "$DYLIB_DIR" ]; then
+  echo "!! libAPIAnywareGerbil.dylib not found under $REPO/swift/.build/*/{release,debug}" >&2
+  echo "   build it: (cd swift && SDKROOT=macosx swift build -c release --product APIAnywareGerbil)" >&2
   exit 2
 fi
 if [ ! -f "$LIB/createml/functions.ss" ]; then

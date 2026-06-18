@@ -125,7 +125,7 @@ chez's classification **exactly** (51 function trampolines, 7 constants; deferre
 6 closure / 10 nonbridged-struct / 4 unnameable / 34 unbindable-generic). That
 equality is the strongest evidence the port is faithful.
 
-## Build-time finding (N1) — hypothesis evaluated, *measurement pending leaf 030*
+## Build-time finding (N1) — hypothesis evaluated *and measured* (leaf 030)
 
 N1 (2026-06-15) hypothesised that moving native code into a Swift dylib could be a
 build-time **win** by offloading work out of the `gsc` compile (gerbil's defining
@@ -146,11 +146,30 @@ win does not hold:**
   the necessity-only principle and risks regression for speculative gain.
 
 **Conclusion: the Swift dylib is justified by *necessity* (only Swift can call the
-Swift ABI), not by a build-time win.** Per the brief's "measured, not asserted"
-bar, leaf `030-rerun-verify` will *quantify* the actual `swift build` cost and
-confirm the generics compile is unchanged, and **append the numbers to this
-section**. The decision above does not depend on the measurement (necessity stands
-regardless); the measurement closes N1 honestly.
+Swift ABI), not by a build-time win.** The decision above does not depend on the
+measurement (necessity stands regardless); the measurement below closes N1 honestly.
+
+### Measured (leaf 030, 2026-06-18)
+
+Per the brief's "measured, not asserted" bar, leaf `030-rerun-verify` quantified
+the added `swift build` step and confirmed the generics compile is untouched:
+
+| | wall-clock |
+|---|---|
+| `swift build -c release --product APIAnywareGerbil` — **cold** (after `swift package clean`) | **3.96s** (produces an 84 KB dylib) |
+| same — warm / no-op rebuild | 0.34s |
+| gerbil **generics** compile — 113 shards, cold parallel (ADR-0023, the `gsc`/`gxc` path) | **291.5s**, *unchanged* by the dylib |
+
+The numbers confirm the structural argument exactly. The added `swift build` step is
+**~4 seconds of pure addition** (84 KB of `@_cdecl` trampolines + the two hermetic
+helpers), **orthogonal to and ~74× smaller than** the ~292s generics compile that
+dominates gerbil's cold build. The dylib lives in a **separate toolchain** (`swiftc`)
+that never enters the `gsc`/`gxc` graph, so the ADR-0023 generics cost is provably
+unchanged — there is nothing in `gsc` for the dylib to offload, because the
+trampoline is new work that never flowed through it. **N1's hypothesised build-time
+*win* does not materialise; the cost is small, additive, and unavoidable.** Necessity,
+not a win — closed honestly. (Full evidence:
+`generation/targets/gerbil/test-results/swift-native-probe/report.md`.)
 
 ## The ADR-0011 shared-source call — still hermetic duplication; the trigger did not fire
 
@@ -187,11 +206,17 @@ and load-bearing.
   the emitter (`emit_functions` / `emit_constants`) routes `objc_exposed == false`
   decls to `define-c-lambda` trampoline bindings, replacing the prior skip at
   `emit_functions.rs:49` / `emit_constants.rs:133`.
-- `cargo test --workspace` green; a CLI smoke proves the spec §6a exemplars
+- `cargo test --workspace` green (985/0 at leaf 030, incl. the `bundle-gerbil`
+  swift-dylib relocation tests); the CLI smoke proves the spec §6a exemplars
   (`CreateML.timestampSeed()` → time-derived `Int`, `MLCreateErrorDomain` →
-  `"com.apple.CreateML"`) resolve and run through `libAPIAnywareGerbil`. The full
-  cold rerun + VM-verify (the project done-bar) + the N1 measurement land in leaf
-  `070-gerbil-extend/030`.
+  `"com.apple.CreateML"`) resolve and run through `libAPIAnywareGerbil`, and is now
+  chained into the gerbil `run-smokes.sh` harness as the permanent Swift-native
+  regression guard. The full cold rerun + VM-verify (the project done-bar) + the N1
+  measurement **landed** in leaf `070-gerbil-extend/030` (2026-06-18) — the residual
+  reproduced exactly (51/7; deferred 6/10/4/34), the bundled `.app` passed `otool -L`
+  self-containment (dylib relocated into `Contents/Frameworks/`), and the probe
+  rendered both exemplars live in the TestAnyware VM. See
+  `generation/targets/gerbil/test-results/swift-native-probe/report.md`.
 - **Last target.** Completing gerbil closes the charter's "rerun every target"
   done-bar, makes the grove ready to finish, and unpauses
   `add-sbcl-clos-target` (whose paused Swift library is this model's trampoline

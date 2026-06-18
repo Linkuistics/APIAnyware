@@ -73,8 +73,10 @@ class-pair plumbing), `subclass.ss`, `cocoa.ss` (geometry constructors +
 standard app menu), and `native_block.c` (the clang `-fblocks` companion). The
 module table, bridge specs, and build recipe live in
 `generation/targets/gerbil/lib/runtime/README.md` — read it before touching the
-runtime. **There is no `libAPIAnywareGerbil.dylib`** (ADR-0017): the native
-core is compiled by gsc into every executable.
+runtime. The **native core** carries no dylib (ADR-0017): it is compiled by gsc
+into every executable. The *only* Swift compilation unit is the trampoline-only
+`libAPIAnywareGerbil.dylib` (ADR-0029, §8 below) — admitted solely because a
+Swift-native API can be reached only from Swift; it does not absorb the native core.
 
 ## 2. Toolchain provisioning (the bottle)
 

@@ -56,5 +56,29 @@ for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges smoke-subc
   fi
 done
 
+# Swift-native trampoline smoke (ADR-0029) — the permanent regression guard for
+# the complete-API trampoline path. It has its OWN runner because it links the
+# extra `-lAPIAnywareGerbil` line (the dylib the trampolines live in) that the
+# pure-ObjC smokes above never need. Chained here so "verifying the runtime"
+# always exercises the trampoline require-shape (the `define-c-lambda` bindings
+# resolving) + the constant-trampoline round-trip at module init. Requires the
+# generated createml bindings + the built dylib; if either is absent we SKIP with
+# a build instruction rather than fail (a fresh checkout has neither until the
+# pipeline + swift build have run).
+echo "== smoke-swift-trampoline (ADR-0029 Swift-native guard) =="
+TRAMPOLINE_DYLIB=""
+for triple_dir in "$LIB"/../../../../swift/.build/*/; do
+  for profile in release debug; do
+    [ -f "$triple_dir$profile/libAPIAnywareGerbil.dylib" ] && TRAMPOLINE_DYLIB="found" && break 2
+  done
+done
+if [ -z "$TRAMPOLINE_DYLIB" ] || [ ! -f "$LIB/createml/functions.ss" ]; then
+  echo "   SKIP — needs generate --target gerbil + swift build -c release --product APIAnywareGerbil"
+elif "$HERE/run-swift-trampoline-smoke.sh" | sed 's/^/   /'; then
+  echo "   smoke-swift-trampoline OK"
+else
+  echo "   !! smoke-swift-trampoline FAILED"; rc=1
+fi
+
 [ $rc -eq 0 ] && echo "ALL SMOKES OK" || echo "SMOKE FAILURES"
 exit $rc

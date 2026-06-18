@@ -492,7 +492,43 @@ whole pipeline cold and proved the path in a GUI app:
   load-verification; it caught a real internal-`define` ordering bug during the port,
   fixed before VM-verify.
 
-Only `070-gerbil-extend` (the hard case — no Swift dylib) remains before grove-finish.
+### 6d. gerbil slice closed — full rerun + VM-verify landed (070/030)
+
+The gerbil slice closed in leaf 070/030 (2026-06-18), the **last target**, mirroring
+the racket §6b / chez §6c closes. The design landed in **ADR-0029** (the deliberate
+ADR-0017 deviation — gerbil grows a trampoline-only Swift dylib because only Swift can
+call the Swift ABI); 070/010 de-risked the build path, 070/020 ported codegen+emitter,
+030 re-ran the whole pipeline cold and proved the path in a GUI app:
+
+- **Cold full rerun, clean.** `collect` (284 frameworks, 0 errors) → `analyze`
+  (0 verification failures, LLM annotations replayed) → `generate --target gerbil` →
+  `swift build` → `gxc`. The gerbil residual classification **reproduced exactly** and
+  is **identical to racket's and chez's** — **51 function trampolines, 7 constants**,
+  deferred `6 closure_param / 10 nonbridged_struct_param / 4 unnameable_param /
+  34 unbindable_generic`. Same shared IR ⇒ same residual.
+- **No ObjC regression.** `cargo test --workspace` 985/0 (incl. the new `bundle-gerbil`
+  swift-dylib relocation tests). The gerbil `run-smokes.sh` harness now **chains**
+  `smoke-swift-trampoline.ss` as the permanent Swift-native regression guard (the
+  require-shape + constant-trampoline round-trip at module init) — the gerbil analog of
+  racket's `RUNTIME_LOAD_TEST` / chez's smoke registration.
+- **VM-verified (project done-bar).** The gerbil `swift-native-probe` sample app is a
+  standalone self-contained `.app` (ADR-0009) showing the §6a exemplars live:
+  `CreateML.timestampSeed()` returned a time-derived `Int` (`1781763860100`) and
+  `MLCreateErrorDomain` rendered `com.apple.CreateML`, both through
+  `libAPIAnywareGerbil`'s `@_cdecl` trampolines (bound via `define-c-lambda`, the
+  constant Scheme-side coerced per ADR-0015). Gerbil **links** the dylib at `gxc -exe`
+  time (ADR-0029 §4, unlike chez's dlopen); `bundle-gerbil` vendored + relocated it into
+  `Contents/Frameworks/` by the same path that relocates openssl@3 (ADR-0029 §3) — the
+  bundled exe's `otool -L` shows only `/usr/lib/*`, system frameworks, and
+  `@executable_path/..`. Visually confirmed in the TestAnyware VM (golden `macos-tahoe`);
+  screenshot at `generation/targets/gerbil/test-results/swift-native-probe/screenshot.png`.
+- **N1 measured (ADR-0029).** The added `swift build` step is **3.96s cold** (84 KB
+  dylib), orthogonal to and ~74× smaller than the ~292s generics compile (ADR-0023,
+  unchanged) — the build-time *win* hypothesis does not hold; the dylib is necessity,
+  not a gain.
+
+All three targets (racket, chez, gerbil) are now re-run and VM-verified — the charter's
+"rerun every target" done-bar is met and the grove is ready to finish.
 
 ## 7. Out of scope (this leaf)
 
