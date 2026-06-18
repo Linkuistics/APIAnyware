@@ -502,6 +502,8 @@ fn extract_method(
         returns_retained: None,
         satisfies_protocol: None,
         objc_exposed: true,
+        // ObjC methods bind via msgSend; no Swift-native trampoline metadata.
+        swift_fn: None,
     })
 }
 
@@ -870,6 +872,9 @@ fn extract_struct(entity: &Entity<'_>, sdk_path: &Path) -> Option<ir::Struct> {
     Some(ir::Struct {
         name,
         fields,
+        // C structs carry only fields; Swift-native value-type methods are
+        // recovered on the extract-swift side (leaf 020).
+        methods: vec![],
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),

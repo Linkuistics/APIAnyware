@@ -217,7 +217,9 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
 /// reports what was bound and what was not (spec §5, "defer nothing, but be
 /// honest"). Returns the number of trampoline entries written.
 pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
-    use apianyware_macos_emit_racket::trampoline::{collect_trampolines, generate_trampolines_swift};
+    use apianyware_macos_emit_racket::trampoline::{
+        collect_trampolines, generate_trampolines_swift,
+    };
 
     let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
     if frameworks.is_empty() {
@@ -308,7 +310,9 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
 /// deferred with a reason; the per-reason counts are logged (spec §5). Returns the
 /// number of trampoline entries written.
 pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
-    use apianyware_macos_emit_gerbil::trampoline::{collect_trampolines, generate_trampolines_swift};
+    use apianyware_macos_emit_gerbil::trampoline::{
+        collect_trampolines, generate_trampolines_swift,
+    };
 
     let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
     if frameworks.is_empty() {
@@ -381,6 +385,7 @@ mod tests {
                     returns_retained: None,
                     satisfies_protocol: None,
                     objc_exposed: true,
+                    swift_fn: None,
                 }],
                 category_methods: vec![],
                 swift_attributes: vec![],
@@ -739,6 +744,7 @@ mod tests {
                 returns_retained: None,
                 satisfies_protocol: None,
                 objc_exposed: true,
+                swift_fn: None,
             }],
             category_methods: vec![],
             swift_attributes: vec![],

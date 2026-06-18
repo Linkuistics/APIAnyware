@@ -259,6 +259,16 @@ pub struct Method {
         skip_serializing_if = "crate::serde_helpers::is_true"
     )]
     pub objc_exposed: bool,
+
+    /// Swift-native call metadata (ADR-0027 generalised to methods, leaf 020).
+    /// Present **only** on `objc_exposed == false` methods/initializers recovered
+    /// from the Swift ABI; `None` for every ObjC/C method (which binds via
+    /// `msgSend` and needs no trampoline). Carries the `throws`/`async`/generic
+    /// facts the receiver-handle trampoline codegen needs but that the lossy
+    /// Swift→ObjC `TypeRef` normalization would otherwise drop. Skip-serialized
+    /// when absent so the ObjC golden JSON is byte-identical.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub swift_fn: Option<SwiftFnInfo>,
 }
 
 /// Named parameter in a method or function signature.
@@ -454,6 +464,16 @@ pub struct Struct {
     #[serde(default)]
     pub fields: Vec<StructField>,
 
+    /// Swift-native value-type methods + initializers (leaf 020). Empty for C
+    /// structs (which carry only fields) and ObjC-bridged value types, so the
+    /// `skip_serializing_if` keeps the ObjC golden JSON unchanged. Populated for
+    /// `objc_exposed == false` Swift structs so the receiver-handle trampoline
+    /// (population B, D1/D3) can vend them — a value-receiver method unboxes the
+    /// handle to the concrete type and (for `mutating`) writes the mutated copy
+    /// back into the box.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub methods: Vec<Method>,
+
     /// Which extractor produced this declaration.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<DeclarationSource>,
@@ -570,6 +590,17 @@ pub struct SwiftFnInfo {
     /// (`unbindable_generic_free_function`).
     #[serde(default)]
     pub is_generic: bool,
+
+    /// The method's `self` access kind for value-type receivers (digester
+    /// `funcSelfKind`): `"Mutating"`, `"NonMutating"`, `"Consuming"`,
+    /// `"Borrowing"`, etc. `None` for free functions (no receiver) and ObjC
+    /// methods. Drives D3: a `Mutating` value-receiver trampoline writes the
+    /// mutated copy back into the handle box, and a `Consuming` receiver is
+    /// deferred-with-count (the handle would dangle after the call). Skip-
+    /// serialized when absent so existing free-function `swift_fn` JSON is
+    /// unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub self_kind: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

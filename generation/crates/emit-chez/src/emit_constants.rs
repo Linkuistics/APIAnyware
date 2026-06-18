@@ -386,8 +386,14 @@ mod tests {
         );
         // Exported and pulls in the coercion runtime; never a direct foreign-ref.
         assert!(out.contains("    MLCreateErrorDomain"), "{out}");
-        assert!(out.contains("(apianyware runtime swift-trampoline)"), "{out}");
-        assert!(!out.contains("foreign-entry \"MLCreateErrorDomain\""), "{out}");
+        assert!(
+            out.contains("(apianyware runtime swift-trampoline)"),
+            "{out}"
+        );
+        assert!(
+            !out.contains("foreign-entry \"MLCreateErrorDomain\""),
+            "{out}"
+        );
     }
 
     #[test]
@@ -401,16 +407,25 @@ mod tests {
                     params: vec![],
                 },
             ),
-            swift_const("TKSwiftSeedDomain", TypeRefKind::Class {
-                name: "NSString".into(),
-                framework: Some("Foundation".into()),
-                params: vec![],
-            }),
+            swift_const(
+                "TKSwiftSeedDomain",
+                TypeRefKind::Class {
+                    name: "NSString".into(),
+                    framework: Some("Foundation".into()),
+                    params: vec![],
+                },
+            ),
         ];
         let out = generate_constants_file(&consts, "TestKit");
         // Direct constant still dereferences its C symbol.
-        assert!(out.contains("(foreign-ref 'uptr (foreign-entry \"TKVersionString\") 0)"), "{out}");
+        assert!(
+            out.contains("(foreign-ref 'uptr (foreign-entry \"TKVersionString\") 0)"),
+            "{out}"
+        );
         // Residual constant routes to the trampoline.
-        assert!(out.contains("aw_chez_swift_const_TestKit_TKSwiftSeedDomain"), "{out}");
+        assert!(
+            out.contains("aw_chez_swift_const_TestKit_TKSwiftSeedDomain"),
+            "{out}"
+        );
     }
 }

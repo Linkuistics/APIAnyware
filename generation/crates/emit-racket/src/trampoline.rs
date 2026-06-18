@@ -90,7 +90,10 @@ enum RetMarshal {
     /// the underlying scalar; the body converts the call result (`Double(<call>)`).
     /// Strictly better than boxing a number behind an opaque handle, and what makes
     /// `acos`/`nan`-style math residual resolve to a plain racket `real?`.
-    ScalarTypedef { scalar: Scalar, name: String },
+    ScalarTypedef {
+        scalar: Scalar,
+        name: String,
+    },
     /// `Swift.String` → bridged `NSString`, returned +1-retained as an `id`; the
     /// racket side copies to a string and releases.
     SwiftString,
@@ -178,11 +181,9 @@ impl Scalar {
             Scalar::Int | Scalar::Int8 | Scalar::Int16 | Scalar::Int32 | Scalar::Int64 => {
                 "exact-integer?"
             }
-            Scalar::UInt
-            | Scalar::UInt8
-            | Scalar::UInt16
-            | Scalar::UInt32
-            | Scalar::UInt64 => "exact-nonnegative-integer?",
+            Scalar::UInt | Scalar::UInt8 | Scalar::UInt16 | Scalar::UInt32 | Scalar::UInt64 => {
+                "exact-nonnegative-integer?"
+            }
         }
     }
 }
@@ -395,7 +396,9 @@ pub struct ConstTrampoline {
 /// The macOS `introduced:` version from a declaration's IR provenance, if any —
 /// the trampoline emits it as `@available(macOS <v>, *)` so swiftc accepts the
 /// call to a version-gated API (the residual is full of them).
-fn introduced_macos(provenance: &Option<apianyware_macos_types::provenance::SourceProvenance>) -> Option<String> {
+fn introduced_macos(
+    provenance: &Option<apianyware_macos_types::provenance::SourceProvenance>,
+) -> Option<String> {
     provenance
         .as_ref()
         .and_then(|p| p.availability.as_ref())
@@ -624,11 +627,7 @@ fn is_overloaded(func: &Function, siblings: &[Function]) -> bool {
 
 /// The content-addressed function entry symbol.
 fn function_entry_name(module: &str, func: &Function, siblings: &[Function]) -> String {
-    let base = format!(
-        "{FN_PREFIX}{}_{}",
-        sanitize(module),
-        sanitize(&func.name)
-    );
+    let base = format!("{FN_PREFIX}{}_{}", sanitize(module), sanitize(&func.name));
     if is_overloaded(func, siblings) {
         format!("{base}_{}", overload_hash(func))
     } else {
@@ -1150,12 +1149,7 @@ mod tests {
             param_type: t,
         }
     }
-    fn swift_fn(
-        name: &str,
-        params: Vec<Param>,
-        ret: TypeRef,
-        info: SwiftFnInfo,
-    ) -> Function {
+    fn swift_fn(name: &str, params: Vec<Param>, ret: TypeRef, info: SwiftFnInfo) -> Function {
         Function {
             name: name.into(),
             params,
@@ -1177,15 +1171,22 @@ mod tests {
     #[test]
     fn scalar_function_trampolines_directly() {
         let f = plain("compute", vec![param("x", prim("double"))], prim("double"));
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
+        let FnDisposition::Trampoline(t) =
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
         assert_eq!(t.entry, "aw_racket_swift_TestKit_compute");
         let mut s = String::new();
         emit_fn(&mut s, &t);
-        assert!(s.contains("@_cdecl(\"aw_racket_swift_TestKit_compute\")"), "{s}");
-        assert!(s.contains("public func aw_racket_swift_TestKit_compute(_ a0: Double) -> Double"), "{s}");
+        assert!(
+            s.contains("@_cdecl(\"aw_racket_swift_TestKit_compute\")"),
+            "{s}"
+        );
+        assert!(
+            s.contains("public func aw_racket_swift_TestKit_compute(_ a0: Double) -> Double"),
+            "{s}"
+        );
         assert!(s.contains("return TestKit.compute(x: a0)"), "{s}");
         // ffi arrow + racket binding (no coercion → bare get-ffi-obj).
         assert_eq!(t.ffi_arrow(), "(_fun _double -> _double)");
@@ -1199,15 +1200,21 @@ mod tests {
     #[test]
     fn string_function_bridges_both_ways() {
         let f = plain("greeting", vec![param("name", nsstring())], nsstring());
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
+        let FnDisposition::Trampoline(t) =
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
         let mut s = String::new();
         emit_fn(&mut s, &t);
-        assert!(s.contains("_ a0: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer?"), "{s}");
         assert!(
-            s.contains("let s0 = Unmanaged<NSString>.fromOpaque(a0!).takeUnretainedValue() as String"),
+            s.contains("_ a0: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer?"),
+            "{s}"
+        );
+        assert!(
+            s.contains(
+                "let s0 = Unmanaged<NSString>.fromOpaque(a0!).takeUnretainedValue() as String"
+            ),
             "{s}"
         );
         assert!(
@@ -1217,8 +1224,14 @@ mod tests {
         assert_eq!(t.ffi_arrow(), "(_fun _pointer -> _pointer)");
         // Racket side bridges the string arg in and coerces the string result out.
         let rkt = t.render_racket();
-        assert!(rkt.contains("(aw-string-result (raw (aw-string-arg a0)))"), "{rkt}");
-        assert_eq!(t.provide_contract(), "[greeting (c-> string? (or/c string? #f))]");
+        assert!(
+            rkt.contains("(aw-string-result (raw (aw-string-arg a0)))"),
+            "{rkt}"
+        );
+        assert_eq!(
+            t.provide_contract(),
+            "[greeting (c-> string? (or/c string? #f))]"
+        );
     }
 
     #[test]
@@ -1229,14 +1242,18 @@ mod tests {
             vec![param("x", prim("double")), param("y", prim("double"))],
             swift_class("GeoPoint", "TestKit"),
         );
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
+        let FnDisposition::Trampoline(t) =
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
         let mut s = String::new();
         emit_fn(&mut s, &t);
         assert!(s.contains("-> UnsafeMutableRawPointer?"), "{s}");
-        assert!(s.contains("return awRacketBox((TestKit.makePoint(x: a0, y: a1)) as GeoPoint)"), "{s}");
+        assert!(
+            s.contains("return awRacketBox((TestKit.makePoint(x: a0, y: a1)) as GeoPoint)"),
+            "{s}"
+        );
     }
 
     #[test]
@@ -1250,14 +1267,21 @@ mod tests {
                 ..Default::default()
             },
         );
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
+        let FnDisposition::Trampoline(t) =
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
         let mut s = String::new();
         emit_fn(&mut s, &t);
-        assert!(s.contains("_ a0: Int, _ awErrOut: UnsafeMutableRawPointer?) -> Int"), "{s}");
-        assert!(s.contains("return awRacketTry(awErrOut, 0) { try TestKit.risky(input: a0) }"), "{s}");
+        assert!(
+            s.contains("_ a0: Int, _ awErrOut: UnsafeMutableRawPointer?) -> Int"),
+            "{s}"
+        );
+        assert!(
+            s.contains("return awRacketTry(awErrOut, 0) { try TestKit.risky(input: a0) }"),
+            "{s}"
+        );
         // The arrow carries the trailing error out-buffer pointer; the racket side
         // routes through aw-call/error (raise on error, else identity coerce).
         assert_eq!(t.ffi_arrow(), "(_fun _int64 _pointer -> _int64)");
@@ -1276,7 +1300,8 @@ mod tests {
                 ..Default::default()
             },
         );
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
+        let FnDisposition::Trampoline(t) =
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1302,7 +1327,8 @@ mod tests {
                 deprecated: None,
             }),
         });
-        let FnDisposition::Trampoline(t) = classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
+        let FnDisposition::Trampoline(t) =
+            classify_function("TestKit", &f, std::slice::from_ref(&f), &no_structs())
         else {
             panic!("expected trampoline");
         };
@@ -1388,7 +1414,10 @@ mod tests {
             "{s}"
         );
         // The unboxed value feeds the by-name call (label is `_`, so positional).
-        assert!(s.contains("return awRacketBox((CreateML.show(u0)) as MLStreamingVisualizable)"), "{s}");
+        assert!(
+            s.contains("return awRacketBox((CreateML.show(u0)) as MLStreamingVisualizable)"),
+            "{s}"
+        );
         // Racket side: pointer in, pointer out, no coercion wrapper → bare get-ffi-obj.
         assert_eq!(t.ffi_arrow(), "(_fun _pointer -> _pointer)");
         assert_eq!(
@@ -1473,7 +1502,12 @@ mod tests {
         };
         let with_block = plain("onEvent", vec![param("handler", block)], prim("void"));
         assert!(matches!(
-            classify_function("TestKit", &with_block, std::slice::from_ref(&with_block), &no_structs()),
+            classify_function(
+                "TestKit",
+                &with_block,
+                std::slice::from_ref(&with_block),
+                &no_structs()
+            ),
             FnDisposition::Deferred(DeferReason::ClosureParam)
         ));
         let any = TypeRef {
@@ -1482,7 +1516,12 @@ mod tests {
         };
         let with_any = plain("accept", vec![param("value", any)], prim("void"));
         assert!(matches!(
-            classify_function("TestKit", &with_any, std::slice::from_ref(&with_any), &no_structs()),
+            classify_function(
+                "TestKit",
+                &with_any,
+                std::slice::from_ref(&with_any),
+                &no_structs()
+            ),
             FnDisposition::Deferred(DeferReason::UnnameableParam)
         ));
     }
@@ -1492,22 +1531,39 @@ mod tests {
         let a = plain("scale", vec![param("by", prim("int64"))], prim("int64"));
         let b = plain("scale", vec![param("by", prim("double"))], prim("double"));
         let siblings = vec![a.clone(), b.clone()];
-        let FnDisposition::Trampoline(ta) = classify_function("TestKit", &a, &siblings, &no_structs()) else {
+        let FnDisposition::Trampoline(ta) =
+            classify_function("TestKit", &a, &siblings, &no_structs())
+        else {
             panic!()
         };
-        let FnDisposition::Trampoline(tb) = classify_function("TestKit", &b, &siblings, &no_structs()) else {
+        let FnDisposition::Trampoline(tb) =
+            classify_function("TestKit", &b, &siblings, &no_structs())
+        else {
             panic!()
         };
         assert_ne!(ta.entry, tb.entry, "overloads must not collide");
         assert!(ta.entry.starts_with("aw_racket_swift_TestKit_scale_"));
         // The racket-visible name is also disambiguated (racket has no overloading,
         // so a bare `(define scale)` twice would collide) — same hash as the entry.
-        assert_ne!(ta.binding_name, tb.binding_name, "racket names must not collide");
+        assert_ne!(
+            ta.binding_name, tb.binding_name,
+            "racket names must not collide"
+        );
         assert!(ta.binding_name.starts_with("scale_"), "{}", ta.binding_name);
-        assert!(ta.render_racket().contains("(define scale_"), "{}", ta.render_racket());
-        assert!(ta.provide_contract().starts_with("[scale_"), "{}", ta.provide_contract());
+        assert!(
+            ta.render_racket().contains("(define scale_"),
+            "{}",
+            ta.render_racket()
+        );
+        assert!(
+            ta.provide_contract().starts_with("[scale_"),
+            "{}",
+            ta.provide_contract()
+        );
         // Deterministic: recomputing yields the same symbol (no global counter).
-        let FnDisposition::Trampoline(ta2) = classify_function("TestKit", &a, &siblings, &no_structs()) else {
+        let FnDisposition::Trampoline(ta2) =
+            classify_function("TestKit", &a, &siblings, &no_structs())
+        else {
             panic!()
         };
         assert_eq!(ta.entry, ta2.entry);
@@ -1545,7 +1601,9 @@ mod tests {
             "{s}"
         );
         assert!(
-            s.contains("return Unmanaged.passRetained((TestKit.sharedToken) as NSString).toOpaque()"),
+            s.contains(
+                "return Unmanaged.passRetained((TestKit.sharedToken) as NSString).toOpaque()"
+            ),
             "{s}"
         );
     }
@@ -1564,7 +1622,10 @@ mod tests {
         let t = classify_constant("TestKit", &c);
         let mut s = String::new();
         emit_const(&mut s, &t);
-        assert!(s.contains("return awRacketBox((TestKit.defaultConfig) as Config)"), "{s}");
+        assert!(
+            s.contains("return awRacketBox((TestKit.defaultConfig) as Config)"),
+            "{s}"
+        );
         assert_eq!(
             t.render_racket(),
             "(define defaultConfig ((get-ffi-obj 'aw_racket_swift_const_TestKit_defaultConfig _aw-lib (_fun -> _pointer))))"

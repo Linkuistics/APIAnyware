@@ -144,10 +144,8 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
         .map(|c| classify_constant(framework, c))
         .collect();
 
-    let flavours: Vec<(&Constant, Flavour)> = direct
-        .iter()
-        .map(|c| (*c, classify(c, &mapper)))
-        .collect();
+    let flavours: Vec<(&Constant, Flavour)> =
+        direct.iter().map(|c| (*c, classify(c, &mapper))).collect();
 
     // A `begin-ffi` block (and so `:std/foreign`) is needed for any symbol-read
     // crossing — a direct non-CFSTR global or any residual trampoline. The `objc`
@@ -480,7 +478,10 @@ mod tests {
             "{out}"
         );
         // String coercion pulls in the swift-trampoline runtime; no umbrella include.
-        assert!(out.contains(":gerbil-bindings/runtime/swift-trampoline"), "{out}");
+        assert!(
+            out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
         assert!(!out.contains("#include <CreateML/"), "{out}");
         // Exported through the facade-visible name list.
         assert!(constant_names(&consts).contains(&"MLCreateErrorDomain".to_string()));
@@ -504,7 +505,10 @@ mod tests {
             "{out}"
         );
         // A pure scalar residual needs no runtime helpers.
-        assert!(!out.contains(":gerbil-bindings/runtime/swift-trampoline"), "{out}");
+        assert!(
+            !out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
     }
 
     #[test]
@@ -532,9 +536,18 @@ mod tests {
         ];
         let out = generate_constants_file(&consts, "AppKit");
         assert!(out.contains(":gerbil-bindings/runtime/objc"), "{out}");
-        assert!(out.contains(":gerbil-bindings/runtime/swift-trampoline"), "{out}");
+        assert!(
+            out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
         // Direct object global still wraps; residual string still coerces.
-        assert!(out.contains("(define NSFontAttributeName (wrap (%const-NSFontAttributeName)))"), "{out}");
-        assert!(out.contains("(define MLCreateErrorDomain (aw-swift-string-result"), "{out}");
+        assert!(
+            out.contains("(define NSFontAttributeName (wrap (%const-NSFontAttributeName)))"),
+            "{out}"
+        );
+        assert!(
+            out.contains("(define MLCreateErrorDomain (aw-swift-string-result"),
+            "{out}"
+        );
     }
 }

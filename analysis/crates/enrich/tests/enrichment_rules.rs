@@ -32,6 +32,7 @@ fn make_method(selector: &str, params: Vec<Param>, return_kind: TypeRefKind) -> 
         returns_retained: None,
         satisfies_protocol: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 

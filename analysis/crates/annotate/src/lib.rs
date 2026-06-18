@@ -130,8 +130,10 @@ pub fn annotate_framework(
     // frameworks such as CoreTransferable — and the protocol API surface of
     // every other framework — would otherwise receive zero annotations
     // (FU-1). Protocol annotations share the `class_annotations` list, keyed
-    // by protocol name. Structs and enums carry no methods in the IR, so
-    // there is nothing to annotate on them.
+    // by protocol name. Swift-native struct methods (leaf 020) are recovered
+    // for the receiver-handle trampoline but not LLM-annotated here — the
+    // trampoline binding is structural, not annotation-driven (mirrors the
+    // free-function trampoline). Enums carry no methods in the IR.
     for protocol in &framework.protocols {
         let mut method_annotations = Vec::new();
         for method in protocol
@@ -518,6 +520,7 @@ mod tests {
             returns_retained: None,
             satisfies_protocol: None,
             objc_exposed: true,
+            swift_fn: None,
         };
 
         Framework {

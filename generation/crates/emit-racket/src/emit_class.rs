@@ -1697,6 +1697,7 @@ mod tests {
             returns_retained: retained,
             satisfies_protocol: None,
             objc_exposed: true,
+            swift_fn: None,
         };
 
         // IR value takes precedence
@@ -1758,6 +1759,7 @@ mod tests {
                 returns_retained: None,
                 satisfies_protocol: None,
                 objc_exposed: true,
+                swift_fn: None,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
@@ -1894,6 +1896,7 @@ mod tests {
             returns_retained: None,
             satisfies_protocol: None,
             objc_exposed: true,
+            swift_fn: None,
         }
     }
 

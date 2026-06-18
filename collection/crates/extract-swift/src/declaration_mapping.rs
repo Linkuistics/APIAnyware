@@ -424,20 +424,42 @@ fn map_enum(node: &AbiNode) -> Option<ir::Enum> {
 
 fn map_struct(node: &AbiNode) -> Option<ir::Struct> {
     let mut fields = Vec::new();
+    let mut methods = Vec::new();
 
     for child in &node.children {
-        if child.decl_kind.as_deref() == Some("Var") && !child.children.is_empty() {
-            let type_node = &child.children[0];
-            fields.push(ir::StructField {
-                name: child.name.clone(),
-                field_type: map_swift_type(type_node),
-            });
+        match child.decl_kind.as_deref() {
+            // `Var` children with a type are stored fields.
+            Some("Var") if !child.children.is_empty() => {
+                let type_node = &child.children[0];
+                fields.push(ir::StructField {
+                    name: child.name.clone(),
+                    field_type: map_swift_type(type_node),
+                });
+            }
+            // Value-type initializers are the population-B root producer (D2):
+            // an `init` trampoline returns a boxed handle of the struct type.
+            Some("Constructor") => {
+                if let Some(m) = map_constructor(child) {
+                    methods.push(m);
+                }
+            }
+            // Value-type methods are the population-B receiver methods (D1/D3):
+            // recovered here so the receiver-handle trampoline can unbox the
+            // struct and call them. Previously dropped — a Swift struct's methods
+            // never reached the IR at all.
+            Some("Func") => {
+                if let Some(m) = map_method(child) {
+                    methods.push(m);
+                }
+            }
+            _ => {}
         }
     }
 
     Some(ir::Struct {
         name: node.name.clone(),
         fields,
+        methods,
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
@@ -448,6 +470,31 @@ fn map_struct(node: &AbiNode) -> Option<ir::Struct> {
 // ---------------------------------------------------------------------------
 // Method mapping
 // ---------------------------------------------------------------------------
+
+/// Build the Swift-native call metadata for a method/initializer node, mirroring
+/// `map_top_level_function`'s `swift_fn` population (ADR-0027 / leaf 020).
+///
+/// Returns `None` for an `objc_exposed` (ObjC/C-cursor'd) decl — it binds via
+/// `msgSend` and needs no trampoline facts, and `None` is skip-serialized so the
+/// ObjC golden JSON is unchanged. Returns `Some` for a Swift-native (`s:` USR)
+/// decl, carrying the `throws`/`async`/generic facts the receiver-handle codegen
+/// needs but the lossy `TypeRef` normalization drops.
+fn build_swift_fn(node: &AbiNode) -> Option<ir::SwiftFnInfo> {
+    if objc_exposed_of(node) {
+        return None;
+    }
+    Some(ir::SwiftFnInfo {
+        throwing: node.throwing,
+        // `node.is_async` is the (currently never-emitted) digester `async`
+        // field; OR it with the mangled-name `Ya` marker so async is actually
+        // detected (swift-api-digester surfaces async only in the mangling).
+        is_async: node.is_async || node_is_async(node),
+        is_generic: node.generic_sig.is_some(),
+        // Receiver mutation kind for value-type methods (D3). `None` for inits
+        // and any decl the digester leaves unmarked.
+        self_kind: node.func_self_kind.clone(),
+    })
+}
 
 /// Map a Swift function/method node to an IR [`ir::Method`].
 fn map_method(node: &AbiNode) -> Option<ir::Method> {
@@ -479,6 +526,7 @@ fn map_method(node: &AbiNode) -> Option<ir::Method> {
         returns_retained: None,
         satisfies_protocol: None,
         objc_exposed: objc_exposed_of(node),
+        swift_fn: build_swift_fn(node),
     })
 }
 
@@ -511,6 +559,7 @@ fn map_constructor(node: &AbiNode) -> Option<ir::Method> {
         returns_retained: None,
         satisfies_protocol: None,
         objc_exposed: objc_exposed_of(node),
+        swift_fn: build_swift_fn(node),
     })
 }
 
@@ -651,6 +700,8 @@ fn map_top_level_function(node: &AbiNode) -> Option<ir::Function> {
             // does not compile (ADR-0027 / racket-trampoline spec §3a kick-back).
             is_async: node.is_async || node_is_async(node),
             is_generic: node.generic_sig.is_some(),
+            // Free functions have no `self` receiver.
+            self_kind: None,
         }),
     })
 }
@@ -971,11 +1022,215 @@ mod tests {
         let f = map_top_level_function(&async_func_node("s:8MyModule5fetchSiyYaF"))
             .expect("async free function maps");
         let info = f.swift_fn.expect("swift_fn populated");
-        assert!(info.is_async, "async must be detected from the mangled name");
+        assert!(
+            info.is_async,
+            "async must be detected from the mangled name"
+        );
 
         // A sync counterpart (same shape, `SiyF`) must stay non-async.
         let g = map_top_level_function(&async_func_node("s:8MyModule5fetchSiyF"))
             .expect("sync free function maps");
         assert!(!g.swift_fn.unwrap().is_async, "sync function is not async");
+    }
+
+    // ------------------------------------------------------------------
+    // Swift-native method recovery: swift_fn on ir::Method (leaf 020)
+    // ------------------------------------------------------------------
+
+    /// A Swift method node (`Func` under a type) with a single return-type child
+    /// and the given USR + printed name. `throwing`/effects are set by the
+    /// caller via the JSON.
+    fn swift_method_node(usr: &str, printed_name: &str, throwing: bool) -> AbiNode {
+        swift_method_node_self(usr, printed_name, throwing, "NonMutating")
+    }
+
+    fn swift_method_node_self(
+        usr: &str,
+        printed_name: &str,
+        throwing: bool,
+        self_kind: &str,
+    ) -> AbiNode {
+        serde_json::from_value(json!({
+            "kind": "Function",
+            "name": printed_name.split('(').next().unwrap_or(printed_name),
+            "printedName": printed_name,
+            "declKind": "Func",
+            "moduleName": "MyModule",
+            "usr": usr,
+            "throwing": throwing,
+            "funcSelfKind": self_kind,
+            "children": [
+                { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+            ]
+        }))
+        .expect("build method AbiNode")
+    }
+
+    #[test]
+    fn swift_native_mutating_method_records_self_kind() {
+        // D3: a `mutating` value-type method needs write-back in the trampoline,
+        // so the receiver mutation kind must be recovered into the IR. `consuming
+        // self` (handle would dangle) is deferred — both decisions need this fact.
+        let m = map_method(&swift_method_node_self(
+            "s:8MyModule6WidgetV6resizeyyF",
+            "resize()",
+            false,
+            "Mutating",
+        ))
+        .expect("mutating method maps");
+        let info = m.swift_fn.expect("swift_fn populated");
+        assert_eq!(
+            info.self_kind.as_deref(),
+            Some("Mutating"),
+            "mutating self-kind recovered for D3 write-back sizing"
+        );
+    }
+
+    #[test]
+    fn swift_native_method_carries_swift_fn_with_async_from_mangling() {
+        // Swift-native (`s:` USR) async method. The digester emits no `async`
+        // field, so async must be recovered from the `YaF` mangled suffix —
+        // exactly as `map_top_level_function` does. Without it the method would
+        // misclassify as a synchronous call and the trampoline codegen (030)
+        // would emit a non-compiling `return recv.method(…)`.
+        let m = map_method(&swift_method_node(
+            "s:8MyModule3FooV5fetchSiyYaF",
+            "fetch()",
+            false,
+        ))
+        .expect("swift-native method maps");
+        let info = m
+            .swift_fn
+            .expect("swift_fn populated for swift-native method");
+        assert!(info.is_async, "async recovered from mangled `YaF` suffix");
+        assert!(!info.throwing, "non-throwing");
+    }
+
+    #[test]
+    fn swift_native_throwing_method_sets_throwing() {
+        let m = map_method(&swift_method_node(
+            "s:8MyModule3FooV4riskSiyKF",
+            "risk()",
+            true,
+        ))
+        .expect("swift-native throwing method maps");
+        let info = m.swift_fn.expect("swift_fn populated");
+        assert!(info.throwing, "throwing recovered from node.throwing");
+        assert!(!info.is_async, "sync");
+    }
+
+    #[test]
+    fn objc_exposed_method_has_no_swift_fn() {
+        // An ObjC-exposed method (`c:` USR) binds directly via msgSend and needs
+        // no trampoline metadata. `swift_fn` MUST be `None` so the skip-serialized
+        // field keeps the ObjC golden JSON byte-identical (ADR-0026 discipline).
+        let m = map_method(&swift_method_node("c:objc(cs)NSFoo(im)bar", "bar()", false))
+            .expect("objc method maps");
+        assert!(
+            m.swift_fn.is_none(),
+            "objc-exposed method must not carry swift_fn"
+        );
+    }
+
+    fn swift_constructor_node(usr: &str, throwing: bool) -> AbiNode {
+        serde_json::from_value(json!({
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(value:)",
+            "declKind": "Constructor",
+            "moduleName": "MyModule",
+            "usr": usr,
+            "throwing": throwing,
+            "children": [
+                { "kind": "TypeNominal", "name": "Foo", "printedName": "MyModule.Foo", "children": [] },
+                { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+            ]
+        }))
+        .expect("build constructor AbiNode")
+    }
+
+    #[test]
+    fn swift_native_constructor_is_init_method_with_swift_fn() {
+        // The population-B root producer (D2): an `init` carries `init_method:
+        // true` and the same swift_fn facts (a throwing init drives the
+        // error-out producer shape).
+        let m = map_constructor(&swift_constructor_node(
+            "s:8MyModule3FooV5valueACSi_tcfc",
+            true,
+        ))
+        .expect("constructor maps");
+        assert!(m.init_method, "constructor is an initializer");
+        let info = m
+            .swift_fn
+            .expect("swift_fn populated for swift-native init");
+        assert!(info.throwing, "throwing init recovered");
+    }
+
+    // ------------------------------------------------------------------
+    // Swift-native struct method/initializer recovery (leaf 020)
+    // ------------------------------------------------------------------
+
+    fn swift_struct_node() -> AbiNode {
+        // A Swift-native value type with a field, an initializer, and a method.
+        // Today `map_struct` reads only the `Var` field and silently drops the
+        // `Constructor` + `Func` — the population-B (value-receiver) recovery hole.
+        serde_json::from_value(json!({
+            "kind": "TypeDecl",
+            "name": "Widget",
+            "printedName": "Widget",
+            "declKind": "Struct",
+            "moduleName": "MyModule",
+            "usr": "s:8MyModule6WidgetV",
+            "children": [
+                {
+                    "kind": "Var", "name": "size", "printedName": "size",
+                    "declKind": "Var", "usr": "s:8MyModule6WidgetV4sizeSivp",
+                    "children": [ { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] } ]
+                },
+                {
+                    "kind": "Constructor", "name": "init", "printedName": "init(size:)",
+                    "declKind": "Constructor", "usr": "s:8MyModule6WidgetV4sizeACSi_tcfc",
+                    "children": [
+                        { "kind": "TypeNominal", "name": "Widget", "printedName": "MyModule.Widget", "children": [] },
+                        { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+                    ]
+                },
+                {
+                    "kind": "Function", "name": "area", "printedName": "area()",
+                    "declKind": "Func", "usr": "s:8MyModule6WidgetV4areaSiyF",
+                    "children": [ { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] } ]
+                }
+            ]
+        }))
+        .expect("build struct AbiNode")
+    }
+
+    #[test]
+    fn swift_native_struct_recovers_methods_and_initializers() {
+        let s = map_struct(&swift_struct_node()).expect("struct maps");
+        // The field is still recovered.
+        assert_eq!(s.fields.len(), 1, "field recovered");
+        // The initializer + method are now recovered as methods (were dropped).
+        assert_eq!(
+            s.methods.len(),
+            2,
+            "struct constructor + func recovered as methods"
+        );
+        let init = s
+            .methods
+            .iter()
+            .find(|m| m.init_method)
+            .expect("initializer recovered");
+        assert!(
+            !init.objc_exposed,
+            "swift-native struct init is not objc-exposed"
+        );
+        assert!(init.swift_fn.is_some(), "init carries swift_fn");
+        let area = s
+            .methods
+            .iter()
+            .find(|m| !m.init_method)
+            .expect("instance method recovered");
+        assert!(area.swift_fn.is_some(), "struct method carries swift_fn");
     }
 }

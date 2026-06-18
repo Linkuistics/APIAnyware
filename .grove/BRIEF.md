@@ -49,6 +49,45 @@ Grown by the `010-plan` grilling (decisions D1–D7 in that leaf's running log):
 Receiver model (D1): both **population A** (objc-exposed receiver, no producer) and
 **population B** (Swift-native receiver via a handle producer) are in scope.
 
+## Residual measurement (leaf 020, 2026-06-18)
+
+Measured over the 284-framework **collected** IR after the 020 recovery landed
+(`swift_fn` on `ir::Method`; `methods` on `ir::Struct`; `self_kind` threaded).
+A method is Swift-native iff it carries `swift_fn` (⇔ `objc_exposed == false`);
+the owning type is population B iff its `objc_exposed == false`. Reproduce:
+`SDKROOT=macosx ./target/debug/apianyware-macos-collect` then walk
+`collection/ir/collected/*.json` (script in the 020 leaf's commit message / the
+session transcript). 117 of 284 frameworks carry Swift-native methods.
+
+- **Total Swift-native methods: 13,084** — by owner kind: **class 3,181**
+  (this is exactly the charter's headline number — it had counted classes only),
+  **struct 8,011** (previously *dropped entirely* by `map_struct` — the real
+  recovery hole this leaf closed), **protocol 1,892**.
+- **Initializers: 5,681** (3,639 on structs) — the population-B root producers (D2).
+- **Async: 451** (charter est. 445) · **throwing: 2,202**.
+- **Unbindable generic: 7,459** (57%) — every protocol requirement (`Self` is a
+  generic parameter) plus the heavily-generic SwiftUI value types. `@_cdecl`
+  cannot be generic ⇒ **deferred-with-count** (ADR-0027 §5 discipline).
+- **Consuming `self`: 6** (`__Consuming`) — handle would dangle ⇒ **deferred-with-count** (D3).
+- **⇒ Bindable estimate (non-generic, non-consuming): 5,620** — receiver split
+  **A (objc owner) 672 : B (swift owner) 4,948** (B dominates, validating D1/D2).
+  Among bindable: 1,963 inits · 282 async · 1,233 throwing · **259 mutating
+  value-receivers** (D3 write-back) · by owner kind class 1,206 / struct 4,414 /
+  protocol 0 (all protocol reqs are generic-deferred).
+
+**Feeds 030 (D7):** the headline async exemplar (`URLSession.data(from:)`, pop A)
+is among the 282 bindable-async; the pop-B novel-machinery exemplar (init producer
++ value-receiver method, ideally `mutating`) is pickable from the 4,414 bindable
+struct methods / 259 mutating ones. Protocol-requirement trampolining is out of
+this measurement's bindable cut (generic `Self`); 030/per-target may revisit via
+conformance flattening (cf. gerbil grove leaf 120), recorded here as deferred.
+
+**Receiver-type exposure threading (D1/D2) is structural, not a new field:**
+methods stay nested under their owning `Class`/`Struct`/`Protocol`, so the owner's
+`name` + `objc_exposed` (the A/B split and the §5c nameability gate) are reachable
+at 030's classification time by iterating types-then-methods. No IR change needed
+beyond surfacing struct methods.
+
 ## Pointers
 
 - Design of record: `docs/specs/2026-06-15-racket-trampoline.md` (§3a runtime,

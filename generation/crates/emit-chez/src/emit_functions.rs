@@ -97,7 +97,11 @@ pub fn function_emittable_names(
 /// `structs` is the framework's own `Framework.structs` — the value-struct set
 /// that gates the trampoline param-unbox path (spec §5c). It must be the same
 /// slice the global trampoline pass sees.
-pub fn generate_functions_file(functions: &[Function], framework: &str, structs: &[Struct]) -> String {
+pub fn generate_functions_file(
+    functions: &[Function],
+    framework: &str,
+    structs: &[Struct],
+) -> String {
     let mapper = ChezFfiTypeMapper;
     let fw_low = framework.to_ascii_lowercase();
     let is_libdispatch = framework == "libdispatch";
@@ -409,12 +413,7 @@ mod tests {
     use apianyware_macos_types::ir::SwiftFnInfo;
 
     /// A Swift-native (`objc_exposed == false`) function with the given `SwiftFnInfo`.
-    fn swift_func(
-        name: &str,
-        params: Vec<Param>,
-        ret: TypeRefKind,
-        info: SwiftFnInfo,
-    ) -> Function {
+    fn swift_func(name: &str, params: Vec<Param>, ret: TypeRefKind, info: SwiftFnInfo) -> Function {
         Function {
             name: name.into(),
             params,
@@ -446,16 +445,30 @@ mod tests {
             // Direct ObjC-exposed C function — bound by its own C symbol.
             func(
                 "TKComputeDistance",
-                vec![param("x", TypeRefKind::Primitive { name: "double".into() })],
-                TypeRefKind::Primitive { name: "double".into() },
+                vec![param(
+                    "x",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                )],
+                TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
                 false,
                 false,
             ),
             // Swift-native scalar function — trampolined via the aw_chez_swift_* entry.
             swift_func(
                 "TKSwiftScale",
-                vec![param("factor", TypeRefKind::Primitive { name: "double".into() })],
-                TypeRefKind::Primitive { name: "double".into() },
+                vec![param(
+                    "factor",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                )],
+                TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
                 SwiftFnInfo::default(),
             ),
         ];
@@ -474,13 +487,19 @@ mod tests {
         assert!(out.contains("    TKComputeDistance"), "{out}");
         assert!(out.contains("    TKSwiftScale"), "{out}");
         // The residual pulls in the Scheme-side coercion runtime import.
-        assert!(out.contains("(apianyware runtime swift-trampoline)"), "{out}");
+        assert!(
+            out.contains("(apianyware runtime swift-trampoline)"),
+            "{out}"
+        );
         // ...and forces the chez dylib to load before the entries resolve (chez
         // instantiates libraries lazily — see swift-trampoline.sls).
         let force = out.find("(define %aw-lib-ready aw-trampoline-lib-ready)");
         let entry = out.find("aw_chez_swift_TestKit_TKSwiftScale");
         assert!(force.is_some(), "forcing reference must be emitted:\n{out}");
-        assert!(force < entry, "forcing reference must precede the entries:\n{out}");
+        assert!(
+            force < entry,
+            "forcing reference must precede the entries:\n{out}"
+        );
     }
 
     #[test]
@@ -492,9 +511,18 @@ mod tests {
             SwiftFnInfo::default(),
         )];
         let out = generate_functions_file(&fs, "TestKit", &[]);
-        assert!(out.contains("(aw-string-arg a0)"), "string arg bridged in:\n{out}");
-        assert!(out.contains("(aw-string-result (%raw"), "string result coerced out:\n{out}");
-        assert!(out.contains("(apianyware runtime swift-trampoline)"), "{out}");
+        assert!(
+            out.contains("(aw-string-arg a0)"),
+            "string arg bridged in:\n{out}"
+        );
+        assert!(
+            out.contains("(aw-string-result (%raw"),
+            "string result coerced out:\n{out}"
+        );
+        assert!(
+            out.contains("(apianyware runtime swift-trampoline)"),
+            "{out}"
+        );
     }
 
     #[test]
@@ -502,7 +530,9 @@ mod tests {
         let fs = vec![swift_func(
             "TKSwiftFetch",
             vec![],
-            TypeRefKind::Primitive { name: "void".into() },
+            TypeRefKind::Primitive {
+                name: "void".into(),
+            },
             SwiftFnInfo {
                 is_async: true,
                 ..Default::default()
@@ -525,7 +555,9 @@ mod tests {
         let fs = vec![func(
             "TKDirect",
             vec![],
-            TypeRefKind::Primitive { name: "void".into() },
+            TypeRefKind::Primitive {
+                name: "void".into(),
+            },
             false,
             false,
         )];

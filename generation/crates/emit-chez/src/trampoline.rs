@@ -92,7 +92,10 @@ enum RetMarshal {
     Scalar(Scalar),
     /// A scalar-backed named typedef return (`-> CGFloat`): the `@_cdecl` returns
     /// the underlying scalar; the body converts the call result (`Double(<call>)`).
-    ScalarTypedef { scalar: Scalar, name: String },
+    ScalarTypedef {
+        scalar: Scalar,
+        name: String,
+    },
     /// `Swift.String` → bridged `NSString`, returned +1-retained as an `id`; the
     /// chez side copies to a string and releases (Scheme-side, ADR-0015).
     SwiftString,
@@ -1056,7 +1059,10 @@ mod tests {
         let out = t.render_chez();
         // String arg bridged in, string result coerced out — both Scheme-side.
         assert!(out.contains("(aw-string-arg a0)"), "{out}");
-        assert!(out.contains("(aw-string-result (%raw (aw-string-arg a0)))"), "{out}");
+        assert!(
+            out.contains("(aw-string-result (%raw (aw-string-arg a0)))"),
+            "{out}"
+        );
         // The C-ABI rep for both is a pointer.
         assert!(
             out.contains("(foreign-procedure \"aw_chez_swift_TestKit_greeting\" (void*) void*)"),
@@ -1083,7 +1089,9 @@ mod tests {
         let out = t.render_chez();
         // The foreign-procedure carries a trailing void* NSError** buffer.
         assert!(
-            out.contains("(foreign-procedure \"aw_chez_swift_TestKit_validate\" (integer-64 void*) boolean)"),
+            out.contains(
+                "(foreign-procedure \"aw_chez_swift_TestKit_validate\" (integer-64 void*) boolean)"
+            ),
             "{out}"
         );
         // The wrapper routes through aw-call/error with a `values` (identity) coerce.
@@ -1153,6 +1161,7 @@ mod tests {
         let value_struct = Struct {
             name: "TKColumn".into(),
             fields: vec![],
+            methods: vec![],
             source: None,
             provenance: None,
             doc_refs: None,
@@ -1194,19 +1203,43 @@ mod tests {
 
     #[test]
     fn overloads_get_distinct_content_addressed_entries_and_bindings() {
-        let a = swift_func("show", vec![param("_", prim("int64"))], prim("void"), SwiftFnInfo::default());
-        let b = swift_func("show", vec![param("_", prim("double"))], prim("void"), SwiftFnInfo::default());
+        let a = swift_func(
+            "show",
+            vec![param("_", prim("int64"))],
+            prim("void"),
+            SwiftFnInfo::default(),
+        );
+        let b = swift_func(
+            "show",
+            vec![param("_", prim("double"))],
+            prim("void"),
+            SwiftFnInfo::default(),
+        );
         let siblings = vec![a.clone(), b.clone()];
-        let FnDisposition::Trampoline(ta) = classify_function("M", &a, &siblings, &no_structs()) else { panic!() };
-        let FnDisposition::Trampoline(tb) = classify_function("M", &b, &siblings, &no_structs()) else { panic!() };
+        let FnDisposition::Trampoline(ta) = classify_function("M", &a, &siblings, &no_structs())
+        else {
+            panic!()
+        };
+        let FnDisposition::Trampoline(tb) = classify_function("M", &b, &siblings, &no_structs())
+        else {
+            panic!()
+        };
         assert_ne!(ta.entry, tb.entry, "overloads need distinct C entries");
-        assert_ne!(ta.binding_name, tb.binding_name, "overloads need distinct chez names");
+        assert_ne!(
+            ta.binding_name, tb.binding_name,
+            "overloads need distinct chez names"
+        );
         assert!(ta.binding_name.starts_with("show_"), "{}", ta.binding_name);
     }
 
     #[test]
     fn swift_codegen_calls_by_name_and_imports_owning_module() {
-        let f = swift_func("timestampSeed", vec![], prim("int64"), SwiftFnInfo::default());
+        let f = swift_func(
+            "timestampSeed",
+            vec![],
+            prim("int64"),
+            SwiftFnInfo::default(),
+        );
         let mut set = TrampolineSet::default();
         if let FnDisposition::Trampoline(t) =
             classify_function("CreateML", &f, std::slice::from_ref(&f), &no_structs())
@@ -1215,9 +1248,15 @@ mod tests {
         }
         let swift = generate_trampolines_swift(&set);
         assert!(swift.contains("import CreateML"), "{swift}");
-        assert!(swift.contains("@_cdecl(\"aw_chez_swift_CreateML_timestampSeed\")"), "{swift}");
+        assert!(
+            swift.contains("@_cdecl(\"aw_chez_swift_CreateML_timestampSeed\")"),
+            "{swift}"
+        );
         assert!(swift.contains("return CreateML.timestampSeed()"), "{swift}");
-        assert!(swift.contains("1 function + 0 constant trampoline."), "{swift}");
+        assert!(
+            swift.contains("1 function + 0 constant trampoline."),
+            "{swift}"
+        );
     }
 
     #[test]
@@ -1266,8 +1305,12 @@ mod tests {
         direct.swift_fn = None;
         fw.functions.push(direct);
         // Residual function — trampolined.
-        fw.functions
-            .push(swift_func("seed", vec![], prim("int64"), SwiftFnInfo::default()));
+        fw.functions.push(swift_func(
+            "seed",
+            vec![],
+            prim("int64"),
+            SwiftFnInfo::default(),
+        ));
         let set = collect_trampolines(std::slice::from_ref(&fw));
         assert_eq!(set.functions.len(), 1);
         assert_eq!(set.functions[0].swift_name, "seed");

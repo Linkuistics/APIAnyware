@@ -164,7 +164,10 @@ pub fn generate_functions_file(
     // Swift-native residual — classified into trampolines + deferred recordings.
     let mut tramps: Vec<FnTrampoline> = Vec::new();
     let mut deferred: Vec<(&Function, &'static str)> = Vec::new();
-    for func in functions.iter().filter(|f| is_emittable(f) && !f.objc_exposed) {
+    for func in functions
+        .iter()
+        .filter(|f| is_emittable(f) && !f.objc_exposed)
+    {
         match classify_function(framework, func, functions, &value_structs) {
             FnDisposition::Trampoline(t) => tramps.push(t),
             FnDisposition::Deferred(reason) => deferred.push((func, reason.as_str())),
@@ -206,7 +209,11 @@ pub fn generate_functions_file(
     } else {
         w.line("         (rename-in racket/contract [-> c->])");
         for (i, req) in extra_requires.iter().enumerate() {
-            let close = if i == extra_requires.len() - 1 { ")" } else { "" };
+            let close = if i == extra_requires.len() - 1 {
+                ")"
+            } else {
+                ""
+            };
             write_line!(w, "         {}{}", req, close);
         }
     }
@@ -1288,22 +1295,39 @@ mod tests {
             // Direct ObjC-exposed C function — unchanged, bound against _fw-lib.
             make_function(
                 "TKComputeDistance",
-                vec![make_param("x", TypeRefKind::Primitive { name: "double".into() })],
-                TypeRefKind::Primitive { name: "double".into() },
+                vec![make_param(
+                    "x",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                )],
+                TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
                 false,
                 false,
             ),
             // Swift-native scalar function — trampolined against _aw-lib.
             swift_function(
                 "TKSwiftScale",
-                vec![make_param("factor", TypeRefKind::Primitive { name: "double".into() })],
-                TypeRefKind::Primitive { name: "double".into() },
+                vec![make_param(
+                    "factor",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                )],
+                TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
                 SwiftFnInfo::default(),
             ),
         ];
         let out = generate_functions_file(&functions, "TestKit", &[]);
         // The swift-trampoline runtime is required when any residual is present.
-        assert!(out.contains("\"../../runtime/swift-trampoline.rkt\""), "{out}");
+        assert!(
+            out.contains("\"../../runtime/swift-trampoline.rkt\""),
+            "{out}"
+        );
         // Direct function still binds the framework dylib.
         assert!(
             out.contains("(define TKComputeDistance (get-ffi-obj 'TKComputeDistance _fw-lib"),
@@ -1311,11 +1335,16 @@ mod tests {
         );
         // Swift-native function binds the trampoline entry against _aw-lib.
         assert!(
-            out.contains("(define TKSwiftScale (get-ffi-obj 'aw_racket_swift_TestKit_TKSwiftScale _aw-lib"),
+            out.contains(
+                "(define TKSwiftScale (get-ffi-obj 'aw_racket_swift_TestKit_TKSwiftScale _aw-lib"
+            ),
             "{out}"
         );
         // Both appear in the provide/contract block.
-        assert!(out.contains("[TKComputeDistance (c-> real? real?)]"), "{out}");
+        assert!(
+            out.contains("[TKComputeDistance (c-> real? real?)]"),
+            "{out}"
+        );
         assert!(out.contains("[TKSwiftScale (c-> real? real?)]"), "{out}");
     }
 
@@ -1329,9 +1358,18 @@ mod tests {
             SwiftFnInfo::default(),
         )];
         let out = generate_functions_file(&functions, "TestKit", &[]);
-        assert!(out.contains("aw-string-arg"), "string arg bridged in:\n{out}");
-        assert!(out.contains("aw-string-result"), "string result coerced out:\n{out}");
-        assert!(out.contains("[TKSwiftGreeting (c-> string? (or/c string? #f))]"), "{out}");
+        assert!(
+            out.contains("aw-string-arg"),
+            "string arg bridged in:\n{out}"
+        );
+        assert!(
+            out.contains("aw-string-result"),
+            "string result coerced out:\n{out}"
+        );
+        assert!(
+            out.contains("[TKSwiftGreeting (c-> string? (or/c string? #f))]"),
+            "{out}"
+        );
     }
 
     #[test]
@@ -1340,7 +1378,9 @@ mod tests {
         let functions = vec![swift_function(
             "TKSwiftFetch",
             vec![],
-            TypeRefKind::Primitive { name: "void".into() },
+            TypeRefKind::Primitive {
+                name: "void".into(),
+            },
             SwiftFnInfo {
                 is_async: true,
                 ..Default::default()
@@ -1348,7 +1388,10 @@ mod tests {
         )];
         let out = generate_functions_file(&functions, "TestKit", &[]);
         // Not bound...
-        assert!(!out.contains("aw_racket_swift_TestKit_TKSwiftFetch"), "{out}");
+        assert!(
+            !out.contains("aw_racket_swift_TestKit_TKSwiftFetch"),
+            "{out}"
+        );
         // ...but recorded with its reason.
         assert!(
             out.contains(";;   TKSwiftFetch — deferred_async"),
@@ -1366,6 +1409,7 @@ mod tests {
         let value_struct = Struct {
             name: "TKColumn".into(),
             fields: vec![],
+            methods: vec![],
             source: None,
             provenance: None,
             doc_refs: None,
@@ -1381,7 +1425,9 @@ mod tests {
                     params: vec![],
                 },
             )],
-            TypeRefKind::Primitive { name: "int64".into() },
+            TypeRefKind::Primitive {
+                name: "int64".into(),
+            },
             SwiftFnInfo::default(),
         )];
         // Without the struct set, the value-struct param defers (recorded).
@@ -1391,13 +1437,22 @@ mod tests {
             "absent the struct set the param must defer:\n{without}"
         );
         // With the framework's structs, it routes to the trampoline against _aw-lib.
-        let with = generate_functions_file(&functions, "TestKit", std::slice::from_ref(&value_struct));
+        let with =
+            generate_functions_file(&functions, "TestKit", std::slice::from_ref(&value_struct));
         assert!(
-            with.contains("(define summarize (get-ffi-obj 'aw_racket_swift_TestKit_summarize _aw-lib"),
+            with.contains(
+                "(define summarize (get-ffi-obj 'aw_racket_swift_TestKit_summarize _aw-lib"
+            ),
             "value-struct param must bind the trampoline:\n{with}"
         );
-        assert!(with.contains("[summarize (c-> cpointer? exact-integer?)]"), "{with}");
-        assert!(!with.contains(";;   summarize —"), "must not also be recorded deferred:\n{with}");
+        assert!(
+            with.contains("[summarize (c-> cpointer? exact-integer?)]"),
+            "{with}"
+        );
+        assert!(
+            !with.contains(";;   summarize —"),
+            "must not also be recorded deferred:\n{with}"
+        );
     }
 
     #[test]

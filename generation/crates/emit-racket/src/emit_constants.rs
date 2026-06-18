@@ -74,7 +74,11 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     } else {
         w.line("         (rename-in racket/contract [-> c->])");
         for (i, req) in extra_requires.iter().enumerate() {
-            let close = if i == extra_requires.len() - 1 { ")" } else { "" };
+            let close = if i == extra_requires.len() - 1 {
+                ")"
+            } else {
+                ""
+            };
             write_line!(w, "         {}{}", req, close);
         }
     }
@@ -633,7 +637,10 @@ mod tests {
             ),
         ];
         let out = generate_constants_file(&constants, "TestKit");
-        assert!(out.contains("\"../../runtime/swift-trampoline.rkt\""), "{out}");
+        assert!(
+            out.contains("\"../../runtime/swift-trampoline.rkt\""),
+            "{out}"
+        );
         // ObjC-exposed constant still binds the framework dylib.
         assert!(
             out.contains("(define TKVersionString (get-ffi-obj 'TKVersionString _fw-lib _id))"),
@@ -658,8 +665,14 @@ mod tests {
             },
         )];
         let out = generate_constants_file(&constants, "TestKit");
-        assert!(out.contains("aw-string-result"), "string constant coerced:\n{out}");
-        assert!(out.contains("[TKSwiftBuildLabel (or/c string? #f)]"), "{out}");
+        assert!(
+            out.contains("aw-string-result"),
+            "string constant coerced:\n{out}"
+        );
+        assert!(
+            out.contains("[TKSwiftBuildLabel (or/c string? #f)]"),
+            "{out}"
+        );
     }
 
     #[test]

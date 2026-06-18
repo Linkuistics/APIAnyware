@@ -127,7 +127,11 @@ pub fn function_emittable_names(
 /// `structs` is the framework's own `Framework.structs` — the value-struct set
 /// that gates the trampoline param-unbox path (spec §5c). It must be the same
 /// slice the global trampoline pass sees.
-pub fn generate_functions_file(functions: &[Function], framework: &str, structs: &[Struct]) -> String {
+pub fn generate_functions_file(
+    functions: &[Function],
+    framework: &str,
+    structs: &[Struct],
+) -> String {
     let mapper = GerbilFfiTypeMapper;
     let mut w = CodeWriter::new();
     let is_libdispatch = framework == "libdispatch";
@@ -601,12 +605,7 @@ mod tests {
     use apianyware_macos_types::ir::SwiftFnInfo;
 
     /// A Swift-native (`objc_exposed == false`) function with the given `SwiftFnInfo`.
-    fn swift_func(
-        name: &str,
-        params: Vec<Param>,
-        ret: TypeRefKind,
-        info: SwiftFnInfo,
-    ) -> Function {
+    fn swift_func(name: &str, params: Vec<Param>, ret: TypeRefKind, info: SwiftFnInfo) -> Function {
         Function {
             name: name.into(),
             params,
@@ -638,29 +637,50 @@ mod tests {
             // Direct ObjC-exposed C function — bound by its own C symbol.
             func(
                 "TKComputeDistance",
-                vec![param("x", TypeRefKind::Primitive { name: "double".into() })],
-                TypeRefKind::Primitive { name: "double".into() },
+                vec![param(
+                    "x",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                )],
+                TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
                 false,
                 false,
             ),
             // Swift-native scalar function — trampolined via the aw_gerbil_swift_* entry.
             swift_func(
                 "TKSwiftScale",
-                vec![param("factor", TypeRefKind::Primitive { name: "double".into() })],
-                TypeRefKind::Primitive { name: "double".into() },
+                vec![param(
+                    "factor",
+                    TypeRefKind::Primitive {
+                        name: "double".into(),
+                    },
+                )],
+                TypeRefKind::Primitive {
+                    name: "double".into(),
+                },
                 SwiftFnInfo::default(),
             ),
         ];
         let out = generate_functions_file(&fs, "TestKit", &[]);
         // Direct function: its own synthesized prototype + direct call.
-        assert!(out.contains("(c-declare \"extern double TKComputeDistance(double);\")"), "{out}");
         assert!(
-            out.contains("(define-c-lambda TKComputeDistance (double) double \"TKComputeDistance\")"),
+            out.contains("(c-declare \"extern double TKComputeDistance(double);\")"),
+            "{out}"
+        );
+        assert!(
+            out.contains(
+                "(define-c-lambda TKComputeDistance (double) double \"TKComputeDistance\")"
+            ),
             "{out}"
         );
         // Swift-native function: a %swift- crossing to the content-addressed entry.
         assert!(
-            out.contains("(c-declare \"extern double aw_gerbil_swift_TestKit_TKSwiftScale(double);\")"),
+            out.contains(
+                "(c-declare \"extern double aw_gerbil_swift_TestKit_TKSwiftScale(double);\")"
+            ),
             "{out}"
         );
         assert!(
@@ -671,7 +691,10 @@ mod tests {
         assert!(out.contains("  TKComputeDistance"), "{out}");
         assert!(out.contains("  TKSwiftScale"), "{out}");
         // A pure-scalar residual needs no runtime import (no wrap/coercion).
-        assert!(!out.contains(":gerbil-bindings/runtime/swift-trampoline"), "{out}");
+        assert!(
+            !out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
     }
 
     #[test]
@@ -681,13 +704,21 @@ mod tests {
         let fs = vec![swift_func(
             "timestampSeed",
             vec![],
-            TypeRefKind::Primitive { name: "int64".into() },
+            TypeRefKind::Primitive {
+                name: "int64".into(),
+            },
             SwiftFnInfo::default(),
         )];
         assert_eq!(count_emittable(&fs, "CreateML", &[]), 1);
         let out = generate_functions_file(&fs, "CreateML", &[]);
-        assert!(out.contains("aw_gerbil_swift_CreateML_timestampSeed"), "{out}");
-        assert!(out.contains("(define timestampSeed %swift-timestampSeed)"), "{out}");
+        assert!(
+            out.contains("aw_gerbil_swift_CreateML_timestampSeed"),
+            "{out}"
+        );
+        assert!(
+            out.contains("(define timestampSeed %swift-timestampSeed)"),
+            "{out}"
+        );
         // No direct begin-ffi block (no direct functions); a pure-scalar residual
         // needs only the FFI import (single-line form, no runtime helpers).
         assert!(out.contains("(import :std/foreign)"), "{out}");
@@ -702,10 +733,19 @@ mod tests {
             SwiftFnInfo::default(),
         )];
         let out = generate_functions_file(&fs, "TestKit", &[]);
-        assert!(out.contains("(aw-swift-string-arg a0)"), "string arg bridged in:\n{out}");
-        assert!(out.contains("(aw-swift-string-result"), "string result coerced out:\n{out}");
+        assert!(
+            out.contains("(aw-swift-string-arg a0)"),
+            "string arg bridged in:\n{out}"
+        );
+        assert!(
+            out.contains("(aw-swift-string-result"),
+            "string result coerced out:\n{out}"
+        );
         // String shapes pull in the runtime helpers.
-        assert!(out.contains(":gerbil-bindings/runtime/swift-trampoline"), "{out}");
+        assert!(
+            out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
     }
 
     #[test]
@@ -723,7 +763,10 @@ mod tests {
             SwiftFnInfo::default(),
         )];
         let out = generate_functions_file(&fs, "TestKit", &[]);
-        assert!(out.contains("(wrap (%swift-TKMakeWidget) #t)"), "object return must wrap:\n{out}");
+        assert!(
+            out.contains("(wrap (%swift-TKMakeWidget) #t)"),
+            "object return must wrap:\n{out}"
+        );
         // `wrap` is owned by the objc runtime, not swift-trampoline.
         assert!(out.contains(":gerbil-bindings/runtime/objc"), "{out}");
     }
@@ -733,7 +776,9 @@ mod tests {
         let fs = vec![swift_func(
             "TKSwiftFetch",
             vec![],
-            TypeRefKind::Primitive { name: "void".into() },
+            TypeRefKind::Primitive {
+                name: "void".into(),
+            },
             SwiftFnInfo {
                 is_async: true,
                 ..Default::default()
@@ -744,7 +789,10 @@ mod tests {
         // generate is called, the deferral is recorded as a comment, never bound.
         assert_eq!(count_emittable(&fs, "TestKit", &[]), 0);
         let out = generate_functions_file(&fs, "TestKit", &[]);
-        assert!(!out.contains("aw_gerbil_swift_TestKit_TKSwiftFetch"), "{out}");
+        assert!(
+            !out.contains("aw_gerbil_swift_TestKit_TKSwiftFetch"),
+            "{out}"
+        );
         // With no bindings the empty-export branch fires; deferred-only frameworks
         // are tallied globally, not per-file.
         assert!(out.contains("(export)"), "{out}");

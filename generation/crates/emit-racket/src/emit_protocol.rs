@@ -334,6 +334,7 @@ mod tests {
             returns_retained: None,
             satisfies_protocol: None,
             objc_exposed: true,
+            swift_fn: None,
         }
     }
 

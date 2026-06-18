@@ -69,6 +69,7 @@ fn make_method(selector: &str, class_method: bool) -> Method {
         returns_retained: None,
         satisfies_protocol: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -93,6 +94,7 @@ fn make_method_with_params(selector: &str, params: Vec<Param>) -> Method {
         returns_retained: None,
         satisfies_protocol: None,
         objc_exposed: true,
+        swift_fn: None,
     }
 }
 
