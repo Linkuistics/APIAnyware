@@ -488,10 +488,16 @@ fn build_class_plan(
     // trampolines (ADR-0030, charter #4). A class is a reference receiver
     // (`owner_is_class = true`, `Unmanaged` path); a `Class` carries no provenance,
     // so the owner-availability fold (B3) is empty for class owners.
+    // MUST use `cls.methods` (the *declared* methods), not `effective_methods`
+    // (which prefers `all_methods` = inherited + category). The global trampoline
+    // pass (`collect_trampolines` → `collect_type_methods`) emits `@_cdecl` entries
+    // for `c.methods` only, so binding an inherited/category method here would
+    // reference a content-addressed entry the Swift side never produced (the §6c
+    // agreement). Inherited Swift-native methods bind under their declaring class.
     let mut swift_native = collect_swift_native_bindings(
         &cls.name,
         framework,
-        &methods_owned,
+        &cls.methods,
         true,
         value_structs,
         None,
