@@ -125,6 +125,30 @@ not the scripting target, so chez inherits it:
   trampolines are kept (they run when called on the main thread), the warning count
   the honest record.
 
+### 7. `(chezscheme)`-builtin name collisions on init producers (the 020 close)
+
+Surfaced by the `020-rerun-verify` cold rerun + method-probe VM-verify (not visible
+to the in-process smoke, which imports leaf libraries directly; the bundler loads the
+**framework umbrella**, which imports every sub-library). A value-struct **init
+producer** spells `make-<struct>`, and Chez exports `make-date`, `make-list`, … from
+`(chezscheme)`. Under strict R6RS a local `(define make-date …)` that shadows an
+import is a hard *"multiple definitions"* load error — unlike Gerbil/Gambit, where
+shadowing a procedure binding is harmless (cf. emit-gerbil's `is_reserved_surface_name`,
+which deliberately omits procedures). The same hazard hits free functions that mirror
+libm names (`coregraphics/functions.sls`: `acos`, `cos`, …), latent until that umbrella
+is imported.
+
+Fix (`emit-chez/chez_builtins.rs`): every generated library's `(import (chezscheme) …)`
+is emitted via `chezscheme_import_spec(exports)`, which `except`s any **export** name
+that is a `(chezscheme)` builtin, letting the local `define` win. Excepting only
+*export* names is provably safe — a file that both exported `X` and used Chez's builtin
+`X` in a body would already fail to load (so the fix never breaks a currently-loading
+file), and the async identity marshaller `values` is used-not-exported, so it is never
+excepted. The builtin set is `(environment-symbols (environment '(chezscheme)))`
+captured in `chez_builtins.txt` (regeneration recipe in the module docs). Applied at all
+three `(chezscheme)`-importing emit sites (value-struct, class, functions). Residual
+counts are unchanged (import-line only).
+
 ## Consequences
 
 - **`Generated/Trampolines.swift` (chez) gains 576 init + 554 method `@_cdecl`s**

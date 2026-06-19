@@ -27,6 +27,7 @@ use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::{Function, Struct};
 
+use crate::chez_builtins::chezscheme_import_spec;
 use crate::ffi_type_mapping::ChezFfiTypeMapper;
 use crate::shared_signatures::{framework_shared_object_arg, is_libdispatch_unexported};
 use crate::trampoline::{classify_function, value_struct_names, FnDisposition, FnTrampoline};
@@ -137,7 +138,9 @@ pub fn generate_functions_file(
     // `libAPIAnywareChez.dylib` (via `(apianyware runtime ffi)`), against which the
     // trampoline entries resolve. The trampoline coercers live in
     // `(apianyware runtime swift-trampoline)`, imported only when residual is present.
-    w.line("  (import (chezscheme)");
+    // Free functions mirror C/libm names (`acos`, `cos`, …) which collide with
+    // `(chezscheme)` builtins; except the offenders so the local define wins.
+    write_line!(w, "  (import {}", chezscheme_import_spec(&exports));
     if tramps.is_empty() {
         w.line("          (apianyware runtime types))");
     } else {

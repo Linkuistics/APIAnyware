@@ -21,6 +21,7 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::{Class, Method, Param, Property, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
+use crate::chez_builtins::chezscheme_import_spec;
 use crate::ffi_type_mapping::{
     block_make_expr, is_known_geometry_alias, return_needs_indirect_result, ChezFfiTypeMapper,
 };
@@ -339,8 +340,10 @@ pub fn generate_struct_file(
     // No `(except … objc)` and no framework-dylib load: a value struct has no ObjC
     // substrate. `(apianyware runtime types)` supplies `coerce-arg` (+ transitively
     // loads `libAPIAnywareChez`); swift-trampoline supplies the coercers + the
-    // forcing reference; async-bridge only when a method is `async`.
-    w.line("  (import (chezscheme)");
+    // forcing reference; async-bridge only when a method is `async`. Init producers
+    // spell `make-<struct>`, which can collide with a `(chezscheme)` builtin
+    // (`Date` → `make-date`); except the offenders so the local define wins.
+    write_line!(w, "  (import {}", chezscheme_import_spec(&exports));
     w.line("          (apianyware runtime types)");
     if bindings.needs_async_bridge() {
         w.line("          (apianyware runtime swift-trampoline)");
@@ -717,8 +720,10 @@ fn emit_header(
     // `nserror-code`, …). Excepting them from the import lets every
     // generated class library freely define those names; the runtime
     // accessors are still reachable from sample-app code via direct
-    // `(apianyware runtime objc)` import.
-    w.line("  (import (chezscheme)");
+    // `(apianyware runtime objc)` import. A Swift-native method/init binding name
+    // can collide with a `(chezscheme)` builtin; except the offenders (strict R6RS
+    // rejects a local define that shadows an import).
+    write_line!(w, "  (import {}", chezscheme_import_spec(exports));
     w.line("          (apianyware runtime ffi)");
     w.line(
         "          (except (apianyware runtime objc) \
