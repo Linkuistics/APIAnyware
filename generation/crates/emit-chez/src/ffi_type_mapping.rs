@@ -109,7 +109,11 @@ impl FfiTypeMapper for ChezFfiTypeMapper {
             TypeRefKind::Primitive { name } => {
                 let n = normalize(name);
                 if n == "void" {
-                    return if is_return_type { "void".into() } else { "void*".into() };
+                    return if is_return_type {
+                        "void".into()
+                    } else {
+                        "void*".into()
+                    };
                 }
                 if n == "pointer" {
                     return "void*".into();
@@ -213,13 +217,12 @@ pub fn block_make_expr(
         .map(|p| {
             format!(
                 "'{}",
-                block_callable_token(p, false, mapper)
-                    .expect("block param verified bridgeable")
+                block_callable_token(p, false, mapper).expect("block param verified bridgeable")
             )
         })
         .collect();
-    let ret_tok = block_callable_token(return_type, true, mapper)
-        .expect("block return verified bridgeable");
+    let ret_tok =
+        block_callable_token(return_type, true, mapper).expect("block return verified bridgeable");
     format!(
         "(objc-block-ptr (make-objc-block {} (list {}) '{}))",
         var,
@@ -243,11 +246,21 @@ mod tests {
     fn void_return_vs_param() {
         let m = ChezFfiTypeMapper;
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "void".into() }), true),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
+                true
+            ),
             "void"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "void".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
+                false
+            ),
             "void*"
         );
     }
@@ -256,19 +269,39 @@ mod tests {
     fn primitives() {
         let m = ChezFfiTypeMapper;
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "uint64".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "uint64".into()
+                }),
+                false
+            ),
             "unsigned-64"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "int64".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "int64".into()
+                }),
+                false
+            ),
             "integer-64"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "double".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "double".into()
+                }),
+                false
+            ),
             "double-float"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "bool".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "bool".into()
+                }),
+                false
+            ),
             "boolean"
         );
     }

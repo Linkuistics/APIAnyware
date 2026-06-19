@@ -211,6 +211,8 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
+            swift_fn: None,
         }
     }
 
@@ -235,6 +237,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }
     }
 

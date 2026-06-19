@@ -40,6 +40,19 @@ generation/targets/gerbil/lib/*
 # bindings it is reproducible from the IR (build order: generate -> swift build).
 swift/Sources/APIAnywareRacket/Generated/
 
+# Generated chez Swift-native trampolines (ADR-0027 ported to chez, leaf 060):
+# one @_cdecl per Swift-native residual decl, emitted into the APIAnywareChez
+# Swift target by `apianyware-macos-generate` and compiled by `swift build`.
+# Reproducible from the IR (build order: generate -> swift build).
+swift/Sources/APIAnywareChez/Generated/
+
+# Generated gerbil Swift-native trampolines (ADR-0029, leaf 070): one @_cdecl per
+# Swift-native residual decl, emitted into the APIAnywareGerbil Swift target by
+# `apianyware-macos-generate` and compiled by `swift build` into
+# libAPIAnywareGerbil.dylib (the deliberate ADR-0017 deviation — gerbil grows a
+# `swift build` step). Reproducible from the IR (build order: generate -> swift build).
+swift/Sources/APIAnywareGerbil/Generated/
+
 # Racket bytecode caches
 generation/targets/*/runtime/compiled/
 generation/targets/*/apianyware/runtime/compiled/

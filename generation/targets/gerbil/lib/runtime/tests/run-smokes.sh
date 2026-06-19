@@ -56,5 +56,47 @@ for smoke in smoke-data-plane smoke-dual-surface smoke-native-bridges smoke-subc
   fi
 done
 
+# Swift-native trampoline smoke (ADR-0029) — the permanent regression guard for
+# the complete-API trampoline path. It has its OWN runner because it links the
+# extra `-lAPIAnywareGerbil` line (the dylib the trampolines live in) that the
+# pure-ObjC smokes above never need. Chained here so "verifying the runtime"
+# always exercises the trampoline require-shape (the `define-c-lambda` bindings
+# resolving) + the constant-trampoline round-trip at module init. Requires the
+# generated createml bindings + the built dylib; if either is absent we SKIP with
+# a build instruction rather than fail (a fresh checkout has neither until the
+# pipeline + swift build have run).
+echo "== smoke-swift-trampoline (ADR-0029 Swift-native guard) =="
+TRAMPOLINE_DYLIB=""
+for triple_dir in "$LIB"/../../../../swift/.build/*/; do
+  for profile in release debug; do
+    [ -f "$triple_dir$profile/libAPIAnywareGerbil.dylib" ] && TRAMPOLINE_DYLIB="found" && break 2
+  done
+done
+if [ -z "$TRAMPOLINE_DYLIB" ] || [ ! -f "$LIB/createml/functions.ss" ]; then
+  echo "   SKIP — needs generate --target gerbil + swift build -c release --product APIAnywareGerbil"
+elif "$HERE/run-swift-trampoline-smoke.sh" | sed 's/^/   /'; then
+  echo "   smoke-swift-trampoline OK"
+else
+  echo "   !! smoke-swift-trampoline FAILED"; rc=1
+fi
+
+# Swift-native METHOD trampoline smoke (ADR-0030/0032) — the permanent regression
+# guard for the receiver-handle METHOD frontier (the method analogue of the
+# free-function smoke above, leaf 050-gerbil/020). Like its sibling it has its OWN
+# runner (run-swift-method-smoke.sh) which links `-lAPIAnywareGerbil` and
+# precompiles the foundation import closure the two exemplars touch. Chained here so
+# "verifying the runtime" always exercises the method receiver-handle bindings
+# (init producer D2 + mutating value-receiver write-back D3) AND the first gerbil
+# async path (URLSession.data(from:) via async-bridge.ss). Requires the generated
+# foundation bindings + the built dylib; SKIP with a build instruction otherwise.
+echo "== smoke-swift-method (ADR-0030/0032 Swift-native METHOD guard) =="
+if [ -z "$TRAMPOLINE_DYLIB" ] || [ ! -f "$LIB/foundation/indexset.ss" ] || [ ! -f "$LIB/foundation/urlsession.ss" ]; then
+  echo "   SKIP — needs generate --target gerbil + swift build -c release --product APIAnywareGerbil"
+elif "$HERE/run-swift-method-smoke.sh" | sed 's/^/   /'; then
+  echo "   smoke-swift-method OK"
+else
+  echo "   !! smoke-swift-method FAILED"; rc=1
+fi
+
 [ $rc -eq 0 ] && echo "ALL SMOKES OK" || echo "SMOKE FAILURES"
 exit $rc

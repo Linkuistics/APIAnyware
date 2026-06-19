@@ -31,7 +31,11 @@ pub fn generate_enums_file(enums: &[Enum], framework: &str) -> String {
     let mut w = CodeWriter::new();
     let fw_low = framework.to_ascii_lowercase();
 
-    write_line!(w, ";; Generated enum definitions for {} — do not edit", framework);
+    write_line!(
+        w,
+        ";; Generated enum definitions for {} — do not edit",
+        framework
+    );
     write_line!(w, "(library (apianyware {} enums)", fw_low);
 
     if plan.exports.is_empty() {
@@ -163,10 +167,7 @@ fn build_plan(enums: &[Enum]) -> EnumPlan {
         }
     }
 
-    EnumPlan {
-        exports,
-        decisions,
-    }
+    EnumPlan { exports, decisions }
 }
 
 #[cfg(test)]
@@ -194,6 +195,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }
     }
 
@@ -218,10 +220,7 @@ mod tests {
 
     #[test]
     fn same_name_same_value_is_deduped() {
-        let enums = vec![
-            en("A", &[("zero", 0)]),
-            en("B", &[("zero", 0)]),
-        ];
+        let enums = vec![en("A", &[("zero", 0)]), en("B", &[("zero", 0)])];
         let out = generate_enums_file(&enums, "TestKit");
         // Only one `(define zero 0)` survives — the second-enum's
         // duplicate is dropped.
@@ -263,10 +262,7 @@ mod tests {
     fn names_colliding_with_chez_builtin_emit_fine() {
         // `reverse`, `and`, `or`, `error`, `force` would conflict with
         // (chezscheme) exports but are fine under (only (rnrs base) define).
-        let enums = vec![en(
-            "SortOrder",
-            &[("forward", 0), ("reverse", 1)],
-        )];
+        let enums = vec![en("SortOrder", &[("forward", 0), ("reverse", 1)])];
         let out = generate_enums_file(&enums, "Foundation");
         assert!(out.contains("(define reverse 1)"));
         assert!(out.contains("(only (rnrs base) define)"));

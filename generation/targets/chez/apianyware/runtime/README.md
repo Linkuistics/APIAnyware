@@ -82,6 +82,32 @@ chez --libdirs $LIBDIRS \
 #   [smoke-dispatch] 3. Dynamic subclass override OK
 #   [smoke-dispatch] 4. Background dispatch_async callback OK
 #   [smoke-dispatch] all tests passed
+
+# 4. swift-trampoline.sls — the Swift-native residual (ADR-0027/0028) reaches
+#    chez through libAPIAnywareChez's @_cdecl trampolines. Permanent regression
+#    guard for the trampoline require-shape + the constant-trampoline round-trip
+#    (the chez analog of racket's RUNTIME_LOAD_TEST registration; leaf 060/020).
+#    Requires a freshly built dylib: (cd swift && SDKROOT=macosx swift build).
+chez --libdirs $LIBDIRS \
+     --script generation/targets/chez/apianyware/runtime/tests/smoke-swift-trampoline.sls
+# → ok  timestampSeed-is-integer / -is-positive   (CreateML.timestampSeed -> Int)
+#   ok  MLCreateErrorDomain-value                  ("com.apple.CreateML")
+#   swift-trampoline smoke: 3/3 OK
+
+# 5. swift-method.sls — the Swift-native METHOD frontier (ADR-0030/0031) reaches
+#    chez through libAPIAnywareChez's receiver-handle @_cdecl trampolines. Drives
+#    both 030 known-good exemplars through the GENERATED bindings: pop-B IndexSet
+#    init→contains→mutating insert! write-back (D2+D3) and pop-A async
+#    URLSession.data(from: file://…) via async-bridge.sls (R4, the first chez async
+#    path). Requires generated bindings + a freshly built dylib with the method
+#    entries: (SDKROOT=macosx ./target/release/apianyware-macos-generate --target chez
+#    --input-dir collection/ir/collected ; cd swift && SDKROOT=macosx swift build
+#    --product APIAnywareChez).
+chez --libdirs $LIBDIRS \
+     --script generation/targets/chez/apianyware/runtime/tests/smoke-swift-method.sls
+# → ok  indexset-init-producer-returns-handle … contains-7-after-insert-D3-writeback
+#   ok  async-completion-fired / async-delivered-data-response-handle
+#   swift-method smoke: 10/10 OK
 ```
 
 ## What's not here yet

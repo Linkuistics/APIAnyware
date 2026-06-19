@@ -308,6 +308,33 @@
   :gerbil-bindings/foundation/formatter
   :gerbil-bindings/foundation/urlsessiontask
   :gerbil-bindings/foundation/unit
+  :gerbil-bindings/foundation/characterset
+  :gerbil-bindings/foundation/personnamecomponents
+  :gerbil-bindings/foundation/morphology
+  :gerbil-bindings/foundation/indexset
+  :gerbil-bindings/foundation/attributecontainer
+  :gerbil-bindings/foundation/attributedstring
+  :gerbil-bindings/foundation/attributedsubstring
+  :gerbil-bindings/foundation/data
+  :gerbil-bindings/foundation/locale
+  :gerbil-bindings/foundation/predicatecodableconfiguration
+  :gerbil-bindings/foundation/bytecountformatstyle
+  :gerbil-bindings/foundation/stringstyle
+  :gerbil-bindings/foundation/timezone
+  :gerbil-bindings/foundation/urlresourcevalues
+  :gerbil-bindings/foundation/url
+  :gerbil-bindings/foundation/urlcomponents
+  :gerbil-bindings/foundation/urlqueryitem
+  :gerbil-bindings/foundation/date
+  :gerbil-bindings/foundation/dateinterval
+  :gerbil-bindings/foundation/indexpath
+  :gerbil-bindings/foundation/uuid
+  :gerbil-bindings/foundation/affinetransform
+  :gerbil-bindings/foundation/erroruserinfokey
+  :gerbil-bindings/foundation/urlrequest
+  :gerbil-bindings/foundation/nsfastenumerationiterator
+  :gerbil-bindings/foundation/localizedstringresource
+  :gerbil-bindings/foundation/decimal
   :gerbil-bindings/foundation/protocols/nscachedelegate
   :gerbil-bindings/foundation/protocols/nscoding
   :gerbil-bindings/foundation/protocols/nsconnectiondelegate
@@ -1761,6 +1788,7 @@
   NSNonRetainedObjectMapValueCallBacks
   NSNormalizedPredicateOption
   NSNotEqualToPredicateOperatorType
+  NSNotFound
   NSNotPredicateType
   NSNotification
   NSNotification?
@@ -3110,6 +3138,13 @@
   addresses!
   ae-desc
   aete-resource
+  affinetransform-invert!
+  affinetransform-inverted
+  affinetransform-rotate-by-degrees!
+  affinetransform-rotate-by-radians!
+  affinetransform-scale!
+  affinetransform-scale-x-y!
+  affinetransform-translate-x-y!
   all-credentials
   all-header-fields
   all-http-header-fields
@@ -3170,12 +3205,14 @@
   attribute-for-local-name-uri
   attribute-for-name
   attribute-keys
+  attributecontainer-filter-inherited-by-added-text
   attributed-content-text
   attributed-string-for-nil
   attributed-string-for-not-a-number
   attributed-string-for-object-value-with-default-attributes
   attributed-string-for-zero
   attributed-title
+  attributedstring-inflected
   attributedstringattributemutation-selectors
   attributedstringprotocol-selectors
   attributes
@@ -3207,6 +3244,7 @@
   bundle-identifier
   bundle-path
   bundle-url
+  bytecountformatstyle-format
   bytes
   cache-policy
   cached-response
@@ -3239,6 +3277,10 @@
   character-encoding
   character-is-member
   characters-to-be-skipped
+  characterset-has-member-in-plane
+  characterset-insert-characters-in!
+  characterset-invert!
+  characterset-remove-characters-in!
   checking-types
   child-at-index
   child-count
@@ -3378,14 +3420,22 @@
   custom-playground-quick-look
   custom-selector
   data
+  data-advanced-by
   data-decoding-strategy
   data-encoding-strategy
   data-for-key
+  data-index-after
+  data-index-before
+  data-make-iterator
   data-representation
+  data-reserve-capacity!
   data-task-with-request
   data-task-with-url
   dataprotocol-selectors
   date
+  date-add-time-interval!
+  date-adding-time-interval
+  date-advanced-by
   date-by-adding-components-to-date-options
   date-by-adding-unit-value-to-date-options
   date-by-setting-hour-minute-second-of-date-options
@@ -3393,6 +3443,7 @@
   date-decoding-strategy
   date-encoding-strategy
   date-format
+  date-formatted
   date-from-components
   date-from-string
   date-matches-components
@@ -3409,6 +3460,8 @@
   daylight-saving-time-offset-for-date
   dealloc
   debug-description
+  decimal-formatted
+  decimal-negate!
   decimal-number-by-adding
   decimal-number-by-adding-with-behavior
   decimal-number-by-dividing-by
@@ -3434,7 +3487,6 @@
   decode-int64-for-key
   decode-object-for-key
   decode-port-object
-  decode-top-level-object
   decoding-failure-policy
   decomposed-string-with-canonical-mapping
   decomposed-string-with-compatibility-mapping
@@ -3638,6 +3690,7 @@
   filehandle-encode-with-coder
   filehandle-offset
   filehandle-read-to-end
+  filehandle-read-up-to-count
   filehandle-seek-to-end
   filehandle-supports-secure-coding
   filename
@@ -3760,6 +3813,17 @@
   indexes-in-range-options-passing-test
   indexes-passing-test
   indexes-with-options-passing-test
+  indexpath-append!
+  indexpath-appending
+  indexpath-drop-last
+  indexpath-index-after
+  indexpath-index-before
+  indexpath-make-iterator
+  indexset-contains
+  indexset-insert!
+  indexset-make-iterator
+  indexset-remove-all!
+  indexset-shift-starting-at-by!
   info-dictionary
   informative-text
   init-absolute-url-with-data-representation-relative-to-url
@@ -3947,6 +4011,7 @@
   jsonencoder-set-output-formatting!
   jsonencoder-set-user-info!
   jsonencoder-user-info
+  kCFStringEncodingASCII
   key
   key-class-description
   key-decoding-strategy
@@ -3997,6 +4062,14 @@
   local-port
   locale
   locale-identifier
+  locale-localized-string-for-collation-identifier
+  locale-localized-string-for-collator-identifier
+  locale-localized-string-for-currency-code
+  locale-localized-string-for-identifier
+  locale-localized-string-for-language-code
+  locale-localized-string-for-region-code
+  locale-localized-string-for-script-code
+  locale-localized-string-for-variant-code
   localizations
   localized-additional-description
   localized-attributed-string-for-key-value-table
@@ -4033,11 +4106,37 @@
   mach-port
   main
   main-document-url
+  make-affinetransform
+  make-affinetransform-m11-m12-m21-m22-t-x-t-y
+  make-affinetransform-rotation-by-degrees
+  make-affinetransform-rotation-by-radians
+  make-affinetransform-scale
+  make-affinetransform-scale-by-x-by-y
+  make-affinetransform-translation-by-x-by-y
+  make-attributecontainer
+  make-attributedstring
+  make-attributedstring-string-literal
   make-attributedstringattributemutation
   make-attributedstringprotocol
+  make-attributedsubstring
   make-bundle
+  make-characterset
+  make-characterset-characters-in
+  make-characterset-contents-of-file
   make-contiguousbytes
+  make-data
+  make-data-capacity
+  make-data-count
+  make-data-repeating-count
   make-dataprotocol
+  make-date
+  make-date-time-interval-since-now
+  make-date-time-interval-since-reference-date
+  make-date-time-interval-since1970
+  make-dateinterval
+  make-decimal
+  make-decimal-float-literal
+  make-decimal-integer-literal
   make-decodableattributedstringkey
   make-decodablewithconfiguration
   make-dimension
@@ -4045,17 +4144,24 @@
   make-discreteformatstyle
   make-encodableattributedstringkey
   make-encodablewithconfiguration
+  make-erroruserinfokey-raw-value
   make-filehandle
   make-filehandle-init-with-coder
   make-filemanager
   make-formatstyle
   make-httpcookiestorage
-  make-iterator
+  make-indexpath
+  make-indexpath-index
+  make-indexset
+  make-indexset-integer
   make-jsondecoder
   make-jsonencoder
+  make-locale-identifier
+  make-localizedstringresource-string-literal
   make-markdowndecodableattributedstringkey
   make-measurementformatter
   make-measurementformatter-init-with-coder
+  make-morphology
   make-mutabledataprotocol
   make-notificationcenter
   make-nsaffinetransform-init-with-coder
@@ -4276,6 +4382,8 @@
   make-nsnotificationqueue-init-with-notification-center
   make-nsnull
   make-nsnull-init-with-coder
+  make-nsnumber-boolean-literal
+  make-nsnumber-float-literal
   make-nsnumber-init-with-bool
   make-nsnumber-init-with-char
   make-nsnumber-init-with-coder
@@ -4292,6 +4400,7 @@
   make-nsnumber-init-with-unsigned-long
   make-nsnumber-init-with-unsigned-long-long
   make-nsnumber-init-with-unsigned-short
+  make-nsnumber-integer-literal
   make-nsnumberformatter
   make-nsoperation
   make-nsoperationqueue
@@ -4376,6 +4485,7 @@
   make-nsstream
   make-nsstreamdelegate
   make-nsstring-init-with-coder
+  make-nsstring-string
   make-nstask
   make-nstermofaddress
   make-nstermofaddress-init-with-coder
@@ -4542,8 +4652,10 @@
   make-operationqueue
   make-parseableformatstyle
   make-parsestrategy
+  make-personnamecomponents
   make-port
   make-port-init-with-coder
+  make-predicatecodableconfiguration
   make-predicateexpression
   make-process
   make-processinfo
@@ -4555,6 +4667,9 @@
   make-scanner
   make-sortcomparator
   make-timer
+  make-timezone-abbreviation
+  make-timezone-identifier
+  make-timezone-seconds-from-gmt
   make-undomanager
   make-unitenergy
   make-unitenergy-init-with-coder
@@ -4570,11 +4685,23 @@
   make-unittemperature-init-with-coder
   make-unitvolume
   make-unitvolume-init-with-coder
+  make-url-file-reference-literal-resource-name
+  make-url-file-url-with-path
+  make-url-file-url-with-path-is-directory
+  make-url-string
+  make-url-string-encoding-invalid-characters
   make-urlcache
+  make-urlcomponents
+  make-urlcomponents-string
+  make-urlcomponents-string-encoding-invalid-characters
+  make-urlqueryitem-name-value
+  make-urlresourcevalues
   make-urlsession
   make-urlsessiontasktransactionmetrics
   make-urlsessionwebsockettask
   make-userdefaults
+  make-uuid
+  make-uuid-uuid-string
   markdowndecodableattributedstringkey-selectors
   matches-apple-event-code
   matches-contents-of-url
@@ -4614,6 +4741,7 @@
   month
   month-symbols
   morphology
+  morphology-custom-pronoun-for-language
   mounted-volume-ur-ls-including-resource-values-for-keys-options
   move-item-at-path-to-path-error!
   move-item-at-url-to-url-error!
@@ -5009,6 +5137,7 @@
   nscoder-allows-keyed-coding
   nscoder-decode-data-object
   nscoder-decode-top-level-object
+  nscoder-decode-top-level-object-for-key
   nscoder-decoding-failure-policy
   nscoder-encode-data-object
   nscoder-error
@@ -5459,6 +5588,7 @@
   nsextensionitem-user-info
   nsextensionrequesthandling-selectors
   nsfastenumeration-selectors
+  nsfastenumerationiterator-next!
   nsfileaccessintent-reading-intent-with-url-options
   nsfileaccessintent-url
   nsfileaccessintent-writing-intent-with-url-options
@@ -8263,7 +8393,6 @@
   objects-by-evaluating-with-containers
   objects-for-x-query-constants-error
   objects-for-x-query-error
-  offset
   offset-in-file
   old
   open
@@ -8324,6 +8453,7 @@
   persistent-domain-for-name
   persistent-identifier
   person-name-components-from-string
+  personnamecomponents-formatted
   phone-number
   phonetic
   phonetic-representation
@@ -8433,11 +8563,9 @@
   read-data-to-end-of-file-and-return-error
   read-data-up-to-length-error
   read-from-url-options-error
-  read-to-end
   ready
   realm
   reason
-  receive
   receive-message-with-completion-handler
   receive-port
   receivers-specifier
@@ -8614,12 +8742,12 @@
   scale
   scale-by
   scale-x-by-y-by
-  scan-character
-  scan-decimal
   scan-location
   scanner-current-index
   scanner-scan-character
   scanner-scan-decimal
+  scanner-scan-string
+  scanner-scan-up-to-string
   scanner-set-current-index!
   schedule-in-run-loop-for-mode
   schedule-notification
@@ -8645,7 +8773,6 @@
   secure
   secure-connection-end-date
   secure-connection-start-date
-  seek-to-end
   seek-to-offset-error
   selector
   selector-for-command
@@ -9248,6 +9375,7 @@
   string-from-value-unit
   string-value
   string-with-file-system-representation-length
+  stringstyle-format
   style
   subgroups
   subject-form
@@ -9398,12 +9526,24 @@
   ur-ls-for-resources-with-extension-subdirectory-localization
   uri
   url
+  url-append-path-component!
+  url-append-path-component-is-directory!
+  url-append-path-extension!
+  url-appending-path-component
+  url-appending-path-component-is-directory
+  url-appending-path-extension
   url-by-deleting-last-path-component
   url-by-deleting-path-extension
   url-by-resolving-symlinks-in-path
   url-by-standardizing-path
   url-cache
+  url-check-promised-item-is-reachable
+  url-check-resource-is-reachable
   url-credential-storage
+  url-delete-last-path-component!
+  url-delete-path-extension!
+  url-deleting-last-path-component
+  url-deleting-path-extension
   url-for-auxiliary-executable
   url-for-directory-in-domain-appropriate-for-url-create-error
   url-for-key
@@ -9411,7 +9551,28 @@
   url-for-resource-with-extension-subdirectory
   url-for-resource-with-extension-subdirectory-localization
   url-for-ubiquity-container-identifier
+  url-formatted
+  url-fragment-percent-encoded
+  url-host-percent-encoded
+  url-password-percent-encoded
+  url-path-percent-encoded
+  url-query-percent-encoded
   url-relative-to-url
+  url-remove-all-cached-resource-values!
+  url-resolve-symlinks-in-path!
+  url-resolving-symlinks-in-path
+  url-standardize!
+  url-start-accessing-security-scoped-resource
+  url-stop-accessing-security-scoped-resource
+  url-user-percent-encoded
+  urlcomponents-url-relative-to
+  urlrequest-add-value-for-http-header-field!
+  urlrequest-set-value-for-http-header-field!
+  urlrequest-value-for-http-header-field
+  urlsession-data-for
+  urlsession-data-from
+  urlsession-data-task-publisher-for
+  urlsession-upload-for-from-file
   urlsessiontasktransactionmetrics-local-port
   urlsessiontasktransactionmetrics-negotiated-tls-cipher-suite
   urlsessiontasktransactionmetrics-negotiated-tls-protocol-version

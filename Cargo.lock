@@ -197,6 +197,7 @@ version = "0.1.0"
 dependencies = [
  "apianyware-macos-emit",
  "apianyware-macos-types",
+ "serde_json",
  "tempfile",
 ]
 

@@ -286,6 +286,9 @@ fn extract_class(
         ancestors: Vec::new(),
         all_methods: Vec::new(),
         all_properties: Vec::new(),
+        // extract-objc nodes are clang `c:`/`So` cursors — ObjC-runtime
+        // reachable by construction (ADR-0026).
+        objc_exposed: true,
     })
 }
 
@@ -498,6 +501,9 @@ fn extract_method(
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: true,
+        // ObjC methods bind via msgSend; no Swift-native trampoline metadata.
+        swift_fn: None,
     })
 }
 
@@ -567,6 +573,7 @@ fn extract_property(
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
         origin: None,
+        objc_exposed: true,
     })
 }
 
@@ -639,6 +646,7 @@ fn extract_protocol(
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
+        objc_exposed: true,
     })
 }
 
@@ -738,9 +746,7 @@ fn relativize_unnamed_name(name: &str, sdk_path: &Path) -> String {
     // Peel the trailing `:<line>:<col>` off the right. POSIX header paths carry
     // no `:`, so the two rightmost colons unambiguously delimit line and column.
     let mut parts = body.rsplitn(3, ':');
-    let (Some(col), Some(line), Some(path_str)) =
-        (parts.next(), parts.next(), parts.next())
-    else {
+    let (Some(col), Some(line), Some(path_str)) = (parts.next(), parts.next(), parts.next()) else {
         return name.to_string();
     };
     // Reuse `extract_provenance`'s relativization: strip the SDK root, falling
@@ -817,6 +823,7 @@ fn extract_enum(entity: &Entity<'_>, sdk_path: &Path) -> Option<ir::Enum> {
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
+        objc_exposed: true,
     })
 }
 
@@ -865,9 +872,13 @@ fn extract_struct(entity: &Entity<'_>, sdk_path: &Path) -> Option<ir::Struct> {
     Some(ir::Struct {
         name,
         fields,
+        // C structs carry only fields; Swift-native value-type methods are
+        // recovered on the extract-swift side (leaf 020).
+        methods: vec![],
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
+        objc_exposed: true,
     })
 }
 
@@ -938,6 +949,10 @@ fn extract_function(
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
+        objc_exposed: true,
+        // ObjC/C functions bind directly (trampoline-elided); no Swift-native
+        // call metadata (ADR-0027 / leaf 040/020).
+        swift_fn: None,
     })
 }
 
@@ -1006,6 +1021,7 @@ fn extract_constant(
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
         macro_value: None,
+        objc_exposed: true,
     })
 }
 
@@ -1052,6 +1068,7 @@ fn extract_cfstr_macro_constant(entity: &Entity<'_>, sdk_path: &Path) -> Option<
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
         macro_value: Some(string_value),
+        objc_exposed: true,
     })
 }
 

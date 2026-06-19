@@ -15,7 +15,6 @@
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/AppKit.framework/AppKit"))
 (define _objc-lib (ffi-lib "libobjc"))
 
-;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -552,7 +551,6 @@
   [nsapplication-yield-activation-to-application (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-yield-activation-to-application-with-bundle-identifier (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-detach-drawing-thread-to-target-with-object (c-> string? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
-  [nsapplication-load-application (c-> void?)]
   )
 
 ;; --- Class reference ---
@@ -1886,5 +1884,3 @@
 ;; --- Class methods ---
 (define (nsapplication-detach-drawing-thread-to-target-with-object selector target argument)
   (aw_racket_msg_PPP_v (id->ffi2-ptr NSApplication) (id->ffi2-ptr (sel_registerName "detachDrawingThread:toTarget:withObject:")) (id->ffi2-ptr (sel_registerName selector)) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (coerce-arg argument))))
-(define (nsapplication-load-application)
-  (aw_racket_msg_0_v (id->ffi2-ptr NSApplication) (id->ffi2-ptr (sel_registerName "loadApplication"))))

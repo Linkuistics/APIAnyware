@@ -227,6 +227,13 @@ fn build_effective_methods_for_class(
                         *is_cm,
                     ))),
                     satisfies_protocol: None,
+                    // Minimal cross-framework inherited method: no source decl
+                    // in our index. Default to the ObjC-exposed limit (ADR-0026)
+                    // — the in-index branch above clones and preserves the fact.
+                    objc_exposed: true,
+                    // No source decl ⇒ no Swift-native call metadata; the
+                    // in-index branch clones and preserves the real value.
+                    swift_fn: None,
                 };
                 if let Some(proto) =
                     protocol_satisfaction.get(&(class.as_str(), sel.as_str(), *is_cm))
@@ -279,6 +286,7 @@ fn build_effective_properties_for_class(
                     provenance: None,
                     doc_refs: None,
                     origin: Some(origin.clone()),
+                    objc_exposed: true,
                 }
             }
         })

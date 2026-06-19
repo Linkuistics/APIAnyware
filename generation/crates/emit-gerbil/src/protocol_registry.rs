@@ -74,11 +74,7 @@ impl ProtocolRegistry {
     }
 
     /// Register one protocol→inherits edge set (test helper / incremental build).
-    pub fn insert(
-        &mut self,
-        protocol_name: impl Into<String>,
-        inherits: Vec<String>,
-    ) {
+    pub fn insert(&mut self, protocol_name: impl Into<String>, inherits: Vec<String>) {
         self.inherits.insert(protocol_name.into(), inherits);
     }
 

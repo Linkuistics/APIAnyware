@@ -111,7 +111,15 @@ pub struct AbiNode {
     #[serde(default)]
     pub throwing: bool,
 
-    /// Whether this function is async.
+    /// Whether this function is async, **as reported by an `async` JSON field**.
+    ///
+    /// WARNING: `swift-api-digester` (json_format_version 8, Xcode 16) does **not**
+    /// emit an `async` field — async is recoverable only from the mangled-name
+    /// `Ya` effect marker (see [`mangled_is_async`] in `declaration_mapping`). This
+    /// field therefore deserializes to `false` on every current decl; it is kept
+    /// for forward-compatibility with a future digester that does surface it, and
+    /// is OR-ed with the mangled-name detection rather than read alone. (`throwing`
+    /// above *is* emitted, so it is read directly.)
     #[serde(default, rename = "async")]
     pub is_async: bool,
 

@@ -6,13 +6,13 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::generate_class_file;
+use crate::emit_class::{generate_class_file_with_structs, generate_struct_file};
 use crate::emit_constants::generate_constants_file;
 use crate::emit_enums::generate_enums_file;
 use crate::emit_functions::{count_emittable, generate_functions_file};
@@ -51,13 +51,42 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
 
     let mut files_written: usize = 0;
 
-    // Class files
+    // Class files. The owning framework's value-struct set is the soundness gate for
+    // unboxing value-struct params on Swift-native methods (threaded so emit_class
+    // classifies identically to the global trampoline pass).
+    let value_structs = crate::trampoline::value_struct_names(&fw.structs);
     let mut class_files: Vec<(String, String)> = Vec::new();
+    let mut used_filenames: std::collections::HashSet<String> = std::collections::HashSet::new();
     for cls in &fw.classes {
         let filename = format!("{}.rkt", class_name_to_lowercase(&cls.name));
-        let content = generate_class_file(cls, &fw.name, fw.enrichment.as_ref());
+        let content = generate_class_file_with_structs(
+            cls,
+            &fw.name,
+            fw.enrichment.as_ref(),
+            &value_structs,
+        );
         emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename.clone());
         class_files.push((cls.name.clone(), filename));
+        files_written += 1;
+    }
+
+    // Swift-native value-struct files (population B, ADR-0030). Only structs that
+    // vend at least one bindable trampoline get a file; a plain C struct yields
+    // `None`. A struct whose lowercased name collides with a class file (rare) takes
+    // a `-struct` suffix so neither clobbers the other.
+    for st in &fw.structs {
+        let Some(content) = generate_struct_file(st, &fw.name, &value_structs) else {
+            continue;
+        };
+        let base = class_name_to_lowercase(&st.name);
+        let mut filename = format!("{base}.rkt");
+        if used_filenames.contains(&filename) {
+            filename = format!("{base}-struct.rkt");
+        }
+        emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename.clone());
+        class_files.push((st.name.clone(), filename));
         files_written += 1;
     }
 
@@ -81,7 +110,7 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
     let emittable_functions = count_emittable(&fw.functions);
     let has_functions = emittable_functions > 0;
     if has_functions {
-        let content = generate_functions_file(&fw.functions, &fw.name);
+        let content = generate_functions_file(&fw.functions, &fw.name, &fw.structs);
         emitter.write_file("functions.rkt", &content)?;
         files_written += 1;
     }
@@ -248,12 +277,15 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
+                swift_fn: None,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.classes_emitted, 1);
@@ -286,6 +318,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.enums_emitted, 1);
@@ -321,11 +354,14 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
+                swift_fn: None,
             }],
             properties: vec![],
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.protocols_emitted, 1);
@@ -361,6 +397,8 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
+            swift_fn: None,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.functions_emitted, 1);
@@ -389,6 +427,8 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
+            swift_fn: None,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.functions_emitted, 0);

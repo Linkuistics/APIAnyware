@@ -558,22 +558,24 @@ mod tests {
         let src = "(import (chezscheme) (apianyware runtime objc))\n(main)\n";
         let w = generate_wrapper(src, &Collisions::new()).unwrap();
         assert!(w.contains("(import (chezscheme) (apianyware runtime objc))"));
-        assert!(w.trim_end().ends_with("(scheme-start (lambda args (main) 0))"));
+        assert!(w
+            .trim_end()
+            .ends_with("(scheme-start (lambda args (main) 0))"));
     }
 
     #[test]
     fn wrapper_tolerates_trailing_whitespace_before_main() {
         let src = "(import (chezscheme))\n(main)\n\n  \n";
         let w = generate_wrapper(src, &Collisions::new()).unwrap();
-        assert!(w.trim_end().ends_with("(scheme-start (lambda args (main) 0))"));
+        assert!(w
+            .trim_end()
+            .ends_with("(scheme-start (lambda args (main) 0))"));
     }
 
     #[test]
     fn wrapper_errs_when_facade_absent_from_source() {
-        let collisions = Collisions::from([(
-            "(apianyware webkit)".to_string(),
-            vec!["foo".to_string()],
-        )]);
+        let collisions =
+            Collisions::from([("(apianyware webkit)".to_string(), vec!["foo".to_string()])]);
         let err = generate_wrapper(HELLO_SOURCE, &collisions).unwrap_err();
         assert!(matches!(err, BundleError::FacadeNotInSource { .. }));
     }

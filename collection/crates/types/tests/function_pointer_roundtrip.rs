@@ -164,6 +164,8 @@ fn function_pointer_in_framework_roundtrip() {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
+            swift_fn: None,
         }],
         constants: vec![],
         class_annotations: vec![],

@@ -2,7 +2,8 @@
 (import :std/foreign
         (rename-in :std/generic (defgeneric g:defgeneric) (defmethod g:defmethod))
         :gerbil-bindings/generics
-        :gerbil-bindings/runtime/objc)
+        :gerbil-bindings/runtime/objc
+        :gerbil-bindings/runtime/swift-trampoline)
 (export
   NSString
   NSString?
@@ -32,6 +33,7 @@
   long-long-value
   lowercase-string
   make-nsstring-init-with-coder
+  make-nsstring-string
   nsstring-absolute-path
   nsstring-available-string-encodings
   nsstring-bool-value
@@ -420,4 +422,19 @@
 
 (define (nsstring-supports-secure-coding)
   (%msg-v->b (objc_getClass "NSString") %sel-nsstring-supports-secure-coding))
+
+;; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---
+;; Trampolined through libAPIAnywareGerbil (aw_gerbil_swift_* entries),
+;; not the framework dylib (ADR-0029); receiver coerced via (->ptr self).
+(begin-ffi (
+            %swift-make-nsstring-string
+            )
+  (c-declare "extern void * aw_gerbil_swift_init_Foundation_NSString_bd6dd38a(void *);")
+
+  (define-c-lambda %swift-make-nsstring-string ((pointer void)) (pointer void) "aw_gerbil_swift_init_Foundation_NSString_bd6dd38a")
+  )
+
+(define make-nsstring-string
+  (lambda (string)
+    (wrap (%swift-make-nsstring-string (aw-swift-string-arg string)) #t)))
 

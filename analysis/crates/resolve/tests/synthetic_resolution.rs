@@ -47,6 +47,7 @@ fn make_class(name: &str, superclass: &str) -> Class {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }
 }
 
@@ -67,6 +68,8 @@ fn make_method(selector: &str, class_method: bool) -> Method {
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -90,6 +93,8 @@ fn make_method_with_params(selector: &str, params: Vec<Param>) -> Method {
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -108,6 +113,7 @@ fn make_property(name: &str) -> Property {
         provenance: None,
         doc_refs: None,
         origin: None,
+        objc_exposed: true,
     }
 }
 
@@ -121,6 +127,57 @@ fn find_class<'a>(frameworks: &'a [Framework], class_name: &str) -> &'a Class {
         .flat_map(|fw| &fw.classes)
         .find(|c| c.name == class_name)
         .unwrap_or_else(|| panic!("class {class_name} not found in resolved frameworks"))
+}
+
+// ---------------------------------------------------------------------------
+// objc_exposed survives the resolve flatten transform (ADR-0026)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn objc_exposed_false_survives_resolve_flattening() {
+    // A class carrying a Swift-native method (objc_exposed: false) — the
+    // per-member trampoline residual. Resolve flattens own + inherited methods
+    // into `all_methods`; the fact must ride through unchanged so the emitter
+    // still sees it after resolve.
+    let mut fw = empty_framework("TestKit");
+    let mut parent = make_class("Parent", "");
+    let mut swift_method = make_method("swiftOnly", false);
+    swift_method.objc_exposed = false;
+    parent.methods = vec![make_method("objcOnly", false), swift_method];
+    let child = make_class("Child", "Parent");
+    fw.classes = vec![parent, child];
+
+    let resolved = resolve(&[fw]);
+
+    // Own class: the method retains objc_exposed: false in all_methods.
+    let parent = find_class(&resolved, "Parent");
+    let swift = parent
+        .all_methods
+        .iter()
+        .find(|m| m.selector == "swiftOnly")
+        .expect("swiftOnly should be in Parent.all_methods");
+    assert!(
+        !swift.objc_exposed,
+        "objc_exposed false must survive flatten"
+    );
+    let objc = parent
+        .all_methods
+        .iter()
+        .find(|m| m.selector == "objcOnly")
+        .expect("objcOnly should be in Parent.all_methods");
+    assert!(objc.objc_exposed, "objc_exposed true preserved");
+
+    // Inherited into the child: the fact rides through inheritance flattening.
+    let child = find_class(&resolved, "Child");
+    let inherited = child
+        .all_methods
+        .iter()
+        .find(|m| m.selector == "swiftOnly")
+        .expect("swiftOnly should be inherited into Child.all_methods");
+    assert!(
+        !inherited.objc_exposed,
+        "inherited Swift-native method keeps objc_exposed: false"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -564,6 +621,7 @@ fn protocol_method_satisfaction_detected() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
 
     let mut fw = empty_framework("TestKit");
@@ -603,6 +661,7 @@ fn inherited_method_satisfies_protocol() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
 
     let mut fw = empty_framework("TestKit");
@@ -651,6 +710,7 @@ fn class_inherits_protocol_method_when_not_declared() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
 
     let mut fw = empty_framework("TestKit");
@@ -713,6 +773,7 @@ fn class_does_not_duplicate_protocol_method_already_declared() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
 
     let mut fw = empty_framework("TestKit");
@@ -755,6 +816,7 @@ fn class_inherits_optional_protocol_methods() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
 
     let mut fw = empty_framework("TestKit");
@@ -788,6 +850,7 @@ fn class_inherits_methods_from_transitive_protocol_inheritance() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
     let proto_b = Protocol {
         name: "ProtoB".to_string(),
@@ -798,6 +861,7 @@ fn class_inherits_methods_from_transitive_protocol_inheritance() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
 
     let mut fw = empty_framework("TestKit");
@@ -837,6 +901,7 @@ fn subclass_inherits_protocol_methods_from_superclass_conformance() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
 
     let mut fw = empty_framework("TestKit");
@@ -874,6 +939,7 @@ fn cross_framework_protocol_method_inheritance() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     };
     let mut fw_foundation = empty_framework("Foundation");
     fw_foundation.protocols = vec![proto];
@@ -1126,6 +1192,7 @@ fn cross_framework_inherited_property_preserves_type() {
         provenance: None,
         doc_refs: None,
         origin: None,
+        objc_exposed: true,
     }];
 
     let mut fw1 = empty_framework("BaseKit");

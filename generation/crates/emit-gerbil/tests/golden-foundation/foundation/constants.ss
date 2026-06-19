@@ -827,6 +827,8 @@
   NSZeroPoint
   NSZeroRect
   NSZeroSize
+  kCFStringEncodingASCII
+  NSNotFound
   )
 
 (begin-ffi (
@@ -3303,6 +3305,19 @@
   (define-c-lambda %const-NSZeroSize () (pointer void) "___return((void*)&NSZeroSize);")
   )
 
+  ;; Swift-native residual — read through libAPIAnywareGerbil constant
+  ;; trampolines (aw_gerbil_swift_const_*) rather than a C symbol (ADR-0029).
+(begin-ffi (
+            %swift-const-kCFStringEncodingASCII
+            %swift-const-NSNotFound
+            )
+  (c-declare "extern unsigned int aw_gerbil_swift_const_Foundation_kCFStringEncodingASCII(void);")
+  (c-declare "extern long long aw_gerbil_swift_const_Foundation_NSNotFound(void);")
+
+  (define-c-lambda %swift-const-kCFStringEncodingASCII () unsigned-int32 "aw_gerbil_swift_const_Foundation_kCFStringEncodingASCII")
+  (define-c-lambda %swift-const-NSNotFound () int64 "aw_gerbil_swift_const_Foundation_NSNotFound")
+  )
+
 (define NSAMPMDesignation (wrap (%const-NSAMPMDesignation)))
 (define NSAlternateDescriptionAttributeName (wrap (%const-NSAlternateDescriptionAttributeName)))
 (define NSAppleEventManagerWillProcessFirstEventNotification (wrap (%const-NSAppleEventManagerWillProcessFirstEventNotification)))
@@ -4126,3 +4141,5 @@
 (define NSZeroPoint (%const-NSZeroPoint))
 (define NSZeroRect (%const-NSZeroRect))
 (define NSZeroSize (%const-NSZeroSize))
+(define kCFStringEncodingASCII (%swift-const-kCFStringEncodingASCII))
+(define NSNotFound (%swift-const-NSNotFound))

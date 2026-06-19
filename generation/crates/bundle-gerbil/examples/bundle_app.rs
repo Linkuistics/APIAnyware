@@ -40,7 +40,10 @@ fn main() -> ExitCode {
         spec.app_name = display;
     }
 
-    eprintln!("building standalone {} (this drives gxc end-to-end)…", spec.app_name);
+    eprintln!(
+        "building standalone {} (this drives gxc end-to-end)…",
+        spec.app_name
+    );
     match bundle_app(&spec, &source_root, &output_dir) {
         Ok(path) => {
             println!("{}", path.display());

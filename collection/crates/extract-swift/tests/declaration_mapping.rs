@@ -124,49 +124,48 @@ fn map_test_framework_struct() {
 }
 
 #[test]
-fn map_test_framework_function_is_filtered_as_swift_native() {
+fn map_test_framework_swift_native_function_is_retained_with_objc_exposed_false() {
     // The synthetic fixture's `createDefaultWidget` has a Swift-mangled USR
-    // (`s:13TestFramework...`). Swift-native top-level functions cannot be
-    // resolved via `dlsym` from the dylib, so they must not land in the
-    // `functions` list; they belong in `skipped_symbols` instead.
+    // (`s:13TestFramework...`). Per ADR-0026 the additive change RETAINS such
+    // Swift-native top-level functions (carrying `objc_exposed: false`) so they
+    // reach the emitter to be trampolined — they are no longer dropped to
+    // `skipped_symbols` under `SWIFT_NATIVE`.
     let json_str = std::fs::read_to_string(fixtures_dir().join("test_framework_abi.json"))
         .expect("read fixture");
     let doc: AbiDocument = serde_json::from_str(&json_str).expect("parse");
     let framework = map_abi_to_framework(&doc, "15.4");
 
-    assert!(
-        framework.functions.is_empty(),
-        "Swift-native createDefaultWidget must not appear in functions; got {:?}",
-        framework
-            .functions
-            .iter()
-            .map(|f| &f.name)
-            .collect::<Vec<_>>()
-    );
-
-    // Swift-native top-level functions are recorded with their printed name
-    // (including parameter labels) so overloads with identical simple names
-    // become distinct entries in `skipped_symbols`. Matches how extract-objc
-    // qualifies methods with their owner class.
-    let skipped = framework
-        .skipped_symbols
+    let func = framework
+        .functions
         .iter()
-        .find(|s| s.name == "createDefaultWidget(name:)")
+        .find(|f| f.name == "createDefaultWidget")
         .unwrap_or_else(|| {
             panic!(
-                "createDefaultWidget(name:) should be recorded in skipped_symbols; got {:?}",
+                "Swift-native createDefaultWidget should be retained in functions; got {:?}",
                 framework
-                    .skipped_symbols
+                    .functions
                     .iter()
-                    .map(|s| &s.name)
+                    .map(|f| &f.name)
                     .collect::<Vec<_>>()
             )
         });
-    assert_eq!(skipped.kind, "function");
     assert!(
-        skipped.reason.contains("swift-native"),
-        "skip reason should mention swift-native, got {:?}",
-        skipped.reason
+        !func.objc_exposed,
+        "createDefaultWidget is Swift-native (s: USR) → objc_exposed must be false"
+    );
+
+    // It must NOT be recorded as a skipped symbol any more.
+    assert!(
+        !framework
+            .skipped_symbols
+            .iter()
+            .any(|s| s.name == "createDefaultWidget(name:)"),
+        "Swift-native top-level functions are retained, not skipped; got {:?}",
+        framework
+            .skipped_symbols
+            .iter()
+            .map(|s| &s.name)
+            .collect::<Vec<_>>()
     );
 }
 
@@ -213,13 +212,13 @@ fn top_level_var(name: &str, usr: &str) -> Value {
 }
 
 #[test]
-fn swift_native_top_level_func_is_skipped_while_c_reexport_is_kept() {
-    // Mixed USR prefixes in one synthetic framework:
-    //   `s:…`   → Swift-native, filter
-    //   `c:@F@` → clang function cursor (real dylib export), keep
-    //   ``      → missing USR: keep (conservative — missing data is not
-    //              evidence of non-linkability, and every real-world node
-    //              produced by the digester carries a USR).
+fn swift_native_top_level_func_is_retained_with_objc_exposed_false() {
+    // Mixed USR prefixes in one synthetic framework (ADR-0026):
+    //   `s:…`   → Swift-native: RETAIN with objc_exposed = false (trampoline)
+    //   `c:@F@` → clang function cursor (real dylib export): retain, exposed
+    //   ``      → missing USR: retain, exposed (conservative — missing data is
+    //              not evidence of non-linkability; every real digester node
+    //              carries a USR).
     let doc = doc_with_top_level(vec![
         top_level_func("swiftNative", "s:10MyFramework11swiftNativeyyF"),
         top_level_func("c_reexport", "c:@F@c_reexport"),
@@ -228,31 +227,44 @@ fn swift_native_top_level_func_is_skipped_while_c_reexport_is_kept() {
 
     let framework = map_abi_to_framework(&doc, "15.4");
 
+    // All three are now retained — Swift-native is no longer dropped.
     let kept: Vec<&str> = framework
         .functions
         .iter()
         .map(|f| f.name.as_str())
         .collect();
-    assert_eq!(
-        kept,
-        vec!["c_reexport", "unknown"],
-        "only `s:`-prefixed functions should be filtered"
-    );
+    assert_eq!(kept, vec!["swiftNative", "c_reexport", "unknown"]);
 
-    // Swift-native functions are recorded with their printed name (parameter
-    // labels included) so overloads with identical simple names remain
-    // distinct in `skipped_symbols`.
+    let exposed_of = |name: &str| {
+        framework
+            .functions
+            .iter()
+            .find(|f| f.name == name)
+            .unwrap_or_else(|| panic!("{name} should be retained"))
+            .objc_exposed
+    };
+    assert!(!exposed_of("swiftNative"), "s: USR → objc_exposed false");
+    assert!(exposed_of("c_reexport"), "c:@F@ USR → objc_exposed true");
+    assert!(exposed_of("unknown"), "missing USR → objc_exposed true");
+
+    // No function lands in skipped_symbols any more (only macro / anon-enum
+    // cursors do, exercised by the dedicated tests below).
     let skipped: Vec<&str> = framework
         .skipped_symbols
         .iter()
         .filter(|s| s.kind == "function")
         .map(|s| s.name.as_str())
         .collect();
-    assert_eq!(skipped, vec!["swiftNative()"]);
+    assert!(
+        skipped.is_empty(),
+        "Swift-native funcs are retained, not skipped; got {skipped:?}"
+    );
 }
 
 #[test]
-fn swift_native_top_level_var_is_skipped_while_c_reexport_is_kept() {
+fn swift_native_top_level_var_is_retained_with_objc_exposed_false() {
+    // ADR-0026: a Swift-native top-level `Var` is retained as a constant
+    // carrying `objc_exposed: false` (trampoline residual), no longer dropped.
     let doc = doc_with_top_level(vec![
         top_level_var("kSwiftNative", "s:10MyFramework13kSwiftNativeSivp"),
         top_level_var("kCReexport", "c:@kCReexport"),
@@ -265,7 +277,18 @@ fn swift_native_top_level_var_is_skipped_while_c_reexport_is_kept() {
         .iter()
         .map(|c| c.name.as_str())
         .collect();
-    assert_eq!(kept, vec!["kCReexport"]);
+    assert_eq!(kept, vec!["kSwiftNative", "kCReexport"]);
+
+    let exposed_of = |name: &str| {
+        framework
+            .constants
+            .iter()
+            .find(|c| c.name == name)
+            .unwrap_or_else(|| panic!("{name} should be retained"))
+            .objc_exposed
+    };
+    assert!(!exposed_of("kSwiftNative"), "s: USR → objc_exposed false");
+    assert!(exposed_of("kCReexport"), "c:@ USR → objc_exposed true");
 
     let skipped: Vec<&str> = framework
         .skipped_symbols
@@ -273,20 +296,28 @@ fn swift_native_top_level_var_is_skipped_while_c_reexport_is_kept() {
         .filter(|s| s.kind == "constant")
         .map(|s| s.name.as_str())
         .collect();
-    assert_eq!(skipped, vec!["kSwiftNative"]);
+    assert!(
+        skipped.is_empty(),
+        "Swift-native vars are retained, not skipped; got {skipped:?}"
+    );
 }
 
 #[test]
-fn foundation_swift_overlay_symbols_are_filtered() {
-    // Regression guard: these four symbols were observed leaking into the
-    // Foundation collected IR via extract-swift despite having no matching
-    // C dylib export. Their USRs (captured verbatim from a real
-    // `swift-api-digester -dump-sdk -module Foundation` run on macOS 26.4)
-    // all begin with the Swift mangling prefix `s:10Foundation…`. The test
-    // reproduces the USR shape inline rather than reading the gitignored
-    // `collection/ir/collected/Foundation.json`, so CI is not silently
-    // green when the checkpoint is absent (see memory: "Prefer synthetic
-    // tests over external-data-dependent tests").
+fn foundation_swift_overlay_symbols_are_retained_for_trampolining() {
+    // These four real Foundation symbols carry Swift-mangled `s:10Foundation…`
+    // USRs (captured verbatim from a real `swift-api-digester -dump-sdk -module
+    // Foundation` run on macOS 26.4). Under the OLD model they were dropped to
+    // `skipped_symbols` because the emitter would have emitted broken `dlsym`
+    // bindings for them. Under ADR-0026 they are RETAINED carrying
+    // `objc_exposed: false`: the direct-vs-trampoline decision moves to the
+    // emitter (040), which trampolines or skips them instead of mis-binding
+    // them — so the old `dlsym`-at-load-time regression is now prevented at the
+    // emitter layer, not by dropping the symbols here.
+    //
+    // The USR shape is reproduced inline rather than read from the gitignored
+    // `collection/ir/collected/Foundation.json`, so CI is not silently green
+    // when the checkpoint is absent (see memory: "Prefer synthetic tests over
+    // external-data-dependent tests").
     let doc = doc_with_top_level(vec![
         top_level_func("pow", "s:10Foundation3powySo9NSDecimalaAD_SitF"),
         top_level_func(
@@ -302,43 +333,123 @@ fn foundation_swift_overlay_symbols_are_filtered() {
 
     let framework = map_abi_to_framework(&doc, "15.4");
 
+    let fn_names: Vec<&str> = framework
+        .functions
+        .iter()
+        .map(|f| f.name.as_str())
+        .collect();
+    assert_eq!(fn_names, vec!["pow", "NSLocalizedString"]);
+    let const_names: Vec<&str> = framework
+        .constants
+        .iter()
+        .map(|c| c.name.as_str())
+        .collect();
+    assert_eq!(const_names, vec!["kCFStringEncodingASCII", "NSNotFound"]);
+
+    // Every retained Swift-native symbol carries objc_exposed: false.
     assert!(
-        framework.functions.is_empty(),
-        "no Foundation swift-overlay functions should reach the IR: got {:?}",
-        framework
-            .functions
-            .iter()
-            .map(|f| &f.name)
-            .collect::<Vec<_>>()
+        framework.functions.iter().all(|f| !f.objc_exposed),
+        "swift-overlay functions must carry objc_exposed: false"
     );
     assert!(
-        framework.constants.is_empty(),
-        "no Foundation swift-overlay constants should reach the IR: got {:?}",
-        framework
-            .constants
-            .iter()
-            .map(|c| &c.name)
-            .collect::<Vec<_>>()
+        framework.constants.iter().all(|c| !c.objc_exposed),
+        "swift-overlay constants must carry objc_exposed: false"
     );
 
-    // Functions are qualified with their parameter labels (via printed_name);
-    // vars carry their simple name (no overloads, no labels).
-    let skipped_names: std::collections::BTreeSet<&str> = framework
+    // None of them is dropped to skipped_symbols any more.
+    assert!(
+        framework.skipped_symbols.is_empty(),
+        "swift-overlay symbols are retained, not skipped; got {:?}",
+        framework
+            .skipped_symbols
+            .iter()
+            .map(|s| &s.name)
+            .collect::<Vec<_>>()
+    );
+}
+
+// ---------------------------------------------------------------------------
+// objc_exposed on retained Swift-native TYPES — synthetic tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn swift_native_types_carry_objc_exposed_false() {
+    // The synthetic TestFramework fixture is entirely Swift-native (every USR
+    // is `s:13TestFramework…`). ADR-0026: these already-retained type decls now
+    // carry `objc_exposed: false` so the emitter can route them away from the
+    // latently-broken `objc_msgSend` bindings.
+    let json = std::fs::read_to_string(fixtures_dir().join("test_framework_abi.json"))
+        .expect("read fixture");
+    let doc: AbiDocument = serde_json::from_str(&json).expect("parse");
+    let framework = map_abi_to_framework(&doc, "15.4");
+
+    let widget = &framework.classes[0];
+    assert_eq!(widget.name, "Widget");
+    assert!(
+        !widget.objc_exposed,
+        "Swift-native class → objc_exposed false"
+    );
+    // Per-member granularity: the class's own Swift methods carry false too.
+    assert!(
+        widget.methods.iter().all(|m| !m.objc_exposed),
+        "Swift-native methods must carry objc_exposed: false"
+    );
+    assert!(
+        widget.properties.iter().all(|p| !p.objc_exposed),
+        "Swift-native properties must carry objc_exposed: false"
+    );
+    assert!(
+        !framework.protocols[0].objc_exposed,
+        "Swift-native protocol → objc_exposed false"
+    );
+    assert!(
+        !framework.enums[0].objc_exposed,
+        "Swift-native enum → objc_exposed false"
+    );
+    assert!(
+        !framework.structs[0].objc_exposed,
+        "Swift-native struct → objc_exposed false"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Deferred ABI kinds — synthetic tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn deferred_abi_kinds_are_recorded_in_skipped_symbols() {
+    // ADR-0026/D2: Macro / TypeAlias / AssociatedType top-level ABI nodes are
+    // not yet walked, but recording them in skipped_symbols (under
+    // `deferred_abi_kind`) makes the drop auditable rather than the former
+    // silent `_ => {}`. Recovering them is a later frontier leaf.
+    let doc = doc_with_top_level(vec![
+        json!({ "kind": "TypeAlias", "name": "MyAlias", "printedName": "MyAlias",
+                "declKind": "TypeAlias", "usr": "s:10MyFramework7MyAliasa", "children": [] }),
+        json!({ "kind": "Macro", "name": "MyMacro", "printedName": "MyMacro",
+                "declKind": "Macro", "usr": "s:10MyFramework7MyMacrofm", "children": [] }),
+        json!({ "kind": "AssociatedType", "name": "Element", "printedName": "Element",
+                "declKind": "AssociatedType", "usr": "s:10MyFramework7ElementQa", "children": [] }),
+    ]);
+
+    let framework = map_abi_to_framework(&doc, "15.4");
+
+    let deferred: std::collections::BTreeSet<(&str, &str)> = framework
         .skipped_symbols
         .iter()
-        .map(|s| s.name.as_str())
+        .filter(|s| s.reason.contains("deferred_abi_kind"))
+        .map(|s| (s.name.as_str(), s.kind.as_str()))
         .collect();
-    for name in [
-        "pow()",
-        "NSLocalizedString()",
-        "kCFStringEncodingASCII",
-        "NSNotFound",
-    ] {
-        assert!(
-            skipped_names.contains(name),
-            "{name} should be recorded in skipped_symbols; got {skipped_names:?}"
-        );
-    }
+    let expected: std::collections::BTreeSet<(&str, &str)> = [
+        ("MyAlias", "typealias"),
+        ("MyMacro", "macro"),
+        ("Element", "associatedtype"),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(
+        deferred, expected,
+        "all three deferred ABI kinds must be recorded with their lowercased decl kind"
+    );
 }
 
 // ---------------------------------------------------------------------------

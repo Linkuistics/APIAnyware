@@ -395,6 +395,8 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
+            swift_fn: None,
         }
     }
 
@@ -415,6 +417,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
         fw.classes.push(Class {
             name: "NSMutableArray".to_string(),
@@ -427,6 +430,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
 
         let patterns = detect_factory_clusters(&fw);
@@ -453,6 +457,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
 
         let patterns = detect_observer_pairs(&fw);
@@ -479,6 +484,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
 
         let patterns = detect_paired_state(&fw);
@@ -504,6 +510,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
 
         let patterns = detect_paired_state(&fw);
@@ -528,6 +535,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
         fw.protocols.push(Protocol {
             name: "NSCacheDelegate".to_string(),
@@ -538,6 +546,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
 
         let patterns = detect_delegate_protocols(&fw);
@@ -560,6 +569,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
         // No NSFooDelegate protocol
 

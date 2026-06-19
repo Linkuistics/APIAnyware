@@ -231,6 +231,8 @@ fn method(
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -253,6 +255,7 @@ fn property(name: &str, property_type: TypeRef, readonly: bool) -> Property {
         provenance: None,
         doc_refs: None,
         origin: None,
+        objc_exposed: true,
     }
 }
 
@@ -277,6 +280,7 @@ fn build_tkobject() -> Class {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }
 }
 
@@ -326,6 +330,7 @@ fn build_tkview() -> Class {
             method("description", false, false, vec![], type_class("NSString")),
         ],
         all_properties: vec![],
+        objc_exposed: true,
     }
 }
 
@@ -379,6 +384,7 @@ fn build_tkbutton() -> Class {
             property("tag", type_int(), false),
             property("frame", type_struct("NSRect"), false),
         ],
+        objc_exposed: true,
     }
 }
 
@@ -434,6 +440,7 @@ fn build_tkmanager() -> Class {
             ),
         ],
         all_properties: vec![],
+        objc_exposed: true,
     }
 }
 
@@ -457,6 +464,7 @@ fn build_tkhelper() -> Class {
             method("description", false, false, vec![], type_class("NSString")),
         ],
         all_properties: vec![],
+        objc_exposed: true,
     }
 }
 
@@ -475,6 +483,8 @@ fn build_tk_compute_distance() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -506,6 +516,8 @@ fn build_tk_transform_point() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -520,6 +532,8 @@ fn build_tk_reset() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -545,6 +559,8 @@ fn build_tk_create_buffer() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -571,6 +587,8 @@ fn build_tk_get_name() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -607,6 +625,8 @@ fn build_tk_register_callback() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -621,6 +641,8 @@ fn build_tk_log_variadic() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -640,6 +662,8 @@ fn build_tk_fast_hash_inline() -> Function {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -664,6 +688,7 @@ fn build_tkcopying_protocol() -> Protocol {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     }
 }
 
@@ -700,6 +725,7 @@ fn build_tkdelegate_protocol() -> Protocol {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     }
 }
 
@@ -733,6 +759,7 @@ fn build_tkalignment_enum() -> Enum {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     }
 }
 
@@ -748,6 +775,7 @@ fn build_version_constant() -> Constant {
         provenance: None,
         doc_refs: None,
         macro_value: None,
+        objc_exposed: true,
     }
 }
 
@@ -759,6 +787,7 @@ fn build_timeout_constant() -> Constant {
         provenance: None,
         doc_refs: None,
         macro_value: None,
+        objc_exposed: true,
     }
 }
 
@@ -773,6 +802,7 @@ fn build_cfstr_constant() -> Constant {
         provenance: None,
         doc_refs: None,
         macro_value: Some("TKStatus".to_string()),
+        objc_exposed: true,
     }
 }
 

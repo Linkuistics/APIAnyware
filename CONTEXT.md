@@ -25,6 +25,134 @@ analysis is per-target. (Future targets — Prolog, Haskell, Idris2, TypeScript 
 are paradigmatically alien; a shared substrate would be the wrong abstraction.)
 See **ADR-0010** and **ADR-0011**.
 
+## Complete-API binding model
+
+**Complete-API binding model**:
+The pure form of the design goal (ADR-0025, refining ADR-0010): each target's
+binding is *abstractly* a **complete C-ABI re-export of the entire macOS API** —
+every Objective-C **and** Swift declaration — surfaced to the target language. A
+per-target native (Swift) library vends the whole API behind a flat C ABI, with a
+thin target-language surface over it. The library *is* the API.
+_Avoid_: "ObjC-only binding" (the current targets are not ObjC-only by design —
+they are the fully-elided limit of this model; see **Trampoline elision**);
+"Swift bridge" (too narrow — the model covers the whole API, not just the Swift
+delta).
+
+**Trampoline**:
+A C-ABI entry in a target's native (Swift) library that **re-exports a macOS API
+the target cannot reach directly**, making it `dlsym`-able. The paradigm case is a
+**Swift-native API** (USR `s:` — only reachable via the Swift ABI): the library
+calls it across the Swift ABI and re-exports it as a C-linkable entry. Also covers
+pointer-valued constants (a runtime address can't be a target-language literal).
+_Avoid_: "shim" (overloaded); "wrapper" (a trampoline is specifically the
+C-ABI-re-export-of-an-otherwise-unreachable-API kind of wrapper).
+
+**Receiver-handle method trampoline**:
+A **trampoline for a Swift-native *method*** (`objc_exposed == false` on a
+class/struct/protocol) — the method generalisation of the free-function trampoline
+(ADR-0027). The `@_cdecl` takes an **opaque receiver handle** as its first parameter,
+unboxes it to the concrete receiver type, and calls `receiver.method(labels:)` by
+name. The receiver splits by the **exposure of its type**: *population A* — receiver
+type is `objc_exposed` (a live `id` the target already holds, e.g. `URLSession` for
+its Swift-native `async` `data(from:)`), no producer needed; *population B* —
+receiver type is Swift-native (`s:`), obtainable only via a handle some other
+trampoline produced. Both are in scope (grove `add-swift-native-method-coverage`,
+D1). The receiver rides the **same unified handle rep** as boxed returns
+(`AwValueBox`/`Unmanaged`), bidirectionally. A `mutating` method on a value receiver
+**writes the mutated value back** into the (mutable) box (D3). An `async` method
+relies on Swift `await` to hop onto the method's actor — no isolation machinery (D5).
+_Avoid_: "method shim"; conflating the receiver handle with a **direct** ObjC
+object cpointer (population A *is* such a cpointer, but population B is a Swift
+**Opaque handle**); treating the receiver as a distinct "token" type (it is the
+unified handle rep).
+
+**Async callback form** _(R4; `aw-async-call`)_:
+The racket surface for an `async` Swift-native method (ADR-0030 addendum). The
+generated binding takes a **`complete` continuation and returns immediately**
+(non-blocking); the `@_cdecl` drives `awRacketAsyncDispatch`, which marshals the
+result on the cooperative pool and invokes a C callback **on the main thread** (the
+SIGILL-safe hop), running `(complete result err)`. There is deliberately **no
+blocking await** — a synchronous block would freeze the very Cocoa run loop the
+completion needs to drain (and the Racket CS green scheduler is frozen under
+`nsapplication-run`). A richer mailbox/await layer may sit on top later.
+_Avoid_: "blocking await" / "`aw-async-await`" (a rejected candidate, spec §5b);
+"future"/"promise" (the surface is a callback, not a value handle).
+
+**Object-ref param** _(R1; `objc_object_param_bridge`)_:
+A method parameter the lossy Swift→ObjC normalization reports as a Foundation objc
+twin (`URL` → `NSURL`); the trampoline reconstructs the reference and **bridges to
+the value the by-name call wants** (`… as URL`). Only a **curated, typecheck-proven**
+set bridges — an objc twin can also hide an `inout` param (invisible in the IR), and
+a bridging *constructor* (`Data(referencing:)`) wants the reference, so init object
+params stay deferred.
+_Avoid_: bridging by guesswork (the set is proven against the real-framework
+typecheck, not assumed).
+
+**Handle producer / initializer trampoline**:
+The mechanism that *produces* a first **Opaque handle** for a Swift-native (`s:`)
+receiver so population-B methods are usable. The **sole root producer is the
+initializer**: an `init` trampoline `@_cdecl` calls `Type(labels:)` and returns a
+boxed handle (`awRacketBox` value / `Unmanaged.passRetained` class). Everything else
+**chains** off it — a method/property/factory returning a Swift-native type boxes its
+return via the existing return-marshalling taxonomy (spec §3); no separate factory
+design (D2). Soundness gate = the §5c oracle: the produced/unboxed type must be
+nameable & in-module ("name ∈ owning framework's struct/class set").
+_Avoid_: designing standalone factory/`static`-property producers (they fall out of
+return-boxing); a constructor rep distinct from the unified handle rep.
+
+**Trampoline elision** _(the direct-binding optimisation)_:
+Binding a macOS API **directly** from the target, skipping the trampoline, wherever
+the target can reach it without one: ObjC methods via `objc_msgSend`; constants as
+native target-language literals (**except** pointer-valued constants). The current
+targets (racket, chez, gerbil) are the **fully-elided limit** — all-ObjC, all
+directly reachable, trampoline library ~empty — which is why they look "ObjC-only"
+though they are really the optimised case of the complete-API model. The residual
+that genuinely needs a trampoline is the **Swift-native delta** plus pointer
+constants.
+_Avoid_: framing elision as a deviation from ADR-0010 (it is the optimisation
+*of* it); "skip Swift" (elision is about what's reachable *directly*, not about
+dropping Swift).
+
+**`objc_exposed` (ObjC-exposure fact)**:
+The single derived IR fact (ADR-0026) that makes the **direct-vs-trampoline
+boundary** explicit — a `bool` on every declaration node with a USR (`Class`,
+`Method`, `Property`, `Protocol`, `Enum`, `Struct`, `Function`, `Constant`)
+recording *is this reachable through the ObjC/C runtime without crossing the
+Swift ABI?* Derived once in collection by one shared USR-prefix classifier: `s:`
+USR → `false` (Swift-native, trampoline/skip); clang `c:`/`So` cursor (incl.
+`@objc` Swift decls) → `true` (bind directly). It is a **fact, not a
+classification** — each emitter derives Direct|Trampoline|Skip from it locally
+(ADR-0025/D1), combined with pointer-ness (derived from `constant_type`, not
+carried). Defaults `true` (the fully-elided ObjC limit) and is omitted from JSON
+when true, so the golden diff audits exactly the trampoline residual.
+_Avoid_: a shared `reachability: Direct|Trampoline` field (D1 forbids it —
+reachability is per-target in the limit); reusing `DeclarationSource`
+(`ObjcHeader|SwiftInterface`) as the boundary (an `@objc` Swift class is
+`SwiftInterface` yet `objc_exposed`); re-parsing the raw USR prefix in emitters
+(the classifier lives once, in collection).
+
+**Opaque handle**:
+The trampoline rep (ADR-0027) for a Swift value/reference that has no flat C-ABI
+form and is not Foundation-bridgeable — a non-bridged Swift `struct`, a payload
+`enum`, a class instance, an existential, an opaque `some P` return. The
+trampoline heap-boxes (value) or `Unmanaged`-retains (reference) it and returns
+an opaque pointer; generated `_field` / `_tag` accessor + `_free` trampolines
+read and release it. Distinct from a **direct** ObjC object cpointer (that one is
+a live `id` the runtime knows); a handle is a Swift thing reachable only through
+its accessors.
+_Avoid_: "box" alone (overloaded with NSNumber boxing); "wrapper".
+
+**Unbindable residual**:
+Swift-native declarations that cannot be trampolined *at all* — chiefly **generic
+free functions** (no concrete symbol exists without monomorphization; `@_cdecl`
+cannot be generic). Under the "defer nothing" directive these are **recorded with
+a reason and their count surfaced** by the trampoline pass, never silently
+dropped; revisited only when a real API needs one. The honest floor of "complete
+marshalling to the limit of the C ABI".
+_Avoid_: conflating with **trampoline elision** (that is *directly reachable*, not
+unbindable) or with `deferred_abi_kind` (Macro/TypeAlias/AssociatedType — a
+deferred *frontier*, not a hard limit).
+
 ## Language
 
 **Target**:

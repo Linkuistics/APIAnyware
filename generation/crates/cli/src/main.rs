@@ -48,6 +48,46 @@ struct Cli {
     /// `.rkt` bindings are wanted, or the Swift target is unavailable).
     #[arg(long)]
     no_racket_dispatch: bool,
+
+    /// Output path for the racket target's generated Swift-native trampolines
+    /// (ADR-0027). Written when racket is among the generated targets; `swift
+    /// build` then compiles it into `libAPIAnywareRacket`.
+    #[arg(
+        long,
+        default_value = "swift/Sources/APIAnywareRacket/Generated/Trampolines.swift"
+    )]
+    racket_trampolines_out: PathBuf,
+
+    /// Skip generating the racket Swift-native trampolines.
+    #[arg(long)]
+    no_racket_trampolines: bool,
+
+    /// Output path for the chez target's generated Swift-native trampolines
+    /// (ADR-0027, ported to chez). Written when chez is among the generated
+    /// targets; `swift build` then compiles it into `libAPIAnywareChez`.
+    #[arg(
+        long,
+        default_value = "swift/Sources/APIAnywareChez/Generated/Trampolines.swift"
+    )]
+    chez_trampolines_out: PathBuf,
+
+    /// Skip generating the chez Swift-native trampolines.
+    #[arg(long)]
+    no_chez_trampolines: bool,
+
+    /// Output path for the gerbil target's generated Swift-native trampolines
+    /// (ADR-0029 — the deliberate ADR-0017 deviation: gerbil grows a `swift build`
+    /// step for a trampoline-only dylib). Written when gerbil is among the
+    /// generated targets; `swift build` then compiles it into libAPIAnywareGerbil.
+    #[arg(
+        long,
+        default_value = "swift/Sources/APIAnywareGerbil/Generated/Trampolines.swift"
+    )]
+    gerbil_trampolines_out: PathBuf,
+
+    /// Skip generating the gerbil Swift-native trampolines.
+    #[arg(long)]
+    no_gerbil_trampolines: bool,
 }
 
 fn main() -> Result<()> {
@@ -87,6 +127,47 @@ fn main() -> Result<()> {
             entries,
             output = %cli.racket_dispatch_out.display(),
             "racket native dispatch table generated — run `swift build` to compile it"
+        );
+    }
+
+    // Generate the racket Swift-native trampolines (ADR-0027) — also a global
+    // pass over all frameworks, run alongside the dispatch table. Build order is
+    // the same: generate (here) -> swift build.
+    if racket_generated && !cli.no_racket_trampolines {
+        let entries =
+            generate::run_racket_trampolines(&cli.input_dir, &cli.racket_trampolines_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.racket_trampolines_out.display(),
+            "racket Swift-native trampolines generated — run `swift build` to compile them"
+        );
+    }
+
+    // Generate the chez Swift-native trampolines (ADR-0027 ported to chez) when
+    // chez was among the targets — a global pass over all frameworks, same build
+    // order: generate (here) -> swift build compiles them into libAPIAnywareChez.
+    let chez_generated = summaries.iter().any(|s| s.target_id == "chez");
+    if chez_generated && !cli.no_chez_trampolines {
+        let entries = generate::run_chez_trampolines(&cli.input_dir, &cli.chez_trampolines_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.chez_trampolines_out.display(),
+            "chez Swift-native trampolines generated — run `swift build` to compile them"
+        );
+    }
+
+    // Generate the gerbil Swift-native trampolines (ADR-0029) when gerbil was
+    // among the targets — a global pass over all frameworks, same build order:
+    // generate (here) -> swift build compiles them into libAPIAnywareGerbil. This
+    // is the ADR-0017 deviation: gerbil's build gains a `swift build` step.
+    let gerbil_generated = summaries.iter().any(|s| s.target_id == "gerbil");
+    if gerbil_generated && !cli.no_gerbil_trampolines {
+        let entries =
+            generate::run_gerbil_trampolines(&cli.input_dir, &cli.gerbil_trampolines_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.gerbil_trampolines_out.display(),
+            "gerbil Swift-native trampolines generated — run `swift build` to compile them"
         );
     }
 

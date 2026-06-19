@@ -107,13 +107,7 @@ pub fn generate_protocol_file(proto: &Protocol, framework: &str) -> String {
             // here we just emit void*-per-param.
             let pts: Vec<&str> = m.params.iter().map(|_| "void*").collect();
             let ret = return_type_sym(&m.return_type);
-            write_line!(
-                w,
-                "      (\"{}\" ({}) {})",
-                m.selector,
-                pts.join(" "),
-                ret
-            );
+            write_line!(w, "      (\"{}\" ({}) {})", m.selector, pts.join(" "), ret);
         }
         w.line("      ))");
     }
@@ -184,6 +178,8 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
+            swift_fn: None,
         }
     }
 
@@ -208,6 +204,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         }
     }
 
@@ -274,11 +271,7 @@ mod tests {
                         name: "bool".into(),
                     },
                 ),
-                m(
-                    "produceResult",
-                    vec![],
-                    TypeRefKind::Instancetype,
-                ),
+                m("produceResult", vec![], TypeRefKind::Instancetype),
                 m(
                     "numberOfRowsInTableView:",
                     vec![obj_param("tv", "NSTableView")],

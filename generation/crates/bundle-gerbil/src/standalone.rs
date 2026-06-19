@@ -13,9 +13,9 @@ use apianyware_macos_stub_launcher::codesign_path;
 use plist::Value as PlistValue;
 
 use crate::bundle::{AppSpec, BundleError};
-use crate::compile::compile_app;
+use crate::compile::{compile_app, discover_swift_dylib};
 use crate::deps::collect_closure;
-use crate::relocate::{relocate_homebrew_deps, FRAMEWORKS_SUBDIR};
+use crate::relocate::{relocate_homebrew_deps, relocate_swift_dylib, FRAMEWORKS_SUBDIR};
 
 /// Build a self-contained `.app` for the gerbil sample app at
 /// `source_root/apps/<script_name>/<script_name>.ss` into
@@ -45,13 +45,35 @@ pub fn bundle_app(
     // 1. Walk the binding-library compile closure (deps-first).
     let closure = collect_closure(&entry, &lib_root)?;
 
+    // Locate the Swift-native trampoline dylib (ADR-0029). The repo root is the
+    // parent of `generation/` — three levels above `<root>/generation/targets/gerbil`.
+    // `None` when no `swift build` artifact exists (an app with no Swift-native
+    // residual still bundles; one that references the trampolines fails loudly at
+    // the gxc link).
+    let workspace_root = abs_root
+        .ancestors()
+        .nth(3)
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| abs_root.clone());
+    let swift_dylib = discover_swift_dylib(&workspace_root);
+    if let Some(ref d) = swift_dylib {
+        tracing::info!(dylib = %d.display(), "linking Swift-native trampoline dylib (ADR-0029)");
+    }
+
     // 2. Compile: clang companion + gxc -O closure into a persistent cache +
     //    gxc -exe -O link. Intermediates live in a scratch dir; the
     //    GERBIL_PATH cache persists under output_dir/ (gitignored) so it
     //    warms across rebuilds.
     let scratch = tempfile::tempdir()?;
     let cache_dir = output_dir.join("gerbil-cache");
-    let exe = compile_app(&entry, &lib_root, &closure, scratch.path(), &cache_dir)?;
+    let exe = compile_app(
+        &entry,
+        &lib_root,
+        &closure,
+        scratch.path(),
+        &cache_dir,
+        swift_dylib.as_deref(),
+    )?;
 
     // 3. Assemble the .app.
     fs::create_dir_all(output_dir)?;
@@ -74,6 +96,16 @@ pub fn bundle_app(
     let identity = spec.signing_identity.as_deref().unwrap_or("-");
     let vendored = relocate_homebrew_deps(&bundle_exe, &frameworks, identity)?;
 
+    // 4b. Vendor + relocate the Swift-native trampoline dylib (ADR-0029 §3) —
+    //     the one *linked* (not dlopen'd) dylib. A no-op for an app whose exe
+    //     records no `@rpath/libAPIAnywareGerbil.dylib` load command (no
+    //     Swift-native residual), so it is safe to call unconditionally; when the
+    //     dylib was not even built, `swift_dylib` is `None` and we skip entirely.
+    let swift_vendored = match swift_dylib.as_deref() {
+        Some(src) => relocate_swift_dylib(&bundle_exe, src, &frameworks, identity)?,
+        None => None,
+    };
+
     // 5. Sign the whole bundle last — covers the exe (whose load commands
     //    were rewritten) and Resources, with a stable CDHash.
     codesign_path(&app_path, identity)?;
@@ -83,6 +115,7 @@ pub fn bundle_app(
         path = %app_path.display(),
         closure = closure.len(),
         vendored = vendored.len(),
+        swift_dylib = swift_vendored.is_some(),
         "bundled standalone gerbil app"
     );
     Ok(app_path)
@@ -129,7 +162,10 @@ mod tests {
 
         let value = PlistValue::from_file(&path).unwrap();
         let d = value.as_dictionary().unwrap();
-        assert_eq!(d.get("CFBundleName").unwrap().as_string(), Some("Hello Window"));
+        assert_eq!(
+            d.get("CFBundleName").unwrap().as_string(),
+            Some("Hello Window")
+        );
         assert_eq!(
             d.get("CFBundleIdentifier").unwrap().as_string(),
             Some("com.linkuistics.HelloWindow")
@@ -138,7 +174,10 @@ mod tests {
             d.get("CFBundleExecutable").unwrap().as_string(),
             Some("hello-window")
         );
-        assert_eq!(d.get("CFBundlePackageType").unwrap().as_string(), Some("APPL"));
+        assert_eq!(
+            d.get("CFBundlePackageType").unwrap().as_string(),
+            Some("APPL")
+        );
     }
 
     #[test]

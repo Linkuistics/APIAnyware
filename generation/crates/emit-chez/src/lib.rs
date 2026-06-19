@@ -9,6 +9,7 @@
 //! `library` forms need explicit export names, so the main file's
 //! re-export list is materialised from each sub-file's emitter helper.
 
+pub mod chez_builtins;
 pub mod emit_class;
 pub mod emit_constants;
 pub mod emit_enums;
@@ -19,5 +20,6 @@ pub mod ffi_type_mapping;
 pub mod method_filter;
 pub mod naming;
 pub mod shared_signatures;
+pub mod trampoline;
 
 pub use emit_framework::ChezEmitter;

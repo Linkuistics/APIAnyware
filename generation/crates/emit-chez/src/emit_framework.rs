@@ -15,19 +15,18 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
 use apianyware_macos_emit::naming::class_name_to_lowercase;
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::{class_exports, generate_class_file};
+use crate::emit_class::{generate_class_file_with_exports, generate_struct_file};
 use crate::emit_constants::{constant_names, generate_constants_file};
 use crate::emit_enums::{enum_value_names, generate_enums_file};
-use crate::emit_functions::{
-    count_emittable, function_emittable_names, generate_functions_file,
-};
+use crate::emit_functions::{count_emittable, function_emittable_names, generate_functions_file};
 use crate::emit_protocol::{generate_protocol_file, protocol_exports};
+use crate::trampoline::value_struct_names;
 
 pub const CHEZ_TARGET_INFO: TargetInfo = TargetInfo {
     id: "chez",
@@ -68,17 +67,52 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
     let mut files_written: usize = 0;
     let mut sublibraries: Vec<SubLibrary> = Vec::new();
 
-    // Class files.
+    // The owning framework's value-struct set is the soundness gate for unboxing
+    // value-struct params on Swift-native methods (spec §5c). It must be the same
+    // slice the global trampoline pass sees, and is threaded into both class and
+    // struct emission so the per-type bindings agree on trampoline-vs-deferred.
+    let value_structs = value_struct_names(&fw.structs);
+    let mut used_filenames: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    // Class files (ObjC substrate + Swift-native trampoline section, charter #4).
     for cls in &fw.classes {
-        let filename = format!("{}.sls", class_name_to_lowercase(&cls.name));
-        let content = generate_class_file(cls, &fw.name);
+        let cls_low = class_name_to_lowercase(&cls.name);
+        let filename = format!("{}.sls", cls_low);
+        let (content, exports) =
+            generate_class_file_with_exports(cls, &fw.name, &value_structs);
         emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename);
         files_written += 1;
 
-        let cls_low = class_name_to_lowercase(&cls.name);
         sublibraries.push(SubLibrary {
             library_path: format!("(apianyware {fw_low} {cls_low})"),
-            exports: class_exports(cls),
+            exports,
+            is_protocol: false,
+        });
+    }
+
+    // Swift-native value-struct files (population B, ADR-0030). Only structs that
+    // vend at least one bindable trampoline get a file; a plain C struct yields
+    // `None`. A struct whose lowercased name collides with a class file (rare) takes
+    // a `-struct` suffix so neither clobbers the other.
+    for st in &fw.structs {
+        let base = class_name_to_lowercase(&st.name);
+        let (filename, lib_low) = if used_filenames.contains(&format!("{base}.sls")) {
+            (format!("{base}-struct.sls"), format!("{base}-struct"))
+        } else {
+            (format!("{base}.sls"), base.clone())
+        };
+        let Some((content, exports)) =
+            generate_struct_file(st, &fw.name, &value_structs, &lib_low)
+        else {
+            continue;
+        };
+        emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename);
+        files_written += 1;
+        sublibraries.push(SubLibrary {
+            library_path: format!("(apianyware {fw_low} {lib_low})"),
+            exports,
             is_protocol: false,
         });
     }
@@ -109,16 +143,16 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
         });
     }
 
-    // C functions.
-    let emittable_functions = count_emittable(&fw.functions);
+    // C functions (direct ObjC-exposed + Swift-native trampolined residual).
+    let emittable_functions = count_emittable(&fw.functions, &fw.name, &fw.structs);
     let has_functions = emittable_functions > 0;
     if has_functions {
-        let content = generate_functions_file(&fw.functions, &fw.name);
+        let content = generate_functions_file(&fw.functions, &fw.name, &fw.structs);
         emitter.write_file("functions.sls", &content)?;
         files_written += 1;
         sublibraries.push(SubLibrary {
             library_path: format!("(apianyware {fw_low} functions)"),
-            exports: function_emittable_names(&fw.functions, &fw.name),
+            exports: function_emittable_names(&fw.functions, &fw.name, &fw.structs),
             is_protocol: false,
         });
     }
@@ -321,12 +355,15 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
+                swift_fn: None,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.classes_emitted, 1);
@@ -356,6 +393,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.enums_emitted, 1);
@@ -383,6 +421,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.constants_emitted, 1);
@@ -418,6 +457,8 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
+            swift_fn: None,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.functions_emitted, 1);
@@ -445,6 +486,8 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
+            swift_fn: None,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.functions_emitted, 0);
@@ -480,11 +523,14 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
+                swift_fn: None,
             }],
             properties: vec![],
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.protocols_emitted, 1);
@@ -510,6 +556,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.protocols_emitted, 0);

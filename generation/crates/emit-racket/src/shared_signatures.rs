@@ -111,10 +111,7 @@ impl SignatureMap {
 /// This is [`collect_class_signatures`] minus every signature
 /// [`crate::native_dispatch::is_routable`] accepts; the two share the same
 /// per-method enumeration so the native and fallback partitions never overlap.
-pub fn collect_class_fallback_signatures(
-    cls: &Class,
-    mapper: &dyn FfiTypeMapper,
-) -> SignatureMap {
+pub fn collect_class_fallback_signatures(cls: &Class, mapper: &dyn FfiTypeMapper) -> SignatureMap {
     let full = collect_class_signatures(cls, mapper);
     let entries: BTreeMap<String, usize> = full
         .entries
@@ -334,7 +331,10 @@ mod tests {
 
         let (param_types, return_type) = block_ffi_types(&params, &ret, &mapper);
         // Object -> ptr_t, double -> double_t, object return -> ptr_t.
-        assert_eq!(param_types, vec!["ptr_t".to_string(), "double_t".to_string()]);
+        assert_eq!(
+            param_types,
+            vec!["ptr_t".to_string(), "double_t".to_string()]
+        );
         assert_eq!(return_type, "ptr_t");
 
         let key = make_signature_key(&param_types, &return_type);

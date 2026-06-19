@@ -31,6 +31,8 @@ fn make_method(selector: &str, params: Vec<Param>, return_kind: TypeRefKind) -> 
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: true,
+        swift_fn: None,
     }
 }
 
@@ -106,6 +108,7 @@ fn sync_block_method_derived() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw.class_annotations = vec![ClassAnnotations {
         class_name: "NSArray".to_string(),
@@ -161,6 +164,7 @@ fn async_and_stored_block_methods() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw.class_annotations = vec![ClassAnnotations {
         class_name: "NSOperation".to_string(),
@@ -223,6 +227,7 @@ fn main_thread_class_derived_from_threading_annotation() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw.class_annotations = vec![ClassAnnotations {
         class_name: "NSView".to_string(),
@@ -263,6 +268,7 @@ fn convenience_error_method_derived() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw.class_annotations = vec![ClassAnnotations {
         class_name: "NSFileManager".to_string(),
@@ -312,6 +318,7 @@ fn collection_iterable_from_count_and_object_at_index() {
             provenance: None,
             doc_refs: None,
             origin: None,
+            objc_exposed: true,
         }],
         methods: vec![make_method("objectAtIndex:", vec![], TypeRefKind::Id)],
         category_methods: vec![],
@@ -319,6 +326,7 @@ fn collection_iterable_from_count_and_object_at_index() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     let (e, _) = enrich(&fw);
@@ -339,6 +347,7 @@ fn collection_iterable_from_fast_enumeration() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     let (e, _) = enrich(&fw);
@@ -369,6 +378,7 @@ fn delegate_protocol_detected_from_set_delegate() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw.protocols = vec![Protocol {
         name: "NSWindowDelegate".to_string(),
@@ -385,6 +395,7 @@ fn delegate_protocol_detected_from_set_delegate() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     }];
 
     let (e, _) = enrich(&fw);
@@ -417,6 +428,7 @@ fn unclassified_block_violation() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     // No annotations — block param is unclassified
 
@@ -449,6 +461,7 @@ fn classified_block_no_violation() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw.class_annotations = vec![ClassAnnotations {
         class_name: "MyClass".to_string(),
@@ -593,6 +606,7 @@ fn verification_violations_are_per_framework_not_global() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     // No annotations — block param is unclassified
 
@@ -616,6 +630,7 @@ fn verification_violations_are_per_framework_not_global() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
@@ -663,6 +678,7 @@ fn enrichment_data_is_per_framework_not_global() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw_a.class_annotations = vec![ClassAnnotations {
         class_name: "ViewA".to_string(),
@@ -697,6 +713,7 @@ fn enrichment_data_is_per_framework_not_global() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
@@ -745,6 +762,7 @@ fn cross_framework_delegate_protocol_attributed_to_protocol_framework() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     // FW_A does NOT declare the protocol
     fw_a.protocols = vec![];
@@ -768,6 +786,7 @@ fn cross_framework_delegate_protocol_attributed_to_protocol_framework() {
         source: None,
         provenance: None,
         doc_refs: None,
+        objc_exposed: true,
     }];
 
     let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
@@ -821,6 +840,7 @@ fn multi_framework_block_violations_scoped_correctly() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw_a.class_annotations = vec![ClassAnnotations {
         class_name: "NSOperationQueue".to_string(),
@@ -858,6 +878,7 @@ fn multi_framework_block_violations_scoped_correctly() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     // No annotations → unclassified
 
@@ -914,6 +935,7 @@ fn cross_framework_collection_iterables_isolated() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     // FW_B: iterable via count + objectAtIndex:
@@ -939,6 +961,7 @@ fn cross_framework_collection_iterables_isolated() {
             provenance: None,
             doc_refs: None,
             origin: None,
+            objc_exposed: true,
         }],
         methods: vec![make_method("objectAtIndex:", vec![], TypeRefKind::Id)],
         category_methods: vec![],
@@ -946,6 +969,7 @@ fn cross_framework_collection_iterables_isolated() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
@@ -1003,6 +1027,7 @@ fn three_framework_comprehensive_enrichment_isolation() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw_a.class_annotations = vec![ClassAnnotations {
         class_name: "NSFileManager".to_string(),
@@ -1057,6 +1082,7 @@ fn three_framework_comprehensive_enrichment_isolation() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw_b.class_annotations = vec![ClassAnnotations {
         class_name: "NSManagedObjectContext".to_string(),
@@ -1102,6 +1128,7 @@ fn three_framework_comprehensive_enrichment_isolation() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
     fw_c.api_patterns = vec![apianyware_macos_types::annotation::ApiPattern {
         stereotype: PatternStereotype::PairedState,
@@ -1198,6 +1225,7 @@ fn flag_mismatch_violation_scoped_to_owning_framework() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     // FW_B: clean framework with no issues
@@ -1220,6 +1248,7 @@ fn flag_mismatch_violation_scoped_to_owning_framework() {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: true,
     }];
 
     let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();

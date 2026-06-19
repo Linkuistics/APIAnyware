@@ -71,35 +71,62 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
             }
             "Func" => {
                 if child.kind == "Function" {
-                    if let Some(reason) = non_c_linkable_skip_reason(child) {
-                        // Record with the printed name (e.g. `pointwiseMin(_:_:)`)
-                        // so that Swift overloads with identical simple names become
-                        // distinct `skipped_symbols` entries. Mirrors how extract-objc
-                        // qualifies methods with their owner class.
-                        skipped_symbols.push(ir::SkippedSymbol {
-                            name: child.printed_name.clone(),
-                            kind: "function".to_string(),
-                            reason: reason.to_string(),
-                        });
-                    } else if let Some(f) = map_top_level_function(child) {
-                        functions.push(f);
+                    match classify_usr(child) {
+                        // Additive change (ADR-0026): Swift-native top-level
+                        // functions are now RETAINED (carrying objc_exposed:
+                        // false) so they reach the emitter to be trampolined,
+                        // rather than being dropped under SWIFT_NATIVE.
+                        // `map_top_level_function` stamps objc_exposed from the
+                        // node's USR, so the Direct and SwiftNative arms coincide
+                        // here — both retain.
+                        UsrDisposition::Direct | UsrDisposition::SwiftNative => {
+                            if let Some(f) = map_top_level_function(child) {
+                                functions.push(f);
+                            }
+                        }
+                        UsrDisposition::Skip(reason) => {
+                            // Record with the printed name (e.g. `pointwiseMin(_:_:)`)
+                            // so that Swift overloads with identical simple names become
+                            // distinct `skipped_symbols` entries. Mirrors how extract-objc
+                            // qualifies methods with their owner class.
+                            skipped_symbols.push(ir::SkippedSymbol {
+                                name: child.printed_name.clone(),
+                                kind: "function".to_string(),
+                                reason: reason.to_string(),
+                            });
+                        }
                     }
                 }
             }
             "Var" => {
                 if child.kind == "Var" && !child.children.is_empty() {
-                    if let Some(reason) = non_c_linkable_skip_reason(child) {
-                        skipped_symbols.push(ir::SkippedSymbol {
-                            name: child.name.clone(),
-                            kind: "constant".to_string(),
-                            reason: reason.to_string(),
-                        });
-                    } else if let Some(c) = map_top_level_constant(child) {
-                        constants.push(c);
+                    match classify_usr(child) {
+                        UsrDisposition::Direct | UsrDisposition::SwiftNative => {
+                            if let Some(c) = map_top_level_constant(child) {
+                                constants.push(c);
+                            }
+                        }
+                        UsrDisposition::Skip(reason) => {
+                            skipped_symbols.push(ir::SkippedSymbol {
+                                name: child.name.clone(),
+                                kind: "constant".to_string(),
+                                reason: reason.to_string(),
+                            });
+                        }
                     }
                 }
             }
-            // Skip Import, Macro, TypeAlias, AssociatedType
+            // Deferred ABI kinds (ADR-0026/D2): not yet walked, but recorded in
+            // skipped_symbols so the drop is auditable rather than silent.
+            // Recovery is a later frontier leaf.
+            "Macro" | "TypeAlias" | "AssociatedType" => {
+                skipped_symbols.push(ir::SkippedSymbol {
+                    name: child.name.clone(),
+                    kind: child.decl_kind.clone().unwrap_or_default().to_lowercase(),
+                    reason: skipped_symbol_reason::DEFERRED_ABI_KIND.to_string(),
+                });
+            }
+            // Import (and any other kind) is still ignored.
             _ => {}
         }
     }
@@ -125,53 +152,78 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
     }
 }
 
-/// Classify a top-level declaration node by its USR prefix and return a skip
-/// reason if the node is not reachable via `dlsym` from the framework dylib.
+/// Three-way disposition of an ABI node, derived from its USR prefix. This is
+/// the single classifier that subsumes the old `non_c_linkable_skip_reason()`
+/// (ADR-0026): it decides retain-vs-skip **and** yields the `objc_exposed`
+/// fact, so the USR-prefix knowledge lives in exactly one place.
+enum UsrDisposition {
+    /// Directly reachable through the ObjC/C runtime (clang `c:@F@`, `c:@`,
+    /// `So…` cursors, or a missing USR). Retain with `objc_exposed: true`.
+    Direct,
+    /// Swift-native (`s:` USR): reachable only via the Swift ABI. Retain with
+    /// `objc_exposed: false` so the emitter trampolines it downstream.
+    SwiftNative,
+    /// Unrepresentable: no dylib symbol exists. Do not retain; record in
+    /// `skipped_symbols` with `reason`.
+    Skip(&'static str),
+}
+
+/// Classify a declaration node by its USR prefix.
 ///
 /// The Swift API digester stamps declarations with Unified Symbol Resolution
 /// identifiers whose prefix identifies the producing cursor:
 ///
 /// - `s:…` — Swift-mangled USR: declaration native to the Swift module,
-///   reachable only via the Swift ABI. **Not C-linkable.**
+///   reachable only via the Swift ABI. **Swift-native** → retain & trampoline.
+///   (An `@objc`-annotated Swift declaration instead carries a clang `c:` USR
+///   such as `c:@M@Probe@objc(cs)Foo` — so it classifies as `Direct`, ADR-0026.)
 /// - `c:@F@<name>` — clang `FunctionDecl` cursor: a real C function
-///   re-exported from the clang-imported module. Linkable.
-/// - `c:@<Name>` — clang `VarDecl` / enum cursor. Linkable.
+///   re-exported from the clang-imported module. **Direct.**
+/// - `c:@<Name>` — clang `VarDecl` / enum cursor. **Direct.**
 /// - `c:@macro@…` — clang preprocessor macro cursor. The C compiler inlines
 ///   `#define` values at use sites and emits no dylib symbol, so any FFI
 ///   binding that references the name will fail at load time with
-///   `get-ffi-obj: could not find export from foreign library`. **Not
-///   C-linkable.**
+///   `get-ffi-obj: could not find export from foreign library`. **Skip.**
 /// - `c:@Ea@<dummy>@<Member>` — member of an *anonymous* enum. The second
 ///   USR segment is libclang's synthetic disambiguator for enums with no
-///   tag (conventionally the first member's name). **Not C-linkable.** The
-///   C compiler inlines enum members' integer values at every use site, so
-///   they never receive a dylib symbol. Members of *named* enums use the
+///   tag (conventionally the first member's name). **Skip.** The C compiler
+///   inlines enum members' integer values at every use site, so they never
+///   receive a dylib symbol. Members of *named* enums use the
 ///   `c:@E@<Enum>@<Member>` shape and reach the IR through the dedicated
 ///   `Enum` → `EnumElement` mapping path, not the top-level `Var` / `Func`
-///   cursors filtered here.
+///   cursors classified here.
 /// - `c:@EA@<typedef>@<Member>` — same as above for the typedef'd anonymous
 ///   enum shape (`typedef enum { … } Name_t`). The second segment is the
-///   typedef name. **Not C-linkable** for the same reason.
-/// - `So<mangled>` — clang-imported Obj-C declaration. Linkable via the
-///   Obj-C runtime (not handled here; Obj-C extraction lives in
-///   `extract-objc`).
+///   typedef name. **Skip** for the same reason.
+/// - `So<mangled>` — clang-imported Obj-C declaration. **Direct** (linkable via
+///   the Obj-C runtime; Obj-C extraction itself lives in `extract-objc`).
 ///
-/// Nodes without a USR are treated as linkable — missing metadata is not
+/// Nodes without a USR are treated as `Direct` — missing metadata is not
 /// evidence of non-linkability, and every real digester node carries one.
 /// New USR families discovered in future SDK releases should be added here
-/// so that the filter remains the single source of truth for "is this
-/// `dlsym`-able from the framework dylib?".
-fn non_c_linkable_skip_reason(node: &AbiNode) -> Option<&'static str> {
-    let usr = node.usr.as_deref()?;
+/// so that this stays the single source of truth for both the skip filter and
+/// the `objc_exposed` fact.
+fn classify_usr(node: &AbiNode) -> UsrDisposition {
+    let Some(usr) = node.usr.as_deref() else {
+        return UsrDisposition::Direct;
+    };
     if usr.starts_with("s:") {
-        Some(skipped_symbol_reason::SWIFT_NATIVE)
+        UsrDisposition::SwiftNative
     } else if usr.starts_with("c:@macro@") {
-        Some(skipped_symbol_reason::PREPROCESSOR_MACRO)
+        UsrDisposition::Skip(skipped_symbol_reason::PREPROCESSOR_MACRO)
     } else if usr.starts_with("c:@Ea@") || usr.starts_with("c:@EA@") {
-        Some(skipped_symbol_reason::ANONYMOUS_ENUM_MEMBER)
+        UsrDisposition::Skip(skipped_symbol_reason::ANONYMOUS_ENUM_MEMBER)
     } else {
-        None
+        UsrDisposition::Direct
     }
+}
+
+/// The `objc_exposed` fact for a node: true unless the node is Swift-native
+/// (`s:` USR). `Direct` and `Skip` nodes are both ObjC/C-cursor'd; only
+/// `SwiftNative` is `false`. (Skip nodes are never retained, so their value is
+/// moot — but computing it uniformly keeps the rule in one place.)
+fn objc_exposed_of(node: &AbiNode) -> bool {
+    !matches!(classify_usr(node), UsrDisposition::SwiftNative)
 }
 
 /// True iff `framework_name` follows Apple's cross-import overlay convention
@@ -268,6 +320,7 @@ fn map_class(node: &AbiNode) -> Option<ir::Class> {
         ancestors: vec![],
         all_methods: vec![],
         all_properties: vec![],
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -324,6 +377,7 @@ fn map_protocol(node: &AbiNode) -> Option<ir::Protocol> {
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -360,6 +414,7 @@ fn map_enum(node: &AbiNode) -> Option<ir::Enum> {
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -369,29 +424,77 @@ fn map_enum(node: &AbiNode) -> Option<ir::Enum> {
 
 fn map_struct(node: &AbiNode) -> Option<ir::Struct> {
     let mut fields = Vec::new();
+    let mut methods = Vec::new();
 
     for child in &node.children {
-        if child.decl_kind.as_deref() == Some("Var") && !child.children.is_empty() {
-            let type_node = &child.children[0];
-            fields.push(ir::StructField {
-                name: child.name.clone(),
-                field_type: map_swift_type(type_node),
-            });
+        match child.decl_kind.as_deref() {
+            // `Var` children with a type are stored fields.
+            Some("Var") if !child.children.is_empty() => {
+                let type_node = &child.children[0];
+                fields.push(ir::StructField {
+                    name: child.name.clone(),
+                    field_type: map_swift_type(type_node),
+                });
+            }
+            // Value-type initializers are the population-B root producer (D2):
+            // an `init` trampoline returns a boxed handle of the struct type.
+            Some("Constructor") => {
+                if let Some(m) = map_constructor(child) {
+                    methods.push(m);
+                }
+            }
+            // Value-type methods are the population-B receiver methods (D1/D3):
+            // recovered here so the receiver-handle trampoline can unbox the
+            // struct and call them. Previously dropped — a Swift struct's methods
+            // never reached the IR at all.
+            Some("Func") => {
+                if let Some(m) = map_method(child) {
+                    methods.push(m);
+                }
+            }
+            _ => {}
         }
     }
 
     Some(ir::Struct {
         name: node.name.clone(),
         fields,
+        methods,
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
 // ---------------------------------------------------------------------------
 // Method mapping
 // ---------------------------------------------------------------------------
+
+/// Build the Swift-native call metadata for a method/initializer node, mirroring
+/// `map_top_level_function`'s `swift_fn` population (ADR-0027 / leaf 020).
+///
+/// Returns `None` for an `objc_exposed` (ObjC/C-cursor'd) decl — it binds via
+/// `msgSend` and needs no trampoline facts, and `None` is skip-serialized so the
+/// ObjC golden JSON is unchanged. Returns `Some` for a Swift-native (`s:` USR)
+/// decl, carrying the `throws`/`async`/generic facts the receiver-handle codegen
+/// needs but the lossy `TypeRef` normalization drops.
+fn build_swift_fn(node: &AbiNode) -> Option<ir::SwiftFnInfo> {
+    if objc_exposed_of(node) {
+        return None;
+    }
+    Some(ir::SwiftFnInfo {
+        throwing: node.throwing,
+        // `node.is_async` is the (currently never-emitted) digester `async`
+        // field; OR it with the mangled-name `Ya` marker so async is actually
+        // detected (swift-api-digester surfaces async only in the mangling).
+        is_async: node.is_async || node_is_async(node),
+        is_generic: node.generic_sig.is_some(),
+        // Receiver mutation kind for value-type methods (D3). `None` for inits
+        // and any decl the digester leaves unmarked.
+        self_kind: node.func_self_kind.clone(),
+    })
+}
 
 /// Map a Swift function/method node to an IR [`ir::Method`].
 fn map_method(node: &AbiNode) -> Option<ir::Method> {
@@ -422,6 +525,8 @@ fn map_method(node: &AbiNode) -> Option<ir::Method> {
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: objc_exposed_of(node),
+        swift_fn: build_swift_fn(node),
     })
 }
 
@@ -453,6 +558,8 @@ fn map_constructor(node: &AbiNode) -> Option<ir::Method> {
         overrides: None,
         returns_retained: None,
         satisfies_protocol: None,
+        objc_exposed: objc_exposed_of(node),
+        swift_fn: build_swift_fn(node),
     })
 }
 
@@ -517,12 +624,36 @@ fn map_property(node: &AbiNode) -> Option<ir::Property> {
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
         origin: None,
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
 // ---------------------------------------------------------------------------
 // Top-level function / constant mapping
 // ---------------------------------------------------------------------------
+
+/// Detect an `async` function from its Swift **mangled name**, since
+/// `swift-api-digester` (json_format_version 8) does not emit a structured
+/// `async` field (it *does* emit `throwing`). The mangling encodes effect
+/// markers right before the final function operator `F`: async is `Ya`, throws is
+/// `K`, so an async free function's symbol ends in `YaF` (async) or `YaKF` (async
+/// throws) — e.g. `URLSession.data(from:)` is `…tYaKF`. Both the `usr` and
+/// `mangled_name` carry the suffix; check whichever is present.
+///
+/// The check is anchored at the suffix to avoid a stray `Ya` mid-symbol producing
+/// a false positive. It is forward-compatible: if a future digester populates the
+/// `async` field, the caller OR-s that in (see `map_top_level_function`).
+fn mangled_is_async(symbol: &str) -> bool {
+    symbol.ends_with("YaF") || symbol.ends_with("YaKF")
+}
+
+/// True when this node's mangled symbol marks it `async`.
+fn node_is_async(node: &AbiNode) -> bool {
+    node.mangled_name
+        .as_deref()
+        .or(node.usr.as_deref())
+        .is_some_and(mangled_is_async)
+}
 
 fn map_top_level_function(node: &AbiNode) -> Option<ir::Function> {
     if node.children.is_empty() {
@@ -555,6 +686,23 @@ fn map_top_level_function(node: &AbiNode) -> Option<ir::Function> {
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
+        objc_exposed: objc_exposed_of(node),
+        // Carry the call-by-name facts the trampoline codegen needs (ADR-0027 /
+        // leaf 040/020) — `throws`/`async`/generic that the Swift→ObjC TypeRef
+        // normalization drops. Only Swift-native top-level functions reach here.
+        swift_fn: Some(ir::SwiftFnInfo {
+            throwing: node.throwing,
+            // `node.is_async` is the (currently never-emitted) `async` JSON field;
+            // OR it with the mangled-name marker so async is actually detected
+            // (swift-api-digester surfaces async only in the mangling). Without
+            // this an async free function would classify as *bindable* and the
+            // trampoline codegen would emit a synchronous `return foo(…)` call that
+            // does not compile (ADR-0027 / racket-trampoline spec §3a kick-back).
+            is_async: node.is_async || node_is_async(node),
+            is_generic: node.generic_sig.is_some(),
+            // Free functions have no `self` receiver.
+            self_kind: None,
+        }),
     })
 }
 
@@ -571,6 +719,7 @@ fn map_top_level_constant(node: &AbiNode) -> Option<ir::Constant> {
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
         macro_value: None,
+        objc_exposed: objc_exposed_of(node),
     })
 }
 
@@ -825,5 +974,263 @@ mod tests {
             class_names.contains(&"IntentParameter"),
             "_AppIntents_SwiftUI overlay must retain foreign Class `IntentParameter`; got {class_names:?}"
         );
+    }
+
+    // ------------------------------------------------------------------
+    // async detection from the mangled name (no digester `async` field)
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn mangled_is_async_recognises_async_effect_suffix() {
+        // Real `URLSession.data(from:)` USR — `async throws`, suffix `YaKF`.
+        assert!(mangled_is_async(
+            "s:So12NSURLSessionC10FoundationE4data4fromAC4DataV_So13NSURLResponseCtAC3URLV_tYaKF"
+        ));
+        // Async, non-throwing: suffix `YaF`.
+        assert!(mangled_is_async("s:8MyModule5fetchSiyYaF"));
+        // Sync throwing (`KF`) and plain sync (`F`) are NOT async.
+        assert!(!mangled_is_async("s:8MyModule4riskySiyKF"));
+        assert!(!mangled_is_async("s:8MyModule4pureSiyF"));
+        // A stray `Ya` mid-symbol must not false-positive (anchored at suffix).
+        assert!(!mangled_is_async("s:8MyModule3YapSiyF"));
+    }
+
+    fn async_func_node(usr: &str) -> AbiNode {
+        // A top-level Swift-native async free function: a Func node with a single
+        // return-type child and an async-marked USR. `swift-api-digester` emits no
+        // `async` field, so detection must come from the mangling.
+        serde_json::from_value(json!({
+            "kind": "Function",
+            "name": "fetch",
+            "printedName": "fetch()",
+            "declKind": "Func",
+            "moduleName": "MyModule",
+            "usr": usr,
+            "children": [
+                { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+            ]
+        }))
+        .expect("build AbiNode")
+    }
+
+    #[test]
+    fn top_level_async_function_sets_is_async_from_mangling() {
+        // No `async` JSON field present (digester never emits one); the mangled USR
+        // suffix `SiyYaF` is the only async signal. The mapped function must carry
+        // `swift_fn.is_async = true` so the trampoline codegen defers it rather than
+        // misclassifying it as a (non-compiling) synchronous call.
+        let f = map_top_level_function(&async_func_node("s:8MyModule5fetchSiyYaF"))
+            .expect("async free function maps");
+        let info = f.swift_fn.expect("swift_fn populated");
+        assert!(
+            info.is_async,
+            "async must be detected from the mangled name"
+        );
+
+        // A sync counterpart (same shape, `SiyF`) must stay non-async.
+        let g = map_top_level_function(&async_func_node("s:8MyModule5fetchSiyF"))
+            .expect("sync free function maps");
+        assert!(!g.swift_fn.unwrap().is_async, "sync function is not async");
+    }
+
+    // ------------------------------------------------------------------
+    // Swift-native method recovery: swift_fn on ir::Method (leaf 020)
+    // ------------------------------------------------------------------
+
+    /// A Swift method node (`Func` under a type) with a single return-type child
+    /// and the given USR + printed name. `throwing`/effects are set by the
+    /// caller via the JSON.
+    fn swift_method_node(usr: &str, printed_name: &str, throwing: bool) -> AbiNode {
+        swift_method_node_self(usr, printed_name, throwing, "NonMutating")
+    }
+
+    fn swift_method_node_self(
+        usr: &str,
+        printed_name: &str,
+        throwing: bool,
+        self_kind: &str,
+    ) -> AbiNode {
+        serde_json::from_value(json!({
+            "kind": "Function",
+            "name": printed_name.split('(').next().unwrap_or(printed_name),
+            "printedName": printed_name,
+            "declKind": "Func",
+            "moduleName": "MyModule",
+            "usr": usr,
+            "throwing": throwing,
+            "funcSelfKind": self_kind,
+            "children": [
+                { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+            ]
+        }))
+        .expect("build method AbiNode")
+    }
+
+    #[test]
+    fn swift_native_mutating_method_records_self_kind() {
+        // D3: a `mutating` value-type method needs write-back in the trampoline,
+        // so the receiver mutation kind must be recovered into the IR. `consuming
+        // self` (handle would dangle) is deferred — both decisions need this fact.
+        let m = map_method(&swift_method_node_self(
+            "s:8MyModule6WidgetV6resizeyyF",
+            "resize()",
+            false,
+            "Mutating",
+        ))
+        .expect("mutating method maps");
+        let info = m.swift_fn.expect("swift_fn populated");
+        assert_eq!(
+            info.self_kind.as_deref(),
+            Some("Mutating"),
+            "mutating self-kind recovered for D3 write-back sizing"
+        );
+    }
+
+    #[test]
+    fn swift_native_method_carries_swift_fn_with_async_from_mangling() {
+        // Swift-native (`s:` USR) async method. The digester emits no `async`
+        // field, so async must be recovered from the `YaF` mangled suffix —
+        // exactly as `map_top_level_function` does. Without it the method would
+        // misclassify as a synchronous call and the trampoline codegen (030)
+        // would emit a non-compiling `return recv.method(…)`.
+        let m = map_method(&swift_method_node(
+            "s:8MyModule3FooV5fetchSiyYaF",
+            "fetch()",
+            false,
+        ))
+        .expect("swift-native method maps");
+        let info = m
+            .swift_fn
+            .expect("swift_fn populated for swift-native method");
+        assert!(info.is_async, "async recovered from mangled `YaF` suffix");
+        assert!(!info.throwing, "non-throwing");
+    }
+
+    #[test]
+    fn swift_native_throwing_method_sets_throwing() {
+        let m = map_method(&swift_method_node(
+            "s:8MyModule3FooV4riskSiyKF",
+            "risk()",
+            true,
+        ))
+        .expect("swift-native throwing method maps");
+        let info = m.swift_fn.expect("swift_fn populated");
+        assert!(info.throwing, "throwing recovered from node.throwing");
+        assert!(!info.is_async, "sync");
+    }
+
+    #[test]
+    fn objc_exposed_method_has_no_swift_fn() {
+        // An ObjC-exposed method (`c:` USR) binds directly via msgSend and needs
+        // no trampoline metadata. `swift_fn` MUST be `None` so the skip-serialized
+        // field keeps the ObjC golden JSON byte-identical (ADR-0026 discipline).
+        let m = map_method(&swift_method_node("c:objc(cs)NSFoo(im)bar", "bar()", false))
+            .expect("objc method maps");
+        assert!(
+            m.swift_fn.is_none(),
+            "objc-exposed method must not carry swift_fn"
+        );
+    }
+
+    fn swift_constructor_node(usr: &str, throwing: bool) -> AbiNode {
+        serde_json::from_value(json!({
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(value:)",
+            "declKind": "Constructor",
+            "moduleName": "MyModule",
+            "usr": usr,
+            "throwing": throwing,
+            "children": [
+                { "kind": "TypeNominal", "name": "Foo", "printedName": "MyModule.Foo", "children": [] },
+                { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+            ]
+        }))
+        .expect("build constructor AbiNode")
+    }
+
+    #[test]
+    fn swift_native_constructor_is_init_method_with_swift_fn() {
+        // The population-B root producer (D2): an `init` carries `init_method:
+        // true` and the same swift_fn facts (a throwing init drives the
+        // error-out producer shape).
+        let m = map_constructor(&swift_constructor_node(
+            "s:8MyModule3FooV5valueACSi_tcfc",
+            true,
+        ))
+        .expect("constructor maps");
+        assert!(m.init_method, "constructor is an initializer");
+        let info = m
+            .swift_fn
+            .expect("swift_fn populated for swift-native init");
+        assert!(info.throwing, "throwing init recovered");
+    }
+
+    // ------------------------------------------------------------------
+    // Swift-native struct method/initializer recovery (leaf 020)
+    // ------------------------------------------------------------------
+
+    fn swift_struct_node() -> AbiNode {
+        // A Swift-native value type with a field, an initializer, and a method.
+        // Today `map_struct` reads only the `Var` field and silently drops the
+        // `Constructor` + `Func` — the population-B (value-receiver) recovery hole.
+        serde_json::from_value(json!({
+            "kind": "TypeDecl",
+            "name": "Widget",
+            "printedName": "Widget",
+            "declKind": "Struct",
+            "moduleName": "MyModule",
+            "usr": "s:8MyModule6WidgetV",
+            "children": [
+                {
+                    "kind": "Var", "name": "size", "printedName": "size",
+                    "declKind": "Var", "usr": "s:8MyModule6WidgetV4sizeSivp",
+                    "children": [ { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] } ]
+                },
+                {
+                    "kind": "Constructor", "name": "init", "printedName": "init(size:)",
+                    "declKind": "Constructor", "usr": "s:8MyModule6WidgetV4sizeACSi_tcfc",
+                    "children": [
+                        { "kind": "TypeNominal", "name": "Widget", "printedName": "MyModule.Widget", "children": [] },
+                        { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] }
+                    ]
+                },
+                {
+                    "kind": "Function", "name": "area", "printedName": "area()",
+                    "declKind": "Func", "usr": "s:8MyModule6WidgetV4areaSiyF",
+                    "children": [ { "kind": "TypeNominal", "name": "Int", "printedName": "Swift.Int", "children": [] } ]
+                }
+            ]
+        }))
+        .expect("build struct AbiNode")
+    }
+
+    #[test]
+    fn swift_native_struct_recovers_methods_and_initializers() {
+        let s = map_struct(&swift_struct_node()).expect("struct maps");
+        // The field is still recovered.
+        assert_eq!(s.fields.len(), 1, "field recovered");
+        // The initializer + method are now recovered as methods (were dropped).
+        assert_eq!(
+            s.methods.len(),
+            2,
+            "struct constructor + func recovered as methods"
+        );
+        let init = s
+            .methods
+            .iter()
+            .find(|m| m.init_method)
+            .expect("initializer recovered");
+        assert!(
+            !init.objc_exposed,
+            "swift-native struct init is not objc-exposed"
+        );
+        assert!(init.swift_fn.is_some(), "init carries swift_fn");
+        let area = s
+            .methods
+            .iter()
+            .find(|m| !m.init_method)
+            .expect("instance method recovered");
+        assert!(area.swift_fn.is_some(), "struct method carries swift_fn");
     }
 }

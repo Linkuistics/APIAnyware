@@ -20,7 +20,11 @@
 //!    the exe transitively links (the Gerbil stdlib's `openssl@3`:
 //!    `libssl`/`libcrypto`) into `Contents/Frameworks/` and rewrite every
 //!    Homebrew load command to `@executable_path/../Frameworks/<name>` via
-//!    `install_name_tool`, so `otool -L` shows no Homebrew dependency.
+//!    `install_name_tool`, so `otool -L` shows no Homebrew dependency. When the
+//!    app links the Swift-native trampoline dylib `libAPIAnywareGerbil.dylib`
+//!    (ADR-0029 — its closure pulled a Swift-native binding), that dylib is
+//!    vendored + relocated by the *same* path ([`relocate::relocate_swift_dylib`]),
+//!    a no-op for an app with no Swift-native residual.
 //! 4. **Codesign** the relocated dylibs then the whole bundle.
 //!
 //! # Example
@@ -75,6 +79,9 @@ mod standalone;
 pub use bundle::{resolve_signing_identity, AppSpec, BundleError, LOCAL_SIGNING_IDENTITY};
 pub use compile::{discover_gerbil_bin_dir, DEFAULT_GERBIL_BIN_ENV};
 pub use deps::collect_closure;
-pub use relocate::{homebrew_deps_of, relocated_install_name};
+pub use relocate::{
+    homebrew_deps_of, relocate_swift_dylib, relocated_install_name, swift_dylib_load_command,
+    SWIFT_DYLIB_NAME,
+};
 pub use spec::read_display_name_from_spec;
 pub use standalone::bundle_app;

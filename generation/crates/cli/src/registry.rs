@@ -57,10 +57,7 @@ mod tests {
     fn registry_contains_racket() {
         let registry = EmitterRegistry::new();
         let racket = registry.get("racket");
-        assert!(
-            racket.is_some(),
-            "registry should contain racket emitter"
-        );
+        assert!(racket.is_some(), "registry should contain racket emitter");
         let info = racket.unwrap().target_info();
         assert_eq!(info.id, "racket");
         assert_eq!(info.display_name, "Racket");

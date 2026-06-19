@@ -55,7 +55,10 @@ mod tests {
     #[test]
     fn returns_none_when_file_missing() {
         let dir = TempDir::new().unwrap();
-        assert_eq!(read_display_name_from_spec(&dir.path().join("nope.md")), None);
+        assert_eq!(
+            read_display_name_from_spec(&dir.path().join("nope.md")),
+            None
+        );
     }
 
     #[test]

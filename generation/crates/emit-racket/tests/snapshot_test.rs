@@ -10,8 +10,8 @@
 
 use std::path::PathBuf;
 
-use apianyware_macos_emit::target_emitter::TargetEmitter;
 use apianyware_macos_emit::snapshot_testing::GoldenTest;
+use apianyware_macos_emit::target_emitter::TargetEmitter;
 use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
 use apianyware_macos_emit_racket::emit_framework::RacketEmitter;
 

@@ -4,8 +4,8 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 use apianyware_macos_emit::framework_ordering::topological_sort;
+use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 
 use crate::registry::EmitterRegistry;
 
@@ -108,34 +108,35 @@ pub fn run_generation(
         // same whole-program shape as racket's native-dispatch pass. Every
         // other target uses the registry instance unchanged.
         let gerbil_configured;
-        let active: &dyn TargetEmitter =
-            if info.id == apianyware_macos_emit_gerbil::GERBIL_TARGET_INFO.id {
-                let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
-                    &ordered_frameworks,
-                );
-                // Protocol-inheritance registry (leaf 120): the same whole-program
-                // shape, backing conformed-protocol method flattening — a class's
-                // conformance closure follows protocol `inherits` edges that cross
-                // frameworks.
-                let protos =
+        let active: &dyn TargetEmitter = if info.id
+            == apianyware_macos_emit_gerbil::GERBIL_TARGET_INFO.id
+        {
+            let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
+                &ordered_frameworks,
+            );
+            // Protocol-inheritance registry (leaf 120): the same whole-program
+            // shape, backing conformed-protocol method flattening — a class's
+            // conformance closure follows protocol `inherits` edges that cross
+            // frameworks.
+            let protos =
                     apianyware_macos_emit_gerbil::protocol_registry::ProtocolRegistry::from_framework_refs(
                         &ordered_frameworks,
                     );
-                // Same whole-program shape: the shared global generics module
-                // (`generics.ss`) holds one `:std/generic` generic per distinct
-                // instance-surface selector across every framework, so a selector
-                // shared by unrelated classes is one generic they all extend
-                // (cross-module unification fix). Written once, here.
-                apianyware_macos_emit_gerbil::write_global_generics_module(
-                    &ordered_frameworks,
-                    &out_dir,
-                )?;
-                gerbil_configured =
-                    apianyware_macos_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
-                &gerbil_configured
-            } else {
-                *emitter
-            };
+            // Same whole-program shape: the shared global generics module
+            // (`generics.ss`) holds one `:std/generic` generic per distinct
+            // instance-surface selector across every framework, so a selector
+            // shared by unrelated classes is one generic they all extend
+            // (cross-module unification fix). Written once, here.
+            apianyware_macos_emit_gerbil::write_global_generics_module(
+                &ordered_frameworks,
+                &out_dir,
+            )?;
+            gerbil_configured =
+                apianyware_macos_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
+            &gerbil_configured
+        } else {
+            *emitter
+        };
 
         for fw in &ordered_frameworks {
             let result = active
@@ -195,8 +196,7 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
         std::fs::create_dir_all(parent)
             .with_context(|| format!("creating {}", parent.display()))?;
     }
-    std::fs::write(swift_out, swift)
-        .with_context(|| format!("writing {}", swift_out.display()))?;
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
 
     tracing::info!(
         entries = sigs.len(),
@@ -204,6 +204,156 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
         "generated native dispatch table"
     );
     Ok(sigs.len())
+}
+
+/// Generate the racket target's Swift-native **trampolines** (ADR-0027) into the
+/// `APIAnywareRacket` Swift target; `swift build` then compiles them into the dylib.
+///
+/// Like the native dispatch table this is a **global** pass — the trampolines are
+/// collected across every framework and emitted into one file — so it runs once
+/// after [`run_generation`], before `swift build`. Every retained
+/// `objc_exposed == false` declaration is either trampolined or recorded as
+/// deferred (with a reason); the per-reason counts are logged so a clean generate
+/// reports what was bound and what was not (spec §5, "defer nothing, but be
+/// honest"). Returns the number of trampoline entries written.
+pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit_racket::trampoline::{
+        collect_trampolines, generate_trampolines_swift,
+    };
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let set = collect_trampolines(&frameworks);
+    let entries = set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        functions = set.functions.len(),
+        constants = set.constants.len(),
+        inits = set.inits.len(),
+        methods = set.methods.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated Swift-native trampolines"
+    );
+    Ok(entries)
+}
+
+/// Generate the **chez** target's Swift-native trampolines (ADR-0027 ported to
+/// chez, leaf 060) into the `APIAnywareChez` Swift target; `swift build` then
+/// compiles them into `libAPIAnywareChez`.
+///
+/// A **global** pass like the racket trampolines: the residual is collected across
+/// every framework into one `Generated/Trampolines.swift`. Per ADR-0011 the chez
+/// trampoline layer shares no native substrate with racket — only the
+/// classification taxonomy (a property of the shared IR) is duplicated. Every
+/// retained `objc_exposed == false` declaration is either trampolined or recorded
+/// as deferred with a reason; the per-reason counts are logged (spec §5). Returns
+/// the number of trampoline entries written.
+pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit_chez::trampoline::{collect_trampolines, generate_trampolines_swift};
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let set = collect_trampolines(&frameworks);
+    // Match racket's accounting: the method frontier (ADR-0030) adds init producers
+    // + receiver-handle methods to the free-function/constant residual, so the
+    // entry total and the log report all four kinds (the §6c invariant is checked
+    // by reproducing racket's per-kind + per-reason counts).
+    let entries =
+        set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        functions = set.functions.len(),
+        constants = set.constants.len(),
+        inits = set.inits.len(),
+        methods = set.methods.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated chez Swift-native trampolines"
+    );
+    Ok(entries)
+}
+
+/// Generate the **gerbil** target's Swift-native trampolines (ADR-0027 racket /
+/// ADR-0028 chez, ported to gerbil under ADR-0029, leaf 070) into the
+/// `APIAnywareGerbil` Swift target; `swift build` then compiles them into
+/// `libAPIAnywareGerbil` — the deliberate ADR-0017 deviation (gerbil grows a
+/// `swift build` step) the dylib trampoline requires.
+///
+/// A **global** pass like the racket/chez trampolines: the residual is collected
+/// across every framework into one `Generated/Trampolines.swift`. Per ADR-0011
+/// the gerbil trampoline layer shares no native substrate with racket/chez — only
+/// the classification taxonomy (a property of the shared IR) is duplicated, so the
+/// residual reproduces exactly (51 functions, 7 constants). Every retained
+/// `objc_exposed == false` declaration is either trampolined or recorded as
+/// deferred with a reason; the per-reason counts are logged (spec §5). Returns the
+/// number of trampoline entries written.
+pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit_gerbil::trampoline::{
+        collect_trampolines, generate_trampolines_swift,
+    };
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let set = collect_trampolines(&frameworks);
+    let entries =
+        set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        functions = set.functions.len(),
+        constants = set.constants.len(),
+        inits = set.inits.len(),
+        methods = set.methods.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated gerbil Swift-native trampolines"
+    );
+    Ok(entries)
 }
 
 #[cfg(test)]
@@ -246,12 +396,15 @@ mod tests {
                     overrides: None,
                     returns_retained: None,
                     satisfies_protocol: None,
+                    objc_exposed: true,
+                    swift_fn: None,
                 }],
                 category_methods: vec![],
                 swift_attributes: vec![],
                 ancestors: vec![],
                 all_methods: vec![],
                 all_properties: vec![],
+                objc_exposed: true,
             }],
             protocols: vec![],
             enums: vec![],
@@ -334,9 +487,7 @@ mod tests {
 
         // Both frameworks generated
         assert_eq!(summaries[0].frameworks_generated, 2);
-        assert!(output_dir
-            .join("racket/generated/foundation")
-            .exists());
+        assert!(output_dir.join("racket/generated/foundation").exists());
         assert!(output_dir.join("racket/generated/appkit").exists());
     }
 
@@ -535,6 +686,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 
@@ -603,12 +755,15 @@ mod tests {
                 overrides: None,
                 returns_retained: None,
                 satisfies_protocol: None,
+                objc_exposed: true,
+                swift_fn: None,
             }],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 

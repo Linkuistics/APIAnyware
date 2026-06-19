@@ -101,8 +101,9 @@ pub fn extract_interesting_methods(framework: &Framework) -> FrameworkSummary {
     // Protocol methods (required + optional). A protocol-only framework such
     // as CoreTransferable has zero classes, so without this loop `llm-extract`
     // emits no `.methods.json` for it and the annotation-drift gate flags any
-    // checked-in `.llm.json` as orphaned (FU-1). Structs and enums carry no
-    // methods in the IR, so there is nothing to extract from them.
+    // checked-in `.llm.json` as orphaned (FU-1). Swift-native struct methods
+    // (leaf 020) are recovered for the trampoline but not LLM-extracted here —
+    // the trampoline binding is structural. Enums carry no methods in the IR.
     for protocol in &framework.protocols {
         let mut methods = Vec::new();
         collect_interesting(&protocol.required_methods, &mut methods);
@@ -695,6 +696,8 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
+            swift_fn: None,
         }
     }
 
@@ -710,6 +713,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         }
     }
 
@@ -1745,6 +1749,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         };
         let mut fw = make_framework("TestKit", vec![]);
         fw.protocols = vec![protocol];

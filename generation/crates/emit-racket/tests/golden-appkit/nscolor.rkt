@@ -17,13 +17,10 @@
 
 
 ;; --- Class predicates ---
-(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nscolorspace? v) (objc-instance-of? v "NSColorSpace"))
-(define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
-(define (nsurl? v) (objc-instance-of? v "NSURL"))
 (define (opaquetypearchetype? v) (objc-instance-of? v "OpaqueTypeArchetype"))
 (provide NSColor)
 (provide/contract
@@ -156,7 +153,6 @@
   [nscolor-get-red-green-blue-alpha (c-> nscolor? (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nscolor-get-white-alpha (c-> nscolor? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nscolor-highlight-with-level (c-> nscolor? real? (or/c nscolor? objc-nil?))]
-  [nscolor-imported-content-types (c-> nscolor? (or/c nsarray? objc-nil?))]
   [nscolor-pasteboard-property-list-for-type (c-> nscolor? (or/c string? objc-object? #f) any/c)]
   [nscolor-set! (c-> nscolor? void?)]
   [nscolor-set-fill! (c-> nscolor? void?)]
@@ -605,10 +601,6 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_d_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "highlightWithLevel:")) val))
    ))
-(define (nscolor-imported-content-types self)
-  (wrap-objc-object
-   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "importedContentTypes"))))
-   ))
 (define (nscolor-pasteboard-property-list-for-type self type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pasteboardPropertyListForType:")) (id->ffi2-ptr (coerce-arg type))))
@@ -705,7 +697,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithHue:saturation:brightness:alpha:")) hue saturation brightness alpha))
    ))
-;; block param 1: stored (retained across calls)
+;; block param 1: async-copied (runtime-managed)
 (define (nscolor-color-with-name-dynamic-provider color-name dynamic-provider)
   (define-values (_blk1 _blk1-id)
     (make-objc-block dynamic-provider (list _id) _id))

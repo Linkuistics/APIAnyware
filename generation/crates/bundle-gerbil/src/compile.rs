@@ -48,6 +48,81 @@ pub const DEFAULT_GERBIL_BIN_ENV: &str = "AW_GERBIL_BIN_DIR";
 /// emitter crate. Compiled without `-O` (ADR-0023) — see [`compile_app`] step 2.
 const GENERICS_MODULE_STEM: &str = "generics";
 
+/// The linker name of the Swift-native trampoline dylib (`-lAPIAnywareGerbil`,
+/// ADR-0029). Built by `swift build` from the `APIAnywareGerbil` SwiftPM target;
+/// see [`discover_swift_dylib`]. The basename is
+/// [`crate::relocate::SWIFT_DYLIB_NAME`].
+const SWIFT_DYLIB_LINK_NAME: &str = "APIAnywareGerbil";
+
+/// Locate the built `libAPIAnywareGerbil.dylib` under the repo's
+/// `swift/.build/<triple>/{release,debug}/` (ADR-0029). The dylib is the
+/// `swift build` artifact for the `APIAnywareGerbil` SwiftPM target; gerbil
+/// **links** it (`-lAPIAnywareGerbil`) rather than dlopen'ing it (the chez
+/// divergence, ADR-0029 §4), so its directory becomes a `-L`/`-rpath` on the
+/// gerbil app link line.
+///
+/// Prefers `release` over `debug` (a bundled app should ship the optimized
+/// build when both exist), and the host triple's build dir over others. Returns
+/// `None` when no artifact exists — the caller then omits the link args, so an
+/// app with no Swift-native residual still bundles, and one that *does* reference
+/// the trampolines fails loudly at the `gxc` link (undefined `aw_gerbil_swift_*`)
+/// with the build instruction in the app README. `workspace_root` is the repo
+/// root (the parent of `swift/`).
+pub fn discover_swift_dylib(workspace_root: &Path) -> Option<PathBuf> {
+    let build_root = workspace_root.join("swift").join(".build");
+    let base = crate::relocate::SWIFT_DYLIB_NAME;
+    // Host triple's conventional dir name (e.g. arm64-apple-macosx); also scan
+    // any sibling triple dirs so a cross/older build layout still resolves.
+    let mut triple_dirs: Vec<PathBuf> = Vec::new();
+    if let Ok(entries) = fs::read_dir(&build_root) {
+        for e in entries.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                // Skip SwiftPM's `release`/`debug` *symlinks* at the .build root;
+                // we want the per-triple dirs that contain them.
+                if name != "release" && name != "debug" && name != "checkouts" {
+                    triple_dirs.push(p);
+                }
+            }
+        }
+    }
+    triple_dirs.sort();
+    for triple in &triple_dirs {
+        for profile in ["release", "debug"] {
+            let candidate = triple.join(profile).join(base);
+            if candidate.is_file() {
+                return Some(candidate);
+            }
+        }
+    }
+    // Fallback: SwiftPM's profile symlinks directly under .build (older layout).
+    for profile in ["release", "debug"] {
+        let candidate = build_root.join(profile).join(base);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+/// The `-ld-options` fragment that links the Swift trampoline dylib at
+/// `dylib_path`: `-L<dir> -lAPIAnywareGerbil -Wl,-rpath,<dir>`. The `@rpath`
+/// install name is rewritten to `@executable_path/../Frameworks/` by
+/// [`crate::relocate::relocate_swift_dylib`] when the app is assembled, so the
+/// build-dir rpath only matters for the unbundled `gxc` link. Empty string when
+/// `dylib_path` is `None` (no Swift-native residual built).
+fn swift_link_args(dylib_path: Option<&Path>) -> String {
+    match dylib_path.and_then(|p| p.parent()) {
+        Some(dir) => format!(
+            "-L{0} -l{1} -Wl,-rpath,{0}",
+            dir.display(),
+            SWIFT_DYLIB_LINK_NAME
+        ),
+        None => String::new(),
+    }
+}
+
 /// Locate the bottle gerbil's `bin/` directory (the one holding the `gxc`
 /// multicall symlink). Honours [`DEFAULT_GERBIL_BIN_ENV`]; otherwise globs
 /// the Homebrew Cellar for a `gerbil-scheme/<ver>/bin/gxc`.
@@ -92,12 +167,19 @@ pub fn discover_gerbil_bin_dir() -> Result<PathBuf, BundleError> {
 ///   [`crate::collect_closure`].
 /// - `build_dir` — scratch dir for the companion `.o` and the exe.
 /// - `cache_dir` — the persistent `GERBIL_PATH` (warmed across rebuilds).
+/// - `swift_dylib` — the built `libAPIAnywareGerbil.dylib` (ADR-0029), or `None`
+///   when no `swift build` artifact exists. When present its dir is added as a
+///   `-L`/`-rpath` and `-lAPIAnywareGerbil` to the closure-`-O` and exe link
+///   lines so the generated `aw_gerbil_swift_*` trampoline references resolve;
+///   `ld` records a load command only for an app whose closure actually pulls a
+///   trampoline binding (the Swift-native residual), so a plain app is unaffected.
 pub fn compile_app(
     entry: &Path,
     lib_root: &Path,
     closure: &[PathBuf],
     build_dir: &Path,
     cache_dir: &Path,
+    swift_dylib: Option<&Path>,
 ) -> Result<PathBuf, BundleError> {
     let bin_dir = discover_gerbil_bin_dir()?;
     let sdkroot = sdk_path()?;
@@ -150,6 +232,10 @@ pub fn compile_app(
     // exe link AND on the `-O` closure pass (2c), where `functions.ss`'s
     // dynamically-loadable `.oN` makes direct framework C calls (leaf 100/030).
     let frameworks = framework_link_args(closure, lib_root);
+    // The Swift-native trampoline dylib (ADR-0029), when built. Joined onto the
+    // closure-`-O` and exe link lines so the generated `aw_gerbil_swift_*`
+    // references resolve; empty when no `swift build` artifact exists.
+    let swift_ld = swift_link_args(swift_dylib);
 
     let generics_dir = lib_root.join(GENERICS_MODULE_STEM);
     let generics_facade = lib_root.join(format!("{GENERICS_MODULE_STEM}.ss"));
@@ -185,7 +271,9 @@ pub fn compile_app(
     );
     // 2b. generics facade — no `-O` (depends on the shards just compiled).
     let t = Instant::now();
-    gxc_compile(&facade, false, "", &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    gxc_compile(
+        &facade, false, "", &bin_dir, lib_root, cache_dir, &sdkroot, &blk,
+    )?;
     eprintln!(
         "[bundle-gerbil] generics facade (no -O) in {:.1}s",
         t.elapsed().as_secs_f64()
@@ -194,7 +282,16 @@ pub fn compile_app(
     //     generics is already cached, so its importers resolve). The frameworks
     //     go here: `functions.ss`'s loadable `.oN` calls framework C symbols.
     let t = Instant::now();
-    gxc_compile(&optimized, true, &frameworks, &bin_dir, lib_root, cache_dir, &sdkroot, &blk)?;
+    gxc_compile(
+        &optimized,
+        true,
+        format!("{frameworks} {swift_ld}").trim(),
+        &bin_dir,
+        lib_root,
+        cache_dir,
+        &sdkroot,
+        &blk,
+    )?;
     eprintln!(
         "[bundle-gerbil] closure: {} modules (-O) in {:.1}s",
         optimized.len(),
@@ -207,7 +304,7 @@ pub fn compile_app(
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_else(|| "app".to_string());
     let exe = build_dir.join(&script_stem);
-    let ld_options = format!("-lobjc {frameworks} {blk}");
+    let ld_options = format!("-lobjc {frameworks} {swift_ld} {blk}");
     let t = Instant::now();
     let out = gerbil_command("gxc", &bin_dir, lib_root, cache_dir, &sdkroot)?
         .arg("-exe")
@@ -521,7 +618,10 @@ mod tests {
 
     #[test]
     fn framework_link_name_known_and_runtime() {
-        assert_eq!(framework_link_name(OsStr::new("appkit")).as_deref(), Some("AppKit"));
+        assert_eq!(
+            framework_link_name(OsStr::new("appkit")).as_deref(),
+            Some("AppKit")
+        );
         assert_eq!(
             framework_link_name(OsStr::new("foundation")).as_deref(),
             Some("Foundation")
@@ -529,8 +629,17 @@ mod tests {
         assert_eq!(framework_link_name(OsStr::new("runtime")), None);
         // Sample-app frameworks (leaf 100/020) — internal capitalisation the
         // heuristic fallback would get wrong.
-        assert_eq!(framework_link_name(OsStr::new("pdfkit")).as_deref(), Some("PDFKit"));
-        assert_eq!(framework_link_name(OsStr::new("scenekit")).as_deref(), Some("SceneKit"));
-        assert_eq!(framework_link_name(OsStr::new("webkit")).as_deref(), Some("WebKit"));
+        assert_eq!(
+            framework_link_name(OsStr::new("pdfkit")).as_deref(),
+            Some("PDFKit")
+        );
+        assert_eq!(
+            framework_link_name(OsStr::new("scenekit")).as_deref(),
+            Some("SceneKit")
+        );
+        assert_eq!(
+            framework_link_name(OsStr::new("webkit")).as_deref(),
+            Some("WebKit")
+        );
     }
 }

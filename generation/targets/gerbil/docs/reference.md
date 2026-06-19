@@ -73,8 +73,10 @@ class-pair plumbing), `subclass.ss`, `cocoa.ss` (geometry constructors +
 standard app menu), and `native_block.c` (the clang `-fblocks` companion). The
 module table, bridge specs, and build recipe live in
 `generation/targets/gerbil/lib/runtime/README.md` — read it before touching the
-runtime. **There is no `libAPIAnywareGerbil.dylib`** (ADR-0017): the native
-core is compiled by gsc into every executable.
+runtime. The **native core** carries no dylib (ADR-0017): it is compiled by gsc
+into every executable. The *only* Swift compilation unit is the trampoline-only
+`libAPIAnywareGerbil.dylib` (ADR-0029, §8 below) — admitted solely because a
+Swift-native API can be reached only from Swift; it does not absorb the native core.
 
 ## 2. Toolchain provisioning (the bottle)
 
@@ -310,6 +312,63 @@ kernel embed, no whole-program compile, no collision probe.
   `@executable_path/../Frameworks/<name>` via `install_name_tool` — including
   the **exe's and inter-dylib** `-change` commands, not just each dylib's
   `-id`. After relocation `otool -L` shows no Homebrew path.
+- **The Swift-native trampoline dylib `libAPIAnywareGerbil` (ADR-0029).** For
+  Swift-native API coverage gerbil grows a **`swift build` step** — the
+  deliberate ADR-0017 deviation (only Swift can call the Swift ABI; `gsc`
+  structurally cannot). The build order becomes **`generate → swift build →
+  gxc`**: `generate` emits `swift/Sources/APIAnywareGerbil/Generated/
+  Trampolines.swift`, `swift build` compiles it into `libAPIAnywareGerbil.dylib`,
+  and the app `gxc -exe` links it (`-lAPIAnywareGerbil`). Unlike chez (which
+  *dlopens* its dylib), gerbil *links* it, so the exe records an
+  `@rpath/libAPIAnywareGerbil.dylib` load command. **Self-containment is upheld
+  by the existing relocation path, not a new mechanism** (ADR-0029 §3): the Swift
+  runtime is OS-resident (`/usr/lib/swift/`, via the dyld shared cache — not
+  vendored), and `bundle-gerbil` (`relocate::relocate_swift_dylib`) vendors the
+  built dylib into `Contents/Frameworks/` alongside openssl@3 and rewrites the
+  exe's `@rpath` load command to `@executable_path/../Frameworks/` — the same
+  `install_name_tool` treatment openssl gets. After relocation `otool -L` on the
+  bundled exe shows only `/usr/lib/*`, system frameworks, and `@executable_path/..`.
+- **Emitter routing (ADR-0029, leaf 070/020).** A retained Swift-native decl
+  (`objc_exposed == false`) has no C symbol, so `emit_functions` / `emit_constants`
+  route it to a `aw_gerbil_swift_*` trampoline instead of a direct
+  `define-c-lambda`: a per-signature `%swift-…` crossing (synthesized `extern`
+  prototype + `define-c-lambda` against the dylib entry) wrapped Scheme-side. The
+  substantive divergence from chez/racket (which box every non-scalar return) is
+  the **object** return: a trampoline handing back an `id` is `wrap`ped to its
+  exact bound type via the ADR-0020 `register-objc-class!` registry, not a raw
+  pointer (`emit-gerbil/src/trampoline.rs` `RetMarshal::Object` vs `OpaqueBox`).
+  String in/out + the `throws` error-cell ride `runtime/swift-trampoline.ss`; the
+  opaque value box + throws are hermetic Swift (`OpaqueHandle.swift` /
+  `ThrowsBridge.swift`). The residual is a deterministic function of the shared IR,
+  so it reproduces racket/chez **exactly**: 51 function trampolines, 7 constants
+  (deferred 6 closure / 10 nonbridged-struct / 4 unnameable / 34 unbindable-generic).
+- **Method frontier (ADR-0032, leaf 050-gerbil).** The same trampoline mechanism,
+  generalised from free functions to **methods + initializers** by an opaque
+  **receiver handle** as the first C param. `emit_class` routes `objc_exposed ==
+  false` methods/inits away from `objc_msgSend` (charter #4) to a Swift-native
+  section: a `%swift-…` crossing + an outer `(define <name> (lambda (self …) …))`
+  that coerces the receiver via **`(->ptr self)`** (a wrapped class instance → its
+  ptr; a raw value-struct handle → through). A **class** receiver reconstructs via
+  `Unmanaged`; a **value-struct** receiver via `awGerbilUnbox`, with **mutating
+  write-back** into the same box (`AwGerbilValueBox.value` is `var`). **Init
+  producers** box the owner (class → `Unmanaged.passRetained`, wrapped Scheme-side;
+  value → `awGerbilBox`, raw handle). Population-B value structs (e.g. `IndexSet`)
+  emit a `<fw>/<struct>.ss` module with **no `defclass`/msgSend substrate** — just
+  the handle-based bindings. The residual reproduces racket/chez **exactly** (the
+  §6d invariant): 576 init + 554 method trampolines, byte-identical deferred
+  breakdown; the whole 117-framework residual compiles clean in Swift 6 (0 errors,
+  B5 `@MainActor` warnings kept).
+- **First gerbil async path (ADR-0032 §5).** gerbil's free-fn async bucket was empty,
+  so the method frontier introduces gerbil's first async surface:
+  `runtime/async-bridge.ss` (`aw-async-call`) over a Gambit `c-define` callback +
+  the new `AsyncBridge.swift` (`awGerbilAsyncDispatch` / `AwGerbilAsyncOutcome`,
+  the `MainActor.run` main-thread delivery hop, ADR-0022). Non-blocking callback
+  form (R4): the binding takes a `complete` continuation; the completion fires on
+  the main thread on a later run-loop pass. No lazy-load forcing reference
+  (ADR-0029 §4 — the dylib links at `gxc -exe` time). The
+  `tests/run-swift-method-smoke.sh` CLI smoke proves both exemplars (pop-B IndexSet
+  init→contains→insert! write-back; pop-A async `URLSession.data(from: file://…)`)
+  through `libAPIAnywareGerbil`.
 - Pipeline per app (`bundle-gerbil/src/lib.rs`): walk the `(import …)`
   closure → clang the block companion → `gxc -O` the closure into the cache →
   `gxc -exe -O` link → assemble `.app` + `Info.plist`
@@ -318,10 +377,11 @@ kernel embed, no whole-program compile, no collision probe.
 
 ```text
 <App>.app/Contents/
-  MacOS/<App>            ← gxc -exe binary (embeds the Gambit runtime)
-  Info.plist             ← CFBundleName = "<App>"
+  MacOS/<App>                  ← gxc -exe binary (embeds the Gambit runtime)
+  Info.plist                   ← CFBundleName = "<App>"
   Frameworks/
-    libssl.3.dylib       ← vendored + relocated to @executable_path
+    libAPIAnywareGerbil.dylib  ← Swift-native trampoline (ADR-0029), relocated
+    libssl.3.dylib             ← vendored + relocated to @executable_path
     libcrypto.3.dylib
 ```
 
@@ -374,6 +434,16 @@ provisioning needed — the runtime is embedded); reports + screenshots under
 the VM caught: the `char-string` UTF-8 crash (§3) and the weak-delegate GC
 reaping (§4) — the latter needed *sustained interaction* (typing) to trip,
 which is exactly what the VM-verify bar exists to exercise.
+
+The Swift-native trampoline path (ADR-0029) has its own CLI smoke,
+`runtime/tests/run-swift-trampoline-smoke.sh`: it links a gerbil exe against a
+freshly built `libAPIAnywareGerbil.dylib` and proves the §6a exemplars reach
+gerbil through the `@_cdecl` trampolines — `CreateML.timestampSeed()` → a
+time-derived `Int` and `MLCreateErrorDomain` → `"com.apple.CreateML"`, neither of
+which has a C symbol in `CreateML.framework`. Prerequisites:
+`generate --target gerbil` then `swift build --product APIAnywareGerbil`. The
+Swift side is independently covered by `APIAnywareGerbilTests` (`swift test`). The
+VM-verify of a `swift-native-probe` gerbil app is leaf 070/030.
 
 ## 11. When does each target shine?
 

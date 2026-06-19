@@ -42,10 +42,17 @@ use apianyware_macos_types::ir::Constant;
 use apianyware_macos_types::type_ref::TypeRefKind;
 
 use crate::ffi_type_mapping::{c_type_for_token, GerbilFfiTypeMapper, POINTER};
+use crate::trampoline::{
+    classify_constant, const_needs_objc, const_needs_swift_helpers, ConstTrampoline,
+};
 
 /// The runtime module supplying `wrap` (object boxing + lifetime) and
-/// `string->nsstring` (CFSTR construction). Same module the class emitter binds.
+/// `string->nsstring` (CFSTR construction). Same module the class emitter binds;
+/// also owns the `wrap` a Swift-native object constant trampoline uses.
 const RUNTIME_OBJC_IMPORT: &str = ":gerbil-bindings/runtime/objc";
+/// The runtime module supplying the Swift-native trampoline `aw-swift-*` coercers
+/// (a Swift-native `String` global is read + coerced Scheme-side).
+const RUNTIME_TRAMPOLINE_IMPORT: &str = ":gerbil-bindings/runtime/swift-trampoline";
 
 /// What kind of crossing a constant needs. Computed once per constant; drives
 /// both the `begin-ffi` `define-c-lambda` body and the outer binding form.
@@ -114,7 +121,10 @@ fn crossing_return_token(flavour: &Flavour) -> &str {
     }
 }
 
-/// Names that `constants.ss` exports — every constant in IR order.
+/// Names that `constants.ss` exports — every constant in IR order. Direct
+/// (ObjC-exposed) globals and the Swift-native residual (`objc_exposed == false`,
+/// trampolined through libAPIAnywareGerbil, ADR-0029) are *both* bound, so the
+/// facade re-export list is the full set.
 pub fn constant_names(constants: &[Constant]) -> Vec<String> {
     constants.iter().map(|c| c.name.clone()).collect()
 }
@@ -124,20 +134,33 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     let mapper = GerbilFfiTypeMapper;
     let mut w = CodeWriter::new();
 
-    let flavours: Vec<(&Constant, Flavour)> = constants
+    // Direct (ObjC-exposed) globals read by name; the Swift-native residual
+    // (`objc_exposed == false`) has no C symbol, so it is read through a
+    // `aw_gerbil_swift_const_*` trampoline in libAPIAnywareGerbil (ADR-0029).
+    let direct: Vec<&Constant> = constants.iter().filter(|c| c.objc_exposed).collect();
+    let residual: Vec<ConstTrampoline> = constants
         .iter()
-        .map(|c| (c, classify(c, &mapper)))
+        .filter(|c| !c.objc_exposed)
+        .map(|c| classify_constant(framework, c))
         .collect();
 
-    // A `begin-ffi` block (and so `:std/foreign`) is needed only for symbol-read
-    // crossings; the runtime module only when something is `wrap`ped (object
-    // globals + CFSTR).
+    let flavours: Vec<(&Constant, Flavour)> =
+        direct.iter().map(|c| (*c, classify(c, &mapper))).collect();
+
+    // A `begin-ffi` block (and so `:std/foreign`) is needed for any symbol-read
+    // crossing — a direct non-CFSTR global or any residual trampoline. The `objc`
+    // runtime is needed when something is `wrap`ped (object/CFSTR globals, a
+    // residual object constant); the `swift-trampoline` runtime for a residual
+    // `String` global (Scheme-side coercion). The two runtime modules are disjoint.
     let needs_ffi = flavours
         .iter()
-        .any(|(_, f)| !matches!(f, Flavour::CfString(_)));
-    let needs_runtime = flavours
+        .any(|(_, f)| !matches!(f, Flavour::CfString(_)))
+        || !residual.is_empty();
+    let needs_objc = flavours
         .iter()
-        .any(|(_, f)| matches!(f, Flavour::Object | Flavour::CfString(_)));
+        .any(|(_, f)| matches!(f, Flavour::Object | Flavour::CfString(_)))
+        || residual.iter().any(const_needs_objc);
+    let needs_swift = residual.iter().any(const_needs_swift_helpers);
 
     write_line!(
         w,
@@ -145,13 +168,16 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
         framework
     );
 
-    if needs_ffi || needs_runtime {
+    if needs_ffi || needs_objc || needs_swift {
         w.line("(import");
         if needs_ffi {
             w.line("  :std/foreign");
         }
-        if needs_runtime {
+        if needs_objc {
             write_line!(w, "  {}", RUNTIME_OBJC_IMPORT);
+        }
+        if needs_swift {
+            write_line!(w, "  {}", RUNTIME_TRAMPOLINE_IMPORT);
         }
         w.line("  )");
     }
@@ -168,10 +194,14 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
     }
     w.blank_line();
 
-    // begin-ffi: one global-read crossing per non-CFSTR constant. Each symbol is
-    // declared by a synthesized `extern` (ADR-0021) — never by `#include`-ing the
-    // framework umbrella header — so the block compiles under the default gcc-15.
-    if needs_ffi {
+    // Direct begin-ffi: one global-read crossing per non-CFSTR constant. Each
+    // symbol is declared by a synthesized `extern` (ADR-0021) — never by
+    // `#include`-ing the framework umbrella header — so the block compiles under
+    // the default gcc-15.
+    let direct_has_ffi = flavours
+        .iter()
+        .any(|(_, f)| !matches!(f, Flavour::CfString(_)));
+    if direct_has_ffi {
         let needs_stdbool = flavours
             .iter()
             .any(|(_, f)| matches!(f, Flavour::Scalar(tok) if tok == "bool"));
@@ -206,7 +236,33 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
         w.blank_line();
     }
 
-    // Outer bindings: read (+ wrap object/CFSTR) each global.
+    // Swift-native residual begin-ffi: one `%swift-const-<name>` reader per
+    // residual global, against the `aw_gerbil_swift_const_*` entry in
+    // libAPIAnywareGerbil (ADR-0029).
+    if !residual.is_empty() {
+        let crossings: Vec<_> = residual.iter().map(|t| t.crossing()).collect();
+        w.line("  ;; Swift-native residual — read through libAPIAnywareGerbil constant");
+        w.line("  ;; trampolines (aw_gerbil_swift_const_*) rather than a C symbol (ADR-0029).");
+        w.line("(begin-ffi (");
+        for t in &residual {
+            write_line!(w, "            %swift-const-{}", t.swift_name);
+        }
+        w.line("            )");
+        if crossings.iter().any(|c| c.needs_stdbool) {
+            w.line("  (c-declare \"#include <stdbool.h>\")");
+        }
+        for c in &crossings {
+            write_line!(w, "  (c-declare \"{}\")", c.proto);
+        }
+        w.blank_line();
+        for c in &crossings {
+            write_line!(w, "  {}", c.define_c_lambda);
+        }
+        w.line("  )");
+        w.blank_line();
+    }
+
+    // Direct outer bindings: read (+ wrap object/CFSTR) each global.
     for (c, f) in &flavours {
         match f {
             Flavour::CfString(v) => write_line!(
@@ -222,6 +278,12 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
                 write_line!(w, "(define {} ({}))", c.name, crossing_name(&c.name))
             }
         }
+    }
+
+    // Swift-native residual outer bindings: read once at load (+ wrap object /
+    // coerce String) — the trampoline analogue of the direct globals above.
+    for t in &residual {
+        write_line!(w, "{}", t.render_binding());
     }
 
     w.finish()
@@ -259,6 +321,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: None,
+            objc_exposed: true,
         }
     }
 
@@ -273,6 +336,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             macro_value: Some(value.into()),
+            objc_exposed: true,
         }
     }
 
@@ -344,9 +408,9 @@ mod tests {
     fn cfstr_constant_builds_retained_nsstring() {
         let consts = vec![cfstr("kAXWindowsAttribute", "AXWindows")];
         let out = generate_constants_file(&consts, "ApplicationServices");
-        assert!(out.contains(
-            "(define kAXWindowsAttribute (wrap (string->nsstring \"AXWindows\") #t))"
-        ));
+        assert!(
+            out.contains("(define kAXWindowsAttribute (wrap (string->nsstring \"AXWindows\") #t))")
+        );
         // Pure CFSTR module: no symbol to read → no begin-ffi / :std/foreign.
         assert!(!out.contains("begin-ffi"));
         assert!(!out.contains(":std/foreign"));
@@ -366,5 +430,124 @@ mod tests {
         let consts = vec![cfstr("kFoo", "a\"b\\c")];
         let out = generate_constants_file(&consts, "TestKit");
         assert!(out.contains("(string->nsstring \"a\\\"b\\\\c\")"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Swift-native residual routing (objc_exposed == false → trampolines)
+    // -----------------------------------------------------------------------
+
+    /// A Swift-native (`objc_exposed == false`) constant.
+    fn swift_const(name: &str, kind: TypeRefKind) -> Constant {
+        Constant {
+            name: name.into(),
+            constant_type: TypeRef {
+                nullable: false,
+                kind,
+            },
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            macro_value: None,
+            objc_exposed: false,
+        }
+    }
+
+    #[test]
+    fn swift_native_string_constant_reads_through_trampoline() {
+        // The §6a exemplar: a Swift-native String global with no C symbol, read
+        // through the aw_gerbil_swift_const_* trampoline + Scheme-side coercion.
+        let consts = vec![swift_const(
+            "MLCreateErrorDomain",
+            TypeRefKind::Class {
+                name: "NSString".into(),
+                framework: Some("Foundation".into()),
+                params: vec![],
+            },
+        )];
+        let out = generate_constants_file(&consts, "CreateML");
+        assert!(
+            out.contains("(c-declare \"extern void * aw_gerbil_swift_const_CreateML_MLCreateErrorDomain(void);\")"),
+            "{out}"
+        );
+        assert!(
+            out.contains("(define-c-lambda %swift-const-MLCreateErrorDomain () (pointer void) \"aw_gerbil_swift_const_CreateML_MLCreateErrorDomain\")"),
+            "{out}"
+        );
+        assert!(
+            out.contains("(define MLCreateErrorDomain (aw-swift-string-result (%swift-const-MLCreateErrorDomain)))"),
+            "{out}"
+        );
+        // String coercion pulls in the swift-trampoline runtime; no umbrella include.
+        assert!(
+            out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
+        assert!(!out.contains("#include <CreateML/"), "{out}");
+        // Exported through the facade-visible name list.
+        assert!(constant_names(&consts).contains(&"MLCreateErrorDomain".to_string()));
+    }
+
+    #[test]
+    fn swift_native_scalar_constant_reads_by_value() {
+        let consts = vec![swift_const(
+            "MLDefaultBatchSize",
+            TypeRefKind::Primitive {
+                name: "int64".into(),
+            },
+        )];
+        let out = generate_constants_file(&consts, "CreateML");
+        assert!(
+            out.contains("(define-c-lambda %swift-const-MLDefaultBatchSize () int64 \"aw_gerbil_swift_const_CreateML_MLDefaultBatchSize\")"),
+            "{out}"
+        );
+        assert!(
+            out.contains("(define MLDefaultBatchSize (%swift-const-MLDefaultBatchSize))"),
+            "{out}"
+        );
+        // A pure scalar residual needs no runtime helpers.
+        assert!(
+            !out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
+    }
+
+    #[test]
+    fn direct_and_residual_constants_coexist_without_double_wrap() {
+        // A framework with both a direct object global (needs objc `wrap`) and a
+        // Swift-native String residual (needs swift-trampoline) imports both
+        // runtimes; the two are disjoint, so `wrap` is bound exactly once.
+        let consts = vec![
+            c(
+                "NSFontAttributeName",
+                TypeRefKind::Class {
+                    name: "NSString".into(),
+                    framework: None,
+                    params: vec![],
+                },
+            ),
+            swift_const(
+                "MLCreateErrorDomain",
+                TypeRefKind::Class {
+                    name: "NSString".into(),
+                    framework: Some("Foundation".into()),
+                    params: vec![],
+                },
+            ),
+        ];
+        let out = generate_constants_file(&consts, "AppKit");
+        assert!(out.contains(":gerbil-bindings/runtime/objc"), "{out}");
+        assert!(
+            out.contains(":gerbil-bindings/runtime/swift-trampoline"),
+            "{out}"
+        );
+        // Direct object global still wraps; residual string still coerces.
+        assert!(
+            out.contains("(define NSFontAttributeName (wrap (%const-NSFontAttributeName)))"),
+            "{out}"
+        );
+        assert!(
+            out.contains("(define MLCreateErrorDomain (aw-swift-string-result"),
+            "{out}"
+        );
     }
 }

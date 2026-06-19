@@ -167,6 +167,8 @@ mod tests {
             overrides: None,
             returns_retained: None,
             satisfies_protocol: None,
+            objc_exposed: true,
+            swift_fn: None,
         }
     }
 
@@ -182,6 +184,7 @@ mod tests {
             provenance: None,
             doc_refs: None,
             origin: None,
+            objc_exposed: true,
         }
     }
 
@@ -221,6 +224,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
 
         let mut swift = empty_framework("TestKit");
@@ -243,6 +247,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
 
         merge_swift_into_objc(&mut objc, swift);
@@ -280,6 +285,7 @@ mod tests {
             ancestors: vec![],
             all_methods: vec![],
             all_properties: vec![],
+            objc_exposed: true,
         });
 
         merge_swift_into_objc(&mut objc, swift);
@@ -300,6 +306,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
 
         let mut swift = empty_framework("TestKit");
@@ -312,6 +319,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
         swift.protocols.push(ir::Protocol {
             name: "SwiftProto".to_string(), // New: add
@@ -322,6 +330,7 @@ mod tests {
             source: None,
             provenance: None,
             doc_refs: None,
+            objc_exposed: true,
         });
 
         merge_swift_into_objc(&mut objc, swift);

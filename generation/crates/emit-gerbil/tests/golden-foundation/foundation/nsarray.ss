@@ -12,7 +12,6 @@
   encode-with-coder
   first-object
   last-object
-  make-iterator
   make-nsarray-init-with-coder
   nsarray-count
   nsarray-custom-mirror
@@ -67,7 +66,6 @@
 
 (define %sel-nsarray-init-with-coder (sel_registerName "initWithCoder:"))
 (define %sel-nsarray-object-at-index (sel_registerName "objectAtIndex:"))
-(define %sel-nsarray-make-iterator (sel_registerName "makeIterator"))
 (define %sel-nsarray-encode-with-coder (sel_registerName "encodeWithCoder:"))
 (define %sel-nsarray-supports-secure-coding (sel_registerName "supportsSecureCoding"))
 (define %sel-nsarray-count (sel_registerName "count"))
@@ -127,11 +125,6 @@
   (wrap (%msg-u64->p (NSObject-ptr self) %sel-nsarray-object-at-index index)))
 (defmethod {object-at-index NSArray} (lambda (self index) (nsarray-object-at-index self index)))
 
-(define (nsarray-make-iterator self)
-  (wrap (%msg-v->p (NSObject-ptr self) %sel-nsarray-make-iterator)))
-(defmethod {make-iterator NSArray} (lambda (self) (nsarray-make-iterator self)))
-(g:defmethod (make-iterator (o NSArray)) (nsarray-make-iterator o))
-
 (define (nsarray-encode-with-coder self coder)
   (%msg-p->v (NSObject-ptr self) %sel-nsarray-encode-with-coder (->ptr coder)))
 (defmethod {encode-with-coder NSArray} (lambda (self coder) (nsarray-encode-with-coder self coder)))
@@ -139,4 +132,19 @@
 ;; --- Class methods ---
 (define (nsarray-supports-secure-coding)
   (%msg-v->b (objc_getClass "NSArray") %sel-nsarray-supports-secure-coding))
+
+;; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---
+;; Trampolined through libAPIAnywareGerbil (aw_gerbil_swift_* entries),
+;; not the framework dylib (ADR-0029); receiver coerced via (->ptr self).
+(begin-ffi (
+            %swift-nsarray-make-iterator
+            )
+  (c-declare "extern void * aw_gerbil_swift_m_Foundation_NSArray_makeIterator(void *);")
+
+  (define-c-lambda %swift-nsarray-make-iterator ((pointer void)) (pointer void) "aw_gerbil_swift_m_Foundation_NSArray_makeIterator")
+  )
+
+(define nsarray-make-iterator
+  (lambda (self)
+    (wrap (%swift-nsarray-make-iterator (->ptr self)) #t)))
 

@@ -14,7 +14,13 @@
 (require ffi/unsafe
          racket/path)
 
-(provide ;; Autorelease pool
+(provide ;; The libAPIAnywareRacket handle — re-exported so the generated
+         ;; Swift-native trampoline bindings (swift-trampoline.rkt / ADR-0027)
+         ;; can `get-ffi-obj` their `aw_racket_swift_*` entries against the same
+         ;; already-loaded, mandatory dylib (no second load).
+         anyware-lib
+
+         ;; Autorelease pool
          swift:autorelease-push
          swift:autorelease-pop
 

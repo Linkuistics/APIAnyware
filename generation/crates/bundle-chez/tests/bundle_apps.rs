@@ -33,7 +33,10 @@ fn workspace_root() -> PathBuf {
 }
 
 fn chez_root() -> PathBuf {
-    workspace_root().join("generation").join("targets").join("chez")
+    workspace_root()
+        .join("generation")
+        .join("targets")
+        .join("chez")
 }
 
 fn chez_available() -> bool {
@@ -71,7 +74,10 @@ fn computes_hello_window_collision_set() {
         return;
     }
     let root = chez_root();
-    let entry = root.join("apps").join("hello-window").join("hello-window.sls");
+    let entry = root
+        .join("apps")
+        .join("hello-window")
+        .join("hello-window.sls");
 
     let collisions = compute_collisions(&entry, &root).expect("collision probe");
 

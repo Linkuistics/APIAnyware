@@ -11,6 +11,10 @@
 //   list:  aw_racket_list_to_nsarray / aw_racket_nsarray_count / aw_racket_nsarray_get_all
 //   dict:  aw_racket_hash_to_nsdictionary / aw_racket_nsdictionary_count
 //          / aw_racket_nsdictionary_get_all
+//   set:   aw_racket_list_to_nsset / aw_racket_nsset_count / aw_racket_nsset_get_all
+//          (added leaf 040/010 — the Swift `Set<T>` ⇄ NSSet bridge the trampoline
+//           taxonomy needs, spec §3; `Set` has no inherent order, so `get_all`
+//           returns the elements in `-allObjects` order)
 //
 // Ownership conventions (match the prior Racket helpers exactly, so the runtime
 // contract is unchanged):
@@ -122,5 +126,51 @@ public func nsdictionaryGetAll(
         } else {
             outValues[i] = nil
         }
+    }
+}
+
+// MARK: - list ⇄ NSSet
+
+/// Build a +1-retained NSSet from a C array of `count` ObjC `id` pointers.
+/// nil slots are skipped (NSSet cannot hold nil); duplicate pointers collapse,
+/// which is the Swift `Set` semantics the caller asked for. Same +1 ownership
+/// as `aw_racket_list_to_nsarray`: the Racket side wraps it `#:retained #t`.
+@_cdecl("aw_racket_list_to_nsset")
+public func listToNSSet(
+    _ items: UnsafePointer<UnsafeMutableRawPointer?>?,
+    _ count: Int
+) -> UnsafeMutableRawPointer {
+    let set = NSMutableSet(capacity: count)
+    if let items = items {
+        for i in 0..<count where items[i] != nil {
+            set.add(Unmanaged<AnyObject>.fromOpaque(items[i]!).takeUnretainedValue())
+        }
+    }
+    return Unmanaged.passRetained(set).toOpaque()
+}
+
+/// Number of elements in an NSSet — the count the caller allocates its read-back
+/// buffer to before calling `aw_racket_nsset_get_all`.
+@_cdecl("aw_racket_nsset_count")
+public func nssetCount(_ set: UnsafeMutableRawPointer) -> Int {
+    Unmanaged<NSSet>.fromOpaque(set).takeUnretainedValue().count
+}
+
+/// Fill `out` (caller-allocated, `count` pointers wide) with the set's element
+/// `id` pointers, **unretained**, in `-allObjects` order (a set has no inherent
+/// order). Mirrors `aw_racket_nsarray_get_all`'s contract: the elements are
+/// valid only while the source set is alive, which it is across this synchronous
+/// call; the Racket side copies what it needs before returning.
+@_cdecl("aw_racket_nsset_get_all")
+public func nssetGetAll(
+    _ set: UnsafeMutableRawPointer,
+    _ count: Int,
+    _ out: UnsafeMutablePointer<UnsafeMutableRawPointer?>
+) {
+    let s = Unmanaged<NSSet>.fromOpaque(set).takeUnretainedValue()
+    let all = s.allObjects
+    let n = min(count, all.count)
+    for i in 0..<n {
+        out[i] = Unmanaged.passUnretained(all[i] as AnyObject).toOpaque()
     }
 }

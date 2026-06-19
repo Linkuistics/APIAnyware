@@ -180,7 +180,50 @@ When the emitted surface doesn't cover what you need, drop down:
   encodings like `{CGRect={CGPoint=dd}{CGSize=dd}}` live outside what FFI tokens
   capture; the racket ports already carry the encodings.
 
-## 6. Observed gotchas (020–140)
+## 6. The Swift-native method frontier (ADR-0030/0031)
+
+Most of Foundation/AppKit binds through `objc_msgSend` (sections 1–5). The
+`objc_exposed == false` **Swift-native** methods/initializers (`IndexSet`,
+`URLSession.data(from:)`, the SwiftUI value types) have no ObjC selector, so they
+bind through **receiver-handle trampolines** in `libAPIAnywareChez` instead — a
+`@_cdecl` taking an opaque receiver handle + args and calling `receiver.name(labels:)`
+by name (swiftc owns the ABI). This is the chez port of the racket method ADR
+(ADR-0030); the chez deviations are ADR-0031. Calling them from Scheme:
+
+- **Generated names** kebab the Swift selector base + non-wildcard labels (so
+  overloads stay distinct): `IndexSet.contains(_:)` → `indexset-contains`,
+  `URLSession.data(from:)` → `urlsession-data-from`. A `mutating` value-receiver
+  method takes the `!` marker: `IndexSet.insert(_:)` → `indexset-insert!`.
+- **Population B — value structs vend a handle.** A Swift value type (`IndexSet`)
+  has no handle until an **init producer** mints one: `init(integer:)` →
+  `make-indexset-integer`, returning an opaque value handle. Pass that handle as
+  the receiver `self` to its methods. A `mutating` method writes the mutated value
+  back into the *same* handle (one stable identity), so a subsequent read sees it.
+  These live in their own `(library (apianyware <fw> <struct>) …)` — no ObjC
+  substrate, no framework-dylib load.
+- **Population A — objc-exposed receivers** (`URLSession`) reuse the existing
+  `id`-handle the ObjC path already holds; the method section is emitted into the
+  class library after the `objc_msgSend` bindings.
+- **`async` methods take a trailing `complete` continuation** and return
+  immediately (the non-blocking callback form, R4 — a blocking await would freeze
+  the run loop the completion drains): `(urlsession-data-from sess url complete)`
+  where `complete` is `(lambda (result err) …)`, delivered on a later main-run-loop
+  pass. The app must be servicing its run loop (under `nsapplication-run`, or a
+  pumping CLI smoke) for the completion to fire. This is the **first chez async
+  path** (`runtime/async-bridge.sls`, `aw-async-call`), built on a
+  `foreign-callable __collect_safe` callback the Swift `awChezAsyncDispatch` invokes
+  on the main thread.
+- **Throwing methods** raise (sync) via `aw-call/error`; an async throwing method
+  delivers the error as the `complete` continuation's second argument.
+
+The residual is a deterministic function of the shared IR, so chez's classification
+**reproduces racket's exactly** (the §6c invariant): 576 init + 554 method (+ 51
+function + 7 constant) trampolines, with an identical per-reason deferred breakdown.
+Un-trampolinable decls (generic `Self`, actor-isolated, `consuming` receiver, …)
+are deferred-with-count, never silently dropped, and listed in the generated
+library's trailer.
+
+## 7. Observed gotchas (020–140)
 
 🔴 **2026-05-27 — `foreign-callable` is syntax; the runtime `eval`s it in
 `(interaction-environment)`.** `foreign-callable`'s param/result types must be
@@ -314,7 +357,7 @@ unbundled interpreter and is unchanged. But a shipped `.app` no longer execs a
 a stub-launcher `execv` artifact, and the stub-launcher is no longer on the chez
 bundle path). No per-app or runtime fix is owed.
 
-## 7. Verification
+## 8. Verification
 
 CLI smoke (`chez --libdirs … --script …`) reaching `[NSApp run]` proves
 *linking and import resolution* — it does **not** prove the GUI draws. Per
@@ -329,7 +372,7 @@ defects (bundled dylib lookup, the all-sizes struct-return buffer) were
 re-entry, and `note-editor` confirms `aw_chez_gc_count` balances 0→N→0 across
 block create/free.
 
-## 8. When does each target shine?
+## 9. When does each target shine?
 
 - **racket** — richer batteries (regexp, `net/url`, places for off-main-thread
   I/O, a mature `ffi/unsafe/objc` `tell` macro). Per-object finalizers give
@@ -345,7 +388,7 @@ block create/free.
   *build* time. Best when you want a tight, transparent native bridge with a
   dependency-free `.app` and are willing to write the glue.
 
-## 9. Self-contained distribution (the standalone toolchain)
+## 10. Self-contained distribution (the standalone toolchain)
 
 A chez `.app` is a **self-contained, open-world native binary**: its
 `Contents/MacOS/<App>` embeds the Chez kernel and a whole-program boot image, so
