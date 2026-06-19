@@ -7,7 +7,9 @@
          ffi/unsafe/objc
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
-         "../../runtime/coerce.rkt")
+         "../../runtime/coerce.rkt"
+         "../../runtime/swift-trampoline.rkt"
+         (only-in ffi/unsafe [-> aw->]))
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/Foundation.framework/Foundation"))
@@ -18,7 +20,6 @@
 (define (mirror? v) (objc-instance-of? v "Mirror"))
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
-(define (nsfastenumerationiterator? v) (objc-instance-of? v "NSFastEnumerationIterator"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (provide NSArray)
 (provide/contract
@@ -34,10 +35,13 @@
   [nsarray-copy-with-zone (c-> nsarray? (or/c cpointer? #f) any/c)]
   [nsarray-count-by-enumerating-with-state-objects-count (c-> nsarray? (or/c cpointer? #f) (or/c cpointer? #f) exact-nonnegative-integer? exact-nonnegative-integer?)]
   [nsarray-encode-with-coder (c-> nsarray? (or/c string? objc-object? #f) void?)]
-  [nsarray-make-iterator (c-> nsarray? (or/c nsfastenumerationiterator? objc-nil?))]
   [nsarray-mutable-copy-with-zone (c-> nsarray? (or/c cpointer? #f) any/c)]
   [nsarray-object-at-index (c-> nsarray? exact-nonnegative-integer? any/c)]
   [nsarray-supports-secure-coding (c-> boolean?)]
+  )
+
+(provide
+  nsarray-make-iterator
   )
 
 ;; --- Class reference ---
@@ -97,10 +101,6 @@
   (aw_racket_msg_PPQ_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "countByEnumeratingWithState:objects:count:")) (id->ffi2-ptr state) (id->ffi2-ptr buffer) len))
 (define (nsarray-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
-(define (nsarray-make-iterator self)
-  (wrap-objc-object
-   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeIterator"))))
-   ))
 (define (nsarray-mutable-copy-with-zone self zone)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mutableCopyWithZone:")) (id->ffi2-ptr zone)))
@@ -113,3 +113,9 @@
 ;; --- Class methods ---
 (define (nsarray-supports-secure-coding)
   (aw_racket_msg_0_b (id->ffi2-ptr NSArray) (id->ffi2-ptr (sel_registerName "supportsSecureCoding"))))
+
+;; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---
+(define nsarray-make-iterator
+  (let ([raw (get-ffi-obj 'aw_racket_swift_m_Foundation_NSArray_makeIterator _aw-lib (_fun _pointer aw-> _pointer))])
+    (lambda (self)
+      (raw (coerce-arg self)))))

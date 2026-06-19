@@ -8,7 +8,9 @@
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
-         "../../runtime/block.rkt")
+         "../../runtime/block.rkt"
+         "../../runtime/swift-trampoline.rkt"
+         (only-in ffi/unsafe [-> aw->]))
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/Foundation.framework/Foundation"))
@@ -16,7 +18,6 @@
 
 
 ;; --- Class predicates ---
-(define (dynamicself? v) (objc-instance-of? v "DynamicSelf"))
 (define (nsprogress? v) (objc-instance-of? v "NSProgress"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (_playgroundquicklook? v) (objc-instance-of? v "_PlaygroundQuickLook"))
@@ -70,6 +71,10 @@
   [nsstring-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
   [nsstring-readable-type-identifiers-for-item-provider (c-> any/c)]
   [nsstring-supports-secure-coding (c-> boolean?)]
+  )
+
+(provide
+  make-nsstring-string
   )
 
 ;; --- Class reference ---
@@ -237,3 +242,9 @@
    ))
 (define (nsstring-supports-secure-coding)
   (aw_racket_msg_0_b (id->ffi2-ptr NSString) (id->ffi2-ptr (sel_registerName "supportsSecureCoding"))))
+
+;; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---
+(define make-nsstring-string
+  (let ([raw (get-ffi-obj 'aw_racket_swift_init_Foundation_NSString_bd6dd38a _aw-lib (_fun _pointer aw-> _pointer))])
+    (lambda (string)
+      (raw (aw-string-arg string)))))

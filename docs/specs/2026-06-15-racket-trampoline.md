@@ -636,6 +636,43 @@ value-receiver unbox → mutating write-back on one stable handle. Full cold rer
 VM-verify is leaf `030-rerun-verify`; `async` methods + the blocking-await surface
 are leaf `020-async-method`.
 
+### 8.8 Full-residual `swift build` close (leaf `030-racket/040-swift-residual-verify`)
+
+Leaves 010/020 only *typechecked Foundation*. Compiling the **full 117-framework
+residual** (593 init + 588 method `@_cdecl`s) surfaced **955 errors** across ~14
+categories — availability gates the IR can't synthesise, impl-detail-module imports,
+and per-decl semantic failures — that single-framework typechecks never reach. The
+close, all racket-emitter-side (chez/gerbil inherit through the shared IR), is
+**ADR-0030 §B**:
+
+- **Deployment-target bump** `swift/Package.swift` → `swift-tools-version 6.2`,
+  `platforms: [.macOS(.v26)]` (the host SDK floor). A `@_cdecl` is a plain global
+  function, so raising the package minimum clears every API introduced at ≤ 26.0
+  without per-decl `@available` — **826 of 955** in one move (§B1). Package-wide ⇒
+  chez/gerbil inherit; acceptable as all three are **host tools** (VM golden
+  `macos-tahoe`/26), never back-deployed apps.
+- **Umbrella re-attribution** (`swift_import_module`): impl-detail modules
+  (`RealityFoundation`→`RealityKit`, `SwiftUICore`→`SwiftUI`) are re-attributed for
+  the **Swift `import` + type qualifier only** — the entry symbol + Racket binding
+  keep the original module — rescuing **~250** trampolines that can't import their own
+  module (§B2).
+- **Owner-availability fold** (`max_macos_version`): a `@_cdecl` is gated to the max of
+  the method's and its owning value-struct's `introduced:`, binding the type-gated
+  inits (§B3).
+- **Curated `KNOWN_UNBINDABLE`** (51 decls): the genuinely-un-trampolinable residual —
+  dominated by `@MainActor`/actor isolation, which `swift-api-digester` **does not
+  surface** — keyed by content-addressed entry name, each counted under its
+  `DeferReason` (the libobjc Option-B precedent; the full `swift build` is its
+  regression guard) (§B4). A further **~60** `@MainActor @preconcurrency` decls compile
+  with a *warning* and are **kept** (they run on the main thread, the GUI use case);
+  a sound off-main variant is a future async-hopping frontier (§B5).
+
+Result: `swift build` **green** over the full residual (576 init + 554 method emitted;
+the 51 + the modules' non-re-exported tail deferred-with-count), the classification
+**reproducing exactly** from a cold `collect`→`analyze`→`generate`. Done-bar evidence
+(cold rerun, `cargo test`, the two-exemplar CLI smoke, the `RUNTIME_LOAD_TEST` method
+round-trip, the `swift-native-method-probe` VM-verify) is ADR-0030 §B6.
+
 ## 9. Async methods + object-ref params (ADR-0030 addendum, leaf `030-racket/020`)
 
 Decided in ADR-0030's *Addendum*; this section is the implementation contract.

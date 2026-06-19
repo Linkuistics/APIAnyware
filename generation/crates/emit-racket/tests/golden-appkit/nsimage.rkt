@@ -9,7 +9,9 @@
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
          "../../runtime/block.rkt"
-         "../../runtime/type-mapping.rkt")
+         "../../runtime/type-mapping.rkt"
+         "../../runtime/swift-trampoline.rkt"
+         (only-in ffi/unsafe [-> aw->]))
 
 ;; Load framework and ObjC runtime
 (define _fw-lib (ffi-lib "/System/Library/Frameworks/AppKit.framework/AppKit"))
@@ -17,7 +19,6 @@
 
 
 ;; --- Class predicates ---
-(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
@@ -26,7 +27,6 @@
 (define (nslocale? v) (objc-instance-of? v "NSLocale"))
 (define (nsprogress? v) (objc-instance-of? v "NSProgress"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
-(define (nsurl? v) (objc-instance-of? v "NSURL"))
 (define (opaquetypearchetype? v) (objc-instance-of? v "OpaqueTypeArchetype"))
 (provide NSImage)
 (provide/contract
@@ -88,7 +88,6 @@
   [nsimage-hit-test-rect-with-image-destination-rect-context-hints-flipped (c-> nsimage? any/c any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean? boolean?)]
   [nsimage-image-with-locale (c-> nsimage? (or/c string? objc-object? #f) (or/c nsimage? objc-nil?))]
   [nsimage-image-with-symbol-configuration (c-> nsimage? (or/c string? objc-object? #f) (or/c nsimage? objc-nil?))]
-  [nsimage-imported-content-types (c-> nsimage? (or/c nsarray? objc-nil?))]
   [nsimage-init-by-referencing-file (c-> nsimage? (or/c string? objc-object? #f) any/c)]
   [nsimage-init-by-referencing-url (c-> nsimage? (or/c string? objc-object? #f) any/c)]
   [nsimage-is-template (c-> nsimage? boolean?)]
@@ -117,6 +116,10 @@
   [nsimage-readable-types-for-pasteboard (c-> (or/c string? objc-object? #f) any/c)]
   [nsimage-reading-options-for-type-pasteboard (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsimage-supports-secure-coding (c-> boolean?)]
+  )
+
+(provide
+  make-nsimage-image-literal-resource-name
   )
 
 ;; --- Class reference ---
@@ -342,10 +345,6 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "imageWithSymbolConfiguration:")) (id->ffi2-ptr (coerce-arg configuration))))
    ))
-(define (nsimage-imported-content-types self)
-  (wrap-objc-object
-   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "importedContentTypes"))))
-   ))
 (define (nsimage-init-by-referencing-file self file-name)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "initByReferencingFile:")) (id->ffi2-ptr (coerce-arg file-name))))
@@ -405,7 +404,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSImage) (id->ffi2-ptr (sel_registerName "imageNamed:")) (id->ffi2-ptr (coerce-arg name))))
    ))
-;; block param 2: stored (retained across calls)
+;; block param 2: async-copied (runtime-managed)
 (define (nsimage-image-with-size-flipped-drawing-handler size drawing-handler-should-be-called-with-flipped-context drawing-handler)
   (define-values (_blk2 _blk2-id)
     (make-objc-block drawing-handler (list _NSRect) _bool))
@@ -446,3 +445,9 @@
   (aw_racket_msg_PP_Q (id->ffi2-ptr NSImage) (id->ffi2-ptr (sel_registerName "readingOptionsForType:pasteboard:")) (id->ffi2-ptr (coerce-arg type)) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nsimage-supports-secure-coding)
   (aw_racket_msg_0_b (id->ffi2-ptr NSImage) (id->ffi2-ptr (sel_registerName "supportsSecureCoding"))))
+
+;; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---
+(define make-nsimage-image-literal-resource-name
+  (let ([raw (get-ffi-obj 'aw_racket_swift_init_AppKit_NSImage_f5900f1f _aw-lib (_fun _pointer aw-> _pointer))])
+    (lambda (image-literal-resource-name)
+      (raw (aw-string-arg image-literal-resource-name)))))

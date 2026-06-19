@@ -18,7 +18,6 @@
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
-(define (range? v) (objc-instance-of? v "Range"))
 (provide NSData)
 (provide/contract
   [make-nsdata-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]

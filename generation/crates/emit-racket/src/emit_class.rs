@@ -35,7 +35,7 @@ use crate::shared_signatures::{
     block_ffi_types, class_has_blocks, class_has_struct_types, collect_class_fallback_signatures,
     SignatureMap,
 };
-use crate::trampoline::{classify_method, MethodDisposition, AW_ARROW_REQUIRE};
+use crate::trampoline::{classify_method, introduced_macos, MethodDisposition, AW_ARROW_REQUIRE};
 
 /// The rendered receiver-handle trampoline bindings (ADR-0030) for one type's
 /// declared Swift-native methods/inits (`objc_exposed == false`), plus the require
@@ -112,6 +112,7 @@ fn collect_swift_native_bindings(
     methods: &[Method],
     owner_is_class: bool,
     value_structs: &HashSet<&str>,
+    owner_introduced: Option<&str>,
 ) -> SwiftNativeBindings {
     let mut entries: Vec<SwiftNativeBinding> = Vec::new();
     let mut seen = HashSet::new();
@@ -119,7 +120,7 @@ fn collect_swift_native_bindings(
         if m.swift_fn.is_none() {
             continue; // ObjC method — binds via msgSend, no trampoline
         }
-        match classify_method(framework, owner, owner_is_class, m, methods, value_structs) {
+        match classify_method(framework, owner, owner_is_class, m, methods, value_structs, owner_introduced) {
             MethodDisposition::Method(t) => {
                 let mutating = m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref())
                     == Some("Mutating");
@@ -165,8 +166,14 @@ pub fn generate_struct_file(
     framework: &str,
     value_structs: &HashSet<&str>,
 ) -> Option<String> {
-    let bindings =
-        collect_swift_native_bindings(&st.name, framework, &st.methods, false, value_structs);
+    let bindings = collect_swift_native_bindings(
+        &st.name,
+        framework,
+        &st.methods,
+        false,
+        value_structs,
+        introduced_macos(&st.provenance).as_deref(),
+    );
     if bindings.is_empty() {
         return None;
     }
@@ -332,8 +339,14 @@ pub fn generate_class_file_with_structs(
     // front: the header requires `swift-trampoline.rkt`/`async-bridge.rkt` and the
     // `aw->` arrow alias iff this type emits any trampoline, and `provide` lists the
     // exact binding names.
-    let mut swift_native =
-        collect_swift_native_bindings(&cls.name, framework, &cls.methods, true, value_structs);
+    let mut swift_native = collect_swift_native_bindings(
+        &cls.name,
+        framework,
+        &cls.methods,
+        true,
+        value_structs,
+        None, // `Class` carries no provenance; class-owned method gates suffice (spec §8.8)
+    );
 
     // Names that must be disambiguated from a same-named instance binding.
     // Example: NSEvent has both @property(class) modifierFlags and

@@ -161,6 +161,14 @@ const LIBRARY_LOAD_CHECKS: &[&str] = &[
     "generated/corespotlight/constants.rkt",
     "generated/createml/functions.rkt",
     "generated/createml/constants.rkt",
+    // 16. `foundation/indexset.rkt` — the Swift-native receiver-handle METHOD
+    //     trampoline residual (ADR-0030). Where createml/* exercise free-function
+    //     and constant trampolines, this is the only generated file whose load
+    //     resolves `aw_racket_swift_init_*` (init producer) + `aw_racket_swift_m_*`
+    //     (instance method) @_cdecls against `_aw-lib`. The load check guards the
+    //     method-trampoline require shape against drift; `runtime_swift_method_roundtrip`
+    //     below proves the bindings RUN (init → mutating write-back).
+    "generated/foundation/indexset.rkt",
     "runtime/swift-trampoline.rkt",
     "runtime/dynamic-class.rkt",
     "runtime/nsevent-helpers.rkt",
@@ -813,6 +821,83 @@ fn runtime_default_constructors() {
     if !output.status.success() {
         panic!(
             "default-constructors test failed.\n--- stdout ---\n{}\n--- stderr ---\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+    }
+
+    eprintln!("{}", String::from_utf8_lossy(&output.stdout).trim_end());
+}
+
+#[test]
+fn runtime_swift_method_roundtrip() {
+    if skip_unless_enabled("runtime_swift_method_roundtrip") {
+        return;
+    }
+
+    let frameworks = match load_required_frameworks() {
+        Ok(fws) => fws,
+        Err(missing) => {
+            eprintln!(
+                "SKIPPED: enriched IR not found for {missing}. \
+                 Run the analysis pipeline first."
+            );
+            return;
+        }
+    };
+
+    let temp = tempfile::tempdir().expect("tempdir");
+    build_harness_tree(temp.path(), &frameworks);
+
+    // The receiver-handle METHOD trampoline analogue of the constant-trampoline
+    // round-trip the library load checks already guard (ADR-0030, spec §8.7 / §6b
+    // registration pattern). Exercises the full Swift-native value-struct method
+    // chain on Foundation.IndexSet — all `objc_exposed: false`, reachable ONLY
+    // through `aw_racket_swift_{init,m}_Foundation_IndexSet_*` @_cdecls in
+    // libAPIAnywareRacket:
+    //   - init(integer:) producer (D2): boxes an AwValueBox handle,
+    //   - contains(_:) by-value method on the unboxed receiver,
+    //   - insert(_:) MUTATING value-receiver (D3): the mutated copy is written back
+    //     into the SAME box, so a follow-up contains on the SAME handle observes it.
+    // A broken write-back (or a stale/mismatched dylib) makes the final contains
+    // return #f and fails the harness — a permanent regression guard for the method
+    // frontier, the sync sibling of the async CLI smoke (test-swift-method-smoke.rkt).
+    let t = temp.path().to_string_lossy();
+    let script = format!(
+        "\
+#lang racket/base
+(require ffi/unsafe
+         (file \"{t}/generated/foundation/indexset.rkt\"))
+
+(define (check name v)
+  (unless v (eprintf \"FAIL: ~a~n\" name) (exit 1)))
+
+;; init(integer:) producer → boxed Swift-native value handle.
+(define is (make-indexset-integer 5))
+(check \"make-indexset-integer returns a handle\" (cpointer? is))
+;; value-receiver unbox + by-value method.
+(check \"contains 5 after init(integer: 5)\" (indexset-contains is 5))
+(check \"7 absent before insert\" (not (indexset-contains is 7)))
+;; mutating write-back (D3): insert! mutates the same box.
+(void (indexset-insert! is 7))
+(check \"contains 7 after insert! — write-back proven\" (indexset-contains is 7))
+(check \"original member 5 still present\" (indexset-contains is 5))
+
+(printf \"OK: Swift-native IndexSet method round-trip — 5 checks passed~n\")
+"
+    );
+
+    let script_path = temp.path().join("__swift_method_roundtrip.rkt");
+    std::fs::write(&script_path, &script).expect("write swift-method roundtrip script");
+
+    let output = Command::new("racket")
+        .arg(&script_path)
+        .output()
+        .expect("invoke racket");
+
+    if !output.status.success() {
+        panic!(
+            "Swift-native method round-trip failed.\n--- stdout ---\n{}\n--- stderr ---\n{}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
         );

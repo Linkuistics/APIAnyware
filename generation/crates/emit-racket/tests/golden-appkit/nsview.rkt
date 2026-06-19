@@ -18,7 +18,6 @@
 
 ;; --- Class predicates ---
 (define (calayer? v) (objc-instance-of? v "CALayer"))
-(define (cgrect? v) (objc-instance-of? v "CGRect"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
@@ -26,7 +25,6 @@
 (define (nsbitmapimagerep? v) (objc-instance-of? v "NSBitmapImageRep"))
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
-(define (nsedgeinsets? v) (objc-instance-of? v "NSEdgeInsets"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
 (define (nslayoutguide? v) (objc-instance-of? v "NSLayoutGuide"))
 (define (nslayoutxaxisanchor? v) (objc-instance-of? v "NSLayoutXAxisAnchor"))

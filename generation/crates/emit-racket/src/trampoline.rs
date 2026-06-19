@@ -438,13 +438,39 @@ pub struct ConstTrampoline {
 /// The macOS `introduced:` version from a declaration's IR provenance, if any —
 /// the trampoline emits it as `@available(macOS <v>, *)` so swiftc accepts the
 /// call to a version-gated API (the residual is full of them).
-fn introduced_macos(
+pub fn introduced_macos(
     provenance: &Option<apianyware_macos_types::provenance::SourceProvenance>,
 ) -> Option<String> {
     provenance
         .as_ref()
         .and_then(|p| p.availability.as_ref())
         .and_then(|a| a.introduced.clone())
+}
+
+/// Parse a dotted macOS version (`"26.4"`, `"15"`) into comparable components so two
+/// `introduced:` strings can be ordered.
+fn version_key(v: &str) -> Vec<u32> {
+    v.split('.').map(|c| c.parse().unwrap_or(0)).collect()
+}
+
+/// The higher of two `@available(macOS …)` gates. A method's own `introduced:` can be
+/// **lower** than its owning type's (or absent while the type's is present): a
+/// `@_cdecl` calling `Owner.method()` must be gated to the *max* of the two, else
+/// swiftc rejects the call ("'Owner' is only available in macOS N or newer"). Used to
+/// fold the owner type's availability into the method/init gate (spec §8.8).
+fn max_macos_version(a: Option<String>, b: Option<&str>) -> Option<String> {
+    match (a, b) {
+        (Some(a), Some(b)) => {
+            if version_key(&a) >= version_key(b) {
+                Some(a)
+            } else {
+                Some(b.to_string())
+            }
+        }
+        (Some(a), None) => Some(a),
+        (None, Some(b)) => Some(b.to_string()),
+        (None, None) => None,
+    }
 }
 
 /// A residual declaration that is **not** trampolined this leaf, recorded with a
@@ -506,6 +532,51 @@ pub enum DeferReason {
     /// it without boxing. Deferred-with-count (a boxed-scalar async carrier is a
     /// clean follow-up); the dominant async returns are objects/tuples/void.
     AsyncScalarReturn,
+
+    // --- Curated-residual reasons (spec §8.8): swiftc rejects the @_cdecl for a
+    // cause the lossy IR cannot predict. Suppressed via the [`KNOWN_UNBINDABLE`]
+    // USR table, each counted under its own reason. ---
+    /// The method/init is **actor-isolated** (`@MainActor` or an `actor` member):
+    /// a synchronous nonisolated `@_cdecl` cannot call it (`#ActorIsolatedCall`).
+    /// `swift-api-digester` does not surface isolation at all, so this is curated.
+    /// A future async-hopping trampoline could recover the `@MainActor` slice.
+    ActorIsolated,
+    /// A `Module.Owner` whose owner name is not a spellable top-level member of the
+    /// module (`CloudKit.ID` is really `CKRecord.ID`; `MediaExtension.Integer` is a
+    /// generic-context placeholder): `module 'X' has no member named 'Y'`. Recovering
+    /// the qualified/nested name is a follow-up.
+    ModuleMemberMissing,
+    /// A type referenced in the call resolves to something that is not a member type
+    /// (`'X' is not a member type of 'Y'` / `type 'X' has no member 'Y'`) — a nested
+    /// or re-exported type the IR named unspellably.
+    UnresolvedMemberType,
+    /// An init/method parameter requires a **compile-time constant literal**
+    /// (`@const`-position): the runtime-marshalled `@_cdecl` arg cannot satisfy it.
+    CompileTimeConstantParam,
+    /// A call whose **generic parameter could not be inferred** from the marshalled
+    /// arguments — the method is not itself generic (that is `UnbindableGenericMethod`)
+    /// but the call site needs a type witness the C boundary cannot supply.
+    GenericInferenceFailure,
+    /// A `~Copyable` (noncopyable) receiver or value: `Unmanaged`/`as!` reconstruction
+    /// and the `AwValueBox` `as!` cast are both illegal on a noncopyable type.
+    NoncopyableReceiver,
+    /// The decl is only available in a macOS newer than the deployment floor, but its
+    /// IR provenance carries **no** `introduced:` version (and neither does its owning
+    /// type) — so no `@available` gate can be synthesised. Distinct from the gated
+    /// residual the deployment-target bump cleared.
+    UnknownAvailability,
+    /// A method passing `self` (or a returned value) as an `inout` argument where the
+    /// source is immutable (`cannot pass immutable value as inout`): the by-value
+    /// receiver copy is not addressable for the mutation the API wants.
+    ImmutableInoutArgument,
+    /// The decl (or an overload swiftc selects) is `internal`/`private` —
+    /// `inaccessible due to '…' protection level` — so the by-name call cannot reach
+    /// it even though the digester surfaced the symbol.
+    InaccessibleDecl,
+    /// The marshalled `@_cdecl` argument list does not match any overload's shape
+    /// (`extra arguments at positions …`): the IR's flattened param list diverged from
+    /// the real initializer/method signature.
+    ArgumentShapeMismatch,
 }
 
 impl DeferReason {
@@ -525,6 +596,16 @@ impl DeferReason {
             DeferReason::NullableScalarReturn => "deferred_nullable_scalar_return",
             DeferReason::AsyncMutatingReceiver => "deferred_async_mutating_receiver",
             DeferReason::AsyncScalarReturn => "deferred_async_scalar_return",
+            DeferReason::ActorIsolated => "deferred_actor_isolated",
+            DeferReason::ModuleMemberMissing => "deferred_module_member_missing",
+            DeferReason::UnresolvedMemberType => "deferred_unresolved_member_type",
+            DeferReason::CompileTimeConstantParam => "deferred_compile_time_constant_param",
+            DeferReason::GenericInferenceFailure => "deferred_generic_inference_failure",
+            DeferReason::NoncopyableReceiver => "deferred_noncopyable_receiver",
+            DeferReason::UnknownAvailability => "deferred_unknown_availability",
+            DeferReason::ImmutableInoutArgument => "deferred_immutable_inout_argument",
+            DeferReason::InaccessibleDecl => "deferred_inaccessible_decl",
+            DeferReason::ArgumentShapeMismatch => "deferred_argument_shape_mismatch",
         }
     }
 }
@@ -760,10 +841,14 @@ pub fn collect_trampolines(frameworks: &[Framework]) -> TrampolineSet {
         // classes (reference receivers) and structs (value receivers); a method is
         // Swift-native iff it carries `swift_fn` (⇔ `objc_exposed == false`).
         for c in &fw.classes {
-            collect_type_methods(&mut set, &fw.name, &c.name, true, &c.methods, &value_structs);
+            // `Class` carries no `provenance` field (unlike `Struct`); a class-owned
+            // method's own gate suffices, and the type-gated availability residual is
+            // entirely value-struct owners (spec §8.8).
+            collect_type_methods(&mut set, &fw.name, &c.name, true, &c.methods, &value_structs, None);
         }
         for st in &fw.structs {
-            collect_type_methods(&mut set, &fw.name, &st.name, false, &st.methods, &value_structs);
+            let owner_intro = introduced_macos(&st.provenance);
+            collect_type_methods(&mut set, &fw.name, &st.name, false, &st.methods, &value_structs, owner_intro.as_deref());
         }
     }
     // The IR can carry the same decl twice (a category re-listing it, or a digester
@@ -793,12 +878,13 @@ fn collect_type_methods(
     owner_is_class: bool,
     methods: &[Method],
     value_structs: &HashSet<&str>,
+    owner_introduced: Option<&str>,
 ) {
     for m in methods {
         if m.swift_fn.is_none() {
             continue; // ObjC method — binds via msgSend, no trampoline
         }
-        match classify_method(module, owner, owner_is_class, m, methods, value_structs) {
+        match classify_method(module, owner, owner_is_class, m, methods, value_structs, owner_introduced) {
             MethodDisposition::Method(t) => set.methods.push(t),
             MethodDisposition::Init(t) => set.inits.push(t),
             MethodDisposition::Deferred(reason) => set.deferred.push(Deferred {
@@ -1003,7 +1089,7 @@ fn emit_fn(s: &mut String, t: &FnTrampoline) {
         // Run the (possibly result-producing) call inside awRacketTry, which
         // writes any thrown error through `awErrOut` and returns the fallback.
         let body = match &t.ret {
-            RetMarshal::Void => format!("  _ = awRacketTry(awErrOut, ()) {{ try {call} }}\n"),
+            RetMarshal::Void => format!("  awRacketTry(awErrOut, ()) {{ try {call} }}\n"),
             // A scalar (or scalar-backed typedef, marshalled to its underlying
             // scalar) returns directly with the scalar fallback — no `Optional`.
             RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } => format!(
@@ -1053,6 +1139,26 @@ fn emit_const(s: &mut String, t: &ConstTrampoline) {
 
 /// Generate `Generated/Trampolines.swift`: the imports, then one `@_cdecl` per
 /// trampolined function and constant. Deferred decls produce no Swift.
+/// Map an **implementation-detail** module to the umbrella module that re-exports
+/// it (`@_exported import`), for the Swift `import` line and the `Module.Owner`
+/// type qualifier only. Swift forbids `import RealityFoundation` ("it is an
+/// implementation detail of RealityKit; import RealityKit instead"), but the same
+/// types are reachable through the umbrella's namespace — `RealityKit.MeshResource`
+/// names the identical type as the illegal `RealityFoundation.MeshResource`. The
+/// trampoline's `module` field is left untouched (it drives the content-addressed
+/// entry symbol + the Racket binding identity, which both sides must agree on); only
+/// the *Swift spelling* is re-attributed here. ADR-0030, spec §8.8. The residual
+/// decls that the umbrella does not re-export, or that fail for an orthogonal reason
+/// (actor isolation, …), are caught by the build and suppressed via
+/// [`KNOWN_UNBINDABLE`].
+fn swift_import_module(module: &str) -> &str {
+    match module {
+        "RealityFoundation" => "RealityKit",
+        "SwiftUICore" => "SwiftUI",
+        other => other,
+    }
+}
+
 pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     let mut s = String::new();
     s.push_str("// Generated C-ABI trampolines for the Swift-native residual (ADR-0027).\n");
@@ -1065,13 +1171,16 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     s.push_str("import Foundation\n");
 
     // One `import` per distinct module that has at least one emitted trampoline.
+    // Implementation-detail modules are re-attributed to their umbrella (e.g.
+    // RealityFoundation → RealityKit) so the `import` is legal; entry names keep the
+    // original module (see [`swift_import_module`]).
     let mut modules: Vec<&str> = set
         .functions
         .iter()
-        .map(|t| t.module.as_str())
-        .chain(set.constants.iter().map(|t| t.module.as_str()))
-        .chain(set.methods.iter().map(|t| t.module.as_str()))
-        .chain(set.inits.iter().map(|t| t.module.as_str()))
+        .map(|t| swift_import_module(t.module.as_str()))
+        .chain(set.constants.iter().map(|t| swift_import_module(t.module.as_str())))
+        .chain(set.methods.iter().map(|t| swift_import_module(t.module.as_str())))
+        .chain(set.inits.iter().map(|t| swift_import_module(t.module.as_str())))
         .filter(|m| *m != "Foundation")
         .collect();
     modules.sort_unstable();
@@ -1406,6 +1515,91 @@ fn is_identifier(name: &str) -> bool {
         && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
+/// The curated suppression table (spec §8.8): decls swiftc rejects for a cause the
+/// lossy IR cannot mechanically predict — `@MainActor`/actor isolation (which
+/// `swift-api-digester` does not emit at all — `swift_attributes` carries an opaque
+/// `Custom`, not `MainActor`), and a scatter of per-decl semantic failures
+/// (unspellable nested owners, `@const` params, un-inferrable generics, noncopyable
+/// receivers, immutable-`inout` receivers, `internal`/`private` overloads, version-
+/// gated decls with no `introduced:` provenance, arg-shape divergence).
+///
+/// Keyed by the **content-addressed entry name** (the same string
+/// [`method_entry_name`]/[`init_entry_name`] compute and the one swiftc names in the
+/// build error), so the suppression is exact per overload and reproduces from a cold
+/// collect (the entry name is a pure function of the IR). Each entry is counted under
+/// its reason ("defer nothing, but be honest"). This is the method analogue of the
+/// libobjc curated bridge (Option B): a hand-verified list earns its place where
+/// mechanical detection has no signal to act on. The full-residual `swift build` is
+/// the regression guard — a stale entry here re-surfaces as a compile error.
+const KNOWN_UNBINDABLE: &[(&str, DeferReason)] = &[
+    ("aw_racket_swift_init_AppIntents_IntentCollectionSize_66a66a84", DeferReason::CompileTimeConstantParam),
+    ("aw_racket_swift_init_AppIntents_IntentCollectionSize_8398302c", DeferReason::CompileTimeConstantParam),
+    ("aw_racket_swift_init_AuthenticationServices_ASCredentialDataManager", DeferReason::UnknownAvailability),
+    ("aw_racket_swift_init_CloudKit_ID_180762ef", DeferReason::ModuleMemberMissing),
+    ("aw_racket_swift_init_CloudKit_ID_c6665c26", DeferReason::ModuleMemberMissing),
+    ("aw_racket_swift_init_IdentityDocumentServicesUI_IdentityDocumentWebPresentmentController", DeferReason::ActorIsolated),
+    ("aw_racket_swift_init_ImagePlayground_ImageCreator", DeferReason::ActorIsolated),
+    ("aw_racket_swift_init_ImmersiveMediaSupport_ImmersiveMediaRemotePreviewReceiver", DeferReason::ActorIsolated),
+    ("aw_racket_swift_init_MediaExtension_Boolean", DeferReason::ModuleMemberMissing),
+    ("aw_racket_swift_init_MediaExtension_FloatingPoint", DeferReason::ModuleMemberMissing),
+    ("aw_racket_swift_init_MediaExtension_Integer", DeferReason::ModuleMemberMissing),
+    ("aw_racket_swift_init_RealityFoundation_RealityRenderer", DeferReason::ActorIsolated),
+    ("aw_racket_swift_init_StoreKit_AdvancedCommerceProduct", DeferReason::ActorIsolated),
+    ("aw_racket_swift_init_SwiftUICore_PropertyList", DeferReason::ModuleMemberMissing),
+    ("aw_racket_swift_init_SwiftUICore_RectangleCornerRadii_dfe2fe2f", DeferReason::ArgumentShapeMismatch),
+    ("aw_racket_swift_init_Translation_LanguageAvailability_960d49c3", DeferReason::UnresolvedMemberType),
+    ("aw_racket_swift_init_WebKit_URLScheme", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_AuthenticationServices_ASCredentialDataManager_reportUnusedPasswordCredential", DeferReason::UnknownAvailability),
+    ("aw_racket_swift_m_CompositorServices_Frame_predictTiming", DeferReason::GenericInferenceFailure),
+    ("aw_racket_swift_m_CompositorServices_Frame_queryDrawables", DeferReason::GenericInferenceFailure),
+    ("aw_racket_swift_m_CoreHID_HIDDeviceClient_seizeDevice", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_CoreVideo_CVMutablePixelBuffer_fillExtendedPixels", DeferReason::NoncopyableReceiver),
+    ("aw_racket_swift_m_ImmersiveMediaSupport_VenueDescriptor_cameraViewModel", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_ImmersiveMediaSupport_VenueDescriptor_removeCamera", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_ImmersiveMediaSupport_VenueDescriptor_save", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_RealityFoundation_AudioGeneratorController_play", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_RealityFoundation_AudioGeneratorController_stop", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_RealityFoundation_EntityGeometricPins_makeIterator", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_RealityFoundation_EntityGeometricPins_remove", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_RealityFoundation_LowLevelTexture_read", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_RealityFoundation_MeshInstanceCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_racket_swift_m_RealityFoundation_MeshModelCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_racket_swift_m_RealityFoundation_MeshPartCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_racket_swift_m_RealityFoundation_MeshSkeletonCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_racket_swift_m_RealityFoundation_RealityRenderer_update", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_SwiftUICore_EdgeInsets_round_61f6b07c", DeferReason::InaccessibleDecl),
+    ("aw_racket_swift_m_SwiftUICore_EdgeInsets_rounded_c7dec5cb", DeferReason::InaccessibleDecl),
+    ("aw_racket_swift_m_Translation_TranslationSession_cancel", DeferReason::UnresolvedMemberType),
+    ("aw_racket_swift_m_Translation_TranslationSession_prepareTranslation", DeferReason::UnresolvedMemberType),
+    ("aw_racket_swift_m_Translation_TranslationSession_translate_770bd52c", DeferReason::UnresolvedMemberType),
+    ("aw_racket_swift_m_VisionKit_ImageAnalysisOverlayView_beginSubjectAnalysisIfNecessary", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_VisionKit_ImageAnalysisOverlayView_resetSelection", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_VisionKit_ImageAnalysisOverlayView_setContentsRectNeedsUpdate", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_VisionKit_ImageAnalysisOverlayView_setSupplementaryInterfaceHidden", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_WebKit_WebPage_load_4808a66d", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_WebKit_WebPage_load_60456c20", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_WebKit_WebPage_load_6dde058d", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_WebKit_WebPage_load_77ec487a", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_WebKit_WebPage_reload", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m_WebKit_WebPage_stopLoading", DeferReason::ActorIsolated),
+    ("aw_racket_swift_m__StoreKit_SwiftUI_RequestReviewAction_callAsFunction", DeferReason::ActorIsolated),
+];
+
+/// Look up a method/init in [`KNOWN_UNBINDABLE`] by the content-addressed entry name
+/// it would emit (init vs instance-method prefix), the same string swiftc names in a
+/// build error.
+fn known_unbindable(module: &str, owner: &str, method: &Method, siblings: &[Method]) -> Option<DeferReason> {
+    let entry = if method.init_method {
+        init_entry_name(module, owner, method, siblings)
+    } else {
+        method_entry_name(module, owner, method, siblings)
+    };
+    KNOWN_UNBINDABLE
+        .iter()
+        .find(|(e, _)| *e == entry)
+        .map(|(_, r)| *r)
+}
+
 /// Classify one Swift-native method on a type. `owner_is_class` is true when the
 /// owner is in `Framework.classes` (a reference type → `Unmanaged` receiver path),
 /// false for a `Framework.structs` value type (→ `AwValueBox` path). `siblings` is
@@ -1422,7 +1616,19 @@ pub fn classify_method(
     // `Data.Base64EncodingOptions` that are not bare-spellable in an `awRacketUnbox`
     // cast — a qualified-name follow-up). Object params are the async leaf's R1.
     _value_structs: &HashSet<&str>,
+    // The owning type's `introduced:` macOS version (from its IR provenance), folded
+    // into the `@available` gate: a method whose own provenance is absent or lower
+    // than its type's would otherwise call an unavailable type (spec §8.8).
+    owner_introduced: Option<&str>,
 ) -> MethodDisposition {
+    // Curated suppression: a small set of decls that swiftc rejects for a reason the
+    // lossy IR cannot predict (actor isolation — absent from the digester entirely —
+    // and assorted per-decl semantic failures). Keyed by the content-addressed entry
+    // name, each carries its counted reason (spec §8.8, "defer nothing, but be
+    // honest"). Consulted first so the global pass and the emitter agree.
+    if let Some(reason) = known_unbindable(module, owner, method, siblings) {
+        return MethodDisposition::Deferred(reason);
+    }
     let info = method.swift_fn.as_ref();
     if let Some(i) = info {
         if i.is_generic {
@@ -1454,7 +1660,7 @@ pub fn classify_method(
     }
     let labels: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
     let throwing = info.is_some_and(|i| i.throwing);
-    let availability = introduced_macos(&method.provenance);
+    let availability = max_macos_version(introduced_macos(&method.provenance), owner_introduced);
 
     if method.init_method {
         // Object-ref params (R1) bridge to a Swift value twin (`NSData` → `Data`),
@@ -1710,7 +1916,7 @@ fn emit_async_method_tramp(s: &mut String, t: &MethodTrampoline) {
     // racket-owned handle dangles while the Task runs.
     s.push_str(&arg_prelude);
 
-    let owner = format!("{}.{}", t.module, t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
     // The receiver pointer is captured into the `@Sendable` operation closure and
     // the receiver reconstructed *inside* (it lives only on the cooperative thread —
     // capturing the receiver object directly would fail Swift 6 Sendable checking for
@@ -1780,7 +1986,7 @@ fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
 
     // Receiver reconstruction prelude, and (for a mutating value receiver) the
     // write-back line that must run after the call.
-    let owner = format!("{}.{}", t.module, t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
     let (recv_prelude, writeback) = match &t.recv {
         SelfMarshal::ClassRef => (
             format!("  let awSelf = Unmanaged<{owner}>.fromOpaque(awRecv!).takeUnretainedValue()\n"),
@@ -1817,7 +2023,7 @@ fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
         match &t.ret {
             RetMarshal::Void => {
                 s.push_str(&format!(
-                    "  _ = awRacketTry(awErrOut, ()) {{ try {call}\n  {wb}}}\n"
+                    "  awRacketTry(awErrOut, ()) {{ try {call}\n  {wb}}}\n"
                 ));
             }
             RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } => {
@@ -1859,7 +2065,7 @@ fn emit_init_tramp(s: &mut String, t: &InitTrampoline) {
     emit_cdecl_header(s, &t.availability, &t.entry, &decl, " -> UnsafeMutableRawPointer?");
     s.push_str(&arg_prelude);
 
-    let owner = format!("{}.{}", t.module, t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
     // Init params pass with their declared width (no `numericCast`): an overloaded
     // initializer (`Decimal(Int)` vs `Decimal(UInt)`) is selected *by* the param type,
     // so a width-agnostic cast would make the constructor call ambiguous.
@@ -2722,7 +2928,7 @@ mod tests {
             true,
             &m,
             std::slice::from_ref(&m),
-            &no_structs(),
+            &no_structs(), None,
         ) else {
             panic!("an async method must trampoline (callback form), not defer");
         };
@@ -2773,7 +2979,7 @@ mod tests {
     fn value_receiver_nonmutating_method_unboxes_and_calls() {
         let m = method("contains(_:)", vec![param("_", prim("int64"))], prim("bool"), swiftk());
         let MethodDisposition::Method(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs())
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
         else {
             panic!("expected method trampoline");
         };
@@ -2797,7 +3003,7 @@ mod tests {
     fn mutating_value_receiver_writes_back() {
         let m = method("update(with:)", vec![param("with", prim("int64"))], prim("int64"), mutating());
         let MethodDisposition::Method(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs())
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
         else {
             panic!("expected method trampoline");
         };
@@ -2815,7 +3021,7 @@ mod tests {
     fn class_receiver_uses_unmanaged() {
         let m = method("description", vec![], nsstring(), swiftk());
         let MethodDisposition::Method(t) =
-            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs())
+            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
         else {
             panic!("expected method trampoline");
         };
@@ -2834,7 +3040,7 @@ mod tests {
         // init(integer:) reports return NSIndexSet in the IR — must box IndexSet.
         let m = method("init(integer:)", vec![param("integer", prim("int64"))], swift_class("NSIndexSet", "Foundation"), swiftk());
         let MethodDisposition::Init(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs())
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
         else {
             panic!("expected init trampoline");
         };
@@ -2852,7 +3058,7 @@ mod tests {
     fn init_producer_renders_racket_constructor() {
         let m = method("init(integer:)", vec![param("integer", prim("int64"))], swift_class("NSIndexSet", "Foundation"), swiftk());
         let MethodDisposition::Init(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs())
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
         else {
             panic!("expected init trampoline");
         };
@@ -2870,7 +3076,7 @@ mod tests {
     fn no_arg_init_renders_thunk_constructor() {
         let m = method("init", vec![], swift_class("Widget", "TestKit"), swiftk());
         let MethodDisposition::Init(t) =
-            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs())
+            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
         else {
             panic!("expected init trampoline");
         };
@@ -2885,7 +3091,7 @@ mod tests {
     fn class_init_passes_retained() {
         let m = method("init", vec![], swift_class("Widget", "TestKit"), swiftk());
         let MethodDisposition::Init(t) =
-            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs())
+            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
         else {
             panic!("expected init trampoline");
         };
@@ -2909,7 +3115,7 @@ mod tests {
             (&stat, DeferReason::StaticMethod),
         ] {
             let MethodDisposition::Deferred(r) =
-                classify_method("Foundation", "IndexSet", false, m, std::slice::from_ref(m), &no_structs())
+                classify_method("Foundation", "IndexSet", false, m, std::slice::from_ref(m), &no_structs(), None)
             else {
                 panic!("expected deferral for {:?}", m.selector);
             };
@@ -2987,7 +3193,7 @@ mod tests {
             true,
             &m,
             std::slice::from_ref(&m),
-            &no_structs(),
+            &no_structs(), None,
         ) else {
             panic!("an objc-bridged reference param must trampoline, not defer");
         };
@@ -3029,7 +3235,7 @@ mod tests {
             true,
             &m,
             std::slice::from_ref(&m),
-            &no_structs(),
+            &no_structs(), None,
         ) else {
             panic!("expected async method trampoline");
         };
@@ -3052,7 +3258,7 @@ mod tests {
             SwiftFnInfo { is_async: true, self_kind: Some("NonMutating".into()), ..Default::default() },
         );
         let MethodDisposition::Method(t) = classify_method(
-            "StoreKit", "Transaction", false, &void_async, std::slice::from_ref(&void_async), &no_structs(),
+            "StoreKit", "Transaction", false, &void_async, std::slice::from_ref(&void_async), &no_structs(), None,
         ) else {
             panic!("expected async void method trampoline");
         };
@@ -3079,7 +3285,7 @@ mod tests {
             (&scalar_async, DeferReason::AsyncScalarReturn),
         ] {
             let MethodDisposition::Deferred(r) = classify_method(
-                "Foundation", "Thing", false, m, std::slice::from_ref(m), &no_structs(),
+                "Foundation", "Thing", false, m, std::slice::from_ref(m), &no_structs(), None,
             ) else {
                 panic!("expected deferral for {:?}", m.selector);
             };

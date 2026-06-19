@@ -213,3 +213,114 @@ run `URLSession.data(from: file://…)` end-to-end and assert a real
 `(Data, URLResponse)` came back. The generated-class-file **require wiring** (sync +
 async) and the `needs_native`-branch `_fun` interaction are carried to
 `030-rerun-verify` (they surface only at full-pipeline generate + load).
+
+## Addendum: the full-residual `swift build` close (`030-racket/040-swift-residual-verify`)
+
+Leaves 010/020 only *typechecked Foundation* in isolation. Compiling the **full
+117-framework method/init residual** (593 init + 588 method `@_cdecl`s) surfaced 955
+errors across ~14 categories that single-framework typechecks never reached. The
+slice closed by **raising the deployment floor + re-attributing implementation-detail
+modules + folding owner availability + curating the genuinely-un-trampolinable
+residual** — every drop counted by reason (spec §8.8). All four are racket-emitter
+changes (`trampoline.rs`/`emit_class.rs`); the IR and the collection pipeline are
+untouched, so chez (040) and gerbil (050) inherit the policy through the shared IR.
+
+### B1. Deployment-target bump → `.macOS(.v26)` (cleared 826 of 955)
+
+A `@_cdecl` is a plain global function: swiftc requires every API it calls to be
+available at the package's **minimum** deployment target. At `.macOS(.v14)`, 840 of
+the 955 errors were `'X' is only available in macOS N or newer` (N ∈ 14.2 … 26.4) —
+the `@_cdecl` was not gated high enough because the method's IR provenance was `null`
+or *lower* than its owning type's. Rather than synthesise a per-decl gate for each
+(impossible where provenance is `null`), `swift/Package.swift` raises the floor to
+`.macOS(.v26)` (the host SDK; VM golden `macos-tahoe`), which clears every API
+introduced at ≤ 26.0 without any `@available` at all — 826 errors in one move.
+`.v26` needs `swift-tools-version ≥ 6.1`, so the manifest is bumped to **6.2**.
+
+**Policy (chez/gerbil inherit):** `platforms:` is package-wide, so the chez and gerbil
+dylibs adopt the `.v26` floor too. This is acceptable precisely because all three are
+**host tools** (the generated dylibs run on the build/VM host, golden macOS 26), never
+shippable apps with a back-deployment contract. Recorded here so a future
+shippable-artifact target revisits it.
+
+### B2. Implementation-detail module re-attribution (rescued ~250)
+
+266 trampolines owned types in `RealityFoundation` / `SwiftUICore` — modules Swift
+**forbids importing** ("it is an implementation detail of RealityKit/SwiftUI; import
+the umbrella instead"). The same types are reachable through the umbrella's namespace
+(`RealityKit.MeshResource` ≡ the illegal `RealityFoundation.MeshResource`), so
+`swift_import_module()` re-attributes the **Swift spelling only** — the `import` line
+and the `Module.Owner` type qualifier — while the trampoline's `module` field (and
+thus the content-addressed entry symbol + the Racket binding identity, which both
+sides must agree on) keeps the original module. This *rescues* ~250 trampolines that
+would otherwise be dropped, at the cost of a 2-line module map; only the residual that
+the umbrella does not re-export, or that fails for an orthogonal reason (B4), is then
+suppressed. (Chosen over plain defer after the re-attribution was shown to typecheck.)
+
+### B3. Owner-availability fold (binds the type-gated value-struct inits)
+
+A method/init whose own provenance is absent or *lower* than its owning type's must be
+gated to the **max** of the two, else swiftc rejects the call to the unavailable type.
+`max_macos_version(method, owner)` folds the owning **struct's** `introduced:` into the
+`@available` gate (`Class` carries no provenance field; the type-gated residual is
+entirely value-struct owners — ImagePlaygroundOptions @26.4, SignificantAppUpdateTopic
+@26.2, WebKit.URLScheme @26.0). This *binds* those inits rather than deferring them.
+
+### B4. Curated suppression of the un-trampolinable residual (51 decls, counted)
+
+The remaining 51 decls fail for causes the **lossy IR cannot mechanically predict** —
+dominated by `@MainActor`/actor isolation (swiftc errors `#ActorIsolatedCall`), which
+`swift-api-digester` does **not surface at all** (the digester emits no isolation
+attribute; `swift_attributes` carries an opaque `Custom`, never `MainActor`). The rest
+are per-decl semantic failures: unspellable nested owners (`CloudKit.ID` is really
+`CKRecord.ID`), `@const` params, un-inferrable generics, noncopyable receivers,
+immutable-`inout` receivers, `internal`/`private` overloads, null-provenance version
+gates, arg-shape divergence. These are suppressed via a **curated `KNOWN_UNBINDABLE`
+table keyed by the content-addressed entry name** (exact per overload; reproduces from
+a cold collect since the entry name is a pure function of the IR), each entry counted
+under its own `DeferReason`. This is the method analogue of the **libobjc curated
+bridge (Option B)**: a hand-verified list earns its place where mechanical detection
+has no signal to act on, and the **full-residual `swift build` is its regression
+guard** — a stale entry re-surfaces as a compile error.
+
+### B5. `@MainActor @preconcurrency` warning posture (kept, not deferred)
+
+Beyond the 51 hard errors, ~60 trampolines for `@MainActor @preconcurrency` decls
+compile with a **warning** (swiftc *permits* the nonisolated call under
+`@preconcurrency`). These are **kept**: unlike the charter-#4 broken path (no entry,
+always crashes), they have a real `@_cdecl` that **runs when called on the main
+thread** — the actual GUI use case for these SwiftUI/RealityKit-shaped APIs.
+`MainActor.assumeIsolated`-wrapping does *not* cleanly recover them (the non-Sendable
+`@MainActor` return value still cannot cross back to the nonisolated context), so a
+sound off-main variant is a future async-hopping frontier (captured for a later leaf),
+not a defer. The warning count is the honest record of the constraint.
+
+### B6. Proof (the §6b-analog method-slice close)
+
+The whole pipeline re-ran cold from the real SDK and the method path was proven
+end-to-end in a GUI app, mirroring the free-function §6b close:
+
+- **Cold full rerun, clean.** `collect` (284 frameworks, 0 errors) → `analyze`
+  (0 verification failures, LLM annotations replayed) → `generate --target racket` →
+  `swift build`. The method residual **reproduces exactly** from the cold collect:
+  **576 init + 554 method** trampolines (51 + the re-attribution-survivors emitted),
+  with the new per-category deferred counts — `27 actor_isolated, 6
+  module_member_missing, 4 unresolved_member_type, 4 immutable_inout_argument, 2
+  compile_time_constant_param, 2 generic_inference_failure, 2 inaccessible_decl, 2
+  unknown_availability, 1 argument_shape_mismatch, 1 noncopyable_receiver` — a
+  deterministic function of the SDK. `swift build` green (0 errors).
+- **No ObjC regression.** `cargo test --workspace` green (the pre-existing gerbil
+  `computes_hello_window_closure` env-flake aside). The `RUNTIME_LOAD_TEST` harness now
+  carries `foundation/indexset.rkt` in its library load checks (the method-trampoline
+  require-shape) **and** a new `runtime_swift_method_roundtrip` permanent guard — the
+  IndexSet init → `contains` → mutating `insert!` write-back round-trip through the
+  generated bindings, the §6b registration pattern for the method frontier.
+- **CLI smoke (both exemplars).** `tests/test-swift-method-smoke.rkt` drives both
+  through the **generated require-tree** against the freshly built dylib: pop-B
+  IndexSet init→contains→insert!→contains (D2 producer + D3 write-back) and pop-A
+  async `URLSession.data(from: file://…)` (the generated `urlsession-data-from`
+  delivering a real `(Data, URLResponse)`).
+- **VM-verified (project done-bar).** The `swift-native-method-probe` sample app shows
+  both exemplars live through `libAPIAnywareRacket`'s `@_cdecl` trampolines via the
+  generated require-tree; screenshot at
+  `generation/targets/racket/test-results/swift-native-method-probe/screenshot.png`.
