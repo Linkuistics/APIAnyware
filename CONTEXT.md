@@ -66,6 +66,28 @@ object cpointer (population A *is* such a cpointer, but population B is a Swift
 **Opaque handle**); treating the receiver as a distinct "token" type (it is the
 unified handle rep).
 
+**Async callback form** _(R4; `aw-async-call`)_:
+The racket surface for an `async` Swift-native method (ADR-0030 addendum). The
+generated binding takes a **`complete` continuation and returns immediately**
+(non-blocking); the `@_cdecl` drives `awRacketAsyncDispatch`, which marshals the
+result on the cooperative pool and invokes a C callback **on the main thread** (the
+SIGILL-safe hop), running `(complete result err)`. There is deliberately **no
+blocking await** — a synchronous block would freeze the very Cocoa run loop the
+completion needs to drain (and the Racket CS green scheduler is frozen under
+`nsapplication-run`). A richer mailbox/await layer may sit on top later.
+_Avoid_: "blocking await" / "`aw-async-await`" (a rejected candidate, spec §5b);
+"future"/"promise" (the surface is a callback, not a value handle).
+
+**Object-ref param** _(R1; `objc_object_param_bridge`)_:
+A method parameter the lossy Swift→ObjC normalization reports as a Foundation objc
+twin (`URL` → `NSURL`); the trampoline reconstructs the reference and **bridges to
+the value the by-name call wants** (`… as URL`). Only a **curated, typecheck-proven**
+set bridges — an objc twin can also hide an `inout` param (invisible in the IR), and
+a bridging *constructor* (`Data(referencing:)`) wants the reference, so init object
+params stay deferred.
+_Avoid_: bridging by guesswork (the set is proven against the real-framework
+typecheck, not assumed).
+
 **Handle producer / initializer trampoline**:
 The mechanism that *produces* a first **Opaque handle** for a Swift-native (`s:`)
 receiver so population-B methods are usable. The **sole root producer is the

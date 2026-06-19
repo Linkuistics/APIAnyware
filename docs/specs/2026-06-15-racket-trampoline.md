@@ -635,3 +635,69 @@ clean against real Foundation in Swift 6 mode (via the `#[ignore]`d
 value-receiver unbox → mutating write-back on one stable handle. Full cold rerun +
 VM-verify is leaf `030-rerun-verify`; `async` methods + the blocking-await surface
 are leaf `020-async-method`.
+
+## 9. Async methods + object-ref params (ADR-0030 addendum, leaf `030-racket/020`)
+
+Decided in ADR-0030's *Addendum*; this section is the implementation contract.
+Same `trampoline.rs`, same global pass.
+
+### 9.1 Async `@_cdecl` shape (D5) — `emit_async_method_tramp`
+
+The signature is `(receiver, <args>, awCtx: Int, awCb: @convention(c) (Int,
+value, error) -> Void)`, returns void (no `NSError**`: errors ride
+`AwAsyncOutcome.error`). Body:
+
+```swift
+let o0 = Unmanaged<NSURL>.fromOpaque(a0!).takeUnretainedValue() as URL  // args at entry
+nonisolated(unsafe) let awRecvUnsafe = awRecv                            // pointer is not Sendable
+awRacketAsyncDispatch({ () async -> AwAsyncOutcome in
+  let awSelf = Unmanaged<Foundation.URLSession>.fromOpaque(awRecvUnsafe!).takeUnretainedValue()
+  do { let awR = try await awSelf.data(from: o0)
+       return AwAsyncOutcome(value: awRacketBox(awR)) }       // marshal off-main
+  catch { return AwAsyncOutcome.failure(error) }
+}, { awOutcome in awCb(awCtx, awOutcome.value, awOutcome.error) })       // deliver on main
+```
+
+Args marshal to Sendable values **at entry** (no dangling across the `Task`); the
+receiver pointer rides `nonisolated(unsafe)` and is unboxed **inside** the closure;
+the result marshals to `AwAsyncOutcome` (pointer payload) **on the cooperative
+thread**. Non-throwing drops the do/catch and the `try`; `Void` returns
+`AwAsyncOutcome()` (the racket completion gets `#f`).
+
+### 9.2 R4 racket surface — the callback form (`async-bridge.rkt`)
+
+`render_async_racket_method` emits a binding whose ffi arrow ends `… _intptr
+_fpointer -> _void` and whose body is:
+
+```racket
+(lambda (self url complete)
+  (aw-async-call (lambda (id cb) (raw (coerce-arg self) url id cb)) values complete))
+```
+
+`aw-async-call` registers `complete` under a fresh id, then kicks the trampoline
+with that id + the **one GC-stable callback fptr** (passed as `_fpointer`, never a
+`_cprocedure` *param*). The completion fires on the main thread and runs `(complete
+result err)` — non-blocking, no run-loop pump (the app's loop already runs; a CLI
+smoke pumps `CFRunLoopRunInMode` itself). `coerce` is `values` for a boxed handle /
+void, `aw-string-result` for a String.
+
+### 9.3 R1 object-ref params — `ArgMarshal::ObjectRef`, `objc_object_param_bridge`
+
+A `Class` param in the curated bridge table reconstructs the objc reference and
+casts to the value twin (`Unmanaged<NSURL>…takeUnretainedValue() as URL`); racket
+passes the `id` cpointer straight through (`_pointer` ffi, `cpointer?` contract).
+The table is **proven against the whole-Foundation typecheck** (start `NSURL`,
+`NSURLRequest`; `inout` twins like `NSDate` are invisible in the IR and stay out).
+**Init object params defer** (`Data(referencing:)` wants the reference). New
+deferral reasons: `deferred_async_mutating_receiver`, `deferred_async_scalar_return`.
+
+### 9.4 Done-bar evidence
+
+`trampoline.rs` codegen tests (async throws/void/non-throwing, both async deferrals,
+object-ref bridging); whole-Foundation residual compiles clean in Swift 6 (async +
+R1 included; the lone residual error is the *pre-existing* `provenance: null`
+availability gap on `AttributeContainer.filter`, → `030-rerun-verify`); and the
+**in-process smoke** (`generation/targets/racket/runtime/smoke/`) running real
+`URLSession.data(from: file://…)` through the real `async-bridge.rkt` and asserting a
+real `(Data, URLResponse)` returned. Generated-file require wiring + the
+`needs_native` `_fun` interaction are carried to `030-rerun-verify`.

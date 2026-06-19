@@ -138,3 +138,78 @@ seven classes of bug rooted in the IR's lossy normalization:
 See `CONTEXT.md` (*Receiver handle*, *Population A/B*, *Init producer*), ADR-0027
 (the free-function structure this generalises), ADR-0026 (the `objc_exposed`
 fact), and the design spec §method for the how.
+
+## Addendum: async methods + object-ref params (`030-racket/020-async-method`)
+
+The sync structural core above classified `async` methods `deferred_async` and
+deferred object/reference params. This addendum decides both — the headline being a
+real recovered `async throws` method (`URLSession.data(from:)`) that resolves and
+runs end-to-end.
+
+### A1. Async method codegen — the completion-callback shape (D5)
+
+An `async` method cannot return across the C ABI, so its `@_cdecl` takes a trailing
+**completion context (`Int`) + C callback** (`@convention(c) (Int, value, error)
+-> Void`) instead of a synchronous return, returns void, and drives the shipped
+`awRacketAsyncDispatch` (AsyncBridge.swift). The body:
+
+- **marshals every argument to a Sendable value *synchronously at entry*** (before
+  the `Task`), so the captured args (`URL`, `String`, scalars — all `Sendable` and
+  copied) cannot dangle while the async op runs;
+- in the `@Sendable` operation closure, reconstructs the **receiver inside** the
+  closure from the captured opaque pointer. `UnsafeMutableRawPointer` is *not*
+  `Sendable` in Swift 6 (pointers are unsafe to share by design), so the pointer
+  rides a **`nonisolated(unsafe) let`** — an honest assertion: the caller's lifetime
+  contract (keep the receiver alive until completion) makes the capture sound;
+- `await`s the by-name call and **marshals the result to `AwAsyncOutcome` on the
+  cooperative thread** (`awRacketBox` / +1 NSString / `nil`; `.failure(error)` on
+  the throwing path), so only a Sendable C rep crosses the hop;
+- the completion closure delivers it via the C callback **on the main thread** (the
+  `MainActor.run` hop — a Racket CS `_cprocedure` SIGILLs on a foreign thread).
+
+Two sub-cases defer-with-count (cannot ride the carrier): a `mutating` value
+receiver (`deferred_async_mutating_receiver` — write-back is ill-defined across the
+async hop) and a scalar return (`deferred_async_scalar_return` — `AwAsyncOutcome`
+carries a pointer).
+
+### A2. R4 — the racket surface is the non-blocking **callback form**, not a blocking await
+
+The spec §5b named "a blocking `aw-async-await` wrapper" as a candidate. **Rejected**
+(grilled, user-confirmed): a synchronous block would freeze the very Cocoa run loop
+the completion needs to drain — under `nsapplication-run` the Racket CS green-thread
+scheduler is frozen, so a semaphore never wakes; pumping a nested run loop to fake a
+synchronous return is the wrong model for an event-driven app. Instead the generated
+async binding takes a **`complete` continuation and returns immediately**; the result
+is delivered on a later main-run-loop pass (`generation/targets/racket/runtime/
+async-bridge.rkt`, `aw-async-call`). A richer mailbox/await layer can be built on top
+later. The runtime mirrors `main-thread.rkt`: an id-keyed registry of delivery
+thunks + one **GC-stable module-level `_cprocedure`** passed through an `_fpointer`
+param (a `_cprocedure` *param* would per-call wrap a soon-GC'd callback — the bug the
+smoke caught).
+
+### A3. R1 — objc-bridged reference params, via a verified table
+
+A param the lossy Swift→ObjC normalization reports as a Foundation objc twin
+(`URL` → `NSURL`) reconstructs the reference and **bridges to the value the by-name
+call wants** (`… as URL`). The bridge set (`objc_object_param_bridge`) is
+deliberately small and **proven against the whole-Foundation typecheck, not
+assumed**: an objc twin like `NSDate` also appears as a hidden `inout Date` param
+(`Calendar.dateIntervalOfWeekend`), and `inout` is invisible in the IR, so a
+speculative entry can surface an uncompilable method. **Init object params stay
+deferred** — a bridging constructor (`Data(referencing: NSData)`) genuinely wants the
+reference, the opposite of the method-call case, and the IR cannot tell them apart.
+The set widens in `030-rerun-verify` over enriched IR (which may expose `inout`).
+
+### A4. Proof
+
+Codegen unit tests in `trampoline.rs` (async throws/void/non-throwing, the two async
+deferrals, object-ref bridging); the whole-Foundation residual compiling clean
+against real Foundation in Swift 6 (the async `URLSession.data` overloads + the R1
+params included — the only residual error is a *pre-existing* `provenance: null`
+availability gap on `AttributeContainer.filter`, resolved by the full pipeline in
+`030-rerun-verify`); and an **in-process smoke**
+(`generation/targets/racket/runtime/smoke/`) driving the real `async-bridge.rkt` to
+run `URLSession.data(from: file://…)` end-to-end and assert a real
+`(Data, URLResponse)` came back. The generated-class-file **require wiring** (sync +
+async) and the `needs_native`-branch `_fun` interaction are carried to
+`030-rerun-verify` (they surface only at full-pipeline generate + load).

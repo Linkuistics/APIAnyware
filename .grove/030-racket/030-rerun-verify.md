@@ -47,3 +47,18 @@ applies to collect/analyze.
 This leaf's done-bar is the node's §6b done-bar. Per
 `feedback-vm-verify-every-app`, the CLI smoke does not satisfy it — a real bundled
 app verified in the VM does. Retiring this leaf empties the `030-racket` node.
+
+**Carried from `020-async-method` (require-wiring gap, full-pipeline territory).**
+`emit_class.rs` emits Swift-native method bindings against `_aw-lib` /
+`aw-call/error` (sync) and `aw-async-call` (async) but adds **no
+`(require …/swift-trampoline.rkt)` nor `…/async-bridge.rkt`** — the providing
+modules. This is a pre-existing 010 gap (its in-process smoke binds raw, so it
+never loaded a generated class file); 020 inherits it for async. Wire it here when
+the cold rerun generates + loads real framework files (the `RUNTIME_LOAD_TEST`
+"require-shape" guard above): a class file needs `swift-trampoline.rkt` iff it emits
+any trampolined instance method, and `async-bridge.rkt` iff any is `async`
+(`MethodTrampoline::is_async`). **Also resolve the native-branch interaction:** the
+`needs_native` (ffi2) header does `(except-in ffi/unsafe ->)`, but the async/sync
+method ffi arrows use `(_fun … -> …)` — a class that both routes natively *and* has
+Swift-native methods has no `->` in scope. Both surface together only at generate +
+load, which is this leaf.

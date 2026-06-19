@@ -77,6 +77,37 @@ enum ArgMarshal {
     /// because the name is in the struct set, i.e. a value type the box round-trips,
     /// not a CF/ObjC reference that would trap (spec §5a, leaf 040/040/030 fork 1).
     BoxedHandle { name: String },
+    /// An **objc-bridged reference** parameter (R1, leaf 030/020). The lossy
+    /// Swift→ObjC normalization reports a Swift value param as its Foundation objc
+    /// twin (`URL` → `NSURL`, `Data` → `NSData`). Racket holds the twin as an `id`
+    /// cpointer; the `@_cdecl` receives that raw pointer, reconstructs the objc
+    /// reference (`Unmanaged<NSURL>`) and bridges it to the Swift value the by-name
+    /// call wants (`… as URL`). Only the curated [`objc_object_param_bridge`] set
+    /// rides this path — an unknown `Class` param stays deferred (a Swift-native
+    /// struct lowered to `Class`, like `GeoRect`, must not be mistaken for a bridge).
+    ObjectRef { class_name: String, bridge_to: String },
+}
+
+/// The curated objc reference classes whose params bridge to a Swift value twin
+/// (R1). The digester reports a Swift `URL`/`Data`/… param as its Foundation objc
+/// class (`NSURL`/`NSData`/…); the trampoline reconstructs that reference and
+/// bridges to the value the by-name call needs. Returns the Swift value type to
+/// cast to, or `None` for a `Class` name not in the set (stays deferred). The set
+/// grows as the whole-framework typecheck demands (the §6 honest-residual
+/// discipline) — every entry is a verified `_ObjectiveCBridgeable` value pair.
+fn objc_object_param_bridge(name: &str) -> Option<&'static str> {
+    Some(match name {
+        // Verified clean against the whole Foundation residual (`swiftc -typecheck`,
+        // Swift 6). The set is deliberately small: an objc twin like `NSDate` also
+        // appears as a hidden `inout Date` param (e.g. `Calendar.dateIntervalOf-
+        // Weekend`), and `inout` is invisible in the IR — so a speculative entry can
+        // surface an uncompilable method. Each pair here is proven, not assumed; the
+        // full-pipeline typecheck in `030-rerun-verify` (over enriched IR that may
+        // expose `inout`) is where the set widens.
+        "NSURL" => "URL",
+        "NSURLRequest" => "URLRequest",
+        _ => return None,
+    })
 }
 
 /// How a **return** value crosses the boundary. Every shape here is producible
@@ -291,6 +322,11 @@ fn classify_param(t: &TypeRef, value_structs: &HashSet<&str>) -> Result<ArgMarsh
                 })
             } else if value_structs.contains(name.as_str()) {
                 Ok(ArgMarshal::BoxedHandle { name: name.clone() })
+            } else if let Some(bridge_to) = objc_object_param_bridge(name) {
+                Ok(ArgMarshal::ObjectRef {
+                    class_name: name.clone(),
+                    bridge_to: bridge_to.to_string(),
+                })
             } else {
                 Err(DeferReason::NonBridgedStructParam)
             }
@@ -460,6 +496,16 @@ pub enum DeferReason {
     /// `nil`, so it cannot ride the by-value return; deferred (a boxed-optional return
     /// is a clean follow-up). Nullable String/handle returns *are* handled (NULL/#f).
     NullableScalarReturn,
+    /// An `async` **mutating value-receiver** method (D5/R4): the mutated copy would
+    /// have to be written back into the handle box, but the write happens on the
+    /// cooperative thread *after* the call site returned — the single-identity
+    /// write-back (D3) is ill-defined across the async hop. Deferred-with-count.
+    AsyncMutatingReceiver,
+    /// An `async` method returning a **scalar** (`async -> Int`): the completion
+    /// rides `AwAsyncOutcome`, whose payload is a pointer; a C scalar cannot cross
+    /// it without boxing. Deferred-with-count (a boxed-scalar async carrier is a
+    /// clean follow-up); the dominant async returns are objects/tuples/void.
+    AsyncScalarReturn,
 }
 
 impl DeferReason {
@@ -477,6 +523,8 @@ impl DeferReason {
             DeferReason::StaticMethod => "deferred_static_method",
             DeferReason::VariadicMethod => "deferred_variadic_method",
             DeferReason::NullableScalarReturn => "deferred_nullable_scalar_return",
+            DeferReason::AsyncMutatingReceiver => "deferred_async_mutating_receiver",
+            DeferReason::AsyncScalarReturn => "deferred_async_scalar_return",
         }
     }
 }
@@ -794,6 +842,8 @@ fn arg_values(params: &[ArgMarshal], labels: &[String], numeric_cast: bool) -> V
                 ArgMarshal::SwiftString => format!("s{i}"),
                 // The prelude unboxed the handle to `u{i}: Name`; pass that value.
                 ArgMarshal::BoxedHandle { .. } => format!("u{i}"),
+                // The prelude bridged the objc reference to `o{i}: <value twin>`.
+                ArgMarshal::ObjectRef { .. } => format!("o{i}"),
             };
             if label == "_" || label.is_empty() {
                 value
@@ -846,6 +896,17 @@ fn args_decl_and_prelude(params: &[ArgMarshal]) -> (Vec<String>, String) {
                 decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
                 prelude.push_str(&format!(
                     "  let u{i} = awRacketUnbox(a{i}!, as: {name}.self)\n"
+                ));
+            }
+            // Boundary param is an opaque `id`; reconstruct the objc reference and
+            // bridge it to the Swift value twin the by-name call wants (R1).
+            ArgMarshal::ObjectRef {
+                class_name,
+                bridge_to,
+            } => {
+                decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
+                prelude.push_str(&format!(
+                    "  let o{i} = Unmanaged<{class_name}>.fromOpaque(a{i}!).takeUnretainedValue() as {bridge_to}\n"
                 ));
             }
         }
@@ -1089,8 +1150,11 @@ impl FnTrampoline {
             .iter()
             .map(|m| match m {
                 ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.ffi(),
-                // A boxed value handle and a bridged string both cross as a pointer.
-                ArgMarshal::SwiftString | ArgMarshal::BoxedHandle { .. } => "_pointer",
+                // A boxed value handle, an objc reference and a bridged string all
+                // cross as a pointer.
+                ArgMarshal::SwiftString
+                | ArgMarshal::BoxedHandle { .. }
+                | ArgMarshal::ObjectRef { .. } => "_pointer",
             })
             .collect();
         if self.throwing {
@@ -1111,9 +1175,9 @@ impl FnTrampoline {
             .map(|m| match m {
                 ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.contract(),
                 ArgMarshal::SwiftString => "string?",
-                // Racket sees a value handle as an opaque cpointer (the binding
-                // passes it straight to the trampoline, which unboxes it).
-                ArgMarshal::BoxedHandle { .. } => "cpointer?",
+                // Racket sees a value handle or an objc reference as an opaque
+                // cpointer (the binding passes it straight to the trampoline).
+                ArgMarshal::BoxedHandle { .. } | ArgMarshal::ObjectRef { .. } => "cpointer?",
             })
             .collect();
         let ret = ret_contract(&self.ret);
@@ -1156,7 +1220,8 @@ impl FnTrampoline {
                 // value handle is already a cpointer — pass it straight through too.
                 ArgMarshal::Scalar(_)
                 | ArgMarshal::ScalarTypedef { .. }
-                | ArgMarshal::BoxedHandle { .. } => a.clone(),
+                | ArgMarshal::BoxedHandle { .. }
+                | ArgMarshal::ObjectRef { .. } => a.clone(),
             })
             .collect();
         // Success-path result coercion.
@@ -1275,6 +1340,11 @@ pub struct MethodTrampoline {
     /// (String/handle returns); a nullable *scalar* return is deferred upstream.
     ret_nullable: bool,
     throwing: bool,
+    /// The method is `async` (D5/R4): instead of a synchronous return, the `@_cdecl`
+    /// takes a trailing ctx + C completion callback and drives `awRacketAsyncDispatch`
+    /// (the non-blocking, main-thread-delivery bridge). The racket binding wraps it
+    /// with `aw-async-call` (the callback form — no blocking await, per R4).
+    is_async: bool,
     availability: Option<String>,
 }
 
@@ -1342,9 +1412,6 @@ pub fn classify_method(
         if i.is_generic {
             return MethodDisposition::Deferred(DeferReason::UnbindableGenericMethod);
         }
-        if i.is_async {
-            return MethodDisposition::Deferred(DeferReason::Async);
-        }
         if i.self_kind.as_deref() == Some("Consuming") {
             return MethodDisposition::Deferred(DeferReason::ConsumingReceiver);
         }
@@ -1374,6 +1441,15 @@ pub fn classify_method(
     let availability = introduced_macos(&method.provenance);
 
     if method.init_method {
+        // Object-ref params (R1) bridge to a Swift value twin (`NSData` → `Data`),
+        // which is right for a *method* call but wrong for a bridging *constructor*
+        // (`Data(referencing: NSData)` genuinely wants the reference — the same objc
+        // param type means different things at different call sites, and the lossy IR
+        // cannot tell them apart). Init object params were deferred pre-R1, so this
+        // is a no-regression carve-out, not new suppression.
+        if params.iter().any(|m| matches!(m, ArgMarshal::ObjectRef { .. })) {
+            return MethodDisposition::Deferred(DeferReason::NonBridgedStructParam);
+        }
         return MethodDisposition::Init(InitTrampoline {
             module: module.to_string(),
             owner: owner.to_string(),
@@ -1409,6 +1485,21 @@ pub fn classify_method(
     // Write-back only applies to value receivers; a class receiver is a reference,
     // so a `mutating` class method (rare) needs no special handling.
     let mutating = !owner_is_class && info.and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
+
+    // Async (D5/R4): the method drives the completion-callback bridge instead of a
+    // synchronous return. Two sub-cases cannot ride it and defer-with-count: a
+    // `mutating` value receiver (the write-back is ill-defined across the async hop)
+    // and a scalar return (`AwAsyncOutcome` carries a pointer payload, not a scalar).
+    let is_async = info.is_some_and(|i| i.is_async);
+    if is_async {
+        if mutating {
+            return MethodDisposition::Deferred(DeferReason::AsyncMutatingReceiver);
+        }
+        if matches!(ret, RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. }) {
+            return MethodDisposition::Deferred(DeferReason::AsyncScalarReturn);
+        }
+    }
+
     let recv = if owner_is_class {
         SelfMarshal::ClassRef
     } else {
@@ -1425,6 +1516,7 @@ pub fn classify_method(
         ret,
         ret_nullable,
         throwing,
+        is_async,
         availability,
     })
 }
@@ -1558,8 +1650,102 @@ fn method_return_shape(ret: &RetMarshal, nullable: bool) -> (String, Marshaller)
     }
 }
 
+/// The expression marshalling an async method's success result (`awR`) to the
+/// `AwAsyncOutcome.value` pointer payload, computed on the cooperative thread
+/// inside the operation closure. `Void` is handled by the caller (no `awR`);
+/// scalar returns never reach here (deferred `AsyncScalarReturn` upstream). Mirrors
+/// [`method_return_shape`]'s pointer arms, but always lands in `AwAsyncOutcome`.
+fn async_outcome_value(ret: &RetMarshal, nullable: bool) -> String {
+    match ret {
+        RetMarshal::SwiftString if nullable => {
+            "(awR as String?).map { Unmanaged.passRetained($0 as NSString).toOpaque() } ?? nil"
+                .to_string()
+        }
+        RetMarshal::SwiftString => {
+            "Unmanaged.passRetained(awR as NSString).toOpaque()".to_string()
+        }
+        RetMarshal::Handle(_) if nullable => "awR.map { awRacketBox($0) } ?? nil".to_string(),
+        RetMarshal::Handle(_) => "awRacketBox(awR)".to_string(),
+        // Void is handled by the caller; scalars are deferred upstream.
+        RetMarshal::Void | RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } => {
+            "nil".to_string()
+        }
+    }
+}
+
+/// Emit one `async` method trampoline (D5/R4): the `@_cdecl` takes a trailing
+/// racket completion context (`awCtx`) + C callback (`awCb`) and drives
+/// `awRacketAsyncDispatch` — the operation closure unboxes the receiver, `await`s,
+/// and marshals to `AwAsyncOutcome` **on the cooperative thread**; the completion
+/// closure delivers it through `awCb` **on the main thread** (the SIGILL-safe hop).
+/// Errors ride `AwAsyncOutcome.error`, so there is no `NSError**` out-param.
+fn emit_async_method_tramp(s: &mut String, t: &MethodTrampoline) {
+    let (arg_decl, arg_prelude) = args_decl_and_prelude(&t.params);
+    let mut decl = vec!["_ awRecv: UnsafeMutableRawPointer?".to_string()];
+    decl.extend(arg_decl);
+    decl.push("_ awCtx: Int".to_string());
+    decl.push(
+        "_ awCb: @convention(c) (Int, UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> Void"
+            .to_string(),
+    );
+    emit_cdecl_header(s, &t.availability, &t.entry, &decl, "");
+    // Args reconstruct to Sendable values here, on the calling thread; the operation
+    // closure captures those values (URL/String/scalars are Sendable + copy), so no
+    // racket-owned handle dangles while the Task runs.
+    s.push_str(&arg_prelude);
+
+    let owner = format!("{}.{}", t.module, t.owner);
+    // The receiver pointer is captured into the `@Sendable` operation closure and
+    // the receiver reconstructed *inside* (it lives only on the cooperative thread —
+    // capturing the receiver object directly would fail Swift 6 Sendable checking for
+    // a non-Sendable class). `UnsafeMutableRawPointer` is deliberately not Sendable,
+    // so `nonisolated(unsafe)` carries the bare pointer across the hop: the racket
+    // caller's lifetime contract (keep the receiver alive until completion) makes the
+    // capture sound, which is exactly what `nonisolated(unsafe)` asserts.
+    s.push_str("  nonisolated(unsafe) let awRecvUnsafe = awRecv\n");
+    let recv_line = match &t.recv {
+        SelfMarshal::ClassRef => format!(
+            "    let awSelf = Unmanaged<{owner}>.fromOpaque(awRecvUnsafe!).takeUnretainedValue()\n"
+        ),
+        // Mutating-async is deferred upstream, so a value receiver is non-mutating:
+        // unbox a copy for the call.
+        SelfMarshal::ValueBox { .. } => {
+            format!("    let awSelf = awRacketUnbox(awRecvUnsafe!, as: {owner}.self)\n")
+        }
+    };
+    let call = format!(
+        "awSelf.{}({})",
+        t.swift_name,
+        arg_values(&t.params, &t.labels, true).join(", ")
+    );
+    let value_expr = async_outcome_value(&t.ret, t.ret_nullable);
+
+    s.push_str("  awRacketAsyncDispatch({ () async -> AwAsyncOutcome in\n");
+    s.push_str(&recv_line);
+    match (t.throwing, &t.ret) {
+        (true, RetMarshal::Void) => s.push_str(&format!(
+            "    do {{\n      try await {call}\n      return AwAsyncOutcome()\n    }} catch {{\n      return AwAsyncOutcome.failure(error)\n    }}\n"
+        )),
+        (true, _) => s.push_str(&format!(
+            "    do {{\n      let awR = try await {call}\n      return AwAsyncOutcome(value: {value_expr})\n    }} catch {{\n      return AwAsyncOutcome.failure(error)\n    }}\n"
+        )),
+        (false, RetMarshal::Void) => {
+            s.push_str(&format!("    await {call}\n    return AwAsyncOutcome()\n"))
+        }
+        (false, _) => s.push_str(&format!(
+            "    let awR = await {call}\n    return AwAsyncOutcome(value: {value_expr})\n"
+        )),
+    }
+    s.push_str("  }, { awOutcome in\n    awCb(awCtx, awOutcome.value, awOutcome.error)\n  })\n");
+    s.push_str("}\n");
+}
+
 /// Emit one method trampoline: receiver handle + args → `receiver.name(labels:)`.
 fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
+    if t.is_async {
+        emit_async_method_tramp(s, t);
+        return;
+    }
     let (arg_decl, arg_prelude) = args_decl_and_prelude(&t.params);
     let (cret, marshal) = method_return_shape(&t.ret, t.ret_nullable);
 
@@ -1692,8 +1878,20 @@ impl MethodTrampoline {
         for m in &self.params {
             parts.push(match m {
                 ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.ffi(),
-                ArgMarshal::SwiftString | ArgMarshal::BoxedHandle { .. } => "_pointer",
+                ArgMarshal::SwiftString
+                | ArgMarshal::BoxedHandle { .. }
+                | ArgMarshal::ObjectRef { .. } => "_pointer",
             });
+        }
+        // Async (D5/R4): no synchronous return + no NSError** out-param — instead a
+        // trailing completion context (`_intptr`) and the stable C callback function
+        // pointer (`_fpointer`, the GC-stable `aw-async-call` shares; not a
+        // `_cprocedure` param, which would per-call wrap a soon-GC'd callback). The
+        // trampoline itself returns void.
+        if self.is_async {
+            parts.push("_intptr");
+            parts.push("_fpointer");
+            return format!("(_fun {} -> _void)", parts.join(" "));
         }
         if self.throwing {
             parts.push("_pointer");
@@ -1707,6 +1905,9 @@ impl MethodTrampoline {
     /// passed first; `String` args bridge in, the result coerces out.
     pub fn render_racket_method(&self, fn_name: &str, param_names: &[String]) -> String {
         let arrow = self.ffi_arrow();
+        if self.is_async {
+            return self.render_async_racket_method(fn_name, param_names, &arrow);
+        }
         let call_args: Vec<String> = self
             .params
             .iter()
@@ -1747,6 +1948,52 @@ impl MethodTrampoline {
                 entry = self.entry,
             )
         }
+    }
+
+    /// Render the callback-form racket binding for an `async` method (R4). The
+    /// generated procedure takes a trailing `complete` continuation; it threads the
+    /// receiver + args into the kicker (which `aw-async-call` invokes with a fresh
+    /// ctx id + the shared C callback), and `complete` is delivered the coerced
+    /// result (or an error) on the main thread when the operation finishes. No
+    /// blocking await — the racket app keeps servicing its run loop.
+    fn render_async_racket_method(
+        &self,
+        fn_name: &str,
+        param_names: &[String],
+        arrow: &str,
+    ) -> String {
+        let call_args: Vec<String> = self
+            .params
+            .iter()
+            .zip(param_names)
+            .map(|(m, p)| match m {
+                ArgMarshal::SwiftString => format!("(aw-string-arg {p})"),
+                _ => p.clone(),
+            })
+            .collect();
+        let args_str = if call_args.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", call_args.join(" "))
+        };
+        let lambda_params = if param_names.is_empty() {
+            "self complete".to_string()
+        } else {
+            format!("self {} complete", param_names.join(" "))
+        };
+        // A String result coerces to a racket string; everything else (boxed handle,
+        // void) passes the raw value through to `complete`.
+        let coerce = if matches!(self.ret, RetMarshal::SwiftString) {
+            "aw-string-result"
+        } else {
+            "values"
+        };
+        format!(
+            "(define {fn_name}\n  (let ([raw (get-ffi-obj '{entry} _aw-lib {arrow})])\n    \
+             (lambda ({lambda_params})\n      (aw-async-call\n        \
+             (lambda (id cb) (raw (coerce-arg self){args_str} id cb))\n        {coerce}\n        complete))))",
+            entry = self.entry,
+        )
     }
 }
 
@@ -2358,6 +2605,80 @@ mod tests {
         }
     }
 
+    fn asyncthrows() -> SwiftFnInfo {
+        SwiftFnInfo {
+            is_async: true,
+            throwing: true,
+            self_kind: Some("NonMutating".into()),
+            ..Default::default()
+        }
+    }
+
+    /// An `async throws` method (the `URLSession.data(from:)` headline) drives the
+    /// completion-callback bridge (D5/R4): the `@_cdecl` takes a trailing ctx +
+    /// C callback, captures the receiver pointer into an `@Sendable` operation
+    /// closure that unboxes + `await`s + marshals to `AwAsyncOutcome` on the
+    /// cooperative thread, and delivers it through `awRacketAsyncDispatch`.
+    #[test]
+    fn async_throws_method_drives_completion_callback() {
+        let m = method(
+            "data(from:)",
+            vec![param("from", swift_class("NSURL", "Foundation"))],
+            swift_class("Tuple", "Foundation"), // unspellable ⇒ Handle(None), boxed
+            asyncthrows(),
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "Foundation",
+            "URLSession",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+        ) else {
+            panic!("an async method must trampoline (callback form), not defer");
+        };
+        assert!(t.is_async, "classified async");
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        // Signature: receiver, the bridged object param, then ctx + completion
+        // callback; the trampoline itself returns void (no throwing out-param).
+        assert!(
+            s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: UnsafeMutableRawPointer?, _ awCtx: Int, _ awCb: @convention(c) (Int, UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> Void)"),
+            "{s}"
+        );
+        // Args reconstruct to Sendable values *at entry* (captured by value across
+        // the async hop — no dangling handle).
+        assert!(
+            s.contains("let o0 = Unmanaged<NSURL>.fromOpaque(a0!).takeUnretainedValue() as URL"),
+            "{s}"
+        );
+        // The operation closure captures the receiver pointer, unboxes inside,
+        // awaits, and marshals to AwAsyncOutcome on the cooperative thread.
+        // The receiver pointer rides `nonisolated(unsafe)` across the Sendable hop
+        // (UnsafeMutableRawPointer is not Sendable); reconstructed inside the closure.
+        assert!(s.contains("nonisolated(unsafe) let awRecvUnsafe = awRecv"), "{s}");
+        assert!(s.contains("awRacketAsyncDispatch({ () async -> AwAsyncOutcome in"), "{s}");
+        assert!(
+            s.contains("let awSelf = Unmanaged<Foundation.URLSession>.fromOpaque(awRecvUnsafe!).takeUnretainedValue()"),
+            "{s}"
+        );
+        assert!(s.contains("let awR = try await awSelf.data(from: o0)"), "{s}");
+        assert!(s.contains("return AwAsyncOutcome(value: awRacketBox(awR))"), "{s}");
+        assert!(s.contains("return AwAsyncOutcome.failure(error)"), "{s}");
+        assert!(s.contains("awCb(awCtx, awOutcome.value, awOutcome.error)"), "{s}");
+        // ffi arrow: receiver, object pointer, ctx intptr, callback; returns void.
+        assert_eq!(
+            t.ffi_arrow(),
+            "(_fun _pointer _pointer _intptr _fpointer -> _void)"
+        );
+        // Racket binding: the callback form via aw-async-call; `complete` is the
+        // last lambda arg, threaded as ctx+cb into the kicker.
+        let rkt = t.render_racket_method("url-session-data", &["url".into()]);
+        assert!(rkt.contains("(lambda (self url complete)"), "{rkt}");
+        assert!(rkt.contains("(aw-async-call"), "{rkt}");
+        assert!(rkt.contains("(raw (coerce-arg self) url id cb)"), "{rkt}");
+    }
+
     /// A value-struct owner's non-mutating method unboxes a copy and calls by name.
     #[test]
     fn value_receiver_nonmutating_method_unboxes_and_calls() {
@@ -2524,6 +2845,123 @@ mod tests {
         assert_ne!(contains[0], contains[1], "overloads disambiguated: {contains:?}");
         let swift = generate_trampolines_swift(&set);
         assert!(swift.contains("0 function + 0 constant + 1 init + 3 method trampolines."), "{swift}");
+    }
+
+    /// An objc-bridged reference param (`NSURL`) reconstructs as its Swift value
+    /// twin (`as URL`) before the by-name call (R1); racket passes the id cpointer
+    /// straight in. The lossy IR reports `URL` params as their objc twin `NSURL`.
+    #[test]
+    fn object_ref_param_bridges_to_value_twin() {
+        let m = method(
+            "open(_:)",
+            vec![param("_", swift_class("NSURL", "Foundation"))],
+            prim("bool"),
+            swiftk(),
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "AppKit",
+            "NSWorkspace",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+        ) else {
+            panic!("an objc-bridged reference param must trampoline, not defer");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        // Boundary param is an opaque id; the body reconstructs the NSURL and
+        // bridges to the URL value the by-name call wants.
+        assert!(
+            s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: UnsafeMutableRawPointer?) -> Bool"),
+            "{s}"
+        );
+        assert!(
+            s.contains(
+                "let o0 = Unmanaged<NSURL>.fromOpaque(a0!).takeUnretainedValue() as URL"
+            ),
+            "{s}"
+        );
+        assert!(s.contains("return awSelf.open(o0)"), "{s}");
+        // ffi: receiver pointer, then the object pointer.
+        assert_eq!(t.ffi_arrow(), "(_fun _pointer _pointer -> _bool)");
+        // Racket passes the id cpointer straight through (no coercion wrapper).
+        let rkt = t.render_racket_method("ns-workspace-open", &["url".into()]);
+        assert!(rkt.contains("(raw (coerce-arg self) url)"), "{rkt}");
+    }
+
+    /// A non-throwing `async` method returning a handle marshals straight to
+    /// `AwAsyncOutcome(value:)` with no do/catch, and `await`s without `try`.
+    #[test]
+    fn async_nonthrowing_method_has_no_try_or_catch() {
+        let info = SwiftFnInfo {
+            is_async: true,
+            self_kind: Some("NonMutating".into()),
+            ..Default::default()
+        };
+        let m = method("response", vec![], swift_class("Response", "MusicKit"), info);
+        let MethodDisposition::Method(t) = classify_method(
+            "MusicKit",
+            "MusicDataRequest",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+        ) else {
+            panic!("expected async method trampoline");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(s.contains("let awR = await awSelf.response()"), "{s}");
+        assert!(s.contains("return AwAsyncOutcome(value: awRacketBox(awR))"), "{s}");
+        assert!(!s.contains("try await"), "non-throwing must not use try: {s}");
+        assert!(!s.contains("catch"), "non-throwing must not catch: {s}");
+    }
+
+    /// An `async` void method delivers an empty outcome (the racket completion gets
+    /// `#f`), and a `mutating`/scalar-return async method defers with its own reason.
+    #[test]
+    fn async_void_and_unsupportable_returns() {
+        let void_async = method(
+            "finish",
+            vec![],
+            prim("void"),
+            SwiftFnInfo { is_async: true, self_kind: Some("NonMutating".into()), ..Default::default() },
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "StoreKit", "Transaction", false, &void_async, std::slice::from_ref(&void_async), &no_structs(),
+        ) else {
+            panic!("expected async void method trampoline");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(s.contains("await awSelf.finish()"), "{s}");
+        assert!(s.contains("return AwAsyncOutcome()"), "{s}");
+
+        // mutating-async and scalar-return-async defer with their own reasons.
+        let mut_async = method(
+            "advance",
+            vec![],
+            prim("void"),
+            SwiftFnInfo { is_async: true, self_kind: Some("Mutating".into()), ..Default::default() },
+        );
+        let scalar_async = method(
+            "count",
+            vec![],
+            prim("int64"),
+            SwiftFnInfo { is_async: true, self_kind: Some("NonMutating".into()), ..Default::default() },
+        );
+        for (m, want) in [
+            (&mut_async, DeferReason::AsyncMutatingReceiver),
+            (&scalar_async, DeferReason::AsyncScalarReturn),
+        ] {
+            let MethodDisposition::Deferred(r) = classify_method(
+                "Foundation", "Thing", false, m, std::slice::from_ref(m), &no_structs(),
+            ) else {
+                panic!("expected deferral for {:?}", m.selector);
+            };
+            assert_eq!(r, want, "selector {:?}", m.selector);
+        }
     }
 
     /// Real-framework compile proof (run explicitly, needs local collected IR):
