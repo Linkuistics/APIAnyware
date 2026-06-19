@@ -12,7 +12,7 @@ use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInf
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::generate_class_file_with_structs;
+use crate::emit_class::{generate_class_file_with_structs, generate_struct_file};
 use crate::emit_constants::generate_constants_file;
 use crate::emit_enums::generate_enums_file;
 use crate::emit_functions::{count_emittable, generate_functions_file};
@@ -56,6 +56,7 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
     // classifies identically to the global trampoline pass).
     let value_structs = crate::trampoline::value_struct_names(&fw.structs);
     let mut class_files: Vec<(String, String)> = Vec::new();
+    let mut used_filenames: std::collections::HashSet<String> = std::collections::HashSet::new();
     for cls in &fw.classes {
         let filename = format!("{}.rkt", class_name_to_lowercase(&cls.name));
         let content = generate_class_file_with_structs(
@@ -65,7 +66,27 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
             &value_structs,
         );
         emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename.clone());
         class_files.push((cls.name.clone(), filename));
+        files_written += 1;
+    }
+
+    // Swift-native value-struct files (population B, ADR-0030). Only structs that
+    // vend at least one bindable trampoline get a file; a plain C struct yields
+    // `None`. A struct whose lowercased name collides with a class file (rare) takes
+    // a `-struct` suffix so neither clobbers the other.
+    for st in &fw.structs {
+        let Some(content) = generate_struct_file(st, &fw.name, &value_structs) else {
+            continue;
+        };
+        let base = class_name_to_lowercase(&st.name);
+        let mut filename = format!("{base}.rkt");
+        if used_filenames.contains(&filename) {
+            filename = format!("{base}-struct.rkt");
+        }
+        emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename.clone());
+        class_files.push((st.name.clone(), filename));
         files_written += 1;
     }
 

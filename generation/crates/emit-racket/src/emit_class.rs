@@ -14,7 +14,7 @@ use apianyware_macos_emit::ffi_type_mapping::{FfiTypeMapper, RacketFfiTypeMapper
 use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::enrichment::EnrichmentData;
-use apianyware_macos_types::ir::{Class, Method, Param, Property};
+use apianyware_macos_types::ir::{Class, Method, Param, Property, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::emit_functions::map_contract;
@@ -25,7 +25,7 @@ use crate::method_filter::{
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
     make_constructor_name, make_method_name, make_property_getter_name, make_property_setter_name,
-    make_unique_constructor_name,
+    make_swift_init_name, make_swift_method_name, make_unique_constructor_name,
 };
 use crate::native_dispatch::{
     class_error_selectors, collect_class_native_sigs, is_error_out_routable,
@@ -35,7 +35,188 @@ use crate::shared_signatures::{
     block_ffi_types, class_has_blocks, class_has_struct_types, collect_class_fallback_signatures,
     SignatureMap,
 };
-use crate::trampoline::{classify_method, MethodDisposition};
+use crate::trampoline::{classify_method, MethodDisposition, AW_ARROW_REQUIRE};
+
+/// The rendered receiver-handle trampoline bindings (ADR-0030) for one type's
+/// declared Swift-native methods/inits (`objc_exposed == false`), plus the require
+/// flags they imply. Computed once so the header can declare the right requires and
+/// `provide` can list the exact binding names.
+struct SwiftNativeBindings {
+    /// One per emitted binding: (`provide` name, rendered `(define …)`, is-async).
+    entries: Vec<SwiftNativeBinding>,
+}
+
+struct SwiftNativeBinding {
+    name: String,
+    define: String,
+    is_async: bool,
+}
+
+impl SwiftNativeBindings {
+    fn names(&self) -> impl Iterator<Item = &String> {
+        self.entries.iter().map(|e| &e.name)
+    }
+    fn has(&self, name: &str) -> bool {
+        self.entries.iter().any(|e| e.name == name)
+    }
+    fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+    /// Any trampoline present ⇒ the file requires `swift-trampoline.rkt` (`_aw-lib`,
+    /// `aw-call/error`, `aw-string-*`) and the `aw->` arrow alias.
+    fn needs_trampoline(&self) -> bool {
+        !self.entries.is_empty()
+    }
+    /// Any `async` method present ⇒ also requires `async-bridge.rkt` (`aw-async-call`).
+    fn needs_async_bridge(&self) -> bool {
+        self.entries.iter().any(|e| e.is_async)
+    }
+    /// Drop bindings whose Racket name collides with an already-bound ObjC name
+    /// (the ObjC binding wins — e.g. ObjC `objectForKey:` and Swift `object(forKey:)`
+    /// both kebab to `…-object-for-key`). The ObjC path usually provides equivalent
+    /// behaviour; the dropped Swift duplicate is a generation detail (the Swift-side
+    /// trampoline residual is unchanged).
+    fn exclude(&mut self, objc_names: &HashSet<String>) {
+        self.entries.retain(|e| !objc_names.contains(&e.name));
+    }
+}
+
+/// Lambda formal names for a Swift-native method/init: the argument labels, kebabed.
+/// A wildcard label (`_`, e.g. `contains(_:)`) becomes a positional `argN` so two
+/// wildcard params don't collide as duplicate `lambda` formals.
+fn swift_param_names(params: &[Param]) -> Vec<String> {
+    params
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            if p.name == "_" {
+                format!("arg{i}")
+            } else {
+                camel_to_kebab(&p.name)
+            }
+        })
+        .collect()
+}
+
+/// Collect + render the receiver-handle trampoline bindings for a type's declared
+/// Swift-native methods/inits (D4 routing). `owner_is_class` picks the reference
+/// (`Unmanaged`) vs value (`AwValueBox`) receiver path; it MUST match the global
+/// trampoline pass (`collect_trampolines`, which walks `Framework.classes`/`structs`
+/// *declared* methods) so every emitted binding references an entry the `@_cdecl`
+/// pass actually produces. Overloads that collapse to the same Racket name (distinct
+/// content-addressed entries, same base+labels) keep the first — surfaced honestly
+/// as a generation detail, the trampoline residual counts are unaffected (Swift side).
+fn collect_swift_native_bindings(
+    owner: &str,
+    framework: &str,
+    methods: &[Method],
+    owner_is_class: bool,
+    value_structs: &HashSet<&str>,
+) -> SwiftNativeBindings {
+    let mut entries: Vec<SwiftNativeBinding> = Vec::new();
+    let mut seen = HashSet::new();
+    for m in methods {
+        if m.swift_fn.is_none() {
+            continue; // ObjC method — binds via msgSend, no trampoline
+        }
+        match classify_method(framework, owner, owner_is_class, m, methods, value_structs) {
+            MethodDisposition::Method(t) => {
+                let mutating = m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref())
+                    == Some("Mutating");
+                let name = make_swift_method_name(owner, &m.selector, mutating);
+                if !seen.insert(name.clone()) {
+                    continue;
+                }
+                let param_names = swift_param_names(&m.params);
+                entries.push(SwiftNativeBinding {
+                    define: t.render_racket_method(&name, &param_names),
+                    is_async: t.is_async(),
+                    name,
+                });
+            }
+            MethodDisposition::Init(t) => {
+                let name = make_swift_init_name(owner, &m.selector);
+                if !seen.insert(name.clone()) {
+                    continue;
+                }
+                let param_names = swift_param_names(&m.params);
+                entries.push(SwiftNativeBinding {
+                    define: t.render_racket_init(&name, &param_names),
+                    is_async: false,
+                    name,
+                });
+            }
+            MethodDisposition::Deferred(_) => {} // counted by the global trampoline pass
+        }
+    }
+    SwiftNativeBindings { entries }
+}
+
+/// Generate a Racket binding file for a Swift-native **value struct** (population B,
+/// D1/D3) — the receiver is a value handle (`AwValueBox`, `owner_is_class = false`),
+/// init producers vend the handle, `mutating` methods write back. Returns `None`
+/// when the struct has no bindable trampoline (a plain C struct, or every method
+/// deferred) so no empty file is written. Unlike a class file there is no ObjC
+/// substrate: just `ffi/unsafe` (for `_fun`/`get-ffi-obj`), the trampoline runtime,
+/// the `aw->` arrow alias, and `coerce.rkt` (the receiver handle passes through
+/// `coerce-arg`).
+pub fn generate_struct_file(
+    st: &Struct,
+    framework: &str,
+    value_structs: &HashSet<&str>,
+) -> Option<String> {
+    let bindings =
+        collect_swift_native_bindings(&st.name, framework, &st.methods, false, value_structs);
+    if bindings.is_empty() {
+        return None;
+    }
+    let mut w = CodeWriter::new();
+    w.line("#lang racket/base");
+    write_line!(
+        w,
+        ";; Generated binding for {} ({}) — Swift-native value struct (ADR-0030)",
+        st.name,
+        framework
+    );
+    w.line(";; Do not edit — regenerate from enriched IR");
+    w.blank_line();
+    // `ffi/unsafe` for `_fun`/`get-ffi-obj`/`_pointer`/scalar ctypes; the trampoline
+    // runtime for `_aw-lib`/`aw-call/error`/`aw-string-*`; the `aw->` alias for the
+    // `_fun` arrow; `coerce.rkt` for `coerce-arg` (the value handle passes through).
+    w.line("(require ffi/unsafe");
+    w.raw(&format!("         {AW_ARROW_REQUIRE}\n"));
+    w.raw("         \"../../runtime/swift-trampoline.rkt\"\n");
+    w.raw("         \"../../runtime/coerce.rkt\"");
+    if bindings.needs_async_bridge() {
+        w.raw("\n         \"../../runtime/async-bridge.rkt\"");
+    }
+    w.raw_line(")");
+    w.blank_line();
+    w.line("(provide");
+    for name in bindings.names() {
+        write_line!(w, "  {}", name);
+    }
+    w.line("  )");
+    w.blank_line();
+    w.line(";; --- Swift-native value-struct methods (receiver-handle trampolines) ---");
+    for entry in &bindings.entries {
+        w.line(&entry.define);
+    }
+    Some(w.finish())
+}
+
+/// Emit the Swift-native trampoline section (methods + init producers) into a class
+/// or struct file, after the ObjC bindings. Idempotent on an empty set.
+fn emit_swift_native_section(w: &mut CodeWriter, bindings: &SwiftNativeBindings) {
+    if bindings.is_empty() {
+        return;
+    }
+    w.blank_line();
+    w.line(";; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---");
+    for entry in &bindings.entries {
+        w.line(&entry.define);
+    }
+}
 
 /// Generate a complete Racket class binding file. Convenience wrapper used by tests
 /// and any caller without the framework's value-struct set — equivalent to having
@@ -95,12 +276,20 @@ pub fn generate_class_file_with_structs(
     // by the instance property "separatorItem" (boolean getter).
     let prop_names = build_property_name_sets(cls, &properties);
 
-    // Separate method categories
-    let init_methods: Vec<&Method> = methods.iter().filter(|m| m.init_method).copied().collect();
+    // Separate method categories. Swift-native methods/inits (`objc_exposed ==
+    // false`) are excluded from every ObjC list — they are emitted and `provide`d
+    // exclusively by the receiver-handle trampoline section (else the same name is
+    // both contracted here and provided there, a duplicate-provide error).
+    let init_methods: Vec<&Method> = methods
+        .iter()
+        .filter(|m| m.init_method && m.objc_exposed)
+        .copied()
+        .collect();
     let class_methods: Vec<&Method> = methods
         .iter()
         .filter(|m| {
-            m.class_method
+            m.objc_exposed
+                && m.class_method
                 && !m.init_method
                 && !method_collides_with_property(&cls.name, m, &prop_names.class_property_names)
         })
@@ -109,7 +298,8 @@ pub fn generate_class_file_with_structs(
     let instance_methods: Vec<&Method> = methods
         .iter()
         .filter(|m| {
-            !m.class_method
+            m.objc_exposed
+                && !m.class_method
                 && !m.init_method
                 && !method_collides_with_property(&cls.name, m, &prop_names.instance_property_names)
         })
@@ -134,6 +324,16 @@ pub fn generate_class_file_with_structs(
     let native_sigs = collect_class_native_sigs(cls, &mapper, &error_selectors);
     let needs_native = !native_sigs.is_empty();
     let sig_map = collect_class_fallback_signatures(cls, &mapper);
+
+    // Swift-native methods/inits (`objc_exposed == false`) route to receiver-handle
+    // trampolines (ADR-0030), not the broken `objc_msgSend` path (charter #4). Walk
+    // the class's *declared* methods (owner_is_class = true), matching the global
+    // `@_cdecl` pass, so every binding references an entry that exists. Computed up
+    // front: the header requires `swift-trampoline.rkt`/`async-bridge.rkt` and the
+    // `aw->` arrow alias iff this type emits any trampoline, and `provide` lists the
+    // exact binding names.
+    let mut swift_native =
+        collect_swift_native_bindings(&cls.name, framework, &cls.methods, true, value_structs);
 
     // Names that must be disambiguated from a same-named instance binding.
     // Example: NSEvent has both @property(class) modifierFlags and
@@ -170,6 +370,11 @@ pub fn generate_class_file_with_structs(
         .map(|p| p.name.clone())
         .collect();
 
+    // A Swift-native `init` producer binds `(make-<class>)`; when present it owns
+    // that name, so neither the synthesized default constructor nor its contract
+    // export may also claim it.
+    let swift_default_ctor = swift_native.has(&make_constructor_name(&cls.name));
+
     // Build export contracts
     let exports = build_export_contracts(
         cls,
@@ -180,7 +385,13 @@ pub fn generate_class_file_with_structs(
         &class_method_disambig,
         &class_property_disambig,
         &error_selectors,
+        swift_default_ctor,
     );
+
+    // Drop any Swift-native binding whose name collides with an ObjC export (the ObjC
+    // binding wins; e.g. ObjC `objectForKey:` vs Swift `object(forKey:)`).
+    let objc_names: HashSet<String> = exports.iter().map(|e| e.name.clone()).collect();
+    swift_native.exclude(&objc_names);
 
     // Collect class names for predicates (must be defined before
     // provide/contract references them). Includes the class's own name so
@@ -201,6 +412,8 @@ pub fn generate_class_file_with_structs(
         needs_blocks,
         needs_structs,
         needs_native,
+        swift_native.needs_trampoline(),
+        swift_native.needs_async_bridge(),
     );
 
     // Threading note: surface main-thread affinity from enrichment data.
@@ -214,6 +427,17 @@ pub fn generate_class_file_with_structs(
     // Provide with contracts
     emit_provide(&mut w, &cls.name, &exports);
 
+    // Swift-native trampoline bindings are `provide`d plainly (their returns are raw
+    // opaque handles / scalars, not contract-carrying values).
+    if !swift_native.is_empty() {
+        w.line("(provide");
+        for name in swift_native.names() {
+            write_line!(w, "  {}", name);
+        }
+        w.line("  )");
+        w.blank_line();
+    }
+
     // Class reference
     w.line(";; --- Class reference ---");
     write_line!(w, "(import-class {})", cls.name);
@@ -222,8 +446,11 @@ pub fn generate_class_file_with_structs(
     // `_msg-N` get-ffi-obj fallbacks (non-routable struct/string shapes).
     emit_shared_msg_bindings(&mut w, &native_sigs, &sig_map, needs_native);
 
-    // Constructors
-    let needs_default_constructor = !has_explicit_constructor(&init_methods);
+    // Constructors. Suppress the synthesized `(make-<class>)` default when a
+    // Swift-native `init` producer already binds that name (else the two `(define
+    // (make-<class>) …)` forms collide at load).
+    let needs_default_constructor =
+        !has_explicit_constructor(&init_methods) && !swift_default_ctor;
     if !init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
         for m in &init_methods {
@@ -306,6 +533,9 @@ pub fn generate_class_file_with_structs(
             );
         }
     }
+
+    // Swift-native methods + init producers (receiver-handle trampolines, ADR-0030).
+    emit_swift_native_section(&mut w, &swift_native);
 
     w.finish()
 }
@@ -594,6 +824,7 @@ fn build_export_contracts(
     class_method_disambig: &std::collections::HashSet<String>,
     class_property_disambig: &std::collections::HashSet<String>,
     error_selectors: &std::collections::HashSet<String>,
+    swift_default_ctor: bool,
 ) -> Vec<ExportContract> {
     let mut exports = Vec::new();
     let self_predicate = make_class_predicate_name(&cls.name);
@@ -618,7 +849,7 @@ fn build_export_contracts(
     // 73% of classes inherit -init from NSObject without overriding it; without
     // synthesis those classes have no constructor and callers must drop into
     // objc-interop's alloc+init escape hatch.
-    if !has_explicit_constructor(init_methods) {
+    if !has_explicit_constructor(init_methods) && !swift_default_ctor {
         let name = make_constructor_name(&cls.name);
         let contract = format_arrow_contract(&[], "any/c");
         exports.push(ExportContract { name, contract });
@@ -723,6 +954,7 @@ fn method_return_contract(
 
 // --- Header ---
 
+#[allow(clippy::too_many_arguments)]
 fn emit_header(
     w: &mut CodeWriter,
     class_name: &str,
@@ -730,6 +962,8 @@ fn emit_header(
     needs_blocks: bool,
     needs_structs: bool,
     needs_native: bool,
+    needs_trampoline: bool,
+    needs_async_bridge: bool,
 ) {
     w.line("#lang racket/base");
     write_line!(w, ";; Generated binding for {} ({})", class_name, framework);
@@ -765,6 +999,18 @@ fn emit_header(
     }
     if needs_structs {
         w.raw("\n         \"../../runtime/type-mapping.rkt\"");
+    }
+    // Swift-native method/init trampolines (ADR-0030): `swift-trampoline.rkt` provides
+    // `_aw-lib`/`aw-call/error`/`aw-string-*`; `async-bridge.rkt` provides
+    // `aw-async-call`. The trampoline `_fun` arrows are spelled `aw->` so they survive
+    // the native-dispatch header's `(except-in ffi/unsafe ->)` (`_fun` matches the
+    // renamed arrow by binding identity) — the alias is imported regardless of native.
+    if needs_trampoline {
+        w.raw("\n         \"../../runtime/swift-trampoline.rkt\"");
+        w.raw(&format!("\n         {AW_ARROW_REQUIRE}"));
+        if needs_async_bridge {
+            w.raw("\n         \"../../runtime/async-bridge.rkt\"");
+        }
     }
     w.raw_line(")");
     w.blank_line();
@@ -918,6 +1164,11 @@ fn emit_constructor(
     mapper: &dyn FfiTypeMapper,
     needs_native: bool,
 ) {
+    // Swift-native inits (`objc_exposed == false`) are init *producers* — emitted by
+    // the receiver-handle trampoline section, not the ObjC `alloc/init` path.
+    if !method.objc_exposed {
+        return;
+    }
     if !is_supported_method(method) || method.selector == "init" {
         return;
     }
@@ -1244,26 +1495,12 @@ fn emit_method(
     // global trampoline pass records + counts the deferral). Never fall through to
     // the broken msgSend. `classify_method` owns the variadic/generic/etc. gates so
     // the emitter and the global pass agree.
+    // D4 (charter #4): Swift-native methods (`objc_exposed == false`) are emitted by
+    // the dedicated receiver-handle trampoline section (`emit_swift_native_section`),
+    // which owns naming, overload dedup, the requires, and the `aw->` arrow. They must
+    // never fall through to the broken `objc_msgSend` path below, so skip here.
+    let _ = (siblings, value_structs, framework);
     if !method.objc_exposed {
-        // A class file only emits *class* (reference) receivers — owner_is_class.
-        if let MethodDisposition::Method(t) =
-            classify_method(framework, class_name, true, method, siblings, value_structs)
-        {
-            emit_enrichment_notes(w, notes, &method.selector);
-            let fn_name = if is_class_method {
-                make_class_method_name(class_name, &method.selector, disambiguate)
-            } else {
-                make_method_name(class_name, &method.selector)
-            };
-            let param_names: Vec<String> = method
-                .params
-                .iter()
-                .map(|p| camel_to_kebab(&p.name))
-                .collect();
-            w.line(&t.render_racket_method(&fn_name, &param_names));
-        }
-        // Init producers are vended by the global pass; a deferred method is
-        // suppressed (no broken msgSend, counted globally).
         return;
     }
 

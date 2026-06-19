@@ -56,6 +56,70 @@ pub fn make_method_name(class_name: &str, selector: &str) -> String {
     }
 }
 
+/// Extract the argument labels from a **Swift** selector (`base(l1:l2:)`).
+///
+/// Unlike ObjC selectors (`initWithFoo:bar:`), a Swift selector carries its
+/// argument labels inside parentheses. Wildcard labels (`_`, used for
+/// positionally-unlabelled arguments like `contains(_:)`) are dropped — they are
+/// not part of a readable Racket name. A label-less selector (`makeIterator`,
+/// `init`) yields an empty list.
+fn swift_selector_labels(selector: &str) -> Vec<&str> {
+    match selector.split_once('(') {
+        Some((_, rest)) => rest
+            .trim_end_matches(')')
+            .split(':')
+            .filter(|l| !l.is_empty() && *l != "_")
+            .collect(),
+        None => Vec::new(),
+    }
+}
+
+/// Generate a Racket binding name for a **Swift-native** instance method
+/// (`objc_exposed == false`), e.g. `URLSession.data(from:)` → `urlsession-data-from`.
+///
+/// The ObjC-shaped [`make_method_name`] mangles a Swift selector (it leaves the
+/// `(label:)` parentheses in, producing an unreadable, unreadable-as-an-identifier
+/// name like `urlsession-data(from-)`). A Swift-native method instead derives its
+/// name from the selector **base** (up to `(`) plus its non-wildcard argument
+/// labels — the labels keep genuine overloads distinct (`data(for:)` →
+/// `…-data-for`, `data(from:)` → `…-data-from`). A `mutating` value-receiver
+/// method (D3) takes the Racket `!` mutation marker.
+pub fn make_swift_method_name(class_name: &str, selector: &str, mutating: bool) -> String {
+    let base = selector.split('(').next().unwrap_or(selector);
+    let mut name = format!(
+        "{}-{}",
+        class_name_to_lowercase(class_name),
+        camel_to_kebab(base)
+    );
+    for label in swift_selector_labels(selector) {
+        name.push('-');
+        name.push_str(&camel_to_kebab(label));
+    }
+    if mutating {
+        name.push('!');
+    }
+    name
+}
+
+/// Generate a Racket binding name for a **Swift-native** initializer producer
+/// (D2), e.g. `IndexSet.init(integer:)` → `make-indexset-integer`, the bare
+/// `IndexSet.init` → `make-indexset`. The argument labels disambiguate
+/// overloaded initializers (`init(integer:)` vs `init(integersIn:)`).
+pub fn make_swift_init_name(class_name: &str, selector: &str) -> String {
+    let base = make_constructor_name(class_name);
+    let labels = swift_selector_labels(selector);
+    if labels.is_empty() {
+        base
+    } else {
+        let suffix = labels
+            .iter()
+            .map(|l| camel_to_kebab(l))
+            .collect::<Vec<_>>()
+            .join("-");
+        format!("{base}-{suffix}")
+    }
+}
+
 /// Generate a class-method wrapper name, disambiguating against an instance
 /// method that shares the same selector. When `disambiguate` is true, the
 /// class variant gains a `-class` suffix (inserted before the mutating `!`
@@ -150,6 +214,52 @@ mod tests {
         assert_eq!(
             make_method_name("NSString", "UTF8String"),
             "nsstring-utf8-string"
+        );
+    }
+
+    #[test]
+    fn test_swift_method_names() {
+        // Swift selector: base + non-wildcard labels, no leftover parens.
+        assert_eq!(
+            make_swift_method_name("URLSession", "data(from:)", false),
+            "urlsession-data-from"
+        );
+        // Overloads stay distinct via their labels.
+        assert_eq!(
+            make_swift_method_name("URLSession", "data(for:)", false),
+            "urlsession-data-for"
+        );
+        // Wildcard labels are dropped.
+        assert_eq!(
+            make_swift_method_name("IndexSet", "integerGreaterThan(_:)", false),
+            "indexset-integer-greater-than"
+        );
+        // Label-less selector.
+        assert_eq!(
+            make_swift_method_name("IndexSet", "makeIterator", false),
+            "indexset-make-iterator"
+        );
+        // Mutating value-receiver gets the `!` marker (D3).
+        assert_eq!(
+            make_swift_method_name("IndexSet", "insert(_:)", true),
+            "indexset-insert!"
+        );
+        assert_eq!(
+            make_swift_method_name("IndexSet", "update(with:)", true),
+            "indexset-update-with!"
+        );
+    }
+
+    #[test]
+    fn test_swift_init_names() {
+        assert_eq!(make_swift_init_name("IndexSet", "init"), "make-indexset");
+        assert_eq!(
+            make_swift_init_name("IndexSet", "init(integer:)"),
+            "make-indexset-integer"
+        );
+        assert_eq!(
+            make_swift_init_name("IndexSet", "init(integersIn:)"),
+            "make-indexset-integers-in"
         );
     }
 

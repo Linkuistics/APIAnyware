@@ -1120,6 +1120,22 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
 // Racket binding rendering (consumed by emit_functions / emit_constants)
 // ---------------------------------------------------------------------------
 
+/// The `_fun` arrow keyword used by **method/init trampoline** bindings.
+///
+/// A class file that routes ObjC `msgSend` natively (ADR-0013) drops
+/// `ffi/unsafe`'s `->` via `(except-in ffi/unsafe ->)` so ffi2's own `->` (for the
+/// native dispatch arrow types) is unambiguous. But a method-trampoline binding is
+/// an ordinary `(_fun … -> …)` and needs `ffi/unsafe`'s arrow, which `_fun` matches
+/// by binding identity. So trampoline files import `ffi/unsafe`'s `->` under the
+/// alias `aw->` ([`AW_ARROW_REQUIRE`]) and the trampoline arrows are spelled with
+/// it — `_fun` recognises the renamed arrow (free-identifier match), and it coexists
+/// with ffi2's `->` in a native file. Non-native trampoline files get the alias too
+/// (harmless: a second name for the same binding).
+pub const AW_ARROW: &str = "aw->";
+
+/// The require clause a trampoline-bearing class file adds so [`AW_ARROW`] resolves.
+pub const AW_ARROW_REQUIRE: &str = "(only-in ffi/unsafe [-> aw->])";
+
 /// The ffi/unsafe result spelling for a return marshalling (C-ABI rep).
 fn ret_ffi(ret: &RetMarshal) -> &'static str {
     match ret {
@@ -1891,12 +1907,16 @@ impl MethodTrampoline {
         if self.is_async {
             parts.push("_intptr");
             parts.push("_fpointer");
-            return format!("(_fun {} -> _void)", parts.join(" "));
+            return format!("(_fun {} {AW_ARROW} _void)", parts.join(" "));
         }
         if self.throwing {
             parts.push("_pointer");
         }
-        format!("(_fun {} -> {})", parts.join(" "), ret_ffi(&self.ret))
+        format!(
+            "(_fun {} {AW_ARROW} {})",
+            parts.join(" "),
+            ret_ffi(&self.ret)
+        )
     }
 
     /// Render the full `(define <fn-name> …)` racket binding against `_aw-lib`,
@@ -1994,6 +2014,75 @@ impl MethodTrampoline {
              (lambda (id cb) (raw (coerce-arg self){args_str} id cb))\n        {coerce}\n        complete))))",
             entry = self.entry,
         )
+    }
+
+    /// Whether this method is `async` (D5/R4) — the class file requires
+    /// `async-bridge.rkt` (for `aw-async-call`) iff any of its methods is async.
+    pub fn is_async(&self) -> bool {
+        self.is_async
+    }
+}
+
+impl InitTrampoline {
+    /// The ffi `_fun` arrow for an initializer producer: the marshalled args, the
+    /// trailing `NSError**` out-buffer when throwing, and an opaque handle return
+    /// (the boxed owner — a value box or a retained class instance).
+    pub fn ffi_arrow(&self) -> String {
+        let mut parts: Vec<&'static str> = Vec::with_capacity(self.params.len() + 1);
+        for m in &self.params {
+            parts.push(match m {
+                ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => s.ffi(),
+                ArgMarshal::SwiftString
+                | ArgMarshal::BoxedHandle { .. }
+                | ArgMarshal::ObjectRef { .. } => "_pointer",
+            });
+        }
+        if self.throwing {
+            parts.push("_pointer");
+        }
+        if parts.is_empty() {
+            format!("(_fun {AW_ARROW} _pointer)")
+        } else {
+            format!("(_fun {} {AW_ARROW} _pointer)", parts.join(" "))
+        }
+    }
+
+    /// Render the `(define <name> …)` racket binding for an initializer producer
+    /// against `_aw-lib`. The binding is a constructor: it takes the init's args,
+    /// calls the `@_cdecl`, and returns the boxed owner handle (a raw `cpointer`).
+    /// A throwing init routes through `aw-call/error` (allocates the `NSError**`
+    /// cell, raises on error). The result is always an opaque handle — never
+    /// String-coerced — so the value passes straight through.
+    pub fn render_racket_init(&self, fn_name: &str, param_names: &[String]) -> String {
+        let arrow = self.ffi_arrow();
+        let call_args: Vec<String> = self
+            .params
+            .iter()
+            .zip(param_names)
+            .map(|(m, p)| match m {
+                ArgMarshal::SwiftString => format!("(aw-string-arg {p})"),
+                _ => p.clone(),
+            })
+            .collect();
+        let args_str = if call_args.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", call_args.join(" "))
+        };
+        let lambda_params = param_names.join(" ");
+        if self.throwing {
+            format!(
+                "(define {fn_name}\n  (let ([raw (get-ffi-obj '{entry} _aw-lib {arrow})])\n    \
+                 (lambda ({lambda_params})\n      (aw-call/error raw values{args_str}))))",
+                entry = self.entry,
+            )
+        } else {
+            format!(
+                "(define {fn_name}\n  (let ([raw (get-ffi-obj '{entry} _aw-lib {arrow})])\n    \
+                 (lambda ({lambda_params})\n      (raw{args_str}))))",
+                entry = self.entry,
+            )
+        }
     }
 }
 
@@ -2669,7 +2758,7 @@ mod tests {
         // ffi arrow: receiver, object pointer, ctx intptr, callback; returns void.
         assert_eq!(
             t.ffi_arrow(),
-            "(_fun _pointer _pointer _intptr _fpointer -> _void)"
+            "(_fun _pointer _pointer _intptr _fpointer aw-> _void)"
         );
         // Racket binding: the callback form via aw-async-call; `complete` is the
         // last lambda arg, threaded as ctx+cb into the kicker.
@@ -2697,7 +2786,7 @@ mod tests {
         // Integer params ride numericCast (IR int-width collapse); a Bool return is identity.
         assert!(s.contains("return awSelf.contains(numericCast(a0))"), "{s}");
         // ffi arrow: receiver pointer first, then the scalar.
-        assert_eq!(t.ffi_arrow(), "(_fun _pointer _int64 -> _bool)");
+        assert_eq!(t.ffi_arrow(), "(_fun _pointer _int64 aw-> _bool)");
         let rkt = t.render_racket_method("index-set-contains", &["n".into()]);
         assert!(rkt.contains("(lambda (self n)"), "{rkt}");
         assert!(rkt.contains("(raw (coerce-arg self) n)"), "{rkt}");
@@ -2755,6 +2844,40 @@ mod tests {
         assert!(s.contains("_ a0: Int) -> UnsafeMutableRawPointer?"), "{s}");
         // Init params keep their declared width (no numericCast — overload selection).
         assert!(s.contains("return awRacketBox(Foundation.IndexSet(integer: a0))"), "{s}");
+    }
+
+    /// The racket binding for an init producer is a constructor returning the
+    /// boxed owner handle: it calls the `@_cdecl` and passes the cpointer through.
+    #[test]
+    fn init_producer_renders_racket_constructor() {
+        let m = method("init(integer:)", vec![param("integer", prim("int64"))], swift_class("NSIndexSet", "Foundation"), swiftk());
+        let MethodDisposition::Init(t) =
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs())
+        else {
+            panic!("expected init trampoline");
+        };
+        assert_eq!(t.ffi_arrow(), "(_fun _int64 aw-> _pointer)");
+        let rkt = t.render_racket_init("make-index-set-integer", &["integer".into()]);
+        assert!(rkt.contains("(define make-index-set-integer"), "{rkt}");
+        assert!(rkt.contains("'aw_racket_swift_init_Foundation_IndexSet _aw-lib"), "{rkt}");
+        assert!(rkt.contains("(lambda (integer)"), "{rkt}");
+        assert!(rkt.contains("(raw integer)"), "{rkt}");
+    }
+
+    /// A no-arg init renders a zero-argument constructor (still a thunk, so the
+    /// `@_cdecl` runs on call, not at module load).
+    #[test]
+    fn no_arg_init_renders_thunk_constructor() {
+        let m = method("init", vec![], swift_class("Widget", "TestKit"), swiftk());
+        let MethodDisposition::Init(t) =
+            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs())
+        else {
+            panic!("expected init trampoline");
+        };
+        assert_eq!(t.ffi_arrow(), "(_fun aw-> _pointer)");
+        let rkt = t.render_racket_init("make-widget", &[]);
+        assert!(rkt.contains("(lambda ()"), "{rkt}");
+        assert!(rkt.contains("(raw)"), "{rkt}");
     }
 
     /// A class initializer keeps reference identity via `Unmanaged.passRetained`.
@@ -2884,7 +3007,7 @@ mod tests {
         );
         assert!(s.contains("return awSelf.open(o0)"), "{s}");
         // ffi: receiver pointer, then the object pointer.
-        assert_eq!(t.ffi_arrow(), "(_fun _pointer _pointer -> _bool)");
+        assert_eq!(t.ffi_arrow(), "(_fun _pointer _pointer aw-> _bool)");
         // Racket passes the id cpointer straight through (no coercion wrapper).
         let rkt = t.render_racket_method("ns-workspace-open", &["url".into()]);
         assert!(rkt.contains("(raw (coerce-arg self) url)"), "{rkt}");
