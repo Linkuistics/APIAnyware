@@ -26,8 +26,13 @@ import Foundation
 /// Heap box holding an arbitrary Swift value as `Any`. A `final class` so it is
 /// reference-counted: `Unmanaged.passRetained` gives the opaque +1 handle gerbil
 /// holds, and the matching release (via `aw_gerbil_box_free`) frees it.
+///
+/// `value` is a `var` (D3): a `mutating` value-receiver method trampoline reads the
+/// boxed value into a `var`, calls the mutating method, and writes the mutated value
+/// back into the **same** box, so the single handle gerbil holds reflects the
+/// mutation (the value-type write-back, ADR-0030 §D3).
 public final class AwGerbilValueBox {
-    public let value: Any
+    public var value: Any
     @inlinable public init(_ value: Any) { self.value = value }
 }
 

@@ -342,6 +342,33 @@ kernel embed, no whole-program compile, no collision probe.
   `ThrowsBridge.swift`). The residual is a deterministic function of the shared IR,
   so it reproduces racket/chez **exactly**: 51 function trampolines, 7 constants
   (deferred 6 closure / 10 nonbridged-struct / 4 unnameable / 34 unbindable-generic).
+- **Method frontier (ADR-0032, leaf 050-gerbil).** The same trampoline mechanism,
+  generalised from free functions to **methods + initializers** by an opaque
+  **receiver handle** as the first C param. `emit_class` routes `objc_exposed ==
+  false` methods/inits away from `objc_msgSend` (charter #4) to a Swift-native
+  section: a `%swift-…` crossing + an outer `(define <name> (lambda (self …) …))`
+  that coerces the receiver via **`(->ptr self)`** (a wrapped class instance → its
+  ptr; a raw value-struct handle → through). A **class** receiver reconstructs via
+  `Unmanaged`; a **value-struct** receiver via `awGerbilUnbox`, with **mutating
+  write-back** into the same box (`AwGerbilValueBox.value` is `var`). **Init
+  producers** box the owner (class → `Unmanaged.passRetained`, wrapped Scheme-side;
+  value → `awGerbilBox`, raw handle). Population-B value structs (e.g. `IndexSet`)
+  emit a `<fw>/<struct>.ss` module with **no `defclass`/msgSend substrate** — just
+  the handle-based bindings. The residual reproduces racket/chez **exactly** (the
+  §6d invariant): 576 init + 554 method trampolines, byte-identical deferred
+  breakdown; the whole 117-framework residual compiles clean in Swift 6 (0 errors,
+  B5 `@MainActor` warnings kept).
+- **First gerbil async path (ADR-0032 §5).** gerbil's free-fn async bucket was empty,
+  so the method frontier introduces gerbil's first async surface:
+  `runtime/async-bridge.ss` (`aw-async-call`) over a Gambit `c-define` callback +
+  the new `AsyncBridge.swift` (`awGerbilAsyncDispatch` / `AwGerbilAsyncOutcome`,
+  the `MainActor.run` main-thread delivery hop, ADR-0022). Non-blocking callback
+  form (R4): the binding takes a `complete` continuation; the completion fires on
+  the main thread on a later run-loop pass. No lazy-load forcing reference
+  (ADR-0029 §4 — the dylib links at `gxc -exe` time). The
+  `tests/run-swift-method-smoke.sh` CLI smoke proves both exemplars (pop-B IndexSet
+  init→contains→insert! write-back; pop-A async `URLSession.data(from: file://…)`)
+  through `libAPIAnywareGerbil`.
 - Pipeline per app (`bundle-gerbil/src/lib.rs`): walk the `(import …)`
   closure → clang the block companion → `gxc -O` the closure into the cache →
   `gxc -exe -O` link → assemble `.app` + `Info.plist`

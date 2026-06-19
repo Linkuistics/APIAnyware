@@ -329,7 +329,8 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
     }
 
     let set = collect_trampolines(&frameworks);
-    let entries = set.functions.len() + set.constants.len();
+    let entries =
+        set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
     let swift = generate_trampolines_swift(&set);
 
     if let Some(parent) = swift_out.parent() {
@@ -346,6 +347,8 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
     tracing::info!(
         functions = set.functions.len(),
         constants = set.constants.len(),
+        inits = set.inits.len(),
+        methods = set.methods.len(),
         deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
         output = %swift_out.display(),
         "generated gerbil Swift-native trampolines"

@@ -26,7 +26,9 @@ use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
 use crate::class_graph::{build_class_graph, ClassRegistry, ParentRef};
-use crate::emit_class::{generate_bare_module, generate_class_file_with_parent};
+use crate::emit_class::{
+    generate_bare_module, generate_class_file_with_parent, generate_struct_file,
+};
 use crate::emit_constants::{constant_names, generate_constants_file};
 use crate::emit_enums::{enum_value_names, generate_enums_file};
 use crate::emit_functions::{count_emittable, function_emittable_names, generate_functions_file};
@@ -180,6 +182,41 @@ pub fn emit_framework(
                 exports,
                 is_protocol: false,
             });
+        }
+    }
+
+    // Population-B value-struct modules: one `<fw_low>/<struct>.ss` per Swift-native
+    // value struct (`objc_exposed == false`) that has a bindable init producer or
+    // method (ADR-0030 D2). Emitted with no `defclass`/`objc_msgSend` substrate — the
+    // value rides the opaque `awGerbilBox` handle. A struct whose lowercased name
+    // collides with a class module's stem takes a `-struct` suffix on the file + import
+    // path (the binding names are unchanged); the global trampoline pass keys entries
+    // on the struct's real name, so the suffix is a file-resolution detail only.
+    if !fw.structs.is_empty() {
+        let class_stems: std::collections::HashSet<String> = fw
+            .classes
+            .iter()
+            .map(|c| class_module_stem(&c.name))
+            .chain(graph.synthesized.iter().map(|n| class_module_stem(n)))
+            .collect();
+        let struct_dir = output_dir.join(&fw_low);
+        for st in &fw.structs {
+            if let Some((content, exports)) = generate_struct_file(st, &fw.name) {
+                std::fs::create_dir_all(&struct_dir)?;
+                let base = class_module_stem(&st.name);
+                let stem = if class_stems.contains(&base) {
+                    format!("{base}-struct")
+                } else {
+                    base
+                };
+                std::fs::write(struct_dir.join(format!("{stem}.ss")), content)?;
+                files_written += 1;
+                submodules.push(SubModule {
+                    import_path: SubModule::import_path(&fw_low, &[&stem]),
+                    exports,
+                    is_protocol: false,
+                });
+            }
         }
     }
 

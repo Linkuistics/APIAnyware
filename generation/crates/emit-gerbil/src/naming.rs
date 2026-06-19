@@ -121,6 +121,66 @@ pub fn make_selector_binding_name(class_name: &str, selector: &str) -> String {
     )
 }
 
+/// The Swift selector's argument labels (the `label:` parts inside the
+/// parentheses), dropping `_` wildcards and empty segments. Used to build a
+/// readable, overload-disambiguated binding name for a Swift-native method/init.
+fn swift_selector_labels(selector: &str) -> Vec<&str> {
+    match selector.split_once('(') {
+        Some((_, rest)) => rest
+            .trim_end_matches(')')
+            .split(':')
+            .filter(|l| !l.is_empty() && *l != "_")
+            .collect(),
+        None => Vec::new(),
+    }
+}
+
+/// Gerbil binding name for a **Swift-native** instance method
+/// (`objc_exposed == false`), e.g. `URLSession.data(from:)` →
+/// `urlsession-data-from`, `IndexSet.update(with:)` (mutating) →
+/// `indexset-update-with!`.
+///
+/// The ObjC-shaped [`make_method_name`] mangles a Swift selector (it leaves the
+/// `(label:)` parentheses in, producing an unreadable `urlsession-data(from-)`).
+/// A Swift-native method derives its name from the base + kebabed labels, with a
+/// trailing `!` on a `mutating` value-receiver method. Mirrors chez's
+/// `make_swift_method_name`.
+pub fn make_swift_method_name(class_name: &str, selector: &str, mutating: bool) -> String {
+    let base = selector.split('(').next().unwrap_or(selector);
+    let mut name = format!(
+        "{}-{}",
+        class_name_to_lowercase(class_name),
+        camel_to_kebab(base)
+    );
+    for label in swift_selector_labels(selector) {
+        name.push('-');
+        name.push_str(&camel_to_kebab(label));
+    }
+    if mutating {
+        name.push('!');
+    }
+    name
+}
+
+/// Gerbil binding name for a **Swift-native** initializer producer (D2), e.g.
+/// `IndexSet.init(integer:)` → `make-indexset-integer`, the bare `IndexSet.init`
+/// → `make-indexset`. The argument labels disambiguate overloaded initializers.
+/// Mirrors chez's `make_swift_init_name`.
+pub fn make_swift_init_name(class_name: &str, selector: &str) -> String {
+    let base = make_constructor_name(class_name);
+    let labels = swift_selector_labels(selector);
+    if labels.is_empty() {
+        base
+    } else {
+        let suffix = labels
+            .iter()
+            .map(|l| camel_to_kebab(l))
+            .collect::<Vec<_>>()
+            .join("-");
+        format!("{base}-{suffix}")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

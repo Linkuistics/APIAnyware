@@ -117,7 +117,7 @@ use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
 use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
 use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Class, Method, Param, Property};
+use apianyware_macos_types::ir::{Class, Method, Param, Property, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
@@ -132,13 +132,24 @@ use crate::method_filter::{
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
     make_method_name, make_property_getter_name, make_property_setter_name,
-    make_selector_binding_name, make_unique_constructor_name,
+    make_selector_binding_name, make_swift_init_name, make_swift_method_name,
+    make_unique_constructor_name,
 };
 use crate::protocol_registry::ProtocolRegistry;
+use crate::trampoline::{classify_method, introduced_macos, Crossing, MethodDisposition};
 
 /// The runtime module the generated class binds against (root class + `wrap` /
 /// `->ptr` + lifetime).
 const RUNTIME_OBJC_IMPORT: &str = ":gerbil-bindings/runtime/objc";
+
+/// The runtime module supplying the Swift-native trampoline `aw-swift-*` coercers
+/// (string in/out, the `throws` error-cell helper) — imported only when a class's
+/// Swift-native method/init section needs them (ADR-0029 / ADR-0030).
+const RUNTIME_TRAMPOLINE_IMPORT: &str = ":gerbil-bindings/runtime/swift-trampoline";
+
+/// The runtime module supplying `aw-async-call` — imported only when a class has at
+/// least one Swift-native `async` method (D5/R4; the first gerbil async path).
+const RUNTIME_ASYNC_BRIDGE_IMPORT: &str = ":gerbil-bindings/runtime/async-bridge";
 
 /// The `:std/generic` import, renamed so its `defgeneric`/`defmethod` don't clash
 /// with the built-in `{}` MOP `defmethod` (spike `03b`). The generic surface is
@@ -268,7 +279,37 @@ pub fn generate_class_file_with_parent(
     let mapper = GerbilFfiTypeMapper;
     let conformed = protocols.conformance_closure(&cls.protocols);
     let plan = build_class_plan(cls, &mapper, error_selectors, &conformed);
-    let exports = merged_exports(cls, &plan);
+
+    // Swift-native methods/inits (`objc_exposed == false`) → receiver-handle
+    // trampolines (ADR-0030, charter #4). A class is a reference receiver
+    // (`owner_is_class = true`, `Unmanaged` path); a `Class` carries no provenance,
+    // so the owner-availability fold (B3) is empty for class owners. MUST use
+    // `cls.methods` (the *declared* methods), not `effective_methods`: the global
+    // trampoline pass emits `@_cdecl` entries for declared methods only, so binding
+    // an inherited/category method here would reference an entry the Swift side never
+    // produced (the §6d agreement). Method params never unbox a value struct this
+    // leaf (classify_method uses an empty set), so the value-struct gate is empty.
+    let mut swift_native = collect_swift_native_bindings(
+        &cls.name,
+        framework,
+        &cls.methods,
+        true,
+        &HashSet::new(),
+        None,
+    );
+
+    // The ObjC bindings win any name collision (a duplicate `(define …)`/`(export …)`
+    // is at best last-wins shadowing). Drop Swift duplicates against the ObjC export
+    // set, then add the survivors so the facade re-exports them.
+    let mut exports = merged_exports(cls, &plan);
+    let objc_names: HashSet<String> = exports.iter().cloned().collect();
+    swift_native.exclude(&objc_names);
+    for name in swift_native.names() {
+        exports.push(name.clone());
+    }
+    exports.sort();
+    exports.dedup();
+
     let mut w = CodeWriter::new();
 
     let needs_default_constructor =
@@ -277,7 +318,16 @@ pub fn generate_class_file_with_parent(
     // surface — drives whether the generics module is imported in the header.
     let imports_generics = !instance_surface_selectors(cls, &plan).is_empty();
 
-    emit_header(&mut w, cls, framework, &exports, parent, imports_generics);
+    emit_header(
+        &mut w,
+        cls,
+        framework,
+        &exports,
+        parent,
+        imports_generics,
+        swift_native.needs_swift_helpers(),
+        swift_native.needs_async_bridge(),
+    );
     emit_class_graph_block(&mut w, &cls.name, &cls.superclass, parent);
     emit_ffi_block(&mut w, cls, &plan, needs_default_constructor, &mapper);
     emit_selector_caches(&mut w, cls, &plan);
@@ -314,6 +364,10 @@ pub fn generate_class_file_with_parent(
         }
     }
 
+    // Charter #4: the Swift-native receiver-handle trampoline section (ADR-0030),
+    // after the ObjC bindings.
+    emit_swift_native_section(&mut w, &swift_native);
+
     (w.finish(), exports)
 }
 
@@ -343,6 +397,78 @@ pub fn generate_bare_module(class_name: &str, framework: &str) -> (String, Vec<S
     (w.finish(), exports)
 }
 
+/// Render a **population-B value struct** module (ADR-0030 D2): a Swift-native value
+/// struct (`objc_exposed == false`, e.g. `IndexSet`) that has at least one bindable
+/// init producer or method. Unlike a class module there is no `defclass` graph and no
+/// `objc_msgSend` substrate — the value is held as the opaque `awGerbilBox` handle the
+/// init producer hands back (a raw pointer; no ObjC class to `wrap` to), and methods
+/// take that handle as `self` (coerced through `(->ptr self)`, which passes a raw
+/// pointer through). Returns `None` when the struct has no bindable trampoline (no file
+/// is written then). `owner_introduced` folds the struct's `@available` into its method
+/// gates (B3).
+pub fn generate_struct_file(st: &Struct, framework: &str) -> Option<(String, Vec<String>)> {
+    let owner_introduced = introduced_macos(&st.provenance);
+    let swift_native = collect_swift_native_bindings(
+        &st.name,
+        framework,
+        &st.methods,
+        false,
+        &HashSet::new(),
+        owner_introduced.as_deref(),
+    );
+    if swift_native.is_empty() {
+        return None;
+    }
+    let exports: Vec<String> = {
+        let mut v: Vec<String> = swift_native.names().cloned().collect();
+        v.sort();
+        v.dedup();
+        v
+    };
+
+    let mut w = CodeWriter::new();
+    write_line!(
+        w,
+        ";;; Generated binding for {} value struct ({}) — do not edit",
+        st.name,
+        framework
+    );
+    // Imports: the FFI surface always; the objc runtime (`wrap`/`->ptr`), the
+    // `aw-swift-*` coercers, and `aw-async-call` only when a binding needs them.
+    let mut tail: Vec<&str> = Vec::new();
+    if swift_native.needs_objc() {
+        tail.push(RUNTIME_OBJC_IMPORT);
+    }
+    if swift_native.needs_swift_helpers() {
+        tail.push(RUNTIME_TRAMPOLINE_IMPORT);
+    }
+    if swift_native.needs_async_bridge() {
+        tail.push(RUNTIME_ASYNC_BRIDGE_IMPORT);
+    }
+    if tail.is_empty() {
+        w.line("(import :std/foreign)");
+    } else {
+        w.line("(import :std/foreign");
+        for (i, imp) in tail.iter().enumerate() {
+            if i + 1 == tail.len() {
+                write_line!(w, "        {})", imp);
+            } else {
+                write_line!(w, "        {}", imp);
+            }
+        }
+    }
+    w.line("(export");
+    for name in &exports {
+        write_line!(w, "  {}", name);
+    }
+    w.line("  )");
+    w.blank_line();
+
+    emit_swift_native_section(&mut w, &swift_native);
+
+    Some((w.finish(), exports))
+}
+
 // --- class plan (ported from emit-chez, target-neutral) -------------------
 
 /// Cleaned-up emission plan for one class.
@@ -356,6 +482,181 @@ struct ClassPlan {
     /// Threaded from `fw.enrichment` so every supportedness / signature /
     /// emission decision keys error routing off the one set and never drifts.
     error_selectors: HashSet<String>,
+}
+
+// --- Swift-native receiver-handle trampoline bindings (ADR-0030, charter #4) ----
+
+/// The rendered receiver-handle trampoline bindings for one type's declared
+/// Swift-native methods/inits (`objc_exposed == false`), plus the import flags they
+/// imply. Each carries its FFI [`Crossing`] (the `%swift-…` `define-c-lambda` + the
+/// synthesized `extern` prototype, emitted into a dedicated `begin-ffi` block) and
+/// its outer `(define …)`. The gerbil analogue of emit-chez's `SwiftNativeBindings`,
+/// split crossing-vs-binding for gerbil's compiled-FFI idiom (ADR-0029 §2).
+struct SwiftNativeBindings {
+    entries: Vec<SwiftNativeBinding>,
+}
+
+struct SwiftNativeBinding {
+    name: String,
+    crossing: Crossing,
+    define: String,
+    is_async: bool,
+    needs_objc: bool,
+    needs_swift_helpers: bool,
+}
+
+impl SwiftNativeBindings {
+    fn names(&self) -> impl Iterator<Item = &String> {
+        self.entries.iter().map(|e| &e.name)
+    }
+    fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+    /// Any binding wrapping an object / coercing the receiver ⇒ the file needs the
+    /// `objc` runtime (`wrap` / `->ptr`). Always true once any method is present (the
+    /// receiver coerces via `(->ptr self)`); a value-init-only set may be false.
+    fn needs_objc(&self) -> bool {
+        self.entries.iter().any(|e| e.needs_objc)
+    }
+    /// Any string-in/out or `throws` binding ⇒ import `swift-trampoline` (`aw-swift-*`).
+    fn needs_swift_helpers(&self) -> bool {
+        self.entries.iter().any(|e| e.needs_swift_helpers)
+    }
+    /// Any `async` method present ⇒ import `async-bridge` (`aw-async-call`).
+    fn needs_async_bridge(&self) -> bool {
+        self.entries.iter().any(|e| e.is_async)
+    }
+    /// Drop bindings whose Scheme name collides with an already-bound ObjC name (the
+    /// ObjC binding wins — a duplicate `(define …)` / `(export …)` is at best last-wins
+    /// shadowing). The dropped Swift duplicate is a generation detail; the Swift-side
+    /// trampoline residual is unchanged.
+    fn exclude(&mut self, objc_names: &HashSet<String>) {
+        self.entries.retain(|e| !objc_names.contains(&e.name));
+    }
+}
+
+/// Lambda formal names for a Swift-native method/init: the argument labels, kebabed.
+/// A wildcard label (`_`, e.g. `contains(_:)`) becomes a positional `argN` so two
+/// wildcard params don't collide as duplicate `lambda` formals.
+fn swift_param_names(params: &[Param]) -> Vec<String> {
+    params
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            if p.name == "_" {
+                format!("arg{i}")
+            } else {
+                camel_to_kebab(&p.name)
+            }
+        })
+        .collect()
+}
+
+/// Collect + render the receiver-handle trampoline bindings for a type's declared
+/// Swift-native methods/inits (D4 routing). `owner_is_class` picks the reference
+/// (`Unmanaged`) vs value (`AwGerbilValueBox`) receiver path; it MUST match the
+/// global trampoline pass (`collect_trampolines`) so every emitted binding references
+/// an entry the `@_cdecl` pass actually produces. `methods` MUST be the type's
+/// *declared* methods (`cls.methods` / `st.methods`), not effective/inherited — the
+/// global pass walks declared methods only (the §6d agreement). Overloads that
+/// collapse to the same Scheme name keep the first (a generation detail).
+fn collect_swift_native_bindings(
+    owner: &str,
+    framework: &str,
+    methods: &[Method],
+    owner_is_class: bool,
+    value_structs: &HashSet<&str>,
+    owner_introduced: Option<&str>,
+) -> SwiftNativeBindings {
+    let mut entries: Vec<SwiftNativeBinding> = Vec::new();
+    let mut seen = HashSet::new();
+    for m in methods {
+        if m.swift_fn.is_none() {
+            continue; // ObjC method — binds via msgSend, no trampoline
+        }
+        match classify_method(
+            framework,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            value_structs,
+            owner_introduced,
+        ) {
+            MethodDisposition::Method(t) => {
+                let mutating = m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref())
+                    == Some("Mutating");
+                let name = make_swift_method_name(owner, &m.selector, mutating);
+                if !seen.insert(name.clone()) {
+                    continue;
+                }
+                let param_names = swift_param_names(&m.params);
+                entries.push(SwiftNativeBinding {
+                    crossing: t.crossing(&name),
+                    define: t.render_binding(&name, &param_names),
+                    is_async: t.is_async(),
+                    needs_objc: t.needs_objc(),
+                    needs_swift_helpers: t.needs_swift_helpers(),
+                    name,
+                });
+            }
+            MethodDisposition::Init(t) => {
+                let name = make_swift_init_name(owner, &m.selector);
+                if !seen.insert(name.clone()) {
+                    continue;
+                }
+                let param_names = swift_param_names(&m.params);
+                entries.push(SwiftNativeBinding {
+                    crossing: t.crossing(&name),
+                    define: t.render_binding(&name, &param_names),
+                    is_async: false,
+                    needs_objc: t.needs_objc(),
+                    needs_swift_helpers: t.needs_swift_helpers(),
+                    name,
+                });
+            }
+            MethodDisposition::Deferred(_) => {} // counted by the global trampoline pass
+        }
+    }
+    SwiftNativeBindings { entries }
+}
+
+/// Emit the Swift-native trampoline section into a class/struct module body: a
+/// dedicated `begin-ffi` block holding the `%swift-…` crossings (synthesized `extern`
+/// prototypes + `define-c-lambda`s against the linked libAPIAnywareGerbil entries,
+/// ADR-0021/0029), then the outer `(define …)` bindings. No lazy-load forcing
+/// reference (ADR-0029 §4 — the dylib is linked at `gxc -exe` time). Idempotent on
+/// an empty set.
+fn emit_swift_native_section(w: &mut CodeWriter, bindings: &SwiftNativeBindings) {
+    if bindings.is_empty() {
+        return;
+    }
+    w.line(";; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---");
+    w.line(";; Trampolined through libAPIAnywareGerbil (aw_gerbil_swift_* entries),");
+    w.line(";; not the framework dylib (ADR-0029); receiver coerced via (->ptr self).");
+    w.line("(begin-ffi (");
+    for e in &bindings.entries {
+        write_line!(w, "            %swift-{}", e.name);
+    }
+    w.line("            )");
+    if bindings.entries.iter().any(|e| e.crossing.needs_stdbool) {
+        w.line("  (c-declare \"#include <stdbool.h>\")");
+    }
+    for e in &bindings.entries {
+        write_line!(w, "  (c-declare \"{}\")", e.crossing.proto);
+    }
+    w.blank_line();
+    for e in &bindings.entries {
+        write_line!(w, "  {}", e.crossing.define_c_lambda);
+    }
+    w.line("  )");
+    w.blank_line();
+    for e in &bindings.entries {
+        for line in e.define.lines() {
+            write_line!(w, "{}", line);
+        }
+    }
+    w.blank_line();
 }
 
 fn build_class_plan(
@@ -414,16 +715,22 @@ fn build_class_plan(
         .map(|p| make_class_property_setter_name(&cls.name, &p.name, false))
         .collect();
 
+    // Charter #4 (D4): only ObjC-exposed methods route through `objc_msgSend`.
+    // Swift-native methods (`objc_exposed == false`) have no msgSend entry — binding
+    // them there is a latent crash — so they are excluded here and routed to the
+    // receiver-handle trampoline section (`collect_swift_native_bindings` in
+    // `generate_class_file_with_parent`), or suppressed when deferred (the global
+    // trampoline pass records + counts the deferral).
     let init_methods: Vec<Method> = methods_owned
         .iter()
-        .filter(|m| m.init_method)
+        .filter(|m| m.init_method && m.objc_exposed)
         .cloned()
         .collect();
 
     let class_methods: Vec<Method> = methods_owned
         .iter()
         .filter(|m| {
-            if !m.class_method || m.init_method {
+            if !m.class_method || m.init_method || !m.objc_exposed {
                 return false;
             }
             let n = make_method_name(&cls.name, &m.selector);
@@ -435,7 +742,7 @@ fn build_class_plan(
     let instance_methods: Vec<Method> = methods_owned
         .iter()
         .filter(|m| {
-            if m.class_method || m.init_method {
+            if m.class_method || m.init_method || !m.objc_exposed {
                 return false;
             }
             let n = make_method_name(&cls.name, &m.selector);
@@ -931,6 +1238,7 @@ fn geometry_decls(sigs: &[Signature]) -> Vec<GeometryDecl> {
 
 // --- emission -------------------------------------------------------------
 
+#[allow(clippy::too_many_arguments)]
 fn emit_header(
     w: &mut CodeWriter,
     cls: &Class,
@@ -938,6 +1246,8 @@ fn emit_header(
     exports: &[String],
     parent: &ParentRef,
     imports_generics: bool,
+    needs_swift_helpers: bool,
+    needs_async_bridge: bool,
 ) {
     write_line!(
         w,
@@ -963,7 +1273,23 @@ fn emit_header(
     if let Some(import_path) = parent_import_path(parent, &framework.to_ascii_lowercase()) {
         write_line!(w, "        {}", import_path);
     }
-    write_line!(w, "        {})", RUNTIME_OBJC_IMPORT);
+    // Tail imports: the objc runtime always (class graph + `wrap`/`->ptr`); the
+    // Swift-native trampoline coercers + async-bridge only when the Swift-native
+    // method/init section needs them. The last one closes the `(import …)` form.
+    let mut tail = vec![RUNTIME_OBJC_IMPORT];
+    if needs_swift_helpers {
+        tail.push(RUNTIME_TRAMPOLINE_IMPORT);
+    }
+    if needs_async_bridge {
+        tail.push(RUNTIME_ASYNC_BRIDGE_IMPORT);
+    }
+    for (i, imp) in tail.iter().enumerate() {
+        if i + 1 == tail.len() {
+            write_line!(w, "        {})", imp);
+        } else {
+            write_line!(w, "        {}", imp);
+        }
+    }
 
     if exports.is_empty() {
         w.line("(export)");
@@ -2364,5 +2690,103 @@ mod tests {
         let exports = class_exports(&cls);
         assert!(!exports.contains(&"NSObject".to_string()));
         assert!(!exports.contains(&"NSObject?".to_string()));
+    }
+
+    // --- Charter #4: Swift-native method routing (ADR-0030) ------------------
+
+    use apianyware_macos_types::ir::SwiftFnInfo;
+
+    /// A Swift-native (`objc_exposed == false`) instance method on a class.
+    fn swift_method(sel: &str, ret: TypeRef) -> Method {
+        let mut m = make_method(sel, false, false, ret);
+        m.objc_exposed = false;
+        m.swift_fn = Some(SwiftFnInfo::default());
+        m
+    }
+
+    #[test]
+    fn swift_native_method_routes_to_trampoline_not_msgsend() {
+        // A class carrying one ObjC method + one Swift-native method: the ObjC one
+        // binds via objc_msgSend (the %msg- crossing); the Swift-native one routes to
+        // the receiver-handle trampoline section (the %swift- crossing against the
+        // content-addressed libAPIAnywareGerbil entry), NEVER objc_msgSend (charter #4).
+        let objc = make_method("title", false, false, ty(TypeRefKind::Id));
+        let swiftm = swift_method("describe", ty(TypeRefKind::Primitive { name: "int64".into() }));
+        let cls = cls_with("Widget", vec![objc, swiftm], vec![]);
+        let out = generate_class_file(&cls, "TestKit");
+
+        // The Swift-native method gets a %swift- crossing + a trampoline define, not a
+        // msgSend crossing.
+        assert!(
+            out.contains("(define-c-lambda %swift-widget-describe ((pointer void)) int64 \"aw_gerbil_swift_m_TestKit_Widget_describe\")"),
+            "{out}"
+        );
+        assert!(
+            out.contains("(%swift-widget-describe (->ptr self))"),
+            "{out}"
+        );
+        // It must NOT route through msgSend.
+        assert!(
+            !out.contains("%msg-widget-describe"),
+            "Swift-native method must not bind via objc_msgSend:\n{out}"
+        );
+        // The ObjC method still routes through msgSend (its proc reads the cached SEL
+        // and calls a shared-signature %msg- crossing over (NSObject-ptr self)).
+        assert!(out.contains("(define (widget-title self)"), "{out}");
+        assert!(out.contains("%sel-widget-title"), "{out}");
+        // The section comment is present.
+        assert!(out.contains("Swift-native methods (receiver-handle trampolines"), "{out}");
+        // The trampoline binding name is exported.
+        let (_, exports) = generate_class_file_with_parent(
+            &cls,
+            "TestKit",
+            &ParentRef::RuntimeRoot,
+            &HashSet::new(),
+            &ProtocolRegistry::new(),
+        );
+        assert!(exports.contains(&"widget-describe".to_string()), "{exports:?}");
+    }
+
+    /// A population-B value struct (IndexSet-shaped) emits a struct module with an
+    /// init producer (raw handle, no wrap) + a method, no defclass/msgSend substrate.
+    #[test]
+    fn population_b_struct_emits_init_producer_and_method() {
+        let mut init = make_method("init(integer:)", false, true, ty(TypeRefKind::Class {
+            name: "NSIndexSet".into(),
+            framework: Some("Foundation".into()),
+            params: vec![],
+        }));
+        init.objc_exposed = false;
+        init.params = vec![param("integer", TypeRefKind::Primitive { name: "int64".into() })];
+        init.swift_fn = Some(SwiftFnInfo::default());
+
+        let mut contains = make_method("contains(_:)", false, false, ty(TypeRefKind::Primitive {
+            name: "bool".into(),
+        }));
+        contains.objc_exposed = false;
+        contains.params = vec![param("_", TypeRefKind::Primitive { name: "int64".into() })];
+        contains.swift_fn = Some(SwiftFnInfo::default());
+
+        let st = Struct {
+            name: "IndexSet".into(),
+            fields: vec![],
+            methods: vec![init, contains],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            objc_exposed: false,
+        };
+        let (out, exports) = generate_struct_file(&st, "Foundation").expect("struct has bindings");
+        // No class graph / msgSend substrate.
+        assert!(!out.contains("defclass"), "{out}");
+        assert!(!out.contains("objc_getClass"), "{out}");
+        // Init producer: a value owner hands back the raw handle (no wrap).
+        assert!(out.contains("(define-c-lambda %swift-make-indexset-integer (int64) (pointer void) \"aw_gerbil_swift_init_Foundation_IndexSet\")"), "{out}");
+        assert!(out.contains("(%swift-make-indexset-integer integer)"), "{out}");
+        assert!(!out.contains("(wrap (%swift-make-indexset-integer"), "value init must not wrap:\n{out}");
+        // Method: receiver via (->ptr self), numericCast on the int arg.
+        assert!(out.contains("(%swift-indexset-contains (->ptr self) arg0)"), "{out}");
+        assert!(exports.contains(&"make-indexset-integer".to_string()), "{exports:?}");
+        assert!(exports.contains(&"indexset-contains".to_string()), "{exports:?}");
     }
 }

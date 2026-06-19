@@ -42,7 +42,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use apianyware_macos_types::ir::{Constant, Framework, Function, Struct};
+use apianyware_macos_types::ir::{Constant, Framework, Function, Method, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::{c_type_for_token, POINTER};
@@ -85,6 +85,32 @@ enum ArgMarshal {
     /// the body unboxes the *named* value (`awGerbilUnbox(aN!, as: Name.self)`)
     /// before the by-name call — sound only because the name is in the struct set.
     BoxedHandle { name: String },
+    /// An **objc-bridged reference** parameter (R1, ADR-0030 addendum A3). The lossy
+    /// Swift→ObjC normalization reports a Swift value param as its Foundation objc
+    /// twin (`URL` → `NSURL`); gerbil holds the twin as an `id` pointer. The `@_cdecl`
+    /// receives that raw pointer, reconstructs the objc reference (`Unmanaged<NSURL>`)
+    /// and bridges it to the Swift value the by-name call wants (`… as URL`). Only the
+    /// curated [`objc_object_param_bridge`] set rides this path — an unknown `Class`
+    /// param stays deferred (a Swift-native struct lowered to `Class` must not be
+    /// mistaken for a bridge). gerbil passes the id pointer straight through (`->ptr`).
+    ObjectRef { class_name: String, bridge_to: String },
+}
+
+/// The curated objc reference classes whose params bridge to a Swift value twin
+/// (R1, ADR-0030 addendum A3). The digester reports a Swift `URL`/`URLRequest`/… param
+/// as its Foundation objc class; the trampoline reconstructs that reference and
+/// bridges to the value the by-name call needs. Returns the Swift value type to cast
+/// to, or `None` for a `Class` name not in the set (stays deferred). The set mirrors
+/// racket's/chez's (same shared IR ⇒ same residual): each pair is a verified
+/// `_ObjectiveCBridgeable` value pair, proven against the whole-Foundation typecheck,
+/// not assumed (an objc twin like `NSDate` also appears as a hidden `inout Date` that
+/// `inout`-invisible IR cannot distinguish, so a speculative entry can break a build).
+fn objc_object_param_bridge(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "NSURL" => "URL",
+        "NSURLRequest" => "URLRequest",
+        _ => return None,
+    })
 }
 
 /// How a **return** value crosses the boundary. Every shape here is producible
@@ -176,6 +202,14 @@ impl Scalar {
         }
     }
 
+    /// Is this an integer scalar (so a width-agnostic `numericCast` is valid)?
+    /// `Bool`/`Float`/`Double` are not `BinaryInteger` and pass through unconverted.
+    /// The method/init path opts into `numericCast` (the IR collapses `Int`/`Int64`
+    /// etc. onto one token); free functions keep the bare pass-through.
+    fn is_integer(self) -> bool {
+        !matches!(self, Scalar::Bool | Scalar::Float | Scalar::Double)
+    }
+
     /// The `awGerbilTry` fallback literal for this scalar on the throwing path.
     fn fallback(self) -> &'static str {
         match self {
@@ -261,6 +295,11 @@ fn classify_param(t: &TypeRef, value_structs: &HashSet<&str>) -> Result<ArgMarsh
                 })
             } else if value_structs.contains(name.as_str()) {
                 Ok(ArgMarshal::BoxedHandle { name: name.clone() })
+            } else if let Some(bridge_to) = objc_object_param_bridge(name) {
+                Ok(ArgMarshal::ObjectRef {
+                    class_name: name.clone(),
+                    bridge_to: bridge_to.to_string(),
+                })
             } else {
                 Err(DeferReason::NonBridgedStructParam)
             }
@@ -369,13 +408,40 @@ pub struct ConstTrampoline {
 }
 
 /// The macOS `introduced:` version from a declaration's IR provenance, if any.
-fn introduced_macos(
+/// Public so the `emit_class` routing folds an owning struct's version into its
+/// method gate exactly as the global pass does (B3 agreement).
+pub fn introduced_macos(
     provenance: &Option<apianyware_macos_types::provenance::SourceProvenance>,
 ) -> Option<String> {
     provenance
         .as_ref()
         .and_then(|p| p.availability.as_ref())
         .and_then(|a| a.introduced.clone())
+}
+
+/// Parse a dotted macOS version (`"26.4"`, `"15"`) into comparable components.
+fn version_key(v: &str) -> Vec<u32> {
+    v.split('.').map(|c| c.parse().unwrap_or(0)).collect()
+}
+
+/// The higher of two `@available(macOS …)` gates (B3). A method's own `introduced:`
+/// can be **lower** than its owning type's (or absent while the type's is present):
+/// a `@_cdecl` calling `Owner.method()` must be gated to the *max* of the two, else
+/// swiftc rejects the call to the unavailable type. Folds the owning struct's
+/// version into the method/init gate (ADR-0030 addendum B3).
+fn max_macos_version(a: Option<String>, b: Option<&str>) -> Option<String> {
+    match (a, b) {
+        (Some(a), Some(b)) => {
+            if version_key(&a) >= version_key(b) {
+                Some(a)
+            } else {
+                Some(b.to_string())
+            }
+        }
+        (Some(a), None) => Some(a),
+        (None, Some(b)) => Some(b.to_string()),
+        (None, None) => None,
+    }
 }
 
 /// A residual declaration that is **not** trampolined this leaf, recorded with a
@@ -402,6 +468,67 @@ pub enum DeferReason {
     /// A parameter that is not a nameable type at all (`id`/`Any`, a raw pointer, a
     /// selector, …).
     UnnameableParam,
+    /// A **generic method** (`generic_sig` present). Like a generic free function,
+    /// `@_cdecl` cannot be generic — a hard limit (every protocol requirement, the
+    /// heavily-generic SwiftUI value types).
+    UnbindableGenericMethod,
+    /// A `consuming self` method (D3): the call destroys the receiver, so the handle
+    /// the gerbil side still holds would dangle. Deferred-with-count.
+    ConsumingReceiver,
+    /// A method whose base name is not a callable Swift identifier — an operator
+    /// (`==`, `<`), a subscript — so `receiver.<name>(args)` does not parse.
+    NonNameableMethod,
+    /// A `static`/class method: no receiver instance to unbox; out of the sync
+    /// structural perimeter, recorded + counted.
+    StaticMethod,
+    /// A variadic method — a flat `@_cdecl` cannot forward a Swift variadic.
+    VariadicMethod,
+    /// A method returning a **nullable scalar** (`Int?`) — a C scalar cannot carry
+    /// `nil`. Nullable String/handle/object returns *are* handled (NULL/`#f`).
+    NullableScalarReturn,
+    /// An `async` **mutating value-receiver** method (D5/R4): the single-identity
+    /// write-back (D3) is ill-defined across the async hop. Deferred-with-count.
+    AsyncMutatingReceiver,
+    /// An `async` method returning a **scalar** (`async -> Int`): `AwGerbilAsyncOutcome`
+    /// carries a pointer payload, not a scalar. Deferred-with-count.
+    AsyncScalarReturn,
+
+    // --- Curated-residual reasons (ADR-0030 addendum B4): swiftc rejects the @_cdecl
+    // for a cause the lossy IR cannot predict. Suppressed via the [`KNOWN_UNBINDABLE`]
+    // table, each counted under its own reason. Same decl *set* as racket/chez. ---
+    /// The method/init is **actor-isolated** (`@MainActor` or an `actor` member): a
+    /// synchronous nonisolated `@_cdecl` cannot call it. `swift-api-digester` does not
+    /// surface isolation at all, so this is curated.
+    ActorIsolated,
+    /// A `Module.Owner` whose owner name is not a spellable top-level member of the
+    /// module (`CloudKit.ID` is really `CKRecord.ID`).
+    ModuleMemberMissing,
+    /// A type referenced in the call resolves to something that is not a member type —
+    /// a nested or re-exported type the IR named unspellably.
+    UnresolvedMemberType,
+    /// An init/method parameter requires a **compile-time constant literal**
+    /// (`@const`-position): the runtime-marshalled arg cannot satisfy it.
+    CompileTimeConstantParam,
+    /// A call whose **generic parameter could not be inferred** from the marshalled
+    /// arguments — the method is not itself generic but the call site needs a type
+    /// witness the C boundary cannot supply.
+    GenericInferenceFailure,
+    /// A `~Copyable` (noncopyable) receiver or value: `Unmanaged`/`as!` reconstruction
+    /// is illegal on a noncopyable type.
+    NoncopyableReceiver,
+    /// The decl is only available in a macOS newer than the deployment floor, but its
+    /// IR provenance (and its owning type's) carries **no** `introduced:` version — so
+    /// no `@available` gate can be synthesised.
+    UnknownAvailability,
+    /// A method passing `self` (or a returned value) as an `inout` argument where the
+    /// source is immutable: the by-value receiver copy is not addressable.
+    ImmutableInoutArgument,
+    /// The decl (or an overload swiftc selects) is `internal`/`private` — the by-name
+    /// call cannot reach it even though the digester surfaced the symbol.
+    InaccessibleDecl,
+    /// The marshalled `@_cdecl` argument list does not match any overload's shape: the
+    /// IR's flattened param list diverged from the real signature.
+    ArgumentShapeMismatch,
 }
 
 impl DeferReason {
@@ -413,6 +540,24 @@ impl DeferReason {
             DeferReason::NonBridgedStructParam => "deferred_nonbridged_struct_param",
             DeferReason::ClosureParam => "deferred_closure_param",
             DeferReason::UnnameableParam => "deferred_unnameable_param",
+            DeferReason::UnbindableGenericMethod => "unbindable_generic_method",
+            DeferReason::ConsumingReceiver => "deferred_consuming_receiver",
+            DeferReason::NonNameableMethod => "deferred_non_nameable_method",
+            DeferReason::StaticMethod => "deferred_static_method",
+            DeferReason::VariadicMethod => "deferred_variadic_method",
+            DeferReason::NullableScalarReturn => "deferred_nullable_scalar_return",
+            DeferReason::AsyncMutatingReceiver => "deferred_async_mutating_receiver",
+            DeferReason::AsyncScalarReturn => "deferred_async_scalar_return",
+            DeferReason::ActorIsolated => "deferred_actor_isolated",
+            DeferReason::ModuleMemberMissing => "deferred_module_member_missing",
+            DeferReason::UnresolvedMemberType => "deferred_unresolved_member_type",
+            DeferReason::CompileTimeConstantParam => "deferred_compile_time_constant_param",
+            DeferReason::GenericInferenceFailure => "deferred_generic_inference_failure",
+            DeferReason::NoncopyableReceiver => "deferred_noncopyable_receiver",
+            DeferReason::UnknownAvailability => "deferred_unknown_availability",
+            DeferReason::ImmutableInoutArgument => "deferred_immutable_inout_argument",
+            DeferReason::InaccessibleDecl => "deferred_inaccessible_decl",
+            DeferReason::ArgumentShapeMismatch => "deferred_argument_shape_mismatch",
         }
     }
 }
@@ -423,6 +568,10 @@ impl DeferReason {
 pub struct TrampolineSet {
     pub functions: Vec<FnTrampoline>,
     pub constants: Vec<ConstTrampoline>,
+    /// Receiver-handle method trampolines (the method frontier, ADR-0030).
+    pub methods: Vec<MethodTrampoline>,
+    /// Initializer producers — the population-B root handle producers (D2).
+    pub inits: Vec<InitTrampoline>,
     pub deferred: Vec<Deferred>,
 }
 
@@ -624,27 +773,111 @@ pub fn collect_trampolines(frameworks: &[Framework]) -> TrampolineSet {
             }
             set.constants.push(classify_constant(&fw.name, constant));
         }
+        // Receiver-handle method + init trampolines (the method frontier, ADR-0030).
+        // Walk both classes (reference receivers) and structs (value receivers); a
+        // method is Swift-native iff it carries `swift_fn` (⇔ `objc_exposed == false`).
+        for c in &fw.classes {
+            // `Class` carries no `provenance` field (unlike `Struct`); the type-gated
+            // availability residual is entirely value-struct owners (B3).
+            collect_type_methods(
+                &mut set,
+                &fw.name,
+                &c.name,
+                true,
+                &c.methods,
+                &value_structs,
+                None,
+            );
+        }
+        for st in &fw.structs {
+            let owner_intro = introduced_macos(&st.provenance);
+            collect_type_methods(
+                &mut set,
+                &fw.name,
+                &st.name,
+                false,
+                &st.methods,
+                &value_structs,
+                owner_intro.as_deref(),
+            );
+        }
     }
+    // A duplicate entry *is* the same trampoline (a category re-listing, a digester
+    // dupe), which would otherwise emit two `@_cdecl`s with the identical content-
+    // addressed entry — a Swift redeclaration error. Keep the first per entry.
+    dedup_by_entry(&mut set);
     set
+}
+
+/// Drop duplicate trampolines that resolve to the same C entry symbol (keep first).
+fn dedup_by_entry(set: &mut TrampolineSet) {
+    let mut seen = HashSet::new();
+    set.functions.retain(|t| seen.insert(t.entry.clone()));
+    set.constants.retain(|t| seen.insert(t.entry.clone()));
+    set.inits.retain(|t| seen.insert(t.entry.clone()));
+    set.methods.retain(|t| seen.insert(t.entry.clone()));
+}
+
+/// Collect the method/init trampolines (or deferrals) for one owning type's method
+/// list — `owner_is_class` selects the reference (`Unmanaged`) vs value
+/// (`AwGerbilValueBox`) receiver path.
+fn collect_type_methods(
+    set: &mut TrampolineSet,
+    module: &str,
+    owner: &str,
+    owner_is_class: bool,
+    methods: &[Method],
+    value_structs: &HashSet<&str>,
+    owner_introduced: Option<&str>,
+) {
+    for m in methods {
+        if m.swift_fn.is_none() {
+            continue; // ObjC method — binds via msgSend, no trampoline
+        }
+        match classify_method(
+            module,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            value_structs,
+            owner_introduced,
+        ) {
+            MethodDisposition::Method(t) => set.methods.push(t),
+            MethodDisposition::Init(t) => set.inits.push(t),
+            MethodDisposition::Deferred(reason) => set.deferred.push(Deferred {
+                module: module.to_string(),
+                name: format!("{owner}.{}", method_base_name(&m.selector)),
+                reason,
+            }),
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
 // Swift codegen (Generated/Trampolines.swift)
 // ---------------------------------------------------------------------------
 
-/// Render the by-name call expression `name(label0: a0, label1: s1, …)`.
-fn call_expr(t: &FnTrampoline) -> String {
-    let args: Vec<String> = t
-        .params
+/// The per-argument `label: value` strings inside a by-name call's parentheses,
+/// reconstructing each marshalled param from its `@_cdecl` boundary binding. Shared
+/// by the free-function [`call_expr`] and the method/init call builders. The
+/// method/init path opts into `numeric_cast` (IR width collapse); free functions
+/// keep the bare pass-through.
+fn arg_values(params: &[ArgMarshal], labels: &[String], numeric_cast: bool) -> Vec<String> {
+    params
         .iter()
-        .zip(&t.labels)
+        .zip(labels)
         .enumerate()
         .map(|(i, (m, label))| {
             let value = match m {
+                ArgMarshal::Scalar(s) if numeric_cast && s.is_integer() => {
+                    format!("numericCast(a{i})")
+                }
                 ArgMarshal::Scalar(_) => format!("a{i}"),
                 ArgMarshal::ScalarTypedef { name, .. } => format!("{name}(a{i})"),
                 ArgMarshal::SwiftString => format!("s{i}"),
                 ArgMarshal::BoxedHandle { .. } => format!("u{i}"),
+                ArgMarshal::ObjectRef { .. } => format!("o{i}"),
             };
             if label == "_" || label.is_empty() {
                 value
@@ -652,17 +885,28 @@ fn call_expr(t: &FnTrampoline) -> String {
                 format!("{label}: {value}")
             }
         })
-        .collect();
-    // Module-qualify the call so a free function a second imported module also
-    // exports is unambiguous; the owning module is always in scope (we `import` it).
-    format!("{}.{}({})", t.module, t.swift_name, args.join(", "))
+        .collect()
 }
 
-/// The `@_cdecl` parameter list (named) and the body's reconstruction prelude.
-fn decl_params_and_prelude(t: &FnTrampoline) -> (Vec<String>, String) {
-    let mut decl = Vec::with_capacity(t.params.len());
+/// Render the by-name call expression `name(label0: a0, label1: s1, …)`.
+fn call_expr(t: &FnTrampoline) -> String {
+    // Module-qualify the call so a free function a second imported module also
+    // exports is unambiguous; the owning module is always in scope (we `import` it).
+    format!(
+        "{}.{}({})",
+        t.module,
+        t.swift_name,
+        arg_values(&t.params, &t.labels, false).join(", ")
+    )
+}
+
+/// The `@_cdecl` parameter list (named) and the body's reconstruction prelude, for a
+/// sequence of marshalled args. The receiver-handle method/init trampolines reuse
+/// this for their *argument* params (the receiver is prepended separately).
+fn args_decl_and_prelude(params: &[ArgMarshal]) -> (Vec<String>, String) {
+    let mut decl = Vec::with_capacity(params.len());
     let mut prelude = String::new();
-    for (i, m) in t.params.iter().enumerate() {
+    for (i, m) in params.iter().enumerate() {
         match m {
             ArgMarshal::Scalar(s) => decl.push(format!("_ a{i}: {}", s.swift())),
             ArgMarshal::ScalarTypedef { scalar, .. } => {
@@ -678,6 +922,15 @@ fn decl_params_and_prelude(t: &FnTrampoline) -> (Vec<String>, String) {
                 decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
                 prelude.push_str(&format!(
                     "  let u{i} = awGerbilUnbox(a{i}!, as: {name}.self)\n"
+                ));
+            }
+            ArgMarshal::ObjectRef {
+                class_name,
+                bridge_to,
+            } => {
+                decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
+                prelude.push_str(&format!(
+                    "  let o{i} = Unmanaged<{class_name}>.fromOpaque(a{i}!).takeUnretainedValue() as {bridge_to}\n"
                 ));
             }
         }
@@ -738,7 +991,7 @@ fn throw_fallback(ret: &RetMarshal) -> &'static str {
 
 /// Emit one function trampoline.
 fn emit_fn(s: &mut String, t: &FnTrampoline) {
-    let (mut decl, prelude) = decl_params_and_prelude(t);
+    let (mut decl, prelude) = args_decl_and_prelude(&t.params);
     let (cret, marshal) = return_shape(&t.ret);
 
     if t.throwing {
@@ -807,8 +1060,23 @@ fn emit_const(s: &mut String, t: &ConstTrampoline) {
     s.push_str("}\n");
 }
 
+/// Map an **implementation-detail** module to the umbrella that re-exports it (B2),
+/// for the Swift `import` line and the `Module.Owner` type qualifier only. Swift
+/// forbids `import RealityFoundation` ("it is an implementation detail of RealityKit;
+/// import RealityKit instead"), but `RealityKit.MeshResource` names the identical
+/// type. The trampoline's `module` field is left untouched (it drives the content-
+/// addressed entry symbol + the gerbil binding identity, which both sides must agree
+/// on); only the *Swift spelling* is re-attributed here (ADR-0030 addendum B2).
+fn swift_import_module(module: &str) -> &str {
+    match module {
+        "RealityFoundation" => "RealityKit",
+        "SwiftUICore" => "SwiftUI",
+        other => other,
+    }
+}
+
 /// Generate `Generated/Trampolines.swift`: the imports, then one `@_cdecl` per
-/// trampolined function and constant. Deferred decls produce no Swift.
+/// trampolined function, constant, init, and method. Deferred decls produce no Swift.
 pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     let mut s = String::new();
     s.push_str(
@@ -823,11 +1091,27 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     s.push_str("//   docs/adr/0029-gerbil-trampoline-grows-a-swift-dylib.md\n\n");
     s.push_str("import Foundation\n");
 
+    // One `import` per distinct module with an emitted trampoline; implementation-
+    // detail modules are re-attributed to their umbrella (B2) so the `import` is legal.
     let mut modules: Vec<&str> = set
         .functions
         .iter()
-        .map(|t| t.module.as_str())
-        .chain(set.constants.iter().map(|t| t.module.as_str()))
+        .map(|t| swift_import_module(t.module.as_str()))
+        .chain(
+            set.constants
+                .iter()
+                .map(|t| swift_import_module(t.module.as_str())),
+        )
+        .chain(
+            set.methods
+                .iter()
+                .map(|t| swift_import_module(t.module.as_str())),
+        )
+        .chain(
+            set.inits
+                .iter()
+                .map(|t| swift_import_module(t.module.as_str())),
+        )
         .filter(|m| *m != "Foundation")
         .collect();
     modules.sort_unstable();
@@ -845,6 +1129,14 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
         emit_const(&mut s, t);
         s.push('\n');
     }
+    for t in &set.inits {
+        emit_init_tramp(&mut s, t);
+        s.push('\n');
+    }
+    for t in &set.methods {
+        emit_method_tramp(&mut s, t);
+        s.push('\n');
+    }
 
     let counts = set.defer_counts();
     let deferred_note = if counts.is_empty() {
@@ -854,14 +1146,11 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
         format!("; deferred — {}", parts.join(", "))
     };
     s.push_str(&format!(
-        "// {} function + {} constant trampoline{}{}.\n",
+        "// {} function + {} constant + {} init + {} method trampolines{}.\n",
         set.functions.len(),
         set.constants.len(),
-        if set.functions.len() + set.constants.len() == 1 {
-            ""
-        } else {
-            "s"
-        },
+        set.inits.len(),
+        set.methods.len(),
         deferred_note
     ));
     s
@@ -897,7 +1186,9 @@ impl FnTrampoline {
                 ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => {
                     (s.gerbil(), c_type_for_token(s.gerbil()))
                 }
-                ArgMarshal::SwiftString | ArgMarshal::BoxedHandle { .. } => (POINTER, "void *"),
+                ArgMarshal::SwiftString
+                | ArgMarshal::BoxedHandle { .. }
+                | ArgMarshal::ObjectRef { .. } => (POINTER, "void *"),
             })
             .collect();
         if self.throwing {
@@ -957,10 +1248,14 @@ impl FnTrampoline {
     fn needs_runtime(&self) -> bool {
         self.throwing
             || matches!(self.ret, RetMarshal::SwiftString | RetMarshal::Object)
-            || self
-                .params
-                .iter()
-                .any(|m| matches!(m, ArgMarshal::SwiftString | ArgMarshal::BoxedHandle { .. }))
+            || self.params.iter().any(|m| {
+                matches!(
+                    m,
+                    ArgMarshal::SwiftString
+                        | ArgMarshal::BoxedHandle { .. }
+                        | ArgMarshal::ObjectRef { .. }
+                )
+            })
     }
 
     /// Render the outer `(define <binding> …)` form. A pure-scalar / opaque-box
@@ -975,7 +1270,9 @@ impl FnTrampoline {
             .zip(&arg_names)
             .map(|(m, a)| match m {
                 ArgMarshal::SwiftString => format!("(aw-swift-string-arg {a})"),
-                ArgMarshal::BoxedHandle { .. } => format!("(->ptr {a})"),
+                ArgMarshal::BoxedHandle { .. } | ArgMarshal::ObjectRef { .. } => {
+                    format!("(->ptr {a})")
+                }
                 ArgMarshal::Scalar(_) | ArgMarshal::ScalarTypedef { .. } => a.clone(),
             })
             .collect();
@@ -1078,9 +1375,12 @@ pub fn fn_needs_runtime(t: &FnTrampoline) -> bool {
 /// param (passed via `->ptr`).
 pub fn fn_needs_objc(t: &FnTrampoline) -> bool {
     matches!(t.ret, RetMarshal::Object)
-        || t.params
-            .iter()
-            .any(|m| matches!(m, ArgMarshal::BoxedHandle { .. }))
+        || t.params.iter().any(|m| {
+            matches!(
+                m,
+                ArgMarshal::BoxedHandle { .. } | ArgMarshal::ObjectRef { .. }
+            )
+        })
 }
 
 /// Does this function binding reference the `aw-swift-*` helpers
@@ -1104,6 +1404,1008 @@ pub fn const_needs_objc(t: &ConstTrampoline) -> bool {
 /// `String`-typed global.
 pub fn const_needs_swift_helpers(t: &ConstTrampoline) -> bool {
     matches!(t.ret, RetMarshal::SwiftString)
+}
+
+// ===========================================================================
+// Receiver-handle method trampolines (the Swift-native method frontier, ADR-0030)
+// ===========================================================================
+//
+// A method trampoline generalises [`FnTrampoline`]'s call-by-name from free
+// functions to methods: the `@_cdecl` takes an **opaque receiver handle** as its
+// first C param, reconstructs the receiver, and calls `receiver.method(labels:)`
+// by name. An [`InitTrampoline`] is the population-B *root producer*: it calls
+// `Owner(labels:)` and boxes a handle of the owning type. Receiver marshalling is
+// by the **owner's kind**: a class owner is `Unmanaged<Owner>.fromOpaque(recv)
+// .takeUnretainedValue()`; a value struct owner is `awGerbilUnbox(recv, as: Owner.self)`
+// with mutating write-back (D3). gerbil binds the entries with a `define-c-lambda`
+// crossing (the receiver coerces through `(->ptr self)`, ADR-0015 Scheme-side); an
+// **object** return wraps to its exact bound type via the ADR-0020 registry (the
+// gerbil divergence from chez, ADR-0029 §2), a value return rides the opaque box.
+
+/// How a method's receiver (`self`) is reconstructed from its opaque handle.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum SelfMarshal {
+    /// A **class** owner (objc-exposed instance held as `id`, or a Swift-native class
+    /// boxed via `Unmanaged.passRetained`) — both reference types reconstructed
+    /// identically: `Unmanaged<M.O>.fromOpaque(recv).takeUnretainedValue()`.
+    ClassRef,
+    /// A **value struct** owner (population B): the receiver is an `AwGerbilValueBox`
+    /// handle. `mutating` selects the write-back path (`var v = box.value as! T;
+    /// v.method(); box.value = v`) so the gerbil side's handle reflects the mutation
+    /// (D3); non-mutating just unboxes a copy.
+    ValueBox { mutating: bool },
+}
+
+/// A Swift-native instance method the gerbil target trampolines: a `@_cdecl` taking
+/// an opaque receiver handle + the marshalled args, calling `receiver.name(labels:)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MethodTrampoline {
+    pub module: String,
+    /// The owning type (module-qualified at the call site as `module.owner`).
+    pub owner: String,
+    /// Base method name (the selector up to `(`), used in the by-name call.
+    pub swift_name: String,
+    /// Content-addressed C entry symbol (`aw_gerbil_swift_m_<Fw>_<Owner>_<name>[_<hash>]`).
+    pub entry: String,
+    recv: SelfMarshal,
+    labels: Vec<String>,
+    params: Vec<ArgMarshal>,
+    ret: RetMarshal,
+    /// The return type is `Optional` — the marshalling maps `nil` to NULL/`#f`
+    /// (String/handle/object returns); a nullable *scalar* return is deferred upstream.
+    ret_nullable: bool,
+    throwing: bool,
+    /// The method is `async` (D5/R4): instead of a synchronous return, the `@_cdecl`
+    /// takes a trailing ctx + C completion callback and drives `awGerbilAsyncDispatch`.
+    /// The gerbil binding wraps it with `aw-async-call` (the callback form — no blocking
+    /// await, per R4).
+    is_async: bool,
+    availability: Option<String>,
+}
+
+/// An initializer producer — the population-B root handle producer (D2). Calls
+/// `Owner(labels:)` and returns a boxed handle of the **owning type** (a value box
+/// for a struct owner, an `Unmanaged.passRetained` instance for a class owner).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InitTrampoline {
+    pub module: String,
+    pub owner: String,
+    pub entry: String,
+    /// Box a class instance via `Unmanaged.passRetained` (reference identity) vs a
+    /// value via `awGerbilBox` — picked from the owner's kind, not the lossy IR return
+    /// type (R2: `init(integer:)` reports `NSIndexSet`, must box `IndexSet`). On the
+    /// gerbil side a class init additionally `wrap`s the returned id to its exact
+    /// bound type (ADR-0029 §2); a value init hands back the raw opaque handle.
+    owner_is_class: bool,
+    labels: Vec<String>,
+    params: Vec<ArgMarshal>,
+    throwing: bool,
+    availability: Option<String>,
+}
+
+/// The disposition of a Swift-native method: an instance-method trampoline, an
+/// initializer producer, or a recorded deferral.
+pub enum MethodDisposition {
+    Method(MethodTrampoline),
+    Init(InitTrampoline),
+    Deferred(DeferReason),
+}
+
+/// The base method name = the selector up to the first `(` (`update(with:)` →
+/// `update`, `init(integer:)` → `init`, `contains(_:)` → `contains`).
+fn method_base_name(selector: &str) -> &str {
+    selector.split('(').next().unwrap_or(selector)
+}
+
+/// Is `name` a callable Swift identifier (so `receiver.name(args)` parses)? Filters
+/// out operators (`==`, `<`) and other non-identifier selectors.
+fn is_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    matches!(chars.next(), Some(c) if c.is_ascii_alphabetic() || c == '_')
+        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+/// The curated suppression table (ADR-0030 addendum B4): decls swiftc rejects for a
+/// cause the lossy IR cannot mechanically predict — `@MainActor`/actor isolation
+/// (which `swift-api-digester` does not emit at all) and a scatter of per-decl
+/// semantic failures. Keyed by the **gerbil** content-addressed entry name (the one
+/// `method_entry_name`/`init_entry_name` compute and swiftc names in the build error),
+/// so suppression is exact per overload and reproduces from a cold collect. **Same decl
+/// set** as racket's/chez's (the residual is IR-deterministic — the suffix after the
+/// prefix and the overload hash are target-independent), under the gerbil
+/// `aw_gerbil_swift_*` prefix. Each entry counts under its reason; the full-residual
+/// `swift build` is the regression guard — a stale entry re-surfaces as a compile error.
+const KNOWN_UNBINDABLE: &[(&str, DeferReason)] = &[
+    ("aw_gerbil_swift_init_AppIntents_IntentCollectionSize_66a66a84", DeferReason::CompileTimeConstantParam),
+    ("aw_gerbil_swift_init_AppIntents_IntentCollectionSize_8398302c", DeferReason::CompileTimeConstantParam),
+    ("aw_gerbil_swift_init_AuthenticationServices_ASCredentialDataManager", DeferReason::UnknownAvailability),
+    ("aw_gerbil_swift_init_CloudKit_ID_180762ef", DeferReason::ModuleMemberMissing),
+    ("aw_gerbil_swift_init_CloudKit_ID_c6665c26", DeferReason::ModuleMemberMissing),
+    ("aw_gerbil_swift_init_IdentityDocumentServicesUI_IdentityDocumentWebPresentmentController", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_init_ImagePlayground_ImageCreator", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_init_ImmersiveMediaSupport_ImmersiveMediaRemotePreviewReceiver", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_init_MediaExtension_Boolean", DeferReason::ModuleMemberMissing),
+    ("aw_gerbil_swift_init_MediaExtension_FloatingPoint", DeferReason::ModuleMemberMissing),
+    ("aw_gerbil_swift_init_MediaExtension_Integer", DeferReason::ModuleMemberMissing),
+    ("aw_gerbil_swift_init_RealityFoundation_RealityRenderer", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_init_StoreKit_AdvancedCommerceProduct", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_init_SwiftUICore_PropertyList", DeferReason::ModuleMemberMissing),
+    ("aw_gerbil_swift_init_SwiftUICore_RectangleCornerRadii_dfe2fe2f", DeferReason::ArgumentShapeMismatch),
+    ("aw_gerbil_swift_init_Translation_LanguageAvailability_960d49c3", DeferReason::UnresolvedMemberType),
+    ("aw_gerbil_swift_init_WebKit_URLScheme", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_AuthenticationServices_ASCredentialDataManager_reportUnusedPasswordCredential", DeferReason::UnknownAvailability),
+    ("aw_gerbil_swift_m_CompositorServices_Frame_predictTiming", DeferReason::GenericInferenceFailure),
+    ("aw_gerbil_swift_m_CompositorServices_Frame_queryDrawables", DeferReason::GenericInferenceFailure),
+    ("aw_gerbil_swift_m_CoreHID_HIDDeviceClient_seizeDevice", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_CoreVideo_CVMutablePixelBuffer_fillExtendedPixels", DeferReason::NoncopyableReceiver),
+    ("aw_gerbil_swift_m_ImmersiveMediaSupport_VenueDescriptor_cameraViewModel", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_ImmersiveMediaSupport_VenueDescriptor_removeCamera", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_ImmersiveMediaSupport_VenueDescriptor_save", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_RealityFoundation_AudioGeneratorController_play", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_RealityFoundation_AudioGeneratorController_stop", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_RealityFoundation_EntityGeometricPins_makeIterator", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_RealityFoundation_EntityGeometricPins_remove", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_RealityFoundation_LowLevelTexture_read", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_RealityFoundation_MeshInstanceCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_gerbil_swift_m_RealityFoundation_MeshModelCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_gerbil_swift_m_RealityFoundation_MeshPartCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_gerbil_swift_m_RealityFoundation_MeshSkeletonCollection_formIndex", DeferReason::ImmutableInoutArgument),
+    ("aw_gerbil_swift_m_RealityFoundation_RealityRenderer_update", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_SwiftUICore_EdgeInsets_round_61f6b07c", DeferReason::InaccessibleDecl),
+    ("aw_gerbil_swift_m_SwiftUICore_EdgeInsets_rounded_c7dec5cb", DeferReason::InaccessibleDecl),
+    ("aw_gerbil_swift_m_Translation_TranslationSession_cancel", DeferReason::UnresolvedMemberType),
+    ("aw_gerbil_swift_m_Translation_TranslationSession_prepareTranslation", DeferReason::UnresolvedMemberType),
+    ("aw_gerbil_swift_m_Translation_TranslationSession_translate_770bd52c", DeferReason::UnresolvedMemberType),
+    ("aw_gerbil_swift_m_VisionKit_ImageAnalysisOverlayView_beginSubjectAnalysisIfNecessary", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_VisionKit_ImageAnalysisOverlayView_resetSelection", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_VisionKit_ImageAnalysisOverlayView_setContentsRectNeedsUpdate", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_VisionKit_ImageAnalysisOverlayView_setSupplementaryInterfaceHidden", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_WebKit_WebPage_load_4808a66d", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_WebKit_WebPage_load_60456c20", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_WebKit_WebPage_load_6dde058d", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_WebKit_WebPage_load_77ec487a", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_WebKit_WebPage_reload", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m_WebKit_WebPage_stopLoading", DeferReason::ActorIsolated),
+    ("aw_gerbil_swift_m__StoreKit_SwiftUI_RequestReviewAction_callAsFunction", DeferReason::ActorIsolated),
+];
+
+/// Look up a method/init in [`KNOWN_UNBINDABLE`] by its content-addressed entry name.
+fn known_unbindable(
+    module: &str,
+    owner: &str,
+    method: &Method,
+    siblings: &[Method],
+) -> Option<DeferReason> {
+    let entry = if method.init_method {
+        init_entry_name(module, owner, method, siblings)
+    } else {
+        method_entry_name(module, owner, method, siblings)
+    };
+    KNOWN_UNBINDABLE
+        .iter()
+        .find(|(e, _)| *e == entry)
+        .map(|(_, r)| *r)
+}
+
+/// Classify one Swift-native method on a type. `owner_is_class` is true for a
+/// `Framework.classes` reference type (→ `Unmanaged` receiver path), false for a
+/// `Framework.structs` value type (→ `AwGerbilValueBox` path). `siblings` is the
+/// owner's full method list (overload disambiguation); `value_structs` is reserved
+/// (value-struct method params defer this leaf). Mirrors racket/chez `classify_method`
+/// exactly so the gerbil residual reproduces theirs (the §6d invariant).
+#[allow(clippy::too_many_arguments)]
+pub fn classify_method(
+    module: &str,
+    owner: &str,
+    owner_is_class: bool,
+    method: &Method,
+    siblings: &[Method],
+    // Reserved: value-struct **method** params are deferred this leaf (nested type
+    // names like `Data.Base64EncodingOptions` are not bare-spellable). Object params
+    // ride the R1 bridge.
+    _value_structs: &HashSet<&str>,
+    // The owning type's `introduced:` macOS version, folded into the `@available` gate.
+    owner_introduced: Option<&str>,
+) -> MethodDisposition {
+    // Curated suppression first (B4) — keyed by the content-addressed entry name, so
+    // the global pass and the emitter agree.
+    if let Some(reason) = known_unbindable(module, owner, method, siblings) {
+        return MethodDisposition::Deferred(reason);
+    }
+    let info = method.swift_fn.as_ref();
+    if let Some(i) = info {
+        if i.is_generic {
+            return MethodDisposition::Deferred(DeferReason::UnbindableGenericMethod);
+        }
+        if i.self_kind.as_deref() == Some("Consuming") {
+            return MethodDisposition::Deferred(DeferReason::ConsumingReceiver);
+        }
+    }
+    // Static/class methods have no receiver instance — out of the instance-method
+    // perimeter, recorded + counted.
+    if method.class_method && !method.init_method {
+        return MethodDisposition::Deferred(DeferReason::StaticMethod);
+    }
+    if method.variadic {
+        return MethodDisposition::Deferred(DeferReason::VariadicMethod);
+    }
+
+    // Args reuse the free-function scalar/string taxonomy; value-struct params defer
+    // (empty struct set). The first non-bindable param's reason wins.
+    let no_value_structs = HashSet::new();
+    let mut params = Vec::with_capacity(method.params.len());
+    for p in &method.params {
+        match classify_param(&p.param_type, &no_value_structs) {
+            Ok(m) => params.push(m),
+            Err(reason) => return MethodDisposition::Deferred(reason),
+        }
+    }
+    let labels: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
+    let throwing = info.is_some_and(|i| i.throwing);
+    let availability = max_macos_version(introduced_macos(&method.provenance), owner_introduced);
+
+    if method.init_method {
+        // Object-ref params (R1) bridge to a value twin, right for a method call but
+        // wrong for a bridging *constructor* (`Data(referencing: NSData)` wants the
+        // reference); the lossy IR cannot tell them apart, so init object params defer
+        // (a no-regression carve-out — they deferred pre-R1).
+        if params
+            .iter()
+            .any(|m| matches!(m, ArgMarshal::ObjectRef { .. }))
+        {
+            return MethodDisposition::Deferred(DeferReason::NonBridgedStructParam);
+        }
+        return MethodDisposition::Init(InitTrampoline {
+            module: module.to_string(),
+            owner: owner.to_string(),
+            entry: init_entry_name(module, owner, method, siblings),
+            owner_is_class,
+            labels,
+            params,
+            throwing,
+            availability,
+        });
+    }
+
+    let base = method_base_name(&method.selector);
+    if !is_identifier(base) {
+        return MethodDisposition::Deferred(DeferReason::NonNameableMethod);
+    }
+
+    // A method's non-scalar return boxes/wraps **unnamed**: an object return wraps to
+    // its bound type (no `as <Type>` pin needed), a value return boxes; the lossy IR
+    // often yields an unspellable/inaccessible return name. A nullable scalar can't
+    // carry `nil`.
+    let ret_nullable = method.return_type.nullable;
+    let ret = match classify_return(&method.return_type) {
+        RetMarshal::OpaqueBox(_) => RetMarshal::OpaqueBox(None),
+        RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } if ret_nullable => {
+            return MethodDisposition::Deferred(DeferReason::NullableScalarReturn);
+        }
+        other => other,
+    };
+
+    // Write-back only applies to value receivers; a class receiver is a reference.
+    let mutating =
+        !owner_is_class && info.and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
+
+    // Async (D5/R4): drives the completion-callback bridge instead of a synchronous
+    // return. Two sub-cases defer-with-count: a `mutating` value receiver (write-back
+    // ill-defined across the hop) and a scalar return (`AwGerbilAsyncOutcome` carries a
+    // pointer payload).
+    let is_async = info.is_some_and(|i| i.is_async);
+    if is_async {
+        if mutating {
+            return MethodDisposition::Deferred(DeferReason::AsyncMutatingReceiver);
+        }
+        if matches!(ret, RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. }) {
+            return MethodDisposition::Deferred(DeferReason::AsyncScalarReturn);
+        }
+    }
+
+    let recv = if owner_is_class {
+        SelfMarshal::ClassRef
+    } else {
+        SelfMarshal::ValueBox { mutating }
+    };
+    MethodDisposition::Method(MethodTrampoline {
+        module: module.to_string(),
+        owner: owner.to_string(),
+        swift_name: base.to_string(),
+        entry: method_entry_name(module, owner, method, siblings),
+        recv,
+        labels,
+        params,
+        ret,
+        ret_nullable,
+        throwing,
+        is_async,
+        availability,
+    })
+}
+
+// --- Method/init entry naming (content-addressed; emitter reconstructs it) ---
+
+/// FNV-1a hash of a method's selector + param/return ABI shape — appended when
+/// `(module, owner, base)` is overloaded (same precedent as [`overload_hash`]).
+fn method_hash(method: &Method) -> String {
+    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+    let mut feed = |s: &str| {
+        for b in s.bytes() {
+            h ^= b as u64;
+            h = h.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        h ^= 0xff;
+        h = h.wrapping_mul(0x0000_0100_0000_01b3);
+    };
+    feed(&method.selector);
+    for p in &method.params {
+        feed(&p.name);
+        feed(&type_shape(&p.param_type));
+    }
+    feed(&type_shape(&method.return_type));
+    format!("{:08x}", (h ^ (h >> 32)) as u32)
+}
+
+/// True when a Swift-native instance method's base name is overloaded among the
+/// owner's Swift-native instance methods.
+fn method_is_overloaded(method: &Method, siblings: &[Method]) -> bool {
+    let base = method_base_name(&method.selector);
+    siblings
+        .iter()
+        .filter(|m| {
+            m.swift_fn.is_some()
+                && !m.init_method
+                && !m.class_method
+                && method_base_name(&m.selector) == base
+        })
+        .count()
+        > 1
+}
+
+/// True when an initializer is overloaded among the owner's Swift-native inits.
+fn init_is_overloaded(siblings: &[Method]) -> bool {
+    siblings
+        .iter()
+        .filter(|m| m.swift_fn.is_some() && m.init_method)
+        .count()
+        > 1
+}
+
+fn method_entry_name(module: &str, owner: &str, method: &Method, siblings: &[Method]) -> String {
+    let base = format!(
+        "{FN_PREFIX}m_{}_{}_{}",
+        sanitize(module),
+        sanitize(owner),
+        sanitize(method_base_name(&method.selector))
+    );
+    if method_is_overloaded(method, siblings) {
+        format!("{base}_{}", method_hash(method))
+    } else {
+        base
+    }
+}
+
+fn init_entry_name(module: &str, owner: &str, method: &Method, siblings: &[Method]) -> String {
+    let base = format!("{FN_PREFIX}init_{}_{}", sanitize(module), sanitize(owner));
+    if init_is_overloaded(siblings) {
+        format!("{base}_{}", method_hash(method))
+    } else {
+        base
+    }
+}
+
+// --- Method/init Swift codegen ---
+
+/// The `@available` line + `@_cdecl` + `public func <entry>(<decl>)<sig_ret> {` header
+/// shared by the method and init emitters.
+fn emit_cdecl_header(
+    s: &mut String,
+    availability: &Option<String>,
+    entry: &str,
+    decl: &[String],
+    sig_ret: &str,
+) {
+    if let Some(v) = availability {
+        s.push_str(&format!("@available(macOS {v}, *)\n"));
+    }
+    s.push_str(&format!("@_cdecl(\"{entry}\")\n"));
+    s.push_str(&format!(
+        "public func {entry}({}){sig_ret} {{\n",
+        decl.join(", ")
+    ));
+}
+
+/// Is the success-path marshalled expression already an `Optional` C-pointer? An
+/// object return is always optional (the `as AnyObject?` map); a String/box return is
+/// optional only when nullable. Drives whether the throwing path wraps in `Optional(…)`
+/// (a non-optional marshalling — a non-nullable String/box — must be promoted so the
+/// `awGerbilTry` closure's `R = UnsafeMutableRawPointer?` infers).
+fn marshalled_is_optional(ret: &RetMarshal, nullable: bool) -> bool {
+    match ret {
+        RetMarshal::Object => true,
+        RetMarshal::SwiftString | RetMarshal::OpaqueBox(_) => nullable,
+        _ => false,
+    }
+}
+
+/// The C return type + success marshaller for a **method** return. Differs from the
+/// free-function [`return_shape`]: an integer scalar is `numericCast`-converted (IR
+/// width collapse), an object return hands back a raw +1 id (wrapped Scheme-side), a
+/// value return boxes, and a nullable String/box maps `nil` → NULL. A method's box
+/// return is always `OpaqueBox(None)`; a nullable scalar/typedef is deferred upstream.
+fn method_return_shape(ret: &RetMarshal, nullable: bool) -> (String, Marshaller) {
+    match ret {
+        RetMarshal::Void => ("Void".to_string(), Box::new(|c: &str| c.to_string())),
+        RetMarshal::Scalar(s) if s.is_integer() => (
+            s.swift().to_string(),
+            Box::new(|c: &str| format!("numericCast({c})")),
+        ),
+        RetMarshal::Scalar(s) => (s.swift().to_string(), {
+            let _ = s;
+            Box::new(|c: &str| c.to_string())
+        }),
+        RetMarshal::ScalarTypedef { scalar, name } => {
+            let conv = scalar.swift();
+            let name = name.clone();
+            (
+                scalar.swift().to_string(),
+                Box::new(move |c: &str| format!("{conv}(({c}) as {name})")),
+            )
+        }
+        RetMarshal::SwiftString if nullable => (
+            "UnsafeMutableRawPointer?".to_string(),
+            Box::new(|c: &str| {
+                format!("(({c}) as String?).map {{ Unmanaged.passRetained($0 as NSString).toOpaque() }} ?? nil")
+            }),
+        ),
+        RetMarshal::SwiftString => (
+            "UnsafeMutableRawPointer?".to_string(),
+            Box::new(|c: &str| format!("Unmanaged.passRetained(({c}) as NSString).toOpaque()")),
+        ),
+        // Object: hand back a raw +1-retained id (nil-safe via the `as AnyObject?` map);
+        // gerbil `wrap`s it Scheme-side to its exact bound type (ADR-0029 §2).
+        RetMarshal::Object => (
+            "UnsafeMutableRawPointer?".to_string(),
+            Box::new(|c: &str| {
+                format!("(({c}) as AnyObject?).map {{ Unmanaged.passRetained($0).toOpaque() }}")
+            }),
+        ),
+        RetMarshal::OpaqueBox(_) if nullable => (
+            "UnsafeMutableRawPointer?".to_string(),
+            Box::new(|c: &str| format!("({c}).map {{ awGerbilBox($0) }} ?? nil")),
+        ),
+        RetMarshal::OpaqueBox(_) => (
+            "UnsafeMutableRawPointer?".to_string(),
+            Box::new(|c: &str| format!("awGerbilBox({c})")),
+        ),
+    }
+}
+
+/// The expression marshalling an async method's success result (`awR`) to the
+/// `AwGerbilAsyncOutcome.value` pointer payload, computed on the cooperative thread
+/// inside the operation closure. `Void` is handled by the caller; scalar returns are
+/// deferred upstream.
+fn async_outcome_value(ret: &RetMarshal, nullable: bool) -> String {
+    match ret {
+        RetMarshal::SwiftString if nullable => {
+            "(awR as String?).map { Unmanaged.passRetained($0 as NSString).toOpaque() } ?? nil"
+                .to_string()
+        }
+        RetMarshal::SwiftString => "Unmanaged.passRetained(awR as NSString).toOpaque()".to_string(),
+        RetMarshal::Object => {
+            "(awR as AnyObject?).map { Unmanaged.passRetained($0).toOpaque() }".to_string()
+        }
+        RetMarshal::OpaqueBox(_) if nullable => "awR.map { awGerbilBox($0) } ?? nil".to_string(),
+        RetMarshal::OpaqueBox(_) => "awGerbilBox(awR)".to_string(),
+        RetMarshal::Void | RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } => {
+            "nil".to_string()
+        }
+    }
+}
+
+/// Emit one `async` method trampoline (D5/R4): the `@_cdecl` takes a trailing gerbil
+/// completion context (`awCtx`) + C callback (`awCb`) and drives `awGerbilAsyncDispatch`
+/// — the operation closure unboxes the receiver, `await`s, and marshals to
+/// `AwGerbilAsyncOutcome` **on the cooperative thread**; the completion closure delivers
+/// it through `awCb` **on the main thread**. Errors ride `AwGerbilAsyncOutcome.error`,
+/// so there is no `NSError**` out-param.
+fn emit_async_method_tramp(s: &mut String, t: &MethodTrampoline) {
+    let (arg_decl, arg_prelude) = args_decl_and_prelude(&t.params);
+    let mut decl = vec!["_ awRecv: UnsafeMutableRawPointer?".to_string()];
+    decl.extend(arg_decl);
+    decl.push("_ awCtx: Int".to_string());
+    decl.push(
+        "_ awCb: @convention(c) (Int, UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> Void"
+            .to_string(),
+    );
+    emit_cdecl_header(s, &t.availability, &t.entry, &decl, "");
+    // Args reconstruct to Sendable values here (calling thread); the operation closure
+    // captures those values (Sendable + copy), so no gerbil-owned handle dangles.
+    s.push_str(&arg_prelude);
+
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    // The receiver pointer rides a `nonisolated(unsafe) let` across the hop (the
+    // caller's lifetime contract makes the capture sound); the receiver is reconstructed
+    // *inside* the `@Sendable` operation closure.
+    s.push_str("  nonisolated(unsafe) let awRecvUnsafe = awRecv\n");
+    let recv_line = match &t.recv {
+        SelfMarshal::ClassRef => format!(
+            "    let awSelf = Unmanaged<{owner}>.fromOpaque(awRecvUnsafe!).takeUnretainedValue()\n"
+        ),
+        SelfMarshal::ValueBox { .. } => {
+            format!("    let awSelf = awGerbilUnbox(awRecvUnsafe!, as: {owner}.self)\n")
+        }
+    };
+    let call = format!(
+        "awSelf.{}({})",
+        t.swift_name,
+        arg_values(&t.params, &t.labels, true).join(", ")
+    );
+    let value_expr = async_outcome_value(&t.ret, t.ret_nullable);
+
+    s.push_str("  awGerbilAsyncDispatch({ () async -> AwGerbilAsyncOutcome in\n");
+    s.push_str(&recv_line);
+    match (t.throwing, &t.ret) {
+        (true, RetMarshal::Void) => s.push_str(
+            "    do {\n      try await __CALL__\n      return AwGerbilAsyncOutcome()\n    } catch {\n      return AwGerbilAsyncOutcome.failure(error)\n    }\n"
+                .replace("__CALL__", &call)
+                .as_str(),
+        ),
+        (true, _) => s.push_str(
+            "    do {\n      let awR = try await __CALL__\n      return AwGerbilAsyncOutcome(value: __VAL__)\n    } catch {\n      return AwGerbilAsyncOutcome.failure(error)\n    }\n"
+                .replace("__CALL__", &call)
+                .replace("__VAL__", &value_expr)
+                .as_str(),
+        ),
+        (false, RetMarshal::Void) => {
+            s.push_str(&format!("    await {call}\n    return AwGerbilAsyncOutcome()\n"))
+        }
+        (false, _) => s.push_str(&format!(
+            "    let awR = await {call}\n    return AwGerbilAsyncOutcome(value: {value_expr})\n"
+        )),
+    }
+    s.push_str("  }, { awOutcome in\n    awCb(awCtx, awOutcome.value, awOutcome.error)\n  })\n");
+    s.push_str("}\n");
+}
+
+/// Emit one method trampoline: receiver handle + args → `receiver.name(labels:)`.
+fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
+    if t.is_async {
+        emit_async_method_tramp(s, t);
+        return;
+    }
+    let (arg_decl, arg_prelude) = args_decl_and_prelude(&t.params);
+    let (cret, marshal) = method_return_shape(&t.ret, t.ret_nullable);
+
+    let mut decl = vec!["_ awRecv: UnsafeMutableRawPointer?".to_string()];
+    decl.extend(arg_decl);
+    if t.throwing {
+        decl.push("_ awErrOut: UnsafeMutableRawPointer?".to_string());
+    }
+    let sig_ret = if cret == "Void" {
+        String::new()
+    } else {
+        format!(" -> {cret}")
+    };
+    emit_cdecl_header(s, &t.availability, &t.entry, &decl, &sig_ret);
+
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    let (recv_prelude, writeback) = match &t.recv {
+        SelfMarshal::ClassRef => (
+            format!(
+                "  let awSelf = Unmanaged<{owner}>.fromOpaque(awRecv!).takeUnretainedValue()\n"
+            ),
+            None,
+        ),
+        SelfMarshal::ValueBox { mutating: false } => (
+            format!("  let awSelf = awGerbilUnbox(awRecv!, as: {owner}.self)\n"),
+            None,
+        ),
+        SelfMarshal::ValueBox { mutating: true } => (
+            format!(
+                "  let awBox = Unmanaged<AwGerbilValueBox>.fromOpaque(awRecv!).takeUnretainedValue()\n  \
+                 var awSelf = awBox.value as! {owner}\n"
+            ),
+            Some("  awBox.value = awSelf\n".to_string()),
+        ),
+    };
+    s.push_str(&recv_prelude);
+    s.push_str(&arg_prelude);
+
+    let call = format!(
+        "awSelf.{}({})",
+        t.swift_name,
+        arg_values(&t.params, &t.labels, true).join(", ")
+    );
+
+    if t.throwing {
+        let wb = writeback.as_deref().unwrap_or("");
+        match &t.ret {
+            RetMarshal::Void => {
+                s.push_str(&format!(
+                    "  awGerbilTry(awErrOut, ()) {{ try {call}\n  {wb}}}\n"
+                ));
+            }
+            RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } => {
+                let m = marshal("awR");
+                s.push_str(&format!(
+                    "  return awGerbilTry(awErrOut, {fb}) {{ let awR = try {call}\n  {wb}  return {m} }}\n",
+                    fb = throw_fallback(&t.ret),
+                ));
+            }
+            RetMarshal::SwiftString | RetMarshal::Object | RetMarshal::OpaqueBox(_) => {
+                let m = marshal("awR");
+                let wrapped = if marshalled_is_optional(&t.ret, t.ret_nullable) {
+                    m
+                } else {
+                    format!("Optional({m})")
+                };
+                s.push_str(&format!(
+                    "  return awGerbilTry(awErrOut, nil) {{ let awR = try {call}\n  {wb}  return {wrapped} }}\n"
+                ));
+            }
+        }
+    } else {
+        match (&t.ret, &writeback) {
+            (RetMarshal::Void, None) => s.push_str(&format!("  {call}\n")),
+            (RetMarshal::Void, Some(wb)) => s.push_str(&format!("  {call}\n{wb}")),
+            (_, None) => s.push_str(&format!("  return {}\n", marshal(&call))),
+            (_, Some(wb)) => {
+                let m = marshal("awR");
+                s.push_str(&format!("  let awR = {call}\n{wb}  return {m}\n"));
+            }
+        }
+    }
+    s.push_str("}\n");
+}
+
+/// Emit one initializer producer: `Owner(labels:)` → boxed handle of the owner.
+fn emit_init_tramp(s: &mut String, t: &InitTrampoline) {
+    let (arg_decl, arg_prelude) = args_decl_and_prelude(&t.params);
+    let mut decl = arg_decl;
+    if t.throwing {
+        decl.push("_ awErrOut: UnsafeMutableRawPointer?".to_string());
+    }
+    emit_cdecl_header(
+        s,
+        &t.availability,
+        &t.entry,
+        &decl,
+        " -> UnsafeMutableRawPointer?",
+    );
+    s.push_str(&arg_prelude);
+
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    // Init params pass with their declared width (no `numericCast`): an overloaded
+    // initializer is selected *by* the param type, so a width-agnostic cast would make
+    // the constructor call ambiguous.
+    let ctor = format!(
+        "{owner}({})",
+        arg_values(&t.params, &t.labels, false).join(", ")
+    );
+    // Box the owning type (R2): a class instance keeps reference identity via
+    // `Unmanaged.passRetained` (gerbil `wrap`s it Scheme-side); a value rides the
+    // uniform `awGerbilBox`.
+    let box_of = |expr: &str| -> String {
+        if t.owner_is_class {
+            format!("Unmanaged.passRetained({expr}).toOpaque()")
+        } else {
+            format!("awGerbilBox({expr})")
+        }
+    };
+    if t.throwing {
+        s.push_str(&format!(
+            "  return awGerbilTry(awErrOut, nil) {{ Optional({}) }}\n",
+            box_of(&format!("try {ctor}"))
+        ));
+    } else {
+        s.push_str(&format!("  return {}\n", box_of(&ctor)));
+    }
+    s.push_str("}\n");
+}
+
+// --- Method/init gerbil binding rendering (consumed by emit_class routing) ---
+
+/// The `%swift-<fn-name>` crossing identifier for a method/init binding — the
+/// `define-c-lambda` that calls the dylib entry; the outer `(define <fn-name> …)`
+/// wraps it (mirrors the free-function `%swift-<binding>` convention).
+fn method_crossing_name(fn_name: &str) -> String {
+    format!("%swift-{fn_name}")
+}
+
+impl MethodTrampoline {
+    /// The gerbil FFI token + C type for the receiver pointer, each visible param, then
+    /// (async) the trailing ctx + callback fptr, or (throwing) the `NSError**` out-cell.
+    fn gerbil_arg_reps(&self) -> Vec<(&'static str, &'static str)> {
+        let mut v: Vec<(&'static str, &'static str)> = vec![(POINTER, "void *")]; // receiver
+        for m in &self.params {
+            v.push(match m {
+                ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => {
+                    (s.gerbil(), c_type_for_token(s.gerbil()))
+                }
+                ArgMarshal::SwiftString
+                | ArgMarshal::BoxedHandle { .. }
+                | ArgMarshal::ObjectRef { .. } => (POINTER, "void *"),
+            });
+        }
+        if self.is_async {
+            v.push(("int64", "long long")); // completion ctx (Swift `Int`)
+            v.push((POINTER, "void *")); // the GC-stable C callback fptr
+        } else if self.throwing {
+            v.push((ERR_CELL_TOKEN, "void *")); // NSError** out-cell
+        }
+        v
+    }
+
+    /// The gerbil FFI return token + C type. An `async` method returns `void` (the
+    /// result is delivered through the callback).
+    fn ret_rep(&self) -> (&'static str, &'static str) {
+        if self.is_async {
+            return ("void", "void");
+        }
+        match &self.ret {
+            RetMarshal::Void => ("void", "void"),
+            RetMarshal::Scalar(s) | RetMarshal::ScalarTypedef { scalar: s, .. } => {
+                (s.gerbil(), c_type_for_token(s.gerbil()))
+            }
+            RetMarshal::SwiftString | RetMarshal::Object | RetMarshal::OpaqueBox(_) => {
+                (POINTER, "void *")
+            }
+        }
+    }
+
+    /// The FFI crossing for this method trampoline — the synthesized `extern`
+    /// prototype + the `define-c-lambda` binding the dylib entry, both emitted into
+    /// the file's Swift-native `begin-ffi` block. `fn_name` is the gerbil-visible
+    /// method name `emit_class` computes (so the crossing/outer define agree).
+    pub fn crossing(&self, fn_name: &str) -> Crossing {
+        let args = self.gerbil_arg_reps();
+        let (ret_tok, ret_c) = self.ret_rep();
+        let proto_args = args
+            .iter()
+            .map(|(_, c)| (*c).to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let arg_tokens = args
+            .iter()
+            .map(|(t, _)| (*t).to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
+        Crossing {
+            proto: format!("extern {} {}({});", ret_c, self.entry, proto_args),
+            define_c_lambda: format!(
+                "(define-c-lambda {} ({}) {} \"{}\")",
+                method_crossing_name(fn_name),
+                arg_tokens,
+                ret_tok,
+                self.entry
+            ),
+            needs_stdbool: args.iter().any(|(t, _)| *t == "bool") || ret_tok == "bool",
+        }
+    }
+
+    /// Render the outer `(define <fn-name> …)` gerbil binding against
+    /// libAPIAnywareGerbil. The receiver coerces to its raw handle pointer via
+    /// `(->ptr self)` (a wrapped class instance → its ptr; a raw value handle →
+    /// through), `String` args bridge in, an object result `wrap`s out, a `throws`
+    /// routes through the error cell, an `async` through `aw-async-call`.
+    pub fn render_binding(&self, fn_name: &str, param_names: &[String]) -> String {
+        let crossing = method_crossing_name(fn_name);
+        if self.is_async {
+            return self.render_async_binding(fn_name, param_names, &crossing);
+        }
+        let call_args: Vec<String> = self
+            .params
+            .iter()
+            .zip(param_names)
+            .map(|(m, p)| match m {
+                ArgMarshal::SwiftString => format!("(aw-swift-string-arg {p})"),
+                ArgMarshal::BoxedHandle { .. } | ArgMarshal::ObjectRef { .. } => {
+                    format!("(->ptr {p})")
+                }
+                ArgMarshal::Scalar(_) | ArgMarshal::ScalarTypedef { .. } => p.clone(),
+            })
+            .collect();
+        let args_str = if call_args.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", call_args.join(" "))
+        };
+        let lambda_params = if param_names.is_empty() {
+            "self".to_string()
+        } else {
+            format!("self {}", param_names.join(" "))
+        };
+        if self.throwing {
+            let coerce = match &self.ret {
+                RetMarshal::SwiftString => "aw-swift-string-result".to_string(),
+                RetMarshal::Object => "(lambda (p) (wrap p #t))".to_string(),
+                _ => "values".to_string(),
+            };
+            format!(
+                "(define {fn_name}\n  (lambda ({lambda_params})\n    \
+                 (aw-swift-call/error\n      \
+                 (lambda (%err) ({crossing} (->ptr self){args_str} %err))\n      \
+                 {coerce})))",
+            )
+        } else {
+            let raw = format!("({crossing} (->ptr self){args_str})");
+            let body = match &self.ret {
+                RetMarshal::SwiftString => format!("(aw-swift-string-result {raw})"),
+                RetMarshal::Object => format!("(wrap {raw} #t)"),
+                _ => raw,
+            };
+            format!("(define {fn_name}\n  (lambda ({lambda_params})\n    {body}))")
+        }
+    }
+
+    /// Render the callback-form gerbil binding for an `async` method (R4). The
+    /// generated procedure takes a trailing `complete` continuation; it threads the
+    /// receiver + args into the kicker (which `aw-async-call` invokes with a fresh ctx
+    /// id + the shared C callback), and `complete` is delivered the coerced result on
+    /// the main thread when the operation finishes. No blocking await.
+    fn render_async_binding(&self, fn_name: &str, param_names: &[String], crossing: &str) -> String {
+        let call_args: Vec<String> = self
+            .params
+            .iter()
+            .zip(param_names)
+            .map(|(m, p)| match m {
+                ArgMarshal::SwiftString => format!("(aw-swift-string-arg {p})"),
+                ArgMarshal::BoxedHandle { .. } | ArgMarshal::ObjectRef { .. } => {
+                    format!("(->ptr {p})")
+                }
+                ArgMarshal::Scalar(_) | ArgMarshal::ScalarTypedef { .. } => p.clone(),
+            })
+            .collect();
+        let args_str = if call_args.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", call_args.join(" "))
+        };
+        let lambda_params = if param_names.is_empty() {
+            "self complete".to_string()
+        } else {
+            format!("self {} complete", param_names.join(" "))
+        };
+        let coerce = match &self.ret {
+            RetMarshal::SwiftString => "aw-swift-string-result",
+            RetMarshal::Object => "(lambda (p) (wrap p #t))",
+            _ => "values",
+        };
+        format!(
+            "(define {fn_name}\n  (lambda ({lambda_params})\n    \
+             (aw-async-call\n      \
+             (lambda (id cb) ({crossing} (->ptr self){args_str} id cb))\n      \
+             {coerce}\n      complete)))",
+        )
+    }
+
+    /// Whether this method is `async` (D5/R4).
+    pub fn is_async(&self) -> bool {
+        self.is_async
+    }
+
+    /// Whether the binding references `wrap` / `->ptr` (the `objc` runtime). Always
+    /// true — every method coerces the receiver via `(->ptr self)`.
+    pub fn needs_objc(&self) -> bool {
+        true
+    }
+
+    /// Whether the binding references the `aw-swift-*` helpers (string in/out or a
+    /// `throws` shape).
+    pub fn needs_swift_helpers(&self) -> bool {
+        self.throwing
+            || matches!(self.ret, RetMarshal::SwiftString)
+            || self.params.iter().any(|m| matches!(m, ArgMarshal::SwiftString))
+    }
+}
+
+impl InitTrampoline {
+    /// The gerbil FFI token + C type for each marshalled arg, then the trailing
+    /// `NSError**` out-cell when throwing. No receiver.
+    fn gerbil_arg_reps(&self) -> Vec<(&'static str, &'static str)> {
+        let mut v: Vec<(&'static str, &'static str)> = self
+            .params
+            .iter()
+            .map(|m| match m {
+                ArgMarshal::Scalar(s) | ArgMarshal::ScalarTypedef { scalar: s, .. } => {
+                    (s.gerbil(), c_type_for_token(s.gerbil()))
+                }
+                ArgMarshal::SwiftString
+                | ArgMarshal::BoxedHandle { .. }
+                | ArgMarshal::ObjectRef { .. } => (POINTER, "void *"),
+            })
+            .collect();
+        if self.throwing {
+            v.push((ERR_CELL_TOKEN, "void *"));
+        }
+        v
+    }
+
+    /// The FFI crossing for this init producer — a zero-or-more-arg reader returning
+    /// the boxed/object owner handle (always a pointer).
+    pub fn crossing(&self, fn_name: &str) -> Crossing {
+        let args = self.gerbil_arg_reps();
+        let proto_args = if args.is_empty() {
+            "void".to_string()
+        } else {
+            args.iter()
+                .map(|(_, c)| (*c).to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let arg_tokens = args
+            .iter()
+            .map(|(t, _)| (*t).to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
+        Crossing {
+            proto: format!("extern void * {}({});", self.entry, proto_args),
+            define_c_lambda: format!(
+                "(define-c-lambda {} ({}) (pointer void) \"{}\")",
+                method_crossing_name(fn_name),
+                arg_tokens,
+                self.entry
+            ),
+            needs_stdbool: args.iter().any(|(t, _)| *t == "bool"),
+        }
+    }
+
+    /// Render the outer `(define <fn-name> …)` gerbil binding for an initializer
+    /// producer. It calls the `@_cdecl` and returns the owner handle: a **class** owner
+    /// `wrap`s the returned id to its exact bound type (ADR-0029 §2); a **value** owner
+    /// hands back the raw opaque handle. A throwing init routes through the error cell.
+    pub fn render_binding(&self, fn_name: &str, param_names: &[String]) -> String {
+        let crossing = method_crossing_name(fn_name);
+        let call_args: Vec<String> = self
+            .params
+            .iter()
+            .zip(param_names)
+            .map(|(m, p)| match m {
+                ArgMarshal::SwiftString => format!("(aw-swift-string-arg {p})"),
+                _ => p.clone(),
+            })
+            .collect();
+        let args_str = if call_args.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", call_args.join(" "))
+        };
+        let lambda_params = param_names.join(" ");
+        if self.throwing {
+            let coerce = if self.owner_is_class {
+                "(lambda (p) (wrap p #t))"
+            } else {
+                "values"
+            };
+            format!(
+                "(define {fn_name}\n  (lambda ({lambda_params})\n    \
+                 (aw-swift-call/error\n      \
+                 (lambda (%err) ({crossing}{args_str} %err))\n      \
+                 {coerce})))",
+            )
+        } else {
+            let raw = format!("({crossing}{args_str})");
+            let body = if self.owner_is_class {
+                format!("(wrap {raw} #t)")
+            } else {
+                raw
+            };
+            format!("(define {fn_name}\n  (lambda ({lambda_params})\n    {body}))")
+        }
+    }
+
+    /// Whether the binding references `wrap` (the `objc` runtime) — true for a class
+    /// owner (the returned id wraps to its bound type).
+    pub fn needs_objc(&self) -> bool {
+        self.owner_is_class
+    }
+
+    /// Whether the binding references the `aw-swift-*` helpers (string param or throws).
+    pub fn needs_swift_helpers(&self) -> bool {
+        self.throwing || self.params.iter().any(|m| matches!(m, ArgMarshal::SwiftString))
+    }
 }
 
 #[cfg(test)]
@@ -1470,7 +2772,7 @@ mod tests {
         );
         assert!(swift.contains("return CreateML.timestampSeed()"), "{swift}");
         assert!(
-            swift.contains("1 function + 0 constant trampoline."),
+            swift.contains("1 function + 0 constant + 0 init + 0 method trampolines."),
             "{swift}"
         );
     }
@@ -1556,5 +2858,429 @@ mod tests {
         let set = collect_trampolines(std::slice::from_ref(&fw));
         assert_eq!(set.functions.len(), 1);
         assert_eq!(set.functions[0].swift_name, "seed");
+    }
+
+    // --- Method / init trampoline codegen (the method frontier, ADR-0030) ---
+
+    fn method(selector: &str, params: Vec<Param>, ret: TypeRef, info: SwiftFnInfo) -> Method {
+        Method {
+            selector: selector.into(),
+            class_method: false,
+            init_method: selector.starts_with("init"),
+            params,
+            return_type: ret,
+            deprecated: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+            category: None,
+            overrides: None,
+            returns_retained: None,
+            satisfies_protocol: None,
+            objc_exposed: false,
+            swift_fn: Some(info),
+        }
+    }
+
+    fn swiftk() -> SwiftFnInfo {
+        SwiftFnInfo::default()
+    }
+
+    fn mutating() -> SwiftFnInfo {
+        SwiftFnInfo {
+            self_kind: Some("Mutating".into()),
+            ..Default::default()
+        }
+    }
+
+    fn asyncthrows() -> SwiftFnInfo {
+        SwiftFnInfo {
+            is_async: true,
+            throwing: true,
+            self_kind: Some("NonMutating".into()),
+            ..Default::default()
+        }
+    }
+
+    /// An `async throws` method (the `URLSession.data(from:)` headline) drives the
+    /// completion-callback bridge (D5/R4): the `@_cdecl` takes a trailing ctx + C
+    /// callback and delivers through `awGerbilAsyncDispatch`.
+    #[test]
+    fn async_throws_method_drives_completion_callback() {
+        let m = method(
+            "data(from:)",
+            vec![param("from", class("NSURL", "Foundation"))],
+            class("Tuple", "Foundation"), // unspellable ⇒ OpaqueBox(None), boxed
+            asyncthrows(),
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "Foundation",
+            "URLSession",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
+            panic!("an async method must trampoline (callback form), not defer");
+        };
+        assert!(t.is_async(), "classified async");
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(
+            s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: UnsafeMutableRawPointer?, _ awCtx: Int, _ awCb: @convention(c) (Int, UnsafeMutableRawPointer?, UnsafeMutableRawPointer?) -> Void)"),
+            "{s}"
+        );
+        assert!(
+            s.contains("let o0 = Unmanaged<NSURL>.fromOpaque(a0!).takeUnretainedValue() as URL"),
+            "{s}"
+        );
+        assert!(s.contains("nonisolated(unsafe) let awRecvUnsafe = awRecv"), "{s}");
+        assert!(s.contains("awGerbilAsyncDispatch({ () async -> AwGerbilAsyncOutcome in"), "{s}");
+        assert!(
+            s.contains("let awSelf = Unmanaged<Foundation.URLSession>.fromOpaque(awRecvUnsafe!).takeUnretainedValue()"),
+            "{s}"
+        );
+        assert!(s.contains("let awR = try await awSelf.data(from: o0)"), "{s}");
+        assert!(s.contains("return AwGerbilAsyncOutcome(value: awGerbilBox(awR))"), "{s}");
+        assert!(s.contains("return AwGerbilAsyncOutcome.failure(error)"), "{s}");
+        assert!(s.contains("awCb(awCtx, awOutcome.value, awOutcome.error)"), "{s}");
+        // gerbil binding: the callback form via aw-async-call; `complete` is the last
+        // lambda arg, threaded as ctx+cb into the kicker. The crossing has the receiver,
+        // object pointer, ctx (int64), callback fptr; returns void.
+        let cx = t.crossing("url-session-data");
+        assert_eq!(
+            cx.define_c_lambda,
+            "(define-c-lambda %swift-url-session-data ((pointer void) (pointer void) int64 (pointer void)) void \"aw_gerbil_swift_m_Foundation_URLSession_data\")"
+        );
+        let chez = t.render_binding("url-session-data", &["url".into()]);
+        assert!(chez.contains("(lambda (self url complete)"), "{chez}");
+        assert!(chez.contains("(aw-async-call"), "{chez}");
+        assert!(chez.contains("(%swift-url-session-data (->ptr self) (->ptr url) id cb)"), "{chez}");
+    }
+
+    /// A value-struct owner's non-mutating method unboxes a copy and calls by name.
+    #[test]
+    fn value_receiver_nonmutating_method_unboxes_and_calls() {
+        let m = method("contains(_:)", vec![param("_", prim("int64"))], prim("bool"), swiftk());
+        let MethodDisposition::Method(t) =
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
+        else {
+            panic!("expected method trampoline");
+        };
+        assert_eq!(t.entry, "aw_gerbil_swift_m_Foundation_IndexSet_contains");
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(s.contains("@_cdecl(\"aw_gerbil_swift_m_Foundation_IndexSet_contains\")"), "{s}");
+        assert!(s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: Int) -> Bool"), "{s}");
+        assert!(s.contains("let awSelf = awGerbilUnbox(awRecv!, as: Foundation.IndexSet.self)"), "{s}");
+        // Integer params ride numericCast (IR int-width collapse); a Bool return is identity.
+        assert!(s.contains("return awSelf.contains(numericCast(a0))"), "{s}");
+        let cx = t.crossing("index-set-contains");
+        assert_eq!(
+            cx.define_c_lambda,
+            "(define-c-lambda %swift-index-set-contains ((pointer void) int64) bool \"aw_gerbil_swift_m_Foundation_IndexSet_contains\")"
+        );
+        let chez = t.render_binding("index-set-contains", &["n".into()]);
+        assert!(chez.contains("(lambda (self n)"), "{chez}");
+        assert!(chez.contains("(%swift-index-set-contains (->ptr self) n)"), "{chez}");
+    }
+
+    /// A `mutating` value-receiver method writes the mutated value back into the box.
+    #[test]
+    fn mutating_value_receiver_writes_back() {
+        let m = method("update(with:)", vec![param("with", prim("int64"))], prim("int64"), mutating());
+        let MethodDisposition::Method(t) =
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
+        else {
+            panic!("expected method trampoline");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(s.contains("let awBox = Unmanaged<AwGerbilValueBox>.fromOpaque(awRecv!).takeUnretainedValue()"), "{s}");
+        assert!(s.contains("var awSelf = awBox.value as! Foundation.IndexSet"), "{s}");
+        assert!(s.contains("let awR = awSelf.update(with: numericCast(a0))"), "{s}");
+        assert!(s.contains("awBox.value = awSelf"), "{s}");
+        assert!(s.contains("return numericCast(awR)"), "{s}");
+        // The gerbil-visible name carries the mutating `!`.
+        let chez = t.render_binding("index-set-update-with!", &["n".into()]);
+        assert!(chez.contains("(define index-set-update-with!"), "{chez}");
+    }
+
+    /// A class (reference) receiver reconstructs via `Unmanaged`, no write-back.
+    #[test]
+    fn class_receiver_uses_unmanaged() {
+        let m = method("description", vec![], nsstring(), swiftk());
+        let MethodDisposition::Method(t) =
+            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
+        else {
+            panic!("expected method trampoline");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(
+            s.contains("let awSelf = Unmanaged<TestKit.Widget>.fromOpaque(awRecv!).takeUnretainedValue()"),
+            "{s}"
+        );
+        assert!(!s.contains("awBox.value ="), "no write-back for a class receiver: {s}");
+    }
+
+    /// gerbil's divergence: an **object**-returning method `wrap`s to its exact bound
+    /// type (raw +1 id Swift-side), it does NOT box an opaque handle.
+    #[test]
+    fn object_returning_method_wraps_not_boxes() {
+        let m = method("clone", vec![], class("TKWidget", "TestKit"), swiftk());
+        let MethodDisposition::Method(t) =
+            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
+        else {
+            panic!("expected method trampoline");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        // Swift hands back a raw +1 id (nil-safe map), not awGerbilBox.
+        assert!(s.contains("((awSelf.clone()) as AnyObject?).map { Unmanaged.passRetained($0).toOpaque() }"), "{s}");
+        assert!(!s.contains("awGerbilBox"), "object return must not box:\n{s}");
+        // gerbil binding wraps the result to its bound type.
+        let chez = t.render_binding("widget-clone", &[]);
+        assert!(chez.contains("(wrap (%swift-widget-clone (->ptr self)) #t)"), "{chez}");
+    }
+
+    /// An initializer producer for a value struct boxes the *owning type* (R2) and the
+    /// gerbil side hands back the raw opaque handle.
+    #[test]
+    fn value_init_producer_boxes_owner_and_returns_raw_handle() {
+        let m = method("init(integer:)", vec![param("integer", prim("int64"))], class("NSIndexSet", "Foundation"), swiftk());
+        let MethodDisposition::Init(t) =
+            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
+        else {
+            panic!("expected init trampoline");
+        };
+        assert_eq!(t.entry, "aw_gerbil_swift_init_Foundation_IndexSet");
+        let mut s = String::new();
+        emit_init_tramp(&mut s, &t);
+        assert!(s.contains("_ a0: Int) -> UnsafeMutableRawPointer?"), "{s}");
+        // Init params keep their declared width (no numericCast — overload selection).
+        assert!(s.contains("return awGerbilBox(Foundation.IndexSet(integer: a0))"), "{s}");
+        let cx = t.crossing("make-index-set-integer");
+        assert_eq!(
+            cx.define_c_lambda,
+            "(define-c-lambda %swift-make-index-set-integer (int64) (pointer void) \"aw_gerbil_swift_init_Foundation_IndexSet\")"
+        );
+        // A value owner hands back the raw handle (no wrap — no ObjC class to wrap to).
+        let chez = t.render_binding("make-index-set-integer", &["integer".into()]);
+        assert!(chez.contains("(define make-index-set-integer"), "{chez}");
+        assert!(chez.contains("(lambda (integer)"), "{chez}");
+        assert!(chez.contains("(%swift-make-index-set-integer integer)"), "{chez}");
+        assert!(!chez.contains("wrap"), "value init must not wrap:\n{chez}");
+    }
+
+    /// A **class** initializer keeps reference identity (`Unmanaged.passRetained`
+    /// Swift-side) and the gerbil side `wrap`s the returned id to its bound type.
+    #[test]
+    fn class_init_passes_retained_and_wraps() {
+        let m = method("init", vec![], class("Widget", "TestKit"), swiftk());
+        let MethodDisposition::Init(t) =
+            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
+        else {
+            panic!("expected init trampoline");
+        };
+        let mut s = String::new();
+        emit_init_tramp(&mut s, &t);
+        assert!(s.contains("return Unmanaged.passRetained(TestKit.Widget()).toOpaque()"), "{s}");
+        let cx = t.crossing("make-widget");
+        assert_eq!(
+            cx.define_c_lambda,
+            "(define-c-lambda %swift-make-widget () (pointer void) \"aw_gerbil_swift_init_TestKit_Widget\")"
+        );
+        let chez = t.render_binding("make-widget", &[]);
+        assert!(chez.contains("(lambda ()"), "{chez}");
+        assert!(chez.contains("(wrap (%swift-make-widget) #t)"), "{chez}");
+    }
+
+    /// Generic / consuming / operator / static methods defer with the right reason.
+    #[test]
+    fn method_deferrals_are_categorised() {
+        let generic = method("map(_:)", vec![], prim("void"), SwiftFnInfo { is_generic: true, ..Default::default() });
+        let consuming = method("take", vec![], prim("void"), SwiftFnInfo { self_kind: Some("Consuming".into()), ..Default::default() });
+        let op = method("==(_:_:)", vec![], prim("bool"), swiftk());
+        let mut stat = method("shared", vec![], prim("void"), swiftk());
+        stat.class_method = true;
+        for (m, want) in [
+            (&generic, DeferReason::UnbindableGenericMethod),
+            (&consuming, DeferReason::ConsumingReceiver),
+            (&op, DeferReason::NonNameableMethod),
+            (&stat, DeferReason::StaticMethod),
+        ] {
+            let MethodDisposition::Deferred(r) =
+                classify_method("Foundation", "IndexSet", false, m, std::slice::from_ref(m), &no_structs(), None)
+            else {
+                panic!("expected deferral for {:?}", m.selector);
+            };
+            assert_eq!(r, want, "selector {:?}", m.selector);
+        }
+    }
+
+    /// Overloaded methods get distinct content-addressed entries; the collect pass
+    /// walks structs and classes and tallies inits/methods (residual reproduces racket).
+    #[test]
+    fn collect_walks_types_and_disambiguates_overloads() {
+        let fw = Framework {
+            format_version: "1.0".into(),
+            checkpoint: "enriched".into(),
+            name: "Foundation".into(),
+            sdk_version: None,
+            collected_at: None,
+            depends_on: vec![],
+            skipped_symbols: vec![],
+            classes: vec![],
+            protocols: vec![],
+            enums: vec![],
+            structs: vec![Struct {
+                name: "IndexSet".into(),
+                fields: vec![],
+                methods: vec![
+                    method("init(integer:)", vec![param("integer", prim("int64"))], class("NSIndexSet", "Foundation"), swiftk()),
+                    method("contains(_:)", vec![param("_", prim("int64"))], prim("bool"), swiftk()),
+                    method("contains(in:)", vec![param("in", prim("int64"))], prim("bool"), swiftk()),
+                    method("update(with:)", vec![param("with", prim("int64"))], prim("int64"), mutating()),
+                ],
+                source: None,
+                provenance: None,
+                doc_refs: None,
+                objc_exposed: false,
+            }],
+            functions: vec![],
+            constants: vec![],
+            class_annotations: vec![],
+            api_patterns: vec![],
+            enrichment: None,
+            verification: None,
+        };
+        let set = collect_trampolines(std::slice::from_ref(&fw));
+        assert_eq!(set.inits.len(), 1, "one init");
+        assert_eq!(set.methods.len(), 3, "three instance methods");
+        let contains: Vec<&str> = set
+            .methods
+            .iter()
+            .filter(|m| m.swift_name == "contains")
+            .map(|m| m.entry.as_str())
+            .collect();
+        assert_eq!(contains.len(), 2);
+        assert_ne!(contains[0], contains[1], "overloads disambiguated: {contains:?}");
+        let swift = generate_trampolines_swift(&set);
+        assert!(swift.contains("0 function + 0 constant + 1 init + 3 method trampolines."), "{swift}");
+    }
+
+    /// An objc-bridged reference param (`NSURL`) reconstructs as its Swift value twin
+    /// (`as URL`) before the by-name call (R1); gerbil passes the id via `->ptr`.
+    #[test]
+    fn object_ref_param_bridges_to_value_twin() {
+        let m = method(
+            "open(_:)",
+            vec![param("_", class("NSURL", "Foundation"))],
+            prim("bool"),
+            swiftk(),
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "AppKit",
+            "NSWorkspace",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
+            panic!("an objc-bridged reference param must trampoline, not defer");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(
+            s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: UnsafeMutableRawPointer?) -> Bool"),
+            "{s}"
+        );
+        assert!(
+            s.contains("let o0 = Unmanaged<NSURL>.fromOpaque(a0!).takeUnretainedValue() as URL"),
+            "{s}"
+        );
+        assert!(s.contains("return awSelf.open(o0)"), "{s}");
+        let chez = t.render_binding("ns-workspace-open", &["url".into()]);
+        assert!(chez.contains("(%swift-ns-workspace-open (->ptr self) (->ptr url))"), "{chez}");
+    }
+
+    /// A non-throwing `async` method returning an object marshals straight to
+    /// `AwGerbilAsyncOutcome(value:)` with no do/catch, and `await`s without `try`.
+    #[test]
+    fn async_nonthrowing_method_has_no_try_or_catch() {
+        let info = SwiftFnInfo {
+            is_async: true,
+            self_kind: Some("NonMutating".into()),
+            ..Default::default()
+        };
+        let m = method("response", vec![], class("Response", "MusicKit"), info);
+        let MethodDisposition::Method(t) = classify_method(
+            "MusicKit",
+            "MusicDataRequest",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
+            panic!("expected async method trampoline");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(s.contains("let awR = await awSelf.response()"), "{s}");
+        // Object return → raw +1 id map (wrapped Scheme-side), not boxed.
+        assert!(s.contains("return AwGerbilAsyncOutcome(value: (awR as AnyObject?).map { Unmanaged.passRetained($0).toOpaque() })"), "{s}");
+        assert!(!s.contains("try await"), "non-throwing must not use try: {s}");
+        assert!(!s.contains("catch"), "non-throwing must not catch: {s}");
+    }
+
+    /// An `async` void method delivers an empty outcome; a `mutating`/scalar-return
+    /// async method defers with its own reason.
+    #[test]
+    fn async_void_and_unsupportable_returns() {
+        let void_async = method(
+            "finish",
+            vec![],
+            prim("void"),
+            SwiftFnInfo { is_async: true, self_kind: Some("NonMutating".into()), ..Default::default() },
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "StoreKit", "Transaction", false, &void_async, std::slice::from_ref(&void_async), &no_structs(), None,
+        ) else {
+            panic!("expected async void method trampoline");
+        };
+        let mut s = String::new();
+        emit_method_tramp(&mut s, &t);
+        assert!(s.contains("await awSelf.finish()"), "{s}");
+        assert!(s.contains("return AwGerbilAsyncOutcome()"), "{s}");
+
+        let mut_async = method(
+            "advance",
+            vec![],
+            prim("void"),
+            SwiftFnInfo { is_async: true, self_kind: Some("Mutating".into()), ..Default::default() },
+        );
+        let scalar_async = method(
+            "count",
+            vec![],
+            prim("int64"),
+            SwiftFnInfo { is_async: true, self_kind: Some("NonMutating".into()), ..Default::default() },
+        );
+        for (m, want) in [
+            (&mut_async, DeferReason::AsyncMutatingReceiver),
+            (&scalar_async, DeferReason::AsyncScalarReturn),
+        ] {
+            let MethodDisposition::Deferred(r) = classify_method(
+                "Foundation", "Thing", false, m, std::slice::from_ref(m), &no_structs(), None,
+            ) else {
+                panic!("expected deferral for {:?}", m.selector);
+            };
+            assert_eq!(r, want, "selector {:?}", m.selector);
+        }
     }
 }

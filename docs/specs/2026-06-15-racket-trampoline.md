@@ -718,6 +718,21 @@ result err)` — non-blocking, no run-loop pump (the app's loop already runs; a 
 smoke pumps `CFRunLoopRunInMode` itself). `coerce` is `values` for a boxed handle /
 void, `aw-string-result` for a String.
 
+> **chez + gerbil method ports (ADR-0031, ADR-0032).** The method frontier is a
+> deterministic function of the shared IR, so chez (`040-chez`, ADR-0031) and gerbil
+> (`050-gerbil`, ADR-0032) reproduce racket's method classification **exactly** — the
+> **§6d invariant**: 51 function + 7 constant + 576 init + 554 method trampolines,
+> byte-identical per-reason deferred breakdown. Each records only its per-target
+> deviation (the same axis §6b/§6c/§6d record for free functions): chez renders inline
+> `foreign-procedure`s with `(coerce-arg self)`; gerbil splits a `%swift-…`
+> `define-c-lambda` crossing from the outer `(define …)`, coerces the receiver via
+> `(->ptr self)`, and **wraps an object return to its exact bound type** via the
+> ADR-0020 registry (vs chez's uniform opaque box) — and gerbil's method frontier is
+> its **first async path** (`runtime/async-bridge.ss` over a Gambit `c-define`
+> callback; the empty free-fn async bucket carried no async surface). Both inherit the
+> B1–B5 swift-residual close through the IR; gerbil omits chez's lazy-load forcing
+> reference (the dylib links at `gxc -exe` time, ADR-0029 §4).
+
 ### 9.3 R1 object-ref params — `ArgMarshal::ObjectRef`, `objc_object_param_bridge`
 
 A `Class` param in the curated bridge table reconstructs the objc reference and
