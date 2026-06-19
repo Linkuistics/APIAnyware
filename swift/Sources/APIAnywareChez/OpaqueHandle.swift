@@ -26,7 +26,10 @@ import Foundation
 /// reference-counted: `Unmanaged.passRetained` gives the opaque +1 handle chez
 /// holds, and the matching release (via `aw_chez_box_free`) frees it.
 public final class AwChezValueBox {
-    public let value: Any
+    /// `var`, not `let`: a `mutating` value-receiver method trampoline (D3, ADR-0030)
+    /// writes the mutated value back here (`box.value = awSelf`), so the single handle
+    /// the chez side holds reflects the mutation (one stable identity).
+    public var value: Any
     @inlinable public init(_ value: Any) { self.value = value }
 }
 
