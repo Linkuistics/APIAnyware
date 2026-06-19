@@ -80,5 +80,23 @@ else
   echo "   !! smoke-swift-trampoline FAILED"; rc=1
 fi
 
+# Swift-native METHOD trampoline smoke (ADR-0030/0032) — the permanent regression
+# guard for the receiver-handle METHOD frontier (the method analogue of the
+# free-function smoke above, leaf 050-gerbil/020). Like its sibling it has its OWN
+# runner (run-swift-method-smoke.sh) which links `-lAPIAnywareGerbil` and
+# precompiles the foundation import closure the two exemplars touch. Chained here so
+# "verifying the runtime" always exercises the method receiver-handle bindings
+# (init producer D2 + mutating value-receiver write-back D3) AND the first gerbil
+# async path (URLSession.data(from:) via async-bridge.ss). Requires the generated
+# foundation bindings + the built dylib; SKIP with a build instruction otherwise.
+echo "== smoke-swift-method (ADR-0030/0032 Swift-native METHOD guard) =="
+if [ -z "$TRAMPOLINE_DYLIB" ] || [ ! -f "$LIB/foundation/indexset.ss" ] || [ ! -f "$LIB/foundation/urlsession.ss" ]; then
+  echo "   SKIP — needs generate --target gerbil + swift build -c release --product APIAnywareGerbil"
+elif "$HERE/run-swift-method-smoke.sh" | sed 's/^/   /'; then
+  echo "   smoke-swift-method OK"
+else
+  echo "   !! smoke-swift-method FAILED"; rc=1
+fi
+
 [ $rc -eq 0 ] && echo "ALL SMOKES OK" || echo "SMOKE FAILURES"
 exit $rc
