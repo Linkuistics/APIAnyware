@@ -21,11 +21,12 @@ use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInf
 use apianyware_macos_emit::write_line;
 use apianyware_macos_types::ir::Framework;
 
-use crate::emit_class::{class_exports, generate_class_file};
+use crate::emit_class::{generate_class_file_with_exports, generate_struct_file};
 use crate::emit_constants::{constant_names, generate_constants_file};
 use crate::emit_enums::{enum_value_names, generate_enums_file};
 use crate::emit_functions::{count_emittable, function_emittable_names, generate_functions_file};
 use crate::emit_protocol::{generate_protocol_file, protocol_exports};
+use crate::trampoline::value_struct_names;
 
 pub const CHEZ_TARGET_INFO: TargetInfo = TargetInfo {
     id: "chez",
@@ -66,17 +67,52 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
     let mut files_written: usize = 0;
     let mut sublibraries: Vec<SubLibrary> = Vec::new();
 
-    // Class files.
+    // The owning framework's value-struct set is the soundness gate for unboxing
+    // value-struct params on Swift-native methods (spec §5c). It must be the same
+    // slice the global trampoline pass sees, and is threaded into both class and
+    // struct emission so the per-type bindings agree on trampoline-vs-deferred.
+    let value_structs = value_struct_names(&fw.structs);
+    let mut used_filenames: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    // Class files (ObjC substrate + Swift-native trampoline section, charter #4).
     for cls in &fw.classes {
-        let filename = format!("{}.sls", class_name_to_lowercase(&cls.name));
-        let content = generate_class_file(cls, &fw.name);
+        let cls_low = class_name_to_lowercase(&cls.name);
+        let filename = format!("{}.sls", cls_low);
+        let (content, exports) =
+            generate_class_file_with_exports(cls, &fw.name, &value_structs);
         emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename);
         files_written += 1;
 
-        let cls_low = class_name_to_lowercase(&cls.name);
         sublibraries.push(SubLibrary {
             library_path: format!("(apianyware {fw_low} {cls_low})"),
-            exports: class_exports(cls),
+            exports,
+            is_protocol: false,
+        });
+    }
+
+    // Swift-native value-struct files (population B, ADR-0030). Only structs that
+    // vend at least one bindable trampoline get a file; a plain C struct yields
+    // `None`. A struct whose lowercased name collides with a class file (rare) takes
+    // a `-struct` suffix so neither clobbers the other.
+    for st in &fw.structs {
+        let base = class_name_to_lowercase(&st.name);
+        let (filename, lib_low) = if used_filenames.contains(&format!("{base}.sls")) {
+            (format!("{base}-struct.sls"), format!("{base}-struct"))
+        } else {
+            (format!("{base}.sls"), base.clone())
+        };
+        let Some((content, exports)) =
+            generate_struct_file(st, &fw.name, &value_structs, &lib_low)
+        else {
+            continue;
+        };
+        emitter.write_file(&filename, &content)?;
+        used_filenames.insert(filename);
+        files_written += 1;
+        sublibraries.push(SubLibrary {
+            library_path: format!("(apianyware {fw_low} {lib_low})"),
+            exports,
             is_protocol: false,
         });
     }

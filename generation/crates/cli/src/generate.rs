@@ -273,7 +273,12 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
     }
 
     let set = collect_trampolines(&frameworks);
-    let entries = set.functions.len() + set.constants.len();
+    // Match racket's accounting: the method frontier (ADR-0030) adds init producers
+    // + receiver-handle methods to the free-function/constant residual, so the
+    // entry total and the log report all four kinds (the §6c invariant is checked
+    // by reproducing racket's per-kind + per-reason counts).
+    let entries =
+        set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
     let swift = generate_trampolines_swift(&set);
 
     if let Some(parent) = swift_out.parent() {
@@ -290,6 +295,8 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
     tracing::info!(
         functions = set.functions.len(),
         constants = set.constants.len(),
+        inits = set.inits.len(),
+        methods = set.methods.len(),
         deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
         output = %swift_out.display(),
         "generated chez Swift-native trampolines"

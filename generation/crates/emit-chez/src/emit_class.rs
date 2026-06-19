@@ -12,11 +12,13 @@
 //! Foundation surface; the surface only narrows the set of supported
 //! methods (see `method_filter`) where leaf 080 will widen it.
 
+use std::collections::HashSet;
+
 use apianyware_macos_emit::code_writer::CodeWriter;
 use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::naming::class_name_to_lowercase;
+use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
 use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Class, Method, Param, Property};
+use apianyware_macos_types::ir::{Class, Method, Param, Property, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::{
@@ -26,34 +28,188 @@ use crate::method_filter::{is_supported_method, returns_object_type, returns_voi
 use crate::naming::{
     make_class_method_name, make_class_property_getter_name, make_class_property_setter_name,
     make_method_name, make_msgsend_binding_name, make_property_getter_name,
-    make_property_setter_name, make_selector_binding_name, make_unique_constructor_name,
+    make_property_setter_name, make_selector_binding_name, make_swift_init_name,
+    make_swift_method_name, make_unique_constructor_name,
 };
 use crate::shared_signatures::framework_shared_object_arg;
+use crate::trampoline::{classify_method, introduced_macos, MethodDisposition};
 
-/// Generate the full `.sls` library text for one class.
+/// The rendered receiver-handle trampoline bindings (ADR-0030) for one type's
+/// declared Swift-native methods/inits (`objc_exposed == false`), plus the import
+/// flags they imply. Computed once so the header can pull the right runtime
+/// libraries and the export list can carry the exact binding names. The chez
+/// analogue of emit-racket's `SwiftNativeBindings`.
+struct SwiftNativeBindings {
+    /// One per emitted binding: (export name, rendered `(define …)`, is-async).
+    entries: Vec<SwiftNativeBinding>,
+}
+
+struct SwiftNativeBinding {
+    name: String,
+    define: String,
+    is_async: bool,
+}
+
+impl SwiftNativeBindings {
+    fn names(&self) -> impl Iterator<Item = &String> {
+        self.entries.iter().map(|e| &e.name)
+    }
+    fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+    /// Any trampoline present ⇒ the file imports `(apianyware runtime swift-trampoline)`
+    /// (`aw-string-arg`/`aw-string-result`/`aw-call/error`/`aw-trampoline-lib-ready`)
+    /// and emits the dylib-forcing reference (ADR-0028 §3).
+    fn needs_trampoline(&self) -> bool {
+        !self.entries.is_empty()
+    }
+    /// Any `async` method present ⇒ also imports `(apianyware runtime async-bridge)`
+    /// (`aw-async-call`).
+    fn needs_async_bridge(&self) -> bool {
+        self.entries.iter().any(|e| e.is_async)
+    }
+    /// Drop bindings whose Scheme name collides with an already-bound ObjC name (the
+    /// ObjC binding wins — same name in `(export …)` twice, or two `(define …)`s,
+    /// makes Chez reject the whole library). The dropped Swift duplicate is a
+    /// generation detail; the Swift-side trampoline residual is unchanged.
+    fn exclude(&mut self, objc_names: &HashSet<String>) {
+        self.entries.retain(|e| !objc_names.contains(&e.name));
+    }
+}
+
+/// Lambda formal names for a Swift-native method/init: the argument labels, kebabed.
+/// A wildcard label (`_`, e.g. `contains(_:)`) becomes a positional `argN` so two
+/// wildcard params don't collide as duplicate `lambda` formals.
+fn swift_param_names(params: &[Param]) -> Vec<String> {
+    params
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            if p.name == "_" {
+                format!("arg{i}")
+            } else {
+                camel_to_kebab(&p.name)
+            }
+        })
+        .collect()
+}
+
+/// Collect + render the receiver-handle trampoline bindings for a type's declared
+/// Swift-native methods/inits (D4 routing). `owner_is_class` picks the reference
+/// (`Unmanaged`) vs value (`AwChezValueBox`) receiver path; it MUST match the global
+/// trampoline pass (`collect_trampolines`) so every emitted binding references an
+/// entry the `@_cdecl` pass actually produces. Overloads that collapse to the same
+/// Scheme name (distinct content-addressed entries, same base+labels) keep the
+/// first — a generation detail, the Swift-side trampoline residual is unaffected.
+fn collect_swift_native_bindings(
+    owner: &str,
+    framework: &str,
+    methods: &[Method],
+    owner_is_class: bool,
+    value_structs: &HashSet<&str>,
+    owner_introduced: Option<&str>,
+) -> SwiftNativeBindings {
+    let mut entries: Vec<SwiftNativeBinding> = Vec::new();
+    let mut seen = HashSet::new();
+    for m in methods {
+        if m.swift_fn.is_none() {
+            continue; // ObjC method — binds via msgSend, no trampoline
+        }
+        match classify_method(
+            framework,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            value_structs,
+            owner_introduced,
+        ) {
+            MethodDisposition::Method(t) => {
+                let mutating = m
+                    .swift_fn
+                    .as_ref()
+                    .and_then(|i| i.self_kind.as_deref())
+                    == Some("Mutating");
+                let name = make_swift_method_name(owner, &m.selector, mutating);
+                if !seen.insert(name.clone()) {
+                    continue;
+                }
+                let param_names = swift_param_names(&m.params);
+                entries.push(SwiftNativeBinding {
+                    define: t.render_chez_method(&name, &param_names),
+                    is_async: t.is_async(),
+                    name,
+                });
+            }
+            MethodDisposition::Init(t) => {
+                let name = make_swift_init_name(owner, &m.selector);
+                if !seen.insert(name.clone()) {
+                    continue;
+                }
+                let param_names = swift_param_names(&m.params);
+                entries.push(SwiftNativeBinding {
+                    define: t.render_chez_init(&name, &param_names),
+                    is_async: false,
+                    name,
+                });
+            }
+            MethodDisposition::Deferred(_) => {} // counted by the global trampoline pass
+        }
+    }
+    SwiftNativeBindings { entries }
+}
+
+/// Emit the Swift-native trampoline section (methods + init producers) into a class
+/// or struct library body, after the ObjC bindings. The dylib-forcing reference
+/// (ADR-0028 §3) precedes the `foreign-procedure`s — chez instantiates a library
+/// lazily, so a pure-scalar trampoline that touches no coercer would otherwise never
+/// trigger the `libAPIAnywareChez` load and its entries would fail to resolve.
+/// Idempotent on an empty set.
+fn emit_swift_native_section(w: &mut CodeWriter, bindings: &SwiftNativeBindings) {
+    if bindings.is_empty() {
+        return;
+    }
+    w.line(";; --- Swift-native methods (receiver-handle trampolines, ADR-0030) ---");
+    w.line("  (define %aw-lib-ready aw-trampoline-lib-ready)");
+    for entry in &bindings.entries {
+        for line in entry.define.lines() {
+            write_line!(w, "  {}", line);
+        }
+    }
+    w.blank_line();
+}
+
+/// Generate the full `.sls` library text for one class. Convenience wrapper for the
+/// caller without the framework's value-struct set — equivalent to having no
+/// in-framework Swift value structs (a value-struct **param** on a Swift-native
+/// method then defers rather than binding, which only narrows the method frontier).
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
-    let (content, _exports) = generate_class_file_with_exports(cls, framework);
+    let (content, _exports) =
+        generate_class_file_with_exports(cls, framework, &HashSet::new());
     content
 }
 
-/// Compute the exported names for one class, in sorted order, without
-/// generating the file body. Used by `emit_framework` to assemble the
-/// per-framework `main.sls` re-export list — Chez `library` forms need
-/// explicit export names, no `all-from-out` shortcut.
-pub fn class_exports(cls: &Class) -> Vec<String> {
-    let mapper = ChezFfiTypeMapper;
-    compute_class_exports(cls, &mapper)
-}
-
 /// Compute exports + render the class file in a single pass.
-pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String, Vec<String>) {
+pub fn generate_class_file_with_exports(
+    cls: &Class,
+    framework: &str,
+    value_structs: &HashSet<&str>,
+) -> (String, Vec<String>) {
     let mapper = ChezFfiTypeMapper;
     let mut w = CodeWriter::new();
 
-    let plan = build_class_plan(cls, &mapper);
+    let plan = build_class_plan(cls, &mapper, framework, value_structs);
 
     let needs_dispatch = plan_uses_block_bridge(&plan, &mapper);
-    emit_header(&mut w, cls, framework, &plan.exports, needs_dispatch);
+    emit_header(
+        &mut w,
+        cls,
+        framework,
+        &plan.exports,
+        needs_dispatch,
+        plan.swift_native.needs_trampoline(),
+        plan.swift_native.needs_async_bridge(),
+    );
 
     let needs_default_constructor =
         !has_explicit_constructor(&plan.init_methods.iter().collect::<Vec<&Method>>(), &mapper);
@@ -92,16 +248,16 @@ pub fn generate_class_file_with_exports(cls: &Class, framework: &str) -> (String
         }
         w.blank_line();
     }
+    // Swift-native methods/inits (`objc_exposed == false`) route to receiver-handle
+    // trampolines (ADR-0030), not the broken `objc_msgSend` path (charter #4).
+    emit_swift_native_section(&mut w, &plan.swift_native);
+
     let exports = plan.exports;
 
     // Close the (library ...) form.
     w.line(")");
 
     (w.finish(), exports)
-}
-
-fn compute_class_exports(cls: &Class, mapper: &dyn FfiTypeMapper) -> Vec<String> {
-    build_class_plan(cls, mapper).exports
 }
 
 /// True when any *supported, emitted* method in the plan takes a block
@@ -121,17 +277,93 @@ fn plan_uses_block_bridge(plan: &ClassPlan, mapper: &dyn FfiTypeMapper) -> bool 
 }
 
 /// Cleaned-up emission plan for one class. Owns clones of the methods and
-/// properties so both `generate_class_file_with_exports` and
-/// `compute_class_exports` can drive emission from the same data.
+/// properties so `generate_class_file_with_exports` can drive emission from the
+/// same data, plus the rendered Swift-native trampoline bindings (charter #4).
 struct ClassPlan {
     properties: Vec<Property>,
     init_methods: Vec<Method>,
     instance_methods: Vec<Method>,
     class_methods: Vec<Method>,
+    swift_native: SwiftNativeBindings,
     exports: Vec<String>,
 }
 
-fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
+/// Generate a Chez binding library for a Swift-native **value struct** (population B,
+/// D1/D3) — the receiver is a value handle (`AwChezValueBox`, `owner_is_class =
+/// false`), init producers vend the handle, `mutating` methods write back. Returns
+/// `None` (with no file written) when the struct has no bindable trampoline (a plain
+/// C struct, or every method deferred), so no empty library is emitted. Unlike a
+/// class library there is no ObjC substrate and no framework-dylib load — just the
+/// runtime types (for `coerce-arg`), the trampoline coercers, and the bindings; the
+/// `libAPIAnywareChez` load is forced by the trampoline runtime reference. Returns
+/// the rendered library text and its export-name list (for the `main.sls` re-export).
+///
+/// `lib_low` is the lowercased final segment of the library name — Chez resolves
+/// `(apianyware <fw> <lib_low>)` to `<fw>/<lib_low>.sls`, so the caller passes the
+/// (possibly `-struct`-disambiguated) name it writes the file under, keeping the
+/// library name and filename in lockstep.
+pub fn generate_struct_file(
+    st: &Struct,
+    framework: &str,
+    value_structs: &HashSet<&str>,
+    lib_low: &str,
+) -> Option<(String, Vec<String>)> {
+    let bindings = collect_swift_native_bindings(
+        &st.name,
+        framework,
+        &st.methods,
+        false,
+        value_structs,
+        introduced_macos(&st.provenance).as_deref(),
+    );
+    if bindings.is_empty() {
+        return None;
+    }
+    let mut w = CodeWriter::new();
+    let fw = framework.to_ascii_lowercase();
+    write_line!(
+        w,
+        ";; Generated binding for {} ({}) — Swift-native value struct (ADR-0030)",
+        st.name,
+        framework
+    );
+    write_line!(w, "(library (apianyware {} {})", fw, lib_low);
+
+    let exports: Vec<String> = bindings.names().cloned().collect();
+    w.line("  (export");
+    for n in &exports {
+        write_line!(w, "    {}", n);
+    }
+    w.line("    )");
+
+    // No `(except … objc)` and no framework-dylib load: a value struct has no ObjC
+    // substrate. `(apianyware runtime types)` supplies `coerce-arg` (+ transitively
+    // loads `libAPIAnywareChez`); swift-trampoline supplies the coercers + the
+    // forcing reference; async-bridge only when a method is `async`.
+    w.line("  (import (chezscheme)");
+    w.line("          (apianyware runtime types)");
+    if bindings.needs_async_bridge() {
+        w.line("          (apianyware runtime swift-trampoline)");
+        w.line("          (apianyware runtime async-bridge))");
+    } else {
+        w.line("          (apianyware runtime swift-trampoline))");
+    }
+    w.blank_line();
+
+    emit_swift_native_section(&mut w, &bindings);
+
+    // Close the (library ...) form.
+    w.line(")");
+
+    Some((w.finish(), exports))
+}
+
+fn build_class_plan(
+    cls: &Class,
+    mapper: &dyn FfiTypeMapper,
+    framework: &str,
+    value_structs: &HashSet<&str>,
+) -> ClassPlan {
     let methods_owned: Vec<Method> = effective_methods(cls).into_iter().cloned().collect();
     let mut properties_owned: Vec<Property> = effective_properties(cls)
         .into_iter()
@@ -154,7 +386,7 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
     // property).
     let class_method_names: std::collections::HashSet<String> = methods_owned
         .iter()
-        .filter(|m| m.class_method && !m.init_method)
+        .filter(|m| m.class_method && !m.init_method && m.objc_exposed)
         .map(|m| make_method_name(&cls.name, &m.selector))
         .collect();
 
@@ -190,16 +422,21 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
         .map(|p| make_class_property_setter_name(&cls.name, &p.name, false))
         .collect();
 
+    // Charter #4 (D4): only ObjC-exposed methods route through `objc_msgSend`.
+    // Swift-native methods (`objc_exposed == false`) have no msgSend entry — binding
+    // them there is a latent crash — so they are excluded here and routed to the
+    // receiver-handle trampoline section (`swift_native`) below, or suppressed when
+    // deferred (the global trampoline pass records + counts the deferral).
     let init_methods: Vec<Method> = methods_owned
         .iter()
-        .filter(|m| m.init_method)
+        .filter(|m| m.init_method && m.objc_exposed)
         .cloned()
         .collect();
 
     let class_methods: Vec<Method> = methods_owned
         .iter()
         .filter(|m| {
-            if !m.class_method || m.init_method {
+            if !m.class_method || m.init_method || !m.objc_exposed {
                 return false;
             }
             let n = make_method_name(&cls.name, &m.selector);
@@ -211,7 +448,7 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
     let instance_methods: Vec<Method> = methods_owned
         .iter()
         .filter(|m| {
-            if m.class_method || m.init_method {
+            if m.class_method || m.init_method || !m.objc_exposed {
                 return false;
             }
             let n = make_method_name(&cls.name, &m.selector);
@@ -239,7 +476,7 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
         mapper,
     );
 
-    let (filtered_props, filtered_inst, filtered_class, exports) = dedupe_across_categories(
+    let (filtered_props, filtered_inst, filtered_class, mut exports) = dedupe_across_categories(
         cls,
         properties_owned,
         instance_methods,
@@ -247,11 +484,34 @@ fn build_class_plan(cls: &Class, mapper: &dyn FfiTypeMapper) -> ClassPlan {
         raw_exports,
     );
 
+    // Swift-native methods/inits (`objc_exposed == false`) → receiver-handle
+    // trampolines (ADR-0030, charter #4). A class is a reference receiver
+    // (`owner_is_class = true`, `Unmanaged` path); a `Class` carries no provenance,
+    // so the owner-availability fold (B3) is empty for class owners.
+    let mut swift_native = collect_swift_native_bindings(
+        &cls.name,
+        framework,
+        &methods_owned,
+        true,
+        value_structs,
+        None,
+    );
+    // The ObjC bindings win any name collision (Chez rejects a doubly-defined or
+    // doubly-exported name). Drop Swift duplicates against the final ObjC export set.
+    let objc_names: HashSet<String> = exports.iter().cloned().collect();
+    swift_native.exclude(&objc_names);
+    for name in swift_native.names() {
+        exports.push(name.clone());
+    }
+    exports.sort();
+    exports.dedup();
+
     ClassPlan {
         properties: filtered_props,
         init_methods,
         instance_methods: filtered_inst,
         class_methods: filtered_class,
+        swift_native,
         exports,
     }
 }
@@ -423,6 +683,8 @@ fn emit_header(
     framework: &str,
     exports: &[String],
     needs_dispatch: bool,
+    needs_trampoline: bool,
+    needs_async_bridge: bool,
 ) {
     let (fw, cls_low) = library_path_components(&cls.name, framework);
     write_line!(
@@ -457,14 +719,30 @@ fn emit_header(
 make-nserror nserror? nserror-domain nserror-code \
 nserror-localised-description nserror-userinfo)",
     );
-    // Methods with block parameters box the user's Scheme procedure via
-    // `make-objc-block` / `objc-block-ptr` from the dispatch runtime;
-    // import it only for classes that emit such a wrapper.
+    // Build the remaining imports as an ordered list so the last one closes the
+    // `(import …)` form. `(apianyware runtime types)` is always present (it exports
+    // `coerce-arg` + the geometry ftypes). The Swift-native trampoline section
+    // (ADR-0030) adds `(apianyware runtime swift-trampoline)` for the string/throws
+    // coercers + the dylib-forcing reference, and `(apianyware runtime async-bridge)`
+    // when any method is `async` (D5/R4). Methods with block parameters box the
+    // user's Scheme procedure via the dispatch runtime — imported only when needed.
+    let mut tail_imports: Vec<&str> = vec!["(apianyware runtime types)"];
     if needs_dispatch {
-        w.line("          (apianyware runtime types)");
-        w.line("          (apianyware runtime dispatch))");
-    } else {
-        w.line("          (apianyware runtime types))");
+        tail_imports.push("(apianyware runtime dispatch)");
+    }
+    if needs_trampoline {
+        tail_imports.push("(apianyware runtime swift-trampoline)");
+    }
+    if needs_async_bridge {
+        tail_imports.push("(apianyware runtime async-bridge)");
+    }
+    let last = tail_imports.len() - 1;
+    for (i, imp) in tail_imports.iter().enumerate() {
+        if i == last {
+            write_line!(w, "          {})", imp);
+        } else {
+            write_line!(w, "          {}", imp);
+        }
     }
     w.blank_line();
 
@@ -1251,5 +1529,158 @@ mod tests {
         assert!(output.contains("(define (nsstring-string)"));
         assert!(output.contains("(objc_getClass \"NSString\")"));
         assert!(output.contains("wrap-objc-object"));
+    }
+
+    fn swift_method(selector: &str, init: bool, info: apianyware_macos_types::ir::SwiftFnInfo) -> Method {
+        Method {
+            selector: selector.into(),
+            class_method: false,
+            init_method: init,
+            params: vec![Param {
+                name: "by".into(),
+                param_type: ty(TypeRefKind::Primitive {
+                    name: "int64".into(),
+                }),
+            }],
+            return_type: ty(TypeRefKind::Primitive {
+                name: "int64".into(),
+            }),
+            deprecated: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+            category: None,
+            overrides: None,
+            returns_retained: None,
+            satisfies_protocol: None,
+            objc_exposed: false,
+            swift_fn: Some(info),
+        }
+    }
+
+    /// D4 (charter #4): a Swift-native method (`objc_exposed == false`) routes to a
+    /// receiver-handle trampoline `foreign-procedure` against its content-addressed
+    /// `aw_chez_swift_*` entry, **not** the broken `objc_msgSend` path; a deferred
+    /// Swift-native method is suppressed (no binding, and crucially no msgSend).
+    #[test]
+    fn swift_native_method_routes_to_trampoline_not_msgsend() {
+        use apianyware_macos_types::ir::SwiftFnInfo;
+        let cls = Class {
+            name: "TKWidget".into(),
+            superclass: String::new(),
+            protocols: vec![],
+            properties: vec![],
+            methods: vec![
+                swift_method("scaled(by:)", false, SwiftFnInfo::default()),
+                // Generic Swift-native method → deferred → suppressed.
+                swift_method(
+                    "mapped(by:)",
+                    false,
+                    SwiftFnInfo {
+                        is_generic: true,
+                        ..Default::default()
+                    },
+                ),
+            ],
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+            objc_exposed: true,
+        };
+        let out = generate_class_file(&cls, "TestKit");
+        // The bindable method routes to its content-addressed trampoline entry.
+        assert!(
+            out.contains("aw_chez_swift_m_TestKit_TKWidget_scaled"),
+            "trampoline entry missing:\n{out}"
+        );
+        // The receiver is passed through the value coercer, and the dylib-forcing
+        // reference + trampoline runtime import are present.
+        assert!(
+            out.contains("(coerce-arg self)"),
+            "receiver not passed:\n{out}"
+        );
+        assert!(
+            out.contains("aw-trampoline-lib-ready"),
+            "dylib-forcing reference missing:\n{out}"
+        );
+        assert!(
+            out.contains("(apianyware runtime swift-trampoline)"),
+            "trampoline runtime not imported:\n{out}"
+        );
+        // The broken msgSend path must NOT be emitted for the Swift-native method.
+        assert!(
+            !out.contains("sel-register \"scaled"),
+            "Swift-native method must not msgSend a synthesized selector:\n{out}"
+        );
+        // The deferred generic method is suppressed entirely (no binding, no msgSend).
+        assert!(
+            !out.contains("mapped"),
+            "deferred Swift-native method should be suppressed:\n{out}"
+        );
+    }
+
+    /// Population B (D2/D3): a Swift-native value struct emits an `init` producer that
+    /// vends a boxed handle and a `mutating` method that writes back, in its own
+    /// library with no ObjC substrate and no framework-dylib load.
+    #[test]
+    fn swift_native_value_struct_emits_init_producer_and_mutating_method() {
+        use apianyware_macos_types::ir::{Struct, SwiftFnInfo};
+        let init = swift_method("init(value:)", true, SwiftFnInfo::default());
+        let mut mutating = swift_method(
+            "insert(_:)",
+            false,
+            SwiftFnInfo {
+                self_kind: Some("Mutating".into()),
+                ..Default::default()
+            },
+        );
+        mutating.params[0].name = "_".into();
+        mutating.return_type = ty(TypeRefKind::Primitive {
+            name: "void".into(),
+        });
+        let st = Struct {
+            name: "TKBox".into(),
+            fields: vec![],
+            methods: vec![init, mutating],
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            objc_exposed: false,
+        };
+        let structs = vec![st.clone()];
+        let vs = crate::trampoline::value_struct_names(&structs);
+        let (out, exports) = generate_struct_file(&st, "TestKit", &vs, "tkbox")
+            .expect("a bindable struct must produce a file");
+        assert!(
+            out.contains("(library (apianyware testkit tkbox)"),
+            "struct library header wrong:\n{out}"
+        );
+        // Init producer (D2) named from the labels.
+        assert!(
+            out.contains("make-tkbox-value"),
+            "init producer missing:\n{out}"
+        );
+        assert!(
+            exports.contains(&"make-tkbox-value".to_string()),
+            "init producer not exported:\n{exports:?}"
+        );
+        // Mutating method (D3) takes the `!` marker.
+        assert!(
+            out.contains("tkbox-insert!"),
+            "mutating method missing:\n{out}"
+        );
+        // No ObjC substrate: a value struct never loads a framework dylib.
+        assert!(
+            !out.contains("load-shared-object"),
+            "value struct must not load a framework dylib:\n{out}"
+        );
+        assert!(
+            out.contains("(apianyware runtime swift-trampoline)"),
+            "trampoline runtime not imported:\n{out}"
+        );
     }
 }
