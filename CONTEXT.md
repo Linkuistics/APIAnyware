@@ -316,7 +316,13 @@ ObjC's class system is **projected into CLOS via the Metaobject Protocol**, not
 mirrored as plain `defclass`. An `objc-class` metaclass (subclass of
 `standard-class`) backs every bound ObjC class; each ObjC class is a CLOS class
 of that metaclass carrying the ObjC `Class` pointer; ObjC methods are
-`defgeneric`/`defmethod` (native CLOS **multiple dispatch** + method combination);
+**per-selector `defgeneric`/`defmethod` specialized on the receiver** over the
+real metaclass-backed class graph (CLOS generic dispatch + method combination +
+`call-next-method` for subclass overrides — **not** literal multiple-argument
+dispatch, since ObjC is single-receiver; settled **D6**, 2026-06-20, holding D3's
+line against the single-dispatch veneer of all prior CL bridges and dodging the
+"vacuous" critique the gerbil way: dispatch rides a *real* class graph, not one
+wrapper type);
 instance ivars/slots route through MOP hooks (`slot-value-using-class`,
 `allocate-instance`); `make-instance` trampolines to `alloc`/`init`; deriving
 `(defclass my-view (ns:ns-view) … (:metaclass objc-class))` synthesizes a real
@@ -329,7 +335,9 @@ _Avoid_: a single `objc-object` wrapper class with generics (gerbil pre-rejected
 as "vacuous" — receiver-only dispatch over one type, ADR-0018→0020); "manifest
 `defclass` graph" *without* the MOP (that is gerbil's shape, ADR-0020 — sbcl goes
 further); "dynamic synthesis from the ObjC runtime" as sbcl's mechanism (that is
-CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks).
+CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks);
+"multiple dispatch" (ObjC dispatches on the receiver only — the generics are
+receiver-specialized over the real class graph, D6).
 
 **CL-family interface contract** _(provisional — to be settled in the contract leaf)_:
 The **documented, specification-level interface that all Common Lisp targets share**,
@@ -358,6 +366,26 @@ share — different FFI per impl, contract is spec-only); treating the contract 
 overturning ADR-0011 (it scopes an *exception*, native substrate stays isolated);
 placing the contract spec in a per-target unit (it is *cross-target* within the CL
 family — main-tier doc).
+
+**`libAPIAnywareSbcl` / sbcl trampoline layer** _(reframed 030, 2026-06-20)_:
+The sbcl target's native (Swift) library is the **trampoline layer of the
+complete-API binding model** (ADR-0025), *not* a bespoke "Swift coverage device."
+SBCL reaches ObjC **directly** (`objc_msgSend` via `sb-alien`, **trampoline
+elided**) and routes only the **Swift-native residual** — `objc_exposed == false`
+top-level functions/constants, plus the receiver-handle method frontier — through
+`libAPIAnywareSbcl`'s flat C-ABI re-exports, bound by typed `sb-alien` call sites.
+Because SBCL (like gerbil's `gsc`, ADR-0029) **cannot compile Swift inline**, the
+dylib is **necessary** (only Swift calls the Swift ABI), **trampoline-only** (it
+does *not* absorb the MOP runtime/object model), and **per-target hermetic**
+(ADR-0011/0029 settled this fork — no family-shared substrate). The residual is a
+**deterministic function of the shared IR** (gerbil reproduced racket's 51 funcs +
+7 constants exactly), which is *itself* what makes the CL family converge: same
+analysis → same C ABI → same surface. This is the contract's **lower layer**; the
+`ns:`/CLOS surface is the **upper layer**.
+_Avoid_: "Swift coverage library" / "second mechanism" (it is the trampoline layer
+of one model — ADR-0025 retired "ObjC-only target" as a description); "family-
+shared substrate" (ADR-0029 settled hermetic per-target duplication); routing ObjC
+through it (ObjC is direct, trampoline elided).
 
 ## Native binding mechanism
 

@@ -10,14 +10,19 @@ the **MOP machinery** (the `objc-class` metaclass + `slot-value-using-class` /
 delegate bridges; **dynamic ObjC subclass synthesis** (`objc_allocateClassPair` +
 IMP trampolines from `define-alien-callable`); lifetime (finalizers/weak-ptrs +
 entry-point autoreleasepool); foreign-thread activation (`sb-thread`) + AppKit
-main-thread handling; and the `libAPIAnywareSbcl` native dylib if 030 decides one
-is needed.
+main-thread handling; the **startup re-resolution pass** (relive baked
+`Class`/`SEL` pointers after `save-lisp-and-die`, 020 §B5); and **`libAPIAnywareSbcl`
+— the trampoline-only Swift dylib** (settled: necessary, not optional — like
+gerbil's `gsc`, SBCL cannot compile Swift inline; ADR-0029 precedent).
 
 ## Context
 
-Design fixed in **030-design** (questions 3,5,6,7). Read its spec + ADRs. Peers:
-racket/chez Swift dylibs; gerbil's no-dylib ObjC-in-gsc core (ADR-0017) — SBCL
-likely needs a small ObjC dylib since it can't compile ObjC inline.
+Design fixed in **030-design** (the object-model, lifetime/threading/conditions,
+and trampoline-layer child leaves) + the complete-API model ADRs 0025/0026/0029.
+Read those specs + ADRs. Peers: racket/chez/gerbil Swift trampoline dylibs (all
+trampoline-only, hermetic per-target). The dylib is **Swift** (it re-exports the
+Swift-native residual) — *not* an ObjC core; ObjC is reached directly via
+`sb-alien` `objc_msgSend`.
 
 ## Done when
 
