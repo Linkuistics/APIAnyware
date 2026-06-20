@@ -90,6 +90,17 @@ and the burden is on any deviation.
   would mis-spell `ns:ns-u-r-l-…`. The name mapper MUST special-case acronym
   runs. *(The acronym table is shared analysis-level data, not per-impl; the
   emitter applies it identically.)*
+- **The mapping covers the whole top-level surface, not only classes.** Free
+  functions, global constants, and enum values are equally application-facing and
+  so are bound under the **same** acronym-aware kebab-case `ns:` symbols
+  (`CGRectMake` → `ns:cg-rect-make`, `NSFontAttributeName` →
+  `ns:ns-font-attribute-name`, `NSOrderedSame` → `ns:ns-ordered-same`). C
+  identifiers also frequently use snake_case, so **`_` is an additional word
+  separator** (`dispatch_async` → `ns:dispatch-async`, `objc_msgSend` →
+  `ns:objc-msg-send`). The raw C symbol is what the FFI names for the link; the
+  kebab `ns:` symbol is the portable application surface. A member MUST apply this
+  uniformly so application source naming the surface stays portable. *(Established
+  with the SBCL build, leaf `040-build-emitter`; the first member to require it.)*
 
 ### 3.2 Calling methods (message send)
 

@@ -77,6 +77,37 @@ pub fn selector_arity(selector: &str) -> usize {
     selector.bytes().filter(|&b| b == b':').count()
 }
 
+/// The `ns:` symbol name for a **top-level C/Swift identifier** — a free function,
+/// a global constant, or an enum value. The whole non-class, non-selector surface
+/// (leaf 040) shares this mapping, so the SBCL binding is uniformly acronym-aware
+/// kebab-case (the contract §3.1 idiom, applied past classes to every name).
+///
+/// Unlike [`class_name`] (a single camelCase token) this also treats **`_` as a
+/// word separator**, because C functions/constants frequently use snake_case:
+/// `dispatch_async` → `dispatch-async`, `objc_msgSend` → `objc-msg-send`,
+/// `_dispatch_main_q` → `dispatch-main-q` (leading-underscore segment dropped).
+/// PascalCase identifiers kebab acronym-aware as elsewhere: `CGRectMake` →
+/// `cg-rect-make`, `NSFontAttributeName` → `ns-font-attribute-name`,
+/// `NSUTF8StringEncoding` → `ns-utf8-string-encoding`.
+///
+/// The **raw** C symbol (`"dispatch_async"`, `"NSFontAttributeName"`) is what the
+/// `sb-alien` crossing names for the actual link-time lookup; this is only the
+/// Lisp-visible binding symbol.
+pub fn top_level_name(raw: &str) -> String {
+    raw.split('_')
+        .filter(|s| !s.is_empty())
+        .map(acronym_aware_kebab)
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
+}
+
+/// The `ns:`-qualified form of [`top_level_name`] — the symbol an `emit_enums` /
+/// `emit_constants` / `emit_functions` binding form defines.
+pub fn qualified_top_level_name(raw: &str) -> String {
+    format!("{PACKAGE}:{}", top_level_name(raw))
+}
+
 /// The keyword components of a selector — the text before each `:` (or the whole
 /// selector for a unary message). `insertObject:atIndex:` →
 /// `["insertObject", "atIndex"]`; `length` → `["length"]`.
@@ -151,5 +182,38 @@ mod tests {
             generic_name("dataWithContentsOfURL:"),
             "data-with-contents-of-url"
         );
+    }
+
+    #[test]
+    fn top_level_names_kebab_pascal_case() {
+        // PascalCase free functions / constants kebab acronym-aware, like classes.
+        assert_eq!(top_level_name("CGRectMake"), "cg-rect-make");
+        assert_eq!(top_level_name("NSStringFromClass"), "ns-string-from-class");
+        assert_eq!(top_level_name("NSFontAttributeName"), "ns-font-attribute-name");
+        assert_eq!(top_level_name("NSUTF8StringEncoding"), "ns-utf8-string-encoding");
+        assert_eq!(
+            qualified_top_level_name("NSFontAttributeName"),
+            "ns:ns-font-attribute-name"
+        );
+    }
+
+    #[test]
+    fn top_level_names_split_snake_case() {
+        // Underscores are word separators — the camel splitter alone would leave
+        // them embedded in the symbol.
+        assert_eq!(top_level_name("dispatch_async"), "dispatch-async");
+        assert_eq!(top_level_name("objc_msgSend"), "objc-msg-send");
+        assert_eq!(top_level_name("CFStringCreateWithCString"), "cf-string-create-with-c-string");
+        // A leading-underscore "private" symbol drops the empty leading segment.
+        assert_eq!(top_level_name("_dispatch_main_q"), "dispatch-main-q");
+        assert_eq!(qualified_top_level_name("dispatch_async"), "ns:dispatch-async");
+    }
+
+    #[test]
+    fn top_level_name_matches_class_name_when_no_underscores() {
+        // A single camelCase token routes through the same acronym table as
+        // class_name — the surface is uniform.
+        assert_eq!(top_level_name("NSString"), class_name("NSString"));
+        assert_eq!(top_level_name("WKWebView"), class_name("WKWebView"));
     }
 }
