@@ -67,14 +67,20 @@
 //!   before subclass) the framework's ASDF system must honour — the facade header
 //!   states it.
 //!
-//! ## What this leaf does *not* emit (deferred — grove leaf `045`)
+//! ## The method/init Swift-native residual (leaf `045`)
 //!
-//! The **method/init** Swift-native residual (the §6d `576 init + 554 method`) is
-//! *collected* here (feeding the end-to-end §6d count) but **not** wired as
-//! `(defmethod …)` / `make-instance` forms — that wiring (generic-naming for Swift
-//! base names + the defgeneric lockstep) is the focused follow-up leaf `045`. The
-//! **fn/const** residual *is* bound here (its `render_binding` returns complete
-//! drop-in forms).
+//! A **class** owner's Swift-native method/init residual (part of the §6d `576 init +
+//! 554 method`) is wired here, after the direct ObjC dispatch, by
+//! [`crate::emit_generics::emit_swift_native_residual`]: each bindable instance method
+//! becomes a receiver-specialized `(defmethod ns:<base-labels> ((self ns:<owner>) …) …)`
+//! whose generic [`collect_generics`] folds into `generics.lisp` (the defgeneric
+//! lockstep), and each bindable initializer becomes a `(defun ns:make-<owner>… )`
+//! constructor (a class owner `aw-wrap`s the returned id; not §3.3's `make-instance`
+//! path — a Swift-native init calls `Owner(labels:)` through the trampoline, not ObjC
+//! `alloc`/`init`). The **fn/const** residual is bound alongside (its `render_binding`
+//! returns complete drop-in forms). **Value-struct (population-B) owners** are out of
+//! scope — they have no CLOS class to specialize on (an object-model decision deferred
+//! to a follow-up leaf); their residual is still *collected* for the §6d count.
 
 use std::collections::BTreeSet;
 use std::io;
@@ -92,12 +98,15 @@ use crate::emit_constants::{constant_symbols, generate_constants_file};
 use crate::emit_enums::{defined_enum_symbols, generate_enums_file};
 use crate::emit_functions::{function_symbols, generate_functions_file};
 use crate::emit_generics::{
-    collect_generics, emit_class_dispatch, generic_arity_conflicts, render_generics, GenericDecl,
+    collect_generics, emit_class_dispatch, emit_swift_native_residual, generic_arity_conflicts,
+    render_generics, GenericDecl,
 };
 use crate::emit_protocol::{has_surface, protocol_generic_decls, render_protocol};
 use crate::naming::{class_name, PACKAGE};
 use crate::protocol_registry::ProtocolRegistry;
-use crate::trampoline::{classify_constant, classify_function, value_struct_names, FnDisposition};
+use crate::trampoline::{
+    class_residual_inits, classify_constant, classify_function, value_struct_names, FnDisposition,
+};
 
 /// The runtime/impl Common Lisp package every generated binding file is read in:
 /// it `(:use :cl sb-mop)`, owns the `aw-*` helpers ([`crate::emit_generics`]) and
@@ -297,6 +306,13 @@ pub fn emit_framework(
     for d in &generics {
         exports.add_qualified(&d.name);
     }
+    // 045: the Swift-native residual method generics ride the `generics` set above; the
+    // init constructors (`ns:make-<owner>`) are not generics, so export them explicitly.
+    for cls in &fw.classes {
+        for t in class_residual_inits(&fw.name, &cls.name, &cls.methods) {
+            exports.add_qualified(&t.binding_symbol());
+        }
+    }
 
     // --- protocols.lisp: conformance surfaces ------------------------------------
     let surface_protocols: Vec<_> = fw.protocols.iter().filter(|p| has_surface(p)).collect();
@@ -419,6 +435,8 @@ fn render_class_file(
     emit_class_forms(&mut w, cls, &fw.name, parent, &[]);
     let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
     emit_class_dispatch(&mut w, cls, &fw.name, &error_selectors, protocols);
+    // The Swift-native method/init residual (leaf 045), after the direct ObjC dispatch.
+    emit_swift_native_residual(&mut w, cls, &fw.name, &error_selectors, protocols);
     w.finish()
 }
 

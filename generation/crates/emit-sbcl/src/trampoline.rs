@@ -53,7 +53,10 @@ use apianyware_macos_types::ir::{Constant, Framework, Function, Method, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::SAP;
-use crate::naming::qualified_top_level_name;
+use crate::naming::{
+    qualified_class_name, qualified_swift_init_constructor_name,
+    qualified_swift_method_generic_name, qualified_top_level_name,
+};
 
 /// Prefix for a Swift-native **function** trampoline entry.
 pub const FN_PREFIX: &str = "aw_sbcl_swift_";
@@ -878,6 +881,63 @@ fn collect_type_methods(
             }),
         }
     }
+}
+
+/// Collect a **class** owner's bindable Swift-native instance-method trampolines (045)
+/// — the receiver-handle methods whose `(defmethod …)` the class file renders, in
+/// lockstep with the `defgeneric`s [`crate::emit_generics::collect_generics`] folds in.
+/// `methods` MUST be the owner's *declared* methods (`cls.methods`), matching the
+/// global pass (the §6d agreement). Sync methods only: `async` residual methods are
+/// runtime-coupled (the completion-callback bridge) and deferred to a follow-up. Within
+/// the owner, two methods that collapse to the same generic name keep the **first** (a
+/// CLOS generic cannot carry two methods with one receiver specializer + arity).
+pub fn class_residual_methods(
+    module: &str,
+    owner: &str,
+    methods: &[Method],
+) -> Vec<MethodTrampoline> {
+    let no_value_structs = HashSet::new();
+    let mut out: Vec<MethodTrampoline> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
+    for m in methods {
+        if m.swift_fn.is_none() {
+            continue; // ObjC method — binds via msgSend, no trampoline
+        }
+        if let MethodDisposition::Method(t) =
+            classify_method(module, owner, true, m, methods, &no_value_structs, None)
+        {
+            if t.is_async() {
+                continue; // async residual: runtime-coupled, follow-up leaf
+            }
+            if seen.insert(t.generic_decl().0) {
+                out.push(t);
+            }
+        }
+    }
+    out
+}
+
+/// Collect a **class** owner's bindable Swift-native initializer producers (045) — the
+/// `(defun ns:make-<owner>… )` constructors the class file renders. `methods` MUST be
+/// the owner's declared methods (the §6d agreement). Two inits collapsing to one
+/// constructor symbol keep the first.
+pub fn class_residual_inits(module: &str, owner: &str, methods: &[Method]) -> Vec<InitTrampoline> {
+    let no_value_structs = HashSet::new();
+    let mut out: Vec<InitTrampoline> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
+    for m in methods {
+        if m.swift_fn.is_none() {
+            continue;
+        }
+        if let MethodDisposition::Init(t) =
+            classify_method(module, owner, true, m, methods, &no_value_structs, None)
+        {
+            if seen.insert(t.binding_symbol()) {
+                out.push(t);
+            }
+        }
+    }
+    out
 }
 
 // ===========================================================================
@@ -1929,6 +1989,25 @@ fn coerce_result(ret: &RetMarshal, raw: &str) -> String {
     }
 }
 
+/// The CLOS/`defun` formal names for a residual method/init's visible args: each
+/// argument label kebab-cased, a `_`/empty wildcard becoming a positional `argN` (so
+/// two wildcard params don't collide as duplicate formals). Mirrors
+/// [`crate::emit_generics`]'s `arg_name` convention (param formals use `camel_to_kebab`,
+/// distinct from the acronym-aware *surface* names).
+fn swift_formals(labels: &[String]) -> Vec<String> {
+    labels
+        .iter()
+        .enumerate()
+        .map(|(i, l)| {
+            if l == "_" || l.is_empty() {
+                format!("arg{i}")
+            } else {
+                apianyware_macos_emit::naming::camel_to_kebab(l)
+            }
+        })
+        .collect()
+}
+
 /// Coerce one outbound Lisp actual per its marshalling: a String bridges in
 /// (`aw-swift-string-arg`), an object/value-box handle coerces via `aw-ptr`, a scalar
 /// passes through.
@@ -2071,6 +2150,51 @@ impl MethodTrampoline {
     pub fn coerce_result(&self, raw: &str) -> String {
         coerce_result(&self.ret, raw)
     }
+
+    /// The `(ns:`-qualified generic name, visible arity`)` this method's `defmethod`
+    /// extends — folded into `collect_generics` so its `defgeneric` exists (the
+    /// lockstep). Name is selector-analogous (base + labels); arity is the visible
+    /// param count (the receiver is the specializer, not an arg).
+    pub fn generic_decl(&self) -> (String, usize) {
+        (
+            qualified_swift_method_generic_name(&self.swift_name, &self.labels),
+            self.labels.len(),
+        )
+    }
+
+    /// Render the class-owner `(defmethod ns:<generic> ((self ns:<owner>) <formals>)
+    /// …)` Lisp binding (045). The receiver coerces through `(aw-ptr self)` (a class
+    /// owner is a reference receiver); the args coerce in, the crossing calls the
+    /// `libAPIAnywareSbcl` entry, the result coerces out (object → `aw-wrap`, String →
+    /// `aw-swift-string-result`); a `throws` routes through `aw-with-error-cell`. Only
+    /// the **class-owner** (`SelfMarshal::ClassRef`) sync path is rendered here — value
+    /// (population-B) receivers have no CLOS class to specialize on (a follow-up leaf).
+    pub fn render_defmethod(&self) -> String {
+        let generic = qualified_swift_method_generic_name(&self.swift_name, &self.labels);
+        let owner_clos = qualified_class_name(&self.owner);
+        let formals = swift_formals(&self.labels);
+        let coerced = self.arg_coercions(&formals);
+
+        let mut head = format!("(defmethod {generic} ((self {owner_clos})");
+        for f in &formals {
+            head.push(' ');
+            head.push_str(f);
+        }
+        head.push(')');
+
+        let receiver = format!("({PTR_FN} self)");
+        if self.throwing {
+            let mut actuals = coerced;
+            actuals.push("%err".to_string());
+            let raw = self.render_alien_funcall(&receiver, &actuals);
+            let body = self.coerce_result(&raw);
+            format!("{head}\n  ({ERROR_CELL_MACRO} (%err)\n    {body}))")
+        } else {
+            let raw = self.render_alien_funcall(&receiver, &coerced);
+            let body = self.coerce_result(&raw);
+            format!("{head}\n  {body})")
+        }
+    }
 }
 
 impl InitTrampoline {
@@ -2109,6 +2233,48 @@ impl InitTrampoline {
             .zip(lisp_names)
             .map(|(m, name)| coerce_actual(m, name))
             .collect()
+    }
+
+    /// The `ns:`-qualified constructor symbol this init binds (`ns:make-<owner>[-<labels>]`,
+    /// 045) — added to the framework's facade export surface.
+    pub fn binding_symbol(&self) -> String {
+        qualified_swift_init_constructor_name(&self.owner, &self.labels)
+    }
+
+    /// Render the `(defun ns:make-<owner>[-<labels>] (<formals>) …)` constructor (045) —
+    /// a standalone constructor for the Swift-native init (it calls `Owner(labels:)`
+    /// through the trampoline, not ObjC `alloc`/`init`, so it is not §3.3's
+    /// `make-instance` path). Args coerce in, the crossing calls the entry; a **class**
+    /// owner `aw-wrap`s the returned `+1` id to its exact bound type (ADR-0038 §4), a
+    /// **value** owner hands back the raw opaque box; a `throws` routes through
+    /// `aw-with-error-cell`.
+    pub fn render_constructor(&self) -> String {
+        let sym = self.binding_symbol();
+        let formals = swift_formals(&self.labels);
+        let coerced = self.arg_coercions(&formals);
+        let params_str = formals.join(" ");
+        if self.throwing {
+            let mut actuals = coerced;
+            actuals.push("%err".to_string());
+            let raw = self.render_alien_funcall(&actuals);
+            let body = self.coerce_init_result(&raw);
+            format!("(defun {sym} ({params_str})\n  ({ERROR_CELL_MACRO} (%err)\n    {body}))")
+        } else {
+            let raw = self.render_alien_funcall(&coerced);
+            let body = self.coerce_init_result(&raw);
+            format!("(defun {sym} ({params_str})\n  {body})")
+        }
+    }
+
+    /// The init's result coercion: a **class** owner `aw-wrap`s the `+1`-retained id to
+    /// its exact bound type (ADR-0038 §4, always retained); a **value** owner hands the
+    /// raw opaque box straight back.
+    fn coerce_init_result(&self, raw: &str) -> String {
+        if self.owner_is_class {
+            format!("({WRAP_FN} {raw} t)")
+        } else {
+            raw.to_string()
+        }
     }
 }
 
@@ -2401,5 +2567,209 @@ mod tests {
         assert!(swift.contains("@_cdecl(\"aw_sbcl_swift_TestKit_scale\")"), "{swift}");
         assert!(swift.contains("TestKit.scale(by: a0)"), "{swift}");
         assert!(swift.contains("1 function + 0 constant + 0 init + 0 method trampolines."), "{swift}");
+    }
+
+    // --- 045: Lisp method/init residual wiring -------------------------------
+
+    fn class_method_tramp(
+        owner: &str,
+        swift_name: &str,
+        entry: &str,
+        labels: Vec<String>,
+        params: Vec<ArgMarshal>,
+        ret: RetMarshal,
+        throwing: bool,
+    ) -> MethodTrampoline {
+        MethodTrampoline {
+            module: "TestKit".into(),
+            owner: owner.into(),
+            swift_name: swift_name.into(),
+            entry: entry.into(),
+            recv: SelfMarshal::ClassRef,
+            labels,
+            params,
+            ret,
+            ret_nullable: false,
+            throwing,
+            is_async: false,
+            availability: None,
+        }
+    }
+
+    #[test]
+    fn defmethod_is_selector_analogous_and_specializes_on_owner() {
+        // resize(to:) : Double -> Void on a class owner.
+        let m = class_method_tramp(
+            "Widget",
+            "resize",
+            "aw_sbcl_swift_m_TestKit_Widget_resize",
+            vec!["to".into()],
+            vec![ArgMarshal::Scalar(Scalar::Double)],
+            RetMarshal::Void,
+            false,
+        );
+        assert_eq!(m.generic_decl(), ("ns:resize-to".to_string(), 1));
+        let d = m.render_defmethod();
+        // Generic = base+labels; receiver in the specializer; arg formal = kebab label.
+        assert!(d.starts_with("(defmethod ns:resize-to ((self ns:widget) to)"), "{d}");
+        // The receiver coerces through (aw-ptr self); the scalar arg passes through.
+        assert!(
+            d.contains("(sb-alien:extern-alien \"aw_sbcl_swift_m_TestKit_Widget_resize\""),
+            "{d}"
+        );
+        assert!(d.contains("(aw-ptr self) to)"), "{d}");
+        // void return → no wrap.
+        assert!(!d.contains("aw-wrap"), "{d}");
+    }
+
+    #[test]
+    fn defmethod_object_return_wraps_via_mop_registry() {
+        let m = class_method_tramp(
+            "Factory",
+            "make",
+            "aw_sbcl_swift_m_TestKit_Factory_make",
+            vec![],
+            vec![],
+            RetMarshal::Object,
+            false,
+        );
+        assert_eq!(m.generic_decl(), ("ns:make".to_string(), 0));
+        let d = m.render_defmethod();
+        assert!(d.starts_with("(defmethod ns:make ((self ns:factory))"), "{d}");
+        // Object return: aw-wrap … t (the +1 id → exact bound type).
+        assert!(d.contains("(aw-wrap (sb-alien:alien-funcall"), "{d}");
+        assert!(d.trim_end().ends_with("t))"), "{d}");
+    }
+
+    #[test]
+    fn defmethod_string_in_and_out_use_trampoline_coercers() {
+        let m = class_method_tramp(
+            "Greeter",
+            "describe",
+            "aw_sbcl_swift_m_TestKit_Greeter_describe",
+            vec!["of".into()],
+            vec![ArgMarshal::SwiftString],
+            RetMarshal::SwiftString,
+            false,
+        );
+        let d = m.render_defmethod();
+        assert!(d.contains("(aw-swift-string-arg of)"), "{d}");
+        assert!(d.contains("(aw-swift-string-result (sb-alien:alien-funcall"), "{d}");
+    }
+
+    #[test]
+    fn throwing_defmethod_threads_the_error_cell() {
+        let m = class_method_tramp(
+            "Loader",
+            "load",
+            "aw_sbcl_swift_m_TestKit_Loader_load",
+            vec!["from".into()],
+            vec![ArgMarshal::SwiftString],
+            RetMarshal::Object,
+            true,
+        );
+        let d = m.render_defmethod();
+        assert!(d.contains("(aw-with-error-cell (%err)"), "{d}");
+        // %err is the trailing actual of the crossing.
+        assert!(d.contains("(aw-swift-string-arg from) %err)"), "{d}");
+        // The object result still wraps.
+        assert!(d.contains("(aw-wrap (sb-alien:alien-funcall"), "{d}");
+    }
+
+    #[test]
+    fn init_constructor_class_owner_wraps_returned_id() {
+        let i = InitTrampoline {
+            module: "TestKit".into(),
+            owner: "ImageCreator".into(),
+            entry: "aw_sbcl_swift_init_TestKit_ImageCreator".into(),
+            owner_is_class: true,
+            labels: vec!["title".into()],
+            params: vec![ArgMarshal::SwiftString],
+            throwing: false,
+            availability: None,
+        };
+        assert_eq!(i.binding_symbol(), "ns:make-image-creator-title");
+        let c = i.render_constructor();
+        assert!(c.starts_with("(defun ns:make-image-creator-title (title)"), "{c}");
+        assert!(c.contains("(aw-swift-string-arg title)"), "{c}");
+        // A class owner aw-wraps the +1 returned id (ADR-0038 §4).
+        assert!(c.contains("(aw-wrap (sb-alien:alien-funcall"), "{c}");
+        assert!(c.trim_end().ends_with("t))"), "{c}");
+    }
+
+    #[test]
+    fn init_constructor_value_owner_hands_back_raw_box() {
+        let i = InitTrampoline {
+            module: "TestKit".into(),
+            owner: "IndexSet".into(),
+            entry: "aw_sbcl_swift_init_TestKit_IndexSet".into(),
+            owner_is_class: false,
+            labels: vec!["integer".into()],
+            params: vec![ArgMarshal::Scalar(Scalar::Int)],
+            throwing: false,
+            availability: None,
+        };
+        assert_eq!(i.binding_symbol(), "ns:make-index-set-integer");
+        let c = i.render_constructor();
+        // A value owner hands back the raw opaque box — no aw-wrap.
+        assert!(!c.contains("aw-wrap"), "{c}");
+        assert!(c.contains("(sb-alien:extern-alien \"aw_sbcl_swift_init_TestKit_IndexSet\""), "{c}");
+    }
+
+    #[test]
+    fn throwing_init_constructor_threads_the_error_cell() {
+        let i = InitTrampoline {
+            module: "TestKit".into(),
+            owner: "Doc".into(),
+            entry: "aw_sbcl_swift_init_TestKit_Doc".into(),
+            owner_is_class: true,
+            labels: vec!["path".into()],
+            params: vec![ArgMarshal::SwiftString],
+            throwing: true,
+            availability: None,
+        };
+        let c = i.render_constructor();
+        assert!(c.contains("(aw-with-error-cell (%err)"), "{c}");
+        assert!(c.contains("(aw-swift-string-arg path) %err)"), "{c}");
+    }
+
+    fn swift_method(selector: &str, init: bool, ret: TypeRef, params: Vec<Param>) -> Method {
+        Method {
+            selector: selector.into(),
+            class_method: false,
+            init_method: init,
+            params,
+            return_type: ret,
+            deprecated: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+            category: None,
+            overrides: None,
+            returns_retained: None,
+            satisfies_protocol: None,
+            objc_exposed: false,
+            swift_fn: Some(SwiftFnInfo::default()),
+        }
+    }
+
+    #[test]
+    fn class_residual_methods_dedup_same_generic_and_collect_inits() {
+        // Two overloads of `tag(_:)` collapse to one ns:tag defmethod (first wins);
+        // an `init(value:)` collects as a constructor.
+        let methods = vec![
+            swift_method("tag(_:)", false, prim("void"), vec![param("_", prim("int64"))]),
+            swift_method("tag(_:)", false, prim("void"), vec![param("_", prim("double"))]),
+            swift_method("init(value:)", true, idty(), vec![param("value", prim("int64"))]),
+        ];
+        let ms = class_residual_methods("TestKit", "Widget", &methods);
+        assert_eq!(ms.len(), 1, "overloads dedup to one generic: {ms:?}");
+        assert_eq!(ms[0].generic_decl(), ("ns:tag".to_string(), 1));
+
+        let is = class_residual_inits("TestKit", "Widget", &methods);
+        assert_eq!(is.len(), 1);
+        assert_eq!(is[0].binding_symbol(), "ns:make-widget-value");
     }
 }

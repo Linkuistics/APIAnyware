@@ -356,9 +356,16 @@ The **facade is the CL form of gerbil's re-export**: it `(export …)`s every bo
 fixes a **load order** the runtime's ASDF system must honour: **facade first**,
 then `generics.lisp`, then the per-class files **superclass-before-subclass**, then
 the rest. The Swift-native **fn/const residual** is bound here (`render_binding`);
-the **method/init residual** is collected for the §6d count but its
-`defmethod`/`make-instance` wiring is deferred to grove leaf **045** (the generic
-naming for Swift base names + the defgeneric lockstep). _Avoid_: a per-framework
+a **class** owner's **method/init residual** is wired by leaf **045**
+(`emit_swift_native_residual`) — each bindable method a receiver-specialized
+`(defmethod ns:<base-labels> ((self ns:<owner>) …) …)` (selector-analogous generic =
+base + non-wildcard labels; folded into `collect_generics` for the defgeneric
+lockstep), each bindable initializer a `(defun ns:make-<owner>… )` constructor (a
+class owner `aw-wrap`s the returned id — **not** §3.3's `make-instance` path, since a
+Swift-native init calls `Owner(labels:)` through the trampoline, not ObjC
+`alloc`/`init`). **Value-struct (population-B) owners** stay deferred — no CLOS class
+to specialize on (an object-model decision for a follow-up leaf); their residual is
+still collected for the §6d count. _Avoid_: a per-framework
 single `classes.lisp` (per-class files are the convention — reviewable goldens +
 gerbil symmetry); emitting bound names double-colon `ns::` in definitions (that is
 the facade's interning spelling only — definitions use single-colon).

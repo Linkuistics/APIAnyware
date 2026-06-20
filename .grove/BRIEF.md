@@ -56,9 +56,12 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   *(retired 2026-06-20 — orchestrator + facade + goldens; direct contract surface
   complete, §6d count reproduced; layout/seam promoted to CONTEXT.md.)*
 - **045-method-init-residual-wiring** — follow-up split from 040/060: wire the
-  Swift-native method/init residual (576 init + 554 method) as Lisp `defmethod`/
-  `make-instance` forms (generic-naming + defgeneric lockstep; the fn/const residual
-  already landed in 040). Sequenced before the runtime that verifies it.
+  Swift-native method/init residual as Lisp forms. *(done — **class owners**: each
+  bindable method a receiver-specialized `(defmethod ns:<base-labels> ((self ns:<owner>)
+  …))` with its generic folded into `collect_generics` for the lockstep; each init a
+  `(defun ns:make-<owner>… )` constructor — not `make-instance`, since a Swift-native
+  init trampolines `Owner(labels:)` not ObjC alloc/init. **Value-struct (population-B)
+  owners deferred to 090** — no CLOS class to specialize on. §6d count unchanged.)*
 - **050-build-runtime-native-core** — `sb-alien` runtime, MOP metaclass +
   hooks, block/delegate bridges, dynamic-class synthesis, lifetime, threading,
   native dylib (`libAPIAnywareSbcl`) if needed.
@@ -67,6 +70,11 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
 - **070-distribution-bundler** — `bundle-sbcl` crate, `save-lisp-and-die`.
 - **080-docs** — per-language docs (ADR-0024), contract spec placement, repo
   README.
+- **090-value-struct-residual-wiring** — follow-up split from 045: wire the
+  **population-B (value-struct)** method/init residual. Needs an object-model decision
+  (does a value struct get a CLOS class?) — ADR-worthy, hence split out. Logically
+  sequences **after 050** (needs the value-box runtime) and **before 080-docs**; parked
+  at 090, a planning session should `leaf-insert` it into place. Not a blocker for 060.
 
 ## Pointers
 
@@ -95,5 +103,8 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   leaves 040–080 refined to cite it. **040-build-emitter complete + retired
   (2026-06-20)** — `emit-sbcl` emits a complete contract-conforming tree end-to-end
   (`--target sbcl`), §6d count reproduced; the method/init residual defmethod wiring
-  was split to **045**. Next: **045-method-init-residual-wiring**, then
-  **050-build-runtime-native-core**.
+  was split to **045**. **045 complete + retired (2026-06-20)** — the class-owner
+  method/init residual is wired (receiver-specialized `defmethod` + `make-<owner>`
+  constructor + defgeneric lockstep); the **value-struct (population-B)** half split to
+  **090** (needs a value-struct-CLOS-class object-model decision). Next:
+  **050-build-runtime-native-core** (090 sequences after it).

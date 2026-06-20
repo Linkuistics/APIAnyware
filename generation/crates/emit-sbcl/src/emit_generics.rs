@@ -35,13 +35,15 @@
 //! per-selector `foreign-procedure`; SBCL needs **no** `generics.ss`-style sharding
 //! (ADR-0034 §3 — the compile-cost blow-up does not reproduce in native CLOS).
 //!
-//! ## The `objc_exposed == false` residual is NOT emitted here
+//! ## The `objc_exposed == false` residual: no direct body, a trampoline `defmethod`
 //!
 //! A Swift-native method/init (`objc_exposed == false`, charter #4 / ADR-0026 §3)
-//! has **no** `objc_msgSend` entry — binding it directly is a latent crash. Such
-//! methods get **no** direct body; they are collected ([`collect_residual`]) for
-//! the trampoline residual the next leaf (050) routes through `libAPIAnywareSbcl`.
-//! The §6d invariant's `554 method` + `576 init` originate from this collection.
+//! has **no** `objc_msgSend` entry — binding it *directly* is a latent crash, so it
+//! gets no `objc_msgSend` body. It is collected ([`collect_residual`]) for the §6d
+//! count (`554 method` + `576 init`) and, for a **class** owner, wired by
+//! [`emit_swift_native_residual`] (leaf 045) into a receiver-specialized `defmethod` /
+//! `make-<owner>` constructor that crosses the `libAPIAnywareSbcl` trampoline instead
+//! (the residual method generics fold into [`collect_generics`] for the lockstep).
 //!
 //! ## Conformed-protocol flattening (leaf 040/030)
 //!
@@ -107,6 +109,7 @@ use crate::ffi_type_mapping::{SbclFfiTypeMapper, SAP};
 use crate::method_filter::{is_error_out_method, is_supported_method_ctx};
 use crate::naming::{qualified_class_name, qualified_generic_name, selector_keyword_symbols};
 use crate::protocol_registry::ProtocolRegistry;
+use crate::trampoline::{class_residual_inits, class_residual_methods, MethodTrampoline};
 
 /// The `objc_msgSend` function SAP, runtime-owned + startup-re-resolved (ADR-0038).
 pub const MSGSEND_SAP: &str = "+objc-msgsend+";
@@ -157,6 +160,16 @@ pub fn collect_generics(frameworks: &[&Framework], protocols: &ProtocolRegistry)
             for d in class_dispatches(cls, &class_errs, protocols) {
                 by_name.entry(d.generic_name()).or_insert(d.arity());
             }
+            // 045: the Swift-native residual method `defmethod`s extend their own
+            // selector-analogous generics (base + labels); fold them into the same set
+            // so each has a matching `defgeneric` (the lockstep). Inserted after the
+            // ObjC dispatches, so a name shared with an ObjC selector keeps the ObjC
+            // arity (first-wins); a genuine arity clash is surfaced by
+            // [`generic_arity_conflicts`].
+            for t in class_residual_methods(&fw.name, &cls.name, &cls.methods) {
+                let (name, arity) = t.generic_decl();
+                by_name.entry(name).or_insert(arity);
+            }
         }
     }
     by_name
@@ -172,20 +185,27 @@ pub fn collect_generics(frameworks: &[&Framework], protocols: &ProtocolRegistry)
 pub fn generic_arity_conflicts(frameworks: &[&Framework], protocols: &ProtocolRegistry) -> Vec<String> {
     let mut seen: BTreeMap<String, usize> = BTreeMap::new();
     let mut conflicts: BTreeSet<String> = BTreeSet::new();
+    let mut record = |name: String, arity: usize| match seen.get(&name) {
+        Some(&a) if a != arity => {
+            conflicts.insert(name);
+        }
+        None => {
+            seen.insert(name, arity);
+        }
+        _ => {}
+    };
     for fw in frameworks {
         for cls in &fw.classes {
             let class_errs = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
             for d in class_dispatches(cls, &class_errs, protocols) {
-                let name = d.generic_name();
-                match seen.get(&name) {
-                    Some(&a) if a != d.arity() => {
-                        conflicts.insert(name);
-                    }
-                    None => {
-                        seen.insert(name, d.arity());
-                    }
-                    _ => {}
-                }
+                record(d.generic_name(), d.arity());
+            }
+            // 045: the residual method generics share the one congruence namespace, so
+            // a residual method whose name clashes an ObjC selector at a *different*
+            // arity is surfaced loudly here too (not silently mis-emitted).
+            for t in class_residual_methods(&fw.name, &cls.name, &cls.methods) {
+                let (name, arity) = t.generic_decl();
+                record(name, arity);
             }
         }
     }
@@ -300,6 +320,60 @@ pub fn render_class_dispatch_with(
     let mut w = CodeWriter::new();
     emit_class_dispatch(&mut w, cls, framework, &HashSet::new(), protocols);
     w.finish()
+}
+
+/// Emit a **class** owner's Swift-native residual section (leaf 045): a
+/// receiver-specialized `(defmethod ns:<generic> ((self ns:<owner>) …) …)` per bindable
+/// Swift-native instance method (`objc_exposed == false`) and a `(defun ns:make-<owner>
+/// …)` constructor per bindable initializer — each trampolined through
+/// `libAPIAnywareSbcl`, not `objc_msgSend`. Walks `cls.methods` (the *declared* methods,
+/// the §6d agreement). A residual method whose generic name collides with one the class
+/// already ObjC-dispatches is **dropped** (the direct ObjC binding wins — two methods on
+/// one generic + receiver specializer would silently redefine). `async` residual methods
+/// are deferred (a runtime-coupled completion bridge); value-struct (population-B) owners
+/// are out of scope (no CLOS class to specialize on) — both a follow-up leaf.
+pub fn emit_swift_native_residual(
+    w: &mut CodeWriter,
+    cls: &Class,
+    framework: &str,
+    error_selectors: &HashSet<String>,
+    protocols: &ProtocolRegistry,
+) {
+    let methods = class_residual_methods(framework, &cls.name, &cls.methods);
+    let inits = class_residual_inits(framework, &cls.name, &cls.methods);
+    if methods.is_empty() && inits.is_empty() {
+        return;
+    }
+    // The ObjC dispatch wins any generic-name collision.
+    let objc_generics: HashSet<String> = class_dispatches(cls, error_selectors, protocols)
+        .iter()
+        .map(|d| d.generic_name())
+        .collect();
+    let visible: Vec<&MethodTrampoline> = methods
+        .iter()
+        .filter(|t| !objc_generics.contains(&t.generic_decl().0))
+        .collect();
+    if visible.is_empty() && inits.is_empty() {
+        return;
+    }
+
+    write_line!(
+        w,
+        ";; --- {} ({}) — Swift-native residual (receiver-handle trampolines, ADR-0038) ---",
+        cls.name,
+        framework
+    );
+    for t in &visible {
+        for line in t.render_defmethod().lines() {
+            write_line!(w, "{}", line);
+        }
+    }
+    for t in &inits {
+        for line in t.render_constructor().lines() {
+            write_line!(w, "{}", line);
+        }
+    }
+    w.blank_line();
 }
 
 // --- internal: the lowered dispatch representation ------------------------
@@ -1029,6 +1103,27 @@ mod tests {
         assert_eq!(
             rendered.matches("(defgeneric ns:count (receiver)").count(),
             1
+        );
+    }
+
+    #[test]
+    fn collect_generics_folds_in_residual_method_generics() {
+        // A class with a Swift-native (objc_exposed == false) method `update(with:)`
+        // must contribute ns:update-with to the global generic set (the 045 lockstep),
+        // so the class file's residual defmethod has a matching defgeneric.
+        let mut m = method(
+            "update(with:)",
+            false,
+            TypeRef::void(),
+            vec![param("with", TypeRefKind::Primitive { name: "int64".into() })],
+        );
+        m.objc_exposed = false;
+        m.swift_fn = Some(apianyware_macos_types::ir::SwiftFnInfo::default());
+        let f = fw("Foundation", vec![class_with("NSThing", vec![m], vec![])]);
+        let decls = collect_generics(&[&f], &ProtocolRegistry::new());
+        assert!(
+            decls.iter().any(|d| d.name == "ns:update-with" && d.arity == 1),
+            "residual generic folded in: {decls:?}"
         );
     }
 

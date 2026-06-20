@@ -12,8 +12,10 @@
 //!   the facade's export surface (the construct files spell names single-colon,
 //!   which the reader accepts only for external symbols) — except the runtime-owned
 //!   root `ns:ns-object`.
-//! - **The Swift-native fn/const residual is bound** (the half this leaf wires;
-//!   methods/inits are deferred to leaf 045).
+//! - **The Swift-native fn/const residual is bound** (040/060), and a **class** owner's
+//!   Swift-native method/init residual binds as a receiver-specialized `defmethod` +
+//!   `make-<owner>` constructor with its generic in lockstep (045). Value-struct
+//!   (population-B) owners stay deferred (a follow-up leaf).
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -23,7 +25,7 @@ use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
 use apianyware_macos_emit_sbcl::class_graph::ClassRegistry;
 use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
 use apianyware_macos_emit_sbcl::SbclEmitter;
-use apianyware_macos_types::ir::{Constant, Framework, Function, Param};
+use apianyware_macos_types::ir::{Class, Constant, Framework, Function, Method, Param, SwiftFnInfo};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 fn emit(fw: &Framework) -> tempfile::TempDir {
@@ -291,6 +293,124 @@ fn swift_native_fn_and_const_residual_is_bound_and_exported() {
     );
 
     // And the whole residual tree still balances.
+    for f in lisp_files(tmp.path()) {
+        let src = std::fs::read_to_string(&f).unwrap();
+        assert_eq!(paren_balance(&src), Ok(0), "{} unbalanced", f.display());
+    }
+}
+
+fn int64() -> TypeRef {
+    TypeRef {
+        nullable: false,
+        kind: TypeRefKind::Primitive {
+            name: "int64".into(),
+        },
+    }
+}
+
+fn swift_native_method(selector: &str, init: bool, ret: TypeRef, params: Vec<Param>) -> Method {
+    Method {
+        selector: selector.into(),
+        class_method: false,
+        init_method: init,
+        params,
+        return_type: ret,
+        deprecated: false,
+        variadic: false,
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        origin: None,
+        category: None,
+        overrides: None,
+        returns_retained: None,
+        satisfies_protocol: None,
+        objc_exposed: false,
+        swift_fn: Some(SwiftFnInfo::default()),
+    }
+}
+
+#[test]
+fn swift_native_method_and_init_residual_bind_on_the_owning_class() {
+    // A class owner carrying a Swift-native method `update(with:)` and init
+    // `init(value:)` (objc_exposed == false): the method binds as a receiver-specialized
+    // defmethod (045), its generic gets a defgeneric (the lockstep), the init binds as a
+    // make-<owner> constructor, and both reach the facade's package surface.
+    let mut fw = build_snapshot_test_framework();
+    fw.name = "Foundation".into();
+    fw.classes = vec![Class {
+        name: "NSThing".into(),
+        superclass: "NSObject".into(),
+        protocols: vec![],
+        properties: vec![],
+        methods: vec![
+            swift_native_method(
+                "update(with:)",
+                false,
+                TypeRef::void(),
+                vec![Param {
+                    name: "with".into(),
+                    param_type: int64(),
+                }],
+            ),
+            swift_native_method(
+                "init(value:)",
+                true,
+                TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Instancetype,
+                },
+                vec![Param {
+                    name: "value".into(),
+                    param_type: int64(),
+                }],
+            ),
+        ],
+        category_methods: vec![],
+        swift_attributes: vec![],
+        ancestors: vec![],
+        all_methods: vec![],
+        all_properties: vec![],
+        objc_exposed: true,
+    }];
+    fw.protocols.clear();
+    fw.enums.clear();
+    fw.functions.clear();
+    fw.constants.clear();
+
+    let tmp = emit(&fw);
+
+    let nsthing = std::fs::read_to_string(tmp.path().join("foundation/nsthing.lisp")).unwrap();
+    assert!(
+        nsthing.contains("(defmethod ns:update-with ((self ns:ns-thing) with)"),
+        "residual method binds as a receiver-specialized defmethod:\n{nsthing}"
+    );
+    assert!(
+        nsthing.contains("aw_sbcl_swift_m_Foundation_NSThing_update"),
+        "defmethod crosses through its content-addressed trampoline entry:\n{nsthing}"
+    );
+    assert!(
+        nsthing.contains("(defun ns:make-ns-thing-value (value)"),
+        "residual init binds as a make-<owner> constructor:\n{nsthing}"
+    );
+    assert!(
+        nsthing.contains("aw_sbcl_swift_init_Foundation_NSThing"),
+        "constructor crosses through its content-addressed init entry:\n{nsthing}"
+    );
+
+    let generics = std::fs::read_to_string(tmp.path().join("foundation/generics.lisp")).unwrap();
+    assert!(
+        generics.contains("(defgeneric ns:update-with"),
+        "the residual method's generic is declared (the lockstep):\n{generics}"
+    );
+
+    let facade = std::fs::read_to_string(tmp.path().join("foundation.lisp")).unwrap();
+    assert!(facade.contains("ns::update-with"), "method generic exported:\n{facade}");
+    assert!(
+        facade.contains("ns::make-ns-thing-value"),
+        "init constructor exported:\n{facade}"
+    );
+
     for f in lisp_files(tmp.path()) {
         let src = std::fs::read_to_string(&f).unwrap();
         assert_eq!(paren_balance(&src), Ok(0), "{} unbalanced", f.display());

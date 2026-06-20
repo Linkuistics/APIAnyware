@@ -108,6 +108,59 @@ pub fn qualified_top_level_name(raw: &str) -> String {
     format!("{PACKAGE}:{}", top_level_name(raw))
 }
 
+/// The per-selector generic-function symbol name (unqualified) for a **Swift-native
+/// residual method** — the *selector-analogous* mapping of a method that carries a
+/// Swift base name + argument labels rather than an ObjC selector (contract §3.2).
+/// The base plus each **non-wildcard** label, each acronym-aware kebab-cased and
+/// joined with `-`: `update(with:)` (base `update`, labels `["with"]`) →
+/// `update-with`; a zero-label method (`start()`) → `start`; a wildcard label
+/// (`contains(_:)`) contributes nothing → `contains`.
+///
+/// Base-only (`update`) risks colliding with an unrelated ObjC `update`; this
+/// selector-analogous form mirrors how [`generic_name`] joins ObjC selector
+/// components, so a residual method shares a generic with an ObjC selector **only**
+/// when both genuinely kebab the same name (then CLOS dispatch unifies them — one
+/// generic, two receiver-specialized methods).
+pub fn swift_method_generic_name(base: &str, labels: &[String]) -> String {
+    let mut parts = vec![acronym_aware_kebab(base)];
+    for l in labels {
+        if l != "_" && !l.is_empty() {
+            parts.push(acronym_aware_kebab(l));
+        }
+    }
+    parts.join("-")
+}
+
+/// The `ns:`-qualified form of [`swift_method_generic_name`] — the generic a residual
+/// method's `(defmethod …)` extends and `collect_generics` declares a `defgeneric`
+/// for (the lockstep).
+pub fn qualified_swift_method_generic_name(base: &str, labels: &[String]) -> String {
+    format!("{PACKAGE}:{}", swift_method_generic_name(base, labels))
+}
+
+/// The `ns:` symbol name (unqualified) for a **Swift-native residual initializer**'s
+/// constructor — `make-` + the owning type's acronym-aware kebab name + each
+/// non-wildcard label: `IndexSet.init(integer:)` → `make-index-set-integer`, the bare
+/// `IndexSet.init()` → `make-index-set`. A standalone constructor `defun` (not a
+/// `make-instance` registration): a Swift-native init calls `Type(labels:)` through
+/// the trampoline, **not** ObjC `alloc`/`init`, so it is not §3.3's make-instance
+/// contract; the named constructor mirrors the gerbil peer's `make-<type>`.
+pub fn swift_init_constructor_name(owner: &str, labels: &[String]) -> String {
+    let mut name = format!("make-{}", class_name(owner));
+    for l in labels {
+        if l != "_" && !l.is_empty() {
+            name.push('-');
+            name.push_str(&acronym_aware_kebab(l));
+        }
+    }
+    name
+}
+
+/// The `ns:`-qualified form of [`swift_init_constructor_name`].
+pub fn qualified_swift_init_constructor_name(owner: &str, labels: &[String]) -> String {
+    format!("{PACKAGE}:{}", swift_init_constructor_name(owner, labels))
+}
+
 /// The keyword components of a selector — the text before each `:` (or the whole
 /// selector for a unary message). `insertObject:atIndex:` →
 /// `["insertObject", "atIndex"]`; `length` → `["length"]`.
@@ -207,6 +260,33 @@ mod tests {
         // A leading-underscore "private" symbol drops the empty leading segment.
         assert_eq!(top_level_name("_dispatch_main_q"), "dispatch-main-q");
         assert_eq!(qualified_top_level_name("dispatch_async"), "ns:dispatch-async");
+    }
+
+    #[test]
+    fn swift_method_generics_are_selector_analogous() {
+        // base + non-wildcard labels, acronym-aware, joined with `-`.
+        assert_eq!(swift_method_generic_name("update", &["with".into()]), "update-with");
+        assert_eq!(qualified_swift_method_generic_name("update", &["with".into()]), "ns:update-with");
+        // Zero-label method → bare base.
+        assert_eq!(swift_method_generic_name("start", &[]), "start");
+        // A wildcard label contributes nothing (so two wildcard params don't double-`-`).
+        assert_eq!(swift_method_generic_name("contains", &["_".into()]), "contains");
+        // Multi-label, acronym preserved inside a label.
+        assert_eq!(
+            swift_method_generic_name("data", &["fromURL".into(), "delegate".into()]),
+            "data-from-url-delegate"
+        );
+    }
+
+    #[test]
+    fn swift_init_constructors_are_make_prefixed() {
+        // make- + owner kebab + non-wildcard labels.
+        assert_eq!(swift_init_constructor_name("IndexSet", &["integer".into()]), "make-index-set-integer");
+        assert_eq!(qualified_swift_init_constructor_name("IndexSet", &["integer".into()]), "ns:make-index-set-integer");
+        // Bare init → make-<owner>.
+        assert_eq!(swift_init_constructor_name("IndexSet", &[]), "make-index-set");
+        // A class owner kebabs acronym-aware like everywhere else.
+        assert_eq!(swift_init_constructor_name("ImageCreator", &[]), "make-image-creator");
     }
 
     #[test]
