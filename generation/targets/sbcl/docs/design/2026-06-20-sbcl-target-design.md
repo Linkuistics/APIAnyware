@@ -250,8 +250,27 @@ generics-cost precedents the SBCL design diverges from). Evidence:
 
 ## 8. Open items carried to build leaves
 
-- The per-signature **bounce-shim IMP mechanism** (generated-per-selector vs
-  `NSInvocation` forwarding) — `050`.
+- ~~The per-signature **bounce-shim IMP mechanism** (generated-per-selector vs
+  `NSInvocation` forwarding) — `050`.~~ **RESOLVED (`050/010-native-dylib`,
+  2026-06-20): `NSInvocation` forwarding.** Per overridden selector the dylib
+  installs libobjc's `_objc_msgForward` (obtained via `class_getMethodImplementation`
+  on an unimplemented selector — no `dlsym`) and overrides two NSObject hooks once per
+  synthesized class: `methodSignatureForSelector:` (pure Swift, builds the
+  `NSMethodSignature` reflectively from the baked encoding — no Lisp, no bounce, since
+  it runs pre-forwarding on the calling thread) and `forwardInvocation:` (bounces to
+  main via `CallbackBounce`, then calls the **one** registered Lisp dispatcher with the
+  `NSInvocation`). The ObjC runtime reifies args/return per the signature, so this
+  single reflective trampoline is **ABI-correct for every selector shape** (structs,
+  floats) with **no per-selector/per-signature codegen and no coupling to which
+  selectors an app overrides** — unlike generated-per-selector (couples the dylib to
+  the overridable surface) and unlike gerbil's fixed-family `void*`-tail shims (not
+  ABI-correct for struct/float args on arm64). Verified end-to-end in
+  `APIAnywareSbclTests` (arg-read + return-set round-trip). **Refines ADR-0038 §4:** the
+  Lisp side registers **one** dispatcher (`aw_sbcl_subclass_register_dispatcher`) and
+  routes by selector, not a `define-alien-callable` per selector; it drives
+  `objc_allocateClassPair`/`objc_registerClassPair` itself and calls
+  `aw_sbcl_subclass_add_forward(cls, sel, types)` per overridden selector. Code +
+  rationale: `swift/Sources/APIAnywareSbcl/SubclassSynth.swift`. Gates `040-subclass-and-conformance`.
 - **Baked-ivar-offset SDK drift** mitigation (re-resolve via `ivar_getOffset` at startup,
   or pin the SDK) — `050`; the accessor-selector path is the always-safe default.
 - **`NSException` capture** (the native dispatch core `@catch`) — secondary, `050`
