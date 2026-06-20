@@ -29,9 +29,11 @@
 pub mod class_graph;
 pub mod emit_class;
 pub mod emit_generics;
+pub mod emit_protocol;
 pub mod ffi_type_mapping;
 pub mod method_filter;
 pub mod naming;
+pub mod protocol_registry;
 
 mod emit_framework;
 

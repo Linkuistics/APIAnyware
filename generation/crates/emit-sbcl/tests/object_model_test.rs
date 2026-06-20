@@ -17,6 +17,7 @@ use apianyware_macos_emit_sbcl::emit_generics::{
     collect_generics, collect_residual, generic_arity_conflicts, render_class_dispatch,
     render_generics,
 };
+use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
 use apianyware_macos_types::ir::{Class, Framework, Method, Param, Property};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
@@ -154,7 +155,7 @@ fn render_all(fw: &Framework) -> String {
         out.push_str(&render_class(cls, &fw.name, parent));
         out.push_str(&render_class_dispatch(cls, &fw.name));
     }
-    out.push_str(&render_generics(&collect_generics(&[fw])));
+    out.push_str(&render_generics(&collect_generics(&[fw], &ProtocolRegistry::new())));
     out
 }
 
@@ -176,7 +177,7 @@ fn every_defmethod_has_a_matching_defgeneric() {
     let fw = fixture();
     let out = render_all(&fw);
 
-    let declared: HashSet<String> = render_generics(&collect_generics(&[&fw]))
+    let declared: HashSet<String> = render_generics(&collect_generics(&[&fw], &ProtocolRegistry::new()))
         .lines()
         .filter_map(|l| l.strip_prefix("(defgeneric "))
         .filter_map(|rest| rest.split([' ', '(']).next())
@@ -231,5 +232,5 @@ fn every_class_bakes_its_identity_string() {
 #[test]
 fn fixture_has_no_generic_arity_conflicts() {
     let fw = fixture();
-    assert!(generic_arity_conflicts(&[&fw]).is_empty());
+    assert!(generic_arity_conflicts(&[&fw], &ProtocolRegistry::new()).is_empty());
 }

@@ -43,6 +43,22 @@
 //! the trampoline residual the next leaf (050) routes through `libAPIAnywareSbcl`.
 //! The §6d invariant's `554 method` + `576 init` originate from this collection.
 //!
+//! ## Conformed-protocol flattening (leaf 040/030)
+//!
+//! A bound class's dispatch surface is its **own** declared methods *plus* the
+//! methods of every protocol it directly conforms to (closed over protocol
+//! inheritance) — but **not** its superclass-inherited methods, which CLOS method
+//! inheritance covers structurally (a `defmethod` on `ns:ns-view` applies to
+//! `ns:ns-control` instances). Class inheritance rides the `defclass` graph;
+//! protocol conformance does **not** (a protocol is no CLOS superclass), so a
+//! conformed protocol's methods (`NSData`'s `copyWithZone:` from `NSCopying`) live
+//! on no ancestor and are flattened here, as receiver-specialized `defmethod`s.
+//! [`class_dispatches`] takes the [`ProtocolRegistry`] and folds in the
+//! `all_methods` entries whose `origin` is in the class's own conformance closure
+//! ([`effective_methods`]); own methods win ties. An empty registry (the default /
+//! per-class convenience path) flattens nothing — identical to the pre-flattening
+//! surface.
+//!
 //! ## Class methods + error-out methods
 //!
 //! - **Class methods** dispatch on the class metaobject via an `(eql (find-class
@@ -90,6 +106,7 @@ use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 use crate::ffi_type_mapping::{SbclFfiTypeMapper, SAP};
 use crate::method_filter::{is_error_out_method, is_supported_method_ctx};
 use crate::naming::{qualified_class_name, qualified_generic_name, selector_keyword_symbols};
+use crate::protocol_registry::ProtocolRegistry;
 
 /// The `objc_msgSend` function SAP, runtime-owned + startup-re-resolved (ADR-0038).
 pub const MSGSEND_SAP: &str = "+objc-msgsend+";
@@ -132,12 +149,12 @@ pub struct GenericDecl {
 /// name already seen with a *different* arity is a genuine congruence conflict the
 /// orchestration leaf (060) resolves by collision-rename; here the first arity
 /// wins and the clash is surfaced via [`generic_arity_conflicts`].
-pub fn collect_generics(frameworks: &[&Framework]) -> Vec<GenericDecl> {
+pub fn collect_generics(frameworks: &[&Framework], protocols: &ProtocolRegistry) -> Vec<GenericDecl> {
     let mut by_name: BTreeMap<String, usize> = BTreeMap::new();
     for fw in frameworks {
         for cls in &fw.classes {
             let class_errs = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
-            for d in class_dispatches(cls, &class_errs) {
+            for d in class_dispatches(cls, &class_errs, protocols) {
                 by_name.entry(d.generic_name()).or_insert(d.arity());
             }
         }
@@ -152,13 +169,13 @@ pub fn collect_generics(frameworks: &[&Framework]) -> Vec<GenericDecl> {
 /// the program — a CL congruence conflict the orchestration leaf must collision-
 /// rename. Empty in practice (distinct ObjC selectors rarely collide post-kebab);
 /// surfaced so a future framework that does trip it fails loudly, not silently.
-pub fn generic_arity_conflicts(frameworks: &[&Framework]) -> Vec<String> {
+pub fn generic_arity_conflicts(frameworks: &[&Framework], protocols: &ProtocolRegistry) -> Vec<String> {
     let mut seen: BTreeMap<String, usize> = BTreeMap::new();
     let mut conflicts: BTreeSet<String> = BTreeSet::new();
     for fw in frameworks {
         for cls in &fw.classes {
             let class_errs = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
-            for d in class_dispatches(cls, &class_errs) {
+            for d in class_dispatches(cls, &class_errs, protocols) {
                 let name = d.generic_name();
                 match seen.get(&name) {
                     Some(&a) if a != d.arity() => {
@@ -243,8 +260,9 @@ pub fn emit_class_dispatch(
     cls: &Class,
     framework: &str,
     error_selectors: &HashSet<String>,
+    protocols: &ProtocolRegistry,
 ) {
-    let dispatches = class_dispatches(cls, error_selectors);
+    let dispatches = class_dispatches(cls, error_selectors, protocols);
     let inits = exposed_inits(cls);
     if dispatches.is_empty() && inits.is_empty() {
         return;
@@ -265,10 +283,22 @@ pub fn emit_class_dispatch(
 }
 
 /// Convenience: render one class's dispatch surface to a string (no enrichment
-/// error selectors). Used by snapshot tests + the orchestration facade.
+/// error selectors, **no** conformed-protocol flattening). Used by snapshot tests
+/// that exercise own-method emission in isolation.
 pub fn render_class_dispatch(cls: &Class, framework: &str) -> String {
+    render_class_dispatch_with(cls, framework, &ProtocolRegistry::new())
+}
+
+/// Like [`render_class_dispatch`] but with a [`ProtocolRegistry`] driving
+/// conformed-protocol flattening — the shape the orchestration facade (060) uses,
+/// and the one flattening tests exercise.
+pub fn render_class_dispatch_with(
+    cls: &Class,
+    framework: &str,
+    protocols: &ProtocolRegistry,
+) -> String {
     let mut w = CodeWriter::new();
-    emit_class_dispatch(&mut w, cls, framework, &HashSet::new());
+    emit_class_dispatch(&mut w, cls, framework, &HashSet::new(), protocols);
     w.finish()
 }
 
@@ -335,7 +365,17 @@ fn mapper() -> SbclFfiTypeMapper {
 /// the deduped, ordered dispatch list. Precedence (gerbil-aligned): property >
 /// instance method > class method, deduped within a receiver kind by generic name.
 /// `objc_exposed == false` methods are excluded (they route to the residual).
-fn class_dispatches(cls: &Class, error_selectors: &HashSet<String>) -> Vec<Dispatch> {
+///
+/// The method set is [`effective_methods`] — own declared methods **plus** the
+/// conformed-protocol methods flattened from `all_methods` via the class's own
+/// conformance closure (`protocols`), but **not** superclass-inherited methods
+/// (CLOS inheritance covers those). See the module-level "Conformed-protocol
+/// flattening" note.
+fn class_dispatches(
+    cls: &Class,
+    error_selectors: &HashSet<String>,
+    protocols: &ProtocolRegistry,
+) -> Vec<Dispatch> {
     let m = mapper();
     let mut out: Vec<Dispatch> = Vec::new();
     // (class_receiver, generic-name) → already emitted, for dedup.
@@ -359,9 +399,13 @@ fn class_dispatches(cls: &Class, error_selectors: &HashSet<String>) -> Vec<Dispa
         }
     }
 
-    // 2. Instance methods, then 3. class methods (non-init, objc_exposed, supported).
+    // 2. Instance methods, then 3. class methods (non-init, objc_exposed, supported)
+    // — over the effective set (own + conformed-protocol, superclass-inherited
+    // excluded).
+    let conformed = protocols.conformance_closure(&cls.protocols);
+    let methods = effective_methods(cls, &conformed);
     for class_receiver in [false, true] {
-        for meth in &cls.methods {
+        for &meth in &methods {
             if meth.init_method || meth.class_method != class_receiver || !meth.objc_exposed {
                 continue;
             }
@@ -373,6 +417,28 @@ fn class_dispatches(cls: &Class, error_selectors: &HashSet<String>) -> Vec<Dispa
     }
 
     out
+}
+
+/// The methods a class emits dispatch for: its **own** declared methods chained
+/// with the **conformed-protocol** methods the resolve phase flattened into
+/// `all_methods` (origin ∈ the class's own conformance closure), but **not** the
+/// superclass-inherited set (CLOS method inheritance over the `defclass` graph
+/// covers a subclass dispatching to an ancestor's method — re-emitting would be
+/// redundant). `all_methods` entries whose `origin` is a conformed protocol are
+/// exactly the protocol-contributed set; superclass-inherited entries carry an
+/// ancestor-*class* origin and stay filtered out. Own methods win ties; deduped by
+/// selector. With an empty closure this is just `cls.methods`.
+fn effective_methods<'a>(cls: &'a Class, conformed: &BTreeSet<String>) -> Vec<&'a Method> {
+    let mut seen: HashSet<&str> = HashSet::new();
+    cls.methods
+        .iter()
+        .chain(cls.all_methods.iter().filter(|m| {
+            m.origin
+                .as_deref()
+                .is_some_and(|origin| conformed.contains(origin))
+        }))
+        .filter(|m| seen.insert(m.selector.as_str()))
+        .collect()
 }
 
 /// The class's `objc_exposed`, supported, **explicit** init methods (the
@@ -901,7 +967,7 @@ mod tests {
             vec![],
         );
         let mut w = CodeWriter::new();
-        emit_class_dispatch(&mut w, &cls, "Foundation", &errs);
+        emit_class_dispatch(&mut w, &cls, "Foundation", &errs, &ProtocolRegistry::new());
         let out = w.finish();
         // Visible arity 1 (path); no `error` formal.
         assert!(out.contains("(defmethod ns:write-to-file-error ((self ns:ns-data) path)"));
@@ -954,7 +1020,7 @@ mod tests {
         // Two unrelated classes both expose `count` → one global defgeneric.
         let f1 = fw("Foundation", vec![class_with("NSArray", vec![method("count", false, prim("uint64"), vec![])], vec![])]);
         let f2 = fw("CoreData", vec![class_with("NSFetchRequest", vec![method("count", false, prim("uint64"), vec![])], vec![])]);
-        let decls = collect_generics(&[&f1, &f2]);
+        let decls = collect_generics(&[&f1, &f2], &ProtocolRegistry::new());
         let count: Vec<_> = decls.iter().filter(|d| d.name == "ns:count").collect();
         assert_eq!(count.len(), 1, "shared selector unified: {decls:?}");
         assert_eq!(count[0].arity, 0);
@@ -981,7 +1047,7 @@ mod tests {
                 vec![],
             )],
         );
-        let decls = collect_generics(&[&f]);
+        let decls = collect_generics(&[&f], &ProtocolRegistry::new());
         let d = decls.iter().find(|d| d.name == "ns:object-at-index").unwrap();
         assert_eq!(d.arity, 1);
         let rendered = render_generics(&decls);
@@ -994,6 +1060,111 @@ mod tests {
             "Foundation",
             vec![class_with("NSArray", vec![method("count", false, prim("uint64"), vec![])], vec![])],
         );
-        assert!(generic_arity_conflicts(&[&f]).is_empty());
+        assert!(generic_arity_conflicts(&[&f], &ProtocolRegistry::new()).is_empty());
+    }
+
+    // --- conformed-protocol flattening (leaf 040/030) ---
+
+    /// Build an `all_methods` entry as the resolve phase produces it for a method
+    /// declared on a conformed protocol (origin = the declaring protocol).
+    fn flattened(selector: &str, origin: &str, params: Vec<Param>, ret: TypeRef) -> Method {
+        let mut m = method(selector, false, ret, params);
+        m.origin = Some(origin.into());
+        m
+    }
+
+    #[test]
+    fn conformed_protocol_method_flattens_onto_class() {
+        // NSData conforms to NSCopying; copyWithZone: lives on the protocol (origin
+        // NSCopying), in all_methods, not in NSData's own methods. With NSCopying in
+        // the registry, it flattens onto ns:ns-data as a callable defmethod.
+        let mut cls = class_with("NSData", vec![], vec![]);
+        cls.protocols = vec!["NSCopying".into()];
+        cls.all_methods = vec![
+            flattened("copyWithZone:", "NSCopying", vec![param("zone", TypeRefKind::Id)], ty(TypeRefKind::Id)),
+            // A superclass-inherited entry (class origin) must NOT flatten — the
+            // CLOS graph carries it.
+            flattened("isEqual:", "NSObject", vec![param("other", TypeRefKind::Id)], prim("bool")),
+        ];
+        let mut reg = ProtocolRegistry::new();
+        reg.insert("NSCopying", vec![]);
+
+        let out = render_class_dispatch_with(&cls, "Foundation", &reg);
+        assert!(out.contains("(defmethod ns:copy-with-zone ((self ns:ns-data) zone)"));
+        // The class-origin inherited method is filtered out (no re-emit).
+        assert!(!out.contains("is-equal"));
+    }
+
+    #[test]
+    fn empty_registry_flattens_nothing() {
+        // Same class, but an empty registry → the conformance closure is empty → no
+        // protocol method flattens (the pre-flattening surface).
+        let mut cls = class_with("NSData", vec![], vec![]);
+        cls.protocols = vec!["NSCopying".into()];
+        cls.all_methods = vec![flattened(
+            "copyWithZone:",
+            "NSCopying",
+            vec![param("zone", TypeRefKind::Id)],
+            ty(TypeRefKind::Id),
+        )];
+        let out = render_class_dispatch_with(&cls, "Foundation", &ProtocolRegistry::new());
+        assert!(!out.contains("copy-with-zone"));
+    }
+
+    #[test]
+    fn own_method_wins_over_protocol_duplicate() {
+        // A class that re-declares a protocol selector in its own methods keeps its
+        // own lowering; the flattened duplicate is deduped out (own wins).
+        let mut cls = class_with(
+            "NSData",
+            vec![method("copyWithZone:", false, ty(TypeRefKind::Id), vec![param("zone", TypeRefKind::Id)])],
+            vec![],
+        );
+        cls.protocols = vec!["NSCopying".into()];
+        cls.all_methods = vec![flattened(
+            "copyWithZone:",
+            "NSCopying",
+            vec![param("zone", TypeRefKind::Id)],
+            ty(TypeRefKind::Id),
+        )];
+        let mut reg = ProtocolRegistry::new();
+        reg.insert("NSCopying", vec![]);
+        let out = render_class_dispatch_with(&cls, "Foundation", &reg);
+        assert_eq!(out.matches("(defmethod ns:copy-with-zone ").count(), 1);
+    }
+
+    #[test]
+    fn flattened_generic_enters_the_global_set() {
+        // The lockstep guarantee: a flattened defmethod's generic must also be in
+        // collect_generics' output (else the defmethod has no defgeneric).
+        let mut cls = class_with("NSData", vec![], vec![]);
+        cls.protocols = vec!["NSCopying".into()];
+        cls.all_methods = vec![flattened(
+            "copyWithZone:",
+            "NSCopying",
+            vec![param("zone", TypeRefKind::Id)],
+            ty(TypeRefKind::Id),
+        )];
+        let f = fw("Foundation", vec![cls]);
+        let mut reg = ProtocolRegistry::new();
+        reg.insert("NSCopying", vec![]);
+        let decls = collect_generics(&[&f], &reg);
+        assert!(decls.iter().any(|d| d.name == "ns:copy-with-zone" && d.arity == 1));
+    }
+
+    #[test]
+    fn unknown_protocol_does_not_flatten() {
+        // NSData conforms to a protocol absent from the registry (unloaded
+        // framework) → its all_methods stub must not flatten (wrong-arity risk).
+        let mut cls = class_with("NSData", vec![], vec![]);
+        cls.protocols = vec!["SomeUnloadedProtocol".into()];
+        cls.all_methods = vec![flattened(
+            "mysteryMethod:",
+            "SomeUnloadedProtocol",
+            vec![param("x", TypeRefKind::Id)],
+            TypeRef::void(),
+        )];
+        let out = render_class_dispatch_with(&cls, "Foundation", &ProtocolRegistry::new());
+        assert!(!out.contains("mystery-method"));
     }
 }
