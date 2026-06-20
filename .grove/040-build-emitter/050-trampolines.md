@@ -1,0 +1,53 @@
+# 050-trampolines
+
+**Kind:** work
+
+## Goal
+
+The Swift-native residual layer (ADR-0038, the largest module — peer
+`emit-gerbil/trampoline.rs` ~3286 + `shared_signatures.rs`):
+
+- **`trampoline.rs`** — route every `objc_exposed == false` decl collected by
+  020/040 to a **content-addressed `aw_sbcl_*` binding** (ADR-0038 §2 / racket spec
+  §2,§8.4 — reconstructed from decl identity, **no shared counter**):
+  - `aw_sbcl_swift_<Fw>_<name>` (function)
+  - `aw_sbcl_swift_const_<Fw>_<name>` (constant)
+  - `aw_sbcl_swift_m_<Fw>_<Owner>_<base>` (method)
+  - `aw_sbcl_swift_init_<Fw>_<Owner>` (init)
+  - short overload hash appended **only** on collision.
+  Emit the Lisp-side typed `sb-alien` binding per trampoline signature (the same
+  compiled-FFI shape as direct dispatch; String/object-return coercion per ADR-0038
+  §4 — object returns wrap via the MOP class registry).
+- **`run_sbcl_trampolines` global pass** — model on `run_gerbil_trampolines`:
+  collect the residual across **all** frameworks, emit gitignored
+  `swift/Sources/APIAnywareSbcl/Generated/Trampolines.swift` (the `@_cdecl`
+  re-exports). Export `collect_trampolines` + `generate_trampolines_swift` from
+  `lib.rs` (peer gerbil's exports).
+- **`shared_signatures.rs`** if needed (de-dup ABI signatures across trampolines).
+
+## Context
+
+ADR-0038 (whole — §2 naming, §3 binding, §4 marshalling taxonomy, §6 the §6d
+invariant) is the spec. SBCL design spec §4. racket trampoline spec §2/§3/§6d/§8/§9
+(the marshalling taxonomy + the residual close, **unchanged through the IR**).
+Reference: `emit-gerbil/src/{trampoline.rs,shared_signatures.rs}`, its `lib.rs`
+exports, and `run_gerbil_trampolines` wiring in `cli/.../generate.rs`. The B1–B5
+swift-residual close (`.v26` floor, umbrella re-attribution, owner-availability
+fold, `KNOWN_UNBINDABLE`) is **inherited through the IR** (racket spec §8.8) — not
+re-derived here.
+
+## Done when
+
+- Trampoline routing + `aw_sbcl_*` content-addressed naming produces the residual
+  bindings; `run_sbcl_trampolines` writes `Generated/Trampolines.swift`.
+- **The §6d invariant reproduces exactly: 51 fn + 7 const + 576 init + 554 method**
+  (deterministic from the shared IR) — assert in a test, the leaf's hard done-bar.
+- `.swift` residual gitignored (the path is generated, not committed).
+
+## Notes
+
+- Per-signature marshalling: scalars / Foundation-bridged value types / `Optional`
+  / `AwSbclValueBox` / `Unmanaged` / pointer constants / `throws` / async /
+  receiver-handle — the racket taxonomy. The *native* side (the six `.swift` files)
+  is **050 of the parent grove** (runtime), not this leaf; this leaf emits the
+  generated `Trampolines.swift` + the Lisp `sb-alien` bindings only.
