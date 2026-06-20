@@ -310,34 +310,53 @@ signature per method ABI, casting away arm64 variadic `objc_msgSend`.
 _Avoid_: "CFFI" / "the FFI" (name it `sb-alien`); "libffi" (sb-alien generates
 direct native call sites, not libffi thunks).
 
-**MOP projection / `objc-class` metaclass (sbcl)**:
-The `sbcl` object model (provisional, to be settled in the object-model leaf):
-ObjC's class system is **projected into CLOS via the Metaobject Protocol**, not
-mirrored as plain `defclass`. An `objc-class` metaclass (subclass of
-`standard-class`) backs every bound ObjC class; each ObjC class is a CLOS class
-of that metaclass carrying the ObjC `Class` pointer; ObjC methods are
-**per-selector `defgeneric`/`defmethod` specialized on the receiver** over the
-real metaclass-backed class graph (CLOS generic dispatch + method combination +
-`call-next-method` for subclass overrides — **not** literal multiple-argument
-dispatch, since ObjC is single-receiver; settled **D6**, 2026-06-20, holding D3's
-line against the single-dispatch veneer of all prior CL bridges and dodging the
-"vacuous" critique the gerbil way: dispatch rides a *real* class graph, not one
-wrapper type);
-instance ivars/slots route through MOP hooks (`slot-value-using-class`,
-`allocate-instance`); `make-instance` trampolines to `alloc`/`init`; deriving
-`(defclass my-view (ns:ns-view) … (:metaclass objc-class))` synthesizes a real
-ObjC subclass via `objc_allocateClassPair`. The **emitter statically generates
-the class graph** (per ADR-0010 / the shared-IR model); the **MOP machinery
-lives in the runtime** — diverging from Clozure CL, whose bridge synthesizes
-classes dynamically from the live ObjC runtime. The MOP is the *mechanism*; the
-class graph stays statically emitted.
+**MOP projection / `objc-class` metaclass (sbcl)** _(settled — ADR-0034; mechanisms verified first-hand on SBCL 2.6.5)_:
+The `sbcl` object model: ObjC's class system is **projected into CLOS via the
+Metaobject Protocol** (`sb-mop`), not mirrored as plain `defclass`. An `objc-class`
+metaclass (subclass of `standard-class`) backs every bound ObjC class; each ObjC
+class is a CLOS class of that metaclass carrying the ObjC `Class` pointer (foreign
+`ptr` slot on the runtime-owned root `ns:ns-object`); the full ancestor chain is
+reified. ObjC methods are **per-selector `defgeneric`/`defmethod` specialized on
+the receiver** over the real metaclass-backed class graph (CLOS generic dispatch +
+method combination + `call-next-method` for subclass overrides — **not** literal
+multiple-argument dispatch, since ObjC is single-receiver; settled **D6**,
+2026-06-20, holding D3's line against the single-dispatch veneer of all prior CL
+bridges and dodging the "vacuous" critique the gerbil way: dispatch rides a *real*
+class graph, not one wrapper type). The emitter emits **one explicit `defgeneric`
+per selector** (authoritative arglist/docstring — the named contract surface) + one
+`defmethod` per (class × selector). **Generic explosion is a non-issue:** the
+full AppKit+Foundation scale (6,500 generics + 40,000 methods) compiles **cold in
+~8.4 s** on SBCL — gerbil's ADR-0023 5h blow-up lived in Gambit's `:std/generic`
+*macro*, not in SBCL's native CLOS, so **no sharding / no-`-O` / parallel-compile
+machinery is needed**. Instance **ivars** are foreign slots: `slot-value-using-class`
++ a custom foreign slot-definition class carrying a **baked bit-offset** + foreign
+ctype, discriminating foreign ivars from plain-Lisp slots (the `ptr` handle falls
+through to standard storage); baked offsets are SDK-drift-sensitive (a fast path
+over the always-safe accessor-selector path). `make-instance` routes through
+**`allocate-instance` specialized on `objc-class`** → `alloc`/`init` (no init
+initargs ⇒ alloc-only); deriving `(define-objc-subclass my-view (ns:ns-view) …)`
+(→ `:metaclass objc-class`) synthesizes a real ObjC subclass via
+`objc_allocateClassPair` + IMP install + `objc_registerClassPair`. The **emitter
+statically generates the class graph** (per ADR-0010 / the shared-IR model); the
+**MOP machinery lives in the runtime** — diverging from Clozure CL, whose bridge
+synthesizes classes dynamically from the live ObjC runtime. Because
+`save-lisp-and-die` (D4) keeps baked Lisp metadata but **loses live foreign
+pointers** (verified: a revived image sees `objc_getClass "NSString"` → NULL until
+Foundation is re-`dlopen`ed), the runtime owns a CCL-`revive-objc-classes`-equivalent
+**startup re-resolution pass**: re-`dlopen` each framework, then re-resolve every
+`Class`/`SEL` from its **baked string identity** (never reuse a baked pointer) —
+load-bearing for `070` `bundle-sbcl`. The MOP is the *mechanism*; the class graph
+stays statically emitted.
 _Avoid_: a single `objc-object` wrapper class with generics (gerbil pre-rejected
 as "vacuous" — receiver-only dispatch over one type, ADR-0018→0020); "manifest
 `defclass` graph" *without* the MOP (that is gerbil's shape, ADR-0020 — sbcl goes
 further); "dynamic synthesis from the ObjC runtime" as sbcl's mechanism (that is
 CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks);
 "multiple dispatch" (ObjC dispatches on the receiver only — the generics are
-receiver-specialized over the real class graph, D6).
+receiver-specialized over the real class graph, D6); **porting gerbil's
+generics-sharding / no-`-O` / parallel-compile pipeline** (ADR-0023 — that fixes a
+Gambit-macro cost SBCL's native CLOS does not have); reusing a baked foreign
+`Class`/`SEL` pointer after an image dump (it is stale — re-resolve from the string).
 
 **CL-family interface contract** _(settled — ADR-0033 + `docs/specs/2026-06-20-cl-family-interface-contract.md`)_:
 The **documented, specification-level interface that all Common Lisp targets share**,

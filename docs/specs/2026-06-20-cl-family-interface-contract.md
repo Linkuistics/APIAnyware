@@ -107,8 +107,10 @@ and the burden is on any deviation.
   (sending a selector to a receiver runs the most-specific method; subclass
   overrides participate via `call-next-method`); the generic-function realization
   is upper-layer surface, but the *cost mitigation* (gerbil's generic explosion,
-  ADR-0023) is an implementation concern designed per-impl (SBCL:
-  `030-design/020-object-model`).
+  ADR-0023) is an implementation concern designed per-impl. For SBCL it is settled
+  (ADR-0034): the blow-up does **not** reproduce — native CLOS compiles the full
+  AppKit+Foundation scale cold in ~8.4 s — so **no mitigation is needed**, and the
+  emitter emits **one explicit `defgeneric` per selector** as the named surface.
 
 ### 3.3 Instantiation
 
@@ -255,10 +257,12 @@ contract's lower layer.
 
 - **Condition hierarchy (§3.7)** — concrete root name + sub-types →
   `030-design/030-lifetime-threading-conditions`.
-- **Object-model mechanism (§3.4–§3.6)** — metaclass impl, slot mechanism
-  (re-derived first-hand, §5.1 refuted the assumed hook), AMOP-conformance check,
-  D6 dispatch + generic-explosion mitigation, static-emit class graph + startup
-  re-resolution (§B5) → `030-design/020-object-model`.
+- **Object-model mechanism (§3.4–§3.6)** — **settled, ADR-0034**: `objc-class`
+  metaclass; slot mechanism re-derived first-hand (`slot-value-using-class` +
+  baked-offset foreign slots; §5.1's refutation was about CCL, not SBCL);
+  AMOP-conformance confirmed against `sb-mop`; D6 dispatch with the
+  generic-explosion risk **closed** (no mitigation needed); static-emit class graph
+  + mandatory startup re-resolution pass (§B5). Was `030-design/020-object-model`.
 - **Lower-layer C ABI (§5)** — symbol naming, typed `sb-alien` binding,
   `save-lisp-and-die` + startup re-resolution → `030-design/040-trampoline-layer`,
   which also authors the SBCL **target design spec** synthesizing 010–040.
