@@ -4,8 +4,8 @@ A materialised copy of the grove skill for the `claude` harness.
 
 | | |
 |---|---|
-| version | `5.1.0` |
-| materialised on | 2026-05-30 |
+| version | `6.3.0` |
+| materialised on | 2026-06-20 |
 | materialised into | `.claude/skills/grove/` |
 
 ## Updating
