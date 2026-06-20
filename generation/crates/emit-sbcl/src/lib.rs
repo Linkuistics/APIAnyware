@@ -37,7 +37,10 @@ pub mod ffi_type_mapping;
 pub mod method_filter;
 pub mod naming;
 pub mod protocol_registry;
+pub mod shared_signatures;
+pub mod trampoline;
 
 mod emit_framework;
 
 pub use emit_framework::{SbclEmitter, SBCL_TARGET_INFO};
+pub use trampoline::{collect_trampolines, generate_trampolines_swift};

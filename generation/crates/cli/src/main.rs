@@ -88,6 +88,20 @@ struct Cli {
     /// Skip generating the gerbil Swift-native trampolines.
     #[arg(long)]
     no_gerbil_trampolines: bool,
+
+    /// Output path for the sbcl target's generated Swift-native trampolines (ADR-0038 —
+    /// `libAPIAnywareSbcl` is the SBCL target's sole native unit, so its trampolines live
+    /// in a Swift dylib). Written when sbcl is among the generated targets; `swift build`
+    /// then compiles it into libAPIAnywareSbcl.
+    #[arg(
+        long,
+        default_value = "swift/Sources/APIAnywareSbcl/Generated/Trampolines.swift"
+    )]
+    sbcl_trampolines_out: PathBuf,
+
+    /// Skip generating the sbcl Swift-native trampolines.
+    #[arg(long)]
+    no_sbcl_trampolines: bool,
 }
 
 fn main() -> Result<()> {
@@ -168,6 +182,19 @@ fn main() -> Result<()> {
             entries,
             output = %cli.gerbil_trampolines_out.display(),
             "gerbil Swift-native trampolines generated — run `swift build` to compile them"
+        );
+    }
+
+    // Generate the sbcl Swift-native trampolines (ADR-0038) when sbcl was among the
+    // targets — a global pass over all frameworks, same build order: generate (here) ->
+    // swift build compiles them into libAPIAnywareSbcl (the SBCL target's sole native unit).
+    let sbcl_generated = summaries.iter().any(|s| s.target_id == "sbcl");
+    if sbcl_generated && !cli.no_sbcl_trampolines {
+        let entries = generate::run_sbcl_trampolines(&cli.input_dir, &cli.sbcl_trampolines_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.sbcl_trampolines_out.display(),
+            "sbcl Swift-native trampolines generated — run `swift build` to compile them"
         );
     }
 

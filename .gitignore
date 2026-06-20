@@ -53,6 +53,13 @@ swift/Sources/APIAnywareChez/Generated/
 # `swift build` step). Reproducible from the IR (build order: generate -> swift build).
 swift/Sources/APIAnywareGerbil/Generated/
 
+# Generated sbcl Swift-native trampolines (ADR-0038, leaf 040/050): one @_cdecl per
+# Swift-native residual decl, emitted into the APIAnywareSbcl Swift target by
+# `apianyware-macos-generate` and compiled by `swift build` into libAPIAnywareSbcl.dylib
+# (the SBCL target's sole native unit — a Lisp compiles neither ObjC nor Swift inline).
+# Reproducible from the IR (build order: generate -> swift build).
+swift/Sources/APIAnywareSbcl/Generated/
+
 # Racket bytecode caches
 generation/targets/*/runtime/compiled/
 generation/targets/*/apianyware/runtime/compiled/

@@ -356,12 +356,99 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
     Ok(entries)
 }
 
+/// Generate the **sbcl** target's Swift-native trampolines (ADR-0038, the racket
+/// ADR-0027 / chez ADR-0028 / gerbil ADR-0029 mechanism ported to sbcl, leaf 040/050)
+/// into the `APIAnywareSbcl` Swift target; `swift build` then compiles them into
+/// `libAPIAnywareSbcl` — the SBCL target's **sole native compilation unit** (a Lisp
+/// compiles neither ObjC nor Swift inline, so the trampolines must live in a Swift dylib).
+///
+/// A **global** pass like the racket/chez/gerbil trampolines: the residual is collected
+/// across every framework into one `Generated/Trampolines.swift`. Per ADR-0011 the sbcl
+/// trampoline layer shares no native substrate with the peers — only the classification
+/// taxonomy (a property of the shared IR) is duplicated, so the residual reproduces the
+/// peers' **exactly** (the §6d invariant: 51 fn + 7 const + 576 init + 554 method). Every
+/// retained `objc_exposed == false` declaration is either trampolined or recorded as
+/// deferred with a reason; the per-reason counts are logged (spec §5). Returns the number
+/// of trampoline entries written.
+pub fn run_sbcl_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit_sbcl::trampoline::{collect_trampolines, generate_trampolines_swift};
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let set = collect_trampolines(&frameworks);
+    let entries =
+        set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        functions = set.functions.len(),
+        constants = set.constants.len(),
+        inits = set.inits.len(),
+        methods = set.methods.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated sbcl Swift-native trampolines"
+    );
+    Ok(entries)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
     use apianyware_macos_types::ir::{Class, Framework, Method};
     use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+
+    /// **The §6d invariant** (ADR-0038 §7 / racket spec §6d) — the hard done-bar for the
+    /// sbcl trampoline leaf (`040/050`). The Swift-native residual is a deterministic
+    /// function of the *shared* enriched IR, so the sbcl classification must reproduce
+    /// racket's/chez's/gerbil's **exactly**: 51 function + 7 constant + 576 init + 554
+    /// method trampolines. The strongest evidence the hermetic port is faithful (ADR-0011).
+    ///
+    /// The enriched IR is gitignored (16/90 MB, regenerated from the SDK + LLM pipeline),
+    /// so this test **skips-as-pass** when the IR is absent — local checkouts and CI without
+    /// a regeneration step — and asserts the counts when it is present (post-regeneration,
+    /// the release gate, exactly as the racket snapshot tests gate on local IR).
+    #[test]
+    fn sbcl_residual_reproduces_the_6d_invariant() {
+        use apianyware_macos_emit_sbcl::trampoline::collect_trampolines;
+
+        // The enriched IR lives at the workspace root, three levels up from this crate.
+        let enriched =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../analysis/ir/enriched");
+        let frameworks =
+            match apianyware_macos_datalog::loading::load_all_frameworks(&enriched, None) {
+                Ok(fws) if !fws.is_empty() => fws,
+                _ => {
+                    eprintln!(
+                        "SKIP sbcl_residual_reproduces_the_6d_invariant: no enriched IR at {} \
+                         (gitignored — run the regeneration pipeline to exercise this gate)",
+                        enriched.display()
+                    );
+                    return;
+                }
+            };
+
+        let set = collect_trampolines(&frameworks);
+        assert_eq!(set.functions.len(), 51, "function trampolines (§6d)");
+        assert_eq!(set.constants.len(), 7, "constant trampolines (§6d)");
+        assert_eq!(set.inits.len(), 576, "init trampolines (§6d)");
+        assert_eq!(set.methods.len(), 554, "method trampolines (§6d)");
+    }
 
     fn make_test_framework(name: &str) -> Framework {
         Framework {

@@ -47,6 +47,7 @@ use apianyware_macos_types::ir::Function;
 
 use crate::ffi_type_mapping::SbclFfiTypeMapper;
 use crate::naming::{qualified_top_level_name, top_level_name};
+use crate::shared_signatures::is_libdispatch_unexported;
 
 /// True if a function is a **direct** (ObjC/C-exposed) `define-alien-routine` binding.
 /// Skips inline (no symbol) and variadic (fixed-arity FFI) functions. The Swift-native
@@ -188,23 +189,8 @@ fn arg_name(label: &str, i: usize) -> String {
     }
 }
 
-/// libdispatch symbols the digester surfaces as functions but that have **no exported
-/// dylib symbol** (macros / inline shims) — a `define-alien-routine` to them would
-/// dangle, so they are dropped from the direct set.
-///
-/// *Leaf seam:* this is a verbatim copy of gerbil's `shared_signatures::
-/// is_libdispatch_unexported`; the canonical SBCL copy lands in `shared_signatures.rs`
-/// (leaf 050), at which point this is replaced by an import.
-fn is_libdispatch_unexported(symbol: &str) -> bool {
-    matches!(
-        symbol,
-        "dispatch_cancel"
-            | "dispatch_notify"
-            | "dispatch_testcancel"
-            | "dispatch_wait"
-            | "pthread_jit_write_with_callback_np"
-    )
-}
+// The libdispatch-unexported skip list now lives canonically in
+// [`crate::shared_signatures::is_libdispatch_unexported`] (leaf 050 retired this seam).
 
 #[cfg(test)]
 mod tests {
