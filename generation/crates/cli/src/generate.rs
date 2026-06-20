@@ -657,14 +657,23 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Every registered emitter should produce results without error.
+        // Every registered emitter runs through the pipeline without error.
+        // sbcl is still a scaffold (leaf 040/010) that emits no constructs yet,
+        // so the strong per-emitter output assertions apply to the three mature
+        // targets; sbcl folds in once its construct emitters land (leaf 040/060).
         assert_eq!(
             summaries.len(),
-            3,
-            "should run racket + chez + gerbil emitters"
+            4,
+            "should run racket + chez + gerbil + sbcl emitters"
+        );
+        assert!(
+            summaries.iter().any(|s| s.target_id == "sbcl"),
+            "sbcl emitter should run end-to-end"
         );
 
-        for s in &summaries {
+        let mature: Vec<_> = summaries.iter().filter(|s| s.target_id != "sbcl").collect();
+        assert_eq!(mature.len(), 3, "racket + chez + gerbil are the mature targets");
+        for s in &mature {
             assert!(
                 s.total_files_written > 0,
                 "{} should produce files",

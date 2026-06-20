@@ -316,6 +316,29 @@ signature per method ABI, casting away arm64 variadic `objc_msgSend`.
 _Avoid_: "CFFI" / "the FFI" (name it `sb-alien`); "libffi" (sb-alien generates
 direct native call sites, not libffi thunks).
 
+**sbcl emitter conventions** _(settled — `emit-sbcl` leaf 040/010, 2026-06-20)_:
+The fixed spellings every later emitter leaf + the runtime (050) must match, so
+the binding is internally consistent. **Names** (contract §3.1/§3.2): the **`ns:`
+package**; classes are acronym-aware kebab-case (`NSString` → `ns:ns-string`,
+`NSURLHandleClient` → `ns:ns-url-handle-client`, `NSOpenGLView` →
+`ns:ns-opengl-view`) via the **shared** `emit::naming::acronym_aware_kebab` (the
+acronym/compound table is shared analysis-level data — pile-up acronyms split,
+brand compounds stay whole — extend it there, not per-impl); a selector maps to
+one generic-function symbol (`objectAtIndex:` → `ns:object-at-index`) plus a
+keyword-symbol list (`(:object-at-index)`). **FFI spellings** (`SbclFfiTypeMapper`,
+grounded in the 030 spikes): opaque ObjC `id`/`Class`/`SEL`/block/raw-pointer →
+`sb-alien:system-area-pointer` (a SAP, **not** `(* t)`); C strings →
+`sb-alien:c-string`; scalars → `(sb-alien:signed N)`/`(sb-alien:unsigned N)`/
+`sb-alien:float`/`sb-alien:double`; ObjC `BOOL` → `(sb-alien:boolean 8)`; geometry
+structs pass **by value** as `(sb-alien:struct <name>)` with `NSRect`/`CGRect`
+canonicalised to `ns-rect` (the runtime `define-alien-type`s these + confirms
+by-value passing). The `TargetInfo` `generated_subdir` is **`generated`** (SBCL
+imposes no library-path-resolution constraint, unlike chez's `apianyware`).
+_Avoid_: re-deriving the acronym table inside `emit-sbcl` (it lives in shared
+`emit`); `(* t)` for ObjC pointers (the spikes use SAP); lowercasing class names
+to `nsstring` (that is the scheme targets' convention — sbcl is hyphenated +
+`ns:`-qualified).
+
 **MOP projection / `objc-class` metaclass (sbcl)** _(settled — ADR-0034; mechanisms verified first-hand on SBCL 2.6.5)_:
 The `sbcl` object model: ObjC's class system is **projected into CLOS via the
 Metaobject Protocol** (`sb-mop`), not mirrored as plain `defclass`. An `objc-class`

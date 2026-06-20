@@ -20,6 +20,10 @@ impl EmitterRegistry {
             // built over all loaded frameworks (see `generate.rs`). The
             // registry instance here is what `--list-targets` / lookups see.
             Box::new(apianyware_macos_emit_gerbil::GerbilEmitter::new()),
+            // SBCL's per-run emitter (leaf 040/010 scaffold). Like gerbil, later
+            // leaves give it cross-framework registries via a `generate` pre-pass;
+            // the `new()` instance here backs `--list-targets` / lookups.
+            Box::new(apianyware_macos_emit_sbcl::SbclEmitter::new()),
         ];
         Self { emitters }
     }
@@ -78,6 +82,17 @@ mod tests {
         assert!(ids.contains(&"racket"));
         assert!(ids.contains(&"chez"));
         assert!(ids.contains(&"gerbil"));
+        assert!(ids.contains(&"sbcl"));
+    }
+
+    #[test]
+    fn registry_contains_sbcl() {
+        let registry = EmitterRegistry::new();
+        let sbcl = registry.get("sbcl");
+        assert!(sbcl.is_some(), "registry should contain sbcl emitter");
+        let info = sbcl.unwrap().target_info();
+        assert_eq!(info.id, "sbcl");
+        assert_eq!(info.display_name, "SBCL");
     }
 
     #[test]
@@ -110,5 +125,7 @@ mod tests {
         assert!(list.contains("Chez Scheme"));
         assert!(list.contains("gerbil"));
         assert!(list.contains("Gerbil Scheme"));
+        assert!(list.contains("sbcl"));
+        assert!(list.contains("SBCL"));
     }
 }

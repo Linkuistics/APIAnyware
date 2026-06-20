@@ -18,6 +18,7 @@ members = [
     "generation/crates/emit-racket",
     "generation/crates/emit-chez",
     "generation/crates/emit-gerbil",
+    "generation/crates/emit-sbcl",
     "generation/crates/cli",
     # Tooling
     "generation/crates/stub-launcher",
@@ -56,6 +57,7 @@ apianyware-macos-emit = { path = "generation/crates/emit" }
 apianyware-macos-emit-racket = { path = "generation/crates/emit-racket" }
 apianyware-macos-emit-chez = { path = "generation/crates/emit-chez" }
 apianyware-macos-emit-gerbil = { path = "generation/crates/emit-gerbil" }
+apianyware-macos-emit-sbcl = { path = "generation/crates/emit-sbcl" }
 apianyware-macos-stub-launcher = { path = "generation/crates/stub-launcher" }
 apianyware-macos-bundle-racket = { path = "generation/crates/bundle-racket" }
 apianyware-macos-bundle-chez = { path = "generation/crates/bundle-chez" }
