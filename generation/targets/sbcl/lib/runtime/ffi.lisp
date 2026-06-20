@@ -158,6 +158,13 @@
    dispatcher, a trampoline `id` return, a covariant method return) recover the SAME
    typed instance — with its Lisp slots + methods — instead of a fresh borrowed shell.")
 
+(defvar *release-finalizer-installer* nil
+  "nil until 050/050's lifetime layer installs a function (instance -> ) that registers
+   the main-thread release finalizer on a +1-owned wrap (ADR-0036). Defined here (the
+   seam) so `aw-wrap` stays the single wrap site that arms lifetime; POPULATED by
+   lifetime.lisp's `aw-register-release`. nil keeps the 020 seam smoke finalizer-free —
+   the same seam-defines-hook / leaf-populates pattern as `*subclass-instances*`.")
+
 (defun aw-ptr (instance)
   "Outbound object coercion (the contract's `->ptr`): a bound instance | nil -> its
    `id` SAP, nil -> the null SAP. Reads the documented `ptr` slot (a plain Lisp slot
@@ -177,16 +184,21 @@
 
 (defun aw-wrap (id-sap &optional retained)
   "Inbound wrap: a raw `id` SAP -> the exact bound CLOS instance (null -> nil).
-   RETAINED t marks the `id` as already +1 (init/copy/new families, copy
-   properties); the balancing release/finalizer is 050's lifetime concern — here
-   the flag is accepted + ignored so generated `(aw-wrap … t)` forms load + run."
-  (declare (ignore retained))
+   RETAINED t marks the `id` as already +1 (init/copy/new families, copy properties),
+   so the wrap TAKES that ownership and (once 050/050 installs the hook) arms a
+   main-thread release finalizer to balance it (ADR-0036). RETAINED nil is a +0
+   autoreleased transient: the wrap owns nothing — the entry-point pool drains it — so
+   no finalizer is armed."
   (if (aw-null-sap-p id-sap)
       nil
       ;; A synthesized instance resolves to its STRONG back-ref (preserving its Lisp
-      ;; slots + methods); any other `id` builds a fresh shell on its bound class.
+      ;; slots + methods, and already lifetime-managed by 040 — never re-armed here);
+      ;; any other `id` builds a fresh shell on its bound class.
       (or (gethash (sb-sys:sap-int id-sap) *subclass-instances*)
-          (make-instance (aw-resolve-bound-class id-sap) :ptr id-sap))))
+          (let ((instance (make-instance (aw-resolve-bound-class id-sap) :ptr id-sap)))
+            (when (and retained *release-finalizer-installer*)
+              (funcall *release-finalizer-installer* instance))
+            instance))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; The String bridge — `NSString` <-> Lisp string, UTF-8 (design §4).
