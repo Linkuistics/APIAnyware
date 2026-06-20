@@ -339,6 +339,30 @@ _Avoid_: re-deriving the acronym table inside `emit-sbcl` (it lives in shared
 to `nsstring` (that is the scheme targets' convention — sbcl is hyphenated +
 `ns:`-qualified).
 
+**sbcl emitter on-disk layout + the 040→050 package seam** _(settled — `emit-sbcl`
+leaf 040/060, 2026-06-20)_: per framework the orchestrator writes a **facade**
+`<fw_low>.lisp` next to a `<fw_low>/` dir holding `generics.lisp` (one `defgeneric`
+per selector — a CL package unifies generics across files, so there is **no**
+gerbil-style global generics module and no sharding), one **`<class>.lisp` per
+class** (lowercased ObjC name — `NSString` → `nsstring.lisp` — each its own
+`defclass` + dispatch + `register-*`, the gerbil per-class on-disk symmetry), a
+file per synthesized bare node, and `protocols.lisp`/`enums.lisp`/`constants.lisp`/
+`functions.lisp` (each present only when non-empty). Every file opens with
+`(in-package #:apianyware-sbcl-impl)` — the **runtime/impl package** the runtime
+(050) must define (`(:use :cl sb-mop)` + the `aw-*` helpers + the `ns` package).
+The **facade is the CL form of gerbil's re-export**: it `(export …)`s every bound
+`ns:` symbol (spelled `ns::…` to intern) so the construct files' **single-colon**
+`ns:` references — the contract's named surface — read as external symbols. This
+fixes a **load order** the runtime's ASDF system must honour: **facade first**,
+then `generics.lisp`, then the per-class files **superclass-before-subclass**, then
+the rest. The Swift-native **fn/const residual** is bound here (`render_binding`);
+the **method/init residual** is collected for the §6d count but its
+`defmethod`/`make-instance` wiring is deferred to grove leaf **045** (the generic
+naming for Swift base names + the defgeneric lockstep). _Avoid_: a per-framework
+single `classes.lisp` (per-class files are the convention — reviewable goldens +
+gerbil symmetry); emitting bound names double-colon `ns::` in definitions (that is
+the facade's interning spelling only — definitions use single-colon).
+
 **MOP projection / `objc-class` metaclass (sbcl)** _(settled — ADR-0034; mechanisms verified first-hand on SBCL 2.6.5)_:
 The `sbcl` object model: ObjC's class system is **projected into CLOS via the
 Metaobject Protocol** (`sb-mop`), not mirrored as plain `defclass`. An `objc-class`

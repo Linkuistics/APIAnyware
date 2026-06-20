@@ -53,6 +53,12 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   lifetime, callbacks/threading, conditions). Decomposes into sub-leaves.
 - **040-build-emitter** — `emit-sbcl` crate (TargetInfo/TargetEmitter,
   `SbclFfiTypeMapper`, naming, emit_class/protocol/enums/constants/functions).
+  *(retired 2026-06-20 — orchestrator + facade + goldens; direct contract surface
+  complete, §6d count reproduced; layout/seam promoted to CONTEXT.md.)*
+- **045-method-init-residual-wiring** — follow-up split from 040/060: wire the
+  Swift-native method/init residual (576 init + 554 method) as Lisp `defmethod`/
+  `make-instance` forms (generic-naming + defgeneric lockstep; the fn/const residual
+  already landed in 040). Sequenced before the runtime that verifies it.
 - **050-build-runtime-native-core** — `sb-alien` runtime, MOP metaclass +
   hooks, block/delegate bridges, dynamic-class synthesis, lifetime, threading,
   native dylib (`libAPIAnywareSbcl`) if needed.
@@ -86,4 +92,8 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   (`docs/specs/2026-06-20-cl-family-interface-contract.md`, ADR-0033). Full design
   recorded in ADRs **0033–0038** + the SBCL target design spec
   (`generation/targets/sbcl/docs/design/2026-06-20-sbcl-target-design.md`). Build
-  leaves 040–080 refined to cite it. Next: **040-build-emitter**.
+  leaves 040–080 refined to cite it. **040-build-emitter complete + retired
+  (2026-06-20)** — `emit-sbcl` emits a complete contract-conforming tree end-to-end
+  (`--target sbcl`), §6d count reproduced; the method/init residual defmethod wiring
+  was split to **045**. Next: **045-method-init-residual-wiring**, then
+  **050-build-runtime-native-core**.
