@@ -185,11 +185,27 @@ and the burden is on any deviation.
   idiom for `NSError**`) and is normative.
 - The contract requires a **named root condition type in the `ns:` package** from
   which all Cocoa-surfaced error conditions descend, so application source can
-  `handler-case` on a stable family-portable name. **The concrete name and the
-  sub-hierarchy are designed in `030-design/030-lifetime-threading-conditions`**
-  and back-filled here; the prior-art survey found **zero** evidence on this (§C2,
-  §6.3), so it is first-principles design. *(Provisional working name: `ns:objc-error`
-  as the root — to be confirmed in `030`.)*
+  `handler-case` on a stable family-portable name. **Designed in
+  `030-design/030-lifetime-threading-conditions` (ADR-0037); back-filled here.** The
+  prior-art survey found **zero** evidence on this (§C2, §6.3) — first-principles.
+
+  **Confirmed hierarchy (flat, split by source):**
+  - **`ns:objc-error`** `: cl:error` — the root; the stable family-portable
+    `handler-case` target.
+  - **`ns:cocoa-error`** `: ns:objc-error` — the `NSError**` path; readers
+    `domain` / `code` / `user-info` / `localized-description`.
+  - **`ns:objc-exception`** `: ns:objc-error` — the `NSException` path; readers
+    `name` / `reason` / `user-info`.
+
+  The condition types are **distinct symbols** from the projected CLOS classes
+  `ns:ns-error` / `ns:ns-exception` (the condition wraps the object, not reuses its
+  name). **No per-domain subclasses** — callers branch on the `domain`/`code`
+  readers (a small flat surface is what keeps cross-impl conformance cheap).
+  **Restarts (minimal, normative):** `use-value` (substitute result) and
+  `continue`/`return-nil`; `retry` deferred. A member signals **only** when the
+  primary return indicates failure (not merely because `NSError**` is set). The
+  same condition surface serves both the direct `NSError**` path and a member's
+  Swift-`throws` trampoline (SBCL: `ThrowsBridge`, ADR-0037).
 
 ### 3.8 What is explicitly NOT normative
 

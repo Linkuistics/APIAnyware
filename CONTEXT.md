@@ -199,10 +199,16 @@ app `main`, every event handler dispatched from `NSRunLoop`, every callback
 invoked from the ObjC side (delegate methods, blocks, `foreign-callable`
 trampolines) — wraps its body in an `@autoreleasepool`. Transient
 autoreleased objects produced during the entry's lifetime drain at the pool
-boundary and never reach the guardian. Specific to the chez lifetime model;
-the racket runtime relies on per-thread autorelease pools instead. See
-`docs/adr/0007-chez-lifetime-model.md`.
-_Avoid_: "main pool" (ambiguous with NSRunLoop's autorelease pool).
+boundary and never reach the guardian. Originated in the chez lifetime model;
+the racket runtime relies on per-thread autorelease pools instead. **Generalized
+to the CL family** (ADR-0036 + ADR-0033 C1): the *user obligation* — wrap your own
+non-runloop loops, the same rule Cocoa imposes on ObjC command-line tools — is
+family-level **observable behaviour**, but the *mechanism* is per-impl (sbcl: the
+pool boundary doubles as the main-thread release-queue drain — see *sbcl lifetime /
+main-thread release queue*). See `docs/adr/0007-chez-lifetime-model.md`,
+`docs/adr/0036-sbcl-lifetime-finalize-and-main-thread-release-queue.md`.
+_Avoid_: "main pool" (ambiguous with NSRunLoop's autorelease pool); calling it
+chez-only (it is now a family convention with per-impl realization).
 
 **Foreign-thread activation**:
 The chez mechanism for callbacks that fire on a background OS thread. Every
@@ -419,6 +425,57 @@ _Avoid_: "Swift coverage library" / "second mechanism" (it is the trampoline lay
 of one model — ADR-0025 retired "ObjC-only target" as a description); "family-
 shared substrate" (ADR-0029 settled hermetic per-target duplication); routing ObjC
 through it (ObjC is direct, trampoline elided).
+
+**sbcl main-thread bounce** _(settled — ADR-0035; spiked first-hand on SBCL 2.6.5/arm64)_:
+The `sbcl` threading/callback model: a **foreign** OS thread (a GCD worker /
+framework completion SBCL never created) must **never** run Lisp directly — the
+native-core callback trampolines (delegate IMPs, block invokes, subclass IMPs)
+**bounce to the main thread** (SBCL-native, suspendable, runs the AppKit loop)
+before re-entering Lisp, in `libAPIAnywareSbcl` Swift (`dispatch_sync`
+value-returning / `dispatch_async` void — gerbil ADR-0022's split). Reached
+**empirically**, not by inheritance: the 2026-06-20 threading spike crashed 5/5
+when concurrent GCD workers ran Lisp (`cannot suspend thread: ENOTSUP` inside
+`GC-STOP-THE-WORLD` — SBCL can't stop-the-world-suspend foreign threads on macOS),
+so chez's `Sactivate_thread` activation (ADR-0016) is **rejected**. **Richer than
+gerbil:** SBCL-**native** `sb-thread` workers *do* run real concurrent Lisp safely
+(the spike's control survived), so background compute uses `sb-thread`, not captured
+foreign threads — the bounce scopes to *foreign* entry only.
+_Avoid_: "activate the foreign thread" (chez's model — empirically unsafe here);
+"bounce everything" (native `sb-thread`s need no bounce); framing it as inherited
+from gerbil (same outcome, opposite cause — gerbil crashes at entry, sbcl inside GC).
+
+**sbcl lifetime / main-thread release queue** _(settled — ADR-0036; finalizer-thread fact verified on SBCL 2.6.5)_:
+The `sbcl` lifetime model for wrapped ObjC `id`s — the two-mechanism shape of chez
+ADR-0007 / gerbil ADR-0019, with an SBCL twist. **Retained objects:**
+`sb-ext:finalize` (idiomatic; O(dead) like chez's guardian) is the GC-death trigger;
+its closure captures **only the raw `id`** (never the wrapper) and **enqueues** it
+— because `sb-ext:finalize` runs on a dedicated **`"finalizer"` thread**, so a direct
+`release` would fire off-main and an off-main `dealloc` of an AppKit object is UB.
+A **main-thread drain** at the entry-point pool boundary sends `release` on main
+(UI-safe). **Autoreleased (+0) transients:** the entry-point `@autoreleasepool`
+drains them and doubles as the release-queue drain point. The off-main-finalizer
+issue is *UI-affinity*, not GC-safety (the finalizer thread is SBCL-native, hence
+suspendable — unlike the foreign threads of the bounce model).
+_Avoid_: "guardian" (chez's primitive — SBCL uses `sb-ext:finalize`); "weak-pointer
+scan" (rejected — O(live), loses the O(dead) efficiency); "release on the finalizer
+thread" (off-main AppKit dealloc is UB — the queue routes it to main).
+
+**`ns:objc-error` condition hierarchy** _(settled — ADR-0037; back-fills contract spec §3.7)_:
+The CL-family error surface for `NSError**` / `NSException`, **signalled** as CL
+conditions (not `(values result error)` — ADR-0033/0006 contrast). **Flat, split by
+source:** root `ns:objc-error` `: cl:error` (stable family-portable `handler-case`
+target); `ns:cocoa-error` (the `NSError**` path; `domain`/`code`/`user-info`/
+`localized-description` readers); `ns:objc-exception` (the `NSException` path;
+`name`/`reason`/`user-info`). Condition types are **distinct symbols** from the
+projected CLOS classes `ns:ns-error`/`ns:ns-exception` (the condition wraps the
+object). **No per-domain subclasses** (keeps cross-impl conformance cheap — callers
+branch on `domain`/`code`). **Minimal restarts:** `use-value` + `continue`/
+`return-nil` (`retry` deferred). Signals **only** when the primary return indicates
+failure (Cocoa rule — `NSError**` may be garbage on success); the **same signaller**
+serves the direct path and the Swift-`throws` trampoline (`ThrowsBridge`).
+_Avoid_: naming a condition `ns:ns-error`/`ns:ns-exception` (those are the bound CLOS
+classes); per-(domain×code) condition subclasses (rejected — bloats the contract);
+"returns an error tuple" (the family signals, per ADR-0033).
 
 ## Native binding mechanism
 

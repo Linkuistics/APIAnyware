@@ -46,6 +46,79 @@ more here than the prior-art survey:
   reference as the contract's error-handling surface.
 - Feeds the SBCL target design spec (assembled in `040`).
 
+## Decisions (running log)
+
+### D2 — threading/callbacks: **bounce-always** (spiked, settled 2026-06-20)
+
+User chose "spike now, then decide". Built a foreign-thread callback spike
+(`generation/targets/sbcl/docs/research/2026-06-20-sbcl-threading-spike/`):
+a consing `define-alien-callable` fired from genuine GCD worker threads under GC
+pressure, against an SBCL-native control. Result (SBCL 2.6.5, arm64):
+
+- 8 concurrent GCD workers running Lisp → **CRASHED 5/5**, deterministic, always
+  `cannot suspend thread: ENOTSUP` inside `SB-KERNEL::GC-STOP-THE-WORLD`.
+- 8 SBCL-**native** `sb-thread`s, identical load → **SURVIVED** (isolates cause:
+  not the load).
+- 1 lone GCD worker → **SURVIVED** (isolates cause: not foreign entry per se — it
+  is the foreign↔foreign *suspend* during stop-the-world).
+
+**Decision:** adopt the gerbil/racket **bounce-always** model (chez activation
+**rejected** — empirically unsafe here). Foreign callbacks bounce to the main
+thread (SBCL-native, suspendable, runs the AppKit loop) before any Lisp; bounce
+lives in `libAPIAnywareSbcl` Swift (`dispatch_sync` value-returning / `dispatch_async`
+void — gerbil ADR-0022 split). **Richer than gerbil:** native `sb-thread` workers
+are safe for real concurrent Lisp, so background compute uses `sb-thread`, not
+captured foreign threads. → ADR-0035 (threading/callbacks).
+
+### D1 — lifetime: **`sb-ext:finalize` + main-thread release queue** (settled 2026-06-20)
+
+Verified first-hand: `sb-ext:finalize` callbacks run on a dedicated `"finalizer"`
+thread, so a finalizer-driven ObjC `release` fires **off-main** — an off-main
+final `dealloc` of an AppKit object is UB (all 7 sample apps are GUI). This is a
+UI-affinity problem, *not* a GC-safety one (the finalizer thread is SBCL-native,
+hence suspendable — unlike D2's foreign threads).
+
+**Decision:** two-mechanism model (chez ADR-0007 / gerbil ADR-0019 shape):
+- **Retained objects:** `sb-ext:finalize` is the death trigger (idiomatic; O(dead)
+  like chez's guardian — rejected the weak-pointer-registry scan as O(live)). The
+  finalizer closure captures **only the raw `id`** (never the wrapper, else it
+  never dies) and **enqueues** it to a release queue; the entry-point pool boundary
+  **drains the queue on the main thread**, so every `release`/`dealloc` is UI-safe.
+  Rejected direct off-main `release` (AppKit dealloc affinity).
+- **Autoreleased (+0) transients:** adopt the **entry-point `@autoreleasepool`**
+  convention; it doubles as the release-queue drain point.
+- **Generalization:** the entry-point-pool *convention* generalizes to the
+  CL-family contract as a documented **user obligation** (observable behaviour —
+  wrap non-runloop loops yourself), but the *mechanism* (`sb-ext:finalize` + queue)
+  stays SBCL-private per ADR-0033 C1. → ADR-0036 (lifetime).
+
+### C2 — conditions: **flat hierarchy split by source + minimal restarts** (settled 2026-06-20)
+
+Contract §3.7 already fixed the *direction* (signalled CL conditions, not
+`(values result error)`; named `ns:` root; covers `NSError**` + `NSException`;
+provisional root `ns:objc-error`). This leaf designs the hierarchy (zero prior art,
+research §C2 — first-principles).
+
+**Decision:**
+- **Root `ns:objc-error` (confirmed)** `: cl:error` — the stable family-portable
+  `handler-case` target. Distinct from the projected CLOS classes `ns:ns-error` /
+  `ns:ns-exception` (name-collision avoided deliberately).
+- **Flat, split by source:** `ns:cocoa-error` (the `NSError**` path; carries the
+  `ns:ns-error` instance with `domain`/`code`/`user-info`/`localized-description`
+  readers) and `ns:objc-exception` (the `NSException` path; `name`/`reason`/
+  `user-info`). **No per-(domain×code) subclasses** — rejected curated + generated
+  taxonomies: domains are a large, partly framework-defined space; a small flat
+  surface is far cheaper to conform to portably across SBCL/CCL/LispWorks/Allegro.
+- **Restarts: minimal** — a runtime `signal-cocoa-error` helper establishes
+  `use-value` (substitute result) + `continue`/`return-nil`; `retry` deferred.
+- **Mechanics (settled-by-precedent):** key on the **primary return value, not on
+  error-set** (Cocoa rule — `NSError**` may be garbage on success); the **same
+  signaller serves both** the direct `NSError**` path and the Swift-`throws`
+  trampoline (`ThrowsBridge`, gerbil ADR-0029); `with-autorelease-pool` uses
+  `unwind-protect` so a signalled non-local exit still drains the pool (reclaims the
+  concern chez ADR-0006 avoided by not raising). → ADR-0037 (conditions); back-fills
+  contract spec §3.7.
+
 ## Notes
 
 - If any one area proves big enough to need its own session, split it out then —

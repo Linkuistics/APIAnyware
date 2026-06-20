@@ -56,9 +56,12 @@ source + `sb-mop`; lean on in-repo ADRs), do **not** assume:
 
 - SBCL's own **AMOP conformance** for the hooks the projection needs (§6.1).
 - The **slot/ivar mechanism** (§5.1 refuted the assumed `slot-value-using-class`).
-- **`NSError**` → condition hierarchy** (C2 — zero prior-art evidence).
-- **Lifetime** (D1) and **threading/callbacks** (D2 — pick a model vs chez
-  ADR-0016 / gerbil ADR-0022 / racket ADR-0014).
+- ~~**`NSError**` → condition hierarchy** (C2 — zero prior-art evidence).~~
+  **CLOSED** by leaf 030 → ADR-0037 (`ns:objc-error` flat hierarchy; back-fills
+  contract §3.7).
+- ~~**Lifetime** (D1) and **threading/callbacks** (D2).~~ **CLOSED** by leaf 030 →
+  ADR-0036 (lifetime: `sb-ext:finalize` + main-thread release queue) and ADR-0035
+  (threading: bounce-always — chez activation rejected, **spiked** 5/5 crash).
 - **Static-emit + startup re-resolution** (§B5): a dumped image carries baked
   class metadata but **stale foreign `Class`/`SEL` pointers**; needs a CCL
   `revive-objc-classes`-equivalent startup pass — load-bearing for `070`
