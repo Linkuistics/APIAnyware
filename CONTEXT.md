@@ -406,25 +406,41 @@ metaclass is *mechanism, below the contract* — the surface is package/names/ma
 conditions); calling **LispWorks a fallback/degraded tier** (it is a first-class
 member conforming through a different mechanism).
 
-**`libAPIAnywareSbcl` / sbcl trampoline layer** _(reframed 030, 2026-06-20)_:
+**`libAPIAnywareSbcl` / sbcl trampoline layer** _(reframed 030, 2026-06-20; lower layer settled ADR-0038)_:
 The sbcl target's native (Swift) library is the **trampoline layer of the
 complete-API binding model** (ADR-0025), *not* a bespoke "Swift coverage device."
 SBCL reaches ObjC **directly** (`objc_msgSend` via `sb-alien`, **trampoline
 elided**) and routes only the **Swift-native residual** — `objc_exposed == false`
 top-level functions/constants, plus the receiver-handle method frontier — through
-`libAPIAnywareSbcl`'s flat C-ABI re-exports, bound by typed `sb-alien` call sites.
-Because SBCL (like gerbil's `gsc`, ADR-0029) **cannot compile Swift inline**, the
-dylib is **necessary** (only Swift calls the Swift ABI), **trampoline-only** (it
-does *not* absorb the MOP runtime/object model), and **per-target hermetic**
-(ADR-0011/0029 settled this fork — no family-shared substrate). The residual is a
-**deterministic function of the shared IR** (gerbil reproduced racket's 51 funcs +
-7 constants exactly), which is *itself* what makes the CL family converge: same
+`libAPIAnywareSbcl`'s flat C-ABI re-exports, bound by typed `sb-alien` call sites
+(Lisp-side marshalling, ADR-0015; object returns wrapped to bound type via the
+ADR-0034 MOP class registry; no lazy-load forcing reference). Because SBCL (like
+gerbil's `gsc`, ADR-0029) **cannot compile Swift inline**, the dylib is
+**necessary** (only Swift calls the Swift ABI) and **per-target hermetic**
+(ADR-0011/0029 settled this fork — no family-shared substrate). It is the SBCL
+target's **sole native compilation unit** — so, *unlike* gerbil's strictly
+trampoline-only dylib (which had a second ObjC-in-`gsc` home), it **also hosts the
+genuinely-native runtime concerns** gerbil kept in ObjC: the main-thread callback
+bounce (ADR-0035), the `objc_allocateClassPair` subclass-IMP synthesis (ADR-0034 §5),
+and the `OpaqueHandle`/`ThrowsBridge`/`AsyncBridge` marshalling helpers. It is
+**"trampoline-only" in the exact sense that it does *not* absorb the MOP object
+model** (metaclass, hooks, class graph, dispatch generics, startup re-resolution all
+stay Lisp-side). On `save-lisp-and-die` the dylib stays **passive**: SBCL
+auto-reopens it (in `*shared-objects*`) so its `aw_sbcl_*` symbols re-link for free
+and dyld re-loads its linked framework subset, while the **Lisp** startup pass owns
+the direct-msgSend frameworks + **all** `Class`/`SEL` re-resolution over the baked
+graph (ADR-0034 §6 / ADR-0038 §5). The residual is a **deterministic function of the
+shared IR** (the §6d invariant: 51 funcs + 7 constants + 576 init + 554 method,
+identical across targets), which is *itself* what makes the CL family converge: same
 analysis → same C ABI → same surface. This is the contract's **lower layer**; the
 `ns:`/CLOS surface is the **upper layer**.
 _Avoid_: "Swift coverage library" / "second mechanism" (it is the trampoline layer
 of one model — ADR-0025 retired "ObjC-only target" as a description); "family-
 shared substrate" (ADR-0029 settled hermetic per-target duplication); routing ObjC
-through it (ObjC is direct, trampoline elided).
+through it (ObjC is direct, trampoline elided); reading "trampoline-only" as "only
+trampolines" (it is the *sole native unit* and hosts the bounce/IMP/marshalling
+helpers — "trampoline-only" means *no MOP object model*, ADR-0038); a second native
+unit / a `aw_sbcl_revive` dylib entry (one dylib; the relive is a Lisp pass).
 
 **sbcl main-thread bounce** _(settled — ADR-0035; spiked first-hand on SBCL 2.6.5/arm64)_:
 The `sbcl` threading/callback model: a **foreign** OS thread (a GCD worker /
