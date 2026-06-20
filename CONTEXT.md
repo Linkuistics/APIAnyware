@@ -370,6 +370,30 @@ single `classes.lisp` (per-class files are the convention — reviewable goldens
 gerbil symmetry); emitting bound names double-colon `ns::` in definitions (that is
 the facade's interning spelling only — definitions use single-colon).
 
+**sbcl runtime seam (the `sb-alien` FFI foundation)** _(realized — leaf 050/020,
+2026-06-20)_: the runtime lives at `generation/targets/sbcl/lib/runtime/`
+(module-per-concern, peer gerbil's): `packages.lisp` (the `ns` + `apianyware-sbcl-impl`
+packages — `ns` `(:use)` nothing, impl `(:use :cl sb-mop)`), `ffi.lisp` (the seam),
+`swift-trampoline.lisp` (the Swift-native residual binding shape), `load.lisp` (the
+**dev** loader — the production ASDF system that also sequences the `generated/` facade
++ construct files is 050/070's). The seam reaches ObjC **directly**: `+objc-msgsend+`
+is `objc_msgSend`'s address taken **once as a raw SAP**, `sap-alien`-recast to the exact
+`(function <ret> sap sap <args>…)` type **per call site** — arm64 needs **no
+`_stret`/`_fpret`** variant (those symbols exist for x86 compat but the plain entry
+returns structs/floats correctly via x8; verified with `-rangeOfString:`). Classes +
+selectors resolve **lazily from baked strings, cached** (`aw-class`/`aw-sel` over
+`*class-cache*`/`*sel-cache*`) — a framework must be `dlopen`ed (`aw-load-framework`)
+before its classes resolve, and 050/070 clears the caches + re-resolves after a dump
+(the SAP is never baked). The object boundary is `aw-ptr` (outbound, reads the `ptr`
+slot) / `aw-wrap` (inbound, `*objc-class-registry*` → `make-instance` — registry empty
+here, **populated by 050/030**); the UTF-8 string bridge is
+`aw-make-nsstring`/`nsstring->string`. The residual loads `libAPIAnywareSbcl` via
+`aw-load-native-dylib` (`*native-dylib-path*`) and binds each `aw_sbcl_*` entry with a
+typed `sb-alien` crossing (the canonical shape: `aw-box-free` ↔ `aw_sbcl_box_free`).
+_Avoid_: `extern-alien` for `objc_msgSend` (it is selector-polymorphic — take the SAP +
+recast); baking a `Class`/`SEL` **pointer** (bake the string, re-resolve per process);
+CFFI (the seam is `sb-alien`, ADR-0015).
+
 **MOP projection / `objc-class` metaclass (sbcl)** _(settled — ADR-0034; mechanisms verified first-hand on SBCL 2.6.5)_:
 The `sbcl` object model: ObjC's class system is **projected into CLOS via the
 Metaobject Protocol** (`sb-mop`), not mirrored as plain `defclass`. An `objc-class`
