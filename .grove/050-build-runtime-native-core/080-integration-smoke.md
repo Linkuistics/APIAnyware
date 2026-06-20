@@ -26,11 +26,20 @@ background-release smoke + the §6d trampoline residual resolving.
 - **Background-release smoke** (ADR-0036, a node done-bar item): the 050 lifetime smoke
   in the integrated runtime — finalizers enqueue off-main, the main drain `release`s, no
   leak, no off-main `release`.
-- **§6d trampoline residual resolves** (a node done-bar item): the `aw_sbcl_*` residual
-  (040's `run_sbcl_trampolines` → 010's dylib) — every binding the slice references
-  resolves against `libAPIAnywareSbcl`; the **51 fn + 7 const + 576 init + 554 method**
-  invariant is the emitter's (040) — here confirm the *runtime* side links + calls a
-  representative residual entry (a Swift-native method/init trampoline) through.
+- **§6d trampoline residual resolves — Swift-only API access is a FIRST-CLASS gate**
+  (a node done-bar item; user re-emphasised 2026-06-20 — accessing *all* Swift-only APIs
+  is a major outcome, equal to the ObjC/MOP work, mirroring the scheme targets + the api
+  extractor): the `aw_sbcl_*` residual (040's `run_sbcl_trampolines` → 010's dylib) —
+  every binding the slice references resolves against `libAPIAnywareSbcl`; the
+  **51 fn + 7 const + 576 init + 554 method** invariant is the emitter's (040). Verify
+  the *runtime* side **by shape**, not just one representative: a Swift-native
+  **function**, a **constant**, a **method** on a class owner (045), an **init** on a
+  class owner (045), a **value-struct-owner** method/init (090), a **value/opaque return**
+  through `AwSbclValueBox`, a **`throws`** through `ThrowsBridge`→`ns:cocoa-error` (050),
+  and an **async/callback** through `AsyncBridge`/`CallbackBounce` (060) — at least one of
+  EACH shape present in the slice links + calls through. (090 must be retired for the
+  value-struct shape to pass; if 090 is still open when 080 runs, record that shape as
+  pending — do not silently skip it.)
 - **Capture the recipe** — a repeatable `sbcl --load`/`swift build` smoke script under
   `generation/targets/sbcl/lib/runtime/tests/` (peer the gerbil runtime `tests/`), so
   060-sample-apps + 070-distribution inherit a green baseline.
@@ -50,8 +59,11 @@ analogous integration probe that proved gerbil's trampoline residual). The 040 g
   the emitted tree loads on the runtime.
 - The four MOP operations (instantiate / dispatch / subclass / callback) **all pass**
   against a real framework, captured in a repeatable smoke script.
-- The background-release smoke passes; the §6d residual links + a representative
-  trampoline entry calls through.
+- The background-release smoke passes; the §6d residual links + a Swift-only entry of
+  **each shape** (function / constant / class-owner method / class-owner init /
+  value-struct-owner method-or-init / value-opaque return / `throws` / async-callback)
+  links + calls through (any shape absent from the chosen slice or blocked on an open
+  leaf is recorded as pending, never silently skipped).
 - The smoke script is committed under the runtime `tests/` dir + documented (a runtime
   README, peer gerbil's) so 060/070 inherit it.
 
