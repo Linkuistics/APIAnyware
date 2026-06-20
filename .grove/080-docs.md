@@ -8,12 +8,15 @@ Complete the per-language documentation (guide Step 9, ADR-0024) — the target 
 **not done until docs exist in the canonical structure**:
 `generation/targets/sbcl/README.md`, `docs/reference.md` (FFI/`sb-alien`, the MOP
 object model, dispatch, lifetime, callbacks/threading, distribution section),
-`docs/developer-guide.md` *only if warranted*, `docs/design/` (all build-time
-specs), `docs/research/` (the 020 survey if co-located), per-app `learnings.md` +
-`test-results/<app>/report.md` (from 060). Confirm the **CL-family contract spec**
-is in its decided (likely main-tier) location. Update the repo-root `README.md`
-Current Status with the `sbcl` target. Confirm all target ADRs are in central
-`docs/adr/`.
+`docs/developer-guide.md` *only if warranted*, `docs/design/` (the **SBCL target
+design spec already lives there** — `2026-06-20-sbcl-target-design.md`; add any
+build-time specs from 040–070), `docs/research/` (the 020 survey + the MOP/threading
+spikes already co-located). per-app `learnings.md` + `test-results/<app>/report.md`
+(from 060). The **CL-family contract spec** is confirmed **main-tier**
+(`docs/specs/2026-06-20-cl-family-interface-contract.md`, ADR-0033/0024). Update the
+repo-root `README.md` Current Status with the `sbcl` target. All target ADRs are
+central in `docs/adr/` — **0033–0038** (family contract, object model, callbacks,
+lifetime, conditions, trampoline) — confirm.
 
 ## Context
 

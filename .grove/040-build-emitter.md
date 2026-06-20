@@ -20,12 +20,24 @@ ADR-0026 — ObjC bound directly (`sb-alien` `objc_msgSend`, trampoline elided),
 unrepresentable residual skipped. The constant sub-rule (literal vs runtime-read
 vs trampoline) follows ADR-0026 §3.
 
+Also emits the **`run_sbcl_trampolines` global pass** (model on
+`run_gerbil_trampolines`) → gitignored
+`swift/Sources/APIAnywareSbcl/Generated/Trampolines.swift`, and routes
+`objc_exposed == false` decls to content-addressed `aw_sbcl_*` bindings
+(`aw_sbcl_swift_<Fw>_<name>` / `_const_` / `_m_<Owner>_<base>` / `_init_<Owner>`,
+ADR-0038 §2 / racket spec §2,§8.4 — reconstructed with no shared counter). The
+residual reproduces the **§6d invariant exactly** (51 fn + 7 const + 576 init + 554
+method), inheriting the B1–B5 swift-residual close through the shared IR.
+
 ## Context
 
-Refined by **030-design** before this is picked. Read the 030 design spec + the
-contract spec + ADR-0026 (`objc_exposed` emitter contract) + the racket trampoline
-spec (`docs/specs/2026-06-15-racket-trampoline.md`). Reference impls: `emit-chez`,
-`emit-gerbil` (compiled-FFI peers; both now emit the `objc_exposed`-driven split).
+Design settled in **030-design** — read the SBCL target design spec
+(`generation/targets/sbcl/docs/design/2026-06-20-sbcl-target-design.md`) + the
+CL-family contract spec + ADR-0026 (`objc_exposed` emitter contract) + ADR-0034
+(the CLOS surface to emit) + ADR-0038 (the trampoline lower layer) + the racket
+trampoline spec (`docs/specs/2026-06-15-racket-trampoline.md`, the marshalling
+taxonomy + method frontier §8/§9). Reference impls: `emit-chez`, `emit-gerbil`
+(compiled-FFI peers; both emit the `objc_exposed`-driven split).
 
 ## Done when
 

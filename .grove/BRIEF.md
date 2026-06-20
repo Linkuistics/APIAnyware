@@ -77,8 +77,13 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
 
 ## Notes
 
-- Provisional/open items carried into design leaves: exact condition hierarchy
-  for `NSError**`; whether a native dylib is needed (gerbil avoided one via
-  ObjC-in-gsc — SBCL can't compile ObjC inline, so likely yes); foreign-thread
-  callback activation model (`sb-thread`); contract-spec doc placement (main-tier
-  vs per-target).
+- Design phase **complete** (030-design retired 2026-06-20). The provisional/open
+  items are all **resolved**: condition hierarchy for `NSError**` → flat
+  `ns:objc-error` (ADR-0037); native dylib needed → **yes**, `libAPIAnywareSbcl`
+  the **sole native unit** (ADR-0038 — SBCL compiles neither ObjC nor Swift inline);
+  foreign-thread callback model → **main-thread bounce, not activation** (ADR-0035,
+  spiked — chez's `Sactivate_thread` rejected); contract-spec placement → **main-tier**
+  (`docs/specs/2026-06-20-cl-family-interface-contract.md`, ADR-0033). Full design
+  recorded in ADRs **0033–0038** + the SBCL target design spec
+  (`generation/targets/sbcl/docs/design/2026-06-20-sbcl-target-design.md`). Build
+  leaves 040–080 refined to cite it. Next: **040-build-emitter**.

@@ -15,7 +15,13 @@ target machine.
 
 Peers: `bundle-chez` (self-contained, ADR-0009), `bundle-gerbil` (gxc -exe). The
 language-agnostic `apianyware-macos-stub-launcher` provides the `.app` skeleton +
-codesigning; this crate does the image dump + dependency staging.
+codesigning; this crate does the image dump + dependency staging. **Self-containment
++ the dylib (ADR-0038 §6 / design spec §4):** `save-lisp-and-die :executable t`
+embeds the SBCL runtime in the exe; `libAPIAnywareSbcl` is **vendored + relocated**
+into `Contents/Frameworks/` via `install_name_tool` (extend `bundle-gerbil`'s
+`relocate.rs` path, ADR-0029 §3), after which the bundled exe's `otool -L` shows
+only `/usr/lib/*`, system frameworks, and `@executable_path/..`. The Swift runtime
+is OS-resident (`/usr/lib/swift/`) — not vendored.
 
 ## Done when
 

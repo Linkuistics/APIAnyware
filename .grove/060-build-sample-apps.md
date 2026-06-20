@@ -17,6 +17,12 @@ perfect: double-click, edit, empty-state all matter). Record
 
 Needs the emitter (040) + runtime (050) working. Use TestAnyware (the unified VM
 driver) per the project testing methodology; never run GUI apps from the CLI.
+Apps are written against the CL-family contract (ADR-0033 / contract spec); any
+app-level **background compute runs on `sb-thread`, not foreign threads**
+(ADR-0035 — SBCL-native threads run concurrent Lisp safely; foreign callbacks are
+bounced to main by the runtime), and non-runloop loops wrap in
+`with-autorelease-pool` (ADR-0036). The `swift-native-probe` app (the §6d-invariant
+exemplar) verifies the trampoline lower layer end-to-end, as for racket/chez/gerbil.
 
 ## Done when
 
