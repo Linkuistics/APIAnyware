@@ -17,4 +17,5 @@
     (unit "swift-trampoline.lisp")  ; the Swift-native residual binding shape
     (unit "subclass.lisp")          ; ObjC subclass synthesis + protocol conformance
     (unit "lifetime.lisp")          ; sb-ext:finalize + main-thread release queue + entry pool
-    (unit "conditions.lisp")))      ; the ns:objc-error hierarchy + signal-cocoa-error
+    (unit "conditions.lisp")        ; the ns:objc-error hierarchy + signal-cocoa-error
+    (unit "threading.lisp")))       ; aw-block + the foreign->main bounce + sb-thread boundary

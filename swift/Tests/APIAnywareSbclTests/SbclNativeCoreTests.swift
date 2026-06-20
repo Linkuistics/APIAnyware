@@ -96,6 +96,73 @@ private let awTestDispatcher: AwSbclInvocationDispatcher = { _, invPtr in
     inv.setReturnValue(&r)
 }
 
+// ─── BlockBridge (ADR-0035): a Lisp closure projected as an ObjC block ────────
+//
+// Proves the block ABI end-to-end on the DIRECT (on-main) path: the universal
+// `(void*,void*,void*) -> void*` block is built, invoked as the framework would, the
+// dispatcher runs (on main → no hop), the integer-class args cross in and the result
+// crosses back through x0. The off-main FOREIGN bounce under a live run loop and GC
+// pressure — the 5/5-crash regression gate — is the Lisp smoke's job
+// (`smoke-threading-callbacks.lisp`), which needs a real SBCL image + main run loop.
+
+private final class AwTestBlockObs: @unchecked Sendable {
+    var sawMain: Int32 = -1
+    var sawA1: Int = 0
+    var sawA2: Int = 0
+}
+private let awTestBlockObs = AwTestBlockObs()
+
+// Stands in for the Lisp `aw-block-dispatcher`: records main-ness + the first two
+// integer-class args, returns `a1 + a2` as the block's result (rides x0 back).
+private let awTestBlockDispatcher: AwSbclBlockDispatcher = { _bid, a1, a2, _a3 in
+    awTestBlockObs.sawMain = aw_sbcl_is_main_thread()
+    let i1 = Int(bitPattern: a1)
+    let i2 = Int(bitPattern: a2)
+    awTestBlockObs.sawA1 = i1
+    awTestBlockObs.sawA2 = i2
+    return UnsafeMutableRawPointer(bitPattern: i1 + i2)
+}
+
+@MainActor @Test func makeBlockProjectsClosureAndReturnsValueOnMain() {
+    aw_sbcl_block_register_dispatcher(
+        unsafeBitCast(awTestBlockDispatcher, to: UnsafeMutableRawPointer.self))
+    guard let raw = aw_sbcl_make_block(7) else {
+        Issue.record("aw_sbcl_make_block returned nil (dispatcher unregistered?)")
+        return
+    }
+    // Reconstitute the block pointer as a callable and invoke it with three
+    // integer-class args, as a framework block-call would (arm64: x0–x2).
+    typealias Blk = @convention(block) (
+        UnsafeMutableRawPointer?, UnsafeMutableRawPointer?, UnsafeMutableRawPointer?
+    ) -> UnsafeMutableRawPointer?
+    let blk = unsafeBitCast(raw, to: Blk.self)
+    let r = blk(UnsafeMutableRawPointer(bitPattern: 40),
+                UnsafeMutableRawPointer(bitPattern: 2),
+                nil)
+    #expect(awTestBlockObs.sawMain == 1)      // ran on main — the direct path, no hop
+    #expect(awTestBlockObs.sawA1 == 40)       // arg 1 crossed
+    #expect(awTestBlockObs.sawA2 == 2)        // arg 2 crossed
+    #expect(Int(bitPattern: r) == 42)         // value-returning block: result via x0
+    // Balance the +1 the maker handed out (no framework copy in this test).
+    Unmanaged<AnyObject>.fromOpaque(raw).release()
+}
+
+// ─── AsyncBridge (ADR-0035): async completion delivered on the main thread ────
+//
+// `awSbclAsyncDispatch` runs the op on the cooperative pool, then hops to the main
+// actor before invoking the completion — so the Lisp continuation a generated async
+// trampoline would call (the deferred async-trampoline leaf) runs main-side, GC-safe.
+
+@Test func asyncDispatchDeliversCompletionOnTheMainThread() async {
+    let outcome: (onMain: Bool, value: Int) = await withCheckedContinuation { cont in
+        awSbclAsyncDispatch({ () async -> Int in 42 }) { value in
+            cont.resume(returning: (aw_sbcl_is_main_thread() == 1, value))
+        }
+    }
+    #expect(outcome.onMain)        // completion ran on the main thread (ADR-0035)
+    #expect(outcome.value == 42)   // the marshalled payload crossed the hop intact
+}
+
 @MainActor @Test func synthesizedSubclassForwardsToTheDispatcher() {
     aw_sbcl_subclass_register_dispatcher(
         unsafeBitCast(awTestDispatcher, to: UnsafeMutableRawPointer.self))
