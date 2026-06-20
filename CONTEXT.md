@@ -430,8 +430,18 @@ Foundation is re-`dlopen`ed), the runtime owns a CCL-`revive-objc-classes`-equiv
 **startup re-resolution pass**: re-`dlopen` each framework, then re-resolve every
 `Class`/`SEL` from its **baked string identity** (never reuse a baked pointer) —
 load-bearing for `070` `bundle-sbcl`. The MOP is the *mechanism*; the class graph
-stays statically emitted.
-_Avoid_: a single `objc-object` wrapper class with generics (gerbil pre-rejected
+stays statically emitted. A `define-objc-method` override's IMP is libobjc's
+`_objc_msgForward` (installed by `SubclassSynth.swift`); the framework callback bounces
+to the main thread, then **one** Lisp forwarding dispatcher reads the call's ABI shape
+**live** off the `NSInvocation`'s `NSMethodSignature` and routes through the `ns:`
+generic. ObjC super-chaining from an override is the explicit **`call-super` /
+`call-super-id`** (`objc_msgSendSuper`), set in 050/040.
+_Avoid_: `call-next-method` to reach the **ObjC** inherited implementation (a bound
+method sends `objc_msgSend` to *self*, which re-enters the forwarding IMP → infinite
+recursion — use `call-super`; `call-next-method` is for Lisp-subclass-of-Lisp-subclass
+chains only); a raw `define-alien-callable` installed *as* an IMP (it runs Lisp on the
+framework's foreign thread — the ADR-0035 crash; the IMP must be the dylib's native
+bounce shim); a single `objc-object` wrapper class with generics (gerbil pre-rejected
 as "vacuous" — receiver-only dispatch over one type, ADR-0018→0020); "manifest
 `defclass` graph" *without* the MOP (that is gerbil's shape, ADR-0020 — sbcl goes
 further); "dynamic synthesis from the ObjC runtime" as sbcl's mechanism (that is

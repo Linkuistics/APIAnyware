@@ -151,6 +151,13 @@
   "ObjC-class-name string -> the bound CLOS class object. Defined here (the seam);
    POPULATED by 050/030's `register-objc-class`. `aw-wrap` consults it.")
 
+(defvar *subclass-instances* (make-hash-table)
+  "Synthesized-instance `id` (as int) -> the typed CLOS instance (a STRONG back-ref).
+   Defined here (the seam) so `aw-wrap` is authoritative for synthesized instances;
+   POPULATED by 050/040's subclass construction. Lets every wrap site (the forwarding
+   dispatcher, a trampoline `id` return, a covariant method return) recover the SAME
+   typed instance — with its Lisp slots + methods — instead of a fresh borrowed shell.")
+
 (defun aw-ptr (instance)
   "Outbound object coercion (the contract's `->ptr`): a bound instance | nil -> its
    `id` SAP, nil -> the null SAP. Reads the documented `ptr` slot (a plain Lisp slot
@@ -176,7 +183,10 @@
   (declare (ignore retained))
   (if (aw-null-sap-p id-sap)
       nil
-      (make-instance (aw-resolve-bound-class id-sap) :ptr id-sap)))
+      ;; A synthesized instance resolves to its STRONG back-ref (preserving its Lisp
+      ;; slots + methods); any other `id` builds a fresh shell on its bound class.
+      (or (gethash (sb-sys:sap-int id-sap) *subclass-instances*)
+          (make-instance (aw-resolve-bound-class id-sap) :ptr id-sap))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; The String bridge — `NSString` <-> Lisp string, UTF-8 (design §4).
