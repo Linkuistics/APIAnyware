@@ -339,33 +339,47 @@ CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks
 "multiple dispatch" (ObjC dispatches on the receiver only — the generics are
 receiver-specialized over the real class graph, D6).
 
-**CL-family interface contract** _(provisional — to be settled in the contract leaf)_:
+**CL-family interface contract** _(settled — ADR-0033 + `docs/specs/2026-06-20-cl-family-interface-contract.md`)_:
 The **documented, specification-level interface that all Common Lisp targets share**,
 even though each compiles to a different FFI under the hood. The family roster is
 four confirmed members — **SBCL, CCL, AllegroCL, LispWorks** (two open-source, two
-commercial; usage survey in 020 may add ECL/ABCL/Clasp) — though **only `sbcl` is
-built** in the add-sbcl-clos-target grove; the others shape what the contract must
-abstract over (each has its own FFI — `sb-alien` / CCL bridge / Allegro `ff:` /
-LispWorks `fli:` — and its own MOP with varying AMOP conformance). The shared surface:
-the `ns:` package, class names, generic-function names, the `objc-class`
-metaclass / MOP protocol, and the **condition hierarchy** (CL's idiom for
-`NSError**` — errors are *signalled conditions*, not `(values result error)`;
-this is part of the contract). What is **not** shared: the binding implementation
-(emitter FFI output, callback/block bridges, threading, distribution) — those stay
-per-impl and idiomatic (SBCL: `sb-alien` + `save-lisp-and-die`). Application
-source written against the contract is **portable across CL impls**; binding
-source is not. This is a **spec-level** share, never shared binding code — so it
-does **not** reopen the CFFI question (`sb-alien` stays, ADR-0005) and does **not**
-breach ADR-0011's *substrate* isolation; it adds a new **family-level
-interface-sharing axis** that ADR-0011 (justified for *paradigmatically-alien*
-targets) never considered — two CL impls are the same language. Likely aligned
-with Clozure CL's existing Cocoa-bridge API for de-facto portability with the
-existing CL-Cocoa codebase.
+commercial; ECL/ABCL/Clasp out-for-now — absence, not exclusion) — though **only
+`sbcl` is built** in the add-sbcl-clos-target grove; the others shape what the
+contract must abstract over (each has its own FFI — `sb-alien` / CCL bridge /
+Allegro `ff:` / LispWorks `fli:` — and its own MOP with varying AMOP conformance).
+**The normative boundary (decision C1): observable behaviour is normative; the
+realization mechanism is implementation-private.** The shared surface is the
+`ns:` package, class names, generic-function names, the **portable macros**
+`define-objc-subclass` / `define-objc-method` (each impl expands them itself),
+`make-instance`→alloc/init, `slot-value`→ivar access, and the **condition
+hierarchy** (CL's idiom for `NSError**` — errors are *signalled conditions*, not
+`(values result error)`; part of the contract). What is **not** shared — *below*
+the contract: the binding implementation (emitter FFI output, callback/block
+bridges, threading, distribution) **and the `objc-class` metaclass / MOP
+mechanism** (SBCL/CCL realize the macros via the metaclass; LispWorks via plain
+`standard-class` + `standard-objc-object` — so **LispWorks is a first-class
+conformant member**, conforming by *behaviour* through a different mechanism, not
+a fallback tier). Application source written against the contract is **portable
+across CL impls**; binding source is not. This is a **spec-level** share, never
+shared binding code — so it does **not** reopen the CFFI question (`sb-alien`
+stays, ADR-0005) and does **not** breach ADR-0011's *substrate* isolation; it adds
+a new **family-level interface-sharing axis** (ADR-0033) **gated on a sharp
+precondition (decision C3): a family qualifies only if it has a single,
+standardized, well-accepted object model portable across its impls.** CL qualifies
+(ANSI CLOS + AMOP); the Scheme family is **ineligible** (no portable object model —
+Racket classes / TinyCLOS / Gerbil MOP are mutually incompatible), so
+racket/chez/gerbil stay fully hermetic under ADR-0011's default. Aligned with
+Clozure CL's existing Cocoa-bridge API for de-facto portability with the existing
+CL-Cocoa codebase.
 _Avoid_: "shared binding / portable CFFI layer" (that is the rejected code-level
-share — different FFI per impl, contract is spec-only); treating the contract as
-overturning ADR-0011 (it scopes an *exception*, native substrate stays isolated);
-placing the contract spec in a per-target unit (it is *cross-target* within the CL
-family — main-tier doc).
+share — different FFI per impl, contract is spec-only; refuted by Objective-CL's
+per-impl breakage, research §C3); treating the contract as overturning ADR-0011
+(it scopes an *exception*, native substrate stays isolated); placing the contract
+spec in a per-target unit (it is *cross-target* within the CL family — main-tier
+doc); listing **the `objc-class` metaclass as part of the shared surface** (C1: the
+metaclass is *mechanism, below the contract* — the surface is package/names/macros/
+conditions); calling **LispWorks a fallback/degraded tier** (it is a first-class
+member conforming through a different mechanism).
 
 **`libAPIAnywareSbcl` / sbcl trampoline layer** _(reframed 030, 2026-06-20)_:
 The sbcl target's native (Swift) library is the **trampoline layer of the
