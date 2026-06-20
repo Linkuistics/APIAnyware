@@ -1,0 +1,66 @@
+# 020-ffi-seam-and-core-helpers
+
+**Kind:** work
+
+## Goal
+
+Lay the **`sb-alien` FFI seam + the runtime core helpers** the emitted CLOS
+bindings call (the seam half of the node BRIEF's "Runtime contract fixed by
+040/020"). Compiled FFI, ADR-0015 — typed `sb-alien`, not CFFI. This is the
+foundation every later Lisp leaf sits on.
+
+- **Package model** (node BRIEF, PACKAGE MODEL): the `:ns` package `(:use)`
+  **nothing** — pure holder of bound symbols; the runtime defines + exports the
+  `ns:` class/generic names. The runtime/impl package `(:use #:cl #:sb-mop)` + the
+  bare `aw-*` helpers. (The per-file `(in-package …)` + `(export …)` headers are
+  040/060's emitter job; 020 just defines the packages.)
+- **The `objc_msgSend` seam:** `+objc-msgsend+` — the `objc_msgSend` function SAP
+  (re-resolved at startup, ADR-0038 §5; 070 owns the re-resolution, 020 defines the
+  var + the resolve helper). The typed dispatch shape the emitted `defmethod` bodies
+  use: `(sb-alien:alien-funcall (sb-alien:sap-alien +objc-msgsend+ (sb-alien:function
+  <ret> sap sap <args>…)) …)`. Also `objc_msgSend_stret` / `_fpret` only if the host
+  arm64 ABI needs them (arm64 largely unifies these — verify + record inline).
+- **The core helpers** (node BRIEF, DISPATCH BODY):
+  - `aw-ptr` (instance|nil → id SAP) — outbound object coercion; nil → null SAP.
+  - `aw-wrap` (id SAP [retained?] → exact bound instance) — inbound wrap; 2nd arg `t`
+    ⇒ +1 retained (init/copy/new families). Resolves the exact bound CLOS class via
+    `object_getClass` + the class registry. **Registry stub here**, populated by 030.
+  - `aw-sel` (string → SEL SAP) — lazy + cached, re-resolved per process from the
+    baked string (never a baked pointer, ADR-0034 §6).
+  - `aw-class` (string → Class SAP) — lazy/cached/re-resolved; the class-method receiver.
+  - The **String bridge** — `NSString` ⇄ Lisp string (the design §4 "existing string
+    bridge"); both directions, UTF-8.
+- **The residual `aw_sbcl_*` `sb-alien` binding shape** (ADR-0038 §3): `load-shared-object`
+  the 010 dylib; the typed `sb-alien` marshalling (`define-alien-routine` /
+  `alien-funcall`), one per trampoline signature — **the same compiled-FFI shape** as
+  the direct `objc_msgSend` dispatch. Object returns wrap via `aw-wrap` (the MOP
+  registry, gerbil ADR-0029 §2 analogue); eager-load + auto-reopen posture (no
+  lazy-load forcing reference — gerbil §4 position). The full Swift-type → C-ABI →
+  Lisp coercion taxonomy is the racket spec §3/§8/§9 taxonomy, **unchanged** (shared IR).
+
+## Context
+
+Node BRIEF (the whole "Runtime contract fixed by 040/020" block — implement the
+DISPATCH BODY + baked-table *consumption hooks*; the actual `register-objc-*` table
+wiring lands in 030/040). Design spec §1 (the seam), §4 (the residual binding shape +
+marshalling taxonomy), ADR-0015 (compiled FFI), ADR-0038 §3. Reference:
+`generation/targets/gerbil/lib/runtime/ffi.ss` (the C-safe libobjc seam — class/sel
+lookup, retain/release, string bridge, null helpers) + `swift-trampoline.ss` (the
+residual binding shape). Spike: `2026-06-20-sbcl-mop-spike/` README (verified `sb-alien`
+crossings).
+
+## Done when
+
+- The runtime package(s) + the seam load clean in SBCL (`sbcl --load`), no warnings.
+- A hand-written smoke: `(aw-class "NSString")` resolves; round-trip a Lisp string →
+  `NSString` → Lisp string via the bridge; a typed `objc_msgSend` call (e.g.
+  `-length` on a literal `NSString`) returns the right value.
+- `load-shared-object` of the 010 dylib succeeds; one `aw_sbcl_*`-shaped `sb-alien`
+  binding (even a trivial `aw_sbcl_box_free`) calls through.
+
+## Notes
+
+- `aw-wrap`'s class registry is defined here but **populated by 030**
+  (`register-objc-class`). Keep the seam free of MOP detail — 030 owns the metaclass.
+- Confirm the `generated_subdir` / runtime load-path expectation that 040's
+  `SBCL_TARGET_INFO` assumed (040/010 left a note to check this against the runtime).

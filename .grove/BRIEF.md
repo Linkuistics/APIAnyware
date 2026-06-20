@@ -64,7 +64,12 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   owners deferred to 090** — no CLOS class to specialize on. §6d count unchanged.)*
 - **050-build-runtime-native-core** — `sb-alien` runtime, MOP metaclass +
   hooks, block/delegate bridges, dynamic-class synthesis, lifetime, threading,
-  native dylib (`libAPIAnywareSbcl`) if needed.
+  native dylib (`libAPIAnywareSbcl`). *(decomposed 2026-06-20 into 8 bottom-up
+  build-order leaves: 010 native-dylib → 020 ffi-seam → 030 mop-object-model →
+  040 subclass-and-conformance → 050 lifetime-and-conditions → 060
+  threading-and-callbacks → 070 startup-re-resolution → 080 integration-smoke.
+  Design fully settled in ADRs 0034–0038 + the design spec; each leaf implements,
+  none re-decides.)*
 - **060-build-sample-apps** — the 7-app ladder, written against the contract,
   VM-verified. Decomposes per app.
 - **070-distribution-bundler** — `bundle-sbcl` crate, `save-lisp-and-die`.
