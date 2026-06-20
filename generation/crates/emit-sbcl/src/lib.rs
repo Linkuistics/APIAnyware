@@ -25,6 +25,7 @@
 //! - `emit_protocol` / `protocol_registry` (leaf 030).
 //! - `emit_enums` / `emit_constants` / `emit_functions` (leaf 040).
 //! - `trampoline` / `shared_signatures` (leaf 050).
+//! - `emit_framework` orchestrator + facade + golden tree (leaf 060).
 
 pub mod class_graph;
 pub mod emit_class;
@@ -42,5 +43,5 @@ pub mod trampoline;
 
 mod emit_framework;
 
-pub use emit_framework::{SbclEmitter, SBCL_TARGET_INFO};
+pub use emit_framework::{SbclEmitter, IMPL_PACKAGE, SBCL_TARGET_INFO};
 pub use trampoline::{collect_trampolines, generate_trampolines_swift};

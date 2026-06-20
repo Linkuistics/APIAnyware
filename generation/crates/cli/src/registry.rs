@@ -20,9 +20,12 @@ impl EmitterRegistry {
             // built over all loaded frameworks (see `generate.rs`). The
             // registry instance here is what `--list-targets` / lookups see.
             Box::new(apianyware_macos_emit_gerbil::GerbilEmitter::new()),
-            // SBCL's per-run emitter (leaf 040/010 scaffold). Like gerbil, later
-            // leaves give it cross-framework registries via a `generate` pre-pass;
-            // the `new()` instance here backs `--list-targets` / lookups.
+            // SBCL's per-run emitter carries empty cross-framework registries; the
+            // `generate` pre-pass swaps in a populated `SbclEmitter::with_registries`
+            // (the class-graph `ClassRegistry` for ADR-0034 §1 cross-framework
+            // metaclass parents + the `ProtocolRegistry` for conformed-protocol
+            // method flattening), built over all loaded frameworks (see `generate.rs`).
+            // The `new()` instance here backs `--list-targets` / lookups.
             Box::new(apianyware_macos_emit_sbcl::SbclEmitter::new()),
         ];
         Self { emitters }
