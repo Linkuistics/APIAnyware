@@ -179,10 +179,12 @@ fn unique_arg_names(f: &Function) -> Vec<String> {
     out
 }
 
-/// A Lisp formal for a C param: kebab the label, `argN` for an empty/wildcard label.
+/// A Lisp formal for a C param: kebab the label, `argN` for an empty/wildcard label
+/// or one that collides with a CL defined constant (`t`/`nil` — see
+/// [`crate::naming::is_cl_reserved_formal`]; `CGAffineTransform*` carries a `t` param).
 fn arg_name(label: &str, i: usize) -> String {
     let kebab = camel_to_kebab(label);
-    if kebab.is_empty() || label == "_" {
+    if kebab.is_empty() || label == "_" || crate::naming::is_cl_reserved_formal(&kebab) {
         format!("arg{i}")
     } else {
         kebab

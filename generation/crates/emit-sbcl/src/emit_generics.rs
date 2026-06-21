@@ -785,10 +785,11 @@ fn setter_selector_for(prop_name: &str) -> String {
 }
 
 /// A CLOS formal name for a param: kebab the label, falling back to `argN` for an
-/// empty/wildcard label.
+/// empty/wildcard label or one that collides with a CL defined constant (`t`/`nil` —
+/// see [`crate::naming::is_cl_reserved_formal`]).
 fn arg_name(label: &str, i: usize) -> String {
     let kebab = apianyware_macos_emit::naming::camel_to_kebab(label);
-    if kebab.is_empty() || label == "_" {
+    if kebab.is_empty() || label == "_" || crate::naming::is_cl_reserved_formal(&kebab) {
         format!("arg{i}")
     } else {
         kebab

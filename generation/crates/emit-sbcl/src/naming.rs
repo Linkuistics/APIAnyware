@@ -181,6 +181,19 @@ pub fn qualified_swift_init_constructor_name(owner: &str, labels: &[String]) -> 
     format!("{PACKAGE}:{}", swift_init_constructor_name(owner, labels))
 }
 
+/// True when a kebab'd **lambda-list formal** would collide with a Common Lisp
+/// defined constant that cannot be used as a variable — `t` and `nil`. A
+/// `(sb-alien:define-alien-routine … (t …))` formal, or a `defmethod` formal named
+/// `t`, is a `SIMPLE-PROGRAM-ERROR` at load (`COMMON-LISP:T names a defined constant,
+/// and cannot be used …`). The `CGAffineTransform*` family carries a C parameter
+/// literally named `t`, so this bites any binding that loads `functions.lisp`. Such a
+/// formal falls back to the positional `argN`, exactly like an empty/wildcard label.
+/// Only **formals** are affected: a bound NAME (`ns:t`, a constant/function symbol)
+/// lives in the `ns:` package, distinct from `cl:t`, so it needs no guard.
+pub fn is_cl_reserved_formal(kebab: &str) -> bool {
+    matches!(kebab, "t" | "nil")
+}
+
 /// The keyword components of a selector — the text before each `:` (or the whole
 /// selector for a unary message). `insertObject:atIndex:` →
 /// `["insertObject", "atIndex"]`; `length` → `["length"]`.
@@ -326,6 +339,19 @@ mod tests {
         assert_eq!(swift_init_constructor_name("IndexSet", &[]), "make-index-set");
         // A class owner kebabs acronym-aware like everywhere else.
         assert_eq!(swift_init_constructor_name("ImageCreator", &[]), "make-image-creator");
+    }
+
+    #[test]
+    fn cl_reserved_formals_are_only_t_and_nil() {
+        // The exact CL defined constants that cannot be lambda-list variables. `t` is
+        // the one the CGAffineTransform* C param hits; `nil` guarded for symmetry.
+        assert!(is_cl_reserved_formal("t"));
+        assert!(is_cl_reserved_formal("nil"));
+        // Everything else (including collision-resolved `t-1`, ordinary labels) is fine.
+        assert!(!is_cl_reserved_formal("t-1"));
+        assert!(!is_cl_reserved_formal("transform"));
+        assert!(!is_cl_reserved_formal("arg0"));
+        assert!(!is_cl_reserved_formal(""));
     }
 
     #[test]
