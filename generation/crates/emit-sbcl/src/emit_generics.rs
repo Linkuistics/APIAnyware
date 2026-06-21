@@ -709,17 +709,67 @@ fn coerce_arg(a: &DispatchArg) -> String {
     }
 }
 
-/// Emit a `register-objc-init` baking an explicit init's selector + keyword list
-/// for the runtime's `make-instance`→alloc/init mapping (§5).
+/// Emit a `register-objc-init` baking an explicit init's selector + keyword list +
+/// a **typed applier closure** for the runtime's `make-instance`→alloc/init mapping
+/// (§5, typed-arg support added 060/010 / ADR-0040). The keyword list maps initargs to
+/// the selector (order-independent match); the applier is the only place that knows the
+/// init's C signature, so it carries the literal `sb-alien` types `objc_msgSend` needs —
+/// a multi-arg / by-value-struct / scalar / bool init that the runtime cannot build
+/// from a runtime-data type list (an `alien-funcall` needs compile-time types).
 fn emit_register_init(w: &mut CodeWriter, class_name: &str, meth: &Method) {
-    let kws = selector_keyword_symbols(&meth.selector).join(" ");
+    let kws = selector_keyword_symbols(&meth.selector);
+    // Lower the init like any method (no error-out init handled here — the rare
+    // initWith…:error: shape is a documented follow-up); the Dispatch carries the
+    // per-arg alien type + coercion role the applier renders against the initarg plist.
+    let d = method_dispatch(meth, &HashSet::new());
+    let applier = render_init_applier(&d, &kws);
     write_line!(
         w,
-        "({REGISTER_INIT_FN} '{} \"{}\" ({}))",
+        "({REGISTER_INIT_FN} '{} \"{}\" ({}) {})",
         qualified_class_name(class_name),
         meth.selector,
-        kws
+        kws.join(" "),
+        applier
     );
+}
+
+/// Render the typed init applier: `(lambda (%alloced %args) <typed objc_msgSend>)`.
+/// `%alloced` is the freshly `alloc`'d `id`; `%args` is the make-instance initarg plist.
+/// Each visible arg's value is pulled from the plist by its keyword and coerced per role
+/// (object → `aw-ptr`, selector → `aw-sel`, plain scalar/bool/struct → as-is; sb-alien
+/// coerces a Lisp generalized-boolean to `(boolean 8)` and an integer to a scalar). The
+/// init returns the raw `+1` `id` (the metaclass `make-instance` wraps it), so the call
+/// is NOT `aw-wrap`ped here.
+fn render_init_applier(d: &Dispatch, keywords: &[String]) -> String {
+    // Function type: raw id return, id receiver, SEL, then each arg's alien type.
+    let mut arg_aliens: Vec<String> = vec![SAP.to_string(), SAP.to_string()];
+    arg_aliens.extend(d.args.iter().map(|a| a.alien.clone()));
+    let fn_type = format!("(sb-alien:function {SAP} {})", arg_aliens.join(" "));
+
+    // Actuals: %alloced, the init selector, then each arg pulled from the plist + coerced.
+    let mut actuals: Vec<String> = vec![
+        "%alloced".to_string(),
+        format!("({SEL_FN} \"{}\")", d.selector),
+    ];
+    for (a, kw) in d.args.iter().zip(keywords.iter()) {
+        // kw is ":foo"; the plist read is (getf %args :foo), then coerced by role.
+        let read = format!("(getf %args {kw})");
+        let pulled = DispatchArg {
+            name: read,
+            alien: a.alien.clone(),
+            role: a.role,
+        };
+        actuals.push(coerce_arg(&pulled));
+    }
+    let ignore = if d.args.is_empty() {
+        " (declare (ignore %args))"
+    } else {
+        ""
+    };
+    format!(
+        "(lambda (%alloced %args){ignore} (sb-alien:alien-funcall (sb-alien:sap-alien {MSGSEND_SAP} {fn_type}) {}))",
+        actuals.join(" ")
+    )
 }
 
 // --- helpers ---------------------------------------------------------------
@@ -903,7 +953,7 @@ mod tests {
             vec![],
         );
         let out = render_class_dispatch(&cls, "Foundation");
-        assert!(out.contains("(defmethod ns:object-at-index ((self ns:ns-array) index)"));
+        assert!(out.contains("(defmethod ns:object-at-index_ ((self ns:ns-array) index)"));
         assert!(out.contains("(aw-wrap (sb-alien:alien-funcall"));
         assert!(out.contains("(aw-ptr self) (aw-sel \"objectAtIndex:\") index)"));
     }
@@ -922,7 +972,7 @@ mod tests {
             vec![],
         );
         let out = render_class_dispatch(&cls, "Foundation");
-        assert!(out.contains("(defmethod ns:add-object ((self ns:ns-mutable-array) an-object)"));
+        assert!(out.contains("(defmethod ns:add-object_ ((self ns:ns-mutable-array) an-object)"));
         assert!(out.contains("(aw-sel \"addObject:\") (aw-ptr an-object))"));
         // void return → the function type opens with sb-alien:void.
         assert!(out.contains("(sb-alien:function sb-alien:void"));
@@ -953,7 +1003,7 @@ mod tests {
         );
         let out = render_class_dispatch(&cls, "Foundation");
         assert!(out.contains(
-            "(defmethod ns:string-with-string ((class (eql (find-class 'ns:ns-string))) a-string)"
+            "(defmethod ns:string-with-string_ ((class (eql (find-class 'ns:ns-string))) a-string)"
         ));
         assert!(out.contains("(declare (ignore class))"));
         assert!(out.contains("(aw-class \"NSString\") (aw-sel \"stringWithString:\") (aw-ptr a-string)"));
@@ -966,7 +1016,7 @@ mod tests {
         let out = render_class_dispatch(&cls, "AppKit");
         assert!(out.contains("(defmethod ns:title ((self ns:ns-window))"));
         assert!(out.contains("(aw-wrap (sb-alien:alien-funcall")); // object getter wraps
-        assert!(out.contains("(defmethod ns:set-title ((self ns:ns-window) value)"));
+        assert!(out.contains("(defmethod ns:set-title_ ((self ns:ns-window) value)"));
         assert!(out.contains("(aw-sel \"setTitle:\") (aw-ptr value))"));
     }
 
@@ -1016,9 +1066,14 @@ mod tests {
         let out = render_class_dispatch(&cls, "AppKit");
         // No defmethod for an init (make-instance handles instantiation, §5)…
         assert!(!out.contains("(defmethod ns:init-with-frame"));
-        // …but its selector + keyword list (one keyword per selector component) is
-        // baked for the runtime's make-instance (§5).
-        assert!(out.contains("(register-objc-init 'ns:ns-view \"initWithFrame:\" (:init-with-frame))"));
+        // …but its selector + keyword list + a typed applier (ADR-0040) is baked for the
+        // runtime's make-instance (§5): the CGRect arg crosses by value as a struct, read
+        // from the initarg plist by its keyword.
+        assert!(out.contains(
+            "(register-objc-init 'ns:ns-view \"initWithFrame:\" (:init-with-frame) (lambda (%alloced %args)"
+        ));
+        assert!(out.contains("(sb-alien:struct ns-rect)"));
+        assert!(out.contains("(getf %args :init-with-frame)"));
     }
 
     #[test]
@@ -1044,7 +1099,7 @@ mod tests {
         emit_class_dispatch(&mut w, &cls, "Foundation", &errs, &ProtocolRegistry::new());
         let out = w.finish();
         // Visible arity 1 (path); no `error` formal.
-        assert!(out.contains("(defmethod ns:write-to-file-error ((self ns:ns-data) path)"));
+        assert!(out.contains("(defmethod ns:write-to-file_error_ ((self ns:ns-data) path)"));
         assert!(out.contains("(aw-with-error-cell (%err)"));
         // The trailing %err cell is the last actual + a trailing SAP arg type.
         assert!(out.contains("(aw-sel \"writeToFile:error:\") (aw-ptr path) %err)"));
@@ -1143,10 +1198,10 @@ mod tests {
             )],
         );
         let decls = collect_generics(&[&f], &ProtocolRegistry::new());
-        let d = decls.iter().find(|d| d.name == "ns:object-at-index").unwrap();
+        let d = decls.iter().find(|d| d.name == "ns:object-at-index_").unwrap();
         assert_eq!(d.arity, 1);
         let rendered = render_generics(&decls);
-        assert!(rendered.contains("(defgeneric ns:object-at-index (receiver arg0)"));
+        assert!(rendered.contains("(defgeneric ns:object-at-index_ (receiver arg0)"));
     }
 
     #[test]
@@ -1185,7 +1240,7 @@ mod tests {
         reg.insert("NSCopying", vec![]);
 
         let out = render_class_dispatch_with(&cls, "Foundation", &reg);
-        assert!(out.contains("(defmethod ns:copy-with-zone ((self ns:ns-data) zone)"));
+        assert!(out.contains("(defmethod ns:copy-with-zone_ ((self ns:ns-data) zone)"));
         // The class-origin inherited method is filtered out (no re-emit).
         assert!(!out.contains("is-equal"));
     }
@@ -1225,7 +1280,7 @@ mod tests {
         let mut reg = ProtocolRegistry::new();
         reg.insert("NSCopying", vec![]);
         let out = render_class_dispatch_with(&cls, "Foundation", &reg);
-        assert_eq!(out.matches("(defmethod ns:copy-with-zone ").count(), 1);
+        assert_eq!(out.matches("(defmethod ns:copy-with-zone_ ").count(), 1);
     }
 
     #[test]
@@ -1244,7 +1299,7 @@ mod tests {
         let mut reg = ProtocolRegistry::new();
         reg.insert("NSCopying", vec![]);
         let decls = collect_generics(&[&f], &reg);
-        assert!(decls.iter().any(|d| d.name == "ns:copy-with-zone" && d.arity == 1));
+        assert!(decls.iter().any(|d| d.name == "ns:copy-with-zone_" && d.arity == 1));
     }
 
     #[test]

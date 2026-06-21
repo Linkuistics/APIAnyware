@@ -762,19 +762,20 @@ mod tests {
         // all in the package surface (interned via the double-colon spelling).
         assert!(facade.contains("ns::ns-array"), "{facade}");
         assert!(facade.contains("ns::count"), "{facade}");
-        assert!(facade.contains("ns::object-at-index"), "{facade}");
+        // ADR-0039: the arg-taking selector keeps its colon as a trailing `_`.
+        assert!(facade.contains("ns::object-at-index_"), "{facade}");
 
         // generics.lisp declares the generic; the class file extends it with a
         // defmethod (the lockstep, now split across the two files the facade orders).
         let generics =
             std::fs::read_to_string(tmp.path().join("foundation/generics.lisp")).unwrap();
         assert!(
-            generics.contains("(defgeneric ns:object-at-index"),
+            generics.contains("(defgeneric ns:object-at-index_ (receiver arg0)"),
             "{generics}"
         );
         let nsarray = std::fs::read_to_string(tmp.path().join("foundation/nsarray.lisp")).unwrap();
         assert!(
-            nsarray.contains("(defmethod ns:object-at-index ((self ns:ns-array)"),
+            nsarray.contains("(defmethod ns:object-at-index_ ((self ns:ns-array)"),
             "{nsarray}"
         );
     }

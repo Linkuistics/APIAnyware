@@ -114,6 +114,10 @@
   ;; (2) the dispatch SAPs.
   (aw-resolve-objc-msgsend)
   (aw-resolve-objc-msgsend-super)
+  ;; (2a) re-mask the FP traps (thread-local; do NOT survive the dump — 060/010). A
+  ;; revived image on the main thread must clear them before any AppKit call, else the
+  ;; first layout NaN signals FLOATING-POINT-INVALID-OPERATION.
+  (aw-mask-fp-traps)
   ;; (3) drop stale per-process caches.
   (clrhash *sel-cache*)
   (clrhash *class-cache*)

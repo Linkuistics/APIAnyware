@@ -324,8 +324,14 @@ package**; classes are acronym-aware kebab-case (`NSString` → `ns:ns-string`,
 `ns:ns-opengl-view`) via the **shared** `emit::naming::acronym_aware_kebab` (the
 acronym/compound table is shared analysis-level data — pile-up acronyms split,
 brand compounds stay whole — extend it there, not per-impl); a selector maps to
-one generic-function symbol (`objectAtIndex:` → `ns:object-at-index`) plus a
-keyword-symbol list (`(:object-at-index)`). **FFI spellings** (`SbclFfiTypeMapper`,
+one generic-function symbol that **preserves selector structure** (ADR-0039): each
+`:` → `_`, each camelCase hump → `-` (`objectAtIndex:` → `ns:object-at-index_`,
+`setObject:forKey:` → `ns:set-object_for-key_`, `cancel`→`ns:cancel` but
+`cancel:`→`ns:cancel_`), plus a keyword-symbol list (`(:object-at-index)`). This map
+is **injective** — the colon and the hump never merge — so distinct ObjC selectors
+never collide and need NO rename table / global reconciliation / emitter-side
+collision detector (macOS's surface is collision-free, integrity is an analysis-phase
+invariant). The pre-ADR-0039 `-`-join dropped the colon and collided `foo`/`foo:`. **FFI spellings** (`SbclFfiTypeMapper`,
 grounded in the 030 spikes): opaque ObjC `id`/`Class`/`SEL`/block/raw-pointer →
 `sb-alien:system-area-pointer` (a SAP, **not** `(* t)`); C strings →
 `sb-alien:c-string`; scalars → `(sb-alien:signed N)`/`(sb-alien:unsigned N)`/

@@ -137,6 +137,41 @@
   (sb-alien:struct cg-vector (dx sb-alien:double) (dy sb-alien:double)))
 
 ;;; ---------------------------------------------------------------------------
+;;; By-value geometry CONSTRUCTORS (surfaced 060/010). The emitter spells a geometry
+;;; arg as a by-value `(sb-alien:struct ns-rect)` etc., so an app passing one to a
+;;; method or `make-instance` init (e.g. NSWindow's `initWithContentRect:…`) must hand
+;;; it an alien struct VALUE. These `with-` macros STACK-allocate it (`with-alien`, no
+;;; leak) and bind it for the BODY — the C call copies it by value, so the binding need
+;;; only outlive the call. Components coerce to `double` so an app can write integer
+;;; literals. (A value-returning `make-rect` would have to `make-alien` (malloc) and
+;;; leak; the scoped macro is the non-leaking primitive the ladder uses.)
+;;; ---------------------------------------------------------------------------
+
+(defmacro aw-with-point ((var x y) &body body)
+  "Bind VAR to a stack `(sb-alien:struct ns-point)` {X Y} (coerced to double) for BODY."
+  `(sb-alien:with-alien ((,var (sb-alien:struct ns-point)))
+     (setf (sb-alien:slot ,var 'x) (coerce ,x 'double-float)
+           (sb-alien:slot ,var 'y) (coerce ,y 'double-float))
+     ,@body))
+
+(defmacro aw-with-size ((var w h) &body body)
+  "Bind VAR to a stack `(sb-alien:struct ns-size)` {W H} (coerced to double) for BODY."
+  `(sb-alien:with-alien ((,var (sb-alien:struct ns-size)))
+     (setf (sb-alien:slot ,var 'width) (coerce ,w 'double-float)
+           (sb-alien:slot ,var 'height) (coerce ,h 'double-float))
+     ,@body))
+
+(defmacro aw-with-rect ((var x y w h) &body body)
+  "Bind VAR to a stack `(sb-alien:struct ns-rect)` with origin {X Y} + size {W H}
+   (coerced to double) for BODY — the by-value rect a `make-instance`/method call takes."
+  `(sb-alien:with-alien ((,var (sb-alien:struct ns-rect)))
+     (setf (sb-alien:slot (sb-alien:slot ,var 'origin) 'x) (coerce ,x 'double-float)
+           (sb-alien:slot (sb-alien:slot ,var 'origin) 'y) (coerce ,y 'double-float)
+           (sb-alien:slot (sb-alien:slot ,var 'size) 'width) (coerce ,w 'double-float)
+           (sb-alien:slot (sb-alien:slot ,var 'size) 'height) (coerce ,h 'double-float))
+     ,@body))
+
+;;; ---------------------------------------------------------------------------
 ;;; The `objc_msgSend` seam (`+objc-msgsend+`).
 ;;;
 ;;; A SAP, not an `extern-alien` — the emitted `defmethod` bodies `sap-alien` it
@@ -160,6 +195,26 @@
   (setf +objc-msgsend+ (sb-sys:foreign-symbol-sap "objc_msgSend")))
 
 (aw-resolve-objc-msgsend)
+
+;;; ---------------------------------------------------------------------------
+;;; Floating-point trap masking — REQUIRED for any Cocoa code (surfaced 060/010).
+;;;
+;;; SBCL is unusual in ENABLING the IEEE FP traps (:invalid / :divide-by-zero /
+;;; :overflow) by default; almost every other runtime masks them. AppKit/CoreGraphics
+;;; routinely produce NaN/∞ intermediates during ordinary layout and geometry (even a
+;;; bare `[[NSWindow alloc] init]` trips :invalid), so an unmasked SBCL crashes any GUI
+;;; app with `FLOATING-POINT-INVALID-OPERATION`. The Lisp-Cocoa bridges (CCL, cl-objc)
+;;; all clear the traps; we do the same. Set at load AND re-set in 050/070's startup
+;;; hook — FP modes are thread-local and do NOT survive a `save-lisp-and-die` revive.
+;;; ---------------------------------------------------------------------------
+
+(defun aw-mask-fp-traps ()
+  "Clear the IEEE FP traps SBCL enables by default, so Cocoa's NaN/∞ intermediates do
+   not signal `floating-point-*` in Lisp. Idempotent; thread-local (run on each thread
+   that calls into Cocoa — the main thread here, the only one entering AppKit)."
+  (sb-int:set-floating-point-modes :traps '()))
+
+(aw-mask-fp-traps)
 
 ;;; ---------------------------------------------------------------------------
 ;;; Framework loading — `dlopen` a system framework so its ObjC classes resolve.

@@ -164,7 +164,7 @@ fn render_all(framework: &Framework) -> (String, BTreeSet<String>) {
 fn conforming_class_flattens_protocol_method() {
     let (out, _) = render_all(&fixture());
     // copyWithZone: from TKCopying flattens onto ns:tk-document as a callable method.
-    assert!(out.contains("(defmethod ns:copy-with-zone ((self ns:tk-document) zone)"));
+    assert!(out.contains("(defmethod ns:copy-with-zone_ ((self ns:tk-document) zone)"));
     // The class's own method is still there.
     assert!(out.contains("(defmethod ns:title ((self ns:tk-document))"));
 }
@@ -174,8 +174,8 @@ fn flattened_selector_is_not_redeclared_by_its_protocol() {
     // ns:copy-with-zone is in the global generic set (from flattening), so
     // emit_protocol(TKCopying) must NOT emit a second defgeneric for it.
     let (out, names) = render_all(&fixture());
-    assert!(names.contains("ns:copy-with-zone"));
-    assert_eq!(out.matches("(defgeneric ns:copy-with-zone ").count(), 1);
+    assert!(names.contains("ns:copy-with-zone_"));
+    assert_eq!(out.matches("(defgeneric ns:copy-with-zone_ ").count(), 1);
 }
 
 #[test]
@@ -193,7 +193,7 @@ fn delegate_only_selectors_get_their_generics_from_the_protocol() {
 fn both_protocols_register_for_runtime_conformance() {
     let (out, _) = render_all(&fixture());
     assert!(out.contains("(register-objc-protocol \"TKCopying\""));
-    assert!(out.contains("  :required ((\"copyWithZone:\" ns:copy-with-zone))"));
+    assert!(out.contains("  :required ((\"copyWithZone:\" ns:copy-with-zone_))"));
     assert!(out.contains("(register-objc-protocol \"TKDelegate\""));
     assert!(out.contains("(\"tkDidStart\" ns:tk-did-start)"));
 }

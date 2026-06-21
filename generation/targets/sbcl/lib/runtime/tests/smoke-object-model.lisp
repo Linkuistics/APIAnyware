@@ -41,8 +41,8 @@
 ;;; ===========================================================================
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (dolist (n '("NS-STRING" "NS-ARRAY" "NS-MUTABLE-ARRAY" "NS-NUMBER"
-               "LENGTH" "UPPERCASE-STRING" "COUNT" "OBJECT-AT-INDEX" "ADD-OBJECT"
-               "INT-VALUE" "NUMBER-WITH-INT" "ARRAY" "SELF" "TAGGED-COUNT"))
+               "LENGTH" "UPPERCASE-STRING" "COUNT" "OBJECT-AT-INDEX_" "ADD-OBJECT_"
+               "INT-VALUE" "NUMBER-WITH-INT_" "ARRAY" "SELF" "TAGGED-COUNT"))
     (export (intern n '#:ns) '#:ns)))
 
 ;; --- classes (the metaclass-backed graph) + the baked Class string table ---
@@ -77,16 +77,16 @@
                                         sb-alien:system-area-pointer sb-alien:system-area-pointer))
    (aw-ptr self) (aw-sel "count")))
 
-(defgeneric ns:object-at-index (receiver index))
-(defmethod ns:object-at-index ((self ns:ns-array) index)
+(defgeneric ns:object-at-index_ (receiver index))
+(defmethod ns:object-at-index_ ((self ns:ns-array) index)
   (aw-wrap (sb-alien:alien-funcall
             (sb-alien:sap-alien +objc-msgsend+ (sb-alien:function sb-alien:system-area-pointer
                                                  sb-alien:system-area-pointer sb-alien:system-area-pointer
                                                  sb-alien:unsigned-long))
             (aw-ptr self) (aw-sel "objectAtIndex:") index)))
 
-(defgeneric ns:add-object (receiver obj))
-(defmethod ns:add-object ((self ns:ns-mutable-array) obj)
+(defgeneric ns:add-object_ (receiver obj))
+(defmethod ns:add-object_ ((self ns:ns-mutable-array) obj)
   (sb-alien:alien-funcall
    (sb-alien:sap-alien +objc-msgsend+ (sb-alien:function sb-alien:void
                                         sb-alien:system-area-pointer sb-alien:system-area-pointer
@@ -117,8 +117,8 @@
                                                  sb-alien:system-area-pointer sb-alien:system-area-pointer))
             (aw-class "NSMutableArray") (aw-sel "array"))))
 
-(defgeneric ns:number-with-int (class value))
-(defmethod ns:number-with-int ((class (eql (find-class 'ns:ns-number))) value)
+(defgeneric ns:number-with-int_ (class value))
+(defmethod ns:number-with-int_ ((class (eql (find-class 'ns:ns-number))) value)
   (declare (ignore class))
   (aw-wrap (sb-alien:alien-funcall
             (sb-alien:sap-alien +objc-msgsend+ (sb-alien:function sb-alien:system-area-pointer
@@ -144,15 +144,15 @@
 
 ;; (2) make-instance (alloc/init) of a real class + dispatch + read-back
 (let* ((arr (make-instance 'ns:ns-mutable-array))           ; alloc/init -> empty NSMutableArray
-       (n42 (ns:number-with-int (find-class 'ns:ns-number) 42))   ; class method
-       (n7  (ns:number-with-int (find-class 'ns:ns-number) 7)))
+       (n42 (ns:number-with-int_ (find-class 'ns:ns-number) 42))   ; class method
+       (n7  (ns:number-with-int_ (find-class 'ns:ns-number) 7)))
   (check (class-of arr) (find-class 'ns:ns-mutable-array))
   (check (ns:count arr) 0)
-  (ns:add-object arr n42)
-  (ns:add-object arr n7)
+  (ns:add-object_ arr n42)
+  (ns:add-object_ arr n7)
   (check (ns:count arr) 2)                                  ; inherited ns-array dispatch
-  (check (ns:int-value (ns:object-at-index arr 0)) 42)      ; covariant wrap -> ns-number
-  (check (class-of (ns:object-at-index arr 0)) (find-class 'ns:ns-number))
+  (check (ns:int-value (ns:object-at-index_ arr 0)) 42)      ; covariant wrap -> ns-number
+  (check (class-of (ns:object-at-index_ arr 0)) (find-class 'ns:ns-number))
   ;; (3) call-next-method up the chain: 1000 + (count = 2) = 1002
   (check (ns:tagged-count arr) 1002)
   ;; (4) covariant return wraps to the EXACT bound class (cluster superclass walk)

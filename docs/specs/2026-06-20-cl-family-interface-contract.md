@@ -107,6 +107,17 @@ and the burden is on any deviation.
 - A multi-component selector maps to a **sequence of keyword symbols**, one per
   component (§B3): `nextEventMatchingMask:untilDate:inMode:dequeue:` →
   `(:next-event-matching-mask :until-date :in-mode :dequeue)`.
+- **The per-selector generic-function symbol PRESERVES the selector's structure
+  (ADR-0039):** each selector `:` renders as `_`, each camelCase hump as `-`
+  (acronym-aware per component). So `objectAtIndex:` → `ns:object-at-index_`,
+  `setObject:forKey:` → `ns:set-object_for-key_`, `cancel` → `ns:cancel` but
+  `cancel:` → `ns:cancel_`. The two separator classes never merge, making the
+  selector→symbol map **injective** — distinct ObjC selectors never collide (the
+  naive colon-dropping `-`-join collided `foo`/`foo:` and camelCase-vs-multicolon
+  pairs, breaking cross-framework load), and the same `SEL` across frameworks maps
+  to one shared generic. The retained `_` also keeps the argument-description nature
+  of the selector visible. A member MUST preserve selector structure so the surface
+  is collision-free across the complete API without a per-impl rename table.
 - The contract provides the CCL **`#/`** selector reader macro and the **`@`**
   NSString reader macro (§C1). These are the de-facto multi-impl standard —
   Objective-CL deliberately adopted CCL's `#/` (§C3) — so a conforming member

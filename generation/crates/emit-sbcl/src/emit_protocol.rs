@@ -261,8 +261,8 @@ mod tests {
         // No defclass for a protocol.
         assert!(!out.contains("defclass"));
         // Each delegate selector gets a defgeneric (arity 1 = one colon).
-        assert!(out.contains("(defgeneric ns:window-will-close (receiver arg0)"));
-        assert!(out.contains("(defgeneric ns:window-should-close (receiver arg0)"));
+        assert!(out.contains("(defgeneric ns:window-will-close_ (receiver arg0)"));
+        assert!(out.contains("(defgeneric ns:window-should-close_ (receiver arg0)"));
     }
 
     #[test]
@@ -280,12 +280,12 @@ mod tests {
             )],
         );
         let mut existing = BTreeSet::new();
-        existing.insert("ns:window-will-close".to_string());
+        existing.insert("ns:window-will-close_".to_string());
         let out = render_protocol(&p, "AppKit", &existing);
-        assert!(!out.contains("(defgeneric ns:window-will-close"));
+        assert!(!out.contains("(defgeneric ns:window-will-close_"));
         // …but it still appears in the registration table (a conformer must still
         // be routable to the selector).
-        assert!(out.contains("(\"windowWillClose:\" ns:window-will-close)"));
+        assert!(out.contains("(\"windowWillClose:\" ns:window-will-close_)"));
     }
 
     #[test]
@@ -314,9 +314,9 @@ mod tests {
             vec![],
         );
         let out = render_protocol(&p, "TestKit", &empty());
-        assert!(out.contains("(defgeneric ns:copy-with-zone (receiver arg0)"));
+        assert!(out.contains("(defgeneric ns:copy-with-zone_ (receiver arg0)"));
         assert!(out.contains("(register-objc-protocol \"TKCopying\""));
-        assert!(out.contains("  :required ((\"copyWithZone:\" ns:copy-with-zone))"));
+        assert!(out.contains("  :required ((\"copyWithZone:\" ns:copy-with-zone_))"));
         assert!(out.contains("  :optional ()"));
     }
 
@@ -366,7 +366,7 @@ mod tests {
         );
         let decls = protocol_generic_decls(&p, &empty());
         assert_eq!(decls.len(), 1);
-        assert_eq!(decls[0].name, "ns:table-view-object-value-for-table-column-row");
+        assert_eq!(decls[0].name, "ns:table-view_object-value-for-table-column_row_");
         assert_eq!(decls[0].arity, 3);
     }
 }

@@ -10,9 +10,9 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export
    '(
-     ns::animate-with-duration-animations
+     ns::animate-with-duration_animations_
      ns::appearance
-     ns::copy-with-zone
+     ns::copy-with-zone_
      ns::dealloc
      ns::description
      ns::enabled
@@ -20,20 +20,20 @@
      ns::hidden
      ns::is-highlighted
      ns::label
-     ns::load-resource-error
-     ns::manager-did-finish
-     ns::manager-should-continue
-     ns::manager-will-return-result
+     ns::load-resource_error_
+     ns::manager-did-finish_
+     ns::manager-should-continue_
+     ns::manager-will-return-result_
      ns::maximum-count
-     ns::resource-named
-     ns::set-enabled
-     ns::set-frame
-     ns::set-hidden
-     ns::set-label
+     ns::resource-named_
+     ns::set-enabled_
+     ns::set-frame_
+     ns::set-hidden_
+     ns::set-label_
      ns::set-needs-display
-     ns::set-tag
-     ns::set-target-action
-     ns::set-title
+     ns::set-tag_
+     ns::set-target_action_
+     ns::set-title_
      ns::shared-manager
      ns::tag
      ns::title

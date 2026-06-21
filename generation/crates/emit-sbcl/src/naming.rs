@@ -8,11 +8,15 @@
 //!   `ns:ns-string`, `NSOpenGLView` → `ns:ns-opengl-view`, `NSURLHandleClient` →
 //!   `ns:ns-url-handle-client` (the acronym handling is shared analysis-level
 //!   data, [`apianyware_macos_emit::naming::acronym_aware_kebab`]).
-//! - **Selectors** → a per-selector generic-function symbol (the colon-joined
-//!   keyword components kebab-cased) and a keyword-symbol list, one per component
+//! - **Selectors** → a per-selector generic-function symbol (**selector-structure
+//!   preserving**, ADR-0039: each `:` → `_`, each camelCase hump → `-`) and a
+//!   keyword-symbol list, one per component
 //!   (`nextEventMatchingMask:untilDate:inMode:dequeue:` → generic
-//!   `ns:next-event-matching-mask-until-date-in-mode-dequeue`, keyword list
-//!   `(:next-event-matching-mask :until-date :in-mode :dequeue)`).
+//!   `ns:next-event-matching-mask_until-date_in-mode_dequeue_`, keyword list
+//!   `(:next-event-matching-mask :until-date :in-mode :dequeue)`). The injective
+//!   `:`→`_` mapping keeps `foo`/`foo:` distinct (`ns:foo`/`ns:foo_`), so no two
+//!   distinct selectors ever collide — the pre-ADR-0039 `-`-join did, breaking
+//!   cross-framework load (B1).
 //!
 //! The acronym table lives in the shared `emit` crate (contract §3.1: shared,
 //! applied identically by every CL member); this module is the SBCL-specific
@@ -36,17 +40,33 @@ pub fn qualified_class_name(objc_class: &str) -> String {
     format!("{PACKAGE}:{}", class_name(objc_class))
 }
 
-/// The per-selector generic-function symbol name (unqualified): the selector's
-/// keyword components, each acronym-aware kebab-cased, joined with `-`. One
-/// generic per selector (ADR-0034 §2). `length` → `length`, `objectAtIndex:` →
-/// `object-at-index`, `initWithContentRect:styleMask:backing:defer:` →
-/// `init-with-content-rect-style-mask-backing-defer`.
+/// The per-selector generic-function symbol name (unqualified) — **selector-structure
+/// preserving** (ADR-0039, D1). Each selector COLON renders as `_`; each camelCase hump
+/// renders as `-`. The two separator classes never merge, so the selector→symbol map is
+/// **injective** over selector strings: distinct ObjC selectors get distinct generics, and
+/// the same `SEL` across frameworks maps to the same generic at the same arity (so CLOS
+/// dispatch unifies it). `length` → `length` (no colon), `objectAtIndex:` →
+/// `object-at-index_`, `setObject:forKey:` → `set-object_for-key_`,
+/// `initWithContentRect:styleMask:backing:defer:` →
+/// `init-with-content-rect_style-mask_backing_defer_`. Critically `cancel` → `cancel` but
+/// `cancel:` → `cancel_`, and `drawTitleWithFrame:inView:` → `draw-title-with-frame_in-view_`
+/// vs `drawTitle:withFrame:inView:` → `draw-title_with-frame_in-view_` — the kebab no longer
+/// erases the colon (the pre-ADR-0039 `-`-join collided these, breaking cross-framework load).
+/// The `_` also preserves the argument-description nature of the ObjC selector.
 pub fn generic_name(selector: &str) -> String {
-    selector_components(selector)
-        .iter()
-        .map(|c| acronym_aware_kebab(c))
-        .collect::<Vec<_>>()
-        .join("-")
+    if selector.contains(':') {
+        // Each component is followed by a colon → `_`; the trailing `_` distinguishes
+        // `foo:` (foo_) from the unary `foo` (foo). Components kebab acronym-aware.
+        let mut name = selector_components(selector)
+            .iter()
+            .map(|c| acronym_aware_kebab(c))
+            .collect::<Vec<_>>()
+            .join("_");
+        name.push('_');
+        name
+    } else {
+        acronym_aware_kebab(selector)
+    }
 }
 
 /// The `ns:`-qualified generic-function symbol (`objectAtIndex:` →
@@ -197,10 +217,11 @@ mod tests {
 
     #[test]
     fn single_keyword_selector() {
-        assert_eq!(generic_name("objectAtIndex:"), "object-at-index");
+        // ADR-0039: the trailing colon renders as `_` (preserves the arg-taking nature).
+        assert_eq!(generic_name("objectAtIndex:"), "object-at-index_");
         assert_eq!(
             qualified_generic_name("objectAtIndex:"),
-            "ns:object-at-index"
+            "ns:object-at-index_"
         );
         assert_eq!(
             selector_keyword_symbols("objectAtIndex:"),
@@ -212,9 +233,10 @@ mod tests {
     #[test]
     fn multi_keyword_selector_matches_contract_example() {
         let sel = "nextEventMatchingMask:untilDate:inMode:dequeue:";
+        // ADR-0039: each colon → `_` (the boundary), each hump → `-` (within a component).
         assert_eq!(
             generic_name(sel),
-            "next-event-matching-mask-until-date-in-mode-dequeue"
+            "next-event-matching-mask_until-date_in-mode_dequeue_"
         );
         assert_eq!(
             selector_keyword_symbols(sel),
@@ -230,10 +252,27 @@ mod tests {
 
     #[test]
     fn selector_acronyms_are_preserved() {
-        // URL stays whole inside a selector keyword (acronym-aware per component).
+        // URL stays whole inside a selector keyword (acronym-aware per component);
+        // the trailing colon is the `_` (ADR-0039).
         assert_eq!(
             generic_name("dataWithContentsOfURL:"),
-            "data-with-contents-of-url"
+            "data-with-contents-of-url_"
+        );
+    }
+
+    #[test]
+    fn selector_structure_is_injective_no_arity_collision() {
+        // The B1 collisions ADR-0039 resolves: `foo` vs `foo:` and the camelCase-vs-colon
+        // case. `:`→`_`, hump→`-` never merge, so distinct selectors get distinct symbols.
+        assert_eq!(generic_name("cancel"), "cancel");
+        assert_eq!(generic_name("cancel:"), "cancel_");
+        assert_ne!(generic_name("cancel"), generic_name("cancel:"));
+        // drawTitleWithFrame:inView: (2 args) vs drawTitle:withFrame:inView: (3 args)
+        assert_eq!(generic_name("drawTitleWithFrame:inView:"), "draw-title-with-frame_in-view_");
+        assert_eq!(generic_name("drawTitle:withFrame:inView:"), "draw-title_with-frame_in-view_");
+        assert_ne!(
+            generic_name("drawTitleWithFrame:inView:"),
+            generic_name("drawTitle:withFrame:inView:")
         );
     }
 

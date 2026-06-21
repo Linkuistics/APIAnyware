@@ -143,9 +143,9 @@
 (check (and (gethash "TKButton" *objc-class-registry*) t) t)
 (check (and (gethash (find-class 'ns:tk-view) *objc-init-registry*) t) t)   ; initWithFrame:
 (check (getf (gethash "TKCopying" *objc-protocol-registry*) :required)
-       '(("copyWithZone:" ns:copy-with-zone)))
+       '(("copyWithZone:" ns:copy-with-zone_)))
 ;; the lockstep: a per-class defmethod's generic was declared in generics/protocols
-(check (and (fboundp 'ns:frame) (fboundp 'ns:label) (fboundp 'ns:copy-with-zone) t) t)
+(check (and (fboundp 'ns:frame) (fboundp 'ns:label) (fboundp 'ns:copy-with-zone_) t) t)
 ;; a geometry-returning method LOADED (the ns-rect typedef this leaf added) — `ns:frame`
 (check (and (find-method #'ns:frame '() (list (find-class 'ns:tk-view)) nil) t) t)
 
@@ -157,8 +157,8 @@
 (format t "~%========== GATE B — four MOP operations vs live Foundation ==========~%")
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (dolist (n '("NS-STRING" "NS-ARRAY" "NS-MUTABLE-ARRAY" "NS-NUMBER"
-               "LENGTH" "COUNT" "OBJECT-AT-INDEX" "ADD-OBJECT" "INT-VALUE"
-               "NUMBER-WITH-INT" "TAGGED-COUNT"))
+               "LENGTH" "COUNT" "OBJECT-AT-INDEX_" "ADD-OBJECT_" "INT-VALUE"
+               "NUMBER-WITH-INT_" "TAGGED-COUNT"))
     (export (intern n '#:ns) '#:ns)))
 (defclass ns:ns-string (ns:ns-object) () (:metaclass objc-class))
 (register-objc-class 'ns:ns-string "NSString" "NSObject")
@@ -180,14 +180,14 @@
   (sb-alien:alien-funcall (sb-alien:sap-alien +objc-msgsend+
     (sb-alien:function sb-alien:unsigned-long sb-alien:system-area-pointer sb-alien:system-area-pointer))
     (aw-ptr self) (aw-sel "count")))
-(defgeneric ns:object-at-index (r i))
-(defmethod ns:object-at-index ((self ns:ns-array) i)
+(defgeneric ns:object-at-index_ (r i))
+(defmethod ns:object-at-index_ ((self ns:ns-array) i)
   (aw-wrap (sb-alien:alien-funcall (sb-alien:sap-alien +objc-msgsend+
     (sb-alien:function sb-alien:system-area-pointer sb-alien:system-area-pointer
                        sb-alien:system-area-pointer sb-alien:unsigned-long))
     (aw-ptr self) (aw-sel "objectAtIndex:") i)))
-(defgeneric ns:add-object (r o))
-(defmethod ns:add-object ((self ns:ns-mutable-array) o)
+(defgeneric ns:add-object_ (r o))
+(defmethod ns:add-object_ ((self ns:ns-mutable-array) o)
   (sb-alien:alien-funcall (sb-alien:sap-alien +objc-msgsend+
     (sb-alien:function sb-alien:void sb-alien:system-area-pointer sb-alien:system-area-pointer
                        sb-alien:system-area-pointer))
@@ -197,8 +197,8 @@
   (sb-alien:alien-funcall (sb-alien:sap-alien +objc-msgsend+
     (sb-alien:function (sb-alien:signed 32) sb-alien:system-area-pointer sb-alien:system-area-pointer))
     (aw-ptr self) (aw-sel "intValue")))
-(defgeneric ns:number-with-int (class value))                        ; a class method
-(defmethod ns:number-with-int ((class (eql (find-class 'ns:ns-number))) value)
+(defgeneric ns:number-with-int_ (class value))                        ; a class method
+(defmethod ns:number-with-int_ ((class (eql (find-class 'ns:ns-number))) value)
   (declare (ignore class))
   (aw-wrap (sb-alien:alien-funcall (sb-alien:sap-alien +objc-msgsend+
     (sb-alien:function sb-alien:system-area-pointer sb-alien:system-area-pointer
@@ -215,12 +215,12 @@
   (check (ns:length copy) 6))
 ;; (B2) DISPATCH — chain + inherited dispatch + class method + call-next-method
 (let* ((arr (make-instance 'ns:ns-mutable-array))              ; bare alloc/init
-       (n42 (ns:number-with-int (find-class 'ns:ns-number) 42)))
+       (n42 (ns:number-with-int_ (find-class 'ns:ns-number) 42)))
   (check (ns:count arr) 0)
-  (ns:add-object arr n42)
-  (ns:add-object arr (ns:number-with-int (find-class 'ns:ns-number) 7))
+  (ns:add-object_ arr n42)
+  (ns:add-object_ arr (ns:number-with-int_ (find-class 'ns:ns-number) 7))
   (check (ns:count arr) 2)                                     ; inherited from ns-array
-  (check (ns:int-value (ns:object-at-index arr 0)) 42)         ; covariant wrap -> ns-number
+  (check (ns:int-value (ns:object-at-index_ arr 0)) 42)         ; covariant wrap -> ns-number
   (check (ns:tagged-count arr) 1002))                          ; call-next-method up the chain
 
 ;; (B3) SUBCLASS — define a real ObjC subclass + override a selector a FRAMEWORK invokes.

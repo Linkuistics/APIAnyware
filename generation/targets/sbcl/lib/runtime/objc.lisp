@@ -162,16 +162,22 @@
     (setf (gethash objc-name *objc-class-registry*) class)
     class))
 
-(defmacro register-objc-init (clos-name init-selector keywords)
+(defmacro register-objc-init (clos-name init-selector keywords &optional applier)
   "Record one explicit ObjC `init` selector for CLOS-NAME (node BRIEF): its selector
-   string + one keyword per selector component, the data `make-instance` maps initargs
-   through. `init` itself needs no entry — the bare alloc/init default covers it.
+   string + one keyword per selector component (the data `make-instance` maps initargs
+   through) + an optional **typed applier** closure (ADR-0040, 060/010). `init` itself
+   needs no entry — the bare alloc/init default covers it.
 
-   A MACRO, not a function: the node BRIEF's runtime contract emits the KEYWORDS as an
-   UNQUOTED literal list `(:kw …)` (a `defclass`-style data clause), so a function would
-   try to *call* `(:init-with-frame)`. The macro quotes the literal data; CLOS-NAME is
-   spliced (the emitter already writes it `'ns:<cls>`) and the selector is a string."
-  `(push (cons ,init-selector ',keywords)
+   A MACRO, not a function: the runtime contract emits KEYWORDS as an UNQUOTED literal
+   list `(:kw …)` (a `defclass`-style data clause), so a function would try to *call*
+   `(:init-with-frame)`. The macro quotes that literal data; CLOS-NAME is spliced (the
+   emitter writes it `'ns:<cls>`) and the selector is a string. APPLIER is NOT quoted —
+   it is a `(lambda (alloced args) …)` the emitter renders with the init's literal
+   `sb-alien` argument types (an `alien-funcall` needs compile-time types, so the typed
+   crossing cannot be built from runtime data). The entry is `(selector keywords applier)`;
+   APPLIER is nil for a legacy 3-arg form (hand-authored smoke fixtures), which then take
+   the 0/1-arg id fallback in `aw-apply-init`."
+  `(push (list ,init-selector ',keywords ,applier)
          (gethash (find-class ,clos-name) *objc-init-registry*)))
 
 ;; `NSObject` is runtime-owned (the emitter never registers `ns:ns-object`), so seed
@@ -238,22 +244,25 @@
   (null (set-exclusive-or registered-keys supplied-keys)))
 
 (defun aw-apply-init (class alloced initargs)
-  "Map INITARGS (a plist) to a registered explicit init selector + send it on ALLOCED.
-   Each value passes as an `id` (`aw-ptr`) — the dominant explicit-init shape
-   (`initWithString:`, `initWithObject:`). Scalar/multi-typed-arg inits need the 040
-   baked table to carry per-arg TYPES (it bakes only keywords today) — a documented
-   refinement; 0- and 1-arg object inits are wired here."
+  "Map INITARGS (a plist) to a registered explicit init + send it on ALLOCED, returning
+   the raw +1 `id` (the caller wraps). The matched entry's **typed applier** (ADR-0040)
+   performs the crossing — it carries the init's literal `sb-alien` arg types, so it
+   handles ANY arity + by-value structs / scalars / bools / ids (e.g. NSWindow's
+   `initWithContentRect:styleMask:backing:defer:`). A legacy entry with no applier (nil —
+   hand-authored smoke fixtures) falls back to the 0/1-arg id path."
   (let* ((keys (loop for (k nil) on initargs by #'cddr collect k))
-         (entry (find-if (lambda (e) (init-keys-match-p (cdr e) keys))
+         (entry (find-if (lambda (e) (init-keys-match-p (second e) keys))
                          (gethash class *objc-init-registry*))))
     (unless entry
       (error "make-instance: ~S has no registered init for initargs ~S"
              (class-name class) keys))
-    (destructuring-bind (selector . kw-list) entry
-      (let ((sel (aw-sel selector)))
-        (ecase (length kw-list)
-          (0 (%msgsend-id-0 alloced sel))
-          (1 (%msgsend-id-1 alloced sel (aw-ptr (getf initargs (first kw-list))))))))))
+    (destructuring-bind (selector kw-list applier) entry
+      (if applier
+          (funcall applier alloced initargs)
+          (let ((sel (aw-sel selector)))
+            (ecase (length kw-list)
+              (0 (%msgsend-id-0 alloced sel))
+              (1 (%msgsend-id-1 alloced sel (aw-ptr (getf initargs (first kw-list)))))))))))
 
 (defun aw-alloc-init (class initargs)
   "`alloc` an instance of CLASS's ObjC class then send its init selector; return the

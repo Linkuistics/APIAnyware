@@ -198,11 +198,12 @@ fn every_defmethod_has_a_matching_defgeneric() {
             "defmethod generic {g} has no matching defgeneric; declared = {declared:?}"
         );
     }
-    // And the obvious members are present.
-    assert!(declared.contains("ns:add-subview"));
+    // And the obvious members are present (ADR-0039: arg-taking selectors keep the
+    // colon as a trailing `_`; 0-arg getters stay bare).
+    assert!(declared.contains("ns:add-subview_"));
     assert!(declared.contains("ns:integer-value"));
     assert!(declared.contains("ns:hidden"));
-    assert!(declared.contains("ns:set-hidden"));
+    assert!(declared.contains("ns:set-hidden_"));
 }
 
 #[test]
