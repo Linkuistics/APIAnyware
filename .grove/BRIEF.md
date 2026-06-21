@@ -64,12 +64,15 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   owners deferred to 090** — no CLOS class to specialize on. §6d count unchanged.)*
 - **050-build-runtime-native-core** — `sb-alien` runtime, MOP metaclass +
   hooks, block/delegate bridges, dynamic-class synthesis, lifetime, threading,
-  native dylib (`libAPIAnywareSbcl`). *(decomposed 2026-06-20 into 8 bottom-up
-  build-order leaves: 010 native-dylib → 020 ffi-seam → 030 mop-object-model →
+  native dylib (`libAPIAnywareSbcl`). *(✅ COMPLETE + retired 2026-06-21 — all 8
+  bottom-up leaves done: 010 native-dylib → 020 ffi-seam → 030 mop-object-model →
   040 subclass-and-conformance → 050 lifetime-and-conditions → 060
-  threading-and-callbacks → 070 startup-re-resolution → 080 integration-smoke.
-  Design fully settled in ADRs 0034–0038 + the design spec; each leaf implements,
-  none re-decides.)*
+  threading-and-callbacks → 070 startup-re-resolution → 080 integration-smoke (the
+  node done-bar). Runtime loads in SBCL; the MOP object model + lifetime + the §6d
+  Swift-native residual all verified end-to-end. Per-leaf + integration smokes +
+  the runner under `generation/targets/sbcl/lib/runtime/tests/`; runtime README
+  documents the suite. Design was fully settled in ADRs 0034–0038 + the design
+  spec; the leaves implemented, none re-decided.)*
 - **060-build-sample-apps** — the 7-app ladder, written against the contract,
   VM-verified. Decomposes per app.
 - **070-distribution-bundler** — `bundle-sbcl` crate, `save-lisp-and-die`.
@@ -111,5 +114,21 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   was split to **045**. **045 complete + retired (2026-06-20)** — the class-owner
   method/init residual is wired (receiver-specialized `defmethod` + `make-<owner>`
   constructor + defgeneric lockstep); the **value-struct (population-B)** half split to
-  **090** (needs a value-struct-CLOS-class object-model decision). Next:
-  **050-build-runtime-native-core** (090 sequences after it).
+  **090** (needs a value-struct-CLOS-class object-model decision).
+- **050-build-runtime-native-core COMPLETE + retired (2026-06-21).** The 080
+  integration smoke (the node done-bar) is the first thing in the grove to LOAD
+  emitted bindings on the runtime, and surfaced + fixed four cross-layer gaps that
+  hand-authored per-leaf smokes could not see: (1) the geometry struct typedefs
+  (`ns-rect`/`ns-point`/… in `ffi.lisp`) the FFI mapper delegates to "leaf 050" —
+  without them any `frame`/`bounds`/`rangeOfString:` fails to *load*; (2)
+  `define-objc-constant` (emitted into every `constants.lisp`, defined nowhere);
+  (3) `register-objc-init` + `register-objc-protocol` are now MACROS (the runtime
+  contract emits their literal data UNQUOTED, so the functions tried to *call* it);
+  (4) emitter `trampoline.rs` — a `throws` TRAMPOLINE now emits `aw-swift-call/error`,
+  not the `+0`-borrow `aw-with-error-cell`, since the `ThrowsBridge` writes a `+1`
+  `NSError` (golden-neutral). The §6d Swift-native residual is verified BY SHAPE
+  (fn / const / class-owner method+init / value-opaque box / `throws`); two shapes
+  RECORDED PENDING — **value-struct-owner** residual (the live **090** leaf) and the
+  **async-method trampoline** (deferred by design in `threading.lisp` until async
+  trampolines are emitted; the `CallbackBounce` family is proven). Next:
+  **060-build-sample-apps** (090 sequences after 050, not a blocker for 060).
