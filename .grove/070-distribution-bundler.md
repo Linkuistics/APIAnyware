@@ -29,3 +29,26 @@ is OS-resident (`/usr/lib/swift/`) — not vendored.
   produces a runnable, codesigned, self-contained `.app`; used by the 060 apps.
 
 ## Notes
+
+- **FINDING from 060/020-hello-window (2026-06-21) — the `install_name_tool` relocation
+  plan above (Context lines on `Contents/Frameworks/` + `bundle-gerbil`'s `relocate.rs`)
+  is IMPOSSIBLE on a dumped image.** `save-lisp-and-die` appends the Lisp core *after*
+  `__LINKEDIT`, so `install_name_tool` refuses the exe ("the __LINKEDIT segment does not
+  cover the end of the file") and `codesign --force` fails "strict validation" on that
+  layout. So **post-dump Mach-O surgery is off the table** — `bundle-sbcl` CANNOT extend
+  `bundle-gerbil`'s `install_name_tool` path. Consequences to design around:
+  - `libAPIAnywareSbcl` cannot be relocated into `Contents/Frameworks/` via
+    `install_name_tool`. Realistic alternatives: link/dump the exe with an
+    `@executable_path/..`-relative install name set BEFORE the dump (the dylib's own
+    install name + an rpath chosen at `swift build`/load time), or a launcher that sets
+    `DYLD_FALLBACK_LIBRARY_PATH` to a vendored `Contents/Frameworks/`. (Pure-ObjC apps
+    like hello-window dodge this entirely — `:load-residual nil`, no dylib.)
+  - **`libzstd` surfaced as an unplanned dep:** the dumped exe links Homebrew's
+    `/opt/homebrew/opt/zstd/lib/libzstd.1.dylib` (SBCL core-compression). Same relocation
+    constraint applies → dump against an SBCL runtime built `--without-zstd` or relocatable,
+    or vendor + `DYLD_*` launcher. Verification provisioned the one dylib into the VM.
+  - **Do NOT re-`codesign --force` the dumped exe** — `save-lisp-and-die` ALREADY ad-hoc
+    signs it on arm64 (so it launches); that signature must be left intact. The
+    `stub-launcher` codesigning step must sign around it, not re-sign the main exe.
+  - Working dev precursor to extend: `apps/hello-window/{dump.lisp,build.sh}` (dump +
+    `.app` wrap + Info.plist). Full detail in `apps/hello-window/learnings.md`.

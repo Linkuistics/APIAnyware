@@ -68,3 +68,29 @@ the topological-load problem vanish, so no `.asd` manifest is needed for the dev
 
 Both block ALL apps (every app coloads ≥2 frameworks + constructs typed-init objects).
 Awaiting direction on process (design/planning leaf vs fix-in-place) — see session report.
+
+## Outcome (COMPLETE 2026-06-21)
+
+Both blockers were resolved by the inserted `010-design-generic-naming-and-typed-init`
+leaf (ADR-0039 colon→`_` naming; ADR-0040 typed init appliers + FP-trap masking). With
+those in place, **hello-window built + VM-verified** — window "Hello from SBCL"
+(400×200, centred) + centred 24 pt "Hello, macOS!" label + standard app menu;
+TestAnyware confirmed the window/title/size/position/label semantically + visually
+(OCR 1.0), and Cmd-Q terminated cleanly (the SEL-arg menu init wires to `terminate:`).
+Artifacts: `apps/hello-window/{hello-window.lisp,run.lisp,dump.lisp,build.sh,README.md,
+learnings.md}` + `test-results/hello-window/{report.md,hello-window.png}`.
+
+**Pipeline stood up (the ladder reuses it):** generate → `aw-app-load-framework`
+(`:load-residual nil`, no dylib for pure-ObjC) → host construction pre-flight →
+`save-lisp-and-die :executable t` → `.app` wrap → `open -n` in the VM.
+
+**A THIRD contract gap surfaced + fixed (the forcing-function pattern again):** the
+`@"…"` NSString reader macro (contract §3.2, design "readers in runtime") was specified
+but unbuilt — and an app has no other portable way to make an `NSString`. Implemented in
+`lib/runtime/reader-syntax.lisp` (all 7 runtime smokes stay green); `#/` deferred.
+
+**Findings forwarded:** exact-class init registry (inherited inits don't resolve via
+`make-instance` on a subclass) → the controls apps (`learnings.md`); and three
+distribution findings that **correct the 070 leaf's relocation plan** (install_name_tool
+impossible post-dump; libzstd dep; don't re-sign) → recorded in
+`.grove/070-distribution-bundler.md` Notes.
