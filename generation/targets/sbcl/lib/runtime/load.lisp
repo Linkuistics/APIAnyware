@@ -18,4 +18,5 @@
     (unit "subclass.lisp")          ; ObjC subclass synthesis + protocol conformance
     (unit "lifetime.lisp")          ; sb-ext:finalize + main-thread release queue + entry pool
     (unit "conditions.lisp")        ; the ns:objc-error hierarchy + signal-cocoa-error
-    (unit "threading.lisp")))       ; aw-block + the foreign->main bounce + sb-thread boundary
+    (unit "threading.lisp")         ; aw-block + the foreign->main bounce + sb-thread boundary
+    (unit "startup.lisp")))         ; the mandatory startup re-resolution pass (ADR-0034 §6)

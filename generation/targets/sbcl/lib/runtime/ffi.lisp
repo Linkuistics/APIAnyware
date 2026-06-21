@@ -104,11 +104,25 @@
 ;;; here it backs the dev smoke and `aw-class`'s "is the framework loaded?" error.
 ;;; ---------------------------------------------------------------------------
 
+(defvar *loaded-frameworks* '()
+  "Framework base names explicitly `dlopen`ed via `aw-load-framework`, newest-first.
+   This is the **direct-msgSend** framework set 050/070's startup pass re-`dlopen`s
+   after a dump: a `save-lisp-and-die` core keeps these STRINGS but loses the live
+   `dlopen` handles (and with them every framework `Class`), so the pass replays the
+   list to re-register the classes. The dylib-linked **residual-owning** frameworks
+   are NOT here — dyld auto-reopens them with the dylib (ADR-0038 §5), so the Lisp
+   pass intentionally owns only the direct set. Plain string data, so it survives the
+   dump untouched; re-`dlopen` is idempotent, so any incidental overlap is harmless.")
+
 (defun aw-load-framework (name)
   "`dlopen` the system framework NAME (its base name, e.g. \"Foundation\") so its
-   ObjC classes become resolvable. Idempotent — dyld refcounts the handle."
+   ObjC classes become resolvable. Idempotent — dyld refcounts the handle. Records
+   NAME in `*loaded-frameworks*` so 050/070's startup pass can re-`dlopen` it after a
+   `save-lisp-and-die` (the live handle does not survive the dump; the name does)."
   (sb-alien:load-shared-object
-   (format nil "/System/Library/Frameworks/~A.framework/~A" name name)))
+   (format nil "/System/Library/Frameworks/~A.framework/~A" name name))
+  (pushnew name *loaded-frameworks* :test #'string=)
+  name)
 
 ;;; ---------------------------------------------------------------------------
 ;;; Selector + class resolution — lazy, cached, string-keyed (ADR-0034 §6).
@@ -164,6 +178,29 @@
    seam) so `aw-wrap` stays the single wrap site that arms lifetime; POPULATED by
    lifetime.lisp's `aw-register-release`. nil keeps the 020 seam smoke finalizer-free —
    the same seam-defines-hook / leaf-populates pattern as `*subclass-instances*`.")
+
+;;; ---------------------------------------------------------------------------
+;;; Startup re-resolution hooks (050/070). The 070 pass owns the ObjC identity
+;;; re-resolution itself (frameworks, `objc_msgSend`, every `Class`/`SEL`); every
+;;; OTHER subsystem that caches a live foreign pointer across a dump registers a
+;;; "drop my stale foreign state" thunk here, so the pass need not know each
+;;; subsystem's internals. Same seam-defines-hook / leaf-populates pattern as the
+;;; two hooks above — defined at the seam, populated by the owning leaf
+;;; (lifetime.lisp's release queue, subclass.lisp's synthesized-class caches,
+;;; threading.lisp's dylib dispatcher registration).
+;;; ---------------------------------------------------------------------------
+
+(defvar *startup-reresolve-hooks* '()
+  "An alist (name . thunk) of subsystem reset thunks the 050/070 startup pass runs
+   AFTER its own ObjC re-resolution. Keyed by name so a re-load replaces rather than
+   duplicates. Each thunk drops one subsystem's stale-across-dump foreign state.")
+
+(defun aw-register-startup-hook (name thunk)
+  "Register (or replace, by NAME) a subsystem reset THUNK the 050/070 startup pass
+   runs. Idempotent in NAME so reloading a runtime unit does not stack duplicates."
+  (setf *startup-reresolve-hooks*
+        (cons (cons name thunk)
+              (remove name *startup-reresolve-hooks* :key #'car))))
 
 (defun aw-ptr (instance)
   "Outbound object coercion (the contract's `->ptr`): a bound instance | nil -> its

@@ -166,6 +166,19 @@
      (sb-alien:alien-sap (sb-alien:alien-callable-function 'aw-block-dispatcher)))
     (setf *block-dispatcher-registered* t)))
 
+;; 050/070 startup reset: the dispatcher SAP we handed the dylib is a foreign pointer
+;; into THIS image's alien-callable trampolines — meaningless after a dump (the dylib
+;; auto-reopens, ADR-0038 §5, but its stored function pointer is stale). Clear the
+;; registered flag, then re-register IF the dylib is loaded (a pure-ObjC app with no
+;; blocks never loads it — `*native-dylib-loaded*` nil — so the reset is a no-op there).
+;; The dylib's own `*shared-objects*` reopen precedes `*init-hooks*` (070-distribution
+;; validates the full save-lisp-and-die ordering end-to-end).
+(aw-register-startup-hook
+ :block-dispatcher
+ (lambda ()
+   (setf *block-dispatcher-registered* nil)
+   (when *native-dylib-loaded* (aw-init-block-dispatcher))))
+
 ;;; ===========================================================================
 ;;; `aw-on-main` — deliver a thunk onto the main thread (a native worker's UI-safe
 ;;; hand-off). Rides the same `(fn, ctx)` bounce as the release-queue drain: ctx carries a

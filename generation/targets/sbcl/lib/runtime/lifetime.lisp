@@ -71,6 +71,14 @@
     (dolist (id-int batch (length batch))
       (%objc-release (sb-sys:int-sap id-int)))))
 
+;; 050/070 startup reset: a queued `id` is a baked foreign pointer (an integer
+;; captured in the generating process); after a dump it is garbage, and finalizers
+;; are `:dont-save t` so nothing re-enqueues it. DROP the queue at startup — draining
+;; it would `release` a stale pointer (the "never reuse a baked pointer" invariant).
+(aw-register-startup-hook
+ :release-queue
+ (lambda () (sb-thread:with-mutex (*release-queue-lock*) (setf *release-queue* '()))))
+
 ;;; ---------------------------------------------------------------------------
 ;;; Finalizer registration — armed by `aw-wrap` (020 seam) on a +1-owned wrap via
 ;;; the `*release-finalizer-installer*` hook this file installs.

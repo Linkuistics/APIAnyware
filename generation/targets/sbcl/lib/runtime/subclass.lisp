@@ -154,6 +154,23 @@
 (defvar *subclass-counter* 0
   "Monotonic suffix making each synthesized ObjC class name unique within the process.")
 
+;; 050/070 startup reset: every synthesized `Class` pair was `objc_allocateClassPair`ed
+;; in the GENERATING process and does not survive a dump — and these tables are keyed on
+;; (or hold) its now-stale `Class`/`Protocol`/instance SAPs. Clearing them lets the app's
+;; `define-objc-subclass` toplevel re-synthesize cleanly in the revived image (without the
+;; clear, `aw-synthesize-subclass` would early-return the stale pair). Counter back to 0 so
+;; the re-minted ObjC names match the pre-dump run. The matching `*objc-class-registry*`
+;; synth entries are left inert (their old names `objc_getClass` to null, so they never
+;; resolve; re-synthesis adds fresh ones).
+(aw-register-startup-hook
+ :synthesized-classes
+ (lambda ()
+   (clrhash *synth-classes*)
+   (clrhash *override-table*)
+   (clrhash *subclass-protocols*)
+   (clrhash *subclass-instances*)
+   (setf *subclass-counter* 0)))
+
 ;;; ===========================================================================
 ;;; Baked protocol table consumption (`register-objc-protocol`, emitted by 040/030).
 ;;; The runtime reads ABI signatures LIVE; this table only records the selector<->
