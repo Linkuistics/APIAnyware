@@ -162,16 +162,44 @@
     (setf (gethash objc-name *objc-class-registry*) class)
     class))
 
-(defun register-objc-init (clos-name init-selector keywords)
+(defmacro register-objc-init (clos-name init-selector keywords)
   "Record one explicit ObjC `init` selector for CLOS-NAME (node BRIEF): its selector
    string + one keyword per selector component, the data `make-instance` maps initargs
-   through. `init` itself needs no entry — the bare alloc/init default covers it."
-  (push (cons init-selector keywords)
-        (gethash (find-class clos-name) *objc-init-registry*)))
+   through. `init` itself needs no entry — the bare alloc/init default covers it.
+
+   A MACRO, not a function: the node BRIEF's runtime contract emits the KEYWORDS as an
+   UNQUOTED literal list `(:kw …)` (a `defclass`-style data clause), so a function would
+   try to *call* `(:init-with-frame)`. The macro quotes the literal data; CLOS-NAME is
+   spliced (the emitter already writes it `'ns:<cls>`) and the selector is a string."
+  `(push (cons ,init-selector ',keywords)
+         (gethash (find-class ,clos-name) *objc-init-registry*)))
 
 ;; `NSObject` is runtime-owned (the emitter never registers `ns:ns-object`), so seed
 ;; the registry here — the `aw-wrap` superclass-walk always bottoms out in a bound type.
 (setf (gethash "NSObject" *objc-class-registry*) (find-class 'ns::ns-object))
+
+;;; ===========================================================================
+;;; `define-objc-constant` — the bound-constant surface (contract §3, emitted by
+;;; `emit_constants` / the constant-trampoline residual into every `constants.lisp`).
+;;;
+;;; A generated `constants.lisp` reads each global ONCE at load through its emitter-
+;;; chosen foreign read: an `(aw-wrap (sb-alien:extern-alien "Sym" …))` object, an
+;;; `(aw-swift-string-result …)` Swift-native string, an `(aw-make-nsstring …)` macro
+;;; literal, or a bare scalar `extern-alien`. The macro is `defparameter`, NOT
+;;; `defconstant`: the value is a LIVE foreign read (a SAP-backed instance, a freshly
+;;; bridged string), so it is neither compile-time-constant nor `eql`-stable across
+;;; reloads — `defconstant` would error on the second load. An object/SAP-backed
+;;; constant is stale across a `save-lisp-and-die` dump (its foreign pointer dies with
+;;; the image); re-resolving the constant surface at startup is a 070-distribution
+;;; follow-up (the value form is re-evaluable, so the pass need only re-run it). For a
+;;; dev `sbcl --load` (and the 080 integration smoke) the load-time read is exact.
+;;; ===========================================================================
+
+(defmacro define-objc-constant (name value-form)
+  "Bind the `ns:`-qualified constant NAME to VALUE-FORM, read once at load. See the
+   section comment: a `defparameter` over the emitter's foreign read (object / string /
+   scalar). Returns NAME so a generated file's toplevel reads cleanly."
+  `(progn (defparameter ,name ,value-form) ',name))
 
 ;;; ===========================================================================
 ;;; `make-instance` -> alloc/init (contract §3.3, ADR-0034 §5).

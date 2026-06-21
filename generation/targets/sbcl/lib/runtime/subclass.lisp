@@ -181,13 +181,19 @@
   "ObjC protocol name -> a plist (:required ((sel . generic)…) :optional (…)). Baked by
    `emit_protocol` (040/030); names only — never ABI signatures.")
 
-(defun register-objc-protocol (objc-name &key required optional)
-  "Record a bound ObjC protocol (node BRIEF): its required/optional (selector . `ns:`
+(defmacro register-objc-protocol (objc-name &key required optional)
+  "Record a bound ObjC protocol (node BRIEF): its required/optional (selector `ns:`
    generic) pairs. Consumed for selector<->generic lookup; the conformance machinery
-   reads each method's encoding from the LIVE protocol, not from here."
-  (setf (gethash objc-name *objc-protocol-registry*)
-        (list :required required :optional optional))
-  objc-name)
+   reads each method's encoding from the LIVE protocol, not from here.
+
+   A MACRO, not a function: the node BRIEF's runtime contract emits the required/optional
+   pair lists UNQUOTED `((sel ns:gen) …)`, so a function would try to *call*
+   `(\"copyWithZone:\" ns:copy-with-zone)`. The macro quotes the literal data; OBJC-NAME
+   is a string the emitter writes literally."
+  `(progn
+     (setf (gethash ,objc-name *objc-protocol-registry*)
+           (list :required ',required :optional ',optional))
+     ,objc-name))
 
 ;;; ===========================================================================
 ;;; selector <-> `ns:` generic name (the emitter's naming convention, the slice we

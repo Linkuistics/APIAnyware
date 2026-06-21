@@ -44,7 +44,7 @@
 //! classification, the global Swift pass (`run_sbcl_trampolines`), and the `sb-alien`
 //! binding *rendering*; `040/060` (orchestration) wires those renderings into
 //! `emit_framework`; the `.swift` native helpers + the runtime `swift-trampoline`
-//! cluster (`aw-wrap` / `aw-ptr` / `aw-swift-string-*` / `aw-with-error-cell`) are the
+//! cluster (`aw-wrap` / `aw-ptr` / `aw-swift-string-*` / `aw-swift-call/error`) are the
 //! runtime leaf (parent grove 050).
 
 use std::collections::{BTreeMap, HashSet};
@@ -82,10 +82,14 @@ const STRING_ARG_FN: &str = "aw-swift-string-arg";
 /// trampoline **result**. The trampoline cluster's string-out coercer (ADR-0038 §3 —
 /// the existing-bridge position, hosted in the `swift-trampoline` cluster).
 const STRING_RESULT_FN: &str = "aw-swift-string-result";
-/// The `NSError**` out-cell macro: allocates the cell, binds `%err`, runs the body, and
-/// signals `ns:cocoa-error` when the cell was written (ADR-0037). Shared with the direct
-/// `objc_msgSend` error-out path (emit_generics `aw-with-error-cell`).
-const ERROR_CELL_MACRO: &str = "aw-with-error-cell";
+/// The Swift-`throws` out-cell macro for a TRAMPOLINE: allocates the `%err` cell, runs the
+/// body, and signals `ns:cocoa-error` when the cell was written (ADR-0037). This is
+/// `aw-swift-call/error`, NOT the direct path's `aw-with-error-cell`: the `ThrowsBridge`
+/// (`awSbclWriteError`) writes a **+1-retained** `NSError`, so the macro must take that
+/// ownership and release it (OWNED t) — `aw-with-error-cell` borrows a `+0` autoreleased
+/// error (the direct `objc_msgSend` path) and would LEAK the bridge's `+1`. The two paths
+/// are deliberately distinct conditions.lisp macros over the same `signal-cocoa-error`.
+const SWIFT_THROWS_MACRO: &str = "aw-swift-call/error";
 /// The constant-binding form (emit_constants): `(define-objc-constant <sym> <value>)`.
 const DEFINE_CONSTANT: &str = "define-objc-constant";
 
@@ -2041,7 +2045,9 @@ impl FnTrampoline {
     /// libAPIAnywareSbcl. Args coerce in (`aw-swift-string-arg` / `aw-ptr` / scalar
     /// pass-through), the crossing calls the dylib entry, the result coerces out (object →
     /// `aw-wrap`, String → `aw-swift-string-result`, scalar/box → through); a `throws`
-    /// routes through the `aw-with-error-cell` macro (the `%err` cell is the trailing arg).
+    /// routes through the `aw-swift-call/error` macro (the `%err` cell is the trailing arg;
+    /// the `ThrowsBridge` writes a +1 `NSError`, so the +1-owning macro — not the direct
+    /// path's `aw-with-error-cell` — must release it).
     pub fn render_binding(&self) -> String {
         let arg_aliens = self.arg_aliens();
         let ret = self.ret_alien();
@@ -2059,7 +2065,7 @@ impl FnTrampoline {
             let raw = alien_funcall(&self.entry, &ret, &arg_aliens, &actuals);
             let body = coerce_result(&self.ret, &raw);
             format!(
-                "(defun {sym} ({params_str})\n  ({ERROR_CELL_MACRO} (%err)\n    {body}))",
+                "(defun {sym} ({params_str})\n  ({SWIFT_THROWS_MACRO} (%err)\n    {body}))",
                 sym = self.binding_symbol,
             )
         } else {
@@ -2166,9 +2172,10 @@ impl MethodTrampoline {
     /// …)` Lisp binding (045). The receiver coerces through `(aw-ptr self)` (a class
     /// owner is a reference receiver); the args coerce in, the crossing calls the
     /// `libAPIAnywareSbcl` entry, the result coerces out (object → `aw-wrap`, String →
-    /// `aw-swift-string-result`); a `throws` routes through `aw-with-error-cell`. Only
-    /// the **class-owner** (`SelfMarshal::ClassRef`) sync path is rendered here — value
-    /// (population-B) receivers have no CLOS class to specialize on (a follow-up leaf).
+    /// `aw-swift-string-result`); a `throws` routes through `aw-swift-call/error` (the +1
+    /// `ThrowsBridge` consumer). Only the **class-owner** (`SelfMarshal::ClassRef`) sync
+    /// path is rendered here — value (population-B) receivers have no CLOS class to
+    /// specialize on (a follow-up leaf).
     pub fn render_defmethod(&self) -> String {
         let generic = qualified_swift_method_generic_name(&self.swift_name, &self.labels);
         let owner_clos = qualified_class_name(&self.owner);
@@ -2188,7 +2195,7 @@ impl MethodTrampoline {
             actuals.push("%err".to_string());
             let raw = self.render_alien_funcall(&receiver, &actuals);
             let body = self.coerce_result(&raw);
-            format!("{head}\n  ({ERROR_CELL_MACRO} (%err)\n    {body}))")
+            format!("{head}\n  ({SWIFT_THROWS_MACRO} (%err)\n    {body}))")
         } else {
             let raw = self.render_alien_funcall(&receiver, &coerced);
             let body = self.coerce_result(&raw);
@@ -2247,7 +2254,7 @@ impl InitTrampoline {
     /// `make-instance` path). Args coerce in, the crossing calls the entry; a **class**
     /// owner `aw-wrap`s the returned `+1` id to its exact bound type (ADR-0038 §4), a
     /// **value** owner hands back the raw opaque box; a `throws` routes through
-    /// `aw-with-error-cell`.
+    /// `aw-swift-call/error` (the +1 `ThrowsBridge` consumer).
     pub fn render_constructor(&self) -> String {
         let sym = self.binding_symbol();
         let formals = swift_formals(&self.labels);
@@ -2258,7 +2265,7 @@ impl InitTrampoline {
             actuals.push("%err".to_string());
             let raw = self.render_alien_funcall(&actuals);
             let body = self.coerce_init_result(&raw);
-            format!("(defun {sym} ({params_str})\n  ({ERROR_CELL_MACRO} (%err)\n    {body}))")
+            format!("(defun {sym} ({params_str})\n  ({SWIFT_THROWS_MACRO} (%err)\n    {body}))")
         } else {
             let raw = self.render_alien_funcall(&coerced);
             let body = self.coerce_init_result(&raw);
@@ -2433,7 +2440,7 @@ mod tests {
             ]
         );
         let b = t.render_binding();
-        assert!(b.contains("(aw-with-error-cell (%err)"), "{b}");
+        assert!(b.contains("(aw-swift-call/error (%err)"), "{b}");
         // %err is the trailing actual of the crossing.
         assert!(b.contains("(aw-swift-string-arg a0) %err)"), "{b}");
         // The object result still wraps.
@@ -2669,7 +2676,7 @@ mod tests {
             true,
         );
         let d = m.render_defmethod();
-        assert!(d.contains("(aw-with-error-cell (%err)"), "{d}");
+        assert!(d.contains("(aw-swift-call/error (%err)"), "{d}");
         // %err is the trailing actual of the crossing.
         assert!(d.contains("(aw-swift-string-arg from) %err)"), "{d}");
         // The object result still wraps.
@@ -2729,7 +2736,7 @@ mod tests {
             availability: None,
         };
         let c = i.render_constructor();
-        assert!(c.contains("(aw-with-error-cell (%err)"), "{c}");
+        assert!(c.contains("(aw-swift-call/error (%err)"), "{c}");
         assert!(c.contains("(aw-swift-string-arg path) %err)"), "{c}");
     }
 

@@ -74,6 +74,69 @@
   (zerop (sb-sys:sap-int sap)))
 
 ;;; ---------------------------------------------------------------------------
+;;; Geometry struct typedefs — the by-value `(sb-alien:struct …)` types the emitted
+;;; bindings reference by bare name (`SbclFfiTypeMapper::map_geometry_alias`). The
+;;; emitter spells a geometry return/arg as `(sb-alien:struct ns-rect)` and DELEGATES
+;;; the matching `define-alien-type` to the runtime (ffi_type_mapping.rs: "the matching
+;;; `define-alien-type` is the runtime's job (leaf 050), which must also confirm
+;;; `sb-alien` by-value struct passing for these"). Without these, ANY geometry-using
+;;; binding — `-[NSView frame]`, `-[NSView setFrame:]`, `-[NSString rangeOfString:]`,
+;;; … — fails to LOAD ("unknown alien type"). Pervasive in AppKit (all 7 sample apps
+;;; are GUI apps), so these sit in the seam every binding loads on. Surfaced by the
+;;; 050/080 integration smoke (the first thing to load emitted geometry methods).
+;;;
+;;; arm64/LP64 layout: `CGFloat` = `double`; `NSUInteger` = `(unsigned 64)`. The names
+;;; mirror the emitter's `map_geometry_alias` set exactly (NS-spelled, CG aliased onto
+;;; it where they share an ABI). Nested members reference the struct types defined
+;;; above them (`ns-point`/`ns-size` before `ns-rect`). arm64 routes a by-value struct
+;;; return through the indirect-result register (x8), so a cast straight off
+;;; `+objc-msgsend+` is ABI-correct (ffi.lisp's `objc_msgSend` note) — the integration
+;;; smoke confirms it end-to-end against live `NSValue`/`NSString` geometry returns.
+;;; ---------------------------------------------------------------------------
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct ns-point (x sb-alien:double) (y sb-alien:double)))
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct ns-size (width sb-alien:double) (height sb-alien:double)))
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct ns-rect
+    (origin (sb-alien:struct ns-point))
+    (size   (sb-alien:struct ns-size))))
+
+;; NSRange members are `NSUInteger`, not `CGFloat` (the one non-double geometry struct).
+(sb-alien:define-alien-type nil
+  (sb-alien:struct ns-range
+    (location (sb-alien:unsigned 64))
+    (length   (sb-alien:unsigned 64))))
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct ns-edge-insets
+    (top sb-alien:double) (left sb-alien:double)
+    (bottom sb-alien:double) (right sb-alien:double)))
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct ns-directional-edge-insets
+    (top sb-alien:double) (leading sb-alien:double)
+    (bottom sb-alien:double) (trailing sb-alien:double)))
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct ns-affine-transform-struct
+    (m11 sb-alien:double) (m12 sb-alien:double)
+    (m21 sb-alien:double) (m22 sb-alien:double)
+    (t-x sb-alien:double) (t-y sb-alien:double)))
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct cg-affine-transform
+    (a sb-alien:double) (b sb-alien:double)
+    (c sb-alien:double) (d sb-alien:double)
+    (tx sb-alien:double) (ty sb-alien:double)))
+
+(sb-alien:define-alien-type nil
+  (sb-alien:struct cg-vector (dx sb-alien:double) (dy sb-alien:double)))
+
+;;; ---------------------------------------------------------------------------
 ;;; The `objc_msgSend` seam (`+objc-msgsend+`).
 ;;;
 ;;; A SAP, not an `extern-alien` — the emitted `defmethod` bodies `sap-alien` it
