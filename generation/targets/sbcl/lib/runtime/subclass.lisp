@@ -154,22 +154,9 @@
 (defvar *subclass-counter* 0
   "Monotonic suffix making each synthesized ObjC class name unique within the process.")
 
-;; 050/070 startup reset: every synthesized `Class` pair was `objc_allocateClassPair`ed
-;; in the GENERATING process and does not survive a dump — and these tables are keyed on
-;; (or hold) its now-stale `Class`/`Protocol`/instance SAPs. Clearing them lets the app's
-;; `define-objc-subclass` toplevel re-synthesize cleanly in the revived image (without the
-;; clear, `aw-synthesize-subclass` would early-return the stale pair). Counter back to 0 so
-;; the re-minted ObjC names match the pre-dump run. The matching `*objc-class-registry*`
-;; synth entries are left inert (their old names `objc_getClass` to null, so they never
-;; resolve; re-synthesis adds fresh ones).
-(aw-register-startup-hook
- :synthesized-classes
- (lambda ()
-   (clrhash *synth-classes*)
-   (clrhash *override-table*)
-   (clrhash *subclass-protocols*)
-   (clrhash *subclass-instances*)
-   (setf *subclass-counter* 0)))
+;; The startup reset hook (which also re-registers the forwarding dispatcher with the
+;; reopened dylib) is registered after `aw-init-subclass-dispatcher` below — it must see
+;; both the synth tables (above) and the dispatcher machinery.
 
 ;;; ===========================================================================
 ;;; Baked protocol table consumption (`register-objc-protocol`, emitted by 040/030).
@@ -397,6 +384,36 @@
     (%aw-register-dispatcher
      (sb-alien:alien-sap (sb-alien:alien-callable-function 'aw-forward-dispatcher)))
     (setf *dispatcher-registered* t)))
+
+;; 050/070 startup reset. Two stale-foreign-state concerns at revive:
+;;
+;; (1) Every synthesized `Class` pair was `objc_allocateClassPair`ed in the GENERATING
+;;     process and does not survive a dump — and these tables are keyed on (or hold) its
+;;     now-stale `Class`/`Protocol`/instance SAPs. Clearing them lets the app's
+;;     `define-objc-subclass` toplevel re-synthesize cleanly in the revived image (without
+;;     the clear, `aw-synthesize-subclass` would early-return the stale pair). Counter back
+;;     to 0 so the re-minted ObjC names match the pre-dump run. The matching
+;;     `*objc-class-registry*` synth entries are left inert (their old names `objc_getClass`
+;;     to null, so they never resolve; re-synthesis adds fresh ones).
+;;
+;; (2) The forwarding-dispatcher SAP handed to the dylib is itself a foreign pointer into
+;;     THIS image's alien-callable trampolines — meaningless after a dump (the dylib
+;;     auto-reopens, ADR-0038 §5, but its stored function pointer is stale), exactly the
+;;     block-dispatcher case in threading.lisp. Clear the registered flag and re-register
+;;     IF the dylib is loaded, so a forwarded selector on a re-synthesized subclass reaches
+;;     Lisp again. WITHOUT this, the first target-action / delegate callback in a revived
+;;     image bounces into a null dispatcher. (A pure-ObjC app never loads the dylib —
+;;     `*native-dylib-loaded*` nil — so the re-register is a no-op there.)
+(aw-register-startup-hook
+ :synthesized-classes
+ (lambda ()
+   (clrhash *synth-classes*)
+   (clrhash *override-table*)
+   (clrhash *subclass-protocols*)
+   (clrhash *subclass-instances*)
+   (setf *subclass-counter* 0)
+   (setf *dispatcher-registered* nil)
+   (when *native-dylib-loaded* (aw-init-subclass-dispatcher))))
 
 ;;; ===========================================================================
 ;;; Subclass synthesis (ADR-0034 §5, lifted from spike 4-subclass-synthesis).

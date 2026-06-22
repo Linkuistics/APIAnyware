@@ -1,0 +1,251 @@
+;;;; scenekit-viewer.lisp — SceneKit Viewer sample app (sbcl target, the 060 ladder's
+;;;; fourth app). A lit, continuously-spinning 3D geometry the user swaps via an
+;;;; NSPopUpButton (cube / sphere / torus / cylinder) and recolours via NSColorPanel.
+;;;; SCNView's `allowsCameraControl` gives orbit-on-drag + scroll-to-zoom for free.
+;;;;
+;;;; Written against the CL-family interface contract (ADR-0033 / the contract spec): it
+;;;; names only the `ns:` surface, `make-instance` typed inits (§3.3), the per-selector
+;;;; generics (§3.2 — including the SceneKit geometry/action class factories via the
+;;;; `(eql (find-class 'ns:…))` specializer), the `@"…"` NSString reader (§3.2), and the
+;;;; subclass macros `define-objc-subclass` / `define-objc-method` (§3.4/§3.5).
+;;;;
+;;;; FIRST GUI ladder app with a CUSTOM Lisp target-action delegate (hello-window/gallery
+;;;; used only built-in selectors / static controls). The `scene-controller` is a real
+;;;; ObjC subclass of NSObject; its three target-action selectors get the synthesized
+;;;; default `v@:@` encoding (void return, one object arg) and are forwarded — bounced to
+;;;; main, GC-safe — into CLOS `defmethod`s. So unlike the pure-ObjC gallery, this app
+;;;; LOADS `libAPIAnywareSbcl` (the `aw_sbcl_subclass_*` bounce shim) and the VM is
+;;;; provisioned with the dylib (as for swift-native-probe), even though every SceneKit /
+;;;; AppKit call itself is plain ObjC (no Swift-native trampoline residual → `:load-residual
+;;;; nil`; the dylib is loaded purely for the subclass machinery).
+;;;;
+;;;; DUMP/REVIVE of a synthesized subclass: the ObjC class pair lives in libobjc, not the
+;;;; Lisp heap, so it does not survive `save-lisp-and-die`. The runtime startup pass clears
+;;;; the synth tables AND (the scenekit-viewer fix) re-registers the forwarding dispatcher
+;;;; with the reopened dylib; the app re-synthesizes by calling its `define-objc-subclass`
+;;;; from `-main` (which is the revived image's toplevel) via `ensure-scene-controller`.
+;;;;
+;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like the other ladder apps).
+
+(in-package #:apianyware-sbcl-impl)
+
+;;; ---------------------------------------------------------------------------
+;;; The standard app menu (Quit -> -[NSApplication terminate:]), as hello-window/gallery.
+;;; ---------------------------------------------------------------------------
+(defun install-app-menu (app app-name)
+  (let ((main-menu   (make-instance 'ns:ns-menu :init-with-title @""))
+        (app-item    (make-instance 'ns:ns-menu-item
+                       :init-with-title @"" :action "" :key-equivalent @""))
+        (app-submenu (make-instance 'ns:ns-menu :init-with-title @""))
+        (quit-item   (make-instance 'ns:ns-menu-item
+                       :init-with-title (aw-wrap (aw-make-nsstring
+                                                  (format nil "Quit ~A" app-name)) t)
+                       :action "terminate:"
+                       :key-equivalent @"q")))
+    (ns:add-item_ app-submenu quit-item)
+    (ns:add-item_ main-menu app-item)
+    (ns:set-submenu_for-item_ main-menu app-submenu app-item)
+    (ns:set-main-menu_ app main-menu)))
+
+;;; ---------------------------------------------------------------------------
+;;; Geometry + material helpers (pure functions — no controller dependency).
+;;; ---------------------------------------------------------------------------
+
+(defun make-geometry (index)
+  "An SCNGeometry for popup INDEX, via the geometry class factories (contract §3.2
+   `(eql (find-class 'ns:…))` class methods). Dimensions are CGFloat (double-float)."
+  (case index
+    (0 (ns:box-with-width_height_length_chamfer-radius_
+        (find-class 'ns:scn-box) 2.0d0 2.0d0 2.0d0 0.1d0))
+    (1 (ns:sphere-with-radius_ (find-class 'ns:scn-sphere) 1.2d0))
+    (2 (ns:torus-with-ring-radius_pipe-radius_ (find-class 'ns:scn-torus) 1.0d0 0.35d0))
+    (3 (ns:cylinder-with-radius_height_ (find-class 'ns:scn-cylinder) 1.0d0 2.0d0))
+    (t (ns:box-with-width_height_length_chamfer-radius_
+        (find-class 'ns:scn-box) 2.0d0 2.0d0 2.0d0 0.1d0))))
+
+(defun own-color (color)
+  "Take +1 ownership of COLOR (a +0 borrow from a `ns:` colour accessor) so it survives
+   independently of whatever material currently holds it.
+
+   The diffuse `contents` colour is kept alive ONLY by the material that retains it. But
+   SceneKit allocates a fresh `firstMaterial` for every geometry, so `geometryChanged:`'s
+   `setGeometry:` deallocates the old material — and with it the +0 colour — BEFORE
+   `apply-color-to-node` recolours the new one, leaving a dangling slot (manifests as
+   white). Retaining to +1 and arming the balancing main-thread release finalizer
+   (`aw-wrap … t`, ADR-0036) decouples the stored colour's lifetime from any material's.
+   Mirrors `aw-make-nsstring`'s +0→+1 promotion of an autoreleased transient."
+  (when color
+    (aw-wrap (%objc-retain (aw-ptr color)) t)))
+
+(defun apply-color-to-node (node color)
+  "Set NODE's geometry's firstMaterial.diffuse.contents to COLOR. SceneKit creates a
+   fresh firstMaterial for every geometry, so this is re-applied after each swap (else
+   the swap would reset the colour to white)."
+  (let ((geom (ns:geometry node)))
+    (when geom
+      (let ((material (ns:first-material geom)))
+        (when material
+          (let ((prop (ns:diffuse material)))
+            (when prop (ns:set-contents_ prop color))))))))
+
+;;; ---------------------------------------------------------------------------
+;;; The target-action delegate — a real ObjC subclass of NSObject (contract §3.4/§3.5).
+;;;
+;;; Defined INSIDE a function (not at file toplevel) so it re-synthesizes in a revived
+;;; dumped image: `-main` is the dumped image's toplevel, and `aw-synthesize-subclass` /
+;;; `aw-install-override` must re-run there (the ObjC class pair + the dispatch routing
+;;; did not survive the dump). defclass/defmethod re-evaluation is idempotent.
+;;; ---------------------------------------------------------------------------
+
+(defvar *scene-controller-ready* nil
+  "nil until `ensure-scene-controller` has defined the class in THIS process. Reset to
+   nil by the dump (a fresh `defvar` value is NOT baked — but the symbol is, so a
+   revived image starts nil again and re-defines).")
+
+(defun ensure-scene-controller ()
+  "Define the `scene-controller` ObjC subclass + its three target-action methods. Called
+   from `-main` so it runs in whatever process actually shows the UI (host pre-flight or
+   revived dump). Idempotent within a process via `*scene-controller-ready*`."
+  (unless *scene-controller-ready*
+    ;; Slots are read with `slot-value` (not per-class `:accessor`s) inside the method
+    ;; bodies: the bodies are compiled when this file loads, but the accessor functions
+    ;; would only exist once the inner `defclass` RUNS — `slot-value` is always defined,
+    ;; so the methods compile warning-free.
+    (define-objc-subclass scene-controller (ns:ns-object)
+      (:slots
+       (geometry-node :initarg :geometry-node)
+       (current-color :initarg :current-color)))
+
+    ;; geometryChanged: — SENDER is the NSPopUpButton; swap geometry to its selection
+    ;; and re-apply the current colour to the new material.
+    (define-objc-method (scene-controller "geometryChanged:") (self sender)
+      (let ((idx  (ns:index-of-selected-item sender))
+            (node (slot-value self 'geometry-node)))
+        (ns:set-geometry_ node (make-geometry idx))
+        (apply-color-to-node node (slot-value self 'current-color))))
+
+    ;; openColor: — open the shared NSColorPanel, wired to fire colorChanged: continuously.
+    (define-objc-method (scene-controller "openColor:") (self sender)
+      (declare (ignore sender))
+      (let ((panel (ns:shared-color-panel (find-class 'ns:ns-color-panel))))
+        (ns:set-target_ panel self)
+        (ns:set-action_ panel "colorChanged:")
+        (ns:set-continuous_ panel t)
+        (ns:make-key-and-order-front_ panel nil)))
+
+    ;; colorChanged: — SENDER is the NSColorPanel. Normalise to device-RGB (NSColorPanel
+    ;; colours can be in any colour space; SceneKit samples device-RGB cleanly) then
+    ;; re-colour the live material. Guarded so a colour-space conversion failure never
+    ;; unwinds into ObjC.
+    (define-objc-method (scene-controller "colorChanged:") (self sender)
+      (handler-case
+          (let ((raw (ns:color sender)))
+            (when raw
+              (let ((rgb (ns:color-using-color-space_
+                          raw (ns:device-rgb-color-space (find-class 'ns:ns-color-space)))))
+                ;; Own the colour (+1) before storing: it must outlive the material swap
+                ;; in `geometryChanged:` (see `own-color`).
+                (setf (slot-value self 'current-color) (own-color (or rgb raw)))
+                (apply-color-to-node (slot-value self 'geometry-node)
+                                     (slot-value self 'current-color)))))
+        (error (e) (format *error-output* "~&colorChanged: ~A~%" e))))
+
+    (setf *scene-controller-ready* t)))
+
+;;; ---------------------------------------------------------------------------
+;;; The window.
+;;; ---------------------------------------------------------------------------
+(defun scenekit-viewer-main (&key (run t))
+  "Build the SceneKit-viewer UI and, unless RUN is nil, enter the AppKit run loop.
+
+   RUN nil is the host construction PRE-FLIGHT (060): it synthesizes the delegate class,
+   builds the scene graph + every control, wires target-action — every FFI crossing the
+   app does — then returns WITHOUT blocking on `-run`, so a bare `sbcl --load` validates
+   marshalling (and, in the revived image, the startup re-resolution + re-synthesis path)
+   before the VM round-trip. The dumped image's toplevel calls RUN t."
+  (ensure-scene-controller)
+  (let ((app (ns:shared-application (find-class 'ns:ns-application))))
+    (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
+    (install-app-menu app "SceneKit Viewer")
+    (aw-with-rect (frame 0 0 640 480)
+      (let* ((window (make-instance 'ns:ns-window
+                       :init-with-content-rect frame
+                       :style-mask (logior ns:ns-window-style-mask-titled
+                                           ns:ns-window-style-mask-closable
+                                           ns:ns-window-style-mask-miniaturizable
+                                           ns:ns-window-style-mask-resizable)
+                       :backing ns:ns-backing-store-buffered
+                       :defer nil))
+             (content (ns:content-view window)))
+        (ns:set-title_ window @"SceneKit Viewer")
+        (ns:center window)
+        (aw-with-size (minsz 480 360) (ns:set-min-size_ window minsz))
+
+        ;; --- SCNView (fills below the toolbar; camera control + default lighting) ---
+        (let ((scn-view (aw-with-rect (vframe 0 0 640 432)
+                          (make-instance 'ns:scn-view :init-with-frame vframe :options nil))))
+          (ns:set-autoresizing-mask_ scn-view
+            (logior ns:ns-view-width-sizable ns:ns-view-height-sizable))
+          (ns:set-allows-camera-control_ scn-view t)
+          (ns:set-autoenables-default-lighting_ scn-view t)   ; SCNSceneRenderer protocol
+          (ns:set-background-color_ scn-view (ns:dark-gray-color (find-class 'ns:ns-color)))
+          (ns:add-subview_ content scn-view)
+
+          ;; --- Scene + spinning, coloured geometry node ---
+          (let* ((scene (ns:scene (find-class 'ns:scn-scene)))
+                 (root  (progn (ns:set-scene_ scn-view scene)
+                               (ns:root-node scene)))
+                 (geometry-node (ns:node-with-geometry_ (find-class 'ns:scn-node)
+                                                        (make-geometry 0)))
+                 ;; Own the initial colour (+1) too — same material-swap survival concern.
+                 (current-color (own-color (ns:system-red-color (find-class 'ns:ns-color)))))
+            (ns:add-child-node_ root geometry-node)
+            (apply-color-to-node geometry-node current-color)
+            ;; rotateBy is a single finite rotate; repeatActionForever makes it a
+            ;; continuous spin that survives geometry swaps (swapping node.geometry does
+            ;; not cancel actions on the node).  SCNActionable protocol: run-action_.
+            (ns:run-action_ geometry-node
+              (ns:repeat-action-forever_ (find-class 'ns:scn-action)
+                (ns:rotate-by-x_y_z_duration_ (find-class 'ns:scn-action)
+                                              0.0d0 1.5d0 0.0d0 4.0d0)))
+
+            ;; --- The delegate, holding the live node + current colour ---
+            (let ((controller (make-instance 'scene-controller
+                                :geometry-node geometry-node
+                                :current-color current-color)))
+
+              ;; --- Toolbar: geometry popup + Colour button in a horizontal stack ---
+              (let ((picker (aw-with-rect (pframe 0 0 150 26)
+                              (make-instance 'ns:ns-pop-up-button
+                                :init-with-frame pframe :pulls-down nil))))
+                (ns:add-item-with-title_ picker @"Cube")
+                (ns:add-item-with-title_ picker @"Sphere")
+                (ns:add-item-with-title_ picker @"Torus")
+                (ns:add-item-with-title_ picker @"Cylinder")
+                (ns:set-target_ picker controller)
+                (ns:set-action_ picker "geometryChanged:")
+
+                (let ((color-button (ns:button-with-title_target_action_
+                                     (find-class 'ns:ns-button) @"Colour…"
+                                     controller "openColor:"))
+                      (stack (make-instance 'ns:ns-stack-view)))
+                  (aw-with-rect (sframe 12 440 616 32) (ns:set-frame_ stack sframe))
+                  (ns:set-orientation_ stack ns:ns-user-interface-layout-orientation-horizontal)
+                  (ns:set-spacing_ stack 8.0d0)
+                  (ns:add-arranged-subview_ stack picker)
+                  (ns:add-arranged-subview_ stack color-button)
+                  (ns:set-autoresizing-mask_ stack
+                    (logior ns:ns-view-width-sizable ns:ns-view-min-y-margin))
+                  (ns:add-subview_ content stack)
+
+                  ;; --- Show + run ---
+                  (ns:make-key-and-order-front_ window nil)
+                  (ns:activate-ignoring-other-apps_ app t)
+                  ;; Keep the controller alive for the process (target/action does not
+                  ;; retain; the synthesized-instance back-ref already retains it, but
+                  ;; bind it so the compiler does not flag it unused).
+                  (when run
+                    (format t "~&SceneKit Viewer opened. Quit with Cmd-Q.~%")
+                    (finish-output)
+                    (ns:run app))
+                  controller)))))))))
