@@ -1,0 +1,71 @@
+# lifetime-and-conditions-k21
+
+**Kind:** work
+
+## Goal
+
+Build **lifetime + conditions** — grouped because both pivot on the shared
+`with-autorelease-pool` / `unwind-protect` entry-point boundary (a signalled
+non-local exit must still drain the pool).
+
+### Lifetime (ADR-0036) — `sb-ext:finalize` + main-thread release queue + entry pool
+
+The two-mechanism chez/gerbil shape (ADR-0007/0019) with one SBCL twist: **finalizers
+run off-main** (a dedicated `"finalizer"` thread — verified). So:
+
+- A `sb-ext:finalize` on a wrapped instance captures **only the raw `id`** (never the
+  CLOS instance — that resurrects it) and **enqueues** it onto a release queue.
+- A **main-thread drain** at the entry-point `with-autorelease-pool` boundary sends
+  `release` to each queued `id` — keeping every `dealloc` UI-safe.
+- Autoreleased `+0` transients drain at the same pool boundary.
+- `with-autorelease-pool` / `define-entry-point` — `unwind-protect`-based (drains on
+  non-local exit). This is a *UI-affinity* fix, not the GC-safety concern of threading
+  (the finalizer thread is SBCL-native, hence suspendable).
+- `aw-wrap`'s `retained?` arg (020) decides +1 vs +0 at wrap time; the finalizer
+  always `release`s exactly the ownership `aw-wrap` took.
+
+### Conditions (ADR-0037) — flat `ns:objc-error` hierarchy
+
+Cocoa errors surface as **signalled CL conditions** (contract §3.7), not `(values
+result error)` tuples.
+
+- Hierarchy: root `ns:objc-error : cl:error`; `ns:cocoa-error` (the `NSError**` path —
+  `domain` / `code` / `user-info` / `localized-description` readers); `ns:objc-exception`
+  (the `NSException` path).
+- **One signaller** `signal-cocoa-error` — `use-value` / `continue` / `return-nil`
+  restarts; serves **both** the direct `NSError**` path **and** the Swift-`throws`
+  trampoline's `ThrowsBridge` (010). Keyed on the **primary return** indicating failure
+  (`nil`/`NO`), per Apple's "check the return, not the error".
+- **`aw-with-error-cell`** — a MACRO `((var) body…)` (the emitter names `var` `%err`):
+  allocates the `NSError**` cell, binds `var`, threads it as the trailing `id*` actual,
+  runs body, signals `ns:cocoa-error` **only** when the primary return is failure.
+- **`NSException` capture** (secondary, design §8): the native dispatch core `@catch` →
+  `ns:objc-exception`. The `NSError**` path is the primary load-bearing surface; do
+  `NSException` if cheap, else leave a stub + a note (it is explicitly secondary).
+
+## Context
+
+Node BRIEF (`aw-with-error-cell` in DISPATCH BODY). Design spec §3 (all three —
+lifetime/threading/conditions; threading is 060) + ADR-0036 + ADR-0037. Reference:
+`generation/targets/gerbil/lib/runtime/objc.ss` (the lifetime `will` + `with-autorelease-pool`
+/ `define-entry-point` + the `nserror` record + `call-with-nserror-out`). The
+`ThrowsBridge` half is 010's Swift file — 050 wires the Lisp condition signalling onto
+it. Needs 020 (the seam + `aw-wrap` ownership).
+
+## Done when
+
+- A **background-release smoke** (ADR-0036, a node done-bar item): allocate wrapped
+  instances, drop them, force GC (`sb-ext:gc :full t`), confirm the finalizer thread
+  enqueues + the main-thread drain `release`s them (no release on the finalizer thread;
+  no leak — `retainCount` / instrument-style check or a dealloc-counter subclass).
+- `with-autorelease-pool` drains on both normal exit **and** a signalled non-local exit.
+- An `NSError**`-returning method that fails signals `ns:cocoa-error` with populated
+  `domain`/`code`/`localized-description`; the `return-nil` restart yields nil; success
+  returns the value with no signal.
+
+## Notes
+
+- The finalizer-captures-raw-`id`-not-the-instance rule is the subtle correctness point
+  (capturing the instance resurrects it) — inline-comment it.
+- `signal-cocoa-error` is shared by the direct path **and** `ThrowsBridge` — keep it one
+  function so the two paths can never diverge (ADR-0037's whole point).
