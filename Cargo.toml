@@ -12,19 +12,19 @@ members = [
     "platforms/macos/tools/extract-swift",
     "platforms/macos/tools/annotate",
     "platforms/macos/tools/collect-cli",
-    # Generation phase
-    "generation/crates/emit",
-    "generation/crates/emit-racket",
-    "generation/crates/emit-chez",
-    "generation/crates/emit-gerbil",
-    "generation/crates/emit-sbcl",
-    "generation/crates/cli",
-    # Tooling
-    "generation/crates/stub-launcher",
-    "generation/crates/bundle-racket",
-    "generation/crates/bundle-chez",
-    "generation/crates/bundle-gerbil",
-    "generation/crates/bundle-sbcl",
+    # targets/_shared/ domain — shared projection substrate + generate CLI
+    "targets/_shared/tools/emit",
+    "targets/_shared/tools/stub-launcher",
+    "targets/_shared/tools/generate-cli",
+    # targets/<t>/ domain — per-target emitters + bundlers
+    "targets/racket/tools/emit-racket",
+    "targets/racket/tools/bundle-racket",
+    "targets/chez/tools/emit-chez",
+    "targets/chez/tools/bundle-chez",
+    "targets/gerbil/tools/emit-gerbil",
+    "targets/gerbil/tools/bundle-gerbil",
+    "targets/sbcl/tools/emit-sbcl",
+    "targets/sbcl/tools/bundle-sbcl",
 ]
 
 [workspace.package]
@@ -53,14 +53,14 @@ apianyware-datalog = { path = "semantic/tools/datalog" }
 apianyware-resolve = { path = "semantic/tools/resolve" }
 apianyware-annotate = { path = "platforms/macos/tools/annotate" }
 apianyware-enrich = { path = "semantic/tools/enrich" }
-apianyware-emit = { path = "generation/crates/emit" }
-apianyware-emit-racket = { path = "generation/crates/emit-racket" }
-apianyware-emit-chez = { path = "generation/crates/emit-chez" }
-apianyware-emit-gerbil = { path = "generation/crates/emit-gerbil" }
-apianyware-emit-sbcl = { path = "generation/crates/emit-sbcl" }
-apianyware-stub-launcher = { path = "generation/crates/stub-launcher" }
-apianyware-bundle-racket = { path = "generation/crates/bundle-racket" }
-apianyware-bundle-chez = { path = "generation/crates/bundle-chez" }
+apianyware-emit = { path = "targets/_shared/tools/emit" }
+apianyware-emit-racket = { path = "targets/racket/tools/emit-racket" }
+apianyware-emit-chez = { path = "targets/chez/tools/emit-chez" }
+apianyware-emit-gerbil = { path = "targets/gerbil/tools/emit-gerbil" }
+apianyware-emit-sbcl = { path = "targets/sbcl/tools/emit-sbcl" }
+apianyware-stub-launcher = { path = "targets/_shared/tools/stub-launcher" }
+apianyware-bundle-racket = { path = "targets/racket/tools/bundle-racket" }
+apianyware-bundle-chez = { path = "targets/chez/tools/bundle-chez" }
 
 [workspace.lints.rust]
 unsafe_code = "warn"

@@ -8,6 +8,5 @@ governs generated runtime artifacts and outputs — not this shared emitter *cod
 which by "code lives with its consumers" is target-domain expression machinery
 shared across all four emitters (ADR-0043 Consequences).
 
-TODO: the shared `tools/` crates (`emit` incl. the `naming` acronym table,
-`stub-launcher`, `generate-cli`) relocate here in `move-target-crates-k7`. No
-content this leaf.
+The shared `tools/` crates (`emit` incl. the `naming` acronym table,
+`stub-launcher`, `generate-cli`) landed here in `move-target-crates-k7`.
