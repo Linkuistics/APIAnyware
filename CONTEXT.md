@@ -829,6 +829,82 @@ global numbering.
 _Avoid_: a central `docs/targets/<lang>/` tree (re-centralizes what isolation
 separates); per-target ADR renumbering (breaks the cross-target decision graph).
 
+## Repository domains (refactor structure)
+
+These terms are introduced by the `structural-refactoring` grove, which
+re-architects the repo from its *pipeline-phase* shape (`collection/` → `analysis/`
+→ `generation/`) into five *domain* partitions (REFACTOR.md §8/§9). The skeleton
+node creates the homes; later leaves move material in. While the migration is in
+flight the old phase dirs still exist; a term's "lives under" path is the **target**
+home unless noted.
+
+**Domain partition**:
+The top-level organising axis of the refactored repo: directories partition by
+*meaning / role*, not by pipeline phase. The five domains are `semantic/`,
+`platforms/`, `apps/`, `targets/`, `schemas/`. These boundaries are load-bearing and
+preserved throughout (REFACTOR.md §8).
+_Avoid_: "phase" as a structural axis (retired — `collection/`/`analysis/`/
+`generation/` are dissolved into the domains); calling any domain a "module".
+
+**`semantic/`**:
+The *shared language of meaning* domain — projection-independent source semantics:
+the meaning of platform APIs expressed once, first-class multi-API pattern-kinds
+(§7.5/§31/§32), relationship entities, and the semantic-graph vocabulary docs.
+_Avoid_: putting any target-projection or platform-specific extraction detail here
+(those are `targets/` and `platforms/`).
+
+**`platforms/`**:
+The *source platform truth* domain — per-platform formal API specs, kept
+**projection-free** (§7.1/§45.10). `platforms/macos/` is the only live platform;
+`linux/` and `dotnet/` slot in without redesign. A family's spec is the three-stage
+`extracted.yaml` → `annotations.apiw` → `resolved.yaml` under `api/<family>/` (§14).
+_Avoid_: "platform" meaning the generation destination (that is a *target*); any
+target-language detail leaking into a platform spec.
+
+**`apps/`**:
+The *common target-independent behavioural exemplars* domain — AppSpec definitions
+shared across all targets (`apps/<platform>/<app>/`, §15). Generated apps are
+conformance tests, not demos (§7.8). Target *implementations* live under
+`targets/<t>/app-implementations/<platform>/<app>/`, never here.
+_Avoid_: putting any target-specific app code under `apps/` (that is an
+implementation, not a spec).
+
+**`targets/`**:
+The *target-language expression and proof* domain — everything specific to one
+target: capability profiles, idiom catalogues, policies, native adapters, bindings,
+app-implementations, conformance reports, docs (§18). Projection lives here, never
+in `platforms/`. The four live target units (`racket`/`chez`/`gerbil`/`sbcl`),
+currently at `generation/targets/<name>/`, migrate to `targets/<name>/` as the grove
+proceeds (supersedes the *Target* entry's on-disk path above once the move lands).
+_Avoid_: a central `tools/` for target machinery (rejected — ADR-0043); re-reading
+"target" as "platform".
+
+**`targets/_shared/`**:
+The home for cross-target machinery consumed by every target but owned by none — the
+shared projection substrate `emit` (with the `naming` acronym table), `stub-launcher`,
+and the generate CLI (ADR-0044). The leading underscore is intentional: `_shared`
+sorts/reads as *"not a target"*. Hermetic per-target isolation (ADR-0011) governs
+generated runtime artifacts, **not** this shared emitter code (ADR-0043 Consequences).
+_Avoid_: treating `_shared` as a target (it has no `target.yaml`, no bindings); a
+top-level `shared/` (it is domain-placed under `targets/`, not a sixth domain).
+
+**`schemas/`**:
+The *formal validation* domain — the schemas validating every artifact (extracted /
+annotations / resolved specs, app-kinds, AppSpecs, capability profiles, conformance
+reports). The "obvious place for schemas" the success criteria demand (§45.13).
+_Avoid_: scattering per-artifact schemas next to each artifact (validation is
+centralised here, even though docs co-locate).
+
+**Crate-home convention (`tools/`)**:
+Rust crates live under a `tools/` subdirectory of the domain they serve — shared
+crates at `<domain>/tools/<crate>/`, per-target crates at `targets/<t>/tools/<crate>/`.
+§14/§18 give specs/data homes but none for the Rust code; `tools/` is that addition,
+keeping each crate co-located with its subject (ADR-0043) while leaving the `api/`,
+`idioms/`, `adapters/`, … data trees clean. One Cargo workspace, distributed members.
+_Avoid_: a single central `tools/` at the repo root (rejected — D2/ADR-0043);
+splitting the `naming` table *data* out of the `emit` *code* (skeleton over-engineering,
+rejected).
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
