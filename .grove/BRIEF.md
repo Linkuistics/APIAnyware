@@ -83,6 +83,16 @@ Coarse, lazy skeleton — design/build leaves decompose further when picked:
   (does a value struct get a CLOS class?) — ADR-worthy, hence split out. Logically
   sequences **after 050** (needs the value-box runtime) and **before 080-docs**; parked
   at 090, a planning session should `leaf-insert` it into place. Not a blocker for 060.
+- **fix-objc-runtime-class-naming-k38** — ✅ done 2026-06-23. ObjC classes the Swift overlay
+  renames (NSScanner→Scanner, the Unit*/URLSession* family, _NSKeyValueObservation) reached
+  the IR as duplicate split classes. Fixed at **shared collection** (`extract-swift` keys class
+  identity on the ObjC runtime name from the USR + new `ir::Class.swift_name` for the Swift
+  type; merge unifies). sbcl trampoline + dylib + probe done & verified. Because the IR change
+  is global, each other target needs its emitter's Swift trampoline updated to spell
+  `swift_name` (the obsoleted runtime name won't compile as a Swift type) — **3 per-target
+  leaves added** (`racket-trampoline-runtime-name-k39`, `chez-…-k40`, `gerbil-…-k41`), each its
+  own work item per the user's directive. Cross-cutting record: `CONTEXT.md` glossary entry +
+  repo-root `TODO.md` (item resolved).
 
 ## Pointers
 

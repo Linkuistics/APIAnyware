@@ -129,6 +129,14 @@ fn merge_class_members(objc_class: &mut ir::Class, swift_class: ir::Class) {
             objc_class.swift_attributes.push(attr);
         }
     }
+
+    // Carry the Swift overlay name onto the unified (clang-extracted) class. The clang
+    // side never sets `swift_name`; the Swift overlay does, when it renamed the class
+    // (`NSScanner` → `Scanner`). The Swift trampoline needs it to spell a compilable
+    // Swift type, since the unified class's `name` is the obsoleted ObjC runtime name.
+    if objc_class.swift_name.is_none() {
+        objc_class.swift_name = swift_class.swift_name;
+    }
 }
 
 #[cfg(test)]
@@ -225,6 +233,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
 
         let mut swift = empty_framework("TestKit");
@@ -248,6 +257,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
 
         merge_swift_into_objc(&mut objc, swift);
@@ -286,6 +296,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
 
         merge_swift_into_objc(&mut objc, swift);

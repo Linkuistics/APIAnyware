@@ -126,9 +126,15 @@ fn foundation_subset_matches_golden() {
     let emitter = pipeline_emitter(&[&foundation]);
     let tmp = tempfile::tempdir().unwrap();
     let result = emitter.emit_framework(&foundation, tmp.path()).unwrap();
+    // Lower bound, not an exact count (SDK-drift tolerant). Dropped from the
+    // historical 300+ after the k38 fix: the Swift overlay renames ~27 Foundation
+    // ObjC classes (NSScanner → Scanner, NSURLSession → URLSession, …) and these
+    // are now keyed on their ObjC runtime name (collection/extract-swift), so each
+    // overlay unifies with its clang twin instead of inflating the count as a
+    // duplicate class. The de-duplicated Foundation is ~277 classes.
     assert!(
-        result.classes_emitted >= 300,
-        "Foundation should emit 300+ classes (got {})",
+        result.classes_emitted >= 270,
+        "Foundation should emit 270+ classes (got {})",
         result.classes_emitted
     );
 

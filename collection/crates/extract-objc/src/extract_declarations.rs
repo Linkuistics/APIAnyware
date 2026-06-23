@@ -289,6 +289,9 @@ fn extract_class(
         // extract-objc nodes are clang `c:`/`So` cursors — ObjC-runtime
         // reachable by construction (ADR-0026).
         objc_exposed: true,
+        // clang already names the class by its ObjC runtime name; the Swift
+        // overlay name (if any) is supplied by the Swift-side merge.
+        swift_name: None,
     })
 }
 

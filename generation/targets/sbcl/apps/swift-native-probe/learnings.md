@@ -21,32 +21,37 @@ exactly like an empty/wildcard label. After collision resolution `t-1` etc. are 
 the bare constant is reserved). Regenerated; the goldens are unchanged (no `t` param in the
 TestKit/Foundation fixtures). This protects **every** app that loads the residual.
 
-## Cross-cutting FINDING (reported, not fixed): Swift-overlay class names vs ObjC runtime names
+## Cross-cutting finding — FIXED in k38: Swift-overlay class names vs ObjC runtime names
 
-`NSScanner` reaches the IR under its **Swift-overlay** name `"Scanner"` (the `NS`-stripped
-import name). The emitter bakes `(register-objc-class 'ns:scanner "Scanner" "NSObject")`
-from `cls.name`, but the **ObjC runtime** class is `"NSScanner"`. Consequences:
+**Original finding (now resolved).** `NSScanner` reached the IR under its **Swift-overlay**
+name `"Scanner"` (the `NS`-stripped import name), so the emitter baked
+`(register-objc-class 'ns:scanner "Scanner" "NSObject")` from `cls.name` even though the
+**ObjC runtime** class is `"NSScanner"`. That stranded the Swift-native methods: a live
+`NSScanner` auto-wrapped to `ns:ns-scanner` (the clang twin, registered correctly) while the
+receiver-handle method `ns:scan-up-to-string` was specialized on a *separate*, unreachable
+`ns:scanner`, and `make-instance 'ns:scanner` → `objc_getClass("Scanner")` → nil. The probe
+worked around it with `(make-instance 'ns:scanner :ptr (… over (aw-class "NSScanner") …))`.
 
-- `aw-resolve-bound-class` (the auto-wrap path) walks the live `object_getClass` →
-  `class_getName` chain → sees `"NSScanner"` → not in `*objc-class-registry*` → wraps to the
-  nearest registered ancestor (`ns:ns-object`), so a Swift-native **method** specialized on
-  `ns:scanner` gets *no applicable method*.
-- `make-instance 'ns:scanner` (construct) does `aw-class "Scanner"` → `objc_getClass("Scanner")`
-  → **nil** → fails.
+**Root cause + fix (k38).** Not just a naming bake — a **duplicate-class** problem. The Swift
+overlay (`Scanner`, USR `c:objc(cs)NSScanner`) and the clang ObjC class (`NSScanner`) were
+*two IR classes for one runtime class*, with the Swift-native methods on one and the ObjC
+methods on the other, because the collection merge (`merge_swift_into_objc`) matches by
+`name`. Fixed at the source: `extract-swift`'s `map_class` now keys an ObjC-bridged class on
+its **ObjC runtime name recovered from the clang USR** (`objc_runtime_class_name`,
+`c:objc(cs)NSScanner` / the `@M@…@objc(cs)` form → `NSScanner`). The by-name merge then
+**unifies** the overlay with its clang twin into a single `ns:ns-scanner` carrying *both* the
+ObjC `initWithString:` init and the Swift-native `ns:scan-up-to-string` method, registered
+under the live `"NSScanner"`. ~31 Foundation duplicate classes collapsed (Scanner, FileHandle,
+URLSession, the Unit* family, …; even the underscore-private `_NSKeyValueObservation`, which a
+naive NS-prefix heuristic would miss but the USR handles). Being in **shared collection**, the
+fix applies to **all targets** (racket/chez/gerbil dedup identically — discharges the repo-root
+TODO item). Regression test: `extract-swift` `objc_bridged_class_uses_runtime_name_from_usr`
+(+ infixed-USR / idempotent / swift-native guards).
 
-So `ns:scanner` is unreachable through the natural construct/wrap paths; only the method
-trampoline itself works (it takes the receiver pointer, name-agnostic). **Workaround used
-here:** build over the real ObjC class and force the CLOS type —
-`(make-instance 'ns:scanner :ptr (… alloc/initWithString: over (aw-class "NSScanner") …))`
-— after which `ns:scan-up-to-string` dispatches.
-
-This is an **IR/analysis-level** naming issue (the class's recorded `name`), almost
-certainly shared with racket/chez/gerbil, and affects the family of Foundation utility
-classes whose Swift overlay drops/renames `NS` (Scanner→NSScanner, the FileHandle/Notification
-family, …). It does **NOT** affect the AppKit GUI ladder — NSButton/NSWindow/NSTextField/…
-keep their ObjC names, so 040–090's GUI apps construct/dispatch normally. Recommend a
-dedicated fix (register the ObjC runtime name, not the Swift overlay name, for
-`register-objc-class`'s 2nd arg) as its own leaf; captured to the grove inbox.
+**Probe now uses the natural path:** `(make-instance 'ns:ns-scanner :init-with-string @"…")`
+— no `:ptr` workaround (see `probe-make-scanner`). The original finding did **NOT** affect the
+AppKit GUI ladder (NSButton/NSWindow/… keep their ObjC names), so 040–090's GUI apps were
+unaffected throughout.
 
 ## Patterns confirmed for later residual-using apps
 

@@ -4,12 +4,13 @@
 ;;; it interns + exports every bound ns: symbol so the construct files'
 ;;; single-colon references read — then generics.lisp, then the per-class
 ;;; files superclass-before-subclass, then protocols/enums/constants/functions
-;;; (313 sibling file(s) under foundation/).
+;;; (282 sibling file(s) under foundation/).
 (in-package #:apianyware-sbcl-impl)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export
    '(
+     ns::_-ns-key-value-observation
      ns::abbreviation
      ns::abbreviation-dictionary
      ns::abbreviation-for-date_
@@ -202,7 +203,6 @@
      ns::broadcast
      ns::built-in-plug-ins-path
      ns::built-in-plug-ins-url
-     ns::bundle
      ns::bundle-for-class_
      ns::bundle-for-suite_
      ns::bundle-identifier
@@ -599,7 +599,6 @@
      ns::dictionary-from-txt-record-data_
      ns::dictionary-representation
      ns::difference-by-transforming-changes-with-block_
-     ns::dimension
      ns::direct-parameter
      ns::directory
      ns::directory-attributes
@@ -795,14 +794,12 @@
      ns::file-completed-count
      ns::file-descriptor
      ns::file-exists-at-path_
-     ns::file-handle
      ns::file-handle-for-reading
      ns::file-handle-for-writing
      ns::file-handle-with-null-device
      ns::file-handle-with-standard-error
      ns::file-handle-with-standard-input
      ns::file-handle-with-standard-output
-     ns::file-manager
      ns::file-manager_should-copy-item-at-path_to-path_
      ns::file-manager_should-copy-item-at-url_to-url_
      ns::file-manager_should-link-item-at-path_to-path_
@@ -857,7 +854,6 @@
      ns::format
      ns::format-options
      ns::format-width
-     ns::formatter
      ns::formatter-behavior
      ns::formatting-context
      ns::forward
@@ -1323,7 +1319,6 @@
      ns::measurement-by-adding-measurement_
      ns::measurement-by-converting-to-unit_
      ns::measurement-by-subtracting-measurement_
-     ns::measurement-formatter
      ns::mebibits
      ns::mebibytes
      ns::megaampere-hours
@@ -1469,7 +1464,6 @@
      ns::notation-declaration-for-name_
      ns::notation-name
      ns::notification-batching-interval
-     ns::notification-center
      ns::notification-center-for-type_
      ns::now
      ns::ns-activity-animation-tracking-enabled
@@ -2277,7 +2271,6 @@
      ns::ns-key-value-change-setting
      ns::ns-key-value-intersect-set-mutation
      ns::ns-key-value-minus-set-mutation
-     ns::ns-key-value-observation
      ns::ns-key-value-observing-option-initial
      ns::ns-key-value-observing-option-new
      ns::ns-key-value-observing-option-old
@@ -4028,7 +4021,6 @@
      ns::priority
      ns::private-frameworks-path
      ns::private-frameworks-url
-     ns::process
      ns::process-identifier
      ns::process-info
      ns::process-name
@@ -4286,7 +4278,6 @@
      ns::row
      ns::run
      ns::run-in-new-thread
-     ns::run-loop
      ns::run-loop-modes
      ns::running
      ns::same-site-policy
@@ -4301,7 +4292,6 @@
      ns::scan-string
      ns::scan-up-to-string
      ns::scandinavian-miles
-     ns::scanner
      ns::schedule-in-run-loop_for-mode_
      ns::schedule-notification_
      ns::schedule-send-barrier-block_
@@ -5066,7 +5056,6 @@
      ns::timeout-interval
      ns::timeout-interval-for-request
      ns::timeout-interval-for-resource
-     ns::timer
      ns::timer-with-time-interval_invocation_repeats_
      ns::timer-with-time-interval_repeats_block_
      ns::timer-with-time-interval_target_selector_user-info_repeats_
@@ -5122,7 +5111,6 @@
      ns::undo-action-name
      ns::undo-action-user-info-value-for-key_
      ns::undo-count
-     ns::undo-manager
      ns::undo-menu-item-title
      ns::undo-menu-title-for-undo-action-name_
      ns::undo-nested-group
@@ -5131,16 +5119,9 @@
      ns::union-hash-table_
      ns::unique-id
      ns::unit
-     ns::unit-energy
-     ns::unit-length
-     ns::unit-mass
      ns::unit-options
-     ns::unit-pressure
-     ns::unit-speed
      ns::unit-string-from-value_unit_
      ns::unit-style
-     ns::unit-temperature
-     ns::unit-volume
      ns::units-style
      ns::unload
      ns::unlock
@@ -5205,11 +5186,7 @@
      ns::url-protocol_was-redirected-to-request_redirect-response_
      ns::url-query-allowed-character-set
      ns::url-relative-to-url_
-     ns::url-session
      ns::url-session-did-finish-events-for-background-url-session_
-     ns::url-session-task
-     ns::url-session-task-transaction-metrics
-     ns::url-session-web-socket-task
      ns::url-session_better-route-discovered-for-stream-task_
      ns::url-session_data-task_did-become-download-task_
      ns::url-session_data-task_did-become-stream-task_
@@ -5247,7 +5224,6 @@
      ns::user-activity-was-continued_
      ns::user-activity-will-save_
      ns::user-activity_did-receive-input-stream_output-stream_
-     ns::user-defaults
      ns::user-info
      ns::user-morphology
      ns::user-name

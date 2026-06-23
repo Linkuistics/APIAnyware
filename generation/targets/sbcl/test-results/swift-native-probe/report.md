@@ -93,15 +93,16 @@ SEL-arg menu init (`:action "terminate:"`, ADR-0040 typed applier) hello-window 
   not load at all. hello-window dodged it (`:load-residual nil`, pure ObjC). Fixed in the
   emitter (`naming::is_cl_reserved_formal`, applied in both `arg_name`s): a `t`/`nil` formal
   falls back to the positional `argN`, like an empty label. Regenerated; the file now loads.
-- **FINDING (cross-cutting, NOT fixed here) — Swift-overlay class names break auto-wrap.**
-  `NSScanner` is recorded in the IR under its Swift-overlay name `"Scanner"`, so the generated
-  `register-objc-class` bakes `"Scanner"` (not the ObjC runtime name `"NSScanner"`). Then
-  `aw-resolve-bound-class` (auto-wrap) and `make-instance 'ns:scanner` (construct, via
-  `aw-class "Scanner"` → `objc_getClass` → nil) can't reach `ns:scanner` — the Swift-native
-  *method* trampoline works (it uses the pointer), but you can't get a correctly-typed
-  receiver through the natural paths. Worked around in the probe by constructing over the real
-  `"NSScanner"` and forcing the CLOS type with `(make-instance 'ns:scanner :ptr id)`. This is
-  an IR/analysis-level naming issue (likely shared across targets), affecting Foundation
-  utility classes whose Swift overlay drops/renames the `NS` prefix; it does **not** affect
-  the AppKit GUI ladder (NSButton/NSWindow/… keep their names). Recommend a dedicated
-  fix/leaf. See learnings.
+- **FINDING (cross-cutting) — Swift-overlay class names broke auto-wrap. ✅ FIXED in k38.**
+  `NSScanner` reached the IR under its Swift-overlay name `"Scanner"`, *separate* from the
+  clang `NSScanner` (the merge matched by `name`), so the Swift-native methods and the ObjC
+  methods landed on two different CLOS classes and the overlay-named `ns:scanner` (registered
+  `"Scanner"`) matched no live object. The probe originally worked around it with
+  `(make-instance 'ns:scanner :ptr id)`. **Fixed at the shared collection layer**
+  (`extract-swift` `map_class` keys ObjC-bridged classes on the ObjC runtime name from the
+  USR), unifying each overlay with its clang twin into one `ns:ns-scanner` (registered the live
+  `"NSScanner"`, carrying both the init and `ns:scan-up-to-string`) — fixes all targets and
+  collapses ~31 Foundation duplicates. The probe now uses the **natural** path
+  `(make-instance 'ns:ns-scanner :init-with-string @"…")`, no `:ptr` workaround. Never
+  affected the AppKit GUI ladder (NSButton/NSWindow/… keep their names). See learnings + the
+  repo-root `TODO.md` (item resolved).

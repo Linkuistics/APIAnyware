@@ -131,6 +131,24 @@ reachability is per-target in the limit); reusing `DeclarationSource`
 `SwiftInterface` yet `objc_exposed`); re-parsing the raw USR prefix in emitters
 (the classifier lives once, in collection).
 
+**ObjC runtime class name (vs Swift-overlay name)** _(collection IR fact; settled — k38)_:
+The class identity APIAnyware keys on: the name the **live ObjC runtime** reports
+(`class_getName`), recovered at collection from the clang **USR**
+(`c:objc(cs)NSScanner`, or the `@objc`-Swift infixed `c:@M@…@objc(cs)NSScanner` →
+`NSScanner`), **not** the Swift import name the overlay may rename it to (`Scanner`,
+`URLSession`, `FileHandle`, the `Unit*` family, the private `_NSKeyValueObservation`). Set
+in `extract-swift` `map_class` (`objc_runtime_class_name`). Because the Swift↔ObjC merge
+(`merge_swift_into_objc`) matches by `name`, keying on the runtime name **unifies** a
+Swift-overlay class with its clang twin into **one** IR class — instead of two classes that
+split the runtime class's methods (the ObjC methods on `NSScanner`, the Swift-native residual
+on a separate `Scanner`). A shared, analysis-level fact, so the unification fixes **all
+targets** at once. Without it, every target baked the overlay name into its class-identity
+registry, so a live object's runtime name missed the registry (no auto-wrap) and
+`objc_getClass(<overlay-name>)` returned nil (no construct).
+_Avoid_: keying a registry/dispatch table on the Swift-overlay name (the k38 bug — it cannot
+match `class_getName`); a per-target NS-prefix heuristic to recover the runtime name (misses
+non-NS renames like `_NSKeyValueObservation`; the USR is the authoritative source).
+
 **Opaque handle**:
 The trampoline rep (ADR-0027) for a Swift value/reference that has no flat C-ABI
 form and is not Foundation-bridgeable — a non-bridged Swift `struct`, a payload

@@ -29,12 +29,13 @@
 ;;;; WITH the dylib (the §6d residual surviving `save-lisp-and-die`, ADR-0038 §5).
 ;;;;
 ;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like hello-window). The portable
-;;;; Cocoa surface it names is `ns:`; the two probe-only deviations from a pure contract app
-;;;; are recorded in learnings.md (they are inherent to a lower-layer probe, not app code):
-;;;;   - shape 4 wraps the receiver via `(make-instance 'ns:scanner :ptr id)` over a real
-;;;;     `NSScanner`, because the IR records the Swift-overlay class name "Scanner" (not the
-;;;;     ObjC runtime name "NSScanner"), so the natural construct/auto-wrap path can't reach
-;;;;     `ns:scanner` (a cross-cutting finding, see learnings);
+;;;; Cocoa surface it names is `ns:`. Shape 4 now uses the NATURAL construct path —
+;;;; `(make-instance 'ns:ns-scanner :init-with-string @"…")` — since the k38 fix keys
+;;;; ObjC-bridged classes on their ObjC *runtime* name (not the Swift-overlay name), so the
+;;;; unified `ns:ns-scanner` is registered as the live "NSScanner" and carries both the ObjC
+;;;; `initWithString:` init and the Swift-native `ns:scan-up-to-string` method; the earlier
+;;;; `:ptr` workaround over a Swift-overlay-named `ns:scanner` is gone (see learnings). One
+;;;; probe-only deviation remains, inherent to a lower-layer probe (not app code):
 ;;;;   - shape 5 hand-binds three IndexSet trampolines as OPAQUE-handle functions (the
 ;;;;     value-opaque shape — no CLOS class), since the value-STRUCT-owner CLOS modelling is
 ;;;;     the parked 090 leaf; this mirrors the 050 smoke's D5 (hand-bound makePair/pair-sum).
@@ -87,17 +88,15 @@
                     after before still5)
             (and after (not before) still5))))
 
-;;; --- Shape 4 helper: build an NSScanner and wrap it as `ns:scanner`. The natural path
-;;;     (`make-instance 'ns:scanner` / auto-wrap) can't reach `ns:scanner` because the IR
-;;;     registered the class under its Swift-overlay name "Scanner", not the ObjC runtime
-;;;     name "NSScanner" (see learnings — a cross-cutting finding). We construct over the
-;;;     real ObjC class and force the CLOS type with the `:ptr` wrap, so the Swift-native
-;;;     receiver-handle method `ns:scan-up-to-string` dispatches. ---
-(defun probe-make-scanner (text)
-  (let* ((nsstr (aw-make-nsstring text))
-         (id (%msgsend-id-1 (%msgsend-id-0 (aw-class "NSScanner") (aw-sel "alloc"))
-                            (aw-sel "initWithString:") nsstr)))
-    (make-instance 'ns:scanner :ptr id)))
+;;; --- Shape 4 helper: build an NSScanner via the NATURAL construct path. Since the k38
+;;;     fix keys ObjC-bridged classes on their ObjC runtime name (not the Swift-overlay
+;;;     name), the unified `ns:ns-scanner` is registered as the live "NSScanner" and carries
+;;;     BOTH the ObjC `initWithString:` init and the Swift-native receiver-handle method
+;;;     `ns:scan-up-to-string` — so a plain `make-instance` (routing through the generated
+;;;     init, exactly like `ns:ns-url-request :init-with-url`) reaches it, no `:ptr`
+;;;     workaround. A live `NSScanner` likewise auto-wraps to `ns:ns-scanner` now. ---
+(defun probe-make-scanner ()
+  (make-instance 'ns:ns-scanner :init-with-string @"APIAnyware:SBCL"))
 
 ;;; --- The standard app menu (Quit -> -[NSApplication terminate:]), as hello-window. ---
 (defun install-app-menu (app app-name)
@@ -129,7 +128,7 @@
          (const-result ns:ns-not-found)                              ; shape 2: constant
          (num          (ns:make-ns-number-integer-literal 42))       ; shape 3: class-owner init
          (num-result   (probe-nsnumber-int-value num))
-         (scanner      (probe-make-scanner "APIAnyware:SBCL"))       ; shape 4: class-owner method
+         (scanner      (probe-make-scanner))                        ; shape 4: class-owner method
          (scan-result  (ns:scan-up-to-string scanner ":"))
          (iset-result  (probe-indexset-roundtrip)))                  ; shape 5: value-opaque box
     ;; Extra generated-path sanity (not GUI rows): the generated value-opaque RETURN binding

@@ -47,7 +47,7 @@
 //! cluster (`aw-wrap` / `aw-ptr` / `aw-swift-string-*` / `aw-swift-call/error`) are the
 //! runtime leaf (parent grove 050).
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use apianyware_macos_types::ir::{Constant, Framework, Function, Method, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
@@ -835,6 +835,33 @@ pub fn collect_trampolines(frameworks: &[Framework]) -> TrampolineSet {
             );
         }
     }
+    // Remap each class-owner trampoline's `swift_owner` to the owning class's Swift name
+    // (the obsoleted ObjC runtime name does not compile as a Swift type — `NSScanner` →
+    // `Scanner`). The entry symbol + Lisp specializer keep the runtime `owner`; only the
+    // `@_cdecl` body's type reference uses `swift_owner`. Struct (value) owners are not
+    // overlay-renamed, so they keep the default (`owner`).
+    let swift_owner_of: HashMap<(&str, &str), &str> = frameworks
+        .iter()
+        .flat_map(|fw| {
+            fw.classes.iter().map(move |c| {
+                (
+                    (fw.name.as_str(), c.name.as_str()),
+                    c.swift_name.as_deref().unwrap_or(&c.name),
+                )
+            })
+        })
+        .collect();
+    for t in &mut set.methods {
+        if let Some(sn) = swift_owner_of.get(&(t.module.as_str(), t.owner.as_str())) {
+            t.swift_owner = sn.to_string();
+        }
+    }
+    for t in &mut set.inits {
+        if let Some(sn) = swift_owner_of.get(&(t.module.as_str(), t.owner.as_str())) {
+            t.swift_owner = sn.to_string();
+        }
+    }
+
     // A duplicate entry *is* the same trampoline (a category re-listing, a digester dupe),
     // which would otherwise emit two `@_cdecl`s with the identical content-addressed entry
     // — a Swift redeclaration error. Keep the first per entry.
@@ -978,8 +1005,15 @@ enum SelfMarshal {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MethodTrampoline {
     pub module: String,
-    /// The owning type (module-qualified at the call site as `module.owner`).
+    /// The owning type's **ObjC runtime name** — the entry-symbol stem and the Lisp
+    /// `defmethod` receiver specializer (`ns:<owner>`). Equals `swift_owner` unless the
+    /// Swift overlay renamed the class.
     pub owner: String,
+    /// The owning type's **Swift name** — what the `@_cdecl` body spells as the receiver
+    /// type (`Unmanaged<module.swift_owner>`), since the obsoleted ObjC runtime name does
+    /// not compile as a Swift type (`NSScanner` → `Scanner`). Set to `owner` by
+    /// `classify_method`; remapped from the class's `swift_name` in [`collect_trampolines`].
+    pub swift_owner: String,
     /// Base method name (the selector up to `(`), used in the by-name call.
     pub swift_name: String,
     /// Content-addressed C entry symbol (`aw_sbcl_swift_m_<Fw>_<Owner>_<base>[_<hash>]`).
@@ -1005,6 +1039,11 @@ pub struct MethodTrampoline {
 pub struct InitTrampoline {
     pub module: String,
     pub owner: String,
+    /// The owning type's **Swift name** — what the `@_cdecl` body spells as the
+    /// constructed type (`module.swift_owner(labels:)`), since the obsoleted ObjC runtime
+    /// name does not compile as a Swift type. Set to `owner` by `classify_method`;
+    /// remapped from the class's `swift_name` in [`collect_trampolines`].
+    pub swift_owner: String,
     pub entry: String,
     /// Box a class instance via `Unmanaged.passRetained` (reference identity) vs a value
     /// via `awSbclBox` — picked from the owner's kind, not the lossy IR return type (R2:
@@ -1192,6 +1231,8 @@ pub fn classify_method(
         return MethodDisposition::Init(InitTrampoline {
             module: module.to_string(),
             owner: owner.to_string(),
+            // Defaults to the runtime name; [`collect_trampolines`] remaps renamed classes.
+            swift_owner: owner.to_string(),
             entry: init_entry_name(module, owner, method, siblings),
             owner_is_class,
             labels,
@@ -1244,6 +1285,8 @@ pub fn classify_method(
     MethodDisposition::Method(MethodTrampoline {
         module: module.to_string(),
         owner: owner.to_string(),
+        // Defaults to the runtime name; [`collect_trampolines`] remaps renamed classes.
+        swift_owner: owner.to_string(),
         swift_name: base.to_string(),
         entry: method_entry_name(module, owner, method, siblings),
         recv,
@@ -1749,7 +1792,7 @@ fn emit_async_method_tramp(s: &mut String, t: &MethodTrampoline) {
     // captures those values (Sendable + copy), so no sbcl-owned handle dangles.
     s.push_str(&arg_prelude);
 
-    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.swift_owner);
     // The receiver pointer rides a `nonisolated(unsafe) let` across the hop (the caller's
     // lifetime contract makes the capture sound); the receiver is reconstructed *inside*
     // the `@Sendable` operation closure.
@@ -1815,7 +1858,7 @@ fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
     };
     emit_cdecl_header(s, &t.availability, &t.entry, &decl, &sig_ret);
 
-    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.swift_owner);
     let (recv_prelude, writeback) = match &t.recv {
         SelfMarshal::ClassRef => (
             format!("  let awSelf = Unmanaged<{owner}>.fromOpaque(awRecv!).takeUnretainedValue()\n"),
@@ -1897,7 +1940,7 @@ fn emit_init_tramp(s: &mut String, t: &InitTrampoline) {
     );
     s.push_str(&arg_prelude);
 
-    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.swift_owner);
     // Init params pass with their declared width (no `numericCast`): an overloaded
     // initializer is selected *by* the param type, so a width-agnostic cast would make the
     // constructor call ambiguous.
@@ -2520,6 +2563,7 @@ mod tests {
         let m = MethodTrampoline {
             module: "TestKit".into(),
             owner: "Widget".into(),
+            swift_owner: "Widget".into(),
             swift_name: "resize".into(),
             entry: "aw_sbcl_swift_m_TestKit_Widget_resize".into(),
             recv: SelfMarshal::ClassRef,
@@ -2549,6 +2593,7 @@ mod tests {
         let i = InitTrampoline {
             module: "TestKit".into(),
             owner: "Widget".into(),
+            swift_owner: "Widget".into(),
             entry: "aw_sbcl_swift_init_TestKit_Widget".into(),
             owner_is_class: true,
             labels: vec!["title".into()],
@@ -2590,6 +2635,7 @@ mod tests {
         MethodTrampoline {
             module: "TestKit".into(),
             owner: owner.into(),
+            swift_owner: owner.into(),
             swift_name: swift_name.into(),
             entry: entry.into(),
             recv: SelfMarshal::ClassRef,
@@ -2688,6 +2734,7 @@ mod tests {
         let i = InitTrampoline {
             module: "TestKit".into(),
             owner: "ImageCreator".into(),
+            swift_owner: "ImageCreator".into(),
             entry: "aw_sbcl_swift_init_TestKit_ImageCreator".into(),
             owner_is_class: true,
             labels: vec!["title".into()],
@@ -2709,6 +2756,7 @@ mod tests {
         let i = InitTrampoline {
             module: "TestKit".into(),
             owner: "IndexSet".into(),
+            swift_owner: "IndexSet".into(),
             entry: "aw_sbcl_swift_init_TestKit_IndexSet".into(),
             owner_is_class: false,
             labels: vec!["integer".into()],
@@ -2728,6 +2776,7 @@ mod tests {
         let i = InitTrampoline {
             module: "TestKit".into(),
             owner: "Doc".into(),
+            swift_owner: "Doc".into(),
             entry: "aw_sbcl_swift_init_TestKit_Doc".into(),
             owner_is_class: true,
             labels: vec!["path".into()],

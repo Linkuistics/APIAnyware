@@ -86,6 +86,7 @@ fn class(name: &str, superclass: &str, methods: Vec<Method>, properties: Vec<Pro
         all_methods: vec![],
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 

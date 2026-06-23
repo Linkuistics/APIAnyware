@@ -86,6 +86,7 @@ fn class(name: &str, protocols: Vec<String>, methods: Vec<Method>, all_methods: 
         all_methods,
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 

@@ -286,6 +286,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.classes_emitted, 1);

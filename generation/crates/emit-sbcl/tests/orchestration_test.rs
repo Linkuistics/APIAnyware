@@ -372,6 +372,7 @@ fn swift_native_method_and_init_residual_bind_on_the_owning_class() {
         all_methods: vec![],
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }];
     fw.protocols.clear();
     fw.enums.clear();
