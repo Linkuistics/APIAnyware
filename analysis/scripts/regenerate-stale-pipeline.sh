@@ -89,12 +89,12 @@ needs_regen() {
 # --- Stage 1: analyze ---
 
 ANALYZE_INPUTS=(
-    analysis/crates/datalog/src
-    analysis/crates/resolve/src
+    semantic/tools/datalog/src
+    semantic/tools/resolve/src
     analysis/crates/annotate/src
-    analysis/crates/enrich/src
-    analysis/crates/cli/src
-    collection/crates/types/src
+    semantic/tools/enrich/src
+    semantic/tools/analyze-cli/src
+    semantic/tools/types/src
     collection/ir/collected
 )
 ANALYZE_OUTPUT=analysis/ir/enriched

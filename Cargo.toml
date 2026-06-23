@@ -1,18 +1,18 @@
 [workspace]
 resolver = "2"
 members = [
-    # Shared types
-    "collection/crates/types",
-    # Collection phase
+    # semantic/ domain — semantic-graph builders + analyze CLI
+    "semantic/tools/types",
+    "semantic/tools/datalog",
+    "semantic/tools/resolve",
+    "semantic/tools/enrich",
+    "semantic/tools/analyze-cli",
+    # Collection phase (→ platforms/macos/tools/, k6)
     "collection/crates/extract-objc",
     "collection/crates/extract-swift",
     "collection/crates/cli",
-    # Analysis phase
-    "analysis/crates/datalog",
-    "analysis/crates/resolve",
+    # Analysis phase (annotate → platforms/macos/tools/, k6)
     "analysis/crates/annotate",
-    "analysis/crates/enrich",
-    "analysis/crates/cli",
     # Generation phase
     "generation/crates/emit",
     "generation/crates/emit-racket",
@@ -47,13 +47,13 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "serd
 plist = "1.7"
 
 # Internal crates
-apianyware-types = { path = "collection/crates/types" }
+apianyware-types = { path = "semantic/tools/types" }
 apianyware-extract-objc = { path = "collection/crates/extract-objc" }
 apianyware-extract-swift = { path = "collection/crates/extract-swift" }
-apianyware-datalog = { path = "analysis/crates/datalog" }
-apianyware-resolve = { path = "analysis/crates/resolve" }
+apianyware-datalog = { path = "semantic/tools/datalog" }
+apianyware-resolve = { path = "semantic/tools/resolve" }
 apianyware-annotate = { path = "analysis/crates/annotate" }
-apianyware-enrich = { path = "analysis/crates/enrich" }
+apianyware-enrich = { path = "semantic/tools/enrich" }
 apianyware-emit = { path = "generation/crates/emit" }
 apianyware-emit-racket = { path = "generation/crates/emit-racket" }
 apianyware-emit-chez = { path = "generation/crates/emit-chez" }
