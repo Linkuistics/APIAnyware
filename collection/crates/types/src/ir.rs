@@ -167,6 +167,20 @@ pub struct Class {
         skip_serializing_if = "crate::serde_helpers::is_true"
     )]
     pub objc_exposed: bool,
+
+    /// The **Swift type name** for an ObjC-bridged class the Swift overlay renames
+    /// (`NSScanner` → `Scanner`, `NSURLSessionWebSocketTask` →
+    /// `URLSessionWebSocketTask`). `name` carries the ObjC **runtime** name (the
+    /// identity the registry/construct/auto-wrap key on); this carries the name
+    /// Swift code must spell, because the obsoleted ObjC name does not compile as a
+    /// Swift type. The Swift-native **trampoline** uses this for its
+    /// `Unmanaged<Module.Type>` receiver cast and `Type(labels:)` constructor while
+    /// the C entry symbol + Lisp specializer stay on the runtime `name`. `None` when
+    /// the overlay does not rename the class (the common case — `name` is already the
+    /// Swift-spellable name). Set in `extract-swift` `map_class`; carried through the
+    /// Swift↔ObjC merge onto the unified clang class.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub swift_name: Option<String>,
 }
 
 /// Methods contributed by a category from another framework.

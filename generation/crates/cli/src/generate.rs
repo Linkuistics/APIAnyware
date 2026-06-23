@@ -108,6 +108,7 @@ pub fn run_generation(
         // same whole-program shape as racket's native-dispatch pass. Every
         // other target uses the registry instance unchanged.
         let gerbil_configured;
+        let sbcl_configured;
         let active: &dyn TargetEmitter = if info.id
             == apianyware_macos_emit_gerbil::GERBIL_TARGET_INFO.id
         {
@@ -134,6 +135,22 @@ pub fn run_generation(
             gerbil_configured =
                 apianyware_macos_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
             &gerbil_configured
+        } else if info.id == apianyware_macos_emit_sbcl::SBCL_TARGET_INFO.id {
+            // SBCL takes the same whole-program registries (ADR-0034 §1 metaclass
+            // graph crosses frameworks; conformed-protocol flattening follows
+            // cross-framework protocol `inherits` edges) — but **no** global
+            // generics module: a CL package unifies one `(defgeneric ns:<sel> …)`
+            // across files for free, so SBCL needs no gerbil-style `generics.ss`
+            // (ADR-0034 §3). The configured emitter is otherwise the gerbil shape.
+            let reg = apianyware_macos_emit_sbcl::class_graph::ClassRegistry::from_framework_refs(
+                &ordered_frameworks,
+            );
+            let protos =
+                apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry::from_framework_refs(
+                    &ordered_frameworks,
+                );
+            sbcl_configured = apianyware_macos_emit_sbcl::SbclEmitter::with_registries(reg, protos);
+            &sbcl_configured
         } else {
             *emitter
         };
@@ -277,8 +294,7 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
     // + receiver-handle methods to the free-function/constant residual, so the
     // entry total and the log report all four kinds (the §6c invariant is checked
     // by reproducing racket's per-kind + per-reason counts).
-    let entries =
-        set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
+    let entries = set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
     let swift = generate_trampolines_swift(&set);
 
     if let Some(parent) = swift_out.parent() {
@@ -329,8 +345,7 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
     }
 
     let set = collect_trampolines(&frameworks);
-    let entries =
-        set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
+    let entries = set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
     let swift = generate_trampolines_swift(&set);
 
     if let Some(parent) = swift_out.parent() {
@@ -356,12 +371,126 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
     Ok(entries)
 }
 
+/// Generate the **sbcl** target's Swift-native trampolines (ADR-0038, the racket
+/// ADR-0027 / chez ADR-0028 / gerbil ADR-0029 mechanism ported to sbcl, leaf 040/050)
+/// into the `APIAnywareSbcl` Swift target; `swift build` then compiles them into
+/// `libAPIAnywareSbcl` — the SBCL target's **sole native compilation unit** (a Lisp
+/// compiles neither ObjC nor Swift inline, so the trampolines must live in a Swift dylib).
+///
+/// A **global** pass like the racket/chez/gerbil trampolines: the residual is collected
+/// across every framework into one `Generated/Trampolines.swift`. Per ADR-0011 the sbcl
+/// trampoline layer shares no native substrate with the peers — only the classification
+/// taxonomy (a property of the shared IR) is duplicated, so the residual reproduces the
+/// peers' **exactly** (the §6d invariant: 51 fn + 7 const + 576 init + 554 method). Every
+/// retained `objc_exposed == false` declaration is either trampolined or recorded as
+/// deferred with a reason; the per-reason counts are logged (spec §5). Returns the number
+/// of trampoline entries written.
+pub fn run_sbcl_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_macos_emit_sbcl::trampoline::{collect_trampolines, generate_trampolines_swift};
+
+    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    if frameworks.is_empty() {
+        bail!("no enriched IR found in {}", input_dir.display());
+    }
+
+    let set = collect_trampolines(&frameworks);
+    let entries = set.functions.len() + set.constants.len() + set.inits.len() + set.methods.len();
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        functions = set.functions.len(),
+        constants = set.constants.len(),
+        inits = set.inits.len(),
+        methods = set.methods.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated sbcl Swift-native trampolines"
+    );
+    Ok(entries)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
     use apianyware_macos_types::ir::{Class, Framework, Method};
     use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+
+    /// **The §6d invariant** (ADR-0038 §7 / racket spec §6d) — the hard done-bar for the
+    /// sbcl trampoline leaf (`040/050`). The Swift-native residual is a deterministic
+    /// function of the *shared* enriched IR, so the sbcl classification must reproduce
+    /// racket's/chez's/gerbil's **exactly**: 51 function + 7 constant + 576 init + 554
+    /// method trampolines. The strongest evidence the hermetic port is faithful (ADR-0011).
+    ///
+    /// The enriched IR is gitignored (16/90 MB, regenerated from the SDK + LLM pipeline),
+    /// so this test **skips-as-pass** when the IR is absent — local checkouts and CI without
+    /// a regeneration step — and asserts the counts when it is present (post-regeneration,
+    /// the release gate, exactly as the racket snapshot tests gate on local IR).
+    #[test]
+    fn sbcl_residual_reproduces_the_6d_invariant() {
+        use apianyware_macos_emit_sbcl::trampoline::collect_trampolines;
+
+        // The enriched IR lives at the workspace root, three levels up from this crate.
+        let enriched = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../analysis/ir/enriched");
+        let frameworks =
+            match apianyware_macos_datalog::loading::load_all_frameworks(&enriched, None) {
+                Ok(fws) if !fws.is_empty() => fws,
+                _ => {
+                    eprintln!(
+                        "SKIP sbcl_residual_reproduces_the_6d_invariant: no enriched IR at {} \
+                         (gitignored — run the regeneration pipeline to exercise this gate)",
+                        enriched.display()
+                    );
+                    return;
+                }
+            };
+
+        let set = collect_trampolines(&frameworks);
+        assert_eq!(set.functions.len(), 51, "function trampolines (§6d)");
+        assert_eq!(set.constants.len(), 7, "constant trampolines (§6d)");
+        assert_eq!(set.inits.len(), 576, "init trampolines (§6d)");
+        assert_eq!(set.methods.len(), 554, "method trampolines (§6d)");
+    }
+
+    /// The §6d invariant through the **public pipeline pass** (leaf 040/060) — the
+    /// end-to-end complement to the unit assertion above: `run_sbcl_trampolines`
+    /// collects the residual across every framework, emits `Trampolines.swift`, and
+    /// returns the entry total. Skips-as-pass when the gitignored IR is absent.
+    #[test]
+    fn sbcl_run_trampolines_reproduces_6d_end_to_end() {
+        let enriched = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../analysis/ir/enriched");
+        if apianyware_macos_datalog::loading::load_all_frameworks(&enriched, None)
+            .map(|f| f.is_empty())
+            .unwrap_or(true)
+        {
+            eprintln!(
+                "SKIP sbcl_run_trampolines_reproduces_6d_end_to_end: no enriched IR at {} \
+                 (gitignored — run the regeneration pipeline to exercise this gate)",
+                enriched.display()
+            );
+            return;
+        }
+
+        let tmp = tempfile::tempdir().unwrap();
+        let swift_out = tmp.path().join("Generated/Trampolines.swift");
+        let entries = run_sbcl_trampolines(&enriched, &swift_out).unwrap();
+
+        // 51 fn + 7 const + 576 init + 554 method = 1188 (the node's hard done-bar),
+        // and the pass actually wrote the residual `.swift`.
+        assert_eq!(entries, 51 + 7 + 576 + 554, "§6d residual entry total");
+        assert!(swift_out.exists(), "Trampolines.swift written by the pass");
+    }
 
     fn make_test_framework(name: &str) -> Framework {
         Framework {
@@ -405,6 +534,7 @@ mod tests {
                 all_methods: vec![],
                 all_properties: vec![],
                 objc_exposed: true,
+                swift_name: None,
             }],
             protocols: vec![],
             enums: vec![],
@@ -657,13 +787,15 @@ mod tests {
         let registry = EmitterRegistry::new();
         let summaries = run_generation(&registry, &input_dir, &output_dir, None).unwrap();
 
-        // Every registered emitter should produce results without error.
+        // Every registered emitter runs through the pipeline and produces a full
+        // framework tree. sbcl became a mature target with leaf 040/060 (the
+        // orchestrator + facade), so all four now carry the strong output
+        // assertions.
         assert_eq!(
             summaries.len(),
-            3,
-            "should run racket + chez + gerbil emitters"
+            4,
+            "should run racket + chez + gerbil + sbcl emitters"
         );
-
         for s in &summaries {
             assert!(
                 s.total_files_written > 0,
@@ -687,6 +819,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         }
     }
 
@@ -728,6 +861,44 @@ mod tests {
         );
     }
 
+    #[test]
+    fn sbcl_cross_framework_parent_resolves_through_registry() {
+        // The end-to-end proof that the CLI pre-pass builds and threads sbcl's
+        // cross-framework metaclass-graph ClassRegistry (ADR-0034 §1): Foundation
+        // owns NSMutableAttributedString; AppKit's NSTextStorage derives from it.
+        // emit_framework sees only AppKit, so the `ns:ns-text-storage` defclass
+        // names that cross-framework parent only because the pre-pass built the
+        // registry over both frameworks (SBCL needs no global generics module).
+        let tmp = tempfile::tempdir().unwrap();
+        let input_dir = tmp.path().join("enriched");
+        let output_dir = tmp.path().join("targets");
+
+        let mut foundation = make_test_framework("Foundation");
+        foundation.classes = vec![bare_class("NSMutableAttributedString", "NSObject")];
+
+        let mut appkit = make_test_framework("AppKit");
+        appkit.depends_on = vec!["Foundation".to_string()];
+        appkit.classes = vec![bare_class("NSTextStorage", "NSMutableAttributedString")];
+
+        write_test_framework(&input_dir, &foundation);
+        write_test_framework(&input_dir, &appkit);
+
+        let registry = EmitterRegistry::new();
+        let targets = vec!["sbcl".to_string()];
+        run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
+
+        // `generated_subdir = "generated"`; per-class file under the framework dir.
+        let storage =
+            std::fs::read_to_string(output_dir.join("sbcl/generated/appkit/nstextstorage.lisp"))
+                .unwrap();
+        assert!(
+            storage.contains(
+                "(defclass ns:ns-text-storage (ns:ns-mutable-attributed-string) () (:metaclass objc-class))"
+            ),
+            "child derives from the cross-framework parent through the wired registry:\n{storage}"
+        );
+    }
+
     fn class_with_method(name: &str, selector: &str) -> Class {
         Class {
             name: name.into(),
@@ -764,6 +935,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         }
     }
 

@@ -226,6 +226,29 @@ fn objc_exposed_of(node: &AbiNode) -> bool {
     !matches!(classify_usr(node), UsrDisposition::SwiftNative)
 }
 
+/// The ObjC runtime class name for an ObjC-bridged class node, recovered from
+/// its clang USR.
+///
+/// The Swift overlay renames many ObjC classes (NSScanner → Scanner,
+/// NSURLSession → URLSession, NSFileHandle → FileHandle, …) but the clang USR —
+/// the prefix form `c:objc(cs)NSScanner` or the @objc-Swift infixed form
+/// `c:@M@<module>@objc(cs)NSScanner` (see [`classify_usr`]) — preserves the
+/// runtime identity. Keying the IR class on this name lets the by-name
+/// Swift↔ObjC merge ([`crate::merge`]) unify the overlay declaration with its
+/// clang twin, instead of producing a *duplicate* class whose emitted
+/// `register-objc-class` would bake a name (`"Scanner"`) that no live object
+/// ever reports — leaving the overlay's Swift-native methods unreachable through
+/// the natural construct/auto-wrap paths.
+///
+/// Returns `None` for a genuinely Swift-native class (`s:` USR — no ObjC runtime
+/// name); the caller keeps the Swift name, as there is no ObjC twin to unify with.
+fn objc_runtime_class_name(node: &AbiNode) -> Option<String> {
+    let usr = node.usr.as_deref()?;
+    usr.rsplit_once("objc(cs)")
+        .map(|(_, name)| name.to_string())
+        .filter(|name| !name.is_empty())
+}
+
 /// True iff `framework_name` follows Apple's cross-import overlay convention
 /// `_<ModuleA>_<ModuleB>[...]`: leading underscore, then ≥2 non-empty
 /// underscore-free tokens. Excludes plain underscore-prefixed private
@@ -309,8 +332,19 @@ fn map_class(node: &AbiNode) -> Option<ir::Class> {
         }
     }
 
+    // Key on the ObjC runtime name (NSScanner), not the Swift overlay name (Scanner),
+    // so the by-name Swift↔ObjC merge unifies this overlay class with its clang twin
+    // rather than duplicating it (see `objc_runtime_class_name`). When the overlay
+    // *renamed* the class, keep its Swift name in `swift_name` so the Swift trampoline
+    // can spell a type the obsoleted runtime name won't compile as. Swift-native
+    // classes keep their Swift name and need no `swift_name`.
+    let runtime_name = objc_runtime_class_name(node);
+    let swift_name = match &runtime_name {
+        Some(rt) if *rt != node.name => Some(node.name.clone()),
+        _ => None,
+    };
     Some(ir::Class {
-        name: node.name.clone(),
+        name: runtime_name.unwrap_or_else(|| node.name.clone()),
         superclass,
         protocols,
         properties,
@@ -321,6 +355,7 @@ fn map_class(node: &AbiNode) -> Option<ir::Class> {
         all_methods: vec![],
         all_properties: vec![],
         objc_exposed: objc_exposed_of(node),
+        swift_name,
     })
 }
 
@@ -974,6 +1009,80 @@ mod tests {
             class_names.contains(&"IntentParameter"),
             "_AppIntents_SwiftUI overlay must retain foreign Class `IntentParameter`; got {class_names:?}"
         );
+    }
+
+    // ------------------------------------------------------------------
+    // ObjC runtime class name recovered from the clang USR
+    // (NSScanner → Scanner overlay rename; merge unification, k38)
+    // ------------------------------------------------------------------
+
+    fn make_doc_with_class(framework: &str, name: &str, usr: &str) -> AbiDocument {
+        let value = json!({
+            "ABIRoot": {
+                "kind": "Root",
+                "name": framework,
+                "printedName": framework,
+                "children": [
+                    {
+                        "kind": "TypeDecl",
+                        "name": name,
+                        "printedName": name,
+                        "declKind": "Class",
+                        "moduleName": framework,
+                        "usr": usr,
+                        "children": []
+                    }
+                ]
+            }
+        });
+        serde_json::from_value(value).expect("build AbiDocument")
+    }
+
+    fn mapped_class_names(doc: &AbiDocument) -> Vec<String> {
+        map_abi_to_framework(doc, "26.5")
+            .classes
+            .iter()
+            .map(|c| c.name.clone())
+            .collect()
+    }
+
+    #[test]
+    fn objc_bridged_class_uses_runtime_name_from_usr() {
+        // The Foundation Swift overlay renames NSScanner → Scanner, but the clang
+        // USR (`c:objc(cs)NSScanner`) preserves the runtime identity. The IR must
+        // key the class on the runtime name so the by-name Swift↔ObjC merge unifies
+        // the overlay with its clang twin instead of emitting a duplicate
+        // `Scanner` / `ns:scanner` class with a registration that no live object
+        // matches (k38).
+        let doc = make_doc_with_class("Foundation", "Scanner", "c:objc(cs)NSScanner");
+        assert_eq!(
+            mapped_class_names(&doc),
+            vec!["NSScanner"],
+            "Scanner must map to its ObjC runtime name NSScanner"
+        );
+    }
+
+    #[test]
+    fn objc_bridged_class_runtime_name_handles_objc_swift_infixed_usr() {
+        // An @objc Swift class carries the infixed clang USR form
+        // `c:@M@<module>@objc(cs)<Name>` (see `classify_usr`'s `c:@M@Probe@objc(cs)Foo`).
+        let doc = make_doc_with_class("Probe", "Foo", "c:@M@Probe@objc(cs)NSFoo");
+        assert_eq!(mapped_class_names(&doc), vec!["NSFoo"]);
+    }
+
+    #[test]
+    fn objc_bridged_class_with_unrenamed_name_is_idempotent() {
+        // A class the overlay does NOT rename (NSString) stays NSString.
+        let doc = make_doc_with_class("Foundation", "NSString", "c:objc(cs)NSString");
+        assert_eq!(mapped_class_names(&doc), vec!["NSString"]);
+    }
+
+    #[test]
+    fn swift_native_class_keeps_its_swift_name() {
+        // A genuinely Swift-native class (`s:` USR — no ObjC runtime name) keeps
+        // its Swift name; there is no ObjC twin to unify with.
+        let doc = make_doc_with_class("MyModule", "Widget", "s:8MyModule6WidgetC");
+        assert_eq!(mapped_class_names(&doc), vec!["Widget"]);
     }
 
     // ------------------------------------------------------------------

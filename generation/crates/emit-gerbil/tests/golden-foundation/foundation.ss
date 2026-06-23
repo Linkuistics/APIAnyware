@@ -272,42 +272,11 @@
   :gerbil-bindings/foundation/nsxpcinterface
   :gerbil-bindings/foundation/nsxpclistener
   :gerbil-bindings/foundation/nsxpclistenerendpoint
-  :gerbil-bindings/foundation/nskeyvalueobservation
+  :gerbil-bindings/foundation/_nskeyvalueobservation
   :gerbil-bindings/foundation/jsondecoder
   :gerbil-bindings/foundation/jsonencoder
   :gerbil-bindings/foundation/propertylistdecoder
   :gerbil-bindings/foundation/propertylistencoder
-  :gerbil-bindings/foundation/dimension
-  :gerbil-bindings/foundation/unittemperature
-  :gerbil-bindings/foundation/unitlength
-  :gerbil-bindings/foundation/unitenergy
-  :gerbil-bindings/foundation/unitmass
-  :gerbil-bindings/foundation/unitpressure
-  :gerbil-bindings/foundation/unitspeed
-  :gerbil-bindings/foundation/unitvolume
-  :gerbil-bindings/foundation/runloop
-  :gerbil-bindings/foundation/filemanager
-  :gerbil-bindings/foundation/filehandle
-  :gerbil-bindings/foundation/urlsession
-  :gerbil-bindings/foundation/measurementformatter
-  :gerbil-bindings/foundation/notificationcenter
-  :gerbil-bindings/foundation/urlcache
-  :gerbil-bindings/foundation/httpcookiestorage
-  :gerbil-bindings/foundation/undomanager
-  :gerbil-bindings/foundation/processinfo
-  :gerbil-bindings/foundation/bundle
-  :gerbil-bindings/foundation/userdefaults
-  :gerbil-bindings/foundation/process
-  :gerbil-bindings/foundation/port
-  :gerbil-bindings/foundation/operationqueue
-  :gerbil-bindings/foundation/urlsessionwebsockettask
-  :gerbil-bindings/foundation/urlsessiontasktransactionmetrics
-  :gerbil-bindings/foundation/progress
-  :gerbil-bindings/foundation/timer
-  :gerbil-bindings/foundation/scanner
-  :gerbil-bindings/foundation/formatter
-  :gerbil-bindings/foundation/urlsessiontask
-  :gerbil-bindings/foundation/unit
   :gerbil-bindings/foundation/characterset
   :gerbil-bindings/foundation/personnamecomponents
   :gerbil-bindings/foundation/morphology
@@ -403,24 +372,10 @@
   :gerbil-bindings/foundation/functions
   )
 (export
-  Bundle
-  Bundle?
-  Dimension
-  Dimension?
-  FileHandle
-  FileHandle?
-  FileManager
-  FileManager?
-  Formatter
-  Formatter?
-  HTTPCookieStorage
-  HTTPCookieStorage?
   JSONDecoder
   JSONDecoder?
   JSONEncoder
   JSONEncoder?
-  MeasurementFormatter
-  MeasurementFormatter?
   NSAMPMDesignation
   NSASCIIStringEncoding
   NSActivityAnimationTrackingEnabled
@@ -1311,8 +1266,6 @@
   NSKeyValueChangeSetting
   NSKeyValueIntersectSetMutation
   NSKeyValueMinusSetMutation
-  NSKeyValueObservation
-  NSKeyValueObservation?
   NSKeyValueObservingOptionInitial
   NSKeyValueObservingOptionNew
   NSKeyValueObservingOptionOld
@@ -3033,58 +2986,13 @@
   NS_LittleEndian
   NS_UnknownByteOrder
   NXReadNSObjectFromCoder
-  NotificationCenter
-  NotificationCenter?
-  OperationQueue
-  OperationQueue?
-  Port
-  Port?
-  Process
-  Process?
-  ProcessInfo
-  ProcessInfo?
-  Progress
-  Progress?
   PropertyListDecoder
   PropertyListDecoder?
   PropertyListEncoder
   PropertyListEncoder?
-  RunLoop
-  RunLoop?
-  Scanner
-  Scanner?
-  Timer
-  Timer?
-  URLCache
-  URLCache?
-  URLSession
-  URLSession?
-  URLSessionTask
-  URLSessionTask?
-  URLSessionTaskTransactionMetrics
-  URLSessionTaskTransactionMetrics?
-  URLSessionWebSocketTask
-  URLSessionWebSocketTask?
-  UndoManager
-  UndoManager?
-  Unit
-  Unit?
-  UnitEnergy
-  UnitEnergy?
-  UnitLength
-  UnitLength?
-  UnitMass
-  UnitMass?
-  UnitPressure
-  UnitPressure?
-  UnitSpeed
-  UnitSpeed?
-  UnitTemperature
-  UnitTemperature?
-  UnitVolume
-  UnitVolume?
-  UserDefaults
-  UserDefaults?
+  _NSKeyValueObservation
+  _NSKeyValueObservation?
+  _nskeyvalueobservation-invalidate
   abbreviation
   abbreviation-for-date
   abort-parsing
@@ -3522,8 +3430,6 @@
   dictionary-for-key
   dictionary-representation
   difference-by-transforming-changes-with-block
-  dimension-encode-with-coder
-  dimension-supports-secure-coding
   direct-parameter
   directory
   directory-attributes
@@ -3686,13 +3592,6 @@
   file-url
   file-url-value
   file-wrappers
-  filehandle-bytes
-  filehandle-encode-with-coder
-  filehandle-offset
-  filehandle-read-to-end
-  filehandle-read-up-to-count
-  filehandle-seek-to-end
-  filehandle-supports-secure-coding
   filename
   finalize
   finish-decoding
@@ -4106,6 +4005,7 @@
   mach-port
   main
   main-document-url
+  make-_nskeyvalueobservation
   make-affinetransform
   make-affinetransform-m11-m12-m21-m22-t-x-t-y
   make-affinetransform-rotation-by-degrees
@@ -4119,7 +4019,6 @@
   make-attributedstringattributemutation
   make-attributedstringprotocol
   make-attributedsubstring
-  make-bundle
   make-characterset
   make-characterset-characters-in
   make-characterset-contents-of-file
@@ -4139,17 +4038,11 @@
   make-decimal-integer-literal
   make-decodableattributedstringkey
   make-decodablewithconfiguration
-  make-dimension
-  make-dimension-init-with-coder
   make-discreteformatstyle
   make-encodableattributedstringkey
   make-encodablewithconfiguration
   make-erroruserinfokey-raw-value
-  make-filehandle
-  make-filehandle-init-with-coder
-  make-filemanager
   make-formatstyle
-  make-httpcookiestorage
   make-indexpath
   make-indexpath-index
   make-indexset
@@ -4159,11 +4052,8 @@
   make-locale-identifier
   make-localizedstringresource-string-literal
   make-markdowndecodableattributedstringkey
-  make-measurementformatter
-  make-measurementformatter-init-with-coder
   make-morphology
   make-mutabledataprotocol
-  make-notificationcenter
   make-nsaffinetransform-init-with-coder
   make-nsaffinetransform-init-with-transform
   make-nsappleeventdescriptor-init-with-coder
@@ -4310,7 +4200,6 @@
   make-nskeyedarchiverdelegate
   make-nskeyedunarchiver
   make-nskeyedunarchiverdelegate
-  make-nskeyvalueobservation
   make-nskeyvalueobservingcustomization
   make-nskeyvaluesharedobservers-init-with-observable-class
   make-nskeyvaluesharedobserverssnapshot
@@ -4649,57 +4538,28 @@
   make-nsxpclistenerendpoint-init-with-coder
   make-nsxpcproxycreating
   make-objectivecconvertibleattributedstringkey
-  make-operationqueue
   make-parseableformatstyle
   make-parsestrategy
   make-personnamecomponents
-  make-port
-  make-port-init-with-coder
   make-predicatecodableconfiguration
   make-predicateexpression
-  make-process
-  make-processinfo
-  make-progress
   make-propertylistdecoder
   make-propertylistencoder
   make-recoverableerror
-  make-runloop
-  make-scanner
   make-sortcomparator
-  make-timer
   make-timezone-abbreviation
   make-timezone-identifier
   make-timezone-seconds-from-gmt
-  make-undomanager
-  make-unitenergy
-  make-unitenergy-init-with-coder
-  make-unitlength
-  make-unitlength-init-with-coder
-  make-unitmass
-  make-unitmass-init-with-coder
-  make-unitpressure
-  make-unitpressure-init-with-coder
-  make-unitspeed
-  make-unitspeed-init-with-coder
-  make-unittemperature
-  make-unittemperature-init-with-coder
-  make-unitvolume
-  make-unitvolume-init-with-coder
   make-url-file-reference-literal-resource-name
   make-url-file-url-with-path
   make-url-file-url-with-path-is-directory
   make-url-string
   make-url-string-encoding-invalid-characters
-  make-urlcache
   make-urlcomponents
   make-urlcomponents-string
   make-urlcomponents-string-encoding-invalid-characters
   make-urlqueryitem-name-value
   make-urlresourcevalues
-  make-urlsession
-  make-urlsessiontasktransactionmetrics
-  make-urlsessionwebsockettask
-  make-userdefaults
   make-uuid
   make-uuid-uuid-string
   markdowndecodableattributedstringkey-selectors
@@ -4716,8 +4576,6 @@
   measurement-by-adding-measurement
   measurement-by-converting-to-unit
   measurement-by-subtracting-measurement
-  measurementformatter-encode-with-coder
-  measurementformatter-supports-secure-coding
   member
   memory-capacity
   method-return-length
@@ -5603,6 +5461,7 @@
   nsfilecoordinator-remove-file-presenter!
   nsfilecoordinator-set-purpose-identifier!
   nsfilehandle-available-data
+  nsfilehandle-bytes
   nsfilehandle-close-and-return-error!
   nsfilehandle-encode-with-coder
   nsfilehandle-file-descriptor
@@ -5610,9 +5469,13 @@
   nsfilehandle-file-handle-with-standard-error
   nsfilehandle-file-handle-with-standard-input
   nsfilehandle-file-handle-with-standard-output
+  nsfilehandle-offset
   nsfilehandle-offset-in-file
   nsfilehandle-read-data-to-end-of-file-and-return-error
   nsfilehandle-read-data-up-to-length-error
+  nsfilehandle-read-to-end
+  nsfilehandle-read-up-to-count
+  nsfilehandle-seek-to-end
   nsfilehandle-seek-to-offset-error
   nsfilehandle-supports-secure-coding
   nsfilehandle-synchronize-and-return-error
@@ -5949,7 +5812,6 @@
   nskeyedunarchiver-unarchived-object-of-class-from-data-error
   nskeyedunarchiver-unarchived-object-of-classes-from-data-error
   nskeyedunarchiverdelegate-selectors
-  nskeyvalueobservation-invalidate
   nskeyvalueobservingcustomization-selectors
   nskeyvaluesharedobservers-new
   nskeyvaluesharedobservers-snapshot
@@ -6549,7 +6411,9 @@
   nsoperationqueue-is-suspended
   nsoperationqueue-main-queue
   nsoperationqueue-max-concurrent-operation-count
+  nsoperationqueue-minimum-tolerance
   nsoperationqueue-name
+  nsoperationqueue-now
   nsoperationqueue-operation-count
   nsoperationqueue-operations
   nsoperationqueue-progress
@@ -6880,14 +6744,22 @@
   nsrunloop-current-run-loop
   nsrunloop-limit-date-for-mode
   nsrunloop-main-run-loop
+  nsrunloop-minimum-tolerance
+  nsrunloop-now
   nsrunloop-remove-port-for-mode!
   nsscanner-at-end
   nsscanner-case-sensitive
   nsscanner-characters-to-be-skipped
+  nsscanner-current-index
   nsscanner-locale
+  nsscanner-scan-character
+  nsscanner-scan-decimal
   nsscanner-scan-location
+  nsscanner-scan-string
+  nsscanner-scan-up-to-string
   nsscanner-set-case-sensitive!
   nsscanner-set-characters-to-be-skipped!
+  nsscanner-set-current-index!
   nsscanner-set-locale!
   nsscanner-set-scan-location!
   nsscanner-string
@@ -7798,6 +7670,9 @@
   nsurlresponse-text-encoding-name
   nsurlresponse-url
   nsurlsession-configuration
+  nsurlsession-data-for
+  nsurlsession-data-from
+  nsurlsession-data-task-publisher-for
   nsurlsession-data-task-with-request
   nsurlsession-data-task-with-url
   nsurlsession-delegate
@@ -7818,6 +7693,7 @@
   nsurlsession-shared-session
   nsurlsession-stream-task-with-host-name-port
   nsurlsession-stream-task-with-net-service
+  nsurlsession-upload-for-from-file
   nsurlsession-upload-task-with-request-from-data
   nsurlsession-upload-task-with-request-from-file
   nsurlsession-upload-task-with-resume-data
@@ -7986,6 +7862,7 @@
   nsurlsessionwebsockettask-close-reason!
   nsurlsessionwebsockettask-maximum-message-size
   nsurlsessionwebsockettask-new
+  nsurlsessionwebsockettask-receive
   nsurlsessionwebsockettask-receive-message-with-completion-handler
   nsurlsessionwebsockettask-send-message-completion-handler
   nsurlsessionwebsockettask-send-ping-with-pong-receive-handler
@@ -8401,8 +8278,6 @@
   operating-system-version-string
   operation-count
   operation-queue
-  operationqueue-minimum-tolerance
-  operationqueue-now
   operations
   options
   ordinal
@@ -8464,7 +8339,6 @@
   pointer-functions
   pointer-value
   port
-  port-encode-with-coder
   port-for-name
   port-for-name-host
   port-for-name-host-name-server-port-number
@@ -8507,14 +8381,6 @@
   process-name
   processor-count
   progress
-  progress-estimated-time-remaining
-  progress-file-completed-count
-  progress-file-total-count
-  progress-set-estimated-time-remaining!
-  progress-set-file-completed-count!
-  progress-set-file-total-count!
-  progress-set-throughput!
-  progress-throughput
   pronoun
   pronoun-type
   pronouns
@@ -8734,8 +8600,6 @@
   run
   run-in-new-thread
   run-loop-modes
-  runloop-minimum-tolerance
-  runloop-now
   running
   same-site-policy
   save-options
@@ -8743,12 +8607,6 @@
   scale-by
   scale-x-by-y-by
   scan-location
-  scanner-current-index
-  scanner-scan-character
-  scanner-scan-decimal
-  scanner-scan-string
-  scanner-scan-up-to-string
-  scanner-set-current-index!
   schedule-in-run-loop-for-mode
   schedule-notification
   schedule-send-barrier-block
@@ -9487,21 +9345,7 @@
   unit-options
   unit-string-from-value-unit
   unit-style
-  unitenergy-encode-with-coder
-  unitenergy-supports-secure-coding
-  unitlength-encode-with-coder
-  unitlength-supports-secure-coding
-  unitmass-encode-with-coder
-  unitmass-supports-secure-coding
-  unitpressure-encode-with-coder
-  unitpressure-supports-secure-coding
   units-style
-  unitspeed-encode-with-coder
-  unitspeed-supports-secure-coding
-  unittemperature-encode-with-coder
-  unittemperature-supports-secure-coding
-  unitvolume-encode-with-coder
-  unitvolume-supports-secure-coding
   unload
   unlock
   unlock-with-condition
@@ -9569,15 +9413,6 @@
   urlrequest-add-value-for-http-header-field!
   urlrequest-set-value-for-http-header-field!
   urlrequest-value-for-http-header-field
-  urlsession-data-for
-  urlsession-data-from
-  urlsession-data-task-publisher-for
-  urlsession-upload-for-from-file
-  urlsessiontasktransactionmetrics-local-port
-  urlsessiontasktransactionmetrics-negotiated-tls-cipher-suite
-  urlsessiontasktransactionmetrics-negotiated-tls-protocol-version
-  urlsessiontasktransactionmetrics-remote-port
-  urlsessionwebsockettask-receive
   user
   user-info
   user-name

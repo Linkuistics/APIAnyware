@@ -30,8 +30,10 @@
          "../../generated/appkit/nscolor.rkt"
          ;; The Swift-native METHOD residual — trampolined through libAPIAnywareRacket:
          "../../generated/foundation/indexset.rkt"            ; pop-B value-struct methods
-         (only-in "../../generated/foundation/urlsession.rkt" urlsession-data-from)
-         (only-in "../../generated/foundation/nsurlsession.rkt" nsurlsession-shared-session)
+         ;; After k38 the Swift-overlay `URLSession` merged into the runtime-name
+         ;; `NSURLSession`, so `data(from:)` binds as `nsurlsession-data-from` there.
+         (only-in "../../generated/foundation/nsurlsession.rkt"
+                  nsurlsession-shared-session nsurlsession-data-from)
          (only-in "../../generated/foundation/nsurl.rkt" nsurl-file-url-with-path)
          (only-in "../../runtime/coerce.rkt" coerce-arg)
          "../../runtime/objc-base.rkt"
@@ -113,7 +115,7 @@
         (lambda (out) (write-bytes payload out))))
 (define session (nsurlsession-shared-session))
 (define file-url (coerce-arg (nsurl-file-url-with-path (path->string tmp))))
-(urlsession-data-from
+(nsurlsession-data-from
  session file-url
  (lambda (handle err)
    (delete-file tmp)

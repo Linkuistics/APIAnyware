@@ -404,7 +404,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSImage) (id->ffi2-ptr (sel_registerName "imageNamed:")) (id->ffi2-ptr (coerce-arg name))))
    ))
-;; block param 2: async-copied (runtime-managed)
+;; block param 2: stored (retained across calls)
 (define (nsimage-image-with-size-flipped-drawing-handler size drawing-handler-should-be-called-with-flipped-context drawing-handler)
   (define-values (_blk2 _blk2-id)
     (make-objc-block drawing-handler (list _NSRect) _bool))

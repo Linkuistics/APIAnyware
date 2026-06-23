@@ -12,6 +12,7 @@ apianyware-macos-emit.workspace = true
 apianyware-macos-emit-racket.workspace = true
 apianyware-macos-emit-chez.workspace = true
 apianyware-macos-emit-gerbil.workspace = true
+apianyware-macos-emit-sbcl.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 tracing.workspace = true

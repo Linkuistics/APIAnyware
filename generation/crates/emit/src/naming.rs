@@ -146,9 +146,168 @@ pub fn selector_to_snake_name(selector: &str) -> String {
     }
 }
 
+/// Acronym-aware kebab-case for the CL-family contract's name mapper
+/// (`docs/specs/2026-06-20-cl-family-interface-contract.md` §3.1). Unlike
+/// [`camel_to_kebab`], this honours a curated table of multi-letter acronyms and
+/// compound brand tokens so that
+///
+/// - adjacent acronyms in an all-caps pile-up are split:
+///   `NSURLHandleClient` → `ns-url-handle-client` (NOT `nsurl-handle-client`),
+///   `NSHTTPURLResponse` → `ns-http-url-response`;
+/// - compound brand tokens stay whole: `NSOpenGLView` → `ns-opengl-view`
+///   (NOT `ns-open-gl-view`);
+/// - everything the plain splitter already gets right is unchanged:
+///   `NSString` → `ns-string`, `CGRect` → `cg-rect`, `backgroundColor` →
+///   `background-color`.
+///
+/// The naive "hyphen-before-each-capital" rule and the plain camelCase splitter
+/// both mis-spell the pile-up / compound cases (research §5.2). This is **shared
+/// analysis-level data** (contract §3.1): every CL-family member applies the
+/// identical table, so it lives here rather than in any one emitter crate.
+pub fn acronym_aware_kebab(input: &str) -> String {
+    acronym_aware_words(input)
+        .iter()
+        .map(|w| w.to_ascii_lowercase())
+        .collect::<Vec<_>>()
+        .join("-")
+}
+
+/// Curated tokens for [`acronym_aware_kebab`]. Two roles:
+///
+/// - **Compound brand tokens** (`OpenGL`, …) — kept whole; they out-rank the
+///   camelCase splitter, which would otherwise break them at the embedded
+///   capital (`OpenGL` → `Open` + `GL`).
+/// - **Pile-up acronyms** (`NS`, `URL`, `HTTP`, …) — broken out of all-caps runs
+///   the splitter cannot separate (`NSURL` → `NS` + `URL`). A *lone* prefix
+///   before a Capitalised word (`NSString`, `CGRect`, `WKWebView`) is already
+///   split correctly by [`split_camel_case`], so framework prefixes that only
+///   ever appear that way need no entry here.
+///
+/// Matched case-sensitively, only at a word start, only when the match ends at a
+/// clean boundary (next char uppercase or end-of-string — never a lowercase or a
+/// digit, which would mean the "acronym" is really the head of a longer word,
+/// e.g. `UTF8`). Longest match wins. **Extend as sample apps surface gaps** — the
+/// lazy/extensible posture; correctness of the *pattern* does not depend on the
+/// table being exhaustive.
+const KNOWN_TOKENS: &[&str] = &[
+    // Compound brand tokens kept whole.
+    "OpenGL", "OpenCL", "OpenAL",
+    // Pile-up acronyms (longer variants first is not required — longest match is
+    // computed — but grouped for readability).
+    "HTTPS", "HTTP", "HTML", "JSON", "RGBA", "RGB", "CMYK", "ASCII", "UUID", "MIME", "JPEG", "TIFF",
+    "MIDI", "NS", "URL", "URI", "XML", "PDF", "CSV", "API", "SQL", "PNG", "GIF", "DNS",
+];
+
+/// Split `input` into words, honouring [`KNOWN_TOKENS`] at word boundaries and
+/// falling back to [`split_camel_case`] for the spans between matches. Because
+/// the scan only consults the table at positions that are word boundaries (the
+/// start, or just after a previous matched token), and only accepts a match that
+/// ends at a clean boundary, an acronym embedded inside a longer word
+/// (`Identifier`, `SRGB`, `UTF8`) is never spuriously split.
+fn acronym_aware_words(input: &str) -> Vec<String> {
+    let bytes = input.as_bytes();
+    let n = bytes.len();
+    let mut words: Vec<String> = Vec::new();
+    let mut free_start = 0; // start of the run not yet handed to split_camel_case
+    let mut i = 0;
+
+    while i < n {
+        if let Some(tok) = longest_token_at(bytes, i) {
+            // Flush the camelCase span before this token.
+            if free_start < i {
+                words.extend(split_camel_case(&input[free_start..i]));
+            }
+            words.push(tok.to_string());
+            i += tok.len();
+            free_start = i;
+        } else {
+            i += 1;
+        }
+    }
+    if free_start < n {
+        words.extend(split_camel_case(&input[free_start..]));
+    }
+    words
+}
+
+/// The longest [`KNOWN_TOKENS`] entry that matches `bytes` starting at `i`, with
+/// a clean trailing boundary (next byte is end-of-string or an uppercase ASCII
+/// letter). Returns `None` if no entry qualifies. Case-sensitive.
+fn longest_token_at(bytes: &[u8], i: usize) -> Option<&'static str> {
+    let mut best: Option<&'static str> = None;
+    for &tok in KNOWN_TOKENS {
+        let tb = tok.as_bytes();
+        let end = i + tb.len();
+        if end <= bytes.len()
+            && &bytes[i..end] == tb
+            && (end == bytes.len() || bytes[end].is_ascii_uppercase())
+            && best.is_none_or(|b| tb.len() > b.len())
+        {
+            best = Some(tok);
+        }
+    }
+    best
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_acronym_aware_kebab_contract_examples() {
+        // The two normative examples from contract §3.1.
+        assert_eq!(acronym_aware_kebab("NSOpenGLView"), "ns-opengl-view");
+        assert_eq!(
+            acronym_aware_kebab("NSURLHandleClient"),
+            "ns-url-handle-client"
+        );
+    }
+
+    #[test]
+    fn test_acronym_aware_kebab_pileups_split() {
+        // All-caps acronym pile-ups the plain splitter merges wrongly.
+        assert_eq!(acronym_aware_kebab("NSURL"), "ns-url");
+        assert_eq!(acronym_aware_kebab("NSURLRequest"), "ns-url-request");
+        assert_eq!(
+            acronym_aware_kebab("NSHTTPURLResponse"),
+            "ns-http-url-response"
+        );
+        assert_eq!(acronym_aware_kebab("NSXMLParser"), "ns-xml-parser");
+        assert_eq!(
+            acronym_aware_kebab("NSJSONSerialization"),
+            "ns-json-serialization"
+        );
+    }
+
+    #[test]
+    fn test_acronym_aware_kebab_no_regression_on_simple_names() {
+        // Names the plain splitter already handles must be unchanged.
+        assert_eq!(acronym_aware_kebab("NSString"), "ns-string");
+        assert_eq!(acronym_aware_kebab("NSView"), "ns-view");
+        assert_eq!(acronym_aware_kebab("NSData"), "ns-data");
+        assert_eq!(acronym_aware_kebab("CGRect"), "cg-rect");
+        assert_eq!(acronym_aware_kebab("WKWebView"), "wk-web-view");
+        assert_eq!(acronym_aware_kebab("backgroundColor"), "background-color");
+    }
+
+    #[test]
+    fn test_acronym_aware_kebab_longest_match_wins() {
+        // RGBA must beat RGB; HTTPS must beat HTTP.
+        assert_eq!(acronym_aware_kebab("RGBAColor"), "rgba-color");
+        assert_eq!(acronym_aware_kebab("RGBColor"), "rgb-color");
+        assert_eq!(acronym_aware_kebab("HTTPSConnection"), "https-connection");
+    }
+
+    #[test]
+    fn test_acronym_aware_kebab_no_false_positives() {
+        // A table acronym embedded inside a normal word (lowercase-adjacent or
+        // mid-word) must NOT be split out — case-sensitive, boundary-clean.
+        assert_eq!(acronym_aware_kebab("Identifier"), "identifier");
+        assert_eq!(acronym_aware_kebab("Camera"), "camera");
+        assert_eq!(acronym_aware_kebab("Apidoc"), "apidoc");
+        // UTF8 stays one token (digit-adjacent — table never breaks it).
+        assert_eq!(acronym_aware_kebab("UTF8String"), "utf8-string");
+    }
 
     #[test]
     fn test_split_camel_case() {

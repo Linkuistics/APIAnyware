@@ -418,6 +418,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
         fw.classes.push(Class {
             name: "NSMutableArray".to_string(),
@@ -431,6 +432,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
 
         let patterns = detect_factory_clusters(&fw);
@@ -458,6 +460,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
 
         let patterns = detect_observer_pairs(&fw);
@@ -485,6 +488,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
 
         let patterns = detect_paired_state(&fw);
@@ -511,6 +515,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
 
         let patterns = detect_paired_state(&fw);
@@ -536,6 +541,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
         fw.protocols.push(Protocol {
             name: "NSCacheDelegate".to_string(),
@@ -570,6 +576,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
         // No NSFooDelegate protocol
 

@@ -48,6 +48,7 @@ fn make_class(name: &str, superclass: &str) -> Class {
         all_methods: vec![],
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 

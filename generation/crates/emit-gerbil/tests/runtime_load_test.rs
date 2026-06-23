@@ -70,7 +70,10 @@ fn gxc_on_path() -> bool {
         .map(|o| {
             o.status.success() && {
                 let prefix = String::from_utf8_lossy(&o.stdout);
-                PathBuf::from(prefix.trim()).join("bin").join("gxc").exists()
+                PathBuf::from(prefix.trim())
+                    .join("bin")
+                    .join("gxc")
+                    .exists()
             }
         })
         .unwrap_or(false)

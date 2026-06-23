@@ -281,6 +281,7 @@ fn build_tkobject() -> Class {
         all_methods: vec![],
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 
@@ -331,6 +332,7 @@ fn build_tkview() -> Class {
         ],
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 
@@ -385,6 +387,7 @@ fn build_tkbutton() -> Class {
             property("frame", type_struct("NSRect"), false),
         ],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 
@@ -441,6 +444,7 @@ fn build_tkmanager() -> Class {
         ],
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 
@@ -465,6 +469,7 @@ fn build_tkhelper() -> Class {
         ],
         all_properties: vec![],
         objc_exposed: true,
+        swift_name: None,
     }
 }
 

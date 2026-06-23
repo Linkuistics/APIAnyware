@@ -59,12 +59,8 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> std::io::Result<Emit
     let mut used_filenames: std::collections::HashSet<String> = std::collections::HashSet::new();
     for cls in &fw.classes {
         let filename = format!("{}.rkt", class_name_to_lowercase(&cls.name));
-        let content = generate_class_file_with_structs(
-            cls,
-            &fw.name,
-            fw.enrichment.as_ref(),
-            &value_structs,
-        );
+        let content =
+            generate_class_file_with_structs(cls, &fw.name, fw.enrichment.as_ref(), &value_structs);
         emitter.write_file(&filename, &content)?;
         used_filenames.insert(filename.clone());
         class_files.push((cls.name.clone(), filename));
@@ -286,6 +282,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
         let result = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(result.classes_emitted, 1);

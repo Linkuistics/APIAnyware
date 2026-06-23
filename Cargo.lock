@@ -155,6 +155,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-macos-bundle-sbcl"
+version = "0.1.0"
+dependencies = [
+ "apianyware-macos-stub-launcher",
+ "plist",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "apianyware-macos-collect"
 version = "0.1.0"
 dependencies = [
@@ -222,6 +233,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-macos-emit-sbcl"
+version = "0.1.0"
+dependencies = [
+ "apianyware-macos-emit",
+ "apianyware-macos-types",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "apianyware-macos-enrich"
 version = "0.1.0"
 dependencies = [
@@ -269,6 +290,7 @@ dependencies = [
  "apianyware-macos-emit-chez",
  "apianyware-macos-emit-gerbil",
  "apianyware-macos-emit-racket",
+ "apianyware-macos-emit-sbcl",
  "apianyware-macos-types",
  "clap",
  "serde_json",

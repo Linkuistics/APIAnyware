@@ -20,7 +20,7 @@
 ;;     on one stable handle, all via aw_chez_swift_{init,m}_*.
 ;;
 ;;   pop-A — Foundation.URLSession.data(from:) (Swift-native ASYNC method): the
-;;     generated `urlsession-data-from` drives async-bridge.sls's callback runtime
+;;     generated `nsurlsession-data-from` drives async-bridge.sls's callback runtime
 ;;     (R4) against a deterministic local file:// source. The completion delivers a
 ;;     real (Data, URLResponse) handle on the main thread (the MainActor hop), which
 ;;     this script's CFRunLoop pump drains.
@@ -29,8 +29,12 @@
         (apianyware runtime types)                       ; coerce-arg
         (only (apianyware foundation indexset)
               make-indexset-integer indexset-contains indexset-insert!)
-        (only (apianyware foundation urlsession) urlsession-data-from)
-        (only (apianyware foundation nsurlsession) nsurlsession-shared-session)
+        ;; After k38 (runtime-name class identity) the Swift-overlay `URLSession` class
+        ;; merged into the runtime-name `NSURLSession`, so the async `data(from:)` method
+        ;; binds as `nsurlsession-data-from` in the unified nsurlsession.sls (the renamed-
+        ;; class auto-wrap path: the registry keys on the live class_getName "NSURLSession").
+        (only (apianyware foundation nsurlsession)
+              nsurlsession-shared-session nsurlsession-data-from)
         (only (apianyware foundation nsurl) nsurl-file-url-with-path))
 
 (define failures 0)
@@ -84,8 +88,8 @@
 (define err #f)
 (define done #f)
 
-;; (urlsession-data-from session url complete): complete is (lambda (result err) …).
-(urlsession-data-from
+;; (nsurlsession-data-from session url complete): complete is (lambda (result err) …).
+(nsurlsession-data-from
  session nsurl
  (lambda (r e)
    (set! result r)

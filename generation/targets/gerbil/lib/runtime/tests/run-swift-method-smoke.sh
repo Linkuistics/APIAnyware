@@ -38,7 +38,7 @@ if [ -z "$DYLIB_DIR" ]; then
   echo "   build it: (cd swift && SDKROOT=macosx swift build --product APIAnywareGerbil)" >&2
   exit 2
 fi
-if [ ! -f "$FW/indexset.ss" ] || [ ! -f "$FW/urlsession.ss" ]; then
+if [ ! -f "$FW/indexset.ss" ] || [ ! -f "$FW/nsurlsession.ss" ]; then
   echo "!! generated foundation bindings not found; run generate --target gerbil first" >&2
   exit 2
 fi
@@ -67,8 +67,10 @@ gxc -O "$LIB/generics.ss"
 echo "== precompiling foundation trampoline modules =="
 # The foundation modules name both `objc_msgSend`/`objc_getClass`/`sel_registerName`
 # (the msgSend crossings → -lobjc) and the dylib's `aw_gerbil_swift_*` entries.
+# (After k38 the Swift-overlay `urlsession.ss` merged into `nsurlsession.ss`, which now
+# also carries `nsurlsession-data-from` — the async `data(from:)` method.)
 gxc -O -ld-options "-lobjc $SWIFT_LD" \
-    "$FW/indexset.ss" "$FW/nsurl.ss" "$FW/nsurlsession.ss" "$FW/urlsession.ss"
+    "$FW/indexset.ss" "$FW/nsurl.ss" "$FW/nsurlsession.ss"
 # The CoreFoundation run-loop pump for the async exemplar.
 gxc -O -ld-options "-framework CoreFoundation" "$HERE/cf-runloop.ss"
 

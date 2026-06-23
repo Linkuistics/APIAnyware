@@ -126,11 +126,8 @@ fn collect_swift_native_bindings(
             owner_introduced,
         ) {
             MethodDisposition::Method(t) => {
-                let mutating = m
-                    .swift_fn
-                    .as_ref()
-                    .and_then(|i| i.self_kind.as_deref())
-                    == Some("Mutating");
+                let mutating =
+                    m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
                 let name = make_swift_method_name(owner, &m.selector, mutating);
                 if !seen.insert(name.clone()) {
                     continue;
@@ -185,8 +182,7 @@ fn emit_swift_native_section(w: &mut CodeWriter, bindings: &SwiftNativeBindings)
 /// in-framework Swift value structs (a value-struct **param** on a Swift-native
 /// method then defers rather than binding, which only narrows the method frontier).
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
-    let (content, _exports) =
-        generate_class_file_with_exports(cls, framework, &HashSet::new());
+    let (content, _exports) = generate_class_file_with_exports(cls, framework, &HashSet::new());
     content
 }
 
@@ -1257,6 +1253,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "Foundation");
         assert!(output.contains("(library (apianyware foundation nsstring)"));
@@ -1286,6 +1283,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "Foundation");
         assert!(output.contains(
@@ -1318,6 +1316,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "AppKit");
         // Per Chez `foreign-procedure` docs (`(& ftype)` return), the
@@ -1372,6 +1371,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "AppKit");
         // The declared `param-types` list stays `(void* void*)`; the buffer
@@ -1444,6 +1444,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "AppKit");
         // The method binds (not deferred) and its wrapper boxes the handler.
@@ -1507,6 +1508,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "AppKit");
         assert!(
@@ -1535,6 +1537,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "Foundation");
         assert!(output.contains("(define (nsstring-string)"));
@@ -1542,7 +1545,11 @@ mod tests {
         assert!(output.contains("wrap-objc-object"));
     }
 
-    fn swift_method(selector: &str, init: bool, info: apianyware_macos_types::ir::SwiftFnInfo) -> Method {
+    fn swift_method(
+        selector: &str,
+        init: bool,
+        info: apianyware_macos_types::ir::SwiftFnInfo,
+    ) -> Method {
         Method {
             selector: selector.into(),
             class_method: false,
@@ -1601,6 +1608,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let out = generate_class_file(&cls, "TestKit");
         // The bindable method routes to its content-addressed trampoline entry.

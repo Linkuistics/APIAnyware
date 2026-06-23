@@ -26,13 +26,21 @@ let package = Package(
         // ADR-0017 deviation. Gerbil's ObjC native core stays in `gsc`; this
         // dylib carries ONLY the Swift-native trampoline + hermetic helpers.
         .library(name: "APIAnywareGerbil", type: .dynamic, targets: ["APIAnywareGerbil"]),
+        // SBCL's SOLE native compilation unit (ADR-0038): a Lisp compiles neither
+        // ObjC nor Swift inline, so this dylib is broader than gerbil's
+        // trampoline-only one — it also hosts the foreign→main CallbackBounce
+        // (ADR-0035) and the SubclassSynth IMP installer (ADR-0034 §5). The MOP
+        // object model stays in Lisp; "trampoline-only" holds in *that* sense.
+        .library(name: "APIAnywareSbcl", type: .dynamic, targets: ["APIAnywareSbcl"]),
     ],
     targets: [
         .target(name: "APIAnywareRacket"),
         .target(name: "APIAnywareChez"),
         .target(name: "APIAnywareGerbil"),
+        .target(name: "APIAnywareSbcl"),
         .testTarget(name: "APIAnywareRacketTests", dependencies: ["APIAnywareRacket"]),
         .testTarget(name: "APIAnywareChezTests", dependencies: ["APIAnywareChez"]),
         .testTarget(name: "APIAnywareGerbilTests", dependencies: ["APIAnywareGerbil"]),
+        .testTarget(name: "APIAnywareSbclTests", dependencies: ["APIAnywareSbcl"]),
     ]
 )

@@ -78,8 +78,7 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
     for cls in &fw.classes {
         let cls_low = class_name_to_lowercase(&cls.name);
         let filename = format!("{}.sls", cls_low);
-        let (content, exports) =
-            generate_class_file_with_exports(cls, &fw.name, &value_structs);
+        let (content, exports) = generate_class_file_with_exports(cls, &fw.name, &value_structs);
         emitter.write_file(&filename, &content)?;
         used_filenames.insert(filename);
         files_written += 1;
@@ -102,8 +101,7 @@ pub fn emit_framework(fw: &Framework, output_dir: &Path) -> io::Result<EmitResul
         } else {
             (format!("{base}.sls"), base.clone())
         };
-        let Some((content, exports)) =
-            generate_struct_file(st, &fw.name, &value_structs, &lib_low)
+        let Some((content, exports)) = generate_struct_file(st, &fw.name, &value_structs, &lib_low)
         else {
             continue;
         };
@@ -364,6 +362,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         });
         let res = emit_framework(&fw, tmp.path()).unwrap();
         assert_eq!(res.classes_emitted, 1);

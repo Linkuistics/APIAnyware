@@ -120,10 +120,18 @@ fn collect_swift_native_bindings(
         if m.swift_fn.is_none() {
             continue; // ObjC method — binds via msgSend, no trampoline
         }
-        match classify_method(framework, owner, owner_is_class, m, methods, value_structs, owner_introduced) {
+        match classify_method(
+            framework,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            value_structs,
+            owner_introduced,
+        ) {
             MethodDisposition::Method(t) => {
-                let mutating = m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref())
-                    == Some("Mutating");
+                let mutating =
+                    m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
                 let name = make_swift_method_name(owner, &m.selector, mutating);
                 if !seen.insert(name.clone()) {
                     continue;
@@ -462,8 +470,7 @@ pub fn generate_class_file_with_structs(
     // Constructors. Suppress the synthesized `(make-<class>)` default when a
     // Swift-native `init` producer already binds that name (else the two `(define
     // (make-<class>) …)` forms collide at load).
-    let needs_default_constructor =
-        !has_explicit_constructor(&init_methods) && !swift_default_ctor;
+    let needs_default_constructor = !has_explicit_constructor(&init_methods) && !swift_default_ctor;
     if !init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
         for m in &init_methods {
@@ -2079,6 +2086,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "Foundation", None);
         assert!(output.contains("#lang racket/base"));
@@ -2147,6 +2155,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         // The bindable method routes to the content-addressed trampoline via _aw-lib.
@@ -2154,7 +2163,10 @@ mod tests {
             out.contains("aw_racket_swift_m_TestKit_TKWidget_scaled"),
             "trampoline entry missing:\n{out}"
         );
-        assert!(out.contains("_aw-lib"), "binding not against _aw-lib:\n{out}");
+        assert!(
+            out.contains("_aw-lib"),
+            "binding not against _aw-lib:\n{out}"
+        );
         assert!(
             out.contains("(coerce-arg self)"),
             "receiver not passed:\n{out}"
@@ -2219,6 +2231,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let enrichment = EnrichmentData {
             convenience_error_methods: vec![ClassSelectorEntry {
@@ -2388,6 +2401,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "Foundation", None);
         assert!(
@@ -2420,6 +2434,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "Foundation", None);
         // Instance method: receiver uses the class-specific predicate, not the generic objc-object?
@@ -2452,6 +2467,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Object getter: receiver uses class-specific predicate
@@ -2484,6 +2500,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2525,6 +2542,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2563,6 +2581,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2597,6 +2616,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Object setter: receiver uses class-specific predicate; value union stays as-is.
@@ -2642,6 +2662,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
 
@@ -2709,6 +2730,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
 
@@ -2750,6 +2772,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2786,6 +2809,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Receiver uses class-specific predicate; typed param unchanged.
@@ -2830,6 +2854,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Block param → (or/c procedure? #f); receiver uses class-specific predicate.
@@ -2869,6 +2894,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         // Constructor: (-> param-contracts... any/c) — returns wrapped object
@@ -2901,6 +2927,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2934,6 +2961,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -2979,6 +3007,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -3014,6 +3043,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -3168,6 +3198,7 @@ mod tests {
             )],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", None);
 
@@ -3216,6 +3247,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let props = effective_properties(&cls);
         assert_eq!(
@@ -3255,6 +3287,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "AppKit", None);
         let count = output
@@ -3317,6 +3350,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "AppKit", None);
 
@@ -3375,6 +3409,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "AppKit", None);
         let count = output.matches("(define (nsfont-system-font-size").count();
@@ -3421,6 +3456,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let enrichment = EnrichmentData {
             async_block_methods: vec![BlockMethodEntry {
@@ -3475,6 +3511,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let output = generate_class_file(&cls, "TestKit", Some(&EnrichmentData::default()));
         assert!(
@@ -3505,6 +3542,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let enrichment = EnrichmentData {
             main_thread_classes: vec!["TKView".to_string()],
@@ -3576,6 +3614,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         // ffi2 header + native binding + routed body.
@@ -3618,6 +3657,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -3662,6 +3702,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         assert!(
@@ -3716,6 +3757,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let out = generate_class_file(&cls, "TestKit", None);
 
@@ -3779,6 +3821,7 @@ mod tests {
             all_methods: vec![],
             all_properties: vec![],
             objc_exposed: true,
+            swift_name: None,
         };
         let out = generate_class_file(&cls, "TestKit", None);
         assert!(

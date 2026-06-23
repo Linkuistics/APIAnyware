@@ -42,8 +42,9 @@
         :gerbil-bindings/appkit/enums
         ;; The Swift-native METHOD residual — trampolined through libAPIAnywareGerbil:
         :gerbil-bindings/foundation/indexset      ; pop-B value-struct methods
-        :gerbil-bindings/foundation/urlsession    ; pop-A async method
-        :gerbil-bindings/foundation/nsurlsession  ; nsurlsession-shared-session
+        ;; After k38 the Swift-overlay `URLSession` merged into the runtime-name
+        ;; `NSURLSession`, so `data(from:)` binds as `nsurlsession-data-from` there.
+        :gerbil-bindings/foundation/nsurlsession  ; nsurlsession-shared-session, nsurlsession-data-from (pop-A async)
         :gerbil-bindings/foundation/nsurl)        ; nsurl-file-url-with-path
 (export main)
 
@@ -122,7 +123,7 @@
                 (file-url (nsurl-file-url-with-path (string->nsstring tmp))))
             ;; Kick off the async method; the completion fires on the main thread (the
             ;; app's Cocoa loop drives it) and fills the label with the byte count.
-            (urlsession-data-from
+            (nsurlsession-data-from
              session file-url
              (lambda (result err)
                (nscontrol-set-string-value!

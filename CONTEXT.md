@@ -131,6 +131,24 @@ reachability is per-target in the limit); reusing `DeclarationSource`
 `SwiftInterface` yet `objc_exposed`); re-parsing the raw USR prefix in emitters
 (the classifier lives once, in collection).
 
+**ObjC runtime class name (vs Swift-overlay name)** _(collection IR fact; settled — k38)_:
+The class identity APIAnyware keys on: the name the **live ObjC runtime** reports
+(`class_getName`), recovered at collection from the clang **USR**
+(`c:objc(cs)NSScanner`, or the `@objc`-Swift infixed `c:@M@…@objc(cs)NSScanner` →
+`NSScanner`), **not** the Swift import name the overlay may rename it to (`Scanner`,
+`URLSession`, `FileHandle`, the `Unit*` family, the private `_NSKeyValueObservation`). Set
+in `extract-swift` `map_class` (`objc_runtime_class_name`). Because the Swift↔ObjC merge
+(`merge_swift_into_objc`) matches by `name`, keying on the runtime name **unifies** a
+Swift-overlay class with its clang twin into **one** IR class — instead of two classes that
+split the runtime class's methods (the ObjC methods on `NSScanner`, the Swift-native residual
+on a separate `Scanner`). A shared, analysis-level fact, so the unification fixes **all
+targets** at once. Without it, every target baked the overlay name into its class-identity
+registry, so a live object's runtime name missed the registry (no auto-wrap) and
+`objc_getClass(<overlay-name>)` returned nil (no construct).
+_Avoid_: keying a registry/dispatch table on the Swift-overlay name (the k38 bug — it cannot
+match `class_getName`); a per-target NS-prefix heuristic to recover the runtime name (misses
+non-NS renames like `_NSKeyValueObservation`; the USR is the authoritative source).
+
 **Opaque handle**:
 The trampoline rep (ADR-0027) for a Swift value/reference that has no flat C-ABI
 form and is not Foundation-bridgeable — a non-bridged Swift `struct`, a payload
@@ -199,10 +217,16 @@ app `main`, every event handler dispatched from `NSRunLoop`, every callback
 invoked from the ObjC side (delegate methods, blocks, `foreign-callable`
 trampolines) — wraps its body in an `@autoreleasepool`. Transient
 autoreleased objects produced during the entry's lifetime drain at the pool
-boundary and never reach the guardian. Specific to the chez lifetime model;
-the racket runtime relies on per-thread autorelease pools instead. See
-`docs/adr/0007-chez-lifetime-model.md`.
-_Avoid_: "main pool" (ambiguous with NSRunLoop's autorelease pool).
+boundary and never reach the guardian. Originated in the chez lifetime model;
+the racket runtime relies on per-thread autorelease pools instead. **Generalized
+to the CL family** (ADR-0036 + ADR-0033 C1): the *user obligation* — wrap your own
+non-runloop loops, the same rule Cocoa imposes on ObjC command-line tools — is
+family-level **observable behaviour**, but the *mechanism* is per-impl (sbcl: the
+pool boundary doubles as the main-thread release-queue drain — see *sbcl lifetime /
+main-thread release queue*). See `docs/adr/0007-chez-lifetime-model.md`,
+`docs/adr/0036-sbcl-lifetime-finalize-and-main-thread-release-queue.md`.
+_Avoid_: "main pool" (ambiguous with NSRunLoop's autorelease pool); calling it
+chez-only (it is now a family convention with per-impl realization).
 
 **Foreign-thread activation**:
 The chez mechanism for callbacks that fire on a background OS thread. Every
@@ -281,6 +305,349 @@ a Gerbil configured `--enable-shared=no`; foreign-framework linkage is passed vi
 `-ld-options -framework AppKit`. The natural realisation of chez's self-contained
 distribution model (ADR-0009) for the `gerbil` target.
 _Avoid_: "stub-launcher" (that is racket's distribution model, not gerbil's).
+
+## SBCL target toolchain
+
+**`sbcl` target**:
+The fourth target — **Steel Bank Common Lisp** with a **CLOS** binding style.
+The on-disk unit is `generation/targets/sbcl/`; CLI `--target sbcl`; emitter
+crate `emit-sbcl`. The id is a **plain language id** (no `{lang}-{paradigm}`
+slug), matching racket/chez/gerbil — CLOS is this target's *one* binding style
+(the gerbil analogue: its `defclass`+generics object model is gerbil's single
+style), not a reified paradigm axis. No `sbcl-functional` sibling is planned; if
+one is ever wanted, register it then (per the retired **Paradigm** guidance).
+_Avoid_: `sbcl-clos` as the target id (that is the *grove* name, emphasizing the
+headline idiom — the id stays plain `sbcl`); "Common Lisp" as the display name
+(the target is pinned to the SBCL *implementation*, not portable CL — ADR-0005).
+
+**`sb-alien`**:
+SBCL's compiler-integrated native FFI and the `sbcl` target's FFI layer —
+`define-alien-routine` / `alien-funcall` (typed C calls), `with-alien` (stack
+aliens), `alien-sap` (pointer↔SAP), `define-alien-callable` (callbacks). The
+idiomatic SBCL way to reach `objc_msgSend` / libobjc; the analogue of chez's
+`foreign-procedure`, gerbil's `:std/foreign`/`define-c-lambda`, and racket's
+ffi2 + `ffi/unsafe/objc`. Chosen over **CFFI** (the portable-across-Lisps FFI
+library) per ADR-0005 — CFFI is the "portable subset" the chez-vs-R6RS rule
+rejects. Makes `sbcl` a **compiled-FFI** target (ADR-0015), like chez and
+gerbil, unlike interpreted-FFI racket: the emitter open-codes one typed alien
+signature per method ABI, casting away arm64 variadic `objc_msgSend`.
+_Avoid_: "CFFI" / "the FFI" (name it `sb-alien`); "libffi" (sb-alien generates
+direct native call sites, not libffi thunks).
+
+**sbcl emitter conventions** _(settled — `emit-sbcl` leaf 040/010, 2026-06-20)_:
+The fixed spellings every later emitter leaf + the runtime (050) must match, so
+the binding is internally consistent. **Names** (contract §3.1/§3.2): the **`ns:`
+package**; classes are acronym-aware kebab-case (`NSString` → `ns:ns-string`,
+`NSURLHandleClient` → `ns:ns-url-handle-client`, `NSOpenGLView` →
+`ns:ns-opengl-view`) via the **shared** `emit::naming::acronym_aware_kebab` (the
+acronym/compound table is shared analysis-level data — pile-up acronyms split,
+brand compounds stay whole — extend it there, not per-impl); a selector maps to
+one generic-function symbol that **preserves selector structure** (ADR-0039): each
+`:` → `_`, each camelCase hump → `-` (`objectAtIndex:` → `ns:object-at-index_`,
+`setObject:forKey:` → `ns:set-object_for-key_`, `cancel`→`ns:cancel` but
+`cancel:`→`ns:cancel_`), plus a keyword-symbol list (`(:object-at-index)`). This map
+is **injective** — the colon and the hump never merge — so distinct ObjC selectors
+never collide and need NO rename table / global reconciliation / emitter-side
+collision detector (macOS's surface is collision-free, integrity is an analysis-phase
+invariant). The pre-ADR-0039 `-`-join dropped the colon and collided `foo`/`foo:`. **FFI spellings** (`SbclFfiTypeMapper`,
+grounded in the 030 spikes): opaque ObjC `id`/`Class`/`SEL`/block/raw-pointer →
+`sb-alien:system-area-pointer` (a SAP, **not** `(* t)`); C strings →
+`sb-alien:c-string`; scalars → `(sb-alien:signed N)`/`(sb-alien:unsigned N)`/
+`sb-alien:float`/`sb-alien:double`; ObjC `BOOL` → `(sb-alien:boolean 8)`; geometry
+structs pass **by value** as `(sb-alien:struct <name>)` with `NSRect`/`CGRect`
+canonicalised to `ns-rect` (the runtime `define-alien-type`s these + confirms
+by-value passing). The `TargetInfo` `generated_subdir` is **`generated`** (SBCL
+imposes no library-path-resolution constraint, unlike chez's `apianyware`).
+_Avoid_: re-deriving the acronym table inside `emit-sbcl` (it lives in shared
+`emit`); `(* t)` for ObjC pointers (the spikes use SAP); lowercasing class names
+to `nsstring` (that is the scheme targets' convention — sbcl is hyphenated +
+`ns:`-qualified).
+
+**sbcl emitter on-disk layout + the 040→050 package seam** _(settled — `emit-sbcl`
+leaf 040/060, 2026-06-20)_: per framework the orchestrator writes a **facade**
+`<fw_low>.lisp` next to a `<fw_low>/` dir holding `generics.lisp` (one `defgeneric`
+per selector — a CL package unifies generics across files, so there is **no**
+gerbil-style global generics module and no sharding), one **`<class>.lisp` per
+class** (lowercased ObjC name — `NSString` → `nsstring.lisp` — each its own
+`defclass` + dispatch + `register-*`, the gerbil per-class on-disk symmetry), a
+file per synthesized bare node, and `protocols.lisp`/`enums.lisp`/`constants.lisp`/
+`functions.lisp` (each present only when non-empty). Every file opens with
+`(in-package #:apianyware-sbcl-impl)` — the **runtime/impl package** the runtime
+(050) must define (`(:use :cl sb-mop)` + the `aw-*` helpers + the `ns` package).
+The **facade is the CL form of gerbil's re-export**: it `(export …)`s every bound
+`ns:` symbol (spelled `ns::…` to intern) so the construct files' **single-colon**
+`ns:` references — the contract's named surface — read as external symbols. This
+fixes a **load order** the runtime's ASDF system must honour: **facade first**,
+then `generics.lisp`, then the per-class files **superclass-before-subclass**, then
+the rest. The Swift-native **fn/const residual** is bound here (`render_binding`);
+a **class** owner's **method/init residual** is wired by leaf **045**
+(`emit_swift_native_residual`) — each bindable method a receiver-specialized
+`(defmethod ns:<base-labels> ((self ns:<owner>) …) …)` (selector-analogous generic =
+base + non-wildcard labels; folded into `collect_generics` for the defgeneric
+lockstep), each bindable initializer a `(defun ns:make-<owner>… )` constructor (a
+class owner `aw-wrap`s the returned id — **not** §3.3's `make-instance` path, since a
+Swift-native init calls `Owner(labels:)` through the trampoline, not ObjC
+`alloc`/`init`). **Value-struct (population-B) owners** stay deferred — no CLOS class
+to specialize on (an object-model decision for a follow-up leaf); their residual is
+still collected for the §6d count. _Avoid_: a per-framework
+single `classes.lisp` (per-class files are the convention — reviewable goldens +
+gerbil symmetry); emitting bound names double-colon `ns::` in definitions (that is
+the facade's interning spelling only — definitions use single-colon).
+
+**sbcl runtime seam (the `sb-alien` FFI foundation)** _(realized — leaf 050/020,
+2026-06-20)_: the runtime lives at `generation/targets/sbcl/lib/runtime/`
+(module-per-concern, peer gerbil's): `packages.lisp` (the `ns` + `apianyware-sbcl-impl`
+packages — `ns` `(:use)` nothing, impl `(:use :cl sb-mop)`), `ffi.lisp` (the seam),
+`swift-trampoline.lisp` (the Swift-native residual binding shape), `load.lisp` (the
+**dev** loader — the production ASDF system that also sequences the `generated/` facade
++ construct files is 050/070's). The seam reaches ObjC **directly**: `+objc-msgsend+`
+is `objc_msgSend`'s address taken **once as a raw SAP**, `sap-alien`-recast to the exact
+`(function <ret> sap sap <args>…)` type **per call site** — arm64 needs **no
+`_stret`/`_fpret`** variant (those symbols exist for x86 compat but the plain entry
+returns structs/floats correctly via x8; verified with `-rangeOfString:`). Classes +
+selectors resolve **lazily from baked strings, cached** (`aw-class`/`aw-sel` over
+`*class-cache*`/`*sel-cache*`) — a framework must be `dlopen`ed (`aw-load-framework`)
+before its classes resolve, and 050/070 clears the caches + re-resolves after a dump
+(the SAP is never baked). The object boundary is `aw-ptr` (outbound, reads the `ptr`
+slot) / `aw-wrap` (inbound, `*objc-class-registry*` → `make-instance` — registry empty
+here, **populated by 050/030**); the UTF-8 string bridge is
+`aw-make-nsstring`/`nsstring->string`. The residual loads `libAPIAnywareSbcl` via
+`aw-load-native-dylib` (`*native-dylib-path*`) and binds each `aw_sbcl_*` entry with a
+typed `sb-alien` crossing (the canonical shape: `aw-box-free` ↔ `aw_sbcl_box_free`).
+_Avoid_: `extern-alien` for `objc_msgSend` (it is selector-polymorphic — take the SAP +
+recast); baking a `Class`/`SEL` **pointer** (bake the string, re-resolve per process);
+CFFI (the seam is `sb-alien`, ADR-0015).
+
+**MOP projection / `objc-class` metaclass (sbcl)** _(settled — ADR-0034; mechanisms verified first-hand on SBCL 2.6.5)_:
+The `sbcl` object model: ObjC's class system is **projected into CLOS via the
+Metaobject Protocol** (`sb-mop`), not mirrored as plain `defclass`. An `objc-class`
+metaclass (subclass of `standard-class`) backs every bound ObjC class; each ObjC
+class is a CLOS class of that metaclass carrying the ObjC `Class` pointer (foreign
+`ptr` slot on the runtime-owned root `ns:ns-object`); the full ancestor chain is
+reified. ObjC methods are **per-selector `defgeneric`/`defmethod` specialized on
+the receiver** over the real metaclass-backed class graph (CLOS generic dispatch +
+method combination + `call-next-method` for subclass overrides — **not** literal
+multiple-argument dispatch, since ObjC is single-receiver; settled **D6**,
+2026-06-20, holding D3's line against the single-dispatch veneer of all prior CL
+bridges and dodging the "vacuous" critique the gerbil way: dispatch rides a *real*
+class graph, not one wrapper type). The emitter emits **one explicit `defgeneric`
+per selector** (authoritative arglist/docstring — the named contract surface) + one
+`defmethod` per (class × selector). **Generic explosion is a non-issue:** the
+full AppKit+Foundation scale (6,500 generics + 40,000 methods) compiles **cold in
+~8.4 s** on SBCL — gerbil's ADR-0023 5h blow-up lived in Gambit's `:std/generic`
+*macro*, not in SBCL's native CLOS, so **no sharding / no-`-O` / parallel-compile
+machinery is needed**. Instance **ivars** are foreign slots: `slot-value-using-class`
++ a custom foreign slot-definition class carrying a **baked bit-offset** + foreign
+ctype, discriminating foreign ivars from plain-Lisp slots (the `ptr` handle falls
+through to standard storage); baked offsets are SDK-drift-sensitive (a fast path
+over the always-safe accessor-selector path). `make-instance` routes through
+**`allocate-instance` specialized on `objc-class`** → `alloc`/`init` (no init
+initargs ⇒ alloc-only); deriving `(define-objc-subclass my-view (ns:ns-view) …)`
+(→ `:metaclass objc-class`) synthesizes a real ObjC subclass via
+`objc_allocateClassPair` + IMP install + `objc_registerClassPair`. The **emitter
+statically generates the class graph** (per ADR-0010 / the shared-IR model); the
+**MOP machinery lives in the runtime** — diverging from Clozure CL, whose bridge
+synthesizes classes dynamically from the live ObjC runtime. Because
+`save-lisp-and-die` (D4) keeps baked Lisp metadata but **loses live foreign
+pointers** (verified: a revived image sees `objc_getClass "NSString"` → NULL until
+Foundation is re-`dlopen`ed), the runtime owns a CCL-`revive-objc-classes`-equivalent
+**startup re-resolution pass**: re-`dlopen` each framework, then re-resolve every
+`Class`/`SEL` from its **baked string identity** (never reuse a baked pointer) —
+load-bearing for `070` `bundle-sbcl`. The MOP is the *mechanism*; the class graph
+stays statically emitted. A `define-objc-method` override's IMP is libobjc's
+`_objc_msgForward` (installed by `SubclassSynth.swift`); the framework callback bounces
+to the main thread, then **one** Lisp forwarding dispatcher reads the call's ABI shape
+**live** off the `NSInvocation`'s `NSMethodSignature` and routes through the `ns:`
+generic. ObjC super-chaining from an override is the explicit **`call-super` /
+`call-super-id`** (`objc_msgSendSuper`), set in 050/040.
+_Avoid_: `call-next-method` to reach the **ObjC** inherited implementation (a bound
+method sends `objc_msgSend` to *self*, which re-enters the forwarding IMP → infinite
+recursion — use `call-super`; `call-next-method` is for Lisp-subclass-of-Lisp-subclass
+chains only); a raw `define-alien-callable` installed *as* an IMP (it runs Lisp on the
+framework's foreign thread — the ADR-0035 crash; the IMP must be the dylib's native
+bounce shim); a single `objc-object` wrapper class with generics (gerbil pre-rejected
+as "vacuous" — receiver-only dispatch over one type, ADR-0018→0020); "manifest
+`defclass` graph" *without* the MOP (that is gerbil's shape, ADR-0020 — sbcl goes
+further); "dynamic synthesis from the ObjC runtime" as sbcl's mechanism (that is
+CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks);
+"multiple dispatch" (ObjC dispatches on the receiver only — the generics are
+receiver-specialized over the real class graph, D6); **porting gerbil's
+generics-sharding / no-`-O` / parallel-compile pipeline** (ADR-0023 — that fixes a
+Gambit-macro cost SBCL's native CLOS does not have); reusing a baked foreign
+`Class`/`SEL` pointer after an image dump (it is stale — re-resolve from the string).
+
+**value-struct CLOS projection / `ns:value-struct` (sbcl)** _(settled — ADR-0042)_:
+The **population-B (value-struct) dual** of the `objc-class` projection above. A Swift
+value struct (`objc_exposed == false`, e.g. `IndexSet`, `CharacterSet`) with bindable
+Swift-native methods/inits projects to a **plain CLOS class** `(defclass ns:<struct>
+(ns:value-struct) ())` — a `standard-class`, **not** the `objc-class` metaclass (a value
+struct has no ObjC `Class`, so alloc/init, ivar offsets and subclass synthesis are all
+inapplicable). The runtime-owned root **`ns:value-struct`** holds the opaque
+`AwSbclValueBox` handle in a **`ptr` slot — the same slot name `ns:ns-object` uses** — so
+`aw-ptr` reads it unchanged: a value-struct method's receiver coerces through the *same*
+`(aw-ptr self)` as a class owner (and a value-struct arg through `(aw-ptr arg)`), with the
+unbox + `mutating` write-back living entirely in the `@_cdecl` Swift side. Methods bind as
+`(defmethod ns:<gen> ((self ns:<struct>) …))` (their generics fold into `generics.lisp`
+like a class owner's); inits bind as `(defun ns:make-<struct> … (make-instance 'ns:<struct>
+:ptr <box>))` constructors that **wrap the box into an instance** (the sole root producer —
+method/fn returns of a value type stay un-nameable opaque boxes). Lands in a per-framework
+**`structs.lisp`** (residual-gated, loaded like `functions.lisp`). The `ns:value-struct`
+root arms a **box finalizer** (`aw-box-free`) — freed **directly off the finalizer thread**
+(no main-thread queue: a value box has no UI `dealloc` affinity, unlike a wrapped ObjC `id`,
+ADR-0036). A residual method whose generic post-kebabs to an already-declared name at a
+**different arity** is **dropped** (a CLOS generic cannot carry two arities — it would crash
+at load), surfaced as a `WARN`. This is a **cross-target divergence**: gerbil keeps value
+structs **procedural** (`(->ptr self)` passes the raw box, methods are plain `define`s —
+Scheme has no `defun`/`defgeneric` symbol collision); SBCL's single `ns:` package forces the
+CLOS class (a bare `defun ns:foo` cannot coexist with `defgeneric ns:foo`).
+_Avoid_: an `objc-class` metaclass for a value struct (no ObjC Class behind it); a bare
+`defun` value-struct method (collides with same-named generics in the single `ns:` package);
+a constructor that hands back the **raw box** (it would not dispatch through the struct's
+methods); routing `make-instance 'ns:<struct>` through the trampoline (it is the standard
+CLOS make — the named `ns:make-<struct>` is the constructor surface).
+
+**CL-family interface contract** _(settled — ADR-0033 + `docs/specs/2026-06-20-cl-family-interface-contract.md`)_:
+The **documented, specification-level interface that all Common Lisp targets share**,
+even though each compiles to a different FFI under the hood. The family roster is
+four confirmed members — **SBCL, CCL, AllegroCL, LispWorks** (two open-source, two
+commercial; ECL/ABCL/Clasp out-for-now — absence, not exclusion) — though **only
+`sbcl` is built** in the add-sbcl-clos-target grove; the others shape what the
+contract must abstract over (each has its own FFI — `sb-alien` / CCL bridge /
+Allegro `ff:` / LispWorks `fli:` — and its own MOP with varying AMOP conformance).
+**The normative boundary (decision C1): observable behaviour is normative; the
+realization mechanism is implementation-private.** The shared surface is the
+`ns:` package, class names, generic-function names, the **portable macros**
+`define-objc-subclass` / `define-objc-method` (each impl expands them itself),
+`make-instance`→alloc/init, `slot-value`→ivar access, and the **condition
+hierarchy** (CL's idiom for `NSError**` — errors are *signalled conditions*, not
+`(values result error)`; part of the contract). What is **not** shared — *below*
+the contract: the binding implementation (emitter FFI output, callback/block
+bridges, threading, distribution) **and the `objc-class` metaclass / MOP
+mechanism** (SBCL/CCL realize the macros via the metaclass; LispWorks via plain
+`standard-class` + `standard-objc-object` — so **LispWorks is a first-class
+conformant member**, conforming by *behaviour* through a different mechanism, not
+a fallback tier). Application source written against the contract is **portable
+across CL impls**; binding source is not. This is a **spec-level** share, never
+shared binding code — so it does **not** reopen the CFFI question (`sb-alien`
+stays, ADR-0005) and does **not** breach ADR-0011's *substrate* isolation; it adds
+a new **family-level interface-sharing axis** (ADR-0033) **gated on a sharp
+precondition (decision C3): a family qualifies only if it has a single,
+standardized, well-accepted object model portable across its impls.** CL qualifies
+(ANSI CLOS + AMOP); the Scheme family is **ineligible** (no portable object model —
+Racket classes / TinyCLOS / Gerbil MOP are mutually incompatible), so
+racket/chez/gerbil stay fully hermetic under ADR-0011's default. Aligned with
+Clozure CL's existing Cocoa-bridge API for de-facto portability with the existing
+CL-Cocoa codebase.
+_Avoid_: "shared binding / portable CFFI layer" (that is the rejected code-level
+share — different FFI per impl, contract is spec-only; refuted by Objective-CL's
+per-impl breakage, research §C3); treating the contract as overturning ADR-0011
+(it scopes an *exception*, native substrate stays isolated); placing the contract
+spec in a per-target unit (it is *cross-target* within the CL family — main-tier
+doc); listing **the `objc-class` metaclass as part of the shared surface** (C1: the
+metaclass is *mechanism, below the contract* — the surface is package/names/macros/
+conditions); calling **LispWorks a fallback/degraded tier** (it is a first-class
+member conforming through a different mechanism).
+
+**`libAPIAnywareSbcl` / sbcl trampoline layer** _(reframed 030, 2026-06-20; lower layer settled ADR-0038)_:
+The sbcl target's native (Swift) library is the **trampoline layer of the
+complete-API binding model** (ADR-0025), *not* a bespoke "Swift coverage device."
+SBCL reaches ObjC **directly** (`objc_msgSend` via `sb-alien`, **trampoline
+elided**) and routes only the **Swift-native residual** — `objc_exposed == false`
+top-level functions/constants, plus the receiver-handle method frontier — through
+`libAPIAnywareSbcl`'s flat C-ABI re-exports, bound by typed `sb-alien` call sites
+(Lisp-side marshalling, ADR-0015; object returns wrapped to bound type via the
+ADR-0034 MOP class registry; no lazy-load forcing reference). Because SBCL (like
+gerbil's `gsc`, ADR-0029) **cannot compile Swift inline**, the dylib is
+**necessary** (only Swift calls the Swift ABI) and **per-target hermetic**
+(ADR-0011/0029 settled this fork — no family-shared substrate). It is the SBCL
+target's **sole native compilation unit** — so, *unlike* gerbil's strictly
+trampoline-only dylib (which had a second ObjC-in-`gsc` home), it **also hosts the
+genuinely-native runtime concerns** gerbil kept in ObjC: the main-thread callback
+bounce (ADR-0035), the `objc_allocateClassPair` subclass-IMP synthesis (ADR-0034 §5),
+and the `OpaqueHandle`/`ThrowsBridge`/`AsyncBridge` marshalling helpers. It is
+**"trampoline-only" in the exact sense that it does *not* absorb the MOP object
+model** (metaclass, hooks, class graph, dispatch generics, startup re-resolution all
+stay Lisp-side). On `save-lisp-and-die` the dylib stays **passive**: SBCL
+auto-reopens it (in `*shared-objects*`) so its `aw_sbcl_*` symbols re-link for free
+and dyld re-loads its linked framework subset, while the **Lisp** startup pass owns
+the direct-msgSend frameworks + **all** `Class`/`SEL` re-resolution over the baked
+graph (ADR-0034 §6 / ADR-0038 §5). The residual is a **deterministic function of the
+shared IR** (the §6d invariant: 51 funcs + 7 constants + 576 init + 554 method,
+identical across targets), which is *itself* what makes the CL family converge: same
+analysis → same C ABI → same surface. This is the contract's **lower layer**; the
+`ns:`/CLOS surface is the **upper layer**.
+_Avoid_: "Swift coverage library" / "second mechanism" (it is the trampoline layer
+of one model — ADR-0025 retired "ObjC-only target" as a description); "family-
+shared substrate" (ADR-0029 settled hermetic per-target duplication); routing ObjC
+through it (ObjC is direct, trampoline elided); reading "trampoline-only" as "only
+trampolines" (it is the *sole native unit* and hosts the bounce/IMP/marshalling
+helpers — "trampoline-only" means *no MOP object model*, ADR-0038); a second native
+unit / a `aw_sbcl_revive` dylib entry (one dylib; the relive is a Lisp pass).
+
+**bundle-sbcl / sbcl distribution** _(settled — ADR-0041; supersedes ADR-0038 §6)_:
+The crate that packages a sample app as a self-contained `.app`. Pipeline: drive the
+app's **own `dump.lisp`** (`save-lisp-and-die :executable t`) to write the image into
+`Contents/Resources/`, behind a Swift **stub** (`CFBundleExecutable`) that
+`execv`s it. Self-containment is closed **at runtime, never editing the image** —
+post-dump `install_name_tool` is *impossible* (the Lisp core sits past `__LINKEDIT`).
+Two gaps: **libzstd** (a hard `LC_LOAD_DYLIB`) is vendored into `Contents/Frameworks/`
+and resolved by leaf name via the stub's `DYLD_FALLBACK_LIBRARY_PATH`; the `dlopen`ed
+**libAPIAnywareSbcl** (residual apps) is re-opened via a relocated `@executable_path/..`
+`*shared-objects*` namestring (the `AW_NATIVE_DYLIB_RECORD_AS` hook on
+`aw-load-native-dylib`). The dumped image keeps its own ad-hoc signature (signed
+*around*, not re-signed). _Avoid_: "vendor + `install_name_tool` like bundle-gerbil"
+(ADR-0041 — impossible on a dumped image); re-signing the dumped image.
+
+**sbcl main-thread bounce** _(settled — ADR-0035; spiked first-hand on SBCL 2.6.5/arm64)_:
+The `sbcl` threading/callback model: a **foreign** OS thread (a GCD worker /
+framework completion SBCL never created) must **never** run Lisp directly — the
+native-core callback trampolines (delegate IMPs, block invokes, subclass IMPs)
+**bounce to the main thread** (SBCL-native, suspendable, runs the AppKit loop)
+before re-entering Lisp, in `libAPIAnywareSbcl` Swift (`dispatch_sync`
+value-returning / `dispatch_async` void — gerbil ADR-0022's split). Reached
+**empirically**, not by inheritance: the 2026-06-20 threading spike crashed 5/5
+when concurrent GCD workers ran Lisp (`cannot suspend thread: ENOTSUP` inside
+`GC-STOP-THE-WORLD` — SBCL can't stop-the-world-suspend foreign threads on macOS),
+so chez's `Sactivate_thread` activation (ADR-0016) is **rejected**. **Richer than
+gerbil:** SBCL-**native** `sb-thread` workers *do* run real concurrent Lisp safely
+(the spike's control survived), so background compute uses `sb-thread`, not captured
+foreign threads — the bounce scopes to *foreign* entry only.
+_Avoid_: "activate the foreign thread" (chez's model — empirically unsafe here);
+"bounce everything" (native `sb-thread`s need no bounce); framing it as inherited
+from gerbil (same outcome, opposite cause — gerbil crashes at entry, sbcl inside GC).
+
+**sbcl lifetime / main-thread release queue** _(settled — ADR-0036; finalizer-thread fact verified on SBCL 2.6.5)_:
+The `sbcl` lifetime model for wrapped ObjC `id`s — the two-mechanism shape of chez
+ADR-0007 / gerbil ADR-0019, with an SBCL twist. **Retained objects:**
+`sb-ext:finalize` (idiomatic; O(dead) like chez's guardian) is the GC-death trigger;
+its closure captures **only the raw `id`** (never the wrapper) and **enqueues** it
+— because `sb-ext:finalize` runs on a dedicated **`"finalizer"` thread**, so a direct
+`release` would fire off-main and an off-main `dealloc` of an AppKit object is UB.
+A **main-thread drain** at the entry-point pool boundary sends `release` on main
+(UI-safe). **Autoreleased (+0) transients:** the entry-point `@autoreleasepool`
+drains them and doubles as the release-queue drain point. The off-main-finalizer
+issue is *UI-affinity*, not GC-safety (the finalizer thread is SBCL-native, hence
+suspendable — unlike the foreign threads of the bounce model).
+_Avoid_: "guardian" (chez's primitive — SBCL uses `sb-ext:finalize`); "weak-pointer
+scan" (rejected — O(live), loses the O(dead) efficiency); "release on the finalizer
+thread" (off-main AppKit dealloc is UB — the queue routes it to main).
+
+**`ns:objc-error` condition hierarchy** _(settled — ADR-0037; back-fills contract spec §3.7)_:
+The CL-family error surface for `NSError**` / `NSException`, **signalled** as CL
+conditions (not `(values result error)` — ADR-0033/0006 contrast). **Flat, split by
+source:** root `ns:objc-error` `: cl:error` (stable family-portable `handler-case`
+target); `ns:cocoa-error` (the `NSError**` path; `domain`/`code`/`user-info`/
+`localized-description` readers); `ns:objc-exception` (the `NSException` path;
+`name`/`reason`/`user-info`). Condition types are **distinct symbols** from the
+projected CLOS classes `ns:ns-error`/`ns:ns-exception` (the condition wraps the
+object). **No per-domain subclasses** (keeps cross-impl conformance cheap — callers
+branch on `domain`/`code`). **Minimal restarts:** `use-value` + `continue`/
+`return-nil` (`retry` deferred). Signals **only** when the primary return indicates
+failure (Cocoa rule — `NSError**` may be garbage on success); the **same signaller**
+serves the direct path and the Swift-`throws` trampoline (`ThrowsBridge`).
+_Avoid_: naming a condition `ns:ns-error`/`ns:ns-exception` (those are the bound CLOS
+classes); per-(domain×code) condition subclasses (rejected — bloats the contract);
+"returns an error tuple" (the family signals, per ADR-0033).
 
 ## Native binding mechanism
 
