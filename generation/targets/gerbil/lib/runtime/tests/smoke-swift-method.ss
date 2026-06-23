@@ -16,7 +16,7 @@
 ;;;     write-back on one stable handle, all via aw_gerbil_swift_{init,m}_*.
 ;;;
 ;;;   pop-A — Foundation.URLSession.data(from:) (Swift-native ASYNC method): the
-;;;     generated `urlsession-data-from` drives async-bridge.ss's callback runtime
+;;;     generated `nsurlsession-data-from` drives async-bridge.ss's callback runtime
 ;;;     (R4) against a deterministic local file:// source. The completion delivers a
 ;;;     real (Data, URLResponse) handle on the main thread (the MainActor hop), which
 ;;;     this script's CFRunLoop pump drains.
@@ -27,8 +27,11 @@
 (import :gerbil-bindings/runtime/objc              ; ptr-null?, wrap/->ptr
         :gerbil-bindings/runtime/tests/cf-runloop   ; cf-run-loop-run-in-mode (async pump)
         :gerbil-bindings/foundation/indexset       ; make-indexset-integer, contains, insert!
-        :gerbil-bindings/foundation/urlsession     ; urlsession-data-from (async)
-        :gerbil-bindings/foundation/nsurlsession   ; nsurlsession-shared-session
+        ;; After k38 (runtime-name class identity) the Swift-overlay `URLSession` class
+        ;; merged into the runtime-name `NSURLSession`, so the async `data(from:)` method
+        ;; binds as `nsurlsession-data-from` in the unified nsurlsession.ss (the renamed-
+        ;; class auto-wrap path: the registry keys on the live class_getName "NSURLSession").
+        :gerbil-bindings/foundation/nsurlsession   ; nsurlsession-shared-session, nsurlsession-data-from
         :gerbil-bindings/foundation/nsurl)         ; nsurl-file-url-with-path
 
 (def (main . _)
@@ -71,8 +74,8 @@
   (def result #f)
   (def err #f)
   (def done #f)
-  ;; (urlsession-data-from session url complete): complete is (lambda (result err) …).
-  (urlsession-data-from
+  ;; (nsurlsession-data-from session url complete): complete is (lambda (result err) …).
+  (nsurlsession-data-from
    session url
    (lambda (r e) (set! result r) (set! err e) (set! done #t)))
 
