@@ -68,3 +68,4 @@ docs/apps/*/artifacts/
 .claude/scheduled_tasks.lock
 spike-scratch/
 /.grove-meta
+/.grove-worktrees
