@@ -168,11 +168,15 @@ loads eagerly + auto-reopens; chez §3 not ported — gerbil §4 position).
 startup pass over the baked graph (§2/ADR-0034 §6). The **dylib stays passive** — no
 `aw_sbcl_revive` entry.
 
-**Self-containment (ADR-0038 §6 / gerbil ADR-0029 §3):** `save-lisp-and-die :executable t`
-embeds the SBCL runtime in the exe; the Swift runtime is OS-resident; `bundle-sbcl`
-vendors + relocates `libAPIAnywareSbcl` into `Contents/Frameworks/` via `install_name_tool`
-(the `bundle-gerbil` `relocate.rs` path), after which `otool -L` shows only `/usr/lib/*`,
-system frameworks, and `@executable_path/..`.
+**Self-containment (SUPERSEDED by ADR-0041; was ADR-0038 §6 / gerbil ADR-0029 §3):**
+`save-lisp-and-die :executable t` embeds the SBCL runtime in the exe and the Swift
+runtime is OS-resident — both still hold. **The `install_name_tool` relocation described
+here is impossible** on a dumped image (the Lisp core sits past `__LINKEDIT`, 060/020
+finding), so `bundle-sbcl` does **not** reuse `bundle-gerbil`'s `relocate.rs`. Instead
+(ADR-0041): a Swift stub sets `DYLD_FALLBACK_LIBRARY_PATH` so the vendored `libzstd` (a
+hard load command) resolves by leaf name, and the `dlopen`ed `libAPIAnywareSbcl` is
+re-opened via a relocated `@executable_path/..` `*shared-objects*` namestring — neither
+edits the image.
 
 **Scope — the §6d invariant (racket spec §6d):** the residual reproduces
 **51 fn + 7 const + 576 init + 554 method** trampolines **exactly** (deterministic from

@@ -185,6 +185,15 @@ stays Lisp-side.**
 
 ### 6. Self-containment preserved by the existing relocation path (gerbil ADR-0029 §3)
 
+> **SUPERSEDED by ADR-0041 for the relocation *mechanism*.** Building the 060 sample
+> apps proved `install_name_tool` **impossible** on a `save-lisp-and-die` image (the Lisp
+> core sits past `__LINKEDIT`). `bundle-sbcl` does **not** reuse `bundle-gerbil`'s
+> `relocate.rs`; it closes the two gaps at runtime instead — `libzstd` via a stub's
+> `DYLD_FALLBACK_LIBRARY_PATH`, `libAPIAnywareSbcl` via a relocated `*shared-objects*`
+> namestring. The framing below (the dylib is the only new non-system dependency; the
+> Swift runtime is OS-resident) still holds; only the `install_name_tool` paragraph is
+> wrong. See ADR-0041.
+
 `save-lisp-and-die :executable t` embeds the SBCL runtime into the dumped executable;
 the exe `dlopen`s `libAPIAnywareSbcl` at startup. Self-containment is upheld by the
 **same machinery** gerbil uses, not a new exception:

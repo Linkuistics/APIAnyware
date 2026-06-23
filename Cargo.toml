@@ -25,6 +25,7 @@ members = [
     "generation/crates/bundle-racket",
     "generation/crates/bundle-chez",
     "generation/crates/bundle-gerbil",
+    "generation/crates/bundle-sbcl",
 ]
 
 [workspace.package]

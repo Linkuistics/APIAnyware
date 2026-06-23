@@ -40,6 +40,7 @@ run smoke-lifetime-conditions   'SMOKE PASS'
 run smoke-subclass-conformance  'SMOKE PASS'
 run smoke-threading-callbacks   'PASS \(0 failure'
 run smoke-startup-reresolution  'SMOKE PASS'
+run smoke-bundle-relocate       'SMOKE PASS'
 run smoke-integration           'node done-bar\): PASS'
 
 [ $rc -eq 0 ] && echo "ALL SBCL RUNTIME SMOKES OK" || echo "SBCL RUNTIME SMOKE FAILURES"

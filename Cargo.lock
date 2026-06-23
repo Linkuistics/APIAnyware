@@ -155,6 +155,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-macos-bundle-sbcl"
+version = "0.1.0"
+dependencies = [
+ "apianyware-macos-stub-launcher",
+ "plist",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "apianyware-macos-collect"
 version = "0.1.0"
 dependencies = [

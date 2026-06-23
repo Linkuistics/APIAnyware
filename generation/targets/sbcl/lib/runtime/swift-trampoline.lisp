@@ -30,21 +30,59 @@
 
 (defvar *native-dylib-path* nil
   "Filesystem path to `libAPIAnywareSbcl.dylib`. Set by the loader / bundler before
-   `aw-load-native-dylib`; the bundler relocates it into `Contents/Frameworks/` and
-   points this at the `@executable_path/..` copy (ADR-0038 §6).")
+   `aw-load-native-dylib`; the bundler loads it from the BUILD path here but records
+   an `@executable_path/..` namestring for the dumped image (ADR-0041).")
 
 (defvar *native-dylib-loaded* nil
   "True once `aw-load-native-dylib` has succeeded this process.")
+
+(defparameter +native-dylib-record-as-env+ "AW_NATIVE_DYLIB_RECORD_AS"
+  "Environment variable `bundle-sbcl` sets to the `@executable_path`-relative
+   namestring the dumped image must re-open `libAPIAnywareSbcl` by (ADR-0041). Unset
+   in every dev/interactive load, so the relocation hook is inert outside bundling.")
+
+(defun aw-relocate-dylib-namestring (loaded-path record-as)
+  "Rewrite the `sb-alien::*shared-objects*` entry for the just-loaded dylib so a
+   `save-lisp-and-die` image re-opens it by RECORD-AS (an `@executable_path`-relative
+   string) rather than the build-time absolute LOADED-PATH (ADR-0041).
+
+   Post-dump `install_name_tool` is IMPOSSIBLE on a dumped image — `save-lisp-and-die`
+   appends the Lisp core past `__LINKEDIT`, so the Mach-O is uneditable (060/020
+   finding). But `libAPIAnywareSbcl` is `dlopen`ed, not a load command: SBCL keeps it in
+   `*shared-objects*` and auto-reopens it on image restart (ADR-0038 §5) by the recorded
+   NAMESTRING. So we load from the real build path (every `aw_sbcl_*` symbol resolves at
+   dump time) and then point only the recorded string at the vendored
+   `Contents/Frameworks/` copy; dyld expands `@executable_path` relative to the revived
+   exe. The dylib stays loaded from LOADED-PATH this process — only the serialized
+   namestring changes. A no-op (returns nil) if the entry is not found."
+  (let* ((base (file-namestring loaded-path))
+         (obj (find-if (lambda (o)
+                         (let ((ns (sb-alien::shared-object-namestring o)))
+                           (and ns (string= base (file-namestring ns)))))
+                       sb-alien::*shared-objects*)))
+    (when obj
+      (setf (sb-alien::shared-object-namestring obj) record-as
+            ;; PATHNAME is consulted by some reopen paths; null it so NAMESTRING wins.
+            (sb-alien::shared-object-pathname obj) nil)
+      record-as)))
 
 (defun aw-load-native-dylib (&optional (path *native-dylib-path*))
   "`load-shared-object` `libAPIAnywareSbcl` from PATH (defaulting to
    `*native-dylib-path*`). Idempotent at the dyld level. Must run before any
    `aw_sbcl_*` crossing is CALLED; the `define-alien-routine` forms below define
-   lazily, so loading this file does not itself require the dylib."
+   lazily, so loading this file does not itself require the dylib.
+
+   If `+native-dylib-record-as-env+` is set (bundle-sbcl, ADR-0041), the recorded
+   `*shared-objects*` namestring is relocated to that value AFTER loading, so a
+   subsequent `save-lisp-and-die` image re-opens the vendored copy exe-relative."
   (unless path
     (error "aw-load-native-dylib: no path (set *native-dylib-path* or pass one)."))
   (sb-alien:load-shared-object path)
-  (setf *native-dylib-loaded* t))
+  (setf *native-dylib-loaded* t)
+  (let ((record-as (sb-ext:posix-getenv +native-dylib-record-as-env+)))
+    (when (and record-as (plusp (length record-as)))
+      (aw-relocate-dylib-namestring path record-as)))
+  *native-dylib-loaded*)
 
 ;;; ---------------------------------------------------------------------------
 ;;; The one uniform value-handle free (OpaqueHandle.swift `aw_sbcl_box_free`).

@@ -536,6 +536,20 @@ trampolines" (it is the *sole native unit* and hosts the bounce/IMP/marshalling
 helpers — "trampoline-only" means *no MOP object model*, ADR-0038); a second native
 unit / a `aw_sbcl_revive` dylib entry (one dylib; the relive is a Lisp pass).
 
+**bundle-sbcl / sbcl distribution** _(settled — ADR-0041; supersedes ADR-0038 §6)_:
+The crate that packages a sample app as a self-contained `.app`. Pipeline: drive the
+app's **own `dump.lisp`** (`save-lisp-and-die :executable t`) to write the image into
+`Contents/Resources/`, behind a Swift **stub** (`CFBundleExecutable`) that
+`execv`s it. Self-containment is closed **at runtime, never editing the image** —
+post-dump `install_name_tool` is *impossible* (the Lisp core sits past `__LINKEDIT`).
+Two gaps: **libzstd** (a hard `LC_LOAD_DYLIB`) is vendored into `Contents/Frameworks/`
+and resolved by leaf name via the stub's `DYLD_FALLBACK_LIBRARY_PATH`; the `dlopen`ed
+**libAPIAnywareSbcl** (residual apps) is re-opened via a relocated `@executable_path/..`
+`*shared-objects*` namestring (the `AW_NATIVE_DYLIB_RECORD_AS` hook on
+`aw-load-native-dylib`). The dumped image keeps its own ad-hoc signature (signed
+*around*, not re-signed). _Avoid_: "vendor + `install_name_tool` like bundle-gerbil"
+(ADR-0041 — impossible on a dumped image); re-signing the dumped image.
+
 **sbcl main-thread bounce** _(settled — ADR-0035; spiked first-hand on SBCL 2.6.5/arm64)_:
 The `sbcl` threading/callback model: a **foreign** OS thread (a GCD worker /
 framework completion SBCL never created) must **never** run Lisp directly — the
