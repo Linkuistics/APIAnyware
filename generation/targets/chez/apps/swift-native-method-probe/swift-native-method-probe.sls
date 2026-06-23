@@ -37,8 +37,10 @@
         ;; The Swift-native METHOD residual — trampolined through libAPIAnywareChez:
         (only (apianyware foundation indexset)     ; pop-B value-struct methods
               make-indexset-integer indexset-contains indexset-insert!)
-        (only (apianyware foundation urlsession) urlsession-data-from)
-        (only (apianyware foundation nsurlsession) nsurlsession-shared-session)
+        ;; After k38 the Swift-overlay `URLSession` merged into the runtime-name
+        ;; `NSURLSession`, so `data(from:)` binds as `nsurlsession-data-from` there.
+        (only (apianyware foundation nsurlsession)
+              nsurlsession-shared-session nsurlsession-data-from)
         (only (apianyware foundation nsurl) nsurl-file-url-with-path))
 
 (define-entry-point (main)
@@ -111,7 +113,7 @@
                 [file-url (coerce-arg (nsurl-file-url-with-path tmp))])
             ;; Kick off the async method; the completion fires on the main thread (the
             ;; app's Cocoa loop drives it) and fills the label with the byte count.
-            (urlsession-data-from
+            (nsurlsession-data-from
              session file-url
              (lambda (handle err)
                (nstextfield-set-string-value!
