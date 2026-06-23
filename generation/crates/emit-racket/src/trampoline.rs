@@ -85,7 +85,10 @@ enum ArgMarshal {
     /// call wants (`… as URL`). Only the curated [`objc_object_param_bridge`] set
     /// rides this path — an unknown `Class` param stays deferred (a Swift-native
     /// struct lowered to `Class`, like `GeoRect`, must not be mistaken for a bridge).
-    ObjectRef { class_name: String, bridge_to: String },
+    ObjectRef {
+        class_name: String,
+        bridge_to: String,
+    },
 }
 
 /// The curated objc reference classes whose params bridge to a Swift value twin
@@ -844,11 +847,27 @@ pub fn collect_trampolines(frameworks: &[Framework]) -> TrampolineSet {
             // `Class` carries no `provenance` field (unlike `Struct`); a class-owned
             // method's own gate suffices, and the type-gated availability residual is
             // entirely value-struct owners (spec §8.8).
-            collect_type_methods(&mut set, &fw.name, &c.name, true, &c.methods, &value_structs, None);
+            collect_type_methods(
+                &mut set,
+                &fw.name,
+                &c.name,
+                true,
+                &c.methods,
+                &value_structs,
+                None,
+            );
         }
         for st in &fw.structs {
             let owner_intro = introduced_macos(&st.provenance);
-            collect_type_methods(&mut set, &fw.name, &st.name, false, &st.methods, &value_structs, owner_intro.as_deref());
+            collect_type_methods(
+                &mut set,
+                &fw.name,
+                &st.name,
+                false,
+                &st.methods,
+                &value_structs,
+                owner_intro.as_deref(),
+            );
         }
     }
     // The IR can carry the same decl twice (a category re-listing it, or a digester
@@ -884,7 +903,15 @@ fn collect_type_methods(
         if m.swift_fn.is_none() {
             continue; // ObjC method — binds via msgSend, no trampoline
         }
-        match classify_method(module, owner, owner_is_class, m, methods, value_structs, owner_introduced) {
+        match classify_method(
+            module,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            value_structs,
+            owner_introduced,
+        ) {
             MethodDisposition::Method(t) => set.methods.push(t),
             MethodDisposition::Init(t) => set.inits.push(t),
             MethodDisposition::Deferred(reason) => set.deferred.push(Deferred {
@@ -1178,9 +1205,21 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
         .functions
         .iter()
         .map(|t| swift_import_module(t.module.as_str()))
-        .chain(set.constants.iter().map(|t| swift_import_module(t.module.as_str())))
-        .chain(set.methods.iter().map(|t| swift_import_module(t.module.as_str())))
-        .chain(set.inits.iter().map(|t| swift_import_module(t.module.as_str())))
+        .chain(
+            set.constants
+                .iter()
+                .map(|t| swift_import_module(t.module.as_str())),
+        )
+        .chain(
+            set.methods
+                .iter()
+                .map(|t| swift_import_module(t.module.as_str())),
+        )
+        .chain(
+            set.inits
+                .iter()
+                .map(|t| swift_import_module(t.module.as_str())),
+        )
         .filter(|m| *m != "Foundation")
         .collect();
     modules.sort_unstable();
@@ -1588,7 +1627,12 @@ const KNOWN_UNBINDABLE: &[(&str, DeferReason)] = &[
 /// Look up a method/init in [`KNOWN_UNBINDABLE`] by the content-addressed entry name
 /// it would emit (init vs instance-method prefix), the same string swiftc names in a
 /// build error.
-fn known_unbindable(module: &str, owner: &str, method: &Method, siblings: &[Method]) -> Option<DeferReason> {
+fn known_unbindable(
+    module: &str,
+    owner: &str,
+    method: &Method,
+    siblings: &[Method],
+) -> Option<DeferReason> {
     let entry = if method.init_method {
         init_entry_name(module, owner, method, siblings)
     } else {
@@ -1669,7 +1713,10 @@ pub fn classify_method(
         // param type means different things at different call sites, and the lossy IR
         // cannot tell them apart). Init object params were deferred pre-R1, so this
         // is a no-regression carve-out, not new suppression.
-        if params.iter().any(|m| matches!(m, ArgMarshal::ObjectRef { .. })) {
+        if params
+            .iter()
+            .any(|m| matches!(m, ArgMarshal::ObjectRef { .. }))
+        {
             return MethodDisposition::Deferred(DeferReason::NonBridgedStructParam);
         }
         return MethodDisposition::Init(InitTrampoline {
@@ -1717,7 +1764,10 @@ pub fn classify_method(
         if mutating {
             return MethodDisposition::Deferred(DeferReason::AsyncMutatingReceiver);
         }
-        if matches!(ret, RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. }) {
+        if matches!(
+            ret,
+            RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. }
+        ) {
             return MethodDisposition::Deferred(DeferReason::AsyncScalarReturn);
         }
     }
@@ -1819,12 +1869,21 @@ fn init_entry_name(module: &str, owner: &str, method: &Method, siblings: &[Metho
 
 /// The `@available` line + `@_cdecl` + `public func <entry>(<decl>)<-> ret> {`
 /// header shared by the method and init emitters.
-fn emit_cdecl_header(s: &mut String, availability: &Option<String>, entry: &str, decl: &[String], sig_ret: &str) {
+fn emit_cdecl_header(
+    s: &mut String,
+    availability: &Option<String>,
+    entry: &str,
+    decl: &[String],
+    sig_ret: &str,
+) {
     if let Some(v) = availability {
         s.push_str(&format!("@available(macOS {v}, *)\n"));
     }
     s.push_str(&format!("@_cdecl(\"{entry}\")\n"));
-    s.push_str(&format!("public func {entry}({}){sig_ret} {{\n", decl.join(", ")));
+    s.push_str(&format!(
+        "public func {entry}({}){sig_ret} {{\n",
+        decl.join(", ")
+    ));
 }
 
 /// The C return type + success marshaller for a **method** return. Differs from the
@@ -1883,9 +1942,7 @@ fn async_outcome_value(ret: &RetMarshal, nullable: bool) -> String {
             "(awR as String?).map { Unmanaged.passRetained($0 as NSString).toOpaque() } ?? nil"
                 .to_string()
         }
-        RetMarshal::SwiftString => {
-            "Unmanaged.passRetained(awR as NSString).toOpaque()".to_string()
-        }
+        RetMarshal::SwiftString => "Unmanaged.passRetained(awR as NSString).toOpaque()".to_string(),
         RetMarshal::Handle(_) if nullable => "awR.map { awRacketBox($0) } ?? nil".to_string(),
         RetMarshal::Handle(_) => "awRacketBox(awR)".to_string(),
         // Void is handled by the caller; scalars are deferred upstream.
@@ -1989,7 +2046,9 @@ fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
     let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
     let (recv_prelude, writeback) = match &t.recv {
         SelfMarshal::ClassRef => (
-            format!("  let awSelf = Unmanaged<{owner}>.fromOpaque(awRecv!).takeUnretainedValue()\n"),
+            format!(
+                "  let awSelf = Unmanaged<{owner}>.fromOpaque(awRecv!).takeUnretainedValue()\n"
+            ),
             None,
         ),
         SelfMarshal::ValueBox { mutating: false } => (
@@ -2035,7 +2094,11 @@ fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
             }
             RetMarshal::SwiftString | RetMarshal::Handle(_) => {
                 let m = marshal("awR");
-                let wrapped = if t.ret_nullable { m } else { format!("Optional({m})") };
+                let wrapped = if t.ret_nullable {
+                    m
+                } else {
+                    format!("Optional({m})")
+                };
                 s.push_str(&format!(
                     "  return awRacketTry(awErrOut, nil) {{ let awR = try {call}\n  {wb}  return {wrapped} }}\n"
                 ));
@@ -2062,14 +2125,23 @@ fn emit_init_tramp(s: &mut String, t: &InitTrampoline) {
     if t.throwing {
         decl.push("_ awErrOut: UnsafeMutableRawPointer?".to_string());
     }
-    emit_cdecl_header(s, &t.availability, &t.entry, &decl, " -> UnsafeMutableRawPointer?");
+    emit_cdecl_header(
+        s,
+        &t.availability,
+        &t.entry,
+        &decl,
+        " -> UnsafeMutableRawPointer?",
+    );
     s.push_str(&arg_prelude);
 
     let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
     // Init params pass with their declared width (no `numericCast`): an overloaded
     // initializer (`Decimal(Int)` vs `Decimal(UInt)`) is selected *by* the param type,
     // so a width-agnostic cast would make the constructor call ambiguous.
-    let ctor = format!("{owner}({})", arg_values(&t.params, &t.labels, false).join(", "));
+    let ctor = format!(
+        "{owner}({})",
+        arg_values(&t.params, &t.labels, false).join(", ")
+    );
     // Box the owning type (R2): a class instance keeps reference identity via
     // `Unmanaged.passRetained`; a value rides the uniform `awRacketBox`.
     let box_of = |expr: &str| -> String {
@@ -2156,7 +2228,11 @@ impl MethodTrampoline {
         let ret_coerce = matches!(self.ret, RetMarshal::SwiftString);
         if self.throwing {
             // aw-call/error allocates the error cell, raises on error, else coerces.
-            let coerce = if ret_coerce { "aw-string-result" } else { "values" };
+            let coerce = if ret_coerce {
+                "aw-string-result"
+            } else {
+                "values"
+            };
             format!(
                 "(define {fn_name}\n  (let ([raw (get-ffi-obj '{entry} _aw-lib {arrow})])\n    \
                  (lambda ({lambda_params})\n      (aw-call/error raw {coerce} (coerce-arg self){args_str}))))",
@@ -2928,7 +3004,8 @@ mod tests {
             true,
             &m,
             std::slice::from_ref(&m),
-            &no_structs(), None,
+            &no_structs(),
+            None,
         ) else {
             panic!("an async method must trampoline (callback form), not defer");
         };
@@ -2951,16 +3028,31 @@ mod tests {
         // awaits, and marshals to AwAsyncOutcome on the cooperative thread.
         // The receiver pointer rides `nonisolated(unsafe)` across the Sendable hop
         // (UnsafeMutableRawPointer is not Sendable); reconstructed inside the closure.
-        assert!(s.contains("nonisolated(unsafe) let awRecvUnsafe = awRecv"), "{s}");
-        assert!(s.contains("awRacketAsyncDispatch({ () async -> AwAsyncOutcome in"), "{s}");
+        assert!(
+            s.contains("nonisolated(unsafe) let awRecvUnsafe = awRecv"),
+            "{s}"
+        );
+        assert!(
+            s.contains("awRacketAsyncDispatch({ () async -> AwAsyncOutcome in"),
+            "{s}"
+        );
         assert!(
             s.contains("let awSelf = Unmanaged<Foundation.URLSession>.fromOpaque(awRecvUnsafe!).takeUnretainedValue()"),
             "{s}"
         );
-        assert!(s.contains("let awR = try await awSelf.data(from: o0)"), "{s}");
-        assert!(s.contains("return AwAsyncOutcome(value: awRacketBox(awR))"), "{s}");
+        assert!(
+            s.contains("let awR = try await awSelf.data(from: o0)"),
+            "{s}"
+        );
+        assert!(
+            s.contains("return AwAsyncOutcome(value: awRacketBox(awR))"),
+            "{s}"
+        );
         assert!(s.contains("return AwAsyncOutcome.failure(error)"), "{s}");
-        assert!(s.contains("awCb(awCtx, awOutcome.value, awOutcome.error)"), "{s}");
+        assert!(
+            s.contains("awCb(awCtx, awOutcome.value, awOutcome.error)"),
+            "{s}"
+        );
         // ffi arrow: receiver, object pointer, ctx intptr, callback; returns void.
         assert_eq!(
             t.ffi_arrow(),
@@ -2977,18 +3069,38 @@ mod tests {
     /// A value-struct owner's non-mutating method unboxes a copy and calls by name.
     #[test]
     fn value_receiver_nonmutating_method_unboxes_and_calls() {
-        let m = method("contains(_:)", vec![param("_", prim("int64"))], prim("bool"), swiftk());
-        let MethodDisposition::Method(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
-        else {
+        let m = method(
+            "contains(_:)",
+            vec![param("_", prim("int64"))],
+            prim("bool"),
+            swiftk(),
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "Foundation",
+            "IndexSet",
+            false,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
             panic!("expected method trampoline");
         };
         assert_eq!(t.entry, "aw_racket_swift_m_Foundation_IndexSet_contains");
         let mut s = String::new();
         emit_method_tramp(&mut s, &t);
-        assert!(s.contains("@_cdecl(\"aw_racket_swift_m_Foundation_IndexSet_contains\")"), "{s}");
-        assert!(s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: Int) -> Bool"), "{s}");
-        assert!(s.contains("let awSelf = awRacketUnbox(awRecv!, as: Foundation.IndexSet.self)"), "{s}");
+        assert!(
+            s.contains("@_cdecl(\"aw_racket_swift_m_Foundation_IndexSet_contains\")"),
+            "{s}"
+        );
+        assert!(
+            s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: Int) -> Bool"),
+            "{s}"
+        );
+        assert!(
+            s.contains("let awSelf = awRacketUnbox(awRecv!, as: Foundation.IndexSet.self)"),
+            "{s}"
+        );
         // Integer params ride numericCast (IR int-width collapse); a Bool return is identity.
         assert!(s.contains("return awSelf.contains(numericCast(a0))"), "{s}");
         // ffi arrow: receiver pointer first, then the scalar.
@@ -3001,17 +3113,39 @@ mod tests {
     /// A `mutating` value-receiver method writes the mutated value back into the box.
     #[test]
     fn mutating_value_receiver_writes_back() {
-        let m = method("update(with:)", vec![param("with", prim("int64"))], prim("int64"), mutating());
-        let MethodDisposition::Method(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
-        else {
+        let m = method(
+            "update(with:)",
+            vec![param("with", prim("int64"))],
+            prim("int64"),
+            mutating(),
+        );
+        let MethodDisposition::Method(t) = classify_method(
+            "Foundation",
+            "IndexSet",
+            false,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
             panic!("expected method trampoline");
         };
         let mut s = String::new();
         emit_method_tramp(&mut s, &t);
-        assert!(s.contains("let awBox = Unmanaged<AwValueBox>.fromOpaque(awRecv!).takeUnretainedValue()"), "{s}");
-        assert!(s.contains("var awSelf = awBox.value as! Foundation.IndexSet"), "{s}");
-        assert!(s.contains("let awR = awSelf.update(with: numericCast(a0))"), "{s}");
+        assert!(
+            s.contains(
+                "let awBox = Unmanaged<AwValueBox>.fromOpaque(awRecv!).takeUnretainedValue()"
+            ),
+            "{s}"
+        );
+        assert!(
+            s.contains("var awSelf = awBox.value as! Foundation.IndexSet"),
+            "{s}"
+        );
+        assert!(
+            s.contains("let awR = awSelf.update(with: numericCast(a0))"),
+            "{s}"
+        );
         assert!(s.contains("awBox.value = awSelf"), "{s}");
         assert!(s.contains("return numericCast(awR)"), "{s}");
     }
@@ -3020,28 +3154,50 @@ mod tests {
     #[test]
     fn class_receiver_uses_unmanaged() {
         let m = method("description", vec![], nsstring(), swiftk());
-        let MethodDisposition::Method(t) =
-            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
-        else {
+        let MethodDisposition::Method(t) = classify_method(
+            "TestKit",
+            "Widget",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
             panic!("expected method trampoline");
         };
         let mut s = String::new();
         emit_method_tramp(&mut s, &t);
         assert!(
-            s.contains("let awSelf = Unmanaged<TestKit.Widget>.fromOpaque(awRecv!).takeUnretainedValue()"),
+            s.contains(
+                "let awSelf = Unmanaged<TestKit.Widget>.fromOpaque(awRecv!).takeUnretainedValue()"
+            ),
             "{s}"
         );
-        assert!(!s.contains("awBox.value ="), "no write-back for a class receiver: {s}");
+        assert!(
+            !s.contains("awBox.value ="),
+            "no write-back for a class receiver: {s}"
+        );
     }
 
     /// An initializer producer boxes the *owning type* (R2), not the lossy IR return.
     #[test]
     fn init_producer_boxes_owner_value() {
         // init(integer:) reports return NSIndexSet in the IR — must box IndexSet.
-        let m = method("init(integer:)", vec![param("integer", prim("int64"))], swift_class("NSIndexSet", "Foundation"), swiftk());
-        let MethodDisposition::Init(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
-        else {
+        let m = method(
+            "init(integer:)",
+            vec![param("integer", prim("int64"))],
+            swift_class("NSIndexSet", "Foundation"),
+            swiftk(),
+        );
+        let MethodDisposition::Init(t) = classify_method(
+            "Foundation",
+            "IndexSet",
+            false,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
             panic!("expected init trampoline");
         };
         assert_eq!(t.entry, "aw_racket_swift_init_Foundation_IndexSet");
@@ -3049,23 +3205,40 @@ mod tests {
         emit_init_tramp(&mut s, &t);
         assert!(s.contains("_ a0: Int) -> UnsafeMutableRawPointer?"), "{s}");
         // Init params keep their declared width (no numericCast — overload selection).
-        assert!(s.contains("return awRacketBox(Foundation.IndexSet(integer: a0))"), "{s}");
+        assert!(
+            s.contains("return awRacketBox(Foundation.IndexSet(integer: a0))"),
+            "{s}"
+        );
     }
 
     /// The racket binding for an init producer is a constructor returning the
     /// boxed owner handle: it calls the `@_cdecl` and passes the cpointer through.
     #[test]
     fn init_producer_renders_racket_constructor() {
-        let m = method("init(integer:)", vec![param("integer", prim("int64"))], swift_class("NSIndexSet", "Foundation"), swiftk());
-        let MethodDisposition::Init(t) =
-            classify_method("Foundation", "IndexSet", false, &m, std::slice::from_ref(&m), &no_structs(), None)
-        else {
+        let m = method(
+            "init(integer:)",
+            vec![param("integer", prim("int64"))],
+            swift_class("NSIndexSet", "Foundation"),
+            swiftk(),
+        );
+        let MethodDisposition::Init(t) = classify_method(
+            "Foundation",
+            "IndexSet",
+            false,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
             panic!("expected init trampoline");
         };
         assert_eq!(t.ffi_arrow(), "(_fun _int64 aw-> _pointer)");
         let rkt = t.render_racket_init("make-index-set-integer", &["integer".into()]);
         assert!(rkt.contains("(define make-index-set-integer"), "{rkt}");
-        assert!(rkt.contains("'aw_racket_swift_init_Foundation_IndexSet _aw-lib"), "{rkt}");
+        assert!(
+            rkt.contains("'aw_racket_swift_init_Foundation_IndexSet _aw-lib"),
+            "{rkt}"
+        );
         assert!(rkt.contains("(lambda (integer)"), "{rkt}");
         assert!(rkt.contains("(raw integer)"), "{rkt}");
     }
@@ -3075,9 +3248,15 @@ mod tests {
     #[test]
     fn no_arg_init_renders_thunk_constructor() {
         let m = method("init", vec![], swift_class("Widget", "TestKit"), swiftk());
-        let MethodDisposition::Init(t) =
-            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
-        else {
+        let MethodDisposition::Init(t) = classify_method(
+            "TestKit",
+            "Widget",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
             panic!("expected init trampoline");
         };
         assert_eq!(t.ffi_arrow(), "(_fun aw-> _pointer)");
@@ -3090,21 +3269,46 @@ mod tests {
     #[test]
     fn class_init_passes_retained() {
         let m = method("init", vec![], swift_class("Widget", "TestKit"), swiftk());
-        let MethodDisposition::Init(t) =
-            classify_method("TestKit", "Widget", true, &m, std::slice::from_ref(&m), &no_structs(), None)
-        else {
+        let MethodDisposition::Init(t) = classify_method(
+            "TestKit",
+            "Widget",
+            true,
+            &m,
+            std::slice::from_ref(&m),
+            &no_structs(),
+            None,
+        ) else {
             panic!("expected init trampoline");
         };
         let mut s = String::new();
         emit_init_tramp(&mut s, &t);
-        assert!(s.contains("return Unmanaged.passRetained(TestKit.Widget()).toOpaque()"), "{s}");
+        assert!(
+            s.contains("return Unmanaged.passRetained(TestKit.Widget()).toOpaque()"),
+            "{s}"
+        );
     }
 
     /// Generic / consuming / operator / static methods defer with the right reason.
     #[test]
     fn method_deferrals_are_categorised() {
-        let generic = method("map(_:)", vec![], prim("void"), SwiftFnInfo { is_generic: true, ..Default::default() });
-        let consuming = method("take", vec![], prim("void"), SwiftFnInfo { self_kind: Some("Consuming".into()), ..Default::default() });
+        let generic = method(
+            "map(_:)",
+            vec![],
+            prim("void"),
+            SwiftFnInfo {
+                is_generic: true,
+                ..Default::default()
+            },
+        );
+        let consuming = method(
+            "take",
+            vec![],
+            prim("void"),
+            SwiftFnInfo {
+                self_kind: Some("Consuming".into()),
+                ..Default::default()
+            },
+        );
         let op = method("==(_:_:)", vec![], prim("bool"), swiftk());
         let mut stat = method("shared", vec![], prim("void"), swiftk());
         stat.class_method = true;
@@ -3114,9 +3318,15 @@ mod tests {
             (&op, DeferReason::NonNameableMethod),
             (&stat, DeferReason::StaticMethod),
         ] {
-            let MethodDisposition::Deferred(r) =
-                classify_method("Foundation", "IndexSet", false, m, std::slice::from_ref(m), &no_structs(), None)
-            else {
+            let MethodDisposition::Deferred(r) = classify_method(
+                "Foundation",
+                "IndexSet",
+                false,
+                m,
+                std::slice::from_ref(m),
+                &no_structs(),
+                None,
+            ) else {
                 panic!("expected deferral for {:?}", m.selector);
             };
             assert_eq!(r, want, "selector {:?}", m.selector);
@@ -3142,11 +3352,31 @@ mod tests {
                 name: "IndexSet".into(),
                 fields: vec![],
                 methods: vec![
-                    method("init(integer:)", vec![param("integer", prim("int64"))], swift_class("NSIndexSet", "Foundation"), swiftk()),
-                    method("contains(_:)", vec![param("_", prim("int64"))], prim("bool"), swiftk()),
+                    method(
+                        "init(integer:)",
+                        vec![param("integer", prim("int64"))],
+                        swift_class("NSIndexSet", "Foundation"),
+                        swiftk(),
+                    ),
+                    method(
+                        "contains(_:)",
+                        vec![param("_", prim("int64"))],
+                        prim("bool"),
+                        swiftk(),
+                    ),
                     // Two overloads of `contains` → both need a hash.
-                    method("contains(in:)", vec![param("in", prim("int64"))], prim("bool"), swiftk()),
-                    method("update(with:)", vec![param("with", prim("int64"))], prim("int64"), mutating()),
+                    method(
+                        "contains(in:)",
+                        vec![param("in", prim("int64"))],
+                        prim("bool"),
+                        swiftk(),
+                    ),
+                    method(
+                        "update(with:)",
+                        vec![param("with", prim("int64"))],
+                        prim("int64"),
+                        mutating(),
+                    ),
                 ],
                 source: None,
                 provenance: None,
@@ -3171,9 +3401,15 @@ mod tests {
             .map(|m| m.entry.as_str())
             .collect();
         assert_eq!(contains.len(), 2);
-        assert_ne!(contains[0], contains[1], "overloads disambiguated: {contains:?}");
+        assert_ne!(
+            contains[0], contains[1],
+            "overloads disambiguated: {contains:?}"
+        );
         let swift = generate_trampolines_swift(&set);
-        assert!(swift.contains("0 function + 0 constant + 1 init + 3 method trampolines."), "{swift}");
+        assert!(
+            swift.contains("0 function + 0 constant + 1 init + 3 method trampolines."),
+            "{swift}"
+        );
     }
 
     /// An objc-bridged reference param (`NSURL`) reconstructs as its Swift value
@@ -3193,7 +3429,8 @@ mod tests {
             true,
             &m,
             std::slice::from_ref(&m),
-            &no_structs(), None,
+            &no_structs(),
+            None,
         ) else {
             panic!("an objc-bridged reference param must trampoline, not defer");
         };
@@ -3202,13 +3439,13 @@ mod tests {
         // Boundary param is an opaque id; the body reconstructs the NSURL and
         // bridges to the URL value the by-name call wants.
         assert!(
-            s.contains("_ awRecv: UnsafeMutableRawPointer?, _ a0: UnsafeMutableRawPointer?) -> Bool"),
+            s.contains(
+                "_ awRecv: UnsafeMutableRawPointer?, _ a0: UnsafeMutableRawPointer?) -> Bool"
+            ),
             "{s}"
         );
         assert!(
-            s.contains(
-                "let o0 = Unmanaged<NSURL>.fromOpaque(a0!).takeUnretainedValue() as URL"
-            ),
+            s.contains("let o0 = Unmanaged<NSURL>.fromOpaque(a0!).takeUnretainedValue() as URL"),
             "{s}"
         );
         assert!(s.contains("return awSelf.open(o0)"), "{s}");
@@ -3228,22 +3465,34 @@ mod tests {
             self_kind: Some("NonMutating".into()),
             ..Default::default()
         };
-        let m = method("response", vec![], swift_class("Response", "MusicKit"), info);
+        let m = method(
+            "response",
+            vec![],
+            swift_class("Response", "MusicKit"),
+            info,
+        );
         let MethodDisposition::Method(t) = classify_method(
             "MusicKit",
             "MusicDataRequest",
             true,
             &m,
             std::slice::from_ref(&m),
-            &no_structs(), None,
+            &no_structs(),
+            None,
         ) else {
             panic!("expected async method trampoline");
         };
         let mut s = String::new();
         emit_method_tramp(&mut s, &t);
         assert!(s.contains("let awR = await awSelf.response()"), "{s}");
-        assert!(s.contains("return AwAsyncOutcome(value: awRacketBox(awR))"), "{s}");
-        assert!(!s.contains("try await"), "non-throwing must not use try: {s}");
+        assert!(
+            s.contains("return AwAsyncOutcome(value: awRacketBox(awR))"),
+            "{s}"
+        );
+        assert!(
+            !s.contains("try await"),
+            "non-throwing must not use try: {s}"
+        );
         assert!(!s.contains("catch"), "non-throwing must not catch: {s}");
     }
 
@@ -3255,10 +3504,20 @@ mod tests {
             "finish",
             vec![],
             prim("void"),
-            SwiftFnInfo { is_async: true, self_kind: Some("NonMutating".into()), ..Default::default() },
+            SwiftFnInfo {
+                is_async: true,
+                self_kind: Some("NonMutating".into()),
+                ..Default::default()
+            },
         );
         let MethodDisposition::Method(t) = classify_method(
-            "StoreKit", "Transaction", false, &void_async, std::slice::from_ref(&void_async), &no_structs(), None,
+            "StoreKit",
+            "Transaction",
+            false,
+            &void_async,
+            std::slice::from_ref(&void_async),
+            &no_structs(),
+            None,
         ) else {
             panic!("expected async void method trampoline");
         };
@@ -3272,20 +3531,34 @@ mod tests {
             "advance",
             vec![],
             prim("void"),
-            SwiftFnInfo { is_async: true, self_kind: Some("Mutating".into()), ..Default::default() },
+            SwiftFnInfo {
+                is_async: true,
+                self_kind: Some("Mutating".into()),
+                ..Default::default()
+            },
         );
         let scalar_async = method(
             "count",
             vec![],
             prim("int64"),
-            SwiftFnInfo { is_async: true, self_kind: Some("NonMutating".into()), ..Default::default() },
+            SwiftFnInfo {
+                is_async: true,
+                self_kind: Some("NonMutating".into()),
+                ..Default::default()
+            },
         );
         for (m, want) in [
             (&mut_async, DeferReason::AsyncMutatingReceiver),
             (&scalar_async, DeferReason::AsyncScalarReturn),
         ] {
             let MethodDisposition::Deferred(r) = classify_method(
-                "Foundation", "Thing", false, m, std::slice::from_ref(m), &no_structs(), None,
+                "Foundation",
+                "Thing",
+                false,
+                m,
+                std::slice::from_ref(m),
+                &no_structs(),
+                None,
             ) else {
                 panic!("expected deferral for {:?}", m.selector);
             };
@@ -3317,8 +3590,7 @@ mod tests {
                 panic!("could not locate collection/ir/collected/Foundation.json");
             }
         };
-        let fw: Framework =
-            serde_json::from_str(&std::fs::read_to_string(&json).unwrap()).unwrap();
+        let fw: Framework = serde_json::from_str(&std::fs::read_to_string(&json).unwrap()).unwrap();
         let set = collect_trampolines(std::slice::from_ref(&fw));
         let swift = generate_trampolines_swift(&set);
         let out = std::path::PathBuf::from(&path);

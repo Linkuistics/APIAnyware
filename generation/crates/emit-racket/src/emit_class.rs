@@ -120,10 +120,18 @@ fn collect_swift_native_bindings(
         if m.swift_fn.is_none() {
             continue; // ObjC method — binds via msgSend, no trampoline
         }
-        match classify_method(framework, owner, owner_is_class, m, methods, value_structs, owner_introduced) {
+        match classify_method(
+            framework,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            value_structs,
+            owner_introduced,
+        ) {
             MethodDisposition::Method(t) => {
-                let mutating = m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref())
-                    == Some("Mutating");
+                let mutating =
+                    m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
                 let name = make_swift_method_name(owner, &m.selector, mutating);
                 if !seen.insert(name.clone()) {
                     continue;
@@ -462,8 +470,7 @@ pub fn generate_class_file_with_structs(
     // Constructors. Suppress the synthesized `(make-<class>)` default when a
     // Swift-native `init` producer already binds that name (else the two `(define
     // (make-<class>) …)` forms collide at load).
-    let needs_default_constructor =
-        !has_explicit_constructor(&init_methods) && !swift_default_ctor;
+    let needs_default_constructor = !has_explicit_constructor(&init_methods) && !swift_default_ctor;
     if !init_methods.is_empty() || needs_default_constructor {
         w.line(";; --- Constructors ---");
         for m in &init_methods {
@@ -2156,7 +2163,10 @@ mod tests {
             out.contains("aw_racket_swift_m_TestKit_TKWidget_scaled"),
             "trampoline entry missing:\n{out}"
         );
-        assert!(out.contains("_aw-lib"), "binding not against _aw-lib:\n{out}");
+        assert!(
+            out.contains("_aw-lib"),
+            "binding not against _aw-lib:\n{out}"
+        );
         assert!(
             out.contains("(coerce-arg self)"),
             "receiver not passed:\n{out}"

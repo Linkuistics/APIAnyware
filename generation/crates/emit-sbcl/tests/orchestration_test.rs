@@ -408,7 +408,10 @@ fn swift_native_method_and_init_residual_bind_on_the_owning_class() {
     );
 
     let facade = std::fs::read_to_string(tmp.path().join("foundation.lisp")).unwrap();
-    assert!(facade.contains("ns::update-with"), "method generic exported:\n{facade}");
+    assert!(
+        facade.contains("ns::update-with"),
+        "method generic exported:\n{facade}"
+    );
     assert!(
         facade.contains("ns::make-ns-thing-value"),
         "init constructor exported:\n{facade}"
@@ -443,7 +446,9 @@ fn swift_native_value_struct_residual_binds_in_structs_lisp() {
                 false,
                 TypeRef {
                     nullable: false,
-                    kind: TypeRefKind::Primitive { name: "bool".into() },
+                    kind: TypeRefKind::Primitive {
+                        name: "bool".into(),
+                    },
                 },
                 vec![Param {
                     name: "_".into(),
@@ -497,7 +502,10 @@ fn swift_native_value_struct_residual_binds_in_structs_lisp() {
     );
 
     let facade = std::fs::read_to_string(tmp.path().join("foundation.lisp")).unwrap();
-    assert!(facade.contains("ns::index-set"), "struct class exported:\n{facade}");
+    assert!(
+        facade.contains("ns::index-set"),
+        "struct class exported:\n{facade}"
+    );
     assert!(
         facade.contains("ns::make-index-set-integer"),
         "struct constructor exported:\n{facade}"

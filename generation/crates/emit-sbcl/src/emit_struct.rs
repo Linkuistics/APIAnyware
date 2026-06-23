@@ -84,7 +84,11 @@ pub fn generate_struct_file(
     );
     // The value-struct CLOS class: a plain class on the runtime `ns:value-struct` root
     // (the box rides its `ptr` slot), NOT an `objc-class` metaclass.
-    write_line!(w, "(defclass {cls} ({}) ())", qualified_class_name(VALUE_STRUCT_ROOT));
+    write_line!(
+        w,
+        "(defclass {cls} ({}) ())",
+        qualified_class_name(VALUE_STRUCT_ROOT)
+    );
 
     let mut exports = vec![cls];
     for t in &methods {
@@ -165,8 +169,18 @@ mod tests {
         let st = value_struct(
             "IndexSet",
             vec![
-                swift_method("contains(_:)", false, prim("bool"), vec![param("_", prim("int64"))]),
-                swift_method("init(integer:)", true, idty(), vec![param("integer", prim("int64"))]),
+                swift_method(
+                    "contains(_:)",
+                    false,
+                    prim("bool"),
+                    vec![param("_", prim("int64"))],
+                ),
+                swift_method(
+                    "init(integer:)",
+                    true,
+                    idty(),
+                    vec![param("integer", prim("int64"))],
+                ),
             ],
         );
         let (body, exports) =
@@ -177,7 +191,10 @@ mod tests {
             body.contains("(defclass ns:index-set (ns:value-struct) ())"),
             "{body}"
         );
-        assert!(!body.contains("objc-class"), "value struct is not metaclass-backed: {body}");
+        assert!(
+            !body.contains("objc-class"),
+            "value struct is not metaclass-backed: {body}"
+        );
         // The method is a defmethod specialized on the struct's CLOS class, receiver via
         // the shared (aw-ptr self) path.
         assert!(
@@ -194,7 +211,10 @@ mod tests {
         // Exports: the class symbol + the constructor symbol (method generics ride the
         // framework's shared generic set, not exported here).
         assert!(exports.contains(&"ns:index-set".to_string()), "{exports:?}");
-        assert!(exports.contains(&"ns:make-index-set-integer".to_string()), "{exports:?}");
+        assert!(
+            exports.contains(&"ns:make-index-set-integer".to_string()),
+            "{exports:?}"
+        );
     }
 
     #[test]
@@ -211,7 +231,12 @@ mod tests {
             "ByteCountFormatStyle",
             vec![
                 swift_method("format(_:)", false, idty(), vec![param("_", prim("int64"))]),
-                swift_method("contains(_:)", false, prim("bool"), vec![param("_", prim("int64"))]),
+                swift_method(
+                    "contains(_:)",
+                    false,
+                    prim("bool"),
+                    vec![param("_", prim("int64"))],
+                ),
             ],
         );
         let (body, _exports) =

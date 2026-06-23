@@ -154,7 +154,10 @@ pub struct GenericDecl {
 /// name already seen with a *different* arity is a genuine congruence conflict the
 /// orchestration leaf (060) resolves by collision-rename; here the first arity
 /// wins and the clash is surfaced via [`generic_arity_conflicts`].
-pub fn collect_generics(frameworks: &[&Framework], protocols: &ProtocolRegistry) -> Vec<GenericDecl> {
+pub fn collect_generics(
+    frameworks: &[&Framework],
+    protocols: &ProtocolRegistry,
+) -> Vec<GenericDecl> {
     let mut by_name: BTreeMap<String, usize> = BTreeMap::new();
     for fw in frameworks {
         for cls in &fw.classes {
@@ -209,7 +212,10 @@ pub fn arity_consistent(name: &str, arity: usize, index: &BTreeMap<String, usize
 /// the program — a CL congruence conflict the orchestration leaf must collision-
 /// rename. Empty in practice (distinct ObjC selectors rarely collide post-kebab);
 /// surfaced so a future framework that does trip it fails loudly, not silently.
-pub fn generic_arity_conflicts(frameworks: &[&Framework], protocols: &ProtocolRegistry) -> Vec<String> {
+pub fn generic_arity_conflicts(
+    frameworks: &[&Framework],
+    protocols: &ProtocolRegistry,
+) -> Vec<String> {
     let mut seen: BTreeMap<String, usize> = BTreeMap::new();
     let mut conflicts: BTreeSet<String> = BTreeSet::new();
     let mut record = |name: String, arity: usize| match seen.get(&name) {
@@ -664,10 +670,7 @@ fn emit_defmethod(
             format!("({CLASS_FN} \"{class_name}\")"),
         )
     } else {
-        (
-            format!("(self {cls_clos})"),
-            format!("({PTR_FN} self)"),
-        )
+        (format!("(self {cls_clos})"), format!("({PTR_FN} self)"))
     };
 
     // defmethod head + arglist.
@@ -968,7 +971,11 @@ mod tests {
     #[test]
     fn unary_scalar_method_renders_msgsend_body() {
         // length : NSUInteger — (id, SEL) -> unsigned 64, no wrap.
-        let cls = class_with("NSString", vec![method("length", false, prim("uint64"), vec![])], vec![]);
+        let cls = class_with(
+            "NSString",
+            vec![method("length", false, prim("uint64"), vec![])],
+            vec![],
+        );
         let out = render_class_dispatch(&cls, "Foundation");
         assert!(out.contains("(defmethod ns:length ((self ns:ns-string))"));
         assert!(out.contains(
@@ -991,7 +998,12 @@ mod tests {
                 "objectAtIndex:",
                 false,
                 ty(TypeRefKind::Id),
-                vec![param("index", TypeRefKind::Primitive { name: "uint64".into() })],
+                vec![param(
+                    "index",
+                    TypeRefKind::Primitive {
+                        name: "uint64".into(),
+                    },
+                )],
             )],
             vec![],
         );
@@ -1024,7 +1036,11 @@ mod tests {
     #[test]
     fn retained_family_return_is_marked() {
         // copy -> id is a +1 copy family → aw-wrap … t.
-        let cls = class_with("NSObject2", vec![method("copy", false, ty(TypeRefKind::Id), vec![])], vec![]);
+        let cls = class_with(
+            "NSObject2",
+            vec![method("copy", false, ty(TypeRefKind::Id), vec![])],
+            vec![],
+        );
         let out = render_class_dispatch(&cls, "Foundation");
         assert!(out.contains("(aw-wrap (sb-alien:alien-funcall"));
         assert!(out.trim_end().ends_with("(aw-sel \"copy\")) t))"));
@@ -1049,13 +1065,18 @@ mod tests {
             "(defmethod ns:string-with-string_ ((class (eql (find-class 'ns:ns-string))) a-string)"
         ));
         assert!(out.contains("(declare (ignore class))"));
-        assert!(out.contains("(aw-class \"NSString\") (aw-sel \"stringWithString:\") (aw-ptr a-string)"));
+        assert!(out
+            .contains("(aw-class \"NSString\") (aw-sel \"stringWithString:\") (aw-ptr a-string)"));
     }
 
     #[test]
     fn property_getter_and_setter_become_dispatches() {
         // A writable `title` (id) property → getter on `title`, setter on `setTitle:`.
-        let cls = class_with("NSWindow", vec![], vec![prop("title", TypeRefKind::Id, false)]);
+        let cls = class_with(
+            "NSWindow",
+            vec![],
+            vec![prop("title", TypeRefKind::Id, false)],
+        );
         let out = render_class_dispatch(&cls, "AppKit");
         assert!(out.contains("(defmethod ns:title ((self ns:ns-window))"));
         assert!(out.contains("(aw-wrap (sb-alien:alien-funcall")); // object getter wraps
@@ -1065,7 +1086,17 @@ mod tests {
 
     #[test]
     fn readonly_property_emits_only_getter() {
-        let cls = class_with("NSView", vec![], vec![prop("frame", TypeRefKind::Struct { name: "CGRect".into() }, true)]);
+        let cls = class_with(
+            "NSView",
+            vec![],
+            vec![prop(
+                "frame",
+                TypeRefKind::Struct {
+                    name: "CGRect".into(),
+                },
+                true,
+            )],
+        );
         let out = render_class_dispatch(&cls, "AppKit");
         assert!(out.contains("(defmethod ns:frame ((self ns:ns-view))"));
         assert!(!out.contains("set-frame"));
@@ -1092,7 +1123,12 @@ mod tests {
 
     #[test]
     fn objc_exposed_false_init_is_residual() {
-        let mut swift_init = method("initNative:", false, ty(TypeRefKind::Instancetype), vec![param("x", TypeRefKind::Id)]);
+        let mut swift_init = method(
+            "initNative:",
+            false,
+            ty(TypeRefKind::Instancetype),
+            vec![param("x", TypeRefKind::Id)],
+        );
         swift_init.objc_exposed = false;
         swift_init.init_method = true;
         let cls = class_with("NSThing", vec![swift_init], vec![]);
@@ -1103,7 +1139,17 @@ mod tests {
 
     #[test]
     fn exposed_explicit_init_is_baked_not_dispatched() {
-        let mut init = method("initWithFrame:", false, ty(TypeRefKind::Instancetype), vec![param("frame", TypeRefKind::Struct { name: "CGRect".into() })]);
+        let mut init = method(
+            "initWithFrame:",
+            false,
+            ty(TypeRefKind::Instancetype),
+            vec![param(
+                "frame",
+                TypeRefKind::Struct {
+                    name: "CGRect".into(),
+                },
+            )],
+        );
         init.init_method = true;
         let cls = class_with("NSView", vec![init], vec![]);
         let out = render_class_dispatch(&cls, "AppKit");
@@ -1190,8 +1236,22 @@ mod tests {
     #[test]
     fn collect_generics_unifies_shared_selector_across_classes() {
         // Two unrelated classes both expose `count` → one global defgeneric.
-        let f1 = fw("Foundation", vec![class_with("NSArray", vec![method("count", false, prim("uint64"), vec![])], vec![])]);
-        let f2 = fw("CoreData", vec![class_with("NSFetchRequest", vec![method("count", false, prim("uint64"), vec![])], vec![])]);
+        let f1 = fw(
+            "Foundation",
+            vec![class_with(
+                "NSArray",
+                vec![method("count", false, prim("uint64"), vec![])],
+                vec![],
+            )],
+        );
+        let f2 = fw(
+            "CoreData",
+            vec![class_with(
+                "NSFetchRequest",
+                vec![method("count", false, prim("uint64"), vec![])],
+                vec![],
+            )],
+        );
         let decls = collect_generics(&[&f1, &f2], &ProtocolRegistry::new());
         let count: Vec<_> = decls.iter().filter(|d| d.name == "ns:count").collect();
         assert_eq!(count.len(), 1, "shared selector unified: {decls:?}");
@@ -1213,14 +1273,21 @@ mod tests {
             "update(with:)",
             false,
             TypeRef::void(),
-            vec![param("with", TypeRefKind::Primitive { name: "int64".into() })],
+            vec![param(
+                "with",
+                TypeRefKind::Primitive {
+                    name: "int64".into(),
+                },
+            )],
         );
         m.objc_exposed = false;
         m.swift_fn = Some(apianyware_macos_types::ir::SwiftFnInfo::default());
         let f = fw("Foundation", vec![class_with("NSThing", vec![m], vec![])]);
         let decls = collect_generics(&[&f], &ProtocolRegistry::new());
         assert!(
-            decls.iter().any(|d| d.name == "ns:update-with" && d.arity == 1),
+            decls
+                .iter()
+                .any(|d| d.name == "ns:update-with" && d.arity == 1),
             "residual generic folded in: {decls:?}"
         );
     }
@@ -1234,8 +1301,15 @@ mod tests {
         let mut m = method(
             "contains(_:)",
             false,
-            ty(TypeRefKind::Primitive { name: "bool".into() }),
-            vec![param("_", TypeRefKind::Primitive { name: "int64".into() })],
+            ty(TypeRefKind::Primitive {
+                name: "bool".into(),
+            }),
+            vec![param(
+                "_",
+                TypeRefKind::Primitive {
+                    name: "int64".into(),
+                },
+            )],
         );
         m.objc_exposed = false;
         m.swift_fn = Some(apianyware_macos_types::ir::SwiftFnInfo::default());
@@ -1243,7 +1317,9 @@ mod tests {
         f.structs = vec![value_struct("IndexSet", vec![m])];
         let decls = collect_generics(&[&f], &ProtocolRegistry::new());
         assert!(
-            decls.iter().any(|d| d.name == "ns:contains" && d.arity == 1),
+            decls
+                .iter()
+                .any(|d| d.name == "ns:contains" && d.arity == 1),
             "struct residual generic folded in: {decls:?}"
         );
     }
@@ -1270,13 +1346,21 @@ mod tests {
                     "objectAtIndex:",
                     false,
                     ty(TypeRefKind::Id),
-                    vec![param("index", TypeRefKind::Primitive { name: "uint64".into() })],
+                    vec![param(
+                        "index",
+                        TypeRefKind::Primitive {
+                            name: "uint64".into(),
+                        },
+                    )],
                 )],
                 vec![],
             )],
         );
         let decls = collect_generics(&[&f], &ProtocolRegistry::new());
-        let d = decls.iter().find(|d| d.name == "ns:object-at-index_").unwrap();
+        let d = decls
+            .iter()
+            .find(|d| d.name == "ns:object-at-index_")
+            .unwrap();
         assert_eq!(d.arity, 1);
         let rendered = render_generics(&decls);
         assert!(rendered.contains("(defgeneric ns:object-at-index_ (receiver arg0)"));
@@ -1286,7 +1370,11 @@ mod tests {
     fn no_arity_conflicts_on_clean_fixture() {
         let f = fw(
             "Foundation",
-            vec![class_with("NSArray", vec![method("count", false, prim("uint64"), vec![])], vec![])],
+            vec![class_with(
+                "NSArray",
+                vec![method("count", false, prim("uint64"), vec![])],
+                vec![],
+            )],
         );
         assert!(generic_arity_conflicts(&[&f], &ProtocolRegistry::new()).is_empty());
     }
@@ -1309,10 +1397,20 @@ mod tests {
         let mut cls = class_with("NSData", vec![], vec![]);
         cls.protocols = vec!["NSCopying".into()];
         cls.all_methods = vec![
-            flattened("copyWithZone:", "NSCopying", vec![param("zone", TypeRefKind::Id)], ty(TypeRefKind::Id)),
+            flattened(
+                "copyWithZone:",
+                "NSCopying",
+                vec![param("zone", TypeRefKind::Id)],
+                ty(TypeRefKind::Id),
+            ),
             // A superclass-inherited entry (class origin) must NOT flatten — the
             // CLOS graph carries it.
-            flattened("isEqual:", "NSObject", vec![param("other", TypeRefKind::Id)], prim("bool")),
+            flattened(
+                "isEqual:",
+                "NSObject",
+                vec![param("other", TypeRefKind::Id)],
+                prim("bool"),
+            ),
         ];
         let mut reg = ProtocolRegistry::new();
         reg.insert("NSCopying", vec![]);
@@ -1345,7 +1443,12 @@ mod tests {
         // own lowering; the flattened duplicate is deduped out (own wins).
         let mut cls = class_with(
             "NSData",
-            vec![method("copyWithZone:", false, ty(TypeRefKind::Id), vec![param("zone", TypeRefKind::Id)])],
+            vec![method(
+                "copyWithZone:",
+                false,
+                ty(TypeRefKind::Id),
+                vec![param("zone", TypeRefKind::Id)],
+            )],
             vec![],
         );
         cls.protocols = vec!["NSCopying".into()];
@@ -1377,7 +1480,9 @@ mod tests {
         let mut reg = ProtocolRegistry::new();
         reg.insert("NSCopying", vec![]);
         let decls = collect_generics(&[&f], &reg);
-        assert!(decls.iter().any(|d| d.name == "ns:copy-with-zone_" && d.arity == 1));
+        assert!(decls
+            .iter()
+            .any(|d| d.name == "ns:copy-with-zone_" && d.arity == 1));
     }
 
     #[test]

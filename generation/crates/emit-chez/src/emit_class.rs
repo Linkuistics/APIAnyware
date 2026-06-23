@@ -126,11 +126,8 @@ fn collect_swift_native_bindings(
             owner_introduced,
         ) {
             MethodDisposition::Method(t) => {
-                let mutating = m
-                    .swift_fn
-                    .as_ref()
-                    .and_then(|i| i.self_kind.as_deref())
-                    == Some("Mutating");
+                let mutating =
+                    m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
                 let name = make_swift_method_name(owner, &m.selector, mutating);
                 if !seen.insert(name.clone()) {
                     continue;
@@ -185,8 +182,7 @@ fn emit_swift_native_section(w: &mut CodeWriter, bindings: &SwiftNativeBindings)
 /// in-framework Swift value structs (a value-struct **param** on a Swift-native
 /// method then defers rather than binding, which only narrows the method frontier).
 pub fn generate_class_file(cls: &Class, framework: &str) -> String {
-    let (content, _exports) =
-        generate_class_file_with_exports(cls, framework, &HashSet::new());
+    let (content, _exports) = generate_class_file_with_exports(cls, framework, &HashSet::new());
     content
 }
 
@@ -1549,7 +1545,11 @@ mod tests {
         assert!(output.contains("wrap-objc-object"));
     }
 
-    fn swift_method(selector: &str, init: bool, info: apianyware_macos_types::ir::SwiftFnInfo) -> Method {
+    fn swift_method(
+        selector: &str,
+        init: bool,
+        info: apianyware_macos_types::ir::SwiftFnInfo,
+    ) -> Method {
         Method {
             selector: selector.into(),
             class_method: false,

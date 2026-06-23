@@ -181,12 +181,22 @@ mod tests {
     fn void_return_vs_param() {
         let m = SbclFfiTypeMapper;
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "void".into() }), true),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
+                true
+            ),
             "sb-alien:void"
         );
         // void as a parameter is an opaque pointer (mirrors the other targets).
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Primitive { name: "void".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Primitive {
+                    name: "void".into()
+                }),
+                false
+            ),
             SAP
         );
     }
@@ -213,7 +223,10 @@ mod tests {
         let m = SbclFfiTypeMapper;
         let p = |n: &str| ty(TypeRefKind::Primitive { name: n.into() });
         assert_eq!(m.map_type(&p("NSInteger"), false), "(sb-alien:signed 64)");
-        assert_eq!(m.map_type(&p("NSUInteger"), false), "(sb-alien:unsigned 64)");
+        assert_eq!(
+            m.map_type(&p("NSUInteger"), false),
+            "(sb-alien:unsigned 64)"
+        );
         // Swift-qualified primitives normalise too.
         assert_eq!(m.map_type(&p("Swift.Bool"), false), "(sb-alien:boolean 8)");
     }
@@ -252,7 +265,10 @@ mod tests {
     #[test]
     fn cstring_is_c_string() {
         let m = SbclFfiTypeMapper;
-        assert_eq!(m.map_type(&ty(TypeRefKind::CString), false), "sb-alien:c-string");
+        assert_eq!(
+            m.map_type(&ty(TypeRefKind::CString), false),
+            "sb-alien:c-string"
+        );
     }
 
     #[test]
@@ -271,20 +287,40 @@ mod tests {
             "(sb-alien:struct ns-rect)"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Struct { name: "CGRect".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Struct {
+                    name: "CGRect".into()
+                }),
+                false
+            ),
             "(sb-alien:struct ns-rect)"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Struct { name: "CGPoint".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Struct {
+                    name: "CGPoint".into()
+                }),
+                false
+            ),
             "(sb-alien:struct ns-point)"
         );
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Struct { name: "CGVector".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Struct {
+                    name: "CGVector".into()
+                }),
+                false
+            ),
             "(sb-alien:struct cg-vector)"
         );
         // A non-geometry struct falls back to an opaque pointer.
         assert_eq!(
-            m.map_type(&ty(TypeRefKind::Struct { name: "SomeOther".into() }), false),
+            m.map_type(
+                &ty(TypeRefKind::Struct {
+                    name: "SomeOther".into()
+                }),
+                false
+            ),
             SAP
         );
         assert!(is_known_geometry_alias("CGRect"));
@@ -335,7 +371,9 @@ mod tests {
     #[test]
     fn block_bridgeability() {
         let m = SbclFfiTypeMapper;
-        let void_ret = ty(TypeRefKind::Primitive { name: "void".into() });
+        let void_ret = ty(TypeRefKind::Primitive {
+            name: "void".into(),
+        });
         let id_param = ty(TypeRefKind::Id);
         // void (^)(id) — all slots reduce to scalar/pointer → bridgeable.
         assert!(is_bridgeable_block(
@@ -344,7 +382,9 @@ mod tests {
             &m
         ));
         // A block taking a by-value geometry struct is not bridgeable.
-        let rect_param = ty(TypeRefKind::Struct { name: "CGRect".into() });
+        let rect_param = ty(TypeRefKind::Struct {
+            name: "CGRect".into(),
+        });
         assert!(!is_bridgeable_block(&[rect_param], &void_ret, &m));
         // A block taking a c-string is not bridgeable.
         let str_param = ty(TypeRefKind::CString);
@@ -356,7 +396,9 @@ mod tests {
         let m = SbclFfiTypeMapper;
         assert!(m.is_object_type(&ty(TypeRefKind::Id)));
         assert!(m.is_void(&TypeRef::void()));
-        assert!(m.is_struct_type(&ty(TypeRefKind::Struct { name: "NSRect".into() })));
+        assert!(m.is_struct_type(&ty(TypeRefKind::Struct {
+            name: "NSRect".into()
+        })));
         let _ = is_generic_type_param("ObjectType");
     }
 }

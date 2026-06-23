@@ -121,7 +121,11 @@ pub fn protocol_generic_decls(proto: &Protocol, existing: &BTreeSet<String>) -> 
 /// contributed `defgeneric`s (those not already declared by the class graph), and
 /// the `register-objc-protocol` table the runtime drives conformance from. A
 /// protocol with no `objc_exposed` methods renders nothing ([`has_surface`]).
-pub fn render_protocol(proto: &Protocol, framework: &str, existing_generics: &BTreeSet<String>) -> String {
+pub fn render_protocol(
+    proto: &Protocol,
+    framework: &str,
+    existing_generics: &BTreeSet<String>,
+) -> String {
     let methods = exposed_methods(proto);
     if methods.is_empty() {
         return String::new();
@@ -248,12 +252,16 @@ mod tests {
                 m(
                     "windowWillClose:",
                     vec![obj_param("notification", "NSNotification")],
-                    TypeRefKind::Primitive { name: "void".into() },
+                    TypeRefKind::Primitive {
+                        name: "void".into(),
+                    },
                 ),
                 m(
                     "windowShouldClose:",
                     vec![obj_param("sender", "NSWindow")],
-                    TypeRefKind::Primitive { name: "bool".into() },
+                    TypeRefKind::Primitive {
+                        name: "bool".into(),
+                    },
                 ),
             ],
         );
@@ -276,7 +284,9 @@ mod tests {
             vec![m(
                 "windowWillClose:",
                 vec![obj_param("n", "NSNotification")],
-                TypeRefKind::Primitive { name: "void".into() },
+                TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
             )],
         );
         let mut existing = BTreeSet::new();
@@ -292,8 +302,20 @@ mod tests {
     fn registration_splits_required_and_optional() {
         let p = proto(
             "TKDelegate",
-            vec![m("didStart", vec![], TypeRefKind::Primitive { name: "void".into() })],
-            vec![m("shouldContinue", vec![], TypeRefKind::Primitive { name: "bool".into() })],
+            vec![m(
+                "didStart",
+                vec![],
+                TypeRefKind::Primitive {
+                    name: "void".into(),
+                },
+            )],
+            vec![m(
+                "shouldContinue",
+                vec![],
+                TypeRefKind::Primitive {
+                    name: "bool".into(),
+                },
+            )],
         );
         let out = render_protocol(&p, "TestKit", &empty());
         assert!(out.contains("(register-objc-protocol \"TKDelegate\""));
@@ -326,7 +348,20 @@ mod tests {
         // from both the generic surface and the registration (ADR-0026 §3).
         let mut native = m("nativeRequirement", vec![], TypeRefKind::Id);
         native.objc_exposed = false;
-        let p = proto("TKMixed", vec![native, m("realOne", vec![], TypeRefKind::Primitive { name: "void".into() })], vec![]);
+        let p = proto(
+            "TKMixed",
+            vec![
+                native,
+                m(
+                    "realOne",
+                    vec![],
+                    TypeRefKind::Primitive {
+                        name: "void".into(),
+                    },
+                ),
+            ],
+            vec![],
+        );
         let out = render_protocol(&p, "TestKit", &empty());
         assert!(!out.contains("native-requirement"));
         assert!(!out.contains("nativeRequirement"));
@@ -366,7 +401,10 @@ mod tests {
         );
         let decls = protocol_generic_decls(&p, &empty());
         assert_eq!(decls.len(), 1);
-        assert_eq!(decls[0].name, "ns:table-view_object-value-for-table-column_row_");
+        assert_eq!(
+            decls[0].name,
+            "ns:table-view_object-value-for-table-column_row_"
+        );
         assert_eq!(decls[0].arity, 3);
     }
 }

@@ -56,7 +56,11 @@ pub fn generate_enums_file(enums: &[Enum], framework: &str) -> String {
 
     for en in enums {
         // Skip an enum that contributes no surviving value (all duplicates).
-        if en.values.iter().all(|v| plan.emit(&en.name, &v.name).is_none()) {
+        if en
+            .values
+            .iter()
+            .all(|v| plan.emit(&en.name, &v.name).is_none())
+        {
             continue;
         }
         write_line!(w, ";; {}", en.name);
@@ -104,7 +108,9 @@ fn enum_underlying(enum_type: &TypeRef) -> Option<String> {
         TypeRefKind::Alias {
             underlying_primitive,
             ..
-        } => underlying_primitive.as_ref().map(|s| s.to_ascii_lowercase()),
+        } => underlying_primitive
+            .as_ref()
+            .map(|s| s.to_ascii_lowercase()),
         _ => None,
     }
 }
@@ -330,7 +336,10 @@ mod tests {
 
     #[test]
     fn same_name_same_value_is_deduped() {
-        let enums = vec![en("A", "int64", &[("zero", 0)]), en("B", "int64", &[("zero", 0)])];
+        let enums = vec![
+            en("A", "int64", &[("zero", 0)]),
+            en("B", "int64", &[("zero", 0)]),
+        ];
         let out = generate_enums_file(&enums, "TestKit");
         assert_eq!(out.matches("(defconstant ns:zero 0)").count(), 1);
         assert_eq!(defined_enum_symbols(&enums), vec!["zero".to_string()]);

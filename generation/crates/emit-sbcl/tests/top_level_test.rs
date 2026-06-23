@@ -122,8 +122,22 @@ fn direct_constructs_are_emitted_residual_constructs_are_only_collected() {
         constant("MLCreateErrorDomain", nsstring_class(), false), // Swift-native
     ];
     let functions = vec![
-        function("CGRectIsEmpty", vec![], TypeRefKind::Primitive { name: "bool".into() }, true), // direct
-        function("swiftCompute", vec![], TypeRefKind::Primitive { name: "double".into() }, false), // Swift-native
+        function(
+            "CGRectIsEmpty",
+            vec![],
+            TypeRefKind::Primitive {
+                name: "bool".into(),
+            },
+            true,
+        ), // direct
+        function(
+            "swiftCompute",
+            vec![],
+            TypeRefKind::Primitive {
+                name: "double".into(),
+            },
+            false,
+        ), // Swift-native
     ];
 
     let c = generate_constants_file(&constants, "CreateML");
@@ -154,17 +168,37 @@ fn package_export_surface_spans_direct_and_residual_for_every_construct() {
         constant("MLCreateErrorDomain", nsstring_class(), false),
     ];
     let functions = vec![
-        function("CGRectIsEmpty", vec![], TypeRefKind::Primitive { name: "bool".into() }, true),
-        function("swiftCompute", vec![], TypeRefKind::Primitive { name: "double".into() }, false),
+        function(
+            "CGRectIsEmpty",
+            vec![],
+            TypeRefKind::Primitive {
+                name: "bool".into(),
+            },
+            true,
+        ),
+        function(
+            "swiftCompute",
+            vec![],
+            TypeRefKind::Primitive {
+                name: "double".into(),
+            },
+            false,
+        ),
     ];
 
     // Enums: every defined symbol.
-    assert_eq!(defined_enum_symbols(&enums), vec!["ns-alpha".to_string(), "ns-beta".to_string()]);
+    assert_eq!(
+        defined_enum_symbols(&enums),
+        vec!["ns-alpha".to_string(), "ns-beta".to_string()]
+    );
     // Constants + functions: the export surface includes the residual (050 binds it
     // under the same ns: symbol), so 060 has the full package surface from 040.
     assert_eq!(
         constant_symbols(&constants),
-        vec!["ns-font-attribute-name".to_string(), "ml-create-error-domain".to_string()]
+        vec![
+            "ns-font-attribute-name".to_string(),
+            "ml-create-error-domain".to_string()
+        ]
     );
     assert_eq!(
         function_symbols(&functions, "CreateML"),
@@ -183,11 +217,19 @@ fn constant_sub_rule_routes_each_flavour(/* ADR-0026 §3 */) {
             },
             true,
         ), // struct → address
-        constant("NSTimeout", TypeRefKind::Primitive { name: "double".into() }, true), // scalar → by value
+        constant(
+            "NSTimeout",
+            TypeRefKind::Primitive {
+                name: "double".into(),
+            },
+            true,
+        ), // scalar → by value
     ];
     let out = generate_constants_file(&constants, "Foundation");
     // object: extern-alien value + borrowed wrap.
-    assert!(out.contains("(aw-wrap (sb-alien:extern-alien \"NSFontAttributeName\" sb-alien:system-area-pointer))"));
+    assert!(out.contains(
+        "(aw-wrap (sb-alien:extern-alien \"NSFontAttributeName\" sb-alien:system-area-pointer))"
+    ));
     // struct: address as raw SAP.
     assert!(out.contains("(sb-sys:foreign-symbol-sap \"_dispatch_main_q\")"));
     // scalar: by-value typed read, no wrap.

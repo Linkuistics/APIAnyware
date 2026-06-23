@@ -227,7 +227,13 @@ mod tests {
         }
         // Foundation declares NSCoding; a later framework re-declaring it does not
         // overwrite the first owner's edge set.
-        let foundation = fw("Foundation", vec![proto("NSSecureCoding", &["NSCoding"]), proto("NSCoding", &[])]);
+        let foundation = fw(
+            "Foundation",
+            vec![
+                proto("NSSecureCoding", &["NSCoding"]),
+                proto("NSCoding", &[]),
+            ],
+        );
         let appkit = fw("AppKit", vec![proto("NSCoding", &["ShouldNotWin"])]);
         let reg = ProtocolRegistry::from_framework_refs(&[&foundation, &appkit]);
         let c = reg.conformance_closure(&names(&["NSSecureCoding"]));

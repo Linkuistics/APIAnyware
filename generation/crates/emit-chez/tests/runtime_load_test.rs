@@ -39,7 +39,10 @@ fn project_root() -> PathBuf {
 }
 
 fn target_root() -> PathBuf {
-    project_root().join("generation").join("targets").join("chez")
+    project_root()
+        .join("generation")
+        .join("targets")
+        .join("chez")
 }
 
 /// Load Foundation from whichever IR tree is present — the enriched pipeline output
@@ -103,8 +106,11 @@ fn build_harness_tree(root: &Path, foundation: &Framework) {
     .expect("copy runtime cluster");
     // The dylib, where ffi.sls probes it (`<libdir>/lib/…`).
     std::fs::create_dir_all(root.join("lib")).expect("create lib dir");
-    std::fs::copy(dylib_path(), root.join("lib").join("libAPIAnywareChez.dylib"))
-        .expect("copy dylib");
+    std::fs::copy(
+        dylib_path(),
+        root.join("lib").join("libAPIAnywareChez.dylib"),
+    )
+    .expect("copy dylib");
     // Emit Foundation into `<root>/apianyware/` so the struct file lands at
     // `<root>/apianyware/foundation/indexset.sls` (Chez resolves the library name
     // `(apianyware foundation indexset)` to that path).

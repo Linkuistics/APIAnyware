@@ -118,7 +118,13 @@ fn fixture() -> Framework {
                     ),
                     swift_native,
                 ],
-                vec![prop("hidden", TypeRefKind::Primitive { name: "bool".into() }, false)],
+                vec![prop(
+                    "hidden",
+                    TypeRefKind::Primitive {
+                        name: "bool".into(),
+                    },
+                    false,
+                )],
             ),
             class(
                 "NSControl",
@@ -156,7 +162,10 @@ fn render_all(fw: &Framework) -> String {
         out.push_str(&render_class(cls, &fw.name, parent));
         out.push_str(&render_class_dispatch(cls, &fw.name));
     }
-    out.push_str(&render_generics(&collect_generics(&[fw], &ProtocolRegistry::new())));
+    out.push_str(&render_generics(&collect_generics(
+        &[fw],
+        &ProtocolRegistry::new(),
+    )));
     out
 }
 
@@ -178,12 +187,13 @@ fn every_defmethod_has_a_matching_defgeneric() {
     let fw = fixture();
     let out = render_all(&fw);
 
-    let declared: HashSet<String> = render_generics(&collect_generics(&[&fw], &ProtocolRegistry::new()))
-        .lines()
-        .filter_map(|l| l.strip_prefix("(defgeneric "))
-        .filter_map(|rest| rest.split([' ', '(']).next())
-        .map(|s| s.to_string())
-        .collect();
+    let declared: HashSet<String> =
+        render_generics(&collect_generics(&[&fw], &ProtocolRegistry::new()))
+            .lines()
+            .filter_map(|l| l.strip_prefix("(defgeneric "))
+            .filter_map(|rest| rest.split([' ', '(']).next())
+            .map(|s| s.to_string())
+            .collect();
 
     let method_generics: HashSet<String> = out
         .lines()

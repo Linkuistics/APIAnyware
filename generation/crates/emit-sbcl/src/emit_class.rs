@@ -231,7 +231,11 @@ mod tests {
         // NSString : NSObject — the defclass roots on the runtime-owned ns:ns-object,
         // metaclass objc-class, empty slots; the Class string table bakes the
         // identity + super by string.
-        let out = render_class(&cls("NSString", "NSObject"), "Foundation", &ParentRef::RuntimeRoot);
+        let out = render_class(
+            &cls("NSString", "NSObject"),
+            "Foundation",
+            &ParentRef::RuntimeRoot,
+        );
         assert!(out.contains("(defclass ns:ns-string (ns:ns-object) () (:metaclass objc-class))"));
         assert!(out.contains("(register-objc-class 'ns:ns-string \"NSString\" \"NSObject\")"));
         // The runtime-owned root is never re-defined as ns:ns-object's own parent.
@@ -311,14 +315,20 @@ mod tests {
             offset_bits: 64,
             ctype: "int".into(),
         };
-        assert_eq!(render_foreign_slot(&slot), "(counter :offset 64 :ctype :int)");
+        assert_eq!(
+            render_foreign_slot(&slot),
+            "(counter :offset 64 :ctype :int)"
+        );
         // An already-colon'd ctype is left as-is.
         let slot2 = ForeignSlot {
             name: "scale".into(),
             offset_bits: 128,
             ctype: ":double".into(),
         };
-        assert_eq!(render_foreign_slot(&slot2), "(scale :offset 128 :ctype :double)");
+        assert_eq!(
+            render_foreign_slot(&slot2),
+            "(scale :offset 128 :ctype :double)"
+        );
     }
 
     #[test]

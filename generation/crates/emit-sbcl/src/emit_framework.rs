@@ -482,7 +482,14 @@ fn render_class_file(
     let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
     emit_class_dispatch(&mut w, cls, &fw.name, &error_selectors, protocols);
     // The Swift-native method/init residual (leaf 045), after the direct ObjC dispatch.
-    emit_swift_native_residual(&mut w, cls, &fw.name, &error_selectors, protocols, generic_arity);
+    emit_swift_native_residual(
+        &mut w,
+        cls,
+        &fw.name,
+        &error_selectors,
+        protocols,
+        generic_arity,
+    );
     w.finish()
 }
 

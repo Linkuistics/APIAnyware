@@ -15,14 +15,19 @@
 
 use std::collections::BTreeSet;
 
-use apianyware_macos_emit_sbcl::emit_generics::{collect_generics, render_class_dispatch_with, render_generics};
+use apianyware_macos_emit_sbcl::emit_generics::{
+    collect_generics, render_class_dispatch_with, render_generics,
+};
 use apianyware_macos_emit_sbcl::emit_protocol::render_protocol;
 use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
 use apianyware_macos_types::ir::{Class, Framework, Method, Param, Protocol};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 fn ty(kind: TypeRefKind) -> TypeRef {
-    TypeRef { nullable: false, kind }
+    TypeRef {
+        nullable: false,
+        kind,
+    }
 }
 
 fn method(selector: &str, ret: TypeRef, params: Vec<Param>) -> Method {
@@ -56,7 +61,10 @@ fn flattened(selector: &str, origin: &str, ret: TypeRef, params: Vec<Param>) -> 
 }
 
 fn param(name: &str, kind: TypeRefKind) -> Param {
-    Param { name: name.into(), param_type: ty(kind) }
+    Param {
+        name: name.into(),
+        param_type: ty(kind),
+    }
 }
 
 fn proto(name: &str, required: Vec<Method>, optional: Vec<Method>) -> Protocol {
@@ -73,7 +81,12 @@ fn proto(name: &str, required: Vec<Method>, optional: Vec<Method>) -> Protocol {
     }
 }
 
-fn class(name: &str, protocols: Vec<String>, methods: Vec<Method>, all_methods: Vec<Method>) -> Class {
+fn class(
+    name: &str,
+    protocols: Vec<String>,
+    methods: Vec<Method>,
+    all_methods: Vec<Method>,
+) -> Class {
     Class {
         name: name.into(),
         superclass: "NSObject".into(),
@@ -121,7 +134,11 @@ fn fw(name: &str, classes: Vec<Class>, protocols: Vec<Protocol>) -> Framework {
 fn fixture() -> Framework {
     let tkcopying = proto(
         "TKCopying",
-        vec![method("copyWithZone:", ty(TypeRefKind::Instancetype), vec![param("zone", TypeRefKind::Id)])],
+        vec![method(
+            "copyWithZone:",
+            ty(TypeRefKind::Instancetype),
+            vec![param("zone", TypeRefKind::Id)],
+        )],
         vec![],
     );
     let tkdelegate = proto(
@@ -129,7 +146,13 @@ fn fixture() -> Framework {
         vec![],
         vec![
             method("tkDidStart", TypeRef::void(), vec![]),
-            method("tkShouldContinue", ty(TypeRefKind::Primitive { name: "bool".into() }), vec![]),
+            method(
+                "tkShouldContinue",
+                ty(TypeRefKind::Primitive {
+                    name: "bool".into(),
+                }),
+                vec![],
+            ),
         ],
     );
     // TKDocument conforms to TKCopying: copyWithZone: arrives in all_methods with
@@ -138,7 +161,12 @@ fn fixture() -> Framework {
         "TKDocument",
         vec!["TKCopying".into()],
         vec![method("title", ty(TypeRefKind::Id), vec![])],
-        vec![flattened("copyWithZone:", "TKCopying", ty(TypeRefKind::Id), vec![param("zone", TypeRefKind::Id)])],
+        vec![flattened(
+            "copyWithZone:",
+            "TKCopying",
+            ty(TypeRefKind::Id),
+            vec![param("zone", TypeRefKind::Id)],
+        )],
     );
     fw("TestKit", vec![tkdocument], vec![tkcopying, tkdelegate])
 }
@@ -185,7 +213,10 @@ fn delegate_only_selectors_get_their_generics_from_the_protocol() {
     // class-graph generic set — emit_protocol contributes them for a Lisp subclass
     // to specialize via define-objc-method.
     let (out, names) = render_all(&fixture());
-    assert!(!names.contains("ns:tk-did-start"), "delegate-only selector is not a class-graph generic");
+    assert!(
+        !names.contains("ns:tk-did-start"),
+        "delegate-only selector is not a class-graph generic"
+    );
     assert!(out.contains("(defgeneric ns:tk-did-start (receiver)"));
     assert!(out.contains("(defgeneric ns:tk-should-continue (receiver)"));
 }
@@ -222,7 +253,10 @@ fn every_defmethod_and_protocol_selector_has_a_matching_defgeneric() {
 
     assert!(!defmethod_generics.is_empty());
     for g in &defmethod_generics {
-        assert!(declared.contains(g), "defmethod generic {g} has no defgeneric; declared={declared:?}");
+        assert!(
+            declared.contains(g),
+            "defmethod generic {g} has no defgeneric; declared={declared:?}"
+        );
     }
     // The delegate-only generics (which a Lisp subclass will specialize) are
     // declared too.

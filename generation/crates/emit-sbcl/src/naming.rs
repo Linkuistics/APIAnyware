@@ -281,8 +281,14 @@ mod tests {
         assert_eq!(generic_name("cancel:"), "cancel_");
         assert_ne!(generic_name("cancel"), generic_name("cancel:"));
         // drawTitleWithFrame:inView: (2 args) vs drawTitle:withFrame:inView: (3 args)
-        assert_eq!(generic_name("drawTitleWithFrame:inView:"), "draw-title-with-frame_in-view_");
-        assert_eq!(generic_name("drawTitle:withFrame:inView:"), "draw-title_with-frame_in-view_");
+        assert_eq!(
+            generic_name("drawTitleWithFrame:inView:"),
+            "draw-title-with-frame_in-view_"
+        );
+        assert_eq!(
+            generic_name("drawTitle:withFrame:inView:"),
+            "draw-title_with-frame_in-view_"
+        );
         assert_ne!(
             generic_name("drawTitleWithFrame:inView:"),
             generic_name("drawTitle:withFrame:inView:")
@@ -294,8 +300,14 @@ mod tests {
         // PascalCase free functions / constants kebab acronym-aware, like classes.
         assert_eq!(top_level_name("CGRectMake"), "cg-rect-make");
         assert_eq!(top_level_name("NSStringFromClass"), "ns-string-from-class");
-        assert_eq!(top_level_name("NSFontAttributeName"), "ns-font-attribute-name");
-        assert_eq!(top_level_name("NSUTF8StringEncoding"), "ns-utf8-string-encoding");
+        assert_eq!(
+            top_level_name("NSFontAttributeName"),
+            "ns-font-attribute-name"
+        );
+        assert_eq!(
+            top_level_name("NSUTF8StringEncoding"),
+            "ns-utf8-string-encoding"
+        );
         assert_eq!(
             qualified_top_level_name("NSFontAttributeName"),
             "ns:ns-font-attribute-name"
@@ -308,21 +320,36 @@ mod tests {
         // them embedded in the symbol.
         assert_eq!(top_level_name("dispatch_async"), "dispatch-async");
         assert_eq!(top_level_name("objc_msgSend"), "objc-msg-send");
-        assert_eq!(top_level_name("CFStringCreateWithCString"), "cf-string-create-with-c-string");
+        assert_eq!(
+            top_level_name("CFStringCreateWithCString"),
+            "cf-string-create-with-c-string"
+        );
         // A leading-underscore "private" symbol drops the empty leading segment.
         assert_eq!(top_level_name("_dispatch_main_q"), "dispatch-main-q");
-        assert_eq!(qualified_top_level_name("dispatch_async"), "ns:dispatch-async");
+        assert_eq!(
+            qualified_top_level_name("dispatch_async"),
+            "ns:dispatch-async"
+        );
     }
 
     #[test]
     fn swift_method_generics_are_selector_analogous() {
         // base + non-wildcard labels, acronym-aware, joined with `-`.
-        assert_eq!(swift_method_generic_name("update", &["with".into()]), "update-with");
-        assert_eq!(qualified_swift_method_generic_name("update", &["with".into()]), "ns:update-with");
+        assert_eq!(
+            swift_method_generic_name("update", &["with".into()]),
+            "update-with"
+        );
+        assert_eq!(
+            qualified_swift_method_generic_name("update", &["with".into()]),
+            "ns:update-with"
+        );
         // Zero-label method → bare base.
         assert_eq!(swift_method_generic_name("start", &[]), "start");
         // A wildcard label contributes nothing (so two wildcard params don't double-`-`).
-        assert_eq!(swift_method_generic_name("contains", &["_".into()]), "contains");
+        assert_eq!(
+            swift_method_generic_name("contains", &["_".into()]),
+            "contains"
+        );
         // Multi-label, acronym preserved inside a label.
         assert_eq!(
             swift_method_generic_name("data", &["fromURL".into(), "delegate".into()]),
@@ -333,12 +360,24 @@ mod tests {
     #[test]
     fn swift_init_constructors_are_make_prefixed() {
         // make- + owner kebab + non-wildcard labels.
-        assert_eq!(swift_init_constructor_name("IndexSet", &["integer".into()]), "make-index-set-integer");
-        assert_eq!(qualified_swift_init_constructor_name("IndexSet", &["integer".into()]), "ns:make-index-set-integer");
+        assert_eq!(
+            swift_init_constructor_name("IndexSet", &["integer".into()]),
+            "make-index-set-integer"
+        );
+        assert_eq!(
+            qualified_swift_init_constructor_name("IndexSet", &["integer".into()]),
+            "ns:make-index-set-integer"
+        );
         // Bare init → make-<owner>.
-        assert_eq!(swift_init_constructor_name("IndexSet", &[]), "make-index-set");
+        assert_eq!(
+            swift_init_constructor_name("IndexSet", &[]),
+            "make-index-set"
+        );
         // A class owner kebabs acronym-aware like everywhere else.
-        assert_eq!(swift_init_constructor_name("ImageCreator", &[]), "make-image-creator");
+        assert_eq!(
+            swift_init_constructor_name("ImageCreator", &[]),
+            "make-image-creator"
+        );
     }
 
     #[test]

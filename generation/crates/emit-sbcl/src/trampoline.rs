@@ -126,7 +126,10 @@ enum ArgMarshal {
     /// that raw pointer, reconstructs the objc reference (`Unmanaged<NSURL>`) and bridges
     /// it to the Swift value (`… as URL`). Only the curated [`objc_object_param_bridge`]
     /// set rides this path. sbcl passes the id pointer straight through (`aw-ptr`).
-    ObjectRef { class_name: String, bridge_to: String },
+    ObjectRef {
+        class_name: String,
+        bridge_to: String,
+    },
 }
 
 /// The curated objc reference classes whose params bridge to a Swift value twin (R1,
@@ -150,7 +153,10 @@ enum RetMarshal {
     Scalar(Scalar),
     /// A scalar-backed named typedef return (`-> CGFloat`): the `@_cdecl` returns the
     /// underlying scalar; the body converts the call result (`Double(<call>)`).
-    ScalarTypedef { scalar: Scalar, name: String },
+    ScalarTypedef {
+        scalar: Scalar,
+        name: String,
+    },
     /// `Swift.String` → bridged `NSString`, returned `+1`-retained as an `id`; the sbcl
     /// side copies to a `cl:string` and releases (`aw-swift-string-result`).
     SwiftString,
@@ -938,9 +944,15 @@ fn residual_methods(
         if m.swift_fn.is_none() {
             continue; // ObjC method — binds via msgSend, no trampoline
         }
-        if let MethodDisposition::Method(t) =
-            classify_method(module, owner, owner_is_class, m, methods, &no_value_structs, None)
-        {
+        if let MethodDisposition::Method(t) = classify_method(
+            module,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            &no_value_structs,
+            None,
+        ) {
             if t.is_async() {
                 continue; // async residual: runtime-coupled, follow-up leaf
             }
@@ -969,9 +981,15 @@ fn residual_inits(
         if m.swift_fn.is_none() {
             continue;
         }
-        if let MethodDisposition::Init(t) =
-            classify_method(module, owner, owner_is_class, m, methods, &no_value_structs, None)
-        {
+        if let MethodDisposition::Init(t) = classify_method(
+            module,
+            owner,
+            owner_is_class,
+            m,
+            methods,
+            &no_value_structs,
+            None,
+        ) {
             if seen.insert(t.binding_symbol()) {
                 out.push(t);
             }
@@ -1300,8 +1318,7 @@ pub fn classify_method(
     };
 
     // Write-back only applies to value receivers; a class receiver is a reference.
-    let mutating =
-        !owner_is_class && info.and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
+    let mutating = !owner_is_class && info.and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
 
     // Async (D5/R4): drives the completion-callback bridge instead of a synchronous
     // return. Two sub-cases defer-with-count: a `mutating` value receiver (write-back
@@ -1312,7 +1329,10 @@ pub fn classify_method(
         if mutating {
             return MethodDisposition::Deferred(DeferReason::AsyncMutatingReceiver);
         }
-        if matches!(ret, RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. }) {
+        if matches!(
+            ret,
+            RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. }
+        ) {
             return MethodDisposition::Deferred(DeferReason::AsyncScalarReturn);
         }
     }
@@ -1476,7 +1496,9 @@ fn args_decl_and_prelude(params: &[ArgMarshal]) -> (Vec<String>, String) {
             }
             ArgMarshal::BoxedHandle { name } => {
                 decl.push(format!("_ a{i}: UnsafeMutableRawPointer?"));
-                prelude.push_str(&format!("  let u{i} = awSbclUnbox(a{i}!, as: {name}.self)\n"));
+                prelude.push_str(&format!(
+                    "  let u{i} = awSbclUnbox(a{i}!, as: {name}.self)\n"
+                ));
             }
             ArgMarshal::ObjectRef {
                 class_name,
@@ -1929,7 +1951,9 @@ fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
         let wb = writeback.as_deref().unwrap_or("");
         match &t.ret {
             RetMarshal::Void => {
-                s.push_str(&format!("  awSbclTry(awErrOut, ()) {{ try {call}\n  {wb}}}\n"));
+                s.push_str(&format!(
+                    "  awSbclTry(awErrOut, ()) {{ try {call}\n  {wb}}}\n"
+                ));
             }
             RetMarshal::Scalar(_) | RetMarshal::ScalarTypedef { .. } => {
                 let m = marshal("awR");
@@ -1984,7 +2008,10 @@ fn emit_init_tramp(s: &mut String, t: &InitTrampoline) {
     // Init params pass with their declared width (no `numericCast`): an overloaded
     // initializer is selected *by* the param type, so a width-agnostic cast would make the
     // constructor call ambiguous.
-    let ctor = format!("{owner}({})", arg_values(&t.params, &t.labels, false).join(", "));
+    let ctor = format!(
+        "{owner}({})",
+        arg_values(&t.params, &t.labels, false).join(", ")
+    );
     // Box the owning type (R2): a class instance keeps reference identity via
     // `Unmanaged.passRetained` (sbcl `aw-wrap`s it Lisp-side); a value rides the uniform
     // `awSbclBox`.
@@ -2028,7 +2055,12 @@ fn alien_function_type(ret_alien: &str, arg_aliens: &[String]) -> String {
 
 /// The `(sb-alien:alien-funcall (sb-alien:extern-alien "<entry>" <fn-type>) <actuals>…)`
 /// raw crossing for an entry — the compiled-FFI call into the dylib.
-fn alien_funcall(entry: &str, ret_alien: &str, arg_aliens: &[String], actuals: &[String]) -> String {
+fn alien_funcall(
+    entry: &str,
+    ret_alien: &str,
+    arg_aliens: &[String],
+    actuals: &[String],
+) -> String {
     let fn_type = alien_function_type(ret_alien, arg_aliens);
     if actuals.is_empty() {
         format!("(sb-alien:alien-funcall (sb-alien:extern-alien \"{entry}\" {fn_type}))")
@@ -2313,7 +2345,12 @@ impl InitTrampoline {
     /// expressions (already coerced). 060 wraps this in a constructor and, for a class
     /// owner, `aw-wrap`s the result; `%err` (throwing) is appended by the caller.
     pub fn render_alien_funcall(&self, arg_exprs: &[String]) -> String {
-        alien_funcall(&self.entry, &self.ret_alien(), &self.arg_aliens(), arg_exprs)
+        alien_funcall(
+            &self.entry,
+            &self.ret_alien(),
+            &self.arg_aliens(),
+            arg_exprs,
+        )
     }
 
     /// Coerce the init's visible Lisp args for the crossing.
@@ -2366,7 +2403,11 @@ impl InitTrampoline {
         if self.owner_is_class {
             format!("({WRAP_FN} {raw} t)")
         } else {
-            format!("(make-instance '{} :ptr {})", qualified_class_name(&self.owner), raw)
+            format!(
+                "(make-instance '{} :ptr {})",
+                qualified_class_name(&self.owner),
+                raw
+            )
         }
     }
 }
@@ -2431,7 +2472,12 @@ mod tests {
 
     #[test]
     fn entry_name_uses_sbcl_prefix() {
-        let f = swift_func("timestampSeed", vec![], prim("double"), SwiftFnInfo::default());
+        let f = swift_func(
+            "timestampSeed",
+            vec![],
+            prim("double"),
+            SwiftFnInfo::default(),
+        );
         let t = classify("CreateML", &f);
         assert_eq!(t.entry, "aw_sbcl_swift_CreateML_timestampSeed");
         assert_eq!(t.binding_symbol, "ns:timestamp-seed");
@@ -2485,7 +2531,10 @@ mod tests {
         assert_eq!(t.ret_alien(), "sb-alien:system-area-pointer");
         let b = t.render_binding();
         assert!(b.contains("(aw-swift-string-arg a0)"), "{b}");
-        assert!(b.contains("(aw-swift-string-result (sb-alien:alien-funcall"), "{b}");
+        assert!(
+            b.contains("(aw-swift-string-result (sb-alien:alien-funcall"),
+            "{b}"
+        );
     }
 
     #[test]
@@ -2499,7 +2548,12 @@ mod tests {
                 params: vec![],
             },
         };
-        let f = swift_func("load", vec![param("from", url)], prim("void"), SwiftFnInfo::default());
+        let f = swift_func(
+            "load",
+            vec![param("from", url)],
+            prim("void"),
+            SwiftFnInfo::default(),
+        );
         let t = classify("TestKit", &f);
         let b = t.render_binding();
         assert!(b.contains("(aw-ptr a0)"), "{b}");
@@ -2577,15 +2631,31 @@ mod tests {
         let t = classify_constant("CreateML", &c);
         assert_eq!(t.entry, "aw_sbcl_swift_const_CreateML_MLCreateErrorDomain");
         let b = t.render_binding();
-        assert!(b.starts_with("(define-objc-constant ns:ml-create-error-domain"), "{b}");
+        assert!(
+            b.starts_with("(define-objc-constant ns:ml-create-error-domain"),
+            "{b}"
+        );
         // A String constant coerces out to a cl:string.
-        assert!(b.contains("(aw-swift-string-result (sb-alien:alien-funcall"), "{b}");
+        assert!(
+            b.contains("(aw-swift-string-result (sb-alien:alien-funcall"),
+            "{b}"
+        );
     }
 
     #[test]
     fn overloaded_functions_get_distinct_entries_and_symbols() {
-        let a = swift_func("show", vec![param("x", prim("int64"))], prim("void"), SwiftFnInfo::default());
-        let b = swift_func("show", vec![param("x", prim("double"))], prim("void"), SwiftFnInfo::default());
+        let a = swift_func(
+            "show",
+            vec![param("x", prim("int64"))],
+            prim("void"),
+            SwiftFnInfo::default(),
+        );
+        let b = swift_func(
+            "show",
+            vec![param("x", prim("double"))],
+            prim("void"),
+            SwiftFnInfo::default(),
+        );
         let siblings = vec![a.clone(), b.clone()];
         let ta = match classify_function("TestKit", &a, &siblings, &no_structs()) {
             FnDisposition::Trampoline(t) => t,
@@ -2627,7 +2697,10 @@ mod tests {
         );
         assert_eq!(m.ret_alien(), "sb-alien:void");
         let call = m.render_alien_funcall("(aw-ptr self)", &["a0".to_string()]);
-        assert!(call.contains("(sb-alien:extern-alien \"aw_sbcl_swift_m_TestKit_Widget_resize\""), "{call}");
+        assert!(
+            call.contains("(sb-alien:extern-alien \"aw_sbcl_swift_m_TestKit_Widget_resize\""),
+            "{call}"
+        );
         assert!(call.contains("(aw-ptr self) a0)"), "{call}");
     }
 
@@ -2649,19 +2722,33 @@ mod tests {
         let coerced = i.arg_coercions(&["a0".to_string()]);
         assert_eq!(coerced, vec!["(aw-swift-string-arg a0)".to_string()]);
         let call = i.render_alien_funcall(&coerced);
-        assert!(call.contains("(sb-alien:extern-alien \"aw_sbcl_swift_init_TestKit_Widget\""), "{call}");
+        assert!(
+            call.contains("(sb-alien:extern-alien \"aw_sbcl_swift_init_TestKit_Widget\""),
+            "{call}"
+        );
     }
 
     #[test]
     fn swift_codegen_emits_cdecl_and_counts() {
         let mut set = TrampolineSet::default();
-        let f = swift_func("scale", vec![param("by", prim("double"))], prim("double"), SwiftFnInfo::default());
+        let f = swift_func(
+            "scale",
+            vec![param("by", prim("double"))],
+            prim("double"),
+            SwiftFnInfo::default(),
+        );
         set.functions.push(classify("TestKit", &f));
         let swift = generate_trampolines_swift(&set);
         assert!(swift.contains("import TestKit"), "{swift}");
-        assert!(swift.contains("@_cdecl(\"aw_sbcl_swift_TestKit_scale\")"), "{swift}");
+        assert!(
+            swift.contains("@_cdecl(\"aw_sbcl_swift_TestKit_scale\")"),
+            "{swift}"
+        );
         assert!(swift.contains("TestKit.scale(by: a0)"), "{swift}");
-        assert!(swift.contains("1 function + 0 constant + 0 init + 0 method trampolines."), "{swift}");
+        assert!(
+            swift.contains("1 function + 0 constant + 0 init + 0 method trampolines."),
+            "{swift}"
+        );
     }
 
     // --- 045: Lisp method/init residual wiring -------------------------------
@@ -2707,7 +2794,10 @@ mod tests {
         assert_eq!(m.generic_decl(), ("ns:resize-to".to_string(), 1));
         let d = m.render_defmethod();
         // Generic = base+labels; receiver in the specializer; arg formal = kebab label.
-        assert!(d.starts_with("(defmethod ns:resize-to ((self ns:widget) to)"), "{d}");
+        assert!(
+            d.starts_with("(defmethod ns:resize-to ((self ns:widget) to)"),
+            "{d}"
+        );
         // The receiver coerces through (aw-ptr self); the scalar arg passes through.
         assert!(
             d.contains("(sb-alien:extern-alien \"aw_sbcl_swift_m_TestKit_Widget_resize\""),
@@ -2731,7 +2821,10 @@ mod tests {
         );
         assert_eq!(m.generic_decl(), ("ns:make".to_string(), 0));
         let d = m.render_defmethod();
-        assert!(d.starts_with("(defmethod ns:make ((self ns:factory))"), "{d}");
+        assert!(
+            d.starts_with("(defmethod ns:make ((self ns:factory))"),
+            "{d}"
+        );
         // Object return: aw-wrap … t (the +1 id → exact bound type).
         assert!(d.contains("(aw-wrap (sb-alien:alien-funcall"), "{d}");
         assert!(d.trim_end().ends_with("t))"), "{d}");
@@ -2750,7 +2843,10 @@ mod tests {
         );
         let d = m.render_defmethod();
         assert!(d.contains("(aw-swift-string-arg of)"), "{d}");
-        assert!(d.contains("(aw-swift-string-result (sb-alien:alien-funcall"), "{d}");
+        assert!(
+            d.contains("(aw-swift-string-result (sb-alien:alien-funcall"),
+            "{d}"
+        );
     }
 
     #[test]
@@ -2787,7 +2883,10 @@ mod tests {
         };
         assert_eq!(i.binding_symbol(), "ns:make-image-creator-title");
         let c = i.render_constructor();
-        assert!(c.starts_with("(defun ns:make-image-creator-title (title)"), "{c}");
+        assert!(
+            c.starts_with("(defun ns:make-image-creator-title (title)"),
+            "{c}"
+        );
         assert!(c.contains("(aw-swift-string-arg title)"), "{c}");
         // A class owner aw-wraps the +1 returned id (ADR-0038 §4).
         assert!(c.contains("(aw-wrap (sb-alien:alien-funcall"), "{c}");
@@ -2864,9 +2963,24 @@ mod tests {
         // Two overloads of `tag(_:)` collapse to one ns:tag defmethod (first wins);
         // an `init(value:)` collects as a constructor.
         let methods = vec![
-            swift_method("tag(_:)", false, prim("void"), vec![param("_", prim("int64"))]),
-            swift_method("tag(_:)", false, prim("void"), vec![param("_", prim("double"))]),
-            swift_method("init(value:)", true, idty(), vec![param("value", prim("int64"))]),
+            swift_method(
+                "tag(_:)",
+                false,
+                prim("void"),
+                vec![param("_", prim("int64"))],
+            ),
+            swift_method(
+                "tag(_:)",
+                false,
+                prim("void"),
+                vec![param("_", prim("double"))],
+            ),
+            swift_method(
+                "init(value:)",
+                true,
+                idty(),
+                vec![param("value", prim("int64"))],
+            ),
         ];
         let ms = class_residual_methods("TestKit", "Widget", &methods);
         assert_eq!(ms.len(), 1, "overloads dedup to one generic: {ms:?}");
@@ -2883,8 +2997,18 @@ mod tests {
         // value-receiver trampolines and its inits value-owner constructors — the
         // owner-is-class=false dual of the class collectors above.
         let methods = vec![
-            swift_method("contains(_:)", false, prim("bool"), vec![param("_", prim("int64"))]),
-            swift_method("init(integer:)", true, idty(), vec![param("integer", prim("int64"))]),
+            swift_method(
+                "contains(_:)",
+                false,
+                prim("bool"),
+                vec![param("_", prim("int64"))],
+            ),
+            swift_method(
+                "init(integer:)",
+                true,
+                idty(),
+                vec![param("integer", prim("int64"))],
+            ),
         ];
         let ms = struct_residual_methods("Foundation", "IndexSet", &methods);
         assert_eq!(ms.len(), 1, "{ms:?}");

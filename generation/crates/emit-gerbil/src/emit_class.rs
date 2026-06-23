@@ -584,8 +584,8 @@ fn collect_swift_native_bindings(
             owner_introduced,
         ) {
             MethodDisposition::Method(t) => {
-                let mutating = m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref())
-                    == Some("Mutating");
+                let mutating =
+                    m.swift_fn.as_ref().and_then(|i| i.self_kind.as_deref()) == Some("Mutating");
                 let name = make_swift_method_name(owner, &m.selector, mutating);
                 if !seen.insert(name.clone()) {
                     continue;
@@ -2712,7 +2712,12 @@ mod tests {
         // the receiver-handle trampoline section (the %swift- crossing against the
         // content-addressed libAPIAnywareGerbil entry), NEVER objc_msgSend (charter #4).
         let objc = make_method("title", false, false, ty(TypeRefKind::Id));
-        let swiftm = swift_method("describe", ty(TypeRefKind::Primitive { name: "int64".into() }));
+        let swiftm = swift_method(
+            "describe",
+            ty(TypeRefKind::Primitive {
+                name: "int64".into(),
+            }),
+        );
         let cls = cls_with("Widget", vec![objc, swiftm], vec![]);
         let out = generate_class_file(&cls, "TestKit");
 
@@ -2736,7 +2741,10 @@ mod tests {
         assert!(out.contains("(define (widget-title self)"), "{out}");
         assert!(out.contains("%sel-widget-title"), "{out}");
         // The section comment is present.
-        assert!(out.contains("Swift-native methods (receiver-handle trampolines"), "{out}");
+        assert!(
+            out.contains("Swift-native methods (receiver-handle trampolines"),
+            "{out}"
+        );
         // The trampoline binding name is exported.
         let (_, exports) = generate_class_file_with_parent(
             &cls,
@@ -2745,27 +2753,50 @@ mod tests {
             &HashSet::new(),
             &ProtocolRegistry::new(),
         );
-        assert!(exports.contains(&"widget-describe".to_string()), "{exports:?}");
+        assert!(
+            exports.contains(&"widget-describe".to_string()),
+            "{exports:?}"
+        );
     }
 
     /// A population-B value struct (IndexSet-shaped) emits a struct module with an
     /// init producer (raw handle, no wrap) + a method, no defclass/msgSend substrate.
     #[test]
     fn population_b_struct_emits_init_producer_and_method() {
-        let mut init = make_method("init(integer:)", false, true, ty(TypeRefKind::Class {
-            name: "NSIndexSet".into(),
-            framework: Some("Foundation".into()),
-            params: vec![],
-        }));
+        let mut init = make_method(
+            "init(integer:)",
+            false,
+            true,
+            ty(TypeRefKind::Class {
+                name: "NSIndexSet".into(),
+                framework: Some("Foundation".into()),
+                params: vec![],
+            }),
+        );
         init.objc_exposed = false;
-        init.params = vec![param("integer", TypeRefKind::Primitive { name: "int64".into() })];
+        init.params = vec![param(
+            "integer",
+            TypeRefKind::Primitive {
+                name: "int64".into(),
+            },
+        )];
         init.swift_fn = Some(SwiftFnInfo::default());
 
-        let mut contains = make_method("contains(_:)", false, false, ty(TypeRefKind::Primitive {
-            name: "bool".into(),
-        }));
+        let mut contains = make_method(
+            "contains(_:)",
+            false,
+            false,
+            ty(TypeRefKind::Primitive {
+                name: "bool".into(),
+            }),
+        );
         contains.objc_exposed = false;
-        contains.params = vec![param("_", TypeRefKind::Primitive { name: "int64".into() })];
+        contains.params = vec![param(
+            "_",
+            TypeRefKind::Primitive {
+                name: "int64".into(),
+            },
+        )];
         contains.swift_fn = Some(SwiftFnInfo::default());
 
         let st = Struct {
@@ -2783,11 +2814,26 @@ mod tests {
         assert!(!out.contains("objc_getClass"), "{out}");
         // Init producer: a value owner hands back the raw handle (no wrap).
         assert!(out.contains("(define-c-lambda %swift-make-indexset-integer (int64) (pointer void) \"aw_gerbil_swift_init_Foundation_IndexSet\")"), "{out}");
-        assert!(out.contains("(%swift-make-indexset-integer integer)"), "{out}");
-        assert!(!out.contains("(wrap (%swift-make-indexset-integer"), "value init must not wrap:\n{out}");
+        assert!(
+            out.contains("(%swift-make-indexset-integer integer)"),
+            "{out}"
+        );
+        assert!(
+            !out.contains("(wrap (%swift-make-indexset-integer"),
+            "value init must not wrap:\n{out}"
+        );
         // Method: receiver via (->ptr self), numericCast on the int arg.
-        assert!(out.contains("(%swift-indexset-contains (->ptr self) arg0)"), "{out}");
-        assert!(exports.contains(&"make-indexset-integer".to_string()), "{exports:?}");
-        assert!(exports.contains(&"indexset-contains".to_string()), "{exports:?}");
+        assert!(
+            out.contains("(%swift-indexset-contains (->ptr self) arg0)"),
+            "{out}"
+        );
+        assert!(
+            exports.contains(&"make-indexset-integer".to_string()),
+            "{exports:?}"
+        );
+        assert!(
+            exports.contains(&"indexset-contains".to_string()),
+            "{exports:?}"
+        );
     }
 }

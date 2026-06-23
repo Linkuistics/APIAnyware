@@ -191,35 +191,11 @@ pub fn acronym_aware_kebab(input: &str) -> String {
 /// table being exhaustive.
 const KNOWN_TOKENS: &[&str] = &[
     // Compound brand tokens kept whole.
-    "OpenGL",
-    "OpenCL",
-    "OpenAL",
+    "OpenGL", "OpenCL", "OpenAL",
     // Pile-up acronyms (longer variants first is not required — longest match is
     // computed — but grouped for readability).
-    "HTTPS",
-    "HTTP",
-    "HTML",
-    "JSON",
-    "RGBA",
-    "RGB",
-    "CMYK",
-    "ASCII",
-    "UUID",
-    "MIME",
-    "JPEG",
-    "TIFF",
-    "MIDI",
-    "NS",
-    "URL",
-    "URI",
-    "XML",
-    "PDF",
-    "CSV",
-    "API",
-    "SQL",
-    "PNG",
-    "GIF",
-    "DNS",
+    "HTTPS", "HTTP", "HTML", "JSON", "RGBA", "RGB", "CMYK", "ASCII", "UUID", "MIME", "JPEG", "TIFF",
+    "MIDI", "NS", "URL", "URI", "XML", "PDF", "CSV", "API", "SQL", "PNG", "GIF", "DNS",
 ];
 
 /// Split `input` into words, honouring [`KNOWN_TOKENS`] at word boundaries and
@@ -319,10 +295,7 @@ mod tests {
         // RGBA must beat RGB; HTTPS must beat HTTP.
         assert_eq!(acronym_aware_kebab("RGBAColor"), "rgba-color");
         assert_eq!(acronym_aware_kebab("RGBColor"), "rgb-color");
-        assert_eq!(
-            acronym_aware_kebab("HTTPSConnection"),
-            "https-connection"
-        );
+        assert_eq!(acronym_aware_kebab("HTTPSConnection"), "https-connection");
     }
 
     #[test]

@@ -218,7 +218,13 @@ mod tests {
         }
     }
 
-    fn func(name: &str, params: Vec<Param>, ret: TypeRefKind, inline: bool, variadic: bool) -> Function {
+    fn func(
+        name: &str,
+        params: Vec<Param>,
+        ret: TypeRefKind,
+        inline: bool,
+        variadic: bool,
+    ) -> Function {
         Function {
             name: name.into(),
             params,
@@ -270,9 +276,9 @@ mod tests {
     fn zero_arg_function_is_single_form() {
         let fs = vec![func("TKReset", vec![], prim("void"), false, false)];
         let out = generate_functions_file(&fs, "TestKit");
-        assert!(out.contains(
-            "(sb-alien:define-alien-routine (\"TKReset\" ns:tk-reset) sb-alien:void)"
-        ));
+        assert!(
+            out.contains("(sb-alien:define-alien-routine (\"TKReset\" ns:tk-reset) sb-alien:void)")
+        );
     }
 
     #[test]
@@ -316,8 +322,15 @@ mod tests {
     fn by_value_geometry_struct_crosses_by_value() {
         let fs = vec![func(
             "TKBounds",
-            vec![param("r", TypeRefKind::Struct { name: "CGRect".into() })],
-            TypeRefKind::Struct { name: "CGPoint".into() },
+            vec![param(
+                "r",
+                TypeRefKind::Struct {
+                    name: "CGRect".into(),
+                },
+            )],
+            TypeRefKind::Struct {
+                name: "CGPoint".into(),
+            },
             false,
             false,
         )];
@@ -332,8 +345,20 @@ mod tests {
     #[test]
     fn inline_and_variadic_are_skipped() {
         let fs = vec![
-            func("TKFastHash", vec![param("d", TypeRefKind::Pointer)], prim("uint64"), true, false),
-            func("TKLog", vec![param("fmt", TypeRefKind::CString)], prim("void"), false, true),
+            func(
+                "TKFastHash",
+                vec![param("d", TypeRefKind::Pointer)],
+                prim("uint64"),
+                true,
+                false,
+            ),
+            func(
+                "TKLog",
+                vec![param("fmt", TypeRefKind::CString)],
+                prim("void"),
+                false,
+                true,
+            ),
         ];
         let out = generate_functions_file(&fs, "TestKit");
         assert!(!out.contains("tk-fast-hash"));
@@ -363,7 +388,10 @@ mod tests {
         // Two params that kebab to the same formal get distinct symbols.
         let fs = vec![func(
             "TKDup",
-            vec![param("value", prim("double")), param("value", prim("double"))],
+            vec![
+                param("value", prim("double")),
+                param("value", prim("double")),
+            ],
             prim("void"),
             false,
             false,
@@ -384,13 +412,31 @@ mod tests {
     #[test]
     fn libdispatch_unexported_is_dropped() {
         let fs = vec![
-            func("dispatch_async", vec![param("q", TypeRefKind::Id), param("blk", TypeRefKind::Pointer)], prim("void"), false, false),
-            func("dispatch_cancel", vec![param("q", TypeRefKind::Id)], prim("void"), false, false),
+            func(
+                "dispatch_async",
+                vec![
+                    param("q", TypeRefKind::Id),
+                    param("blk", TypeRefKind::Pointer),
+                ],
+                prim("void"),
+                false,
+                false,
+            ),
+            func(
+                "dispatch_cancel",
+                vec![param("q", TypeRefKind::Id)],
+                prim("void"),
+                false,
+                false,
+            ),
         ];
         let out = generate_functions_file(&fs, "libdispatch");
         assert!(out.contains("ns:dispatch-async"));
         assert!(!out.contains("dispatch-cancel"));
-        assert_eq!(function_symbols(&fs, "libdispatch"), vec!["dispatch-async".to_string()]);
+        assert_eq!(
+            function_symbols(&fs, "libdispatch"),
+            vec!["dispatch-async".to_string()]
+        );
         // The same name is NOT filtered outside libdispatch.
         let out2 = generate_functions_file(&fs, "TestKit");
         assert!(out2.contains("ns:dispatch-cancel"));
@@ -401,8 +447,18 @@ mod tests {
     #[test]
     fn swift_native_function_is_collected_not_emitted() {
         let fs = vec![
-            func("TKComputeDistance", vec![param("x", prim("double"))], prim("double"), false, false),
-            swift_func("TKSwiftScale", vec![param("factor", prim("double"))], prim("double")),
+            func(
+                "TKComputeDistance",
+                vec![param("x", prim("double"))],
+                prim("double"),
+                false,
+                false,
+            ),
+            swift_func(
+                "TKSwiftScale",
+                vec![param("factor", prim("double"))],
+                prim("double"),
+            ),
         ];
         let out = generate_functions_file(&fs, "TestKit");
         // Direct one bound…
@@ -424,7 +480,10 @@ mod tests {
         ];
         assert_eq!(
             function_symbols(&fs, "TestKit"),
-            vec!["tk-compute-distance".to_string(), "tk-swift-scale".to_string()]
+            vec![
+                "tk-compute-distance".to_string(),
+                "tk-swift-scale".to_string()
+            ]
         );
     }
 }

@@ -35,7 +35,9 @@ mod tests {
     #[test]
     fn unexported_list_matches_peers() {
         assert!(is_libdispatch_unexported("dispatch_cancel"));
-        assert!(is_libdispatch_unexported("pthread_jit_write_with_callback_np"));
+        assert!(is_libdispatch_unexported(
+            "pthread_jit_write_with_callback_np"
+        ));
         // A real, exported symbol is not filtered.
         assert!(!is_libdispatch_unexported("dispatch_async"));
     }
