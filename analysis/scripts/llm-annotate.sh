@@ -14,7 +14,7 @@
 #   - The API key env var (from config.toml) must be set
 #
 # After running this script, merge heuristic + LLM annotations:
-#   cargo run -p apianyware-macos-analyze -- annotate
+#   cargo run -p apianyware-analyze -- annotate
 
 set -euo pipefail
 
@@ -169,4 +169,4 @@ done
 
 echo ""
 echo "Done. Run the heuristic merge to combine annotations:"
-echo "  cargo run -p apianyware-macos-analyze -- annotate"
+echo "  cargo run -p apianyware-analyze -- annotate"

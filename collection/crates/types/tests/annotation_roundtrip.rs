@@ -1,6 +1,6 @@
 //! Tests: round-trip serialization/deserialization of annotation types.
 
-use apianyware_macos_types::annotation::{
+use apianyware_types::annotation::{
     AnnotationOverride, AnnotationOverrides, AnnotationSource, ApiPattern, BlockInvocationStyle,
     BlockParamAnnotation, ClassAnnotations, ErrorPattern, FrameworkAnnotations, MethodAnnotation,
     OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype, SubagentReport,

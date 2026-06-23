@@ -9,7 +9,7 @@
 //! - Zig: `defer path.close();` or errdefer pattern
 //! - Smalltalk: `path ensure: [path close]`
 
-use apianyware_macos_types::annotation::{ApiPattern, PatternStereotype};
+use apianyware_types::annotation::{ApiPattern, PatternStereotype};
 
 /// Describes what idiomatic construct a pattern should generate.
 ///
@@ -124,7 +124,7 @@ fn pattern_name_to_kebab(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::annotation::AnnotationSource;
+    use apianyware_types::annotation::AnnotationSource;
 
     fn make_pattern(stereotype: PatternStereotype, name: &str) -> ApiPattern {
         ApiPattern {

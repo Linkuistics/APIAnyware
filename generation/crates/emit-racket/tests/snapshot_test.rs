@@ -6,14 +6,14 @@
 //!   3. AppKit (real IR) — curated subset of ~20 representative files (views, controls, delegates)
 //!
 //! To update golden files after intentional changes:
-//!   UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket --test snapshot_test
+//!   UPDATE_GOLDEN=1 cargo test -p apianyware-emit-racket --test snapshot_test
 
 use std::path::PathBuf;
 
-use apianyware_macos_emit::snapshot_testing::GoldenTest;
-use apianyware_macos_emit::target_emitter::TargetEmitter;
-use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
-use apianyware_macos_emit_racket::emit_framework::RacketEmitter;
+use apianyware_emit::snapshot_testing::GoldenTest;
+use apianyware_emit::target_emitter::TargetEmitter;
+use apianyware_emit::test_fixtures::build_snapshot_test_framework;
+use apianyware_emit_racket::emit_framework::RacketEmitter;
 
 /// Root of this crate (for locating golden files relative to source).
 fn crate_root() -> PathBuf {
@@ -133,14 +133,14 @@ fn snapshot_racket_testkit() {
     if let Err(mismatch) = golden_test.assert_matches(&generated_framework_dir) {
         panic!(
             "Racket snapshot mismatch.\n\
-             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket --test snapshot_test` \
+             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-emit-racket --test snapshot_test` \
              to accept.\n\n{mismatch}"
         );
     }
 }
 
 /// Load a real enriched IR framework from the analysis pipeline output.
-fn load_enriched_framework(name: &str) -> Option<apianyware_macos_types::ir::Framework> {
+fn load_enriched_framework(name: &str) -> Option<apianyware_types::ir::Framework> {
     let enriched_dir = crate_root()
         .parent() // emit-racket → crates
         .and_then(|p| p.parent()) // crates → generation
@@ -164,7 +164,7 @@ fn snapshot_racket_foundation_subset() {
             eprintln!(
                 "SKIPPED: Foundation enriched IR not found. \
                  Run the analysis pipeline first: \
-                 cargo run --bin apianyware-macos-analyze"
+                 cargo run --bin apianyware-analyze"
             );
             return;
         }
@@ -203,7 +203,7 @@ fn snapshot_racket_foundation_subset() {
     {
         panic!(
             "Racket Foundation snapshot mismatch.\n\
-             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket --test snapshot_test` \
+             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-emit-racket --test snapshot_test` \
              to accept.\n\n{mismatch}"
         );
     }
@@ -217,7 +217,7 @@ fn snapshot_racket_appkit_subset() {
             eprintln!(
                 "SKIPPED: AppKit enriched IR not found. \
                  Run the analysis pipeline first: \
-                 cargo run --bin apianyware-macos-analyze"
+                 cargo run --bin apianyware-analyze"
             );
             return;
         }
@@ -254,7 +254,7 @@ fn snapshot_racket_appkit_subset() {
     if let Err(mismatch) = golden_test.assert_subset_matches(&generated_dir, APPKIT_GOLDEN_FILES) {
         panic!(
             "Racket AppKit snapshot mismatch.\n\
-             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-racket --test snapshot_test` \
+             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-emit-racket --test snapshot_test` \
              to accept.\n\n{mismatch}"
         );
     }

@@ -4,7 +4,7 @@
 //! Each language emitter formats this content into its own comment syntax
 //! (`;; ...` for Scheme, `-- ...` for Haskell, `/// ...` for Zig, etc.).
 
-use apianyware_macos_types::provenance::{DocRefs, SourceProvenance};
+use apianyware_types::provenance::{DocRefs, SourceProvenance};
 
 /// A rendered documentation block ready for language-specific formatting.
 #[derive(Debug, Clone, Default)]
@@ -113,7 +113,7 @@ pub fn format_doc_lines(block: &DocBlock, prefix: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::provenance::Availability;
+    use apianyware_types::provenance::Availability;
 
     #[test]
     fn test_empty_doc_block() {

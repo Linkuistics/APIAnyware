@@ -24,8 +24,8 @@ pub mod program;
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use apianyware_macos_datalog::loading;
-use apianyware_macos_types::Framework;
+use apianyware_datalog::loading;
+use apianyware_types::Framework;
 
 /// Enrich all annotated frameworks: load, run Datalog, write enriched checkpoints.
 ///

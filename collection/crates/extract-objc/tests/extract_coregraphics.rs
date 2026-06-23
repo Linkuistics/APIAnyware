@@ -7,11 +7,11 @@
 
 use std::sync::LazyLock;
 
-use apianyware_macos_extract_objc::{create_index, extract_framework, init_clang, sdk};
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_extract_objc::{create_index, extract_framework, init_clang, sdk};
+use apianyware_types::type_ref::TypeRefKind;
 
 /// Shared extracted CoreGraphics framework.
-static COREGRAPHICS: LazyLock<apianyware_macos_types::ir::Framework> = LazyLock::new(|| {
+static COREGRAPHICS: LazyLock<apianyware_types::ir::Framework> = LazyLock::new(|| {
     let sdk = sdk::discover_sdk().expect("should discover macOS SDK");
     let frameworks = sdk::discover_frameworks(&sdk.path).expect("should discover frameworks");
     let cg = frameworks
@@ -24,7 +24,7 @@ static COREGRAPHICS: LazyLock<apianyware_macos_types::ir::Framework> = LazyLock:
     extract_framework(&index, cg, &sdk).expect("should extract CoreGraphics")
 });
 
-fn coregraphics() -> &'static apianyware_macos_types::ir::Framework {
+fn coregraphics() -> &'static apianyware_types::ir::Framework {
     &COREGRAPHICS
 }
 

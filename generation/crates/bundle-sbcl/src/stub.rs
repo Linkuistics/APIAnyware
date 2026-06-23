@@ -15,7 +15,7 @@
 
 use std::path::Path;
 
-use apianyware_macos_stub_launcher::compile_stub;
+use apianyware_stub_launcher::compile_stub;
 
 use crate::spec::BundleError;
 

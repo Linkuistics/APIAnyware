@@ -4,7 +4,7 @@ title: APIAnyware
 
 APIAnyware extracts, analyzes, and generates native platform API bindings for non-mainstream programming languages. Rather than producing thin C wrappers, it creates bindings that feel native to each target language — a Haskell user gets monadic error handling, a Smalltalk user gets message-passing objects, an OCaml user gets modules and variants.
 
-**APIAnyware-MacOS** is the first platform target, covering the full macOS API surface (Objective-C, C, and Swift). Sibling projects for Linux and Windows are planned.
+**APIAnyware** is the first platform target, covering the full macOS API surface (Objective-C, C, and Swift). Sibling projects for Linux and Windows are planned.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ Non-mainstream languages are excluded from native platform development not becau
 
 ## Related Projects
 
-APIAnyware-MacOS generates the bindings. Other Linkuistics projects build on them:
+APIAnyware generates the bindings. Other Linkuistics projects build on them:
 
 - **TestAnyware** — VM-based GUI testing for applications built with generated bindings
 - **TheGreatExplainer** — automated documentation and tutorials from the enriched IR

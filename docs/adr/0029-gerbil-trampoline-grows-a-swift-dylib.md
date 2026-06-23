@@ -47,7 +47,7 @@ put it — compiled by `gsc`/`clang` into the exe. The dylib does **not** absorb
 the native core (scope decided in the 070 grilling: necessity, not a build-time
 gamble — see "Build-time finding" below).
 
-`apianyware-macos-generate` emits a gitignored
+`apianyware-generate` emits a gitignored
 `swift/Sources/APIAnywareGerbil/Generated/Trampolines.swift` in a global pass
 (`run_gerbil_trampolines`, modelled on `run_chez_trampolines`/`run_racket_trampolines`),
 then `swift build` compiles it into `libAPIAnywareGerbil.dylib`. Each residual

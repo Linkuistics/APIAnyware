@@ -101,8 +101,8 @@ is untouched (re-signing it is both unnecessary and impossible, §Context).
 
 - A new runtime capability: `aw-load-native-dylib` honours `AW_NATIVE_DYLIB_RECORD_AS`
   (`runtime/swift-trampoline.lisp`), proven by `tests/smoke-bundle-relocate.lisp`.
-- A new crate `apianyware-macos-bundle-sbcl` (`generation/crates/bundle-sbcl`), invoked
-  `cargo run --example bundle_app -p apianyware-macos-bundle-sbcl -- <app>`, peer to
+- A new crate `apianyware-bundle-sbcl` (`generation/crates/bundle-sbcl`), invoked
+  `cargo run --example bundle_app -p apianyware-bundle-sbcl -- <app>`, peer to
   `bundle-chez`/`bundle-gerbil`. It does **not** extend `bundle-gerbil`'s `relocate.rs`.
 - **Hard to reverse:** the stub-as-`CFBundleExecutable` + image-as-Resource layout, the
   `AW_NATIVE_DYLIB_RECORD_AS` contract, and the don't-re-sign-the-image rule are baked

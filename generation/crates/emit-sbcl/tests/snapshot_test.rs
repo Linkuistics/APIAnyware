@@ -16,17 +16,17 @@
 //!      has been run locally, bootstrap/refresh with `UPDATE_GOLDEN=1`.
 //!
 //! To update golden files after intentional emitter changes:
-//!   UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-sbcl --test snapshot_test
+//!   UPDATE_GOLDEN=1 cargo test -p apianyware-emit-sbcl --test snapshot_test
 
 use std::path::PathBuf;
 
-use apianyware_macos_emit::snapshot_testing::GoldenTest;
-use apianyware_macos_emit::target_emitter::TargetEmitter;
-use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
-use apianyware_macos_emit_sbcl::class_graph::ClassRegistry;
-use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
-use apianyware_macos_emit_sbcl::SbclEmitter;
-use apianyware_macos_types::ir::Framework;
+use apianyware_emit::snapshot_testing::GoldenTest;
+use apianyware_emit::target_emitter::TargetEmitter;
+use apianyware_emit::test_fixtures::build_snapshot_test_framework;
+use apianyware_emit_sbcl::class_graph::ClassRegistry;
+use apianyware_emit_sbcl::protocol_registry::ProtocolRegistry;
+use apianyware_emit_sbcl::SbclEmitter;
+use apianyware_types::ir::Framework;
 
 /// Build the emitter exactly as the CLI pre-pass does (`generate.rs` sbcl branch):
 /// with the whole-program class + protocol registries over the frameworks under

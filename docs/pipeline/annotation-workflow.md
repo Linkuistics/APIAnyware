@@ -35,9 +35,9 @@ Each step reads checkpoint files from the previous step and writes its own. No i
 Extract API metadata from macOS SDK headers and Swift modules:
 
 ```
-apianyware-macos-collect                    # all SDK frameworks
-apianyware-macos-collect --only Foundation   # specific framework
-apianyware-macos-collect --list              # list available frameworks
+apianyware-collect                    # all SDK frameworks
+apianyware-collect --only Foundation   # specific framework
+apianyware-collect --list              # list available frameworks
 ```
 
 **Output:** `collection/ir/collected/{Framework}.json` per framework.
@@ -49,8 +49,8 @@ apianyware-macos-collect --list              # list available frameworks
 Flatten inheritance, detect ownership families, resolve protocol conformance:
 
 ```
-apianyware-macos-analyze resolve
-apianyware-macos-analyze resolve --only Foundation
+apianyware-analyze resolve
+apianyware-analyze resolve --only Foundation
 ```
 
 **Input:** `collection/ir/collected/*.json`
@@ -63,8 +63,8 @@ apianyware-macos-analyze resolve --only Foundation
 Run deterministic heuristic classification on every method and merge with any existing LLM annotations:
 
 ```
-apianyware-macos-analyze annotate
-apianyware-macos-analyze annotate --only Foundation
+apianyware-analyze annotate
+apianyware-analyze annotate --only Foundation
 ```
 
 **Input:** `analysis/ir/resolved/*.json` + existing `analysis/ir/annotated/{Framework}.json` (if present)
@@ -152,8 +152,8 @@ When the `annotate` step merges annotations:
 Derive generation-facing relations from annotations + type facts:
 
 ```
-apianyware-macos-analyze enrich
-apianyware-macos-analyze enrich --only Foundation
+apianyware-analyze enrich
+apianyware-analyze enrich --only Foundation
 ```
 
 **Input:** `analysis/ir/annotated/*.json`
@@ -168,21 +168,21 @@ The enriched checkpoint includes a `verification` section. If verification fails
 Run all steps sequentially with a single command:
 
 ```
-apianyware-macos-analyze                      # resolve -> annotate -> enrich
-apianyware-macos-analyze --only Foundation     # single framework
+apianyware-analyze                      # resolve -> annotate -> enrich
+apianyware-analyze --only Foundation     # single framework
 ```
 
 ## How the pieces connect
 
 ```mermaid
 flowchart TD
-    SDK["macOS SDK Headers<br/>+ Swift Modules"] -->|"apianyware-macos-collect"| Collected["collection/ir/collected/*.json"]
+    SDK["macOS SDK Headers<br/>+ Swift Modules"] -->|"apianyware-collect"| Collected["collection/ir/collected/*.json"]
     Collected -->|"analyze resolve"| Resolved["analysis/ir/resolved/*.json"]
     Resolved -->|"analyze annotate<br/>(heuristics)"| Annotated["analysis/ir/annotated/*.json"]
     AppleDocs["Apple Docs<br/>+ Programming Guides"] -->|"/analyze or<br/>llm-annotate.sh"| LLM["LLM annotations<br/>(temp .llm.json)"]
     LLM -->|"analyze annotate<br/>(merge)"| Annotated
     Annotated -->|"analyze enrich"| Enriched["analysis/ir/enriched/*.json"]
-    Enriched -->|"apianyware-macos-generate"| Bindings["generation/targets/{lang}/generated/"]
+    Enriched -->|"apianyware-generate"| Bindings["generation/targets/{lang}/generated/"]
 
     style SDK fill:#e3f2fd
     style Collected fill:#e3f2fd

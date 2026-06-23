@@ -13,7 +13,7 @@ cylinder) and recolor — VM-verified in a **no-Gerbil VM**
 
 ## Build
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- scenekit-viewer`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- scenekit-viewer`.
 Output: `…/apps/scenekit-viewer/build/SceneKit Viewer.app`, bundle id
 `com.linkuistics.SceneKitViewer`, codesigned, dylib-clean (SceneKit + system
 frameworks + vendored openssl; static Gambit runtime). Build ~11 min cold.

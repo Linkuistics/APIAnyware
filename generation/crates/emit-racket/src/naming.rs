@@ -3,7 +3,7 @@
 //! Builds on the shared naming utilities to produce Racket function names
 //! for constructors, properties, and methods.
 
-use apianyware_macos_emit::naming::{
+use apianyware_emit::naming::{
     camel_to_kebab, class_name_to_lowercase, is_mutating_selector, selector_to_kebab_name,
 };
 

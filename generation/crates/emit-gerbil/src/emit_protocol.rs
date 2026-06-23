@@ -43,12 +43,12 @@
 //!   selector/handler calling shape and this 4-tuple spec are this leaf's
 //!   proposal; an inbox note to 050 records it so the runtime matches.
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::naming::class_name_to_lowercase;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Method, Protocol};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::naming::class_name_to_lowercase;
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Method, Protocol};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::GerbilFfiTypeMapper;
 
@@ -184,8 +184,8 @@ pub fn generate_protocol_file(proto: &Protocol, framework: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Method, Param, Protocol};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Method, Param, Protocol};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn ty(kind: TypeRefKind) -> TypeRef {
         TypeRef {

@@ -62,11 +62,11 @@
 //! - **`aw-wrap`** `(id SAP [retained?] → instance)` — the same inbound object wrap the
 //!   dispatch bodies use ([`crate::emit_generics`]).
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Constant;
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Constant;
+use apianyware_types::type_ref::TypeRefKind;
 
 use crate::ffi_type_mapping::{SbclFfiTypeMapper, SAP};
 use crate::naming::{qualified_top_level_name, top_level_name};
@@ -186,7 +186,7 @@ fn escape_string_literal(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::type_ref::TypeRef;
+    use apianyware_types::type_ref::TypeRef;
 
     fn c(name: &str, kind: TypeRefKind) -> Constant {
         Constant {

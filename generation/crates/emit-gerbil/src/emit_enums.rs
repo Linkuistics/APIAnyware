@@ -32,9 +32,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Enum;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Enum;
 
 /// Generate a Gerbil `enums.ss` module for one framework.
 pub fn generate_enums_file(enums: &[Enum], framework: &str) -> String {
@@ -174,8 +174,8 @@ fn build_plan(enums: &[Enum]) -> EnumPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::EnumValue;
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::EnumValue;
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn en(name: &str, vs: &[(&str, i64)]) -> Enum {
         Enum {

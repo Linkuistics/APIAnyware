@@ -2,12 +2,12 @@
 //! for a handful of REAL Foundation global symbols using the converted
 //! `generate_constants_file`, so the output can be compiled+linked under the
 //! bottle's default gcc-15 (no clang, no `-x objective-c`). Run:
-//!   cargo run -p apianyware-macos-emit-gerbil --example dump_foundation_constants
+//!   cargo run -p apianyware-emit-gerbil --example dump_foundation_constants
 //! then build the printed module with gxc against -framework Foundation.
 
-use apianyware_macos_emit_gerbil::emit_constants::generate_constants_file;
-use apianyware_macos_types::ir::Constant;
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit_gerbil::emit_constants::generate_constants_file;
+use apianyware_types::ir::Constant;
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 fn obj(name: &str) -> Constant {
     Constant {

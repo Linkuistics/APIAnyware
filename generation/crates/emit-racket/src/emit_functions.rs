@@ -8,13 +8,13 @@
 //! Generated bindings include `provide/contract` forms that enforce argument
 //! types at module boundaries using Racket contracts mapped from IR TypeRef.
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::{
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::{
     is_generic_type_param, FfiTypeMapper, RacketFfiTypeMapper,
 };
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Function, Struct};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Function, Struct};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::shared_signatures::{any_struct_type, framework_ffi_lib_arg, is_libdispatch_unexported};
 use crate::trampoline::{classify_function, value_struct_names, FnDisposition, FnTrampoline};
@@ -350,7 +350,7 @@ pub fn count_emittable(functions: &[Function]) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Param;
+    use apianyware_types::ir::Param;
 
     fn make_param(name: &str, kind: TypeRefKind) -> Param {
         Param {
@@ -1261,7 +1261,7 @@ mod tests {
         name: &str,
         params: Vec<Param>,
         return_kind: TypeRefKind,
-        info: apianyware_macos_types::ir::SwiftFnInfo,
+        info: apianyware_types::ir::SwiftFnInfo,
     ) -> Function {
         Function {
             name: name.to_string(),
@@ -1290,7 +1290,7 @@ mod tests {
 
     #[test]
     fn direct_and_trampoline_functions_route_to_different_libs() {
-        use apianyware_macos_types::ir::SwiftFnInfo;
+        use apianyware_types::ir::SwiftFnInfo;
         let functions = vec![
             // Direct ObjC-exposed C function — unchanged, bound against _fw-lib.
             make_function(
@@ -1350,7 +1350,7 @@ mod tests {
 
     #[test]
     fn swift_string_function_uses_coercers() {
-        use apianyware_macos_types::ir::SwiftFnInfo;
+        use apianyware_types::ir::SwiftFnInfo;
         let functions = vec![swift_function(
             "TKSwiftGreeting",
             vec![make_param("name", nsstring_kind())],
@@ -1374,7 +1374,7 @@ mod tests {
 
     #[test]
     fn deferred_residual_is_recorded_as_comment_not_dropped() {
-        use apianyware_macos_types::ir::SwiftFnInfo;
+        use apianyware_types::ir::SwiftFnInfo;
         let functions = vec![swift_function(
             "TKSwiftFetch",
             vec![],
@@ -1405,7 +1405,7 @@ mod tests {
         // `structs` (`MLUntypedColumn`-style) binds the trampoline against _aw-lib
         // and unboxes the handle. Passing the same `structs` the global pass sees is
         // what keeps the two sides in agreement (leaf 040/040/030 fork 2).
-        use apianyware_macos_types::ir::{Struct, SwiftFnInfo};
+        use apianyware_types::ir::{Struct, SwiftFnInfo};
         let value_struct = Struct {
             name: "TKColumn".into(),
             fields: vec![],

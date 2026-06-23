@@ -15,7 +15,7 @@ click paints a round dot. CLI smoke does not satisfy this
 
 ## Build
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- drawing-canvas`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- drawing-canvas`.
 Output: `…/apps/drawing-canvas/build/Drawing Canvas.app`, bundle id
 `com.linkuistics.DrawingCanvas`, codesigned. `otool -L Contents/MacOS/drawing-canvas`
 is dylib-clean — only system libs/frameworks (AppKit, **CoreGraphics**, Foundation,

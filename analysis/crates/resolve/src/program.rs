@@ -15,7 +15,7 @@
 
 use ascent::ascent;
 
-use apianyware_macos_datalog::ownership::is_returns_retained;
+use apianyware_datalog::ownership::is_returns_retained;
 
 ascent! {
     pub struct ResolutionProgram;

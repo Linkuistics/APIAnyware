@@ -13,7 +13,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use apianyware_macos_bundle_racket::{
+use apianyware_bundle_racket::{
     bundle_app, bundle_app_with_entry, read_display_name_from_spec, AppSpec,
 };
 
@@ -195,7 +195,7 @@ fn rejects_missing_app() {
     assert!(
         matches!(
             err,
-            apianyware_macos_bundle_racket::BundleError::EntryMissing { .. }
+            apianyware_bundle_racket::BundleError::EntryMissing { .. }
         ),
         "expected EntryMissing, got {err:?}"
     );
@@ -203,7 +203,7 @@ fn rejects_missing_app() {
 
 /// Exercise [`bundle_app_with_entry`] on a Modaliser-style layout:
 /// the entry is a root-level `main.rkt`, and the `bindings/` directory
-/// is a symlink into another tree (in this test, the APIAnyware-MacOS
+/// is a symlink into another tree (in this test, the APIAnyware
 /// racket root, which is what Modaliser-Racket actually does).
 ///
 /// The result must be a self-contained bundle — no absolute symlinks
@@ -268,7 +268,7 @@ fn bundles_root_level_entry_with_symlinked_bindings_subdir() {
     );
 
     // Bindings landed at the logical in-tree location as real copies,
-    // not as a symlink to APIAnyware-MacOS.
+    // not as a symlink to APIAnyware.
     let bindings = racket_app.join("bindings");
     assert!(
         !bindings.is_symlink(),

@@ -2,8 +2,8 @@
 
 use std::path::PathBuf;
 
-use apianyware_macos_extract_swift::abi_types::AbiDocument;
-use apianyware_macos_extract_swift::declaration_mapping::map_abi_to_framework;
+use apianyware_extract_swift::abi_types::AbiDocument;
+use apianyware_extract_swift::declaration_mapping::map_abi_to_framework;
 use serde_json::{json, Value};
 
 fn fixtures_dir() -> PathBuf {
@@ -801,7 +801,7 @@ fn map_test_framework_source_is_swift_interface() {
         for method in &class.methods {
             assert_eq!(
                 method.source,
-                Some(apianyware_macos_types::provenance::DeclarationSource::SwiftInterface),
+                Some(apianyware_types::provenance::DeclarationSource::SwiftInterface),
                 "method {} should have SwiftInterface source",
                 method.selector
             );
@@ -809,7 +809,7 @@ fn map_test_framework_source_is_swift_interface() {
         for property in &class.properties {
             assert_eq!(
                 property.source,
-                Some(apianyware_macos_types::provenance::DeclarationSource::SwiftInterface),
+                Some(apianyware_types::provenance::DeclarationSource::SwiftInterface),
                 "property {} should have SwiftInterface source",
                 property.name
             );

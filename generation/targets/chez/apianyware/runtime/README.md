@@ -100,7 +100,7 @@ chez --libdirs $LIBDIRS \
 #    init→contains→mutating insert! write-back (D2+D3) and pop-A async
 #    URLSession.data(from: file://…) via async-bridge.sls (R4, the first chez async
 #    path). Requires generated bindings + a freshly built dylib with the method
-#    entries: (SDKROOT=macosx ./target/release/apianyware-macos-generate --target chez
+#    entries: (SDKROOT=macosx ./target/release/apianyware-generate --target chez
 #    --input-dir collection/ir/collected ; cd swift && SDKROOT=macosx swift build
 #    --product APIAnywareChez).
 chez --libdirs $LIBDIRS \

@@ -3,7 +3,7 @@
 Bundle gerbil sample apps into self-contained macOS `.app` directories.
 
 ```text
-cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- hello-window
+cargo run --example bundle_app -p apianyware-bundle-gerbil -- hello-window
 ```
 
 Output lands at
@@ -54,13 +54,13 @@ Discovery globs the Cellar; override with `AW_GERBIL_BIN_DIR=<bin>`. The shipped
 
 ## Tests
 
-`cargo test -p apianyware-macos-bundle-gerbil` runs the cheap, deterministic
+`cargo test -p apianyware-bundle-gerbil` runs the cheap, deterministic
 checks (closure walk, import parsing, relocation path math, the entry
 precheck). The heavy end-to-end build (drives `gxc` over the AppKit closure,
 asserts the bundle is Homebrew-clean) is `#[ignore]`d — run it explicitly:
 
 ```text
-cargo test -p apianyware-macos-bundle-gerbil -- --ignored --nocapture
+cargo test -p apianyware-bundle-gerbil -- --ignored --nocapture
 ```
 
 The GUI-actually-draws verification is grove leaf 070/040 (TestAnyware / VM) —

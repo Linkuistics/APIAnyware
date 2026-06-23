@@ -3,8 +3,8 @@
 Bundle chez sample apps into macOS `.app` directories.
 
 ```text
-cargo run --example bundle_app -p apianyware-macos-bundle-chez -- hello-window
-cargo run --example bundle_app -p apianyware-macos-bundle-chez -- --all
+cargo run --example bundle_app -p apianyware-bundle-chez -- hello-window
+cargo run --example bundle_app -p apianyware-bundle-chez -- --all
 ```
 
 Output lands at
@@ -78,7 +78,7 @@ for one-off CLI invocations:
 
 ```text
 APIANYWARE_BUNDLE_CHEZ_SKIP_PRECOMPILE=1 \
-  cargo run --example bundle_app -p apianyware-macos-bundle-chez -- hello-window
+  cargo run --example bundle_app -p apianyware-bundle-chez -- hello-window
 ```
 
 The skipped bundle is smaller and survives a Chez upgrade unchanged,

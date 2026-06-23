@@ -6,7 +6,7 @@
 //! Scheme symbols — same alphabet as Racket — so the shared
 //! `selector_to_kebab_name` does the heavy lifting.
 
-use apianyware_macos_emit::naming::{
+use apianyware_emit::naming::{
     camel_to_kebab, class_name_to_lowercase, is_mutating_selector, selector_to_kebab_name,
 };
 

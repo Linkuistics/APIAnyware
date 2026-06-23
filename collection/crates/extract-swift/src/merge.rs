@@ -7,7 +7,7 @@
 
 use std::collections::HashMap;
 
-use apianyware_macos_types::ir;
+use apianyware_types::ir;
 
 /// Merge Swift-extracted declarations into an ObjC-extracted framework.
 ///
@@ -141,7 +141,7 @@ fn merge_class_members(objc_class: &mut ir::Class, swift_class: ir::Class) {
 
 #[cfg(test)]
 mod tests {
-    use apianyware_macos_types::{
+    use apianyware_types::{
         ir,
         provenance::DeclarationSource,
         type_ref::{TypeRef, TypeRefKind},

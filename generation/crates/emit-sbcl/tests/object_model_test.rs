@@ -11,15 +11,15 @@
 
 use std::collections::HashSet;
 
-use apianyware_macos_emit_sbcl::class_graph::{build_class_graph, ClassRegistry};
-use apianyware_macos_emit_sbcl::emit_class::render_class;
-use apianyware_macos_emit_sbcl::emit_generics::{
+use apianyware_emit_sbcl::class_graph::{build_class_graph, ClassRegistry};
+use apianyware_emit_sbcl::emit_class::render_class;
+use apianyware_emit_sbcl::emit_generics::{
     collect_generics, collect_residual, generic_arity_conflicts, render_class_dispatch,
     render_generics,
 };
-use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
-use apianyware_macos_types::ir::{Class, Framework, Method, Param, Property};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit_sbcl::protocol_registry::ProtocolRegistry;
+use apianyware_types::ir::{Class, Framework, Method, Param, Property};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 fn ty(kind: TypeRefKind) -> TypeRef {
     TypeRef {

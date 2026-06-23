@@ -14,7 +14,7 @@ NSUndoManager undo/redo; NSAlert confirmations; NSOpenPanel.
 
 ## Build
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- note-editor`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- note-editor`.
 Output: `…/apps/note-editor/build/Note Editor.app`, bundle id
 `com.linkuistics.NoteEditor`, codesigned, dylib-clean (WebKit + system frameworks +
 vendored openssl; static Gambit runtime). Built clean after the two fixes below.

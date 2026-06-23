@@ -1,15 +1,15 @@
 [package]
-name = "apianyware-macos-analyze"
+name = "apianyware-analyze"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "CLI: apianyware-macos-analyze — resolve, annotate, enrich pipeline"
+description = "CLI: apianyware-analyze — resolve, annotate, enrich pipeline"
 
 [dependencies]
-apianyware-macos-types.workspace = true
-apianyware-macos-resolve.workspace = true
-apianyware-macos-annotate.workspace = true
-apianyware-macos-enrich.workspace = true
+apianyware-types.workspace = true
+apianyware-resolve.workspace = true
+apianyware-annotate.workspace = true
+apianyware-enrich.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 tracing.workspace = true

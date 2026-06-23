@@ -16,9 +16,9 @@
 
 use std::collections::HashSet;
 
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_types::ir::{Method, Param};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_types::ir::{Method, Param};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::{is_bridgeable_block, is_known_geometry_alias};
 

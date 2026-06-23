@@ -7,10 +7,10 @@
 //! More subtle patterns (builder sequences, transaction brackets) require LLM
 //! analysis of Apple programming guides.
 
-use apianyware_macos_types::annotation::{
+use apianyware_types::annotation::{
     AnnotationSource, ApiPattern, PatternConstraint, PatternStereotype,
 };
-use apianyware_macos_types::ir::Framework;
+use apianyware_types::ir::Framework;
 
 /// Detect all heuristically-recognizable patterns in a framework.
 pub fn detect_patterns(framework: &Framework) -> Vec<ApiPattern> {
@@ -341,7 +341,7 @@ fn detect_resource_lifecycles(framework: &Framework) -> Vec<ApiPattern> {
 }
 
 /// Collect all selector strings from a class (direct methods + category methods).
-fn collect_all_selectors(class: &apianyware_macos_types::ir::Class) -> Vec<&str> {
+fn collect_all_selectors(class: &apianyware_types::ir::Class) -> Vec<&str> {
     let mut selectors: Vec<&str> = class.methods.iter().map(|m| m.selector.as_str()).collect();
     for cg in &class.category_methods {
         for m in &cg.methods {
@@ -354,7 +354,7 @@ fn collect_all_selectors(class: &apianyware_macos_types::ir::Class) -> Vec<&str>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Class, Protocol};
+    use apianyware_types::ir::{Class, Protocol};
 
     fn empty_framework() -> Framework {
         Framework {
@@ -378,13 +378,13 @@ mod tests {
         }
     }
 
-    fn make_method(selector: &str, class_method: bool) -> apianyware_macos_types::ir::Method {
-        apianyware_macos_types::ir::Method {
+    fn make_method(selector: &str, class_method: bool) -> apianyware_types::ir::Method {
+        apianyware_types::ir::Method {
             selector: selector.to_string(),
             class_method,
             init_method: false,
             params: vec![],
-            return_type: apianyware_macos_types::type_ref::TypeRef::void(),
+            return_type: apianyware_types::type_ref::TypeRef::void(),
             deprecated: false,
             variadic: false,
             source: None,

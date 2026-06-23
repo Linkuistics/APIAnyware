@@ -15,15 +15,15 @@
 //! - every emitted direct binding's symbol is in the construct's package-export
 //!   surface (`*_symbols`), and every residual decl is too (050 binds it later).
 
-use apianyware_macos_emit_sbcl::emit_constants::{
+use apianyware_emit_sbcl::emit_constants::{
     collect_const_residual, constant_symbols, generate_constants_file,
 };
-use apianyware_macos_emit_sbcl::emit_enums::{defined_enum_symbols, generate_enums_file};
-use apianyware_macos_emit_sbcl::emit_functions::{
+use apianyware_emit_sbcl::emit_enums::{defined_enum_symbols, generate_enums_file};
+use apianyware_emit_sbcl::emit_functions::{
     collect_fn_residual, function_symbols, generate_functions_file,
 };
-use apianyware_macos_types::ir::{Constant, Enum, EnumValue, Function, Param};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::ir::{Constant, Enum, EnumValue, Function, Param};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 fn ty(kind: TypeRefKind) -> TypeRef {
     TypeRef {

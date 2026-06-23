@@ -11,8 +11,8 @@
 
 use std::sync::LazyLock;
 
-use apianyware_macos_extract_swift::{digester, extract_swift_framework};
-use apianyware_macos_types::ir;
+use apianyware_extract_swift::{digester, extract_swift_framework};
+use apianyware_types::ir;
 
 /// Extracted CoreText framework, shared across tests in this file.
 static CORETEXT: LazyLock<ir::Framework> = LazyLock::new(|| {

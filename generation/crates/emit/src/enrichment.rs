@@ -9,7 +9,7 @@
 
 use std::collections::HashSet;
 
-use apianyware_macos_types::enrichment::EnrichmentData;
+use apianyware_types::enrichment::EnrichmentData;
 
 /// The set of selectors for a class that the analysis stage classified as
 /// **NSError out-param** convenience methods (`ErrorPattern::ErrorOutParam` →
@@ -34,7 +34,7 @@ pub fn class_error_selectors(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::enrichment::ClassSelectorEntry;
+    use apianyware_types::enrichment::ClassSelectorEntry;
 
     #[test]
     fn filters_convenience_error_methods_by_class() {

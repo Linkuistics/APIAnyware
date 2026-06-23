@@ -1,4 +1,4 @@
-# APIAnyware-MacOS
+# APIAnyware
 
 Idiomatic macOS API bindings for every language.
 
@@ -46,11 +46,11 @@ Each phase reads the previous checkpoint and writes the next. Intermediate check
 
 | Checkpoint | Location | Produced by | Contains |
 |---|---|---|---|
-| Collected | `collection/ir/collected/` | `apianyware-macos-collect` | Raw declarations, provenance, doc refs |
-| Resolved | `analysis/ir/resolved/` | `apianyware-macos-analyze resolve` | + inheritance, effective methods, ownership |
-| Annotated | `analysis/ir/annotated/` | `apianyware-macos-analyze annotate` + LLM | + block/threading/ownership/pattern annotations |
-| Enriched | `analysis/ir/enriched/` | `apianyware-macos-analyze enrich` | + derived relations, pattern instances, verification |
-| Generated | `generation/targets/{lang}/generated/` | `apianyware-macos-generate` | Per-language, per-style bindings |
+| Collected | `collection/ir/collected/` | `apianyware-collect` | Raw declarations, provenance, doc refs |
+| Resolved | `analysis/ir/resolved/` | `apianyware-analyze resolve` | + inheritance, effective methods, ownership |
+| Annotated | `analysis/ir/annotated/` | `apianyware-analyze annotate` + LLM | + block/threading/ownership/pattern annotations |
+| Enriched | `analysis/ir/enriched/` | `apianyware-analyze enrich` | + derived relations, pattern instances, verification |
+| Generated | `generation/targets/{lang}/generated/` | `apianyware-generate` | Per-language, per-style bindings |
 
 ## Quick Start
 
@@ -62,7 +62,7 @@ Each phase reads the previous checkpoint and writes the next. Intermediate check
 ### Collect API metadata from the SDK
 
 ```sh
-cargo run -p apianyware-macos-collect
+cargo run -p apianyware-collect
 ```
 
 Discovers all frameworks in the macOS SDK and writes `collection/ir/collected/{Framework}.json`.
@@ -70,28 +70,28 @@ Discovers all frameworks in the macOS SDK and writes `collection/ir/collected/{F
 ### Run the analysis pipeline
 
 ```sh
-cargo run -p apianyware-macos-analyze
+cargo run -p apianyware-analyze
 ```
 
 Runs resolve -> annotate -> enrich on all collected frameworks. Individual steps:
 
 ```sh
-cargo run -p apianyware-macos-analyze -- resolve     # Datalog pass 1
-cargo run -p apianyware-macos-analyze -- annotate    # heuristics + LLM merge
-cargo run -p apianyware-macos-analyze -- enrich      # Datalog pass 2 + verification
+cargo run -p apianyware-analyze -- resolve     # Datalog pass 1
+cargo run -p apianyware-analyze -- annotate    # heuristics + LLM merge
+cargo run -p apianyware-analyze -- enrich      # Datalog pass 2 + verification
 ```
 
 ### Generate language bindings
 
 ```sh
-cargo run -p apianyware-macos-generate
+cargo run -p apianyware-generate
 ```
 
 Generates bindings for all registered languages and all binding styles from the enriched IR. To generate for a specific language:
 
 ```sh
-cargo run -p apianyware-macos-generate -- --target racket
-cargo run -p apianyware-macos-generate -- --list-targets    # show available emitters
+cargo run -p apianyware-generate -- --target racket
+cargo run -p apianyware-generate -- --list-targets    # show available emitters
 ```
 
 Output goes to `generation/targets/{target}/` — under the target's library-root convention (`racket/generated/`, `chez/apianyware/`, `gerbil/lib/`).
@@ -120,7 +120,7 @@ Alternatively, use any OpenAI-compatible API:
 # Rust workspace
 cargo build                                    # Build all crates
 cargo test --workspace                         # Run all tests (~248 tests)
-cargo test -p apianyware-macos-emit-racket  # Single crate
+cargo test -p apianyware-emit-racket  # Single crate
 cargo +nightly fmt                             # Format (requires nightly)
 cargo clippy --workspace                       # Lint
 
@@ -147,7 +147,7 @@ UPDATE_GOLDEN=1 cargo test --workspace
 
 ### Crate Map
 
-**Shared types** -- `collection/crates/types/` (`apianyware-macos-types`):
+**Shared types** -- `collection/crates/types/` (`apianyware-types`):
 IR structs (Framework, Class, Method, Property, Protocol, Enum, TypeRef),
 annotation schema, checkpoint format. Depended on by everything.
 
@@ -168,7 +168,7 @@ trait, `CodeWriter`, naming utils, snapshot testing, pattern dispatch), one
 each target's own `generation/targets/{target}/docs/reference.md`.
 
 **Tooling** -- `generation/crates/stub-launcher/`
-(`apianyware-macos-stub-launcher`): generates per-app Swift stub binaries
+(`apianyware-stub-launcher`): generates per-app Swift stub binaries
 for TCC-compatible `.app` bundles. Each stub `execv`s into the language
 runtime, giving it a unique CDHash so macOS TCC grants permissions per-app
 rather than per-runtime. See [App Bundling](#app-bundling) below.
@@ -226,7 +226,7 @@ and gerbil's `bundle-gerbil` instead produce self-contained native binaries that
 need no runtime install. The invocation is uniform:
 
 ```sh
-cargo run --example bundle_app -p apianyware-macos-bundle-<target> -- <app>
+cargo run --example bundle_app -p apianyware-bundle-<target> -- <app>
 # → generation/targets/<target>/apps/<app>/build/<App Name>.app
 ```
 
@@ -236,7 +236,7 @@ gitignored. The per-target bundling mechanics (require-walking, kernel embedding
 `gxc -exe` + dylib relocation, resulting bundle layout) are documented in each
 target's `generation/targets/<target>/docs/reference.md`.
 
-#### Language-agnostic primitive: `apianyware-macos-stub-launcher`
+#### Language-agnostic primitive: `apianyware-stub-launcher`
 
 The lower-level crate handles the target-neutral parts: generating the Swift
 launcher source, compiling it via `swiftc`, producing `Info.plist`, and
@@ -266,24 +266,24 @@ bar and shares one TCC identity.
 ## Workspace Structure
 
 ```
-APIAnyware-MacOS/
+APIAnyware/
   Cargo.toml                              # workspace root
 
   collection/
     crates/
-      types/               # apianyware-macos-types            — shared IR + annotation schema
-      extract-objc/        # apianyware-macos-extract-objc     — libclang ObjC/C parsing
-      extract-swift/       # apianyware-macos-extract-swift    — swift-api-digester
-      cli/                 # apianyware-macos-collect           — collection CLI
+      types/               # apianyware-types            — shared IR + annotation schema
+      extract-objc/        # apianyware-extract-objc     — libclang ObjC/C parsing
+      extract-swift/       # apianyware-extract-swift    — swift-api-digester
+      cli/                 # apianyware-collect           — collection CLI
     ir/collected/                                               — checkpoint output
 
   analysis/
     crates/
-      datalog/             # apianyware-macos-datalog           — shared Datalog types + loaders
-      resolve/             # apianyware-macos-resolve           — Datalog pass 1
-      annotate/            # apianyware-macos-annotate          — heuristics + LLM merge
-      enrich/              # apianyware-macos-enrich            — Datalog pass 2 + verification
-      cli/                 # apianyware-macos-analyze           — analysis CLI
+      datalog/             # apianyware-datalog           — shared Datalog types + loaders
+      resolve/             # apianyware-resolve           — Datalog pass 1
+      annotate/            # apianyware-annotate          — heuristics + LLM merge
+      enrich/              # apianyware-enrich            — Datalog pass 2 + verification
+      cli/                 # apianyware-analyze           — analysis CLI
     ir/resolved/                                                — checkpoint
     ir/annotated/                                               — checkpoint (LLM annotations here)
     ir/enriched/                                                — checkpoint (Generation reads this)
@@ -292,17 +292,17 @@ APIAnyware-MacOS/
 
   generation/
     crates/
-      emit/                # apianyware-macos-emit              — shared emitter framework
-      emit-racket/         # apianyware-macos-emit-racket       — Racket emitter
-      emit-chez/           # apianyware-macos-emit-chez         — Chez emitter
-      emit-gerbil/         # apianyware-macos-emit-gerbil       — Gerbil emitter
-      emit-sbcl/           # apianyware-macos-emit-sbcl         — SBCL (CLOS) emitter
-      cli/                 # apianyware-macos-generate          — generation CLI
-      stub-launcher/       # apianyware-macos-stub-launcher     — Swift stub + Info.plist + .app skeleton (language-agnostic)
-      bundle-racket/       # apianyware-macos-bundle-racket     — racket bundling: require walker + resource layout
-      bundle-chez/         # apianyware-macos-bundle-chez       — chez bundling: self-contained kernel-embed binary
-      bundle-gerbil/       # apianyware-macos-bundle-gerbil     — gerbil bundling: gxc -exe + dylib relocation
-      bundle-sbcl/         # apianyware-macos-bundle-sbcl       — sbcl bundling: save-lisp-and-die image + launcher stub (ADR-0041)
+      emit/                # apianyware-emit              — shared emitter framework
+      emit-racket/         # apianyware-emit-racket       — Racket emitter
+      emit-chez/           # apianyware-emit-chez         — Chez emitter
+      emit-gerbil/         # apianyware-emit-gerbil       — Gerbil emitter
+      emit-sbcl/           # apianyware-emit-sbcl         — SBCL (CLOS) emitter
+      cli/                 # apianyware-generate          — generation CLI
+      stub-launcher/       # apianyware-stub-launcher     — Swift stub + Info.plist + .app skeleton (language-agnostic)
+      bundle-racket/       # apianyware-bundle-racket     — racket bundling: require walker + resource layout
+      bundle-chez/         # apianyware-bundle-chez       — chez bundling: self-contained kernel-embed binary
+      bundle-gerbil/       # apianyware-bundle-gerbil     — gerbil bundling: gxc -exe + dylib relocation
+      bundle-sbcl/         # apianyware-bundle-sbcl       — sbcl bundling: save-lisp-and-die image + launcher stub (ADR-0041)
     targets/
       racket/              # Racket: runtime, generated bindings, sample apps, tests
       chez/                # Chez: runtime, generated bindings, sample apps, tests

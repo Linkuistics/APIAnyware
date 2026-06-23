@@ -8,7 +8,7 @@ use std::path::Path;
 use anyhow::Result;
 use chrono::Utc;
 
-use apianyware_macos_types::ir;
+use apianyware_types::ir;
 
 use crate::extract_declarations::extract_from_translation_unit;
 use crate::sdk::{FrameworkInfo, SdkInfo};

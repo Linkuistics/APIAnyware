@@ -15,7 +15,7 @@ in `knowledge/targets/chez.md`.
 ## Setup
 
 - **Bundle:** `hello-window` built on the dev host with `cargo run --example
-  bundle_app -p apianyware-macos-bundle-chez -- hello-window` (full precompile;
+  bundle_app -p apianyware-bundle-chez -- hello-window` (full precompile;
   838 `.so` objects; 104 MB / 49 MB tarred, stamped Chez **10.4.1**).
 - **VM:** vanilla `testanyware-golden-macos-tahoe` clone. Chez provisioned the
   *intended* way — `brew install chezscheme` — which today poured **10.4.1**.

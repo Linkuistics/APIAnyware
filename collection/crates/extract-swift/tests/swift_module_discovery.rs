@@ -1,6 +1,6 @@
 //! Tests for Swift module discovery and digester invocation.
 
-use apianyware_macos_extract_swift::digester;
+use apianyware_extract_swift::digester;
 
 #[test]
 fn discover_swift_modules_from_sdk() {
@@ -67,7 +67,7 @@ fn run_digester_on_observation() {
     let json = digester::run_swift_api_digester("Observation", sdk_path).expect("run digester");
 
     // Should be valid JSON with ABIRoot key
-    let doc: apianyware_macos_extract_swift::abi_types::AbiDocument =
+    let doc: apianyware_extract_swift::abi_types::AbiDocument =
         serde_json::from_str(&json).expect("parse ABIRoot");
     assert_eq!(doc.root.name, "Observation");
 }

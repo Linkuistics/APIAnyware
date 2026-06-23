@@ -1,12 +1,12 @@
 [package]
-name = "apianyware-macos-bundle-sbcl"
+name = "apianyware-bundle-sbcl"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Bundle sbcl sample apps into self-contained macOS .app bundles"
 
 [dependencies]
-apianyware-macos-stub-launcher.workspace = true
+apianyware-stub-launcher.workspace = true
 plist.workspace = true
 tempfile = "3"
 thiserror.workspace = true

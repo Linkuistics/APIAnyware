@@ -4,7 +4,7 @@
 //! Usage (from workspace root):
 //!
 //! ```text
-//! cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- <script-name>
+//! cargo run --example bundle_app -p apianyware-bundle-gerbil -- <script-name>
 //! ```
 //!
 //! Output: `generation/targets/gerbil/apps/<script-name>/build/<App Name>.app`.
@@ -17,7 +17,7 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use apianyware_macos_bundle_gerbil::{bundle_app, read_display_name_from_spec, AppSpec};
+use apianyware_bundle_gerbil::{bundle_app, read_display_name_from_spec, AppSpec};
 
 fn main() -> ExitCode {
     let script = std::env::args().nth(1).unwrap_or_else(|| {

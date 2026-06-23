@@ -12,11 +12,11 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-use apianyware_macos_types::annotation::{
+use apianyware_types::annotation::{
     BlockInvocationStyle, FrameworkAnnotations, ThreadingConstraint,
 };
-use apianyware_macos_types::ir::Framework;
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_types::ir::Framework;
+use apianyware_types::type_ref::TypeRefKind;
 
 /// Compact summary of a framework's methods needing LLM annotation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -127,10 +127,7 @@ pub fn extract_interesting_methods(framework: &Framework) -> FrameworkSummary {
 
 /// Append a [`MethodSummary`] to `out` for every "interesting" method in
 /// `source` (see [`classify_interest`]).
-fn collect_interesting(
-    source: &[apianyware_macos_types::ir::Method],
-    out: &mut Vec<MethodSummary>,
-) {
+fn collect_interesting(source: &[apianyware_types::ir::Method], out: &mut Vec<MethodSummary>) {
     for method in source {
         let reasons = classify_interest(method);
         if reasons.is_empty() {
@@ -155,7 +152,7 @@ fn collect_interesting(
 }
 
 /// Determine why a method is "interesting" for LLM annotation.
-fn classify_interest(method: &apianyware_macos_types::ir::Method) -> Vec<String> {
+fn classify_interest(method: &apianyware_types::ir::Method) -> Vec<String> {
     let mut reasons = Vec::new();
     let sel_lower = method.selector.to_lowercase();
 
@@ -217,7 +214,7 @@ pub fn extract_all_frameworks(
     output_dir: &Path,
     only: Option<&[String]>,
 ) -> Result<Vec<FrameworkSummary>> {
-    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, only)?;
+    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, only)?;
     if frameworks.is_empty() {
         anyhow::bail!("no frameworks found in {}", input_dir.display());
     }
@@ -532,7 +529,7 @@ pub fn validate_llm_annotations(
 
             if !matches!(
                 method_ann.source,
-                apianyware_macos_types::annotation::AnnotationSource::Llm
+                apianyware_types::annotation::AnnotationSource::Llm
             ) {
                 report.errors.push(ValidationError::WrongSource {
                     class: class_ann.class_name.clone(),
@@ -639,12 +636,12 @@ pub fn discover_llm_annotations(llm_dir: &Path) -> Result<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::annotation::{
+    use apianyware_types::annotation::{
         AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations,
         MethodAnnotation, OwnershipKind, ParamOwnership, SubagentReport,
     };
-    use apianyware_macos_types::ir::{CategoryGroup, Class, Method, Param};
-    use apianyware_macos_types::type_ref::TypeRef;
+    use apianyware_types::ir::{CategoryGroup, Class, Method, Param};
+    use apianyware_types::type_ref::TypeRef;
 
     fn void_type() -> TypeRef {
         TypeRef {
@@ -1717,7 +1714,7 @@ mod tests {
     fn extracts_interesting_protocol_methods() {
         // FU-1: protocol requirements/optionals must be scanned too, so a
         // protocol-only framework still produces a method summary.
-        use apianyware_macos_types::ir::Protocol;
+        use apianyware_types::ir::Protocol;
 
         let required = make_method(
             "loadWithCompletion:",

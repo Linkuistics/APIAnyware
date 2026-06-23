@@ -3,9 +3,9 @@
 //! Determines which methods can be bound (supported) and which should be skipped
 //! (variadic, deprecated, etc.).
 
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_types::ir::{Method, Param};
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_types::ir::{Method, Param};
+use apianyware_types::type_ref::TypeRefKind;
 
 /// Check if a method can be bound in Racket.
 ///
@@ -65,9 +65,9 @@ pub fn dispatch_strategy(method: &Method, mapper: &dyn FfiTypeMapper) -> Dispatc
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper;
-    use apianyware_macos_types::ir::{Method, Param};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_emit::ffi_type_mapping::RacketFfiTypeMapper;
+    use apianyware_types::ir::{Method, Param};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn make_type(kind: TypeRefKind) -> TypeRef {
         TypeRef {

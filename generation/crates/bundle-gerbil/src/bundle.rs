@@ -10,7 +10,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use apianyware_macos_stub_launcher::StubError;
+use apianyware_stub_launcher::StubError;
 use plist::Value as PlistValue;
 
 /// The persistent self-signed identity documented in docs/codesigning-identity.md.

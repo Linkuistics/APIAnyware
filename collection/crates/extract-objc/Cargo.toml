@@ -1,12 +1,12 @@
 [package]
-name = "apianyware-macos-extract-objc"
+name = "apianyware-extract-objc"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "ObjC/C API extraction from macOS SDK headers via libclang"
 
 [dependencies]
-apianyware-macos-types.workspace = true
+apianyware-types.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true

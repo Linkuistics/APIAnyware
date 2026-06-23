@@ -3,10 +3,10 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-use apianyware_macos_datalog::loading;
-use apianyware_macos_resolve::fact_loader;
-use apianyware_macos_resolve::program::ResolutionProgram;
-use apianyware_macos_types::Framework;
+use apianyware_datalog::loading;
+use apianyware_resolve::fact_loader;
+use apianyware_resolve::program::ResolutionProgram;
+use apianyware_types::Framework;
 
 fn collected_ir_directory() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -343,7 +343,7 @@ fn resolved_framework_has_ancestors() {
         return;
     };
 
-    let resolved = apianyware_macos_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
+    let resolved = apianyware_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
     let foundation = &resolved[0];
 
     assert_eq!(foundation.checkpoint, "resolved");
@@ -370,7 +370,7 @@ fn resolved_framework_has_effective_methods() {
         return;
     };
 
-    let resolved = apianyware_macos_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
+    let resolved = apianyware_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
     let foundation = &resolved[0];
 
     let nsstring = foundation
@@ -407,7 +407,7 @@ fn resolved_framework_has_returns_retained() {
         return;
     };
 
-    let resolved = apianyware_macos_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
+    let resolved = apianyware_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
     let foundation = &resolved[0];
 
     let nsstring = foundation
@@ -449,7 +449,7 @@ fn resolved_framework_has_effective_properties() {
         return;
     };
 
-    let resolved = apianyware_macos_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
+    let resolved = apianyware_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
     let foundation = &resolved[0];
 
     let nsms = foundation
@@ -481,7 +481,7 @@ fn resolved_checkpoint_roundtrips_as_json() {
         return;
     };
 
-    let resolved = apianyware_macos_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
+    let resolved = apianyware_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
     let json = serde_json::to_string(&resolved[0]).unwrap();
     let roundtripped: Framework = serde_json::from_str(&json).unwrap();
 

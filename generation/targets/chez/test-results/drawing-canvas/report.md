@@ -14,7 +14,7 @@
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --release --example bundle_app -p
-  apianyware-macos-bundle-chez -- drawing-canvas` — **~150 s** (dominated by
+  apianyware-bundle-chez -- drawing-canvas` — **~150 s** (dominated by
   the `.sls` → `.so` precompile pass).
 - Bundle size: **92 MB** (AppKit + CoreGraphics precompiled `.so` set; smaller
   than the WebKit apps since no WebKit/PDFKit).

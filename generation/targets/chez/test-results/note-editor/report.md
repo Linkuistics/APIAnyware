@@ -12,7 +12,7 @@
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --example bundle_app -p
-  apianyware-macos-bundle-chez -- note-editor` — **168 s** (dominated by the
+  apianyware-bundle-chez -- note-editor` — **168 s** (dominated by the
   `.sls` → `.so` precompile pass; 1034 precompiled objects ship in the bundle).
 - Bundle size: **121 MB** (AppKit + Foundation + WebKit precompiled `.so` set,
   same order as mini-browser).
@@ -176,7 +176,7 @@ distinct from delegate selectors. Also the designated **TCC-grant continuity**
 app (node done-bar; spike F5).
 
 **Build.** `cargo run --release --example bundle_app -p
-apianyware-macos-bundle-chez -- note-editor`. Output: `Note Editor.app`,
+apianyware-bundle-chez -- note-editor`. Output: `Note Editor.app`,
 **5.5 MB** (largest app, 521 LOC), bundle id `com.linkuistics.NoteEditor`, signed
 `APIAnyware Local Signing`; no Chez/Scheme linkage; no new wrapper collisions.
 

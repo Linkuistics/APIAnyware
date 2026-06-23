@@ -45,9 +45,9 @@
 
 use std::collections::BTreeSet;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Method, Protocol};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Method, Protocol};
 
 use crate::emit_generics::{render_generics, GenericDecl};
 use crate::naming::{qualified_generic_name, selector_arity};
@@ -182,8 +182,8 @@ fn render_registration(w: &mut CodeWriter, proto_name: &str, methods: &[ProtoMet
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Method, Param, Protocol};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Method, Param, Protocol};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn ty(kind: TypeRefKind) -> TypeRef {
         TypeRef {

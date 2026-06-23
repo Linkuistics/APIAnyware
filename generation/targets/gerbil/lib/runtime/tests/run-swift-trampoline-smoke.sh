@@ -5,7 +5,7 @@
 # exe via define-c-lambda. (The VM-verify is node 070/030.)
 #
 # Prerequisites (run from the repo root):
-#   SDKROOT=macosx cargo run --release -q -p apianyware-macos-generate -- --target gerbil
+#   SDKROOT=macosx cargo run --release -q -p apianyware-generate -- --target gerbil
 #   (cd swift && SDKROOT=macosx swift build --product APIAnywareGerbil)
 set -euo pipefail
 

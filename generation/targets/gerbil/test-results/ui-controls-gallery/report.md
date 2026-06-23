@@ -11,7 +11,7 @@ callbacks fire — CLI smoke does not satisfy this ([[feedback-vm-verify-every-a
 
 ## Build
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- ui-controls-gallery`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- ui-controls-gallery`.
 Output: `generation/targets/gerbil/apps/ui-controls-gallery/build/UI Controls Gallery.app`,
 bundle id `com.linkuistics.UIControlsGallery`, CFBundleName "UI Controls Gallery",
 codesigned. `otool -L Contents/MacOS/ui-controls-gallery` is dylib-clean — only

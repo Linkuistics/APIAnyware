@@ -6,7 +6,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use apianyware_macos_types::Framework;
+use apianyware_types::Framework;
 
 /// Discover all `*.json` framework files in a directory, sorted by name.
 ///

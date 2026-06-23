@@ -1,6 +1,6 @@
 # Documentation
 
-APIAnyware-MacOS is a matrix project: N language **targets** × M sample **apps**.
+APIAnyware is a matrix project: N language **targets** × M sample **apps**.
 A target is a language+paradigm combination (e.g. `racket`) with its own emitter
 crate, runtime, generated output, and apps.
 

@@ -42,7 +42,7 @@ the boundary at which "complete" meets what a flat C ABI can express.
 
 ### 1. Generated `@_cdecl` trampolines, **called by name**
 
-`apianyware-macos-generate` emits a new, gitignored
+`apianyware-generate` emits a new, gitignored
 `swift/Sources/APIAnywareRacket/Generated/Trampolines.swift` in a **global pass**
 (one file across all frameworks, like the dispatch table —
 `run_racket_native_dispatch`), then `swift build` compiles it into the dylib. The

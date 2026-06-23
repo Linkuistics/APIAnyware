@@ -1,6 +1,6 @@
 //! Integration tests for SDK and framework discovery.
 
-use apianyware_macos_extract_objc::sdk;
+use apianyware_extract_objc::sdk;
 
 #[test]
 fn discover_sdk_succeeds() {

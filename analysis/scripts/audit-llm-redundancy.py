@@ -16,7 +16,7 @@ Prerequisite — produce a heuristic-only annotated checkpoint to compare
 against the merged checkpoint:
 
     mkdir -p /tmp/empty-llm-dir /tmp/heuristic-only-annotated
-    ./target/release/apianyware-macos-analyze annotate \\
+    ./target/release/apianyware-analyze annotate \\
         --output-dir /tmp/heuristic-only-annotated \\
         --llm-dir /tmp/empty-llm-dir
 

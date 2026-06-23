@@ -1,13 +1,13 @@
 [package]
-name = "apianyware-macos-emit-chez"
+name = "apianyware-emit-chez"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Chez Scheme code generation: idiomatic Chez library form, foreign-procedure FFI, guardian-managed lifetimes"
 
 [dependencies]
-apianyware-macos-types.workspace = true
-apianyware-macos-emit.workspace = true
+apianyware-types.workspace = true
+apianyware-emit.workspace = true
 
 [dev-dependencies]
 tempfile = "3"

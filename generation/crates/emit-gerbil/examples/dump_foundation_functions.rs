@@ -7,12 +7,12 @@
 //! (`NSStringFromRange(NSRange)`), and an NS-geometry-struct **return** by value
 //! (`NSRangeFromString` → `NSRange`) — the last two driving the inline plain-C
 //! `struct _NSRange` decl (never the non-C-safe `<Foundation/NSRange.h>`). Run:
-//!   cargo run -p apianyware-macos-emit-gerbil --example dump_foundation_functions
+//!   cargo run -p apianyware-emit-gerbil --example dump_foundation_functions
 //! then build the printed module with gxc against -framework Foundation.
 
-use apianyware_macos_emit_gerbil::emit_functions::generate_functions_file;
-use apianyware_macos_types::ir::{Function, Param};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit_gerbil::emit_functions::generate_functions_file;
+use apianyware_types::ir::{Function, Param};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 fn ty(kind: TypeRefKind) -> TypeRef {
     TypeRef {

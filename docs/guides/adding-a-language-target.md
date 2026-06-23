@@ -1,6 +1,6 @@
 # Adding a New Language Target
 
-Step-by-step guide for adding a language target to APIAnyware-MacOS. Written
+Step-by-step guide for adding a language target to APIAnyware. Written
 against the real two-target world (`racket` and `chez`) — follow it and you could
 plausibly stand up a third.
 
@@ -147,15 +147,15 @@ generation/crates/emit-{id}/
 
 ```toml
 [package]
-name = "apianyware-macos-emit-{id}"
+name = "apianyware-emit-{id}"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "{Language} code generation: <one line on the idiom — e.g. 'idiomatic Chez library form, foreign-procedure FFI, guardian-managed lifetimes'>"
 
 [dependencies]
-apianyware-macos-types.workspace = true
-apianyware-macos-emit.workspace = true
+apianyware-types.workspace = true
+apianyware-emit.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
@@ -166,7 +166,7 @@ workspace = true
 ```
 
 In the root `Cargo.toml`: add `"generation/crates/emit-{id}"` to `[workspace]
-members` and `apianyware-macos-emit-{id} = { path = "…" }` to
+members` and `apianyware-emit-{id} = { path = "…" }` to
 `[workspace.dependencies]`.
 
 ### Implement `FfiTypeMapper`
@@ -174,8 +174,8 @@ members` and `apianyware-macos-emit-{id} = { path = "…" }` to
 If the target needs a distinct FFI type mapping (it will):
 
 ```rust
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_types::type_ref::TypeRef;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_types::type_ref::TypeRef;
 
 pub struct {Lang}FfiTypeMapper;
 
@@ -193,8 +193,8 @@ In `emit_framework.rs`. `TargetInfo` is **three fields** — there is no
 `supported_styles` / `default_style`:
 
 ```rust
-use apianyware_macos_emit::target_emitter::{TargetInfo, TargetEmitter, EmitResult};
-use apianyware_macos_types::framework::Framework;
+use apianyware_emit::target_emitter::{TargetInfo, TargetEmitter, EmitResult};
+use apianyware_types::framework::Framework;
 use std::io;
 use std::path::Path;
 
@@ -271,28 +271,28 @@ Emitters are registered in one place — `generation/crates/cli/src/registry.rs`
 
 ```rust
 let emitters: Vec<Box<dyn TargetEmitter>> = vec![
-    Box::new(apianyware_macos_emit_racket::RacketEmitter),
-    Box::new(apianyware_macos_emit_chez::ChezEmitter),
-    Box::new(apianyware_macos_emit_{id}::{Lang}Emitter),   // ← add this
+    Box::new(apianyware_emit_racket::RacketEmitter),
+    Box::new(apianyware_emit_chez::ChezEmitter),
+    Box::new(apianyware_emit_{id}::{Lang}Emitter),   // ← add this
 ];
 ```
 
-Add `apianyware-macos-emit-{id}` as a `cli` dependency. The registry keys on
+Add `apianyware-emit-{id}` as a `cli` dependency. The registry keys on
 `target_info().id`, so `--target {id}` and `--list-targets` work with no
 further wiring. (`--target` takes repeated values; default is all registered
 languages.)
 
 ## Step 6: Snapshot / golden tests (optional but recommended)
 
-The shared harness (`apianyware_macos_emit::snapshot_testing::GoldenTest`) gives
+The shared harness (`apianyware_emit::snapshot_testing::GoldenTest`) gives
 deterministic golden tests against the 5-class `TestKit` fixture
 (`build_snapshot_test_framework()`):
 
 ```rust
-use apianyware_macos_emit::snapshot_testing::GoldenTest;
-use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
-use apianyware_macos_emit_{id}::emit_framework::{Lang}Emitter;
-use apianyware_macos_emit::target_emitter::TargetEmitter;
+use apianyware_emit::snapshot_testing::GoldenTest;
+use apianyware_emit::test_fixtures::build_snapshot_test_framework;
+use apianyware_emit_{id}::emit_framework::{Lang}Emitter;
+use apianyware_emit::target_emitter::TargetEmitter;
 
 #[test]
 fn snapshot_{id}_testkit() {
@@ -304,7 +304,7 @@ fn snapshot_{id}_testkit() {
 }
 ```
 
-Generate goldens with `UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-{id}`.
+Generate goldens with `UPDATE_GOLDEN=1 cargo test -p apianyware-emit-{id}`.
 **Target asymmetry is fine:** racket uses external golden files
 (`tests/golden/`); chez instead relies on per-module inline `#[test]`s in
 `emit-chez/src/*.rs` plus the VM-verified sample-app portfolio (below). Pick what
@@ -335,19 +335,19 @@ targets take **different** approaches — pick what fits the language:
 - **racket** (`bundle-racket`, generation/targets/racket/docs/reference.md §9) — a Swift
   **stub-launcher** + the source tree staged under `Resources/`, exec'ing the
   system runtime. Build: `cargo run --example bundle_app -p
-  apianyware-macos-bundle-racket -- <script>`.
+  apianyware-bundle-racket -- <script>`.
 - **chez** (`bundle-chez`, generation/targets/chez/docs/reference.md §9, ADR-0009) — a
   **self-contained standalone binary** that embeds the language kernel +
   whole-program boot, so it needs no runtime installed on the target machine.
-  Build: `cargo run --example bundle_app -p apianyware-macos-bundle-chez --
+  Build: `cargo run --example bundle_app -p apianyware-bundle-chez --
   <script>`.
 - **gerbil** (`bundle-gerbil`, generation/targets/gerbil/docs/reference.md §8) — the language's
   own **`gxc -exe` static-runtime binary** (the toolchain already embeds the
   Gambit runtime) + vendoring/relocating the one Homebrew dylib dependency
   (openssl@3) into `Contents/Frameworks/`. Build: `cargo run --example
-  bundle_app -p apianyware-macos-bundle-gerbil -- <script>`.
+  bundle_app -p apianyware-bundle-gerbil -- <script>`.
 
-The language-agnostic `apianyware-macos-stub-launcher` crate provides the `.app`
+The language-agnostic `apianyware-stub-launcher` crate provides the `.app`
 skeleton + codesigning; per-target bundler crates do dependency discovery and
 staging. Bundle ids are `com.linkuistics.<NoSpaceTitle>`; display names come from
 the H1 of `docs/apps/<app>/spec.md`.

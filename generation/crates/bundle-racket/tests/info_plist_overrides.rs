@@ -11,7 +11,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_bundle_racket::{bundle_app_with_entry, AppSpec};
+use apianyware_bundle_racket::{bundle_app_with_entry, AppSpec};
 use plist::Value;
 
 fn workspace_root() -> PathBuf {

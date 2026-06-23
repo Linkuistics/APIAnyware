@@ -53,7 +53,7 @@ GUI testing uses TestAnyware (never run apps from the CLI — see the apps READM
 Build the standalone bundle (compiles the whole closure, links + relocates the dylib):
 
 ```
-SDKROOT=macosx cargo run -p apianyware-macos-generate -- --target gerbil
+SDKROOT=macosx cargo run -p apianyware-generate -- --target gerbil
 (cd swift && SDKROOT=macosx swift build -c release --product APIAnywareGerbil)
-cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- swift-native-method-probe
+cargo run --example bundle_app -p apianyware-bundle-gerbil -- swift-native-method-probe
 ```

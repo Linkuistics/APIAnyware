@@ -13,11 +13,11 @@
 //!    `string->nsstring-ptr` (plus an `objc_retain` so the value outlives
 //!    the autorelease pool that wraps the library load).
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Constant;
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Constant;
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::ChezFfiTypeMapper;
 use crate::shared_signatures::framework_shared_object_arg;
@@ -218,8 +218,8 @@ fn escape_string_literal(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Constant;
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::Constant;
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn c(name: &str, kind: TypeRefKind) -> Constant {
         Constant {

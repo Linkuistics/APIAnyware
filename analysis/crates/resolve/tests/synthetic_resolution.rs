@@ -5,9 +5,9 @@
 //! inheritance, cross-framework inheritance, method/property override
 //! semantics, ownership detection, and protocol conformance.
 
-use apianyware_macos_types::ir::{Class, Method, Param, Property, Protocol};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
-use apianyware_macos_types::Framework;
+use apianyware_types::ir::{Class, Method, Param, Property, Protocol};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::Framework;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -119,7 +119,7 @@ fn make_property(name: &str) -> Property {
 }
 
 fn resolve(frameworks: &[Framework]) -> Vec<Framework> {
-    apianyware_macos_resolve::resolve_loaded_frameworks(frameworks).unwrap()
+    apianyware_resolve::resolve_loaded_frameworks(frameworks).unwrap()
 }
 
 fn find_class<'a>(frameworks: &'a [Framework], class_name: &str) -> &'a Class {

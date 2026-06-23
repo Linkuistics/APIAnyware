@@ -85,7 +85,7 @@ the Racket wrapper trends toward a single coercion-free ffi2 call.
 - **Build order inverts to `generate → swift build`.** The table is written to
   `swift/Sources/APIAnywareRacket/Generated/Dispatch.swift` (gitignored,
   reproducible from the IR like the `.rkt` bindings) by
-  `apianyware-macos-generate`, then compiled by `swift build`. A clean checkout
+  `apianyware-generate`, then compiled by `swift build`. A clean checkout
   therefore runs `generate` before `swift build` — already true for the `.rkt`
   bindings the entries serve.
 - **Content-addressed names** (`aw_racket_msg_<param-codes>_<ret-code>`) make the

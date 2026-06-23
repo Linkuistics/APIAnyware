@@ -3,7 +3,7 @@
 //! Iterates over a [`Framework`]'s declarations and pushes tuples
 //! into the [`ResolutionProgram`]'s base relations.
 
-use apianyware_macos_types::Framework;
+use apianyware_types::Framework;
 
 use crate::program::ResolutionProgram;
 
@@ -122,7 +122,7 @@ pub fn load_framework_facts(prog: &mut ResolutionProgram, framework: &Framework)
 mod tests {
     use super::*;
     use crate::program::ResolutionProgram;
-    use apianyware_macos_datalog::loading;
+    use apianyware_datalog::loading;
     use std::path::PathBuf;
 
     fn collected_ir_directory() -> PathBuf {

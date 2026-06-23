@@ -34,10 +34,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Enum;
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Enum;
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::naming::{qualified_top_level_name, top_level_name};
 
@@ -231,7 +231,7 @@ fn build_plan(enums: &[Enum]) -> EnumPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::EnumValue;
+    use apianyware_types::ir::EnumValue;
 
     fn en(name: &str, underlying: &str, vs: &[(&str, i64)]) -> Enum {
         Enum {

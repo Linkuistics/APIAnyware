@@ -19,7 +19,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_stub_launcher::codesign_path;
+use apianyware_stub_launcher::codesign_path;
 use plist::Value as PlistValue;
 
 use crate::dump::{driver_needs_dylib, dump_image, ensure_swift_dylib};

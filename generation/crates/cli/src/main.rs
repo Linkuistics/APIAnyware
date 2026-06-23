@@ -1,9 +1,9 @@
 //! CLI for the generation pipeline: emit target bindings from enriched IR.
 //!
 //! Usage:
-//!   apianyware-macos-generate                              # generate all targets
-//!   apianyware-macos-generate --target racket             # generate Racket only
-//!   apianyware-macos-generate --list-targets             # show available emitters
+//!   apianyware-generate                              # generate all targets
+//!   apianyware-generate --target racket             # generate Racket only
+//!   apianyware-generate --list-targets             # show available emitters
 
 mod generate;
 mod registry;
@@ -14,7 +14,7 @@ use anyhow::Result;
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(name = "apianyware-macos-generate")]
+#[command(name = "apianyware-generate")]
 #[command(about = "Generate target bindings from enriched macOS API IR")]
 struct Cli {
     /// Target(s) to generate bindings for (comma-separated or repeated).

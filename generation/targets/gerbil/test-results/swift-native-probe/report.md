@@ -38,7 +38,7 @@ trampoline require-shape (the `define-c-lambda` bindings resolving against
 
 ## Build (standalone self-contained `.app`, ADR-0009)
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- swift-native-probe`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- swift-native-probe`.
 Output: `Swift Native Probe.app`, bundle id `com.linkuistics.SwiftNativeProbe`. The
 `gxc -exe` binary embeds the whole Gerbil/Gambit runtime; the build order is the
 ADR-0029 one — `generate → swift build → gxc` — and the app exe links

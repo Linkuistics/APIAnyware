@@ -47,21 +47,21 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "serd
 plist = "1.7"
 
 # Internal crates
-apianyware-macos-types = { path = "collection/crates/types" }
-apianyware-macos-extract-objc = { path = "collection/crates/extract-objc" }
-apianyware-macos-extract-swift = { path = "collection/crates/extract-swift" }
-apianyware-macos-datalog = { path = "analysis/crates/datalog" }
-apianyware-macos-resolve = { path = "analysis/crates/resolve" }
-apianyware-macos-annotate = { path = "analysis/crates/annotate" }
-apianyware-macos-enrich = { path = "analysis/crates/enrich" }
-apianyware-macos-emit = { path = "generation/crates/emit" }
-apianyware-macos-emit-racket = { path = "generation/crates/emit-racket" }
-apianyware-macos-emit-chez = { path = "generation/crates/emit-chez" }
-apianyware-macos-emit-gerbil = { path = "generation/crates/emit-gerbil" }
-apianyware-macos-emit-sbcl = { path = "generation/crates/emit-sbcl" }
-apianyware-macos-stub-launcher = { path = "generation/crates/stub-launcher" }
-apianyware-macos-bundle-racket = { path = "generation/crates/bundle-racket" }
-apianyware-macos-bundle-chez = { path = "generation/crates/bundle-chez" }
+apianyware-types = { path = "collection/crates/types" }
+apianyware-extract-objc = { path = "collection/crates/extract-objc" }
+apianyware-extract-swift = { path = "collection/crates/extract-swift" }
+apianyware-datalog = { path = "analysis/crates/datalog" }
+apianyware-resolve = { path = "analysis/crates/resolve" }
+apianyware-annotate = { path = "analysis/crates/annotate" }
+apianyware-enrich = { path = "analysis/crates/enrich" }
+apianyware-emit = { path = "generation/crates/emit" }
+apianyware-emit-racket = { path = "generation/crates/emit-racket" }
+apianyware-emit-chez = { path = "generation/crates/emit-chez" }
+apianyware-emit-gerbil = { path = "generation/crates/emit-gerbil" }
+apianyware-emit-sbcl = { path = "generation/crates/emit-sbcl" }
+apianyware-stub-launcher = { path = "generation/crates/stub-launcher" }
+apianyware-bundle-racket = { path = "generation/crates/bundle-racket" }
+apianyware-bundle-chez = { path = "generation/crates/bundle-chez" }
 
 [workspace.lints.rust]
 unsafe_code = "warn"

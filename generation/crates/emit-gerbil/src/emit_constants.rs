@@ -35,11 +35,11 @@
 //!    (050) and `wrap` it `#t` (owned). The retain matters: the constant must
 //!    outlive the entry-point autorelease pool (ADR-0019).
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Constant;
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Constant;
+use apianyware_types::type_ref::TypeRefKind;
 
 use crate::ffi_type_mapping::{c_type_for_token, GerbilFfiTypeMapper, POINTER};
 use crate::trampoline::{
@@ -307,8 +307,8 @@ fn escape_string_literal(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Constant;
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::Constant;
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn c(name: &str, kind: TypeRefKind) -> Constant {
         Constant {

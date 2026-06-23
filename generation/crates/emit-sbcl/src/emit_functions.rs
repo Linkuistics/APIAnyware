@@ -39,11 +39,11 @@
 
 use std::collections::HashSet;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::naming::camel_to_kebab;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Function;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::naming::camel_to_kebab;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Function;
 
 use crate::ffi_type_mapping::SbclFfiTypeMapper;
 use crate::naming::{qualified_top_level_name, top_level_name};
@@ -197,8 +197,8 @@ fn arg_name(label: &str, i: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Param, SwiftFnInfo};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Param, SwiftFnInfo};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn ty(kind: TypeRefKind) -> TypeRef {
         TypeRef {

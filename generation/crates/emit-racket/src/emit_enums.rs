@@ -1,8 +1,8 @@
 //! Racket enum file code generation.
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Enum;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Enum;
 
 /// Generate a Racket enums file for a framework.
 pub fn generate_enums_file(enums: &[Enum], framework: &str) -> String {

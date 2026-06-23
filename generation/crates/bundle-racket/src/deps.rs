@@ -22,7 +22,7 @@
 //! copies of the symlink targets' content. This is what makes bundles
 //! self-contained even when the source tree stitches in external
 //! resources via symlinks (Modaliser-Racket's `bindings/` →
-//! `APIAnyware-MacOS/generation/targets/racket/` is the motivating
+//! `APIAnyware/generation/targets/racket/` is the motivating
 //! case). Reading file content still transparently follows symlinks,
 //! because `fs::read_to_string` and `fs::copy` do.
 
@@ -330,7 +330,7 @@ mod tests {
     }
 
     /// Modaliser-Racket's layout: an in-tree directory (`bindings/`) is a
-    /// symlink pointing outside the project root to APIAnyware-MacOS's
+    /// symlink pointing outside the project root to APIAnyware's
     /// generated bindings. The walker must accept this and preserve the
     /// logical (in-tree) path in its returned set, so the copy step
     /// produces a self-contained bundle without leaking the external

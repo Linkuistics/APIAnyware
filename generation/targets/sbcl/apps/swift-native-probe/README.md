@@ -25,7 +25,7 @@ design follow-up respectively.)
 
 ```sh
 # prerequisites: generated bindings fresh + the dylib built
-SDKROOT=macosx cargo run -p apianyware-macos-generate -- --target sbcl
+SDKROOT=macosx cargo run -p apianyware-generate -- --target sbcl
 SDKROOT=macosx swift build --package-path swift --product APIAnywareSbcl
 # then:
 generation/targets/sbcl/apps/swift-native-probe/build.sh

@@ -13,7 +13,7 @@ sync — VM-verified in a **no-Gerbil VM** ([[feedback-vm-verify-every-app]]).
 
 ## Build
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- pdfkit-viewer`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- pdfkit-viewer`.
 Output: `…/apps/pdfkit-viewer/build/PDFKit Viewer.app`, bundle id
 `com.linkuistics.PDFKitViewer`, codesigned. `otool -L` is dylib-clean — system
 frameworks (AppKit, **PDFKit**, Foundation, …) + vendored openssl; Gambit runtime

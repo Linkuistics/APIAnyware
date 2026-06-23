@@ -41,7 +41,7 @@ GUI testing uses TestAnyware (never run apps from the CLI — see the apps READM
 `../../test-results/swift-native-method-probe/screenshot.png` (golden `macos-tahoe`).
 
 Build the standalone open-world bundle (compiles the whole closure, ADR-0009):
-`cargo run --example bundle_app -p apianyware-macos-bundle-chez -- swift-native-method-probe`.
+`cargo run --example bundle_app -p apianyware-bundle-chez -- swift-native-method-probe`.
 
 Run unbundled (CLI banner only — GUI verification is the VM):
 ```

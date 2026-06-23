@@ -2,14 +2,14 @@
 //!
 //! Tests derive enrichment relations from synthetic and real framework data.
 
-use apianyware_macos_types::annotation::{
+use apianyware_types::annotation::{
     AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations, ErrorPattern,
     MethodAnnotation, PatternStereotype, ThreadingConstraint,
 };
-use apianyware_macos_types::enrichment::EnrichmentData;
-use apianyware_macos_types::ir::{Class, Method, Param, Property, Protocol};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
-use apianyware_macos_types::Framework;
+use apianyware_types::enrichment::EnrichmentData;
+use apianyware_types::ir::{Class, Method, Param, Property, Protocol};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::Framework;
 
 fn make_method(selector: &str, params: Vec<Param>, return_kind: TypeRefKind) -> Method {
     Method {
@@ -75,10 +75,9 @@ fn enrich(
     fw: &Framework,
 ) -> (
     EnrichmentData,
-    apianyware_macos_types::enrichment::VerificationReport,
+    apianyware_types::enrichment::VerificationReport,
 ) {
-    let enriched =
-        apianyware_macos_enrich::enrich_loaded_frameworks(std::slice::from_ref(fw)).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(std::slice::from_ref(fw)).unwrap();
     let e = enriched[0].enrichment.clone().unwrap();
     let v = enriched[0].verification.clone().unwrap();
     (e, v)
@@ -499,7 +498,7 @@ fn classified_block_no_violation() {
 #[test]
 fn scoped_resource_from_paired_state_pattern() {
     let mut fw = empty_framework();
-    fw.api_patterns = vec![apianyware_macos_types::annotation::ApiPattern {
+    fw.api_patterns = vec![apianyware_types::annotation::ApiPattern {
         stereotype: PatternStereotype::PairedState,
         name: "NSLock critical section".to_string(),
         participants: serde_json::json!({
@@ -540,12 +539,12 @@ fn foundation_enrichment_integration() {
         return;
     }
 
-    let fw = apianyware_macos_datalog::loading::load_framework_from_file(
+    let fw = apianyware_datalog::loading::load_framework_from_file(
         &annotated_dir.join("Foundation.json"),
     )
     .unwrap();
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw]).unwrap();
     assert_eq!(enriched.len(), 1);
 
     let e = enriched[0].enrichment.as_ref().unwrap();
@@ -644,7 +643,7 @@ fn verification_violations_are_per_framework_not_global() {
         swift_name: None,
     }];
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
     assert_eq!(enriched.len(), 2);
 
     let v_a = enriched[0].verification.as_ref().unwrap();
@@ -729,7 +728,7 @@ fn enrichment_data_is_per_framework_not_global() {
         swift_name: None,
     }];
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
 
     let e_a = enriched[0].enrichment.as_ref().unwrap();
     let e_b = enriched[1].enrichment.as_ref().unwrap();
@@ -803,7 +802,7 @@ fn cross_framework_delegate_protocol_attributed_to_protocol_framework() {
         objc_exposed: true,
     }];
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
 
     let e_a = enriched[0].enrichment.as_ref().unwrap();
     let e_b = enriched[1].enrichment.as_ref().unwrap();
@@ -898,7 +897,7 @@ fn multi_framework_block_violations_scoped_correctly() {
     }];
     // No annotations → unclassified
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
 
     let v_a = enriched[0].verification.as_ref().unwrap();
     let v_b = enriched[1].verification.as_ref().unwrap();
@@ -990,7 +989,7 @@ fn cross_framework_collection_iterables_isolated() {
         swift_name: None,
     }];
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
 
     let e_a = enriched[0].enrichment.as_ref().unwrap();
     let e_b = enriched[1].enrichment.as_ref().unwrap();
@@ -1151,7 +1150,7 @@ fn three_framework_comprehensive_enrichment_isolation() {
         objc_exposed: true,
         swift_name: None,
     }];
-    fw_c.api_patterns = vec![apianyware_macos_types::annotation::ApiPattern {
+    fw_c.api_patterns = vec![apianyware_types::annotation::ApiPattern {
         stereotype: PatternStereotype::PairedState,
         name: "NSGraphicsContext save/restore".to_string(),
         participants: serde_json::json!({
@@ -1163,7 +1162,7 @@ fn three_framework_comprehensive_enrichment_isolation() {
         doc_ref: None,
     }];
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b, fw_c]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b, fw_c]).unwrap();
 
     let e_a = enriched[0].enrichment.as_ref().unwrap();
     let e_b = enriched[1].enrichment.as_ref().unwrap();
@@ -1274,7 +1273,7 @@ fn flag_mismatch_violation_scoped_to_owning_framework() {
         swift_name: None,
     }];
 
-    let enriched = apianyware_macos_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
+    let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b]).unwrap();
 
     let v_a = enriched[0].verification.as_ref().unwrap();
     let v_b = enriched[1].verification.as_ref().unwrap();

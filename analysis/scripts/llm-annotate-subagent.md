@@ -169,7 +169,7 @@ silently skip them. `0` means "tracked, found none" and *is* checked.
 After writing the file, run:
 
 ```bash
-cargo run -q -p apianyware-macos-analyze -- llm-validate \
+cargo run -q -p apianyware-analyze -- llm-validate \
   --methods-file analysis/ir/llm-summaries/{FRAMEWORK}.methods.json \
   --llm-file    analysis/ir/llm-annotations/{FRAMEWORK}.llm.json
 ```

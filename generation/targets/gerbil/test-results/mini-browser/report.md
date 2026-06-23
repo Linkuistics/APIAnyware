@@ -12,7 +12,7 @@ VM-verified in a **no-Gerbil VM** ([[feedback-vm-verify-every-app]]).
 
 ## Build
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- mini-browser`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- mini-browser`.
 Output: `…/apps/mini-browser/build/Mini Browser.app`, bundle id
 `com.linkuistics.MiniBrowser`, codesigned, dylib-clean (WebKit + system frameworks
 + vendored openssl; static Gambit runtime). Build ~9 min (cache partly warm on the

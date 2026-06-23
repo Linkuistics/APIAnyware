@@ -25,10 +25,10 @@
 //! `NSAffineTransformStruct`) have Objective-C headers, so the emitter declares
 //! an **ABI-exact plain-C typedef'd struct inline** instead ([`GeometryCScope`]).
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
+use apianyware_emit::write_line;
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 /// The opaque-pointer token. ObjC `id`/`Class`/`SEL`, blocks, and raw C
 /// pointers all cross as this — a tagged Gambit foreign pointer.

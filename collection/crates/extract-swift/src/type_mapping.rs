@@ -4,7 +4,7 @@
 //! node kinds within the ABIRoot tree. This module converts those nodes
 //! into the shared [`TypeRef`] / [`TypeRefKind`] representation.
 
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::abi_types::AbiNode;
 

@@ -25,7 +25,7 @@
 ;; Run unbundled with:
 ;;   chez --libdirs generation/targets/chez \
 ;;        --script generation/targets/chez/apps/swift-native-method-probe/swift-native-method-probe.sls
-;; Bundled via `cargo run --example bundle_app -p apianyware-macos-bundle-chez
+;; Bundled via `cargo run --example bundle_app -p apianyware-bundle-chez
 ;;              -- swift-native-method-probe`. GUI testing uses TestAnyware (see README).
 
 (import (chezscheme)

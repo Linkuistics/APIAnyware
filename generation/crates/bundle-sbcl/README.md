@@ -3,7 +3,7 @@
 Bundle sbcl sample apps into self-contained macOS `.app` directories.
 
 ```text
-cargo run --example bundle_app -p apianyware-macos-bundle-sbcl -- hello-window
+cargo run --example bundle_app -p apianyware-bundle-sbcl -- hello-window
 ```
 
 Output lands at
@@ -57,14 +57,14 @@ on the target — both are build-time only.
 
 ## Tests
 
-`cargo test -p apianyware-macos-bundle-sbcl` runs the cheap, deterministic checks
+`cargo test -p apianyware-bundle-sbcl` runs the cheap, deterministic checks
 (residual classification against the real app tree, Info.plist shape, the stub
 source, the otool parser, the missing-driver precheck). The heavy end-to-end
 build (drives `save-lisp-and-die`, then revives the dumped image through the
 stub) is `#[ignore]`d — run it explicitly:
 
 ```text
-cargo test -p apianyware-macos-bundle-sbcl -- --ignored --nocapture
+cargo test -p apianyware-bundle-sbcl -- --ignored --nocapture
 ```
 
 The GUI-actually-draws verification is the 060 sample-app ladder (TestAnyware /

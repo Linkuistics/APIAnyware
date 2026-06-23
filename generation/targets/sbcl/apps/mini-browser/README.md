@@ -35,10 +35,10 @@ not trampoline residual. No framework constant is needed, so no startup-constant
 ```sh
 # prerequisites: WebKit generated (resolve→annotate→enrich --only WebKit, then --target sbcl)
 # + the dylib built
-SDKROOT=macosx cargo run -p apianyware-macos-analyze -- resolve  --only WebKit
-SDKROOT=macosx cargo run -p apianyware-macos-analyze -- annotate --only WebKit --llm-dir analysis/ir/llm-annotations
-SDKROOT=macosx cargo run -p apianyware-macos-analyze -- enrich   --only WebKit
-SDKROOT=macosx cargo run -p apianyware-macos-generate -- --target sbcl
+SDKROOT=macosx cargo run -p apianyware-analyze -- resolve  --only WebKit
+SDKROOT=macosx cargo run -p apianyware-analyze -- annotate --only WebKit --llm-dir analysis/ir/llm-annotations
+SDKROOT=macosx cargo run -p apianyware-analyze -- enrich   --only WebKit
+SDKROOT=macosx cargo run -p apianyware-generate -- --target sbcl
 SDKROOT=macosx swift build --package-path swift --product APIAnywareSbcl
 # then:
 generation/targets/sbcl/apps/mini-browser/build.sh

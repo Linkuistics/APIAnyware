@@ -14,12 +14,12 @@
 
 use std::collections::HashSet;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Class, Method, Param, Property, Struct};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::naming::{camel_to_kebab, class_name_to_lowercase};
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Class, Method, Param, Property, Struct};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::chez_builtins::chezscheme_import_spec;
 use crate::ffi_type_mapping::{
@@ -824,7 +824,7 @@ fn param_var_names(params: &[Param]) -> Vec<String> {
         .iter()
         .enumerate()
         .map(|(i, p)| {
-            let base = apianyware_macos_emit::naming::camel_to_kebab(&p.name);
+            let base = apianyware_emit::naming::camel_to_kebab(&p.name);
             if base.is_empty() {
                 format!("arg{}", i)
             } else {
@@ -1030,12 +1030,12 @@ fn emit_property(
     let getter_binding = format!(
         "%msg-{}-{}-getter",
         class_name_to_lowercase(class_name),
-        apianyware_macos_emit::naming::camel_to_kebab(&prop.name)
+        apianyware_emit::naming::camel_to_kebab(&prop.name)
     );
     let getter_sel = format!(
         "%sel-{}-{}-getter",
         class_name_to_lowercase(class_name),
-        apianyware_macos_emit::naming::camel_to_kebab(&prop.name)
+        apianyware_emit::naming::camel_to_kebab(&prop.name)
     );
 
     let ret_ty = mapper.map_type(&prop.property_type, true);
@@ -1101,12 +1101,12 @@ fn emit_property(
         let setter_binding = format!(
             "%msg-{}-{}-setter",
             class_name_to_lowercase(class_name),
-            apianyware_macos_emit::naming::camel_to_kebab(&prop.name)
+            apianyware_emit::naming::camel_to_kebab(&prop.name)
         );
         let setter_sel = format!(
             "%sel-{}-{}-setter",
             class_name_to_lowercase(class_name),
-            apianyware_macos_emit::naming::camel_to_kebab(&prop.name)
+            apianyware_emit::naming::camel_to_kebab(&prop.name)
         );
         let setter_selector_str = setter_selector_for(&prop.name);
         write_line!(
@@ -1200,8 +1200,8 @@ fn is_family_match(selector: &str, family: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Method;
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::Method;
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn ty(kind: TypeRefKind) -> TypeRef {
         TypeRef {
@@ -1545,11 +1545,7 @@ mod tests {
         assert!(output.contains("wrap-objc-object"));
     }
 
-    fn swift_method(
-        selector: &str,
-        init: bool,
-        info: apianyware_macos_types::ir::SwiftFnInfo,
-    ) -> Method {
+    fn swift_method(selector: &str, init: bool, info: apianyware_types::ir::SwiftFnInfo) -> Method {
         Method {
             selector: selector.into(),
             class_method: false,
@@ -1584,7 +1580,7 @@ mod tests {
     /// Swift-native method is suppressed (no binding, and crucially no msgSend).
     #[test]
     fn swift_native_method_routes_to_trampoline_not_msgsend() {
-        use apianyware_macos_types::ir::SwiftFnInfo;
+        use apianyware_types::ir::SwiftFnInfo;
         let cls = Class {
             name: "TKWidget".into(),
             superclass: String::new(),
@@ -1647,7 +1643,7 @@ mod tests {
     /// library with no ObjC substrate and no framework-dylib load.
     #[test]
     fn swift_native_value_struct_emits_init_producer_and_mutating_method() {
-        use apianyware_macos_types::ir::{Struct, SwiftFnInfo};
+        use apianyware_types::ir::{Struct, SwiftFnInfo};
         let init = swift_method("init(value:)", true, SwiftFnInfo::default());
         let mut mutating = swift_method(
             "insert(_:)",

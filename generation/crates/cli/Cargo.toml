@@ -1,18 +1,18 @@
 [package]
-name = "apianyware-macos-generate"
+name = "apianyware-generate"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "CLI: apianyware-macos-generate — generate language bindings from enriched IR"
+description = "CLI: apianyware-generate — generate language bindings from enriched IR"
 
 [dependencies]
-apianyware-macos-types.workspace = true
-apianyware-macos-datalog.workspace = true
-apianyware-macos-emit.workspace = true
-apianyware-macos-emit-racket.workspace = true
-apianyware-macos-emit-chez.workspace = true
-apianyware-macos-emit-gerbil.workspace = true
-apianyware-macos-emit-sbcl.workspace = true
+apianyware-types.workspace = true
+apianyware-datalog.workspace = true
+apianyware-emit.workspace = true
+apianyware-emit-racket.workspace = true
+apianyware-emit-chez.workspace = true
+apianyware-emit-gerbil.workspace = true
+apianyware-emit-sbcl.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 tracing.workspace = true

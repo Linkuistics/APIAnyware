@@ -93,11 +93,11 @@ use std::collections::BTreeSet;
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::enrichment::class_error_selectors;
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Class, Framework};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::enrichment::class_error_selectors;
+use apianyware_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Class, Framework};
 
 use crate::class_graph::{build_class_graph, ClassGraph, ClassRegistry, ParentRef};
 use crate::emit_class::{emit_bare_node, emit_class_forms};
@@ -646,7 +646,7 @@ fn visit_class<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Framework;
+    use apianyware_types::ir::Framework;
 
     fn make_minimal_framework(name: &str) -> Framework {
         Framework {
@@ -755,8 +755,8 @@ mod tests {
 
     #[test]
     fn facade_exports_every_bound_symbol() {
-        use apianyware_macos_types::ir::{Method, Property};
-        use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+        use apianyware_types::ir::{Method, Property};
+        use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
         let mut fw = make_minimal_framework("Foundation");
         let mut nsarray = class_with("NSArray", "NSObject");
@@ -764,7 +764,7 @@ mod tests {
             selector: "objectAtIndex:".into(),
             class_method: false,
             init_method: false,
-            params: vec![apianyware_macos_types::ir::Param {
+            params: vec![apianyware_types::ir::Param {
                 name: "index".into(),
                 param_type: TypeRef {
                     nullable: false,

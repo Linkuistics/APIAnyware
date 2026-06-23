@@ -44,9 +44,9 @@ pub fn is_libdispatch_unexported(symbol: &str) -> bool {
 
 use std::collections::BTreeMap;
 
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_types::ir::{Class, Method};
-use apianyware_macos_types::type_ref::TypeRef;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_types::ir::{Class, Method};
+use apianyware_types::type_ref::TypeRef;
 
 use crate::method_filter::{
     all_params_are_object_type, dispatch_strategy, is_supported_method, DispatchStrategy,
@@ -271,7 +271,7 @@ pub fn class_has_blocks(cls: &Class) -> bool {
         m.params.iter().any(|p| {
             matches!(
                 p.param_type.kind,
-                apianyware_macos_types::type_ref::TypeRefKind::Block { .. }
+                apianyware_types::type_ref::TypeRefKind::Block { .. }
             )
         })
     })
@@ -304,8 +304,8 @@ mod tests {
     /// is the leaf's "shared_signatures.rs can emit ffi2 type spellings" bar.
     #[test]
     fn shared_signatures_emit_ffi2_spellings() {
-        use apianyware_macos_emit::ffi_type_mapping::RacketFfi2TypeMapper;
-        use apianyware_macos_types::type_ref::TypeRefKind;
+        use apianyware_emit::ffi_type_mapping::RacketFfi2TypeMapper;
+        use apianyware_types::type_ref::TypeRefKind;
 
         let mapper = RacketFfi2TypeMapper;
         let params = vec![

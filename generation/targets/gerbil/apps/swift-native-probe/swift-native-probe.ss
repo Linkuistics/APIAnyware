@@ -22,8 +22,8 @@
 ;;;
 ;;; Build the standalone bundle (compiles the whole closure + links + relocates
 ;;; libAPIAnywareGerbil into Contents/Frameworks):
-;;;   cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- swift-native-probe
-;;; (prerequisite: SDKROOT=macosx cargo run -p apianyware-macos-generate -- --target gerbil
+;;;   cargo run --example bundle_app -p apianyware-bundle-gerbil -- swift-native-probe
+;;; (prerequisite: SDKROOT=macosx cargo run -p apianyware-generate -- --target gerbil
 ;;;  then  (cd swift && SDKROOT=macosx swift build -c release --product APIAnywareGerbil)).
 ;;; GUI testing uses TestAnyware (see README); never run the app from the CLI.
 (import :gerbil-bindings/runtime/objc

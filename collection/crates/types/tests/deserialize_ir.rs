@@ -4,8 +4,8 @@
 //! checkpoint schema. A single synthetic JSON literal exercises every
 //! default and round-trip guarantee in one pass — no on-disk SDK fixtures.
 
-use apianyware_macos_types::ir::Framework;
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::ir::Framework;
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Minimal modern document: the absolute-minimum set of fields a valid
 /// checkpoint must carry, with every post-minimum field omitted so the
@@ -103,7 +103,7 @@ fn objc_exposed_defaults_true_when_absent() {
 /// `objc_exposed: true` is omitted on serialisation; `false` is written.
 #[test]
 fn objc_exposed_skipped_when_true_emitted_when_false() {
-    let exposed = apianyware_macos_types::ir::Constant {
+    let exposed = apianyware_types::ir::Constant {
         name: "kObjc".to_string(),
         constant_type: cstring_type(),
         source: None,
@@ -112,7 +112,7 @@ fn objc_exposed_skipped_when_true_emitted_when_false() {
         macro_value: None,
         objc_exposed: true,
     };
-    let native = apianyware_macos_types::ir::Constant {
+    let native = apianyware_types::ir::Constant {
         name: "kSwift".to_string(),
         objc_exposed: false,
         ..exposed.clone()

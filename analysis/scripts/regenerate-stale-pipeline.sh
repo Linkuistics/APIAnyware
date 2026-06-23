@@ -21,7 +21,7 @@
 #                + analysis/ir/enriched. Output: generation/targets/{lang}/
 #                generated. Runs all registered emitters by default.
 #
-# Collection (cargo run -p apianyware-macos-collect) is intentionally not
+# Collection (cargo run -p apianyware-collect) is intentionally not
 # regenerated here: it costs ~2 minutes and is gated on SDK header changes
 # rather than source code changes, which is a manual decision.
 #
@@ -116,7 +116,7 @@ ANALYZE_OUTPUT_NEWEST=0
 
 if needs_regen "$ANALYZE_INPUT_NEWEST" "$ANALYZE_OUTPUT_NEWEST"; then
     echo "=== analyze: sources newer than enriched IR — regenerating ==="
-    cargo run --quiet -p apianyware-macos-analyze
+    cargo run --quiet -p apianyware-analyze
     # Refresh after regen so the generation stage sees the new mtime.
     ANALYZE_OUTPUT_NEWEST=$(newest_mtime "$ANALYZE_OUTPUT")
 else
@@ -183,14 +183,14 @@ if [[ ${#STALE_TARGETS[@]} -eq 0 ]]; then
 else
     if [[ -n "$LANG_FILTER" ]]; then
         echo "=== generate: regenerating ${LANG_FILTER} ==="
-        cargo run --quiet -p apianyware-macos-generate -- --target "$LANG_FILTER"
+        cargo run --quiet -p apianyware-generate -- --target "$LANG_FILTER"
     elif [[ ${#STALE_TARGETS[@]} -eq ${#TARGETS[@]} ]]; then
         echo "=== generate: regenerating all targets (${STALE_TARGETS[*]}) ==="
-        cargo run --quiet -p apianyware-macos-generate
+        cargo run --quiet -p apianyware-generate
     else
         echo "=== generate: regenerating stale targets (${STALE_TARGETS[*]}) ==="
         for tgt in "${STALE_TARGETS[@]}"; do
-            cargo run --quiet -p apianyware-macos-generate -- --target "$tgt"
+            cargo run --quiet -p apianyware-generate -- --target "$tgt"
         done
     fi
 fi

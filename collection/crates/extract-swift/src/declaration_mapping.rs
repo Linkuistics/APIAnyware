@@ -4,7 +4,7 @@
 //! enums, protocols, functions, properties) into the shared IR types with
 //! `source: SwiftInterface`.
 
-use apianyware_macos_types::{
+use apianyware_types::{
     ir,
     provenance::{Availability, DeclarationSource, DocRefs, SourceProvenance},
     skipped_symbol_reason,
@@ -439,9 +439,9 @@ fn map_enum(node: &AbiNode) -> Option<ir::Enum> {
         name: node.name.clone(),
         // Swift enums don't expose an underlying integer type in ABIRoot.
         // Use a sentinel to indicate a Swift enum.
-        enum_type: apianyware_macos_types::type_ref::TypeRef {
+        enum_type: apianyware_types::type_ref::TypeRef {
             nullable: false,
-            kind: apianyware_macos_types::type_ref::TypeRefKind::Primitive {
+            kind: apianyware_types::type_ref::TypeRefKind::Primitive {
                 name: "swift_enum".to_string(),
             },
         },

@@ -6,7 +6,7 @@
 
 use clang::{Type, TypeKind};
 
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Check if a pointee type is `char` (i.e., the pointer is `char *` or
 /// `const char *`). Only matches the `char` type itself (CharS on

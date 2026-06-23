@@ -22,9 +22,9 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_emit::target_emitter::TargetEmitter;
-use apianyware_macos_emit_chez::emit_framework::ChezEmitter;
-use apianyware_macos_types::ir::Framework;
+use apianyware_emit::target_emitter::TargetEmitter;
+use apianyware_emit_chez::emit_framework::ChezEmitter;
+use apianyware_types::ir::Framework;
 
 fn crate_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

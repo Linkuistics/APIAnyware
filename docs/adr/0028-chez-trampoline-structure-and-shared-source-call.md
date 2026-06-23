@@ -36,7 +36,7 @@ strongest evidence the port is faithful.
 
 ### 1. Generated `@_cdecl` trampolines, called by name — same as racket
 
-`apianyware-macos-generate` emits a gitignored
+`apianyware-generate` emits a gitignored
 `swift/Sources/APIAnywareChez/Generated/Trampolines.swift` in a global pass
 (`run_chez_trampolines`, modelled on `run_racket_trampolines`), then `swift build`
 compiles it into `libAPIAnywareChez`. Each residual decl becomes one `@_cdecl`

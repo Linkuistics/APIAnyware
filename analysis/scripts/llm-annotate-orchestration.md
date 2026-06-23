@@ -14,7 +14,7 @@ For step-by-step provenance and merge semantics, see
 ```
 analysis/ir/resolved/*.json
         │
-        │  apianyware-macos-analyze llm-extract
+        │  apianyware-analyze llm-extract
         ▼
 analysis/ir/llm-summaries/{Framework}.methods.json   ← what subagents read
         │
@@ -22,7 +22,7 @@ analysis/ir/llm-summaries/{Framework}.methods.json   ← what subagents read
         ▼
 analysis/ir/llm-annotations/{Framework}.llm.json     ← what subagents write
         │
-        │  apianyware-macos-analyze annotate --llm-dir
+        │  apianyware-analyze annotate --llm-dir
         ▼
 analysis/ir/annotated/{Framework}.json               ← merged with heuristics
 ```
@@ -33,7 +33,7 @@ Produce per-framework `.methods.json` summaries containing only methods that
 need LLM classification (block params, error out-params, delegate patterns):
 
 ```bash
-cargo run -q -p apianyware-macos-analyze -- llm-extract
+cargo run -q -p apianyware-analyze -- llm-extract
 ```
 
 Output: `analysis/ir/llm-summaries/{Framework}.methods.json`. Frameworks with
@@ -42,7 +42,7 @@ no interesting methods are skipped.
 To target a subset:
 
 ```bash
-cargo run -q -p apianyware-macos-analyze -- llm-extract --only Foundation,AVFoundation
+cargo run -q -p apianyware-analyze -- llm-extract --only Foundation,AVFoundation
 ```
 
 ## Step 2 — Dispatch subagents in parallel
@@ -97,7 +97,7 @@ Once the relevant `.llm.json` files exist, merge them into the annotated
 checkpoints:
 
 ```bash
-cargo run -q -p apianyware-macos-analyze -- annotate \
+cargo run -q -p apianyware-analyze -- annotate \
     --llm-dir analysis/ir/llm-annotations
 ```
 
@@ -110,7 +110,7 @@ Run enrichment to surface verification violations the new annotations
 might trigger or resolve:
 
 ```bash
-cargo run -q -p apianyware-macos-analyze -- enrich
+cargo run -q -p apianyware-analyze -- enrich
 jq '.verification' analysis/ir/enriched/{Framework}.json
 ```
 
@@ -208,7 +208,7 @@ The pipeline is idempotent at every step:
 |---|---|
 | One framework's LLM annotations | `rm analysis/ir/llm-annotations/{Framework}.llm.json` then re-dispatch its subagent |
 | All LLM annotations | `rm -rf analysis/ir/llm-annotations/` then re-dispatch every subagent |
-| Just the merge | `cargo run -q -p apianyware-macos-analyze -- annotate --llm-dir analysis/ir/llm-annotations` |
+| Just the merge | `cargo run -q -p apianyware-analyze -- annotate --llm-dir analysis/ir/llm-annotations` |
 
 `.methods.json` summaries are derived from `analysis/ir/resolved/` and need
 re-running only after the `resolve` step changes (i.e. SDK update or
@@ -372,7 +372,7 @@ methods don't carry a property to read.
 
 ```bash
 mkdir -p /tmp/empty-llm-dir /tmp/heuristic-only-annotated
-./target/release/apianyware-macos-analyze annotate \
+./target/release/apianyware-analyze annotate \
     --output-dir /tmp/heuristic-only-annotated \
     --llm-dir /tmp/empty-llm-dir
 python3 analysis/scripts/audit-llm-redundancy.py  # see script comment

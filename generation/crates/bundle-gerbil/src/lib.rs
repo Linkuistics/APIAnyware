@@ -30,7 +30,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use apianyware_macos_bundle_gerbil::{bundle_app, AppSpec};
+//! use apianyware_bundle_gerbil::{bundle_app, AppSpec};
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");

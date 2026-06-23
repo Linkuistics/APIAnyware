@@ -7,7 +7,7 @@
 //! toolchain and is minutes-long, so it is `#[ignore]`d and run explicitly:
 //!
 //! ```text
-//! cargo test -p apianyware-macos-bundle-gerbil -- --ignored --nocapture
+//! cargo test -p apianyware-bundle-gerbil -- --ignored --nocapture
 //! ```
 //!
 //! That ignored test is the in-crate proof of the node's first two done-bars
@@ -16,7 +16,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use apianyware_macos_bundle_gerbil::{bundle_app, collect_closure, AppSpec, BundleError};
+use apianyware_bundle_gerbil::{bundle_app, collect_closure, AppSpec, BundleError};
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -153,7 +153,7 @@ fn rejects_missing_app() {
 }
 
 fn gxc_available() -> bool {
-    apianyware_macos_bundle_gerbil::discover_gerbil_bin_dir().is_ok()
+    apianyware_bundle_gerbil::discover_gerbil_bin_dir().is_ok()
 }
 
 /// End-to-end: build the hello-window `.app` and assert it is Homebrew-clean.

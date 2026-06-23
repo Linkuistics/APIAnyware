@@ -23,4 +23,4 @@ GUI testing uses TestAnyware (never run apps from the CLI — see the apps READM
 The repeatable recipe and the VM-verify evidence are in spec §6b; the captured
 screenshot is at `../../test-results/swift-native-probe/screenshot.png`.
 
-Build the bundle: `cargo run --example bundle_app -p apianyware-macos-bundle-racket -- swift-native-probe`.
+Build the bundle: `cargo run --example bundle_app -p apianyware-bundle-racket -- swift-native-probe`.

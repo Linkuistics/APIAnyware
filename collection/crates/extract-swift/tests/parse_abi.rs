@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use apianyware_macos_extract_swift::abi_types::AbiDocument;
+use apianyware_extract_swift::abi_types::AbiDocument;
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")

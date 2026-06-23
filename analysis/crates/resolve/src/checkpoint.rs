@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use apianyware_macos_types::ir::{Framework, Method, Property};
+use apianyware_types::ir::{Framework, Method, Property};
 
 use crate::program::ResolutionProgram;
 
@@ -212,7 +212,7 @@ fn build_effective_methods_for_class(
                     class_method: *is_cm,
                     init_method: *is_init,
                     params: Vec::new(),
-                    return_type: apianyware_macos_types::TypeRef::void(),
+                    return_type: apianyware_types::TypeRef::void(),
                     deprecated: *is_dep,
                     variadic: *is_var,
                     source: None,
@@ -277,7 +277,7 @@ fn build_effective_properties_for_class(
                 // Property from another framework
                 Property {
                     name: name.clone(),
-                    property_type: apianyware_macos_types::TypeRef::void(),
+                    property_type: apianyware_types::TypeRef::void(),
                     readonly: *ro,
                     class_property: *cp,
                     is_copy: false,

@@ -1,10 +1,10 @@
 //! CLI for extracting macOS API metadata from SDK headers and Swift modules.
 //!
 //! Usage:
-//!   apianyware-macos-collect                    # extract all SDK frameworks
-//!   apianyware-macos-collect --only Foundation   # extract specific framework(s)
-//!   apianyware-macos-collect --list              # list available frameworks
-//!   apianyware-macos-collect --no-swift          # skip Swift extraction
+//!   apianyware-collect                    # extract all SDK frameworks
+//!   apianyware-collect --only Foundation   # extract specific framework(s)
+//!   apianyware-collect --list              # list available frameworks
+//!   apianyware-collect --no-swift          # skip Swift extraction
 
 use std::collections::HashMap;
 use std::fs;
@@ -13,17 +13,17 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::Parser;
 
-use apianyware_macos_extract_objc::{
+use apianyware_extract_objc::{
     create_index, discover_frameworks, discover_sdk, extract_framework, init_clang,
 };
-use apianyware_macos_extract_swift::{
+use apianyware_extract_swift::{
     digester::{discover_swift_modules, SwiftModuleInfo},
     extract_swift_framework,
     merge::merge_swift_into_objc,
 };
 
 #[derive(Parser)]
-#[command(name = "apianyware-macos-collect")]
+#[command(name = "apianyware-collect")]
 #[command(about = "Extract macOS API metadata from SDK headers and Swift modules")]
 struct Cli {
     /// List available frameworks and exit.
@@ -229,7 +229,7 @@ fn main() -> Result<()> {
 }
 
 fn write_framework_json(
-    ir: &apianyware_macos_types::ir::Framework,
+    ir: &apianyware_types::ir::Framework,
     output_dir: &std::path::Path,
 ) -> Result<()> {
     let output_path = output_dir.join(format!("{}.json", ir.name));

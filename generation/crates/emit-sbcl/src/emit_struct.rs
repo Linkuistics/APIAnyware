@@ -30,9 +30,9 @@
 
 use std::collections::BTreeMap;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Struct;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Struct;
 
 use crate::emit_generics::arity_consistent;
 use crate::naming::qualified_class_name;
@@ -110,8 +110,8 @@ pub fn generate_struct_file(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Method, Param, Struct, SwiftFnInfo};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Method, Param, Struct, SwiftFnInfo};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn prim(name: &str) -> TypeRef {
         TypeRef {

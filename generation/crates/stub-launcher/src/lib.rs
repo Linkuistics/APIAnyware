@@ -7,7 +7,7 @@
 //! # Usage
 //!
 //! ```no_run
-//! use apianyware_macos_stub_launcher::{StubConfig, create_app_bundle};
+//! use apianyware_stub_launcher::{StubConfig, create_app_bundle};
 //! use std::path::Path;
 //!
 //! let config = StubConfig {

@@ -85,7 +85,7 @@ is simpler everywhere it matters (build order, bundling, self-containment).
 
 ### 2. Generated `@_cdecl` trampolines, called by name — same as the peers
 
-`apianyware-macos-generate` emits a gitignored
+`apianyware-generate` emits a gitignored
 `swift/Sources/APIAnywareSbcl/Generated/Trampolines.swift` in a global pass
 (`run_sbcl_trampolines`, modelled on `run_gerbil_trampolines`), then `swift build`
 compiles it into `libAPIAnywareSbcl.dylib`. Each residual decl becomes one `@_cdecl`

@@ -6,23 +6,22 @@
 
 use std::sync::LazyLock;
 
-use apianyware_macos_extract_objc::{create_index, extract_framework, init_clang, sdk};
+use apianyware_extract_objc::{create_index, extract_framework, init_clang, sdk};
 
-static APPLICATION_SERVICES: LazyLock<apianyware_macos_types::ir::Framework> =
-    LazyLock::new(|| {
-        let sdk = sdk::discover_sdk().expect("should discover macOS SDK");
-        let frameworks = sdk::discover_frameworks(&sdk.path).expect("should discover frameworks");
-        let fw = frameworks
-            .iter()
-            .find(|f| f.name == "ApplicationServices")
-            .expect("ApplicationServices not found");
+static APPLICATION_SERVICES: LazyLock<apianyware_types::ir::Framework> = LazyLock::new(|| {
+    let sdk = sdk::discover_sdk().expect("should discover macOS SDK");
+    let frameworks = sdk::discover_frameworks(&sdk.path).expect("should discover frameworks");
+    let fw = frameworks
+        .iter()
+        .find(|f| f.name == "ApplicationServices")
+        .expect("ApplicationServices not found");
 
-        let clang = init_clang().expect("should initialize clang");
-        let index = create_index(&clang);
-        extract_framework(&index, fw, &sdk).expect("should extract ApplicationServices")
-    });
+    let clang = init_clang().expect("should initialize clang");
+    let index = create_index(&clang);
+    extract_framework(&index, fw, &sdk).expect("should extract ApplicationServices")
+});
 
-fn application_services() -> &'static apianyware_macos_types::ir::Framework {
+fn application_services() -> &'static apianyware_types::ir::Framework {
     &APPLICATION_SERVICES
 }
 
@@ -62,7 +61,7 @@ fn application_services_extracts_cfstr_macro_constants() {
         "kAXTitleAttribute",
         "kAXRaiseAction",
     ];
-    let constant_map: std::collections::HashMap<&str, &apianyware_macos_types::ir::Constant> =
+    let constant_map: std::collections::HashMap<&str, &apianyware_types::ir::Constant> =
         fw.constants.iter().map(|c| (c.name.as_str(), c)).collect();
     for req in required {
         let c = constant_map

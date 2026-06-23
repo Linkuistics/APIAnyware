@@ -7,7 +7,7 @@
 //! - **Classes** → `ns:`-qualified, acronym-aware kebab: `NSString` →
 //!   `ns:ns-string`, `NSOpenGLView` → `ns:ns-opengl-view`, `NSURLHandleClient` →
 //!   `ns:ns-url-handle-client` (the acronym handling is shared analysis-level
-//!   data, [`apianyware_macos_emit::naming::acronym_aware_kebab`]).
+//!   data, [`apianyware_emit::naming::acronym_aware_kebab`]).
 //! - **Selectors** → a per-selector generic-function symbol (**selector-structure
 //!   preserving**, ADR-0039: each `:` → `_`, each camelCase hump → `-`) and a
 //!   keyword-symbol list, one per component
@@ -22,7 +22,7 @@
 //! applied identically by every CL member); this module is the SBCL-specific
 //! composition over it (package, generic naming, keyword lists).
 
-use apianyware_macos_emit::naming::acronym_aware_kebab;
+use apianyware_emit::naming::acronym_aware_kebab;
 
 /// The Common Lisp package every bound Cocoa name lives in (contract §3.1).
 pub const PACKAGE: &str = "ns";

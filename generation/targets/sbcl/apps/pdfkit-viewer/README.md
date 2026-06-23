@@ -31,10 +31,10 @@ the `aw_sbcl_subclass_*` bounce shim (as scenekit-viewer), not trampoline residu
 ```sh
 # prerequisites: PDFKit generated (resolve→annotate→enrich --only PDFKit, then --target sbcl)
 # + the dylib built
-SDKROOT=macosx cargo run -p apianyware-macos-analyze -- resolve  --only PDFKit
-SDKROOT=macosx cargo run -p apianyware-macos-analyze -- annotate --only PDFKit --llm-dir analysis/ir/llm-annotations
-SDKROOT=macosx cargo run -p apianyware-macos-analyze -- enrich   --only PDFKit
-SDKROOT=macosx cargo run -p apianyware-macos-generate -- --target sbcl
+SDKROOT=macosx cargo run -p apianyware-analyze -- resolve  --only PDFKit
+SDKROOT=macosx cargo run -p apianyware-analyze -- annotate --only PDFKit --llm-dir analysis/ir/llm-annotations
+SDKROOT=macosx cargo run -p apianyware-analyze -- enrich   --only PDFKit
+SDKROOT=macosx cargo run -p apianyware-generate -- --target sbcl
 SDKROOT=macosx swift build --package-path swift --product APIAnywareSbcl
 # then:
 generation/targets/sbcl/apps/pdfkit-viewer/build.sh

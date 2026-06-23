@@ -7,8 +7,8 @@
 //! …). Geometry struct typedefs map to `(& <ftype>)` so values pass by
 //! reference as ftype-pointers per `runtime/types.sls`.
 
-use apianyware_macos_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 pub struct ChezFfiTypeMapper;
 

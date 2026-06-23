@@ -34,7 +34,7 @@ of racket 050's `RUNTIME_LOAD_TEST` registration).
 
 ## Build (standalone open-world `.app`, ADR-0009)
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-chez -- swift-native-probe`.
+`cargo run --example bundle_app -p apianyware-bundle-chez -- swift-native-probe`.
 Output: `Swift Native Probe.app`, **3.1 MB** tarball, bundle id
 `com.linkuistics.SwiftNativeProbe`. The whole closure (incl. the `createml`
 trampoline bindings) compiles into `Contents/Resources/swift-native-probe.boot`;

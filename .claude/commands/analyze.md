@@ -57,7 +57,7 @@ Sort classes and methods alphabetically. Only include methods with interesting a
 
 Run the heuristic merge to combine heuristic + LLM annotations into the annotated checkpoint:
 ```bash
-cargo run -p apianyware-macos-analyze -- annotate
+cargo run -p apianyware-analyze -- annotate
 ```
 
 This reads `analysis/ir/resolved/`, runs heuristics on all methods, merges with any existing LLM annotations in `analysis/ir/annotated/`, and writes the final annotated checkpoint.

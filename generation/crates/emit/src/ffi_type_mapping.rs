@@ -3,7 +3,7 @@
 //! Converts IR [`TypeRef`] values to FFI type expression strings for target languages.
 //! Each language emitter provides its own [`FfiTypeMapper`] implementation.
 
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Maps IR types to FFI type strings for a specific target language.
 ///

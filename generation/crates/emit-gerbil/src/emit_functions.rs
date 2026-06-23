@@ -40,10 +40,10 @@
 
 use std::collections::HashSet;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Function, Struct};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Function, Struct};
 
 use crate::ffi_type_mapping::{
     c_proto_type, emit_geometry_decls, geometry_decl_no_header, GeometryDecl, GerbilFfiTypeMapper,
@@ -320,8 +320,8 @@ pub fn generate_functions_file(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Function, Param};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Function, Param};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn param(name: &str, kind: TypeRefKind) -> Param {
         Param {
@@ -602,7 +602,7 @@ mod tests {
     // Swift-native residual routing (objc_exposed == false → trampolines)
     // -----------------------------------------------------------------------
 
-    use apianyware_macos_types::ir::SwiftFnInfo;
+    use apianyware_types::ir::SwiftFnInfo;
 
     /// A Swift-native (`objc_exposed == false`) function with the given `SwiftFnInfo`.
     fn swift_func(name: &str, params: Vec<Param>, ret: TypeRefKind, info: SwiftFnInfo) -> Function {

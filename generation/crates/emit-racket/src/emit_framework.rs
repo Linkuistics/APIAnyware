@@ -6,11 +6,11 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
-use apianyware_macos_emit::naming::class_name_to_lowercase;
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Framework;
+use apianyware_emit::code_writer::{CodeWriter, FileEmitter};
+use apianyware_emit::naming::class_name_to_lowercase;
+use apianyware_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
+use apianyware_emit::write_line;
+use apianyware_types::ir::Framework;
 
 use crate::emit_class::{generate_class_file_with_structs, generate_struct_file};
 use crate::emit_constants::generate_constants_file;
@@ -210,8 +210,8 @@ fn generate_main_file(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Class, Enum, EnumValue, Method, Protocol};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Class, Enum, EnumValue, Method, Protocol};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn make_minimal_framework(name: &str) -> Framework {
         Framework {
@@ -372,9 +372,9 @@ mod tests {
     fn test_emit_framework_with_functions() {
         let tmp = tempfile::tempdir().unwrap();
         let mut fw = make_minimal_framework("TestKit");
-        fw.functions.push(apianyware_macos_types::ir::Function {
+        fw.functions.push(apianyware_types::ir::Function {
             name: "TKComputeDistance".to_string(),
-            params: vec![apianyware_macos_types::ir::Param {
+            params: vec![apianyware_types::ir::Param {
                 name: "x".to_string(),
                 param_type: TypeRef {
                     nullable: false,
@@ -410,7 +410,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let mut fw = make_minimal_framework("TestKit");
         // Only add functions that should be skipped
-        fw.functions.push(apianyware_macos_types::ir::Function {
+        fw.functions.push(apianyware_types::ir::Function {
             name: "TKInline".to_string(),
             params: vec![],
             return_type: TypeRef {

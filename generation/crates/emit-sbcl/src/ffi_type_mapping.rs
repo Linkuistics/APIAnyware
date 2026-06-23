@@ -21,8 +21,8 @@
 //! All operators are written fully `sb-alien:`-qualified so generated forms are
 //! robust regardless of the generated file's package imports.
 
-use apianyware_macos_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::ffi_type_mapping::{is_generic_type_param, FfiTypeMapper};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 /// The opaque-pointer alien type. ObjC `id` / `Class` / `SEL`, blocks, function
 /// pointers, and raw C pointers all cross as this (spike-verified).

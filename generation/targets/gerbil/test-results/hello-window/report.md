@@ -10,7 +10,7 @@ window** in a macOS VM with **no Gerbil installed** — CLI smoke does not satis
 
 ## Build
 
-`cargo run --release --example bundle_app -p apianyware-macos-bundle-gerbil -- hello-window`
+`cargo run --release --example bundle_app -p apianyware-bundle-gerbil -- hello-window`
 (`SDKROOT=$(xcrun --sdk macosx --show-sdk-path)` exported). Output:
 `generation/targets/gerbil/apps/hello-window/build/Hello Window.app`, **73 MB**, bundle
 id `com.linkuistics.HelloWindow`, CFBundleName "Hello Window", codesigned.

@@ -6,12 +6,12 @@
 //! Generated bindings include `provide/contract` forms that enforce value
 //! types at module boundaries using Racket contracts mapped from IR TypeRef.
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::{FfiTypeMapper, RacketFfiTypeMapper};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Constant;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::{FfiTypeMapper, RacketFfiTypeMapper};
+use apianyware_emit::write_line;
+use apianyware_types::ir::Constant;
 
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::emit_functions::map_contract;
 use crate::shared_signatures::{any_struct_type, framework_ffi_lib_arg};
@@ -167,7 +167,7 @@ pub fn generate_constants_file(constants: &[Constant], framework: &str) -> Strin
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn make_constant(name: &str, kind: TypeRefKind) -> Constant {
         Constant {

@@ -25,7 +25,7 @@ swift-native-probe loads it, but for the subclass machinery rather than trampoli
 
 ```sh
 # prerequisites: generated bindings fresh (incl. SceneKit) + the dylib built
-SDKROOT=macosx cargo run -p apianyware-macos-generate -- --target sbcl
+SDKROOT=macosx cargo run -p apianyware-generate -- --target sbcl
 SDKROOT=macosx swift build --package-path swift --product APIAnywareSbcl
 # then:
 generation/targets/sbcl/apps/scenekit-viewer/build.sh

@@ -484,7 +484,7 @@ Gotchas baked into the pipeline:
 Build one app's standalone `.app`:
 
 ```bash
-cargo run --release --example bundle_app -p apianyware-macos-bundle-chez -- <script-name>
+cargo run --release --example bundle_app -p apianyware-bundle-chez -- <script-name>
 # → generation/targets/chez/apps/<script>/build/<App Name>.app
 ```
 

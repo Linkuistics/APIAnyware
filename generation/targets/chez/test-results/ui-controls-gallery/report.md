@@ -14,7 +14,7 @@
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --release --example bundle_app -p
-  apianyware-macos-bundle-chez -- ui-controls-gallery` — **154.8 s**
+  apianyware-bundle-chez -- ui-controls-gallery` — **154.8 s**
   (dominated by chez-compiling the 838 staged `.sls` libraries to `.so`).
 - Bundle size: **103 MB** (precompile path from leaf `105`).
 - In-VM cold launch (window visible after `open -n`): **~3 s**, in the
@@ -112,7 +112,7 @@ dispatch-using app** — the first real exercise of the `eval`-synthesised
 `scheme` boot of a whole-program-compiled binary.
 
 **Build.** `cargo run --release --example bundle_app -p
-apianyware-macos-bundle-chez -- ui-controls-gallery`. Output: `UI Controls
+apianyware-bundle-chez -- ui-controls-gallery`. Output: `UI Controls
 Gallery.app`, **5.8 MB** total (4.8 MB whole-program boot + bundled dylib),
 bundle id `com.linkuistics.UIControlsGallery`, signed `APIAnyware Local
 Signing`. `otool -L` shows **no Chez/Scheme linkage** — kernel baked in.

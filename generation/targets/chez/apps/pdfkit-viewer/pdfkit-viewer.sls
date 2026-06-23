@@ -18,7 +18,7 @@
 ;; Run unbundled with:
 ;;   chez --libdirs generation/targets/chez \
 ;;        --script generation/targets/chez/apps/pdfkit-viewer/pdfkit-viewer.sls
-;; Bundled via `cargo run --example bundle_app -p apianyware-macos-bundle-chez
+;; Bundled via `cargo run --example bundle_app -p apianyware-bundle-chez
 ;;              -- pdfkit-viewer`.
 
 (import (chezscheme)

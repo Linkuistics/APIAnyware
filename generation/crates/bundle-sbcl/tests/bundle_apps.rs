@@ -7,13 +7,13 @@
 //! seconds-to-minutes long, so it is `#[ignore]`d and run explicitly:
 //!
 //! ```text
-//! cargo test -p apianyware-macos-bundle-sbcl -- --ignored --nocapture
+//! cargo test -p apianyware-bundle-sbcl -- --ignored --nocapture
 //! ```
 
 use std::path::PathBuf;
 use std::process::Command;
 
-use apianyware_macos_bundle_sbcl::{bundle_app, driver_needs_dylib, AppSpec, BundleError};
+use apianyware_bundle_sbcl::{bundle_app, driver_needs_dylib, AppSpec, BundleError};
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

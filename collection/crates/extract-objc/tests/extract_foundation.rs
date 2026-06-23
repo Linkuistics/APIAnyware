@@ -5,11 +5,11 @@
 
 use std::sync::LazyLock;
 
-use apianyware_macos_extract_objc::{create_index, extract_framework, init_clang, sdk};
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_extract_objc::{create_index, extract_framework, init_clang, sdk};
+use apianyware_types::type_ref::TypeRefKind;
 
 /// Shared extracted Foundation framework (expensive to compute, shared across tests).
-static FOUNDATION: LazyLock<apianyware_macos_types::ir::Framework> = LazyLock::new(|| {
+static FOUNDATION: LazyLock<apianyware_types::ir::Framework> = LazyLock::new(|| {
     let sdk = sdk::discover_sdk().expect("should discover macOS SDK");
     let frameworks = sdk::discover_frameworks(&sdk.path).expect("should discover frameworks");
     let foundation = frameworks
@@ -22,7 +22,7 @@ static FOUNDATION: LazyLock<apianyware_macos_types::ir::Framework> = LazyLock::n
     extract_framework(&index, foundation, &sdk).expect("should extract Foundation")
 });
 
-fn foundation() -> &'static apianyware_macos_types::ir::Framework {
+fn foundation() -> &'static apianyware_types::ir::Framework {
     &FOUNDATION
 }
 
@@ -220,7 +220,7 @@ fn foundation_methods_have_source_field() {
     for method in &nsstring.methods {
         assert_eq!(
             method.source,
-            Some(apianyware_macos_types::provenance::DeclarationSource::ObjcHeader),
+            Some(apianyware_types::provenance::DeclarationSource::ObjcHeader),
             "method {} should have source ObjcHeader",
             method.selector
         );
@@ -302,7 +302,7 @@ fn foundation_serializes_to_json() {
     assert!(json.contains("\"checkpoint\": \"collected\""));
 
     // Verify roundtrip
-    let deserialized: apianyware_macos_types::ir::Framework =
+    let deserialized: apianyware_types::ir::Framework =
         serde_json::from_str(&json).expect("should deserialize from JSON");
     assert_eq!(deserialized.name, "Foundation");
     assert_eq!(deserialized.classes.len(), fw.classes.len());

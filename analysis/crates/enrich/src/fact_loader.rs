@@ -5,12 +5,12 @@
 //! type-level facts (classes, methods, protocols) and annotation facts
 //! (block classifications, threading, error patterns, ownership).
 
-use apianyware_macos_types::annotation::{
+use apianyware_types::annotation::{
     BlockInvocationStyle, ErrorPattern, OwnershipKind, ThreadingConstraint,
 };
-use apianyware_macos_types::ir::Method;
-use apianyware_macos_types::type_ref::TypeRefKind;
-use apianyware_macos_types::Framework;
+use apianyware_types::ir::Method;
+use apianyware_types::type_ref::TypeRefKind;
+use apianyware_types::Framework;
 
 use crate::program::EnrichmentProgram;
 
@@ -212,11 +212,11 @@ fn load_annotation_facts(prog: &mut EnrichmentProgram, framework: &Framework) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::annotation::{
+    use apianyware_types::annotation::{
         AnnotationSource, BlockParamAnnotation, ClassAnnotations, MethodAnnotation, ParamOwnership,
     };
-    use apianyware_macos_types::ir::{Class, Param};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Class, Param};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn make_method(selector: &str, params: Vec<Param>, return_kind: TypeRefKind) -> Method {
         Method {

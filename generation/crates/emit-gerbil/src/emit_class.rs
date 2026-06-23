@@ -63,7 +63,7 @@
 //!
 //! A method whose selector is in the class's enrichment-derived NSError
 //! out-param set (`error_selectors`, from the shared
-//! [`apianyware_macos_emit::enrichment::class_error_selectors`]) **and** whose
+//! [`apianyware_emit::enrichment::class_error_selectors`]) **and** whose
 //! trailing param is a raw pointer (the `NSError**` cell) returns `(values
 //! result error)` instead of threading the pointer. The trailing `NSError**` is
 //! dropped from the proc's visible arity; the per-signature crossing gains an
@@ -113,12 +113,12 @@
 
 use std::collections::{BTreeSet, HashSet};
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Class, Method, Param, Property, Struct};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::naming::{camel_to_kebab, class_name_to_lowercase};
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Class, Method, Param, Property, Struct};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
 use crate::ffi_type_mapping::{
@@ -1897,8 +1897,8 @@ fn is_family_match(selector: &str, family: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Method, Param};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Method, Param};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     #[test]
     fn surface_selector_strips_class_prefix() {
@@ -2695,7 +2695,7 @@ mod tests {
 
     // --- Charter #4: Swift-native method routing (ADR-0030) ------------------
 
-    use apianyware_macos_types::ir::SwiftFnInfo;
+    use apianyware_types::ir::SwiftFnInfo;
 
     /// A Swift-native (`objc_exposed == false`) instance method on a class.
     fn swift_method(sel: &str, ret: TypeRef) -> Method {

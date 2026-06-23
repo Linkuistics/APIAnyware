@@ -12,7 +12,7 @@
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --release --example bundle_app -p
-  apianyware-macos-bundle-chez -- scenekit-viewer` — **156.7 s**.
+  apianyware-bundle-chez -- scenekit-viewer` — **156.7 s**.
 - Bundle size: **108 MB** (carries chez-precompiled SceneKit `.so` set).
 - In-VM cold launch: window visible **~1 s** after `open -n` (within
   the leaf's 1-3 s precompile-on band). First chez sample that pulls
@@ -111,7 +111,7 @@ reach** — the first GPU-backed app, testing whether the standalone binary's
 dylib-search prelude resolves the Metal rendering stack at runtime in a VM.
 
 **Build.** `cargo run --release --example bundle_app -p
-apianyware-macos-bundle-chez -- scenekit-viewer`. Output: `SceneKit Viewer.app`,
+apianyware-bundle-chez -- scenekit-viewer`. Output: `SceneKit Viewer.app`,
 **5.0 MB**, bundle id `com.linkuistics.SceneKitViewer`, signed. `otool -L` shows
 no Chez/Scheme linkage (kernel baked in); SceneKit/Metal are not statically
 linked into the main binary — they load at runtime via the framework class

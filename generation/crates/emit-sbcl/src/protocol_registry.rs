@@ -55,7 +55,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use apianyware_macos_types::ir::Framework;
+use apianyware_types::ir::Framework;
 
 use crate::class_graph::RUNTIME_ROOT;
 
@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn from_framework_refs_first_owner_wins() {
-        use apianyware_macos_types::ir::Protocol;
+        use apianyware_types::ir::Protocol;
         fn proto(name: &str, inherits: &[&str]) -> Protocol {
             Protocol {
                 name: name.into(),

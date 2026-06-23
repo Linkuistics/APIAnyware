@@ -2,7 +2,7 @@
 //!
 //! New targets are added by inserting their emitter into [`EmitterRegistry::new`].
 
-use apianyware_macos_emit::target_emitter::TargetEmitter;
+use apianyware_emit::target_emitter::TargetEmitter;
 
 /// Registry of all available target emitters.
 pub struct EmitterRegistry {
@@ -13,20 +13,20 @@ impl EmitterRegistry {
     /// Create a registry with all built-in emitters.
     pub fn new() -> Self {
         let emitters: Vec<Box<dyn TargetEmitter>> = vec![
-            Box::new(apianyware_macos_emit_racket::RacketEmitter),
-            Box::new(apianyware_macos_emit_chez::ChezEmitter),
+            Box::new(apianyware_emit_racket::RacketEmitter),
+            Box::new(apianyware_emit_chez::ChezEmitter),
             // Gerbil's per-run emitter carries an empty cross-framework
             // `ClassRegistry`; the generate pre-pass swaps in a populated one
             // built over all loaded frameworks (see `generate.rs`). The
             // registry instance here is what `--list-targets` / lookups see.
-            Box::new(apianyware_macos_emit_gerbil::GerbilEmitter::new()),
+            Box::new(apianyware_emit_gerbil::GerbilEmitter::new()),
             // SBCL's per-run emitter carries empty cross-framework registries; the
             // `generate` pre-pass swaps in a populated `SbclEmitter::with_registries`
             // (the class-graph `ClassRegistry` for ADR-0034 §1 cross-framework
             // metaclass parents + the `ProtocolRegistry` for conformed-protocol
             // method flattening), built over all loaded frameworks (see `generate.rs`).
             // The `new()` instance here backs `--list-targets` / lookups.
-            Box::new(apianyware_macos_emit_sbcl::SbclEmitter::new()),
+            Box::new(apianyware_emit_sbcl::SbclEmitter::new()),
         ];
         Self { emitters }
     }

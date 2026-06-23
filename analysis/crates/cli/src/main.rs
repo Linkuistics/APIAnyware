@@ -1,11 +1,11 @@
 //! CLI for the analysis pipeline: resolve, annotate, enrich.
 //!
 //! Usage:
-//!   apianyware-macos-analyze                       # run full pipeline
-//!   apianyware-macos-analyze resolve               # Datalog pass 1 only
-//!   apianyware-macos-analyze annotate              # heuristics + LLM merge only
-//!   apianyware-macos-analyze enrich                # Datalog pass 2 only
-//!   apianyware-macos-analyze resolve --only Foundation
+//!   apianyware-analyze                       # run full pipeline
+//!   apianyware-analyze resolve               # Datalog pass 1 only
+//!   apianyware-analyze annotate              # heuristics + LLM merge only
+//!   apianyware-analyze enrich                # Datalog pass 2 only
+//!   apianyware-analyze resolve --only Foundation
 
 use std::path::{Path, PathBuf};
 
@@ -13,7 +13,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "apianyware-macos-analyze")]
+#[command(name = "apianyware-analyze")]
 #[command(about = "Analyze collected macOS API metadata: resolve → annotate → enrich")]
 struct Cli {
     #[command(subcommand)]
@@ -165,7 +165,7 @@ fn run_resolve(input_dir: &Path, output_dir: &Path, only: Option<&[String]>) -> 
         "starting resolution"
     );
 
-    let resolved = apianyware_macos_resolve::resolve_frameworks(input_dir, output_dir, only)?;
+    let resolved = apianyware_resolve::resolve_frameworks(input_dir, output_dir, only)?;
 
     tracing::info!(frameworks = resolved.len(), "resolution complete");
 
@@ -207,8 +207,7 @@ fn run_annotate(
         "starting annotation"
     );
 
-    let annotated =
-        apianyware_macos_annotate::annotate_frameworks(input_dir, output_dir, only, llm_dir)?;
+    let annotated = apianyware_annotate::annotate_frameworks(input_dir, output_dir, only, llm_dir)?;
 
     tracing::info!(frameworks = annotated.len(), "annotation complete");
 
@@ -233,8 +232,7 @@ fn run_llm_extract(input_dir: &Path, output_dir: &Path, only: Option<&[String]>)
         "extracting methods for LLM annotation"
     );
 
-    let summaries =
-        apianyware_macos_annotate::llm::extract_all_frameworks(input_dir, output_dir, only)?;
+    let summaries = apianyware_annotate::llm::extract_all_frameworks(input_dir, output_dir, only)?;
 
     let total_methods: usize = summaries.iter().map(|s| s.method_count).sum();
 
@@ -248,7 +246,7 @@ fn run_llm_extract(input_dir: &Path, output_dir: &Path, only: Option<&[String]>)
 }
 
 fn run_llm_validate(methods_file: &Path, llm_file: &Path) -> Result<()> {
-    let report = apianyware_macos_annotate::llm::validate_llm_file(methods_file, llm_file)?;
+    let report = apianyware_annotate::llm::validate_llm_file(methods_file, llm_file)?;
 
     for warning in &report.warnings {
         tracing::warn!("{}", warning);
@@ -281,7 +279,7 @@ fn run_enrich(input_dir: &Path, output_dir: &Path, only: Option<&[String]>) -> R
         "starting enrichment"
     );
 
-    let enriched = apianyware_macos_enrich::enrich_frameworks(input_dir, output_dir, only)?;
+    let enriched = apianyware_enrich::enrich_frameworks(input_dir, output_dir, only)?;
 
     tracing::info!(frameworks = enriched.len(), "enrichment complete");
 

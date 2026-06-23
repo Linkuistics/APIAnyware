@@ -49,7 +49,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use apianyware_macos_types::ir::Framework;
+use apianyware_types::ir::Framework;
 
 /// The runtime-owned root class every chain bottoms out in (`ns:ns-object`,
 /// carrying the foreign `ptr`). Defined once in the runtime (leaf 050); the
@@ -196,7 +196,7 @@ fn resolve_parent(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Class;
+    use apianyware_types::ir::Class;
 
     fn cls(name: &str, superclass: &str) -> Class {
         Class {

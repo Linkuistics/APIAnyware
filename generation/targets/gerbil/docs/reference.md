@@ -388,7 +388,7 @@ kernel embed, no whole-program compile, no collision probe.
 Dev-repro for one app:
 
 ```sh
-cargo run --release --example bundle_app -p apianyware-macos-bundle-gerbil -- <script-name>
+cargo run --release --example bundle_app -p apianyware-bundle-gerbil -- <script-name>
 # → generation/targets/gerbil/apps/<script>/build/<App Name>.app
 ```
 

@@ -20,9 +20,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use apianyware_macos_bundle_chez::{
-    bundle_app, compute_collisions, AppSpec, BundleError, Collisions,
-};
+use apianyware_bundle_chez::{bundle_app, compute_collisions, AppSpec, BundleError, Collisions};
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -59,7 +57,7 @@ fn chez_runtime_present() -> bool {
 /// exactly the spike's 4 names, mapped to the right facades (spec §3, the
 /// regression anchor for leaf 020). Heavy: the probe expands the whole
 /// AppKit facade closure (~75s), so it is `#[ignore]`d — run with
-/// `cargo test -p apianyware-macos-bundle-chez -- --ignored
+/// `cargo test -p apianyware-bundle-chez -- --ignored
 /// computes_hello_window_collision_set`. The probe is pure (no `.so`
 /// writes), so running it against the source tree leaves it untouched.
 #[test]

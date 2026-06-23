@@ -9,7 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_bundle_racket::{bundle_app_with_entry, AppSpec};
+use apianyware_bundle_racket::{bundle_app_with_entry, AppSpec};
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

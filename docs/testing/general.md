@@ -136,7 +136,7 @@ If TestAnyware has a bug or missing feature during testing:
 4. Restart server: `../TestAnyware/.build/debug/testanyware vm stop && ../TestAnyware/.build/debug/testanyware vm start`
 5. Continue testing
 
-Keep fixes focused. Commit TestAnyware fixes separately from APIAnyware-MacOS changes.
+Keep fixes focused. Commit TestAnyware fixes separately from APIAnyware changes.
 
 ## Testing Order
 

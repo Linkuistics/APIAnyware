@@ -12,11 +12,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
-use apianyware_macos_extract_objc::extract_declarations::{
+use apianyware_extract_objc::extract_declarations::{
     extract_from_translation_unit, ExtractionResult,
 };
-use apianyware_macos_extract_objc::{create_index, init_clang};
-use apianyware_macos_types::ir;
+use apianyware_extract_objc::{create_index, init_clang};
+use apianyware_types::ir;
 
 const FRAMEWORK_NAME: &str = "LinkageTestFW";
 

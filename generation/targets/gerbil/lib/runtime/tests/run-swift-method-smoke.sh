@@ -8,7 +8,7 @@
 # (The permanent run-smokes.sh chaining + VM-verify is the sibling leaf 020.)
 #
 # Prerequisites (run from the repo root):
-#   SDKROOT=macosx ./target/debug/apianyware-macos-generate --target gerbil \
+#   SDKROOT=macosx ./target/debug/apianyware-generate --target gerbil \
 #       --input-dir collection/ir/collected
 #   (cd swift && SDKROOT=macosx swift build --product APIAnywareGerbil)
 set -euo pipefail

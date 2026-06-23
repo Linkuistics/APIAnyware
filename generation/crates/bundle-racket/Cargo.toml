@@ -1,12 +1,12 @@
 [package]
-name = "apianyware-macos-bundle-racket"
+name = "apianyware-bundle-racket"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Bundle racket sample apps into macOS .app bundles via stub-launcher"
 
 [dependencies]
-apianyware-macos-stub-launcher.workspace = true
+apianyware-stub-launcher.workspace = true
 plist.workspace = true
 thiserror.workspace = true
 tracing.workspace = true

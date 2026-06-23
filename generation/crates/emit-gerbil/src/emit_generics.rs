@@ -32,10 +32,10 @@ use std::collections::BTreeSet;
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::enrichment::class_error_selectors;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Framework;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::enrichment::class_error_selectors;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Framework;
 
 use crate::emit_class::{class_surface_selectors, GENERICS_MODULE_IMPORT, GENERIC_IMPORT};
 use crate::protocol_registry::ProtocolRegistry;
@@ -167,8 +167,8 @@ pub fn write_global_generics_module(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Class, Method};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Class, Method};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn method(sel: &str, ret: &str) -> Method {
         Method {
@@ -300,7 +300,7 @@ mod tests {
         cls.protocols = vec!["SCNActionable".into()];
         let mut run_action = method("runAction:", "void");
         run_action.origin = Some("SCNActionable".into());
-        run_action.params = vec![apianyware_macos_types::ir::Param {
+        run_action.params = vec![apianyware_types::ir::Param {
             name: "action".into(),
             param_type: TypeRef {
                 nullable: false,
@@ -310,7 +310,7 @@ mod tests {
         cls.all_methods = vec![run_action];
 
         let mut fw = fw_with("SceneKit", vec![cls]);
-        fw.protocols = vec![apianyware_macos_types::ir::Protocol {
+        fw.protocols = vec![apianyware_types::ir::Protocol {
             name: "SCNActionable".into(),
             inherits: vec!["NSObject".into()],
             required_methods: vec![],

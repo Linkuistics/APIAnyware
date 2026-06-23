@@ -32,7 +32,7 @@
 
 ;; Standard macOS app menu (About / Hide / Quit). Bold app-name slot
 ;; in the menu bar comes from CFBundleName when launched as a .app
-;; bundle (see `apianyware-macos-bundle-racket`).
+;; bundle (see `apianyware-bundle-racket`).
 (install-standard-app-menu! app "Hello Window")
 
 ;; --- Create window (400x200, centered) ---

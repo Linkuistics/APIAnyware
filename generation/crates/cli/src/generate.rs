@@ -4,8 +4,8 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
-use apianyware_macos_emit::framework_ordering::topological_sort;
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
+use apianyware_emit::framework_ordering::topological_sort;
+use apianyware_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
 
 use crate::registry::EmitterRegistry;
 
@@ -51,7 +51,7 @@ pub fn run_generation(
     target_filter: Option<&[String]>,
 ) -> Result<Vec<GenerationSummary>> {
     // Load all enriched frameworks
-    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
 
     if frameworks.is_empty() {
         bail!("no enriched IR found in {}", input_dir.display());
@@ -109,10 +109,9 @@ pub fn run_generation(
         // other target uses the registry instance unchanged.
         let gerbil_configured;
         let sbcl_configured;
-        let active: &dyn TargetEmitter = if info.id
-            == apianyware_macos_emit_gerbil::GERBIL_TARGET_INFO.id
+        let active: &dyn TargetEmitter = if info.id == apianyware_emit_gerbil::GERBIL_TARGET_INFO.id
         {
-            let reg = apianyware_macos_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
+            let reg = apianyware_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
                 &ordered_frameworks,
             );
             // Protocol-inheritance registry (leaf 120): the same whole-program
@@ -120,36 +119,32 @@ pub fn run_generation(
             // conformance closure follows protocol `inherits` edges that cross
             // frameworks.
             let protos =
-                    apianyware_macos_emit_gerbil::protocol_registry::ProtocolRegistry::from_framework_refs(
-                        &ordered_frameworks,
-                    );
+                apianyware_emit_gerbil::protocol_registry::ProtocolRegistry::from_framework_refs(
+                    &ordered_frameworks,
+                );
             // Same whole-program shape: the shared global generics module
             // (`generics.ss`) holds one `:std/generic` generic per distinct
             // instance-surface selector across every framework, so a selector
             // shared by unrelated classes is one generic they all extend
             // (cross-module unification fix). Written once, here.
-            apianyware_macos_emit_gerbil::write_global_generics_module(
-                &ordered_frameworks,
-                &out_dir,
-            )?;
-            gerbil_configured =
-                apianyware_macos_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
+            apianyware_emit_gerbil::write_global_generics_module(&ordered_frameworks, &out_dir)?;
+            gerbil_configured = apianyware_emit_gerbil::GerbilEmitter::with_registries(reg, protos);
             &gerbil_configured
-        } else if info.id == apianyware_macos_emit_sbcl::SBCL_TARGET_INFO.id {
+        } else if info.id == apianyware_emit_sbcl::SBCL_TARGET_INFO.id {
             // SBCL takes the same whole-program registries (ADR-0034 §1 metaclass
             // graph crosses frameworks; conformed-protocol flattening follows
             // cross-framework protocol `inherits` edges) — but **no** global
             // generics module: a CL package unifies one `(defgeneric ns:<sel> …)`
             // across files for free, so SBCL needs no gerbil-style `generics.ss`
             // (ADR-0034 §3). The configured emitter is otherwise the gerbil shape.
-            let reg = apianyware_macos_emit_sbcl::class_graph::ClassRegistry::from_framework_refs(
+            let reg = apianyware_emit_sbcl::class_graph::ClassRegistry::from_framework_refs(
                 &ordered_frameworks,
             );
             let protos =
-                apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry::from_framework_refs(
+                apianyware_emit_sbcl::protocol_registry::ProtocolRegistry::from_framework_refs(
                     &ordered_frameworks,
                 );
-            sbcl_configured = apianyware_macos_emit_sbcl::SbclEmitter::with_registries(reg, protos);
+            sbcl_configured = apianyware_emit_sbcl::SbclEmitter::with_registries(reg, protos);
             &sbcl_configured
         } else {
             *emitter
@@ -196,12 +191,12 @@ pub fn run_generation(
 /// the mapper here is [`RacketFfiTypeMapper`] (not the ffi2 one): `native_dispatch`
 /// parses `_id`/`_uint64`/`_NSRect` tokens and collapses pointer-likes itself.
 pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<usize> {
-    use apianyware_macos_emit::ffi_type_mapping::RacketFfiTypeMapper;
-    use apianyware_macos_emit_racket::native_dispatch::{
+    use apianyware_emit::ffi_type_mapping::RacketFfiTypeMapper;
+    use apianyware_emit_racket::native_dispatch::{
         collect_global_signatures, generate_dispatch_swift,
     };
 
-    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
     if frameworks.is_empty() {
         bail!("no enriched IR found in {}", input_dir.display());
     }
@@ -234,11 +229,9 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
 /// reports what was bound and what was not (spec §5, "defer nothing, but be
 /// honest"). Returns the number of trampoline entries written.
 pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
-    use apianyware_macos_emit_racket::trampoline::{
-        collect_trampolines, generate_trampolines_swift,
-    };
+    use apianyware_emit_racket::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
     if frameworks.is_empty() {
         bail!("no enriched IR found in {}", input_dir.display());
     }
@@ -282,9 +275,9 @@ pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
 /// as deferred with a reason; the per-reason counts are logged (spec §5). Returns
 /// the number of trampoline entries written.
 pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
-    use apianyware_macos_emit_chez::trampoline::{collect_trampolines, generate_trampolines_swift};
+    use apianyware_emit_chez::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
     if frameworks.is_empty() {
         bail!("no enriched IR found in {}", input_dir.display());
     }
@@ -335,11 +328,9 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
 /// deferred with a reason; the per-reason counts are logged (spec §5). Returns the
 /// number of trampoline entries written.
 pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
-    use apianyware_macos_emit_gerbil::trampoline::{
-        collect_trampolines, generate_trampolines_swift,
-    };
+    use apianyware_emit_gerbil::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
     if frameworks.is_empty() {
         bail!("no enriched IR found in {}", input_dir.display());
     }
@@ -386,9 +377,9 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
 /// deferred with a reason; the per-reason counts are logged (spec §5). Returns the number
 /// of trampoline entries written.
 pub fn run_sbcl_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
-    use apianyware_macos_emit_sbcl::trampoline::{collect_trampolines, generate_trampolines_swift};
+    use apianyware_emit_sbcl::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_macos_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
     if frameworks.is_empty() {
         bail!("no enriched IR found in {}", input_dir.display());
     }
@@ -423,9 +414,9 @@ pub fn run_sbcl_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
-    use apianyware_macos_types::ir::{Class, Framework, Method};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_emit::test_fixtures::build_snapshot_test_framework;
+    use apianyware_types::ir::{Class, Framework, Method};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     /// **The §6d invariant** (ADR-0038 §7 / racket spec §6d) — the hard done-bar for the
     /// sbcl trampoline leaf (`040/050`). The Swift-native residual is a deterministic
@@ -439,22 +430,21 @@ mod tests {
     /// the release gate, exactly as the racket snapshot tests gate on local IR).
     #[test]
     fn sbcl_residual_reproduces_the_6d_invariant() {
-        use apianyware_macos_emit_sbcl::trampoline::collect_trampolines;
+        use apianyware_emit_sbcl::trampoline::collect_trampolines;
 
         // The enriched IR lives at the workspace root, three levels up from this crate.
         let enriched = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../analysis/ir/enriched");
-        let frameworks =
-            match apianyware_macos_datalog::loading::load_all_frameworks(&enriched, None) {
-                Ok(fws) if !fws.is_empty() => fws,
-                _ => {
-                    eprintln!(
-                        "SKIP sbcl_residual_reproduces_the_6d_invariant: no enriched IR at {} \
+        let frameworks = match apianyware_datalog::loading::load_all_frameworks(&enriched, None) {
+            Ok(fws) if !fws.is_empty() => fws,
+            _ => {
+                eprintln!(
+                    "SKIP sbcl_residual_reproduces_the_6d_invariant: no enriched IR at {} \
                          (gitignored — run the regeneration pipeline to exercise this gate)",
-                        enriched.display()
-                    );
-                    return;
-                }
-            };
+                    enriched.display()
+                );
+                return;
+            }
+        };
 
         let set = collect_trampolines(&frameworks);
         assert_eq!(set.functions.len(), 51, "function trampolines (§6d)");
@@ -470,7 +460,7 @@ mod tests {
     #[test]
     fn sbcl_run_trampolines_reproduces_6d_end_to_end() {
         let enriched = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../analysis/ir/enriched");
-        if apianyware_macos_datalog::loading::load_all_frameworks(&enriched, None)
+        if apianyware_datalog::loading::load_all_frameworks(&enriched, None)
             .map(|f| f.is_empty())
             .unwrap_or(true)
         {

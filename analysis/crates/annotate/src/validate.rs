@@ -2,7 +2,7 @@
 //!
 //! Disagreements are surfaced for human review. Agreements increase confidence.
 
-use apianyware_macos_types::annotation::{
+use apianyware_types::annotation::{
     AnnotationDisagreement, AnnotationOverride, AnnotationOverrides, AnnotationSource,
     BlockInvocationStyle, ErrorPattern, MethodAnnotation, OwnershipKind, ThreadingConstraint,
 };
@@ -243,7 +243,7 @@ pub fn apply_overrides(annotation: &mut MethodAnnotation, overrides: &[Annotatio
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::annotation::*;
+    use apianyware_types::annotation::*;
 
     fn make_annotation(
         selector: &str,

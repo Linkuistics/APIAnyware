@@ -87,7 +87,7 @@
 regression anchor for the per-app portfolio.
 
 **Build.** `cargo run --release --example bundle_app -p
-apianyware-macos-bundle-chez -- hello-window`. Fresh build (prior `030`/spike
+apianyware-bundle-chez -- hello-window`. Fresh build (prior `030`/spike
 output removed first). Output: `Hello Window.app`, **4.5 MB** total (3.5 MB
 `Contents/Resources/hello-window.boot` whole-program boot + 164 KB bundled
 `libAPIAnywareChez.dylib`), bundle id `com.linkuistics.HelloWindow`, signed

@@ -33,7 +33,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use apianyware_macos_types::ir::Framework;
+use apianyware_types::ir::Framework;
 
 use crate::class_graph::RUNTIME_ROOT;
 

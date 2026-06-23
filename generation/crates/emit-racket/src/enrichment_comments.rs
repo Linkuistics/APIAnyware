@@ -12,7 +12,7 @@
 
 use std::collections::BTreeMap;
 
-use apianyware_macos_types::enrichment::{
+use apianyware_types::enrichment::{
     BlockMethodEntry, ClassSelectorEntry, EnrichmentData, WeakParamEntry,
 };
 

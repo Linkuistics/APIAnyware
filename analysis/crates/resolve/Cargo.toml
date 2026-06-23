@@ -1,13 +1,13 @@
 [package]
-name = "apianyware-macos-resolve"
+name = "apianyware-resolve"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Datalog pass 1: inheritance resolution, effective methods, ownership families"
 
 [dependencies]
-apianyware-macos-types.workspace = true
-apianyware-macos-datalog.workspace = true
+apianyware-types.workspace = true
+apianyware-datalog.workspace = true
 ascent.workspace = true
 serde.workspace = true
 serde_json.workspace = true

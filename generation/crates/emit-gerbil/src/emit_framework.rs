@@ -19,11 +19,11 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::enrichment::class_error_selectors;
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Framework;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::enrichment::class_error_selectors;
+use apianyware_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
+use apianyware_emit::write_line;
+use apianyware_types::ir::Framework;
 
 use crate::class_graph::{build_class_graph, ClassRegistry, ParentRef};
 use crate::emit_class::{
@@ -391,7 +391,7 @@ fn generate_facade_file(framework: &str, submodules: &[SubModule]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Framework;
+    use apianyware_types::ir::Framework;
 
     fn make_minimal_framework(name: &str) -> Framework {
         Framework {
@@ -470,8 +470,8 @@ mod tests {
         assert!(body.contains("nswindow-title"));
     }
 
-    fn class_with(name: &str, superclass: &str) -> apianyware_macos_types::ir::Class {
-        apianyware_macos_types::ir::Class {
+    fn class_with(name: &str, superclass: &str) -> apianyware_types::ir::Class {
+        apianyware_types::ir::Class {
             name: name.into(),
             superclass: superclass.into(),
             protocols: vec![],
@@ -546,9 +546,9 @@ mod tests {
         assert!(leaf.contains(":gerbil-bindings/widgets/mid"));
     }
 
-    fn method(sel: &str, ret: &str) -> apianyware_macos_types::ir::Method {
-        use apianyware_macos_types::ir::Method;
-        use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    fn method(sel: &str, ret: &str) -> apianyware_types::ir::Method {
+        use apianyware_types::ir::Method;
+        use apianyware_types::type_ref::{TypeRef, TypeRefKind};
         Method {
             selector: sel.into(),
             class_method: false,
@@ -573,8 +573,8 @@ mod tests {
         }
     }
 
-    fn protocol(name: &str, optional: Vec<apianyware_macos_types::ir::Method>) -> Protocol {
-        use apianyware_macos_types::ir::Protocol as P;
+    fn protocol(name: &str, optional: Vec<apianyware_types::ir::Method>) -> Protocol {
+        use apianyware_types::ir::Protocol as P;
         P {
             name: name.into(),
             inherits: vec![],
@@ -588,7 +588,7 @@ mod tests {
         }
     }
 
-    use apianyware_macos_types::ir::Protocol;
+    use apianyware_types::ir::Protocol;
 
     #[test]
     fn framework_with_protocol_writes_under_protocols_subdir() {
@@ -666,8 +666,8 @@ mod tests {
 
     #[test]
     fn emits_data_modules_and_reexports_them() {
-        use apianyware_macos_types::ir::{Constant, Enum, EnumValue, Function};
-        use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+        use apianyware_types::ir::{Constant, Enum, EnumValue, Function};
+        use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
         let tmp = tempfile::tempdir().unwrap();
         let mut fw = make_minimal_framework("TestKit");

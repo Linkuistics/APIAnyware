@@ -44,7 +44,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use apianyware_macos_types::ir::Framework;
+use apianyware_types::ir::Framework;
 
 /// The runtime-owned root class every chain bottoms out in. Defined once in the
 /// runtime module (leaf 050); the emitter references it but never defines it.
@@ -190,7 +190,7 @@ fn resolve_parent(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Class;
+    use apianyware_types::ir::Class;
 
     fn cls(name: &str, superclass: &str) -> Class {
         Class {

@@ -95,26 +95,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
-name = "apianyware-macos-analyze"
+name = "apianyware-analyze"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-annotate",
- "apianyware-macos-enrich",
- "apianyware-macos-resolve",
- "apianyware-macos-types",
+ "apianyware-annotate",
+ "apianyware-enrich",
+ "apianyware-resolve",
+ "apianyware-types",
  "clap",
  "tracing",
  "tracing-subscriber",
 ]
 
 [[package]]
-name = "apianyware-macos-annotate"
+name = "apianyware-annotate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-datalog",
- "apianyware-macos-types",
+ "apianyware-datalog",
+ "apianyware-types",
  "serde",
  "serde_json",
  "thiserror",
@@ -122,10 +122,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-bundle-chez"
+name = "apianyware-bundle-chez"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-stub-launcher",
+ "apianyware-stub-launcher",
  "plist",
  "tempfile",
  "thiserror",
@@ -133,10 +133,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-bundle-gerbil"
+name = "apianyware-bundle-gerbil"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-stub-launcher",
+ "apianyware-stub-launcher",
  "plist",
  "tempfile",
  "thiserror",
@@ -144,10 +144,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-bundle-racket"
+name = "apianyware-bundle-racket"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-stub-launcher",
+ "apianyware-stub-launcher",
  "plist",
  "tempfile",
  "thiserror",
@@ -155,10 +155,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-bundle-sbcl"
+name = "apianyware-bundle-sbcl"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-stub-launcher",
+ "apianyware-stub-launcher",
  "plist",
  "tempfile",
  "thiserror",
@@ -166,13 +166,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-collect"
+name = "apianyware-collect"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-extract-objc",
- "apianyware-macos-extract-swift",
- "apianyware-macos-types",
+ "apianyware-extract-objc",
+ "apianyware-extract-swift",
+ "apianyware-types",
  "clap",
  "serde_json",
  "tracing",
@@ -180,11 +180,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-datalog"
+name = "apianyware-datalog"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-types",
+ "apianyware-types",
  "ascent",
  "serde",
  "serde_json",
@@ -192,10 +192,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-emit"
+name = "apianyware-emit"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-types",
+ "apianyware-types",
  "serde",
  "serde_json",
  "tempfile",
@@ -203,52 +203,52 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-emit-chez"
+name = "apianyware-emit-chez"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-emit",
- "apianyware-macos-types",
+ "apianyware-emit",
+ "apianyware-types",
  "serde_json",
  "tempfile",
 ]
 
 [[package]]
-name = "apianyware-macos-emit-gerbil"
+name = "apianyware-emit-gerbil"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-emit",
- "apianyware-macos-types",
+ "apianyware-emit",
+ "apianyware-types",
  "serde_json",
  "tempfile",
 ]
 
 [[package]]
-name = "apianyware-macos-emit-racket"
+name = "apianyware-emit-racket"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-emit",
- "apianyware-macos-types",
+ "apianyware-emit",
+ "apianyware-types",
  "serde_json",
  "tempfile",
 ]
 
 [[package]]
-name = "apianyware-macos-emit-sbcl"
+name = "apianyware-emit-sbcl"
 version = "0.1.0"
 dependencies = [
- "apianyware-macos-emit",
- "apianyware-macos-types",
+ "apianyware-emit",
+ "apianyware-types",
  "serde_json",
  "tempfile",
 ]
 
 [[package]]
-name = "apianyware-macos-enrich"
+name = "apianyware-enrich"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-datalog",
- "apianyware-macos-types",
+ "apianyware-datalog",
+ "apianyware-types",
  "ascent",
  "serde",
  "serde_json",
@@ -256,11 +256,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-extract-objc"
+name = "apianyware-extract-objc"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-types",
+ "apianyware-types",
  "chrono",
  "clang",
  "serde",
@@ -269,11 +269,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-extract-swift"
+name = "apianyware-extract-swift"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-types",
+ "apianyware-types",
  "chrono",
  "serde",
  "serde_json",
@@ -281,17 +281,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-generate"
+name = "apianyware-generate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-datalog",
- "apianyware-macos-emit",
- "apianyware-macos-emit-chez",
- "apianyware-macos-emit-gerbil",
- "apianyware-macos-emit-racket",
- "apianyware-macos-emit-sbcl",
- "apianyware-macos-types",
+ "apianyware-datalog",
+ "apianyware-emit",
+ "apianyware-emit-chez",
+ "apianyware-emit-gerbil",
+ "apianyware-emit-racket",
+ "apianyware-emit-sbcl",
+ "apianyware-types",
  "clap",
  "serde_json",
  "tempfile",
@@ -300,12 +300,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-resolve"
+name = "apianyware-resolve"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "apianyware-macos-datalog",
- "apianyware-macos-types",
+ "apianyware-datalog",
+ "apianyware-types",
  "ascent",
  "serde",
  "serde_json",
@@ -313,7 +313,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-stub-launcher"
+name = "apianyware-stub-launcher"
 version = "0.1.0"
 dependencies = [
  "tempfile",
@@ -322,7 +322,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "apianyware-macos-types"
+name = "apianyware-types"
 version = "0.1.0"
 dependencies = [
  "serde",

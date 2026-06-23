@@ -9,13 +9,13 @@
 
 use std::collections::HashSet;
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::ffi_type_mapping::{FfiTypeMapper, RacketFfiTypeMapper};
-use apianyware_macos_emit::naming::{camel_to_kebab, class_name_to_lowercase};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::enrichment::EnrichmentData;
-use apianyware_macos_types::ir::{Class, Method, Param, Property, Struct};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::ffi_type_mapping::{FfiTypeMapper, RacketFfiTypeMapper};
+use apianyware_emit::naming::{camel_to_kebab, class_name_to_lowercase};
+use apianyware_emit::write_line;
+use apianyware_types::enrichment::EnrichmentData;
+use apianyware_types::ir::{Class, Method, Param, Property, Struct};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::emit_functions::map_contract;
 use crate::enrichment_comments::EnrichmentNotes;
@@ -1288,8 +1288,7 @@ fn emit_typed_constructor(
         None => {
             let inline_name = format!(
                 "_msg-{}",
-                apianyware_macos_emit::naming::selector_to_kebab_name(&method.selector)
-                    .replace('-', "_")
+                apianyware_emit::naming::selector_to_kebab_name(&method.selector).replace('-', "_")
             );
             write_line!(w, "  (let ([{}", inline_name);
             w.raw("         (get-ffi-obj \"objc_msgSend\" _objc-lib\n");
@@ -1942,8 +1941,8 @@ fn emit_error_out_body(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Param;
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::Param;
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     #[test]
     fn test_format_tell_args_no_params() {
@@ -2100,7 +2099,7 @@ mod tests {
     /// Swift-native method is suppressed (no binding, and crucially no msgSend).
     #[test]
     fn swift_native_method_routes_to_trampoline_not_msgsend() {
-        use apianyware_macos_types::ir::SwiftFnInfo;
+        use apianyware_types::ir::SwiftFnInfo;
         let swift_method = |selector: &str, info: SwiftFnInfo| Method {
             selector: selector.to_string(),
             class_method: false,
@@ -2185,7 +2184,7 @@ mod tests {
 
     #[test]
     fn nserror_out_param_method_emits_values_wrapper() {
-        use apianyware_macos_types::enrichment::{ClassSelectorEntry, EnrichmentData};
+        use apianyware_types::enrichment::{ClassSelectorEntry, EnrichmentData};
 
         // `-loadResource:error:` → BOOL, trailing `NSError **` (a Pointer named
         // "error"). The enrichment classifies it as an NSError out-param.
@@ -3433,7 +3432,7 @@ mod tests {
 
     #[test]
     fn test_enrichment_async_block_note_precedes_define() {
-        use apianyware_macos_types::enrichment::{BlockMethodEntry, EnrichmentData};
+        use apianyware_types::enrichment::{BlockMethodEntry, EnrichmentData};
 
         let cls = Class {
             name: "TKLoader".to_string(),
@@ -3491,7 +3490,7 @@ mod tests {
 
     #[test]
     fn test_enrichment_unannotated_method_gets_no_note() {
-        use apianyware_macos_types::enrichment::EnrichmentData;
+        use apianyware_types::enrichment::EnrichmentData;
 
         let cls = Class {
             name: "TKLoader".to_string(),
@@ -3522,7 +3521,7 @@ mod tests {
 
     #[test]
     fn test_enrichment_main_thread_header_comment() {
-        use apianyware_macos_types::enrichment::EnrichmentData;
+        use apianyware_types::enrichment::EnrichmentData;
 
         let cls = Class {
             name: "TKView".to_string(),

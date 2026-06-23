@@ -1,13 +1,13 @@
 [package]
-name = "apianyware-macos-emit-sbcl"
+name = "apianyware-emit-sbcl"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "SBCL (Common Lisp) code generation: CLOS surface over an sb-alien objc_msgSend seam, ObjC projected into CLOS via the MOP (objc-class metaclass), Swift-native residual via libAPIAnywareSbcl trampolines"
 
 [dependencies]
-apianyware-macos-types.workspace = true
-apianyware-macos-emit.workspace = true
+apianyware-types.workspace = true
+apianyware-emit.workspace = true
 
 [dev-dependencies]
 tempfile = "3"

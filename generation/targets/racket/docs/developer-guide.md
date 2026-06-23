@@ -647,7 +647,7 @@ Two reasons a `racket script.rkt` invocation is not production-ready:
 ### Building a bundle
 
 ```sh
-cargo run --example bundle_app -p apianyware-macos-bundle-racket -- hello-window
+cargo run --example bundle_app -p apianyware-bundle-racket -- hello-window
 # → generation/targets/racket/apps/hello-window/build/Hello Window.app
 ```
 

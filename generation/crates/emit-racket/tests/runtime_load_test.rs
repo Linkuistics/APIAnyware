@@ -32,9 +32,9 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use apianyware_macos_emit::target_emitter::TargetEmitter;
-use apianyware_macos_emit_racket::emit_framework::RacketEmitter;
-use apianyware_macos_types::ir::Framework;
+use apianyware_emit::target_emitter::TargetEmitter;
+use apianyware_emit_racket::emit_framework::RacketEmitter;
+use apianyware_types::ir::Framework;
 
 const RUNTIME_FILES: &[&str] = &[
     "app-menu.rkt",

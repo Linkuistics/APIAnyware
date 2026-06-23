@@ -7,7 +7,7 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_types::Framework;
+use apianyware_types::Framework;
 
 /// Metadata about a target target emitter.
 pub struct TargetInfo {

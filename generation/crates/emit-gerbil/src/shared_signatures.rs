@@ -20,9 +20,9 @@
 //! crossing per distinct key — the compiled-FFI analogue of chez's per-signature
 //! `foreign-procedure` sharing (ADR-0015/0017).
 
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_types::ir::Param;
-use apianyware_macos_types::type_ref::TypeRef;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_types::ir::Param;
+use apianyware_types::type_ref::TypeRef;
 
 use crate::ffi_type_mapping::POINTER;
 
@@ -86,8 +86,8 @@ pub fn msgsend_arg_tokens(params: &[Param], mapper: &dyn FfiTypeMapper) -> Vec<S
 mod tests {
     use super::*;
     use crate::ffi_type_mapping::GerbilFfiTypeMapper;
-    use apianyware_macos_types::ir::Param;
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::Param;
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn param(kind: TypeRefKind) -> Param {
         Param {

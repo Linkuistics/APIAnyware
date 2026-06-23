@@ -9,7 +9,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use apianyware_macos_stub_launcher::codesign_path;
+use apianyware_stub_launcher::codesign_path;
 use plist::Value as PlistValue;
 
 use crate::bundle::{AppSpec, BundleError};

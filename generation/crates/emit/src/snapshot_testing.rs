@@ -7,7 +7,7 @@
 //! # Usage
 //!
 //! ```no_run
-//! use apianyware_macos_emit::snapshot_testing::GoldenTest;
+//! use apianyware_emit::snapshot_testing::GoldenTest;
 //! # use std::path::Path;
 //!
 //! let golden_test = GoldenTest::new(Path::new("tests/golden"), "racket");

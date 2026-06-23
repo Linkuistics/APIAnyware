@@ -8,12 +8,12 @@ use std::collections::HashSet;
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use apianyware_macos_types::annotation::PatternStereotype;
-use apianyware_macos_types::enrichment::{
+use apianyware_types::annotation::PatternStereotype;
+use apianyware_types::enrichment::{
     BlockMethodEntry, ClassSelectorEntry, EnrichmentData, ScopedResourceEntry, VerificationReport,
     Violation, WeakParamEntry,
 };
-use apianyware_macos_types::ir::Framework;
+use apianyware_types::ir::Framework;
 
 use crate::program::EnrichmentProgram;
 
@@ -393,7 +393,7 @@ fn extract_scoped_resources(framework: &Framework) -> Vec<ScopedResourceEntry> {
 ///
 /// Looks for `open`/`close`, `begin`/`end`, `lock`/`unlock`, or `enable`/`disable` keys.
 fn extract_scoped_resource_from_pattern(
-    pattern: &apianyware_macos_types::annotation::ApiPattern,
+    pattern: &apianyware_types::annotation::ApiPattern,
 ) -> Option<ScopedResourceEntry> {
     let participants = &pattern.participants;
 
@@ -464,12 +464,12 @@ fn extract_delegate_protocol_name(pattern_name: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::annotation::{
+    use apianyware_types::annotation::{
         AnnotationSource, ApiPattern, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations,
         MethodAnnotation, OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype,
     };
-    use apianyware_macos_types::ir::{Class, Method, Protocol};
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::ir::{Class, Method, Protocol};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     use crate::fact_loader::load_framework_facts;
 

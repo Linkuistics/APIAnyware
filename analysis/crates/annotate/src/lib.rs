@@ -25,11 +25,11 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use apianyware_macos_datalog::loading;
-use apianyware_macos_types::annotation::{
+use apianyware_datalog::loading;
+use apianyware_types::annotation::{
     AnnotationOverrides, ClassAnnotations, FrameworkAnnotations, MethodAnnotation,
 };
-use apianyware_macos_types::ir::Framework;
+use apianyware_types::ir::Framework;
 
 /// Annotate all resolved frameworks: load, run heuristics, merge with existing LLM annotations.
 ///
@@ -170,8 +170,8 @@ pub fn annotate_framework(
 /// Run heuristics on a class method, merge with its LLM annotation if
 /// available, and push to results.
 fn annotate_and_push(
-    class: &apianyware_macos_types::ir::Class,
-    method: &apianyware_macos_types::ir::Method,
+    class: &apianyware_types::ir::Class,
+    method: &apianyware_types::ir::Method,
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
 ) {
@@ -182,8 +182,8 @@ fn annotate_and_push(
 /// Run heuristics on a protocol method, merge with its LLM annotation if
 /// available, and push to results.
 fn annotate_protocol_method_and_push(
-    protocol: &apianyware_macos_types::ir::Protocol,
-    method: &apianyware_macos_types::ir::Method,
+    protocol: &apianyware_types::ir::Protocol,
+    method: &apianyware_types::ir::Method,
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
 ) {
@@ -196,7 +196,7 @@ fn annotate_protocol_method_and_push(
 /// protocol name — and push the merged result.
 fn merge_and_push(
     receiver_name: &str,
-    method: &apianyware_macos_types::ir::Method,
+    method: &apianyware_types::ir::Method,
     heuristic: MethodAnnotation,
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
@@ -270,8 +270,8 @@ fn retain_llm_sourced(classes: Vec<ClassAnnotations>) -> Vec<ClassAnnotations> {
             class.methods.retain(|m| {
                 matches!(
                     m.source,
-                    apianyware_macos_types::annotation::AnnotationSource::Llm
-                        | apianyware_macos_types::annotation::AnnotationSource::HumanReviewed
+                    apianyware_types::annotation::AnnotationSource::Llm
+                        | apianyware_types::annotation::AnnotationSource::HumanReviewed
                 )
             });
             if class.methods.is_empty() {
@@ -328,7 +328,7 @@ fn write_annotated_checkpoint(framework: &Framework, output_dir: &Path) -> Resul
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::annotation::AnnotationSource;
+    use apianyware_types::annotation::AnnotationSource;
 
     fn method(selector: &str, source: AnnotationSource) -> MethodAnnotation {
         MethodAnnotation {
@@ -491,8 +491,8 @@ mod tests {
     /// Build a framework whose only API is one protocol with one block method —
     /// the CoreTransferable shape (zero classes, protocol-only surface).
     fn protocol_only_framework() -> Framework {
-        use apianyware_macos_types::ir::{Method as IrMethod, Param, Protocol};
-        use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+        use apianyware_types::ir::{Method as IrMethod, Param, Protocol};
+        use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
         let block_method = IrMethod {
             selector: "enumerateItemsUsingBlock:".to_string(),

@@ -82,7 +82,7 @@ SEL-arg menu init (`:action "terminate:"`, ADR-0040 typed applier) hello-window 
    ladder app to dump+revive **with** the dylib — `save-lisp-and-die` keeps the dylib in
    `*shared-objects*`, the revived image auto-reopens it, and all five `aw_sbcl_*` shapes
    re-link + return correct values (the §6d residual surviving the dump, ADR-0038 §5).
-3. **Emitter regression** (`cargo test -p apianyware-macos-emit-sbcl`): green, incl. the new
+3. **Emitter regression** (`cargo test -p apianyware-emit-sbcl`): green, incl. the new
    CL-reserved-formal naming test; the TestKit/Foundation goldens are unchanged.
 
 ## Forcing-function findings (surfaced by being the first app to load a `functions.lisp`)

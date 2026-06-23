@@ -6,7 +6,7 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use apianyware_macos_types::Framework;
+use apianyware_types::Framework;
 
 /// Sort frameworks in dependency order (dependencies before dependents).
 ///

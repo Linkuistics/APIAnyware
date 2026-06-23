@@ -20,15 +20,15 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use apianyware_macos_emit::target_emitter::TargetEmitter;
-use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
-use apianyware_macos_emit_sbcl::class_graph::ClassRegistry;
-use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
-use apianyware_macos_emit_sbcl::SbclEmitter;
-use apianyware_macos_types::ir::{
+use apianyware_emit::target_emitter::TargetEmitter;
+use apianyware_emit::test_fixtures::build_snapshot_test_framework;
+use apianyware_emit_sbcl::class_graph::ClassRegistry;
+use apianyware_emit_sbcl::protocol_registry::ProtocolRegistry;
+use apianyware_emit_sbcl::SbclEmitter;
+use apianyware_types::ir::{
     Class, Constant, Framework, Function, Method, Param, Struct, SwiftFnInfo,
 };
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 fn emit(fw: &Framework) -> tempfile::TempDir {
     let emitter = SbclEmitter::with_registries(

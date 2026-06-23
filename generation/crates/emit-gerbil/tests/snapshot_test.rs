@@ -16,22 +16,22 @@
 //!      bootstrap/refresh the goldens with `UPDATE_GOLDEN=1`.
 //!
 //! To update golden files after intentional emitter changes:
-//!   UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-gerbil --test snapshot_test
+//!   UPDATE_GOLDEN=1 cargo test -p apianyware-emit-gerbil --test snapshot_test
 
 use std::path::PathBuf;
 
-use apianyware_macos_emit::snapshot_testing::GoldenTest;
-use apianyware_macos_emit::target_emitter::TargetEmitter;
-use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
-use apianyware_macos_emit_gerbil::class_graph::ClassRegistry;
-use apianyware_macos_emit_gerbil::protocol_registry::ProtocolRegistry;
-use apianyware_macos_emit_gerbil::{write_global_generics_module, GerbilEmitter};
+use apianyware_emit::snapshot_testing::GoldenTest;
+use apianyware_emit::target_emitter::TargetEmitter;
+use apianyware_emit::test_fixtures::build_snapshot_test_framework;
+use apianyware_emit_gerbil::class_graph::ClassRegistry;
+use apianyware_emit_gerbil::protocol_registry::ProtocolRegistry;
+use apianyware_emit_gerbil::{write_global_generics_module, GerbilEmitter};
 
 /// Build the emitter exactly as the CLI pre-pass does (leaf 060/120): with the
 /// whole-program class + protocol registries over the frameworks under test, so
 /// the goldens capture what the real pipeline emits (cross-framework parents +
 /// conformed-protocol method flattening).
-fn pipeline_emitter(frameworks: &[&apianyware_macos_types::ir::Framework]) -> GerbilEmitter {
+fn pipeline_emitter(frameworks: &[&apianyware_types::ir::Framework]) -> GerbilEmitter {
     GerbilEmitter::with_registries(
         ClassRegistry::from_framework_refs(frameworks),
         ProtocolRegistry::from_framework_refs(frameworks),
@@ -100,7 +100,7 @@ fn snapshot_gerbil_testkit() {
     if let Err(mismatch) = golden_test.assert_matches(temp_dir.path()) {
         panic!(
             "Gerbil TestKit snapshot mismatch.\n\
-             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-gerbil --test snapshot_test` \
+             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-emit-gerbil --test snapshot_test` \
              to accept.\n\n{mismatch}"
         );
     }
@@ -108,7 +108,7 @@ fn snapshot_gerbil_testkit() {
 
 /// Load a real enriched IR framework from the analysis pipeline output, or `None`
 /// if it is not present locally (the IR is gitignored).
-fn load_enriched_framework(name: &str) -> Option<apianyware_macos_types::ir::Framework> {
+fn load_enriched_framework(name: &str) -> Option<apianyware_types::ir::Framework> {
     let enriched_dir = crate_root()
         .parent() // emit-gerbil → crates
         .and_then(|p| p.parent()) // crates → generation
@@ -170,7 +170,7 @@ fn snapshot_gerbil_foundation_subset() {
     {
         panic!(
             "Gerbil Foundation snapshot mismatch.\n\
-             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-macos-emit-gerbil --test snapshot_test` \
+             Run `UPDATE_GOLDEN=1 cargo test -p apianyware-emit-gerbil --test snapshot_test` \
              to accept.\n\n{mismatch}"
         );
     }

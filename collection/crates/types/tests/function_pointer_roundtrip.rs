@@ -1,6 +1,6 @@
 //! Tests: round-trip serialization/deserialization of FunctionPointer TypeRefKind.
 
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 #[test]
 fn function_pointer_with_name_roundtrip() {
@@ -118,7 +118,7 @@ fn function_pointer_json_has_correct_kind_tag() {
 
 #[test]
 fn function_pointer_in_framework_roundtrip() {
-    use apianyware_macos_types::ir::{Framework, Function, Param};
+    use apianyware_types::ir::{Framework, Function, Param};
 
     let fw = Framework {
         format_version: "1.0".to_string(),

@@ -31,4 +31,4 @@ GUI testing uses TestAnyware (never run apps from the CLI — see the apps READM
 `../../test-results/swift-native-probe/screenshot.png`.
 
 Build the standalone bundle (compiles the whole closure):
-`cargo run --example bundle_app -p apianyware-macos-bundle-chez -- swift-native-probe`.
+`cargo run --example bundle_app -p apianyware-bundle-chez -- swift-native-probe`.

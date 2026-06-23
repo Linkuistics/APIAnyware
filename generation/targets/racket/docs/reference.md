@@ -724,7 +724,7 @@ golden ships neither, and 9.2 is not downloadable (§0). Working recipe (verifie
    bundle's `DEFAULT_RACKET_PATH`). Then `raco pkg install --auto --scope user
    ffi2-lib` (fetches from GitHub; VM has network).
 4. Build bundles on the host (`cargo run --example bundle_app -p
-   apianyware-macos-bundle-racket -- --all`), `tar`/`upload`/extract each `.app`,
+   apianyware-bundle-racket -- --all`), `tar`/`upload`/extract each `.app`,
    `xattr -dr com.apple.quarantine`, then `open -n --stderr <log> --stdout <log>
    "<App>.app"`. **First launch compiles the bundle's `.rkt` graph** (no `.zo`
    shipped) — allow ~25–35 s before a window appears.
@@ -746,9 +746,9 @@ shows "racket" — bundling is required for correct app identity, not optional
 polish.
 
 **The two-crate story:**
-- **`apianyware-macos-stub-launcher`** (language-agnostic) — generates the
+- **`apianyware-stub-launcher`** (language-agnostic) — generates the
   Swift stub binary, the `Info.plist`, and the `.app` skeleton.
-- **`apianyware-macos-bundle-racket`** (this language) — does a require-tree
+- **`apianyware-bundle-racket`** (this language) — does a require-tree
   BFS from the entry script to discover dependencies, copies the discovered
   files into `Resources/racket-app/<rel>` mirroring the source tree so relative
   requires resolve at runtime, and copies the optional
@@ -756,7 +756,7 @@ polish.
   script's static requires enter the bundle.
 
 **`bundle_app` CLI.** Build a bundle with
-`cargo run --example bundle_app -p apianyware-macos-bundle-racket -- <script>`
+`cargo run --example bundle_app -p apianyware-bundle-racket -- <script>`
 (or `-- --all`). Built bundles land at `apps/<name>/build/<App Name>.app`
 (gitignored). The display name is read from the H1 of
 `docs/apps/<name>/spec.md` — a kebab→title conversion produces wrong

@@ -13,7 +13,7 @@ pub mod type_mapping;
 use std::path::Path;
 
 use anyhow::Result;
-use apianyware_macos_types::ir;
+use apianyware_types::ir;
 
 use crate::digester::SwiftModuleInfo;
 

@@ -15,13 +15,13 @@
 
 use std::collections::BTreeSet;
 
-use apianyware_macos_emit_sbcl::emit_generics::{
+use apianyware_emit_sbcl::emit_generics::{
     collect_generics, render_class_dispatch_with, render_generics,
 };
-use apianyware_macos_emit_sbcl::emit_protocol::render_protocol;
-use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
-use apianyware_macos_types::ir::{Class, Framework, Method, Param, Protocol};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit_sbcl::emit_protocol::render_protocol;
+use apianyware_emit_sbcl::protocol_registry::ProtocolRegistry;
+use apianyware_types::ir::{Class, Framework, Method, Param, Protocol};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 fn ty(kind: TypeRefKind) -> TypeRef {
     TypeRef {

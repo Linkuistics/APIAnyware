@@ -3,8 +3,8 @@
 //! Usage (from workspace root):
 //!
 //! ```text
-//! cargo run --example bundle_app -p apianyware-macos-bundle-racket -- <script-name>
-//! cargo run --example bundle_app -p apianyware-macos-bundle-racket -- --all
+//! cargo run --example bundle_app -p apianyware-bundle-racket -- <script-name>
+//! cargo run --example bundle_app -p apianyware-bundle-racket -- --all
 //! ```
 //!
 //! Output: `generation/targets/racket/apps/<script-name>/build/<App Name>.app`
@@ -21,7 +21,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use apianyware_macos_bundle_racket::{bundle_app, read_display_name_from_spec, AppSpec};
+use apianyware_bundle_racket::{bundle_app, read_display_name_from_spec, AppSpec};
 
 fn main() -> ExitCode {
     let arg = std::env::args().nth(1).unwrap_or_else(|| {

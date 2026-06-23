@@ -12,7 +12,7 @@
 ;; Run unbundled with:
 ;;   chez --libdirs generation/targets/chez \
 ;;        --script generation/targets/chez/apps/ui-controls-gallery/ui-controls-gallery.sls
-;; Bundled via `cargo run --example bundle_app -p apianyware-macos-bundle-chez
+;; Bundled via `cargo run --example bundle_app -p apianyware-bundle-chez
 ;;              -- ui-controls-gallery`.
 
 (import (chezscheme)

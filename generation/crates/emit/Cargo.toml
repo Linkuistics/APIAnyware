@@ -1,12 +1,12 @@
 [package]
-name = "apianyware-macos-emit"
+name = "apianyware-emit"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Shared emitter framework: naming utilities, FFI type mapping, code writer, framework ordering, doc rendering, binding style abstractions"
 
 [dependencies]
-apianyware-macos-types.workspace = true
+apianyware-types.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

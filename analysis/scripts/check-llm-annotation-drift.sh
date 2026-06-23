@@ -41,11 +41,11 @@ fi
 
 if [[ "${skip_regen}" -eq 0 ]]; then
   if [[ ! -d "${resolved_dir}" ]]; then
-    echo "error: ${resolved_dir} missing — run \`apianyware-macos-analyze resolve\` first" >&2
+    echo "error: ${resolved_dir} missing — run \`apianyware-analyze resolve\` first" >&2
     exit 2
   fi
   echo "regenerating ${summaries_dir} from ${resolved_dir} ..."
-  cargo run -q -p apianyware-macos-analyze -- llm-extract \
+  cargo run -q -p apianyware-analyze -- llm-extract \
     --input-dir "${resolved_dir}" \
     --output-dir "${summaries_dir}"
 fi
@@ -72,7 +72,7 @@ for llm_file in "${annotations_dir}"/*.llm.json; do
     continue
   fi
 
-  if ! cargo run -q -p apianyware-macos-analyze -- llm-validate \
+  if ! cargo run -q -p apianyware-analyze -- llm-validate \
     --methods-file "${methods_file}" \
     --llm-file "${llm_file}" >/dev/null 2>&1; then
     failed+=("${framework}")

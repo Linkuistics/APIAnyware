@@ -61,7 +61,7 @@ the population-B value-struct module re-exports (ADR-0032 §4), no unexpected dr
 
 ## Build (standalone self-contained `.app`, ADR-0009)
 
-`cargo run --example bundle_app -p apianyware-macos-bundle-gerbil -- swift-native-method-probe`.
+`cargo run --example bundle_app -p apianyware-bundle-gerbil -- swift-native-method-probe`.
 Output: `Swift Native Method Probe.app`, bundle id `com.linkuistics.SwiftNativeMethodProbe`.
 The `gxc -exe` binary embeds the whole Gerbil/Gambit runtime; the app exe links
 `-lAPIAnywareGerbil` (ADR-0029 §4: linked, not dlopen'd like chez). `bundle-gerbil`

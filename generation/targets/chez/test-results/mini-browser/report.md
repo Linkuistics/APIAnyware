@@ -12,7 +12,7 @@
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --example bundle_app -p
-  apianyware-macos-bundle-chez -- mini-browser`.
+  apianyware-bundle-chez -- mini-browser`.
 - Bundle size: **121 MB** (carries the chez-precompiled WebKit `.so` set
   on top of AppKit/Foundation).
 - In-VM cold launch: window visible **~4 s** after `open -n` — inside the
@@ -151,7 +151,7 @@ stressing the entry-point autoreleasepool + guardian lifetime under the embedded
 boot.
 
 **Build.** `cargo run --release --example bundle_app -p
-apianyware-macos-bundle-chez -- mini-browser`. Output: `Mini Browser.app`,
+apianyware-bundle-chez -- mini-browser`. Output: `Mini Browser.app`,
 **4.9 MB**, bundle id `com.linkuistics.MiniBrowser`, signed; no Chez/Scheme
 linkage. No new wrapper collisions.
 

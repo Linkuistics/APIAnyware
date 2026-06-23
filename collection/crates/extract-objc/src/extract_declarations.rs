@@ -9,12 +9,10 @@ use std::path::Path;
 
 use clang::{Entity, EntityKind, EntityVisitResult, Linkage, TypeKind};
 
-use apianyware_macos_types::ir;
-use apianyware_macos_types::provenance::{
-    Availability, DeclarationSource, DocRefs, SourceProvenance,
-};
-use apianyware_macos_types::skipped_symbol_reason;
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::ir;
+use apianyware_types::provenance::{Availability, DeclarationSource, DocRefs, SourceProvenance};
+use apianyware_types::skipped_symbol_reason;
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::type_mapping::map_type;
 

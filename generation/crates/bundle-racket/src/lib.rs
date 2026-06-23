@@ -1,6 +1,6 @@
 //! Bundle racket sample apps into macOS `.app` bundles.
 //!
-//! Wraps `apianyware-macos-stub-launcher` with the racket–specific
+//! Wraps `apianyware-stub-launcher` with the racket–specific
 //! conventions: where source files live, how relative `(require ...)`
 //! paths resolve, and how to lay out the bundle's `Resources` directory
 //! so those same relative requires keep working from inside the bundle.
@@ -8,7 +8,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use apianyware_macos_bundle_racket::{bundle_app, AppSpec};
+//! use apianyware_bundle_racket::{bundle_app, AppSpec};
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");

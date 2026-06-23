@@ -3,12 +3,12 @@
 //! Generates protocol definition files with `make-<protocol>` helper functions
 //! for creating delegate instances.
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::naming::camel_to_kebab;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::enrichment::EnrichmentData;
-use apianyware_macos_types::ir::{Method, Protocol};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::naming::camel_to_kebab;
+use apianyware_emit::write_line;
+use apianyware_types::enrichment::EnrichmentData;
+use apianyware_types::ir::{Method, Protocol};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::enrichment_comments::EnrichmentNotes;
 
@@ -310,8 +310,8 @@ fn format_param_names(method: &Method) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Method, Param};
-    use apianyware_macos_types::type_ref::TypeRef;
+    use apianyware_types::ir::{Method, Param};
+    use apianyware_types::type_ref::TypeRef;
 
     fn make_method(selector: &str, params: Vec<Param>, return_kind: TypeRefKind) -> Method {
         Method {
@@ -677,7 +677,7 @@ mod tests {
 
     #[test]
     fn test_enrichment_augments_header_listing_line() {
-        use apianyware_macos_types::enrichment::{BlockMethodEntry, EnrichmentData};
+        use apianyware_types::enrichment::{BlockMethodEntry, EnrichmentData};
 
         let proto = protocol(
             "TKDelegate",
@@ -717,7 +717,7 @@ mod tests {
 
     #[test]
     fn test_enrichment_unannotated_protocol_method_listing_unchanged() {
-        use apianyware_macos_types::enrichment::EnrichmentData;
+        use apianyware_types::enrichment::EnrichmentData;
 
         let proto = protocol("TKDelegate", vec![bool_method("shouldContinue")], vec![]);
         let output = generate_protocol_file(&proto, "TestKit", Some(&EnrichmentData::default()));
@@ -729,7 +729,7 @@ mod tests {
 
     #[test]
     fn test_enrichment_protocol_main_thread_header_comment() {
-        use apianyware_macos_types::enrichment::EnrichmentData;
+        use apianyware_types::enrichment::EnrichmentData;
 
         let proto = protocol("TKDelegate", vec![bool_method("shouldContinue")], vec![]);
         let enrichment = EnrichmentData {

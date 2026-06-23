@@ -15,11 +15,11 @@
 use std::io;
 use std::path::Path;
 
-use apianyware_macos_emit::code_writer::{CodeWriter, FileEmitter};
-use apianyware_macos_emit::naming::class_name_to_lowercase;
-use apianyware_macos_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Framework;
+use apianyware_emit::code_writer::{CodeWriter, FileEmitter};
+use apianyware_emit::naming::class_name_to_lowercase;
+use apianyware_emit::target_emitter::{EmitResult, TargetEmitter, TargetInfo};
+use apianyware_emit::write_line;
+use apianyware_types::ir::Framework;
 
 use crate::emit_class::{generate_class_file_with_exports, generate_struct_file};
 use crate::emit_constants::{constant_names, generate_constants_file};
@@ -279,10 +279,10 @@ fn generate_main_file(framework: &str, sublibraries: &[SubLibrary]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{
+    use apianyware_types::ir::{
         Class, Constant, Enum, EnumValue, Function, Method, Param, Protocol,
     };
-    use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+    use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
     fn make_minimal_framework(name: &str) -> Framework {
         Framework {

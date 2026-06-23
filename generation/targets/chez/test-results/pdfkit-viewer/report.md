@@ -12,7 +12,7 @@
 ## Build & launch
 
 - Dev-host bundle build: `cargo run --release --example bundle_app -p
-  apianyware-macos-bundle-chez -- pdfkit-viewer` — **156.4 s**.
+  apianyware-bundle-chez -- pdfkit-viewer` — **156.4 s**.
 - Bundle size: **107 MB** (carries chez-precompiled PDFKit `.so` set).
 - In-VM cold launch: window visible **~1 s** after `open -n` (well
   inside the 1-3 s precompile-on band). PDFKit is a relatively small
@@ -120,7 +120,7 @@ massaging.
 observer path distinct from button target-action.
 
 **Build.** `cargo run --release --example bundle_app -p
-apianyware-macos-bundle-chez -- pdfkit-viewer`. Output: `PDFKit Viewer.app`,
+apianyware-bundle-chez -- pdfkit-viewer`. Output: `PDFKit Viewer.app`,
 **5.0 MB**, bundle id `com.linkuistics.PDFKitViewer`, signed; no Chez/Scheme
 linkage. No new wrapper collisions.
 

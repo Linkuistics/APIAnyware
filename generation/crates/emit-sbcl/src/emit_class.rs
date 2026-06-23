@@ -57,9 +57,9 @@
 //! ([`crate::ffi_type_mapping`]). The per-file `(in-package …)` header + the
 //! `(export …)` of bound names are the orchestration leaf's job (060).
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::Class;
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::write_line;
+use apianyware_types::ir::Class;
 
 use crate::class_graph::{ParentRef, RUNTIME_ROOT};
 use crate::naming::qualified_class_name;
@@ -207,7 +207,7 @@ pub fn render_bare_node(class_name: &str, framework: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Class;
+    use apianyware_types::ir::Class;
 
     fn cls(name: &str, superclass: &str) -> Class {
         Class {

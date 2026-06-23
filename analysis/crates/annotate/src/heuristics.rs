@@ -4,12 +4,12 @@
 //! They serve as a validation cross-check against LLM-derived annotations:
 //! agreement = high confidence, disagreement = flag for human review.
 
-use apianyware_macos_types::annotation::{
+use apianyware_types::annotation::{
     AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ErrorPattern, MethodAnnotation,
     OwnershipKind, ParamOwnership, ThreadingConstraint,
 };
-use apianyware_macos_types::ir::{Class, Method, Property, Protocol};
-use apianyware_macos_types::type_ref::TypeRefKind;
+use apianyware_types::ir::{Class, Method, Property, Protocol};
+use apianyware_types::type_ref::TypeRefKind;
 
 /// Derive heuristic annotations for a single method, given the name,
 /// properties, and Swift attributes of the class or protocol that declares it.
@@ -379,8 +379,8 @@ fn derive_error_pattern(method: &Method) -> Option<ErrorPattern> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::Param;
-    use apianyware_macos_types::type_ref::TypeRef;
+    use apianyware_types::ir::Param;
+    use apianyware_types::type_ref::TypeRef;
 
     fn make_type_id() -> TypeRef {
         TypeRef {

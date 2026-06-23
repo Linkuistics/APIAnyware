@@ -29,4 +29,4 @@ The captured VM-verify evidence is at
 `../../test-results/swift-native-method-probe/screenshot.png` (golden `macos-tahoe`).
 
 Build the bundle:
-`cargo run --example bundle_app -p apianyware-macos-bundle-racket -- swift-native-method-probe`
+`cargo run --example bundle_app -p apianyware-bundle-racket -- swift-native-method-probe`

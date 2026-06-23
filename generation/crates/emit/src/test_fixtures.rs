@@ -8,11 +8,11 @@
 //! constants) to keep golden files reviewable while covering all generation
 //! branches.
 
-use apianyware_macos_types::enrichment::{ClassSelectorEntry, EnrichmentData};
-use apianyware_macos_types::ir::{
+use apianyware_types::enrichment::{ClassSelectorEntry, EnrichmentData};
+use apianyware_types::ir::{
     Class, Constant, Enum, EnumValue, Framework, Function, Method, Param, Property, Protocol,
 };
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Build a deterministic synthetic framework for snapshot testing.
 ///

@@ -98,12 +98,12 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use apianyware_macos_emit::code_writer::CodeWriter;
-use apianyware_macos_emit::enrichment::class_error_selectors;
-use apianyware_macos_emit::ffi_type_mapping::FfiTypeMapper;
-use apianyware_macos_emit::write_line;
-use apianyware_macos_types::ir::{Class, Framework, Method, Property};
-use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
+use apianyware_emit::code_writer::CodeWriter;
+use apianyware_emit::enrichment::class_error_selectors;
+use apianyware_emit::ffi_type_mapping::FfiTypeMapper;
+use apianyware_emit::write_line;
+use apianyware_types::ir::{Class, Framework, Method, Property};
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 use crate::ffi_type_mapping::{SbclFfiTypeMapper, SAP};
 use crate::method_filter::{is_error_out_method, is_supported_method_ctx};
@@ -832,7 +832,7 @@ fn setter_selector_for(prop_name: &str) -> String {
 /// empty/wildcard label or one that collides with a CL defined constant (`t`/`nil` —
 /// see [`crate::naming::is_cl_reserved_formal`]).
 fn arg_name(label: &str, i: usize) -> String {
-    let kebab = apianyware_macos_emit::naming::camel_to_kebab(label);
+    let kebab = apianyware_emit::naming::camel_to_kebab(label);
     if kebab.is_empty() || label == "_" || crate::naming::is_cl_reserved_formal(&kebab) {
         format!("arg{i}")
     } else {
@@ -871,7 +871,7 @@ fn is_family_match(selector: &str, family: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use apianyware_macos_types::ir::{Param, Property};
+    use apianyware_types::ir::{Param, Property};
 
     fn ty(kind: TypeRefKind) -> TypeRef {
         TypeRef {
@@ -1281,7 +1281,7 @@ mod tests {
             )],
         );
         m.objc_exposed = false;
-        m.swift_fn = Some(apianyware_macos_types::ir::SwiftFnInfo::default());
+        m.swift_fn = Some(apianyware_types::ir::SwiftFnInfo::default());
         let f = fw("Foundation", vec![class_with("NSThing", vec![m], vec![])]);
         let decls = collect_generics(&[&f], &ProtocolRegistry::new());
         assert!(
@@ -1312,7 +1312,7 @@ mod tests {
             )],
         );
         m.objc_exposed = false;
-        m.swift_fn = Some(apianyware_macos_types::ir::SwiftFnInfo::default());
+        m.swift_fn = Some(apianyware_types::ir::SwiftFnInfo::default());
         let mut f = fw("Foundation", vec![]);
         f.structs = vec![value_struct("IndexSet", vec![m])];
         let decls = collect_generics(&[&f], &ProtocolRegistry::new());
@@ -1324,8 +1324,8 @@ mod tests {
         );
     }
 
-    fn value_struct(name: &str, methods: Vec<Method>) -> apianyware_macos_types::ir::Struct {
-        apianyware_macos_types::ir::Struct {
+    fn value_struct(name: &str, methods: Vec<Method>) -> apianyware_types::ir::Struct {
+        apianyware_types::ir::Struct {
             name: name.into(),
             fields: vec![],
             methods,
