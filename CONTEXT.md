@@ -476,6 +476,36 @@ generics-sharding / no-`-O` / parallel-compile pipeline** (ADR-0023 — that fix
 Gambit-macro cost SBCL's native CLOS does not have); reusing a baked foreign
 `Class`/`SEL` pointer after an image dump (it is stale — re-resolve from the string).
 
+**value-struct CLOS projection / `ns:value-struct` (sbcl)** _(settled — ADR-0042)_:
+The **population-B (value-struct) dual** of the `objc-class` projection above. A Swift
+value struct (`objc_exposed == false`, e.g. `IndexSet`, `CharacterSet`) with bindable
+Swift-native methods/inits projects to a **plain CLOS class** `(defclass ns:<struct>
+(ns:value-struct) ())` — a `standard-class`, **not** the `objc-class` metaclass (a value
+struct has no ObjC `Class`, so alloc/init, ivar offsets and subclass synthesis are all
+inapplicable). The runtime-owned root **`ns:value-struct`** holds the opaque
+`AwSbclValueBox` handle in a **`ptr` slot — the same slot name `ns:ns-object` uses** — so
+`aw-ptr` reads it unchanged: a value-struct method's receiver coerces through the *same*
+`(aw-ptr self)` as a class owner (and a value-struct arg through `(aw-ptr arg)`), with the
+unbox + `mutating` write-back living entirely in the `@_cdecl` Swift side. Methods bind as
+`(defmethod ns:<gen> ((self ns:<struct>) …))` (their generics fold into `generics.lisp`
+like a class owner's); inits bind as `(defun ns:make-<struct> … (make-instance 'ns:<struct>
+:ptr <box>))` constructors that **wrap the box into an instance** (the sole root producer —
+method/fn returns of a value type stay un-nameable opaque boxes). Lands in a per-framework
+**`structs.lisp`** (residual-gated, loaded like `functions.lisp`). The `ns:value-struct`
+root arms a **box finalizer** (`aw-box-free`) — freed **directly off the finalizer thread**
+(no main-thread queue: a value box has no UI `dealloc` affinity, unlike a wrapped ObjC `id`,
+ADR-0036). A residual method whose generic post-kebabs to an already-declared name at a
+**different arity** is **dropped** (a CLOS generic cannot carry two arities — it would crash
+at load), surfaced as a `WARN`. This is a **cross-target divergence**: gerbil keeps value
+structs **procedural** (`(->ptr self)` passes the raw box, methods are plain `define`s —
+Scheme has no `defun`/`defgeneric` symbol collision); SBCL's single `ns:` package forces the
+CLOS class (a bare `defun ns:foo` cannot coexist with `defgeneric ns:foo`).
+_Avoid_: an `objc-class` metaclass for a value struct (no ObjC Class behind it); a bare
+`defun` value-struct method (collides with same-named generics in the single `ns:` package);
+a constructor that hands back the **raw box** (it would not dispatch through the struct's
+methods); routing `make-instance 'ns:<struct>` through the trampoline (it is the standard
+CLOS make — the named `ns:make-<struct>` is the constructor surface).
+
 **CL-family interface contract** _(settled — ADR-0033 + `docs/specs/2026-06-20-cl-family-interface-contract.md`)_:
 The **documented, specification-level interface that all Common Lisp targets share**,
 even though each compiles to a different FFI under the hood. The family roster is

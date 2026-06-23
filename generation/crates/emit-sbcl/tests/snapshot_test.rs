@@ -67,6 +67,7 @@ const FOUNDATION_GOLDEN_FILES: &[&str] = &[
     "foundation/enums.lisp",
     "foundation/constants.lisp",
     "foundation/functions.lisp",
+    "foundation/structs.lisp",
 ];
 
 #[test]

@@ -24,11 +24,13 @@
 ;;;;            main-thread pool drain releases it exactly once.
 ;;;;   GATE D — the §6d Swift-native residual resolves BY SHAPE (a first-class outcome,
 ;;;;            equal to the ObjC/MOP work): a Swift-native function / constant / class-owner
-;;;;            method / class-owner init / value-opaque box / `throws`→`ns:cocoa-error`
-;;;;            each links + calls through libAPIAnywareSbcl (+ the committed fixture dylib
-;;;;            standing in for the gitignored Generated/Trampolines.swift). Shapes that
-;;;;            need a still-open leaf (value-struct owner → 090; async-method trampoline →
-;;;;            a deferred follow-up) are RECORDED PENDING, never silently skipped.
+;;;;            method / class-owner init / value-opaque box / value-STRUCT owner
+;;;;            (ADR-0042 CLOS class + defmethod + box-wrapping constructor) /
+;;;;            `throws`→`ns:cocoa-error` each links + calls through libAPIAnywareSbcl (+ the
+;;;;            committed fixture dylib standing in for the gitignored
+;;;;            Generated/Trampolines.swift). Shapes that need a still-open leaf
+;;;;            (async-method trampoline → a deferred follow-up) are RECORDED PENDING,
+;;;;            never silently skipped.
 ;;;;
 ;;;; Self-contained: compiles its own C foreign-thread harness (clang, peer
 ;;;; smoke-threading-callbacks.c) + the Swift residual fixture (swiftc) at run time, so a
@@ -299,7 +301,8 @@
 (format t "~%========== GATE D — §6d Swift-native residual, by shape ==========~%")
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (dolist (n '("SCALE" "FIXTURE-GREETING" "SWIFT-DOUBLE-LENGTH" "MAKE-FIXTURE-STRING"
-               "MAKE-PAIR" "PAIR-SUM" "RISKY"))
+               "MAKE-PAIR" "PAIR-SUM" "RISKY"
+               "PAIR" "PAIR-TOTAL" "MAKE-PAIR-STRUCT"))   ; ADR-0042 value-struct owner
     (export (intern n '#:ns) '#:ns)))
 
 ;; (D1) FUNCTION — scalar in/out.
@@ -354,6 +357,31 @@
   (check (ns:pair-sum box) 42)                                ; the boxed value survived
   (aw-box-free box))                                          ; the one uniform free reclaims it
 
+;; (ADR-0042) VALUE-STRUCT OWNER — a nameable Swift value struct (`Pair`) projects to a
+;; PLAIN CLOS class on `ns:value-struct`: its constructor WRAPS the produced box into an
+;; instance, its method dispatches as a `defmethod` whose receiver coerces through the
+;; SAME `(aw-ptr self)` as a class owner (the box rides the `ptr` slot). This is the exact
+;; shape emit-sbcl's `structs.lisp` emits — proven here against the real dylib.
+(defclass ns:pair (ns:value-struct) ())
+(defgeneric ns:pair-total (receiver))
+(defmethod ns:pair-total ((self ns:pair))
+  (sb-alien:alien-funcall
+   (sb-alien:extern-alien "aw_sbcl_swift_m_FixtureKit_Pair_sum"
+                          (sb-alien:function (sb-alien:signed 64) sb-alien:system-area-pointer))
+   (aw-ptr self)))
+(defun ns:make-pair-struct (a0 a1)
+  (make-instance 'ns:pair :ptr
+                 (sb-alien:alien-funcall
+                  (sb-alien:extern-alien "aw_sbcl_swift_FixtureKit_makePair"
+                                         (sb-alien:function sb-alien:system-area-pointer
+                                                            (sb-alien:signed 64) (sb-alien:signed 64)))
+                  a0 a1)))
+(let ((p (ns:make-pair-struct 20 22)))
+  (check (typep p 'ns:value-struct) t)                       ; the box is wrapped in a CLOS instance
+  (check (typep p 'ns:pair) t)
+  (check (aw-null-sap-p (aw-ptr p)) nil)                      ; (aw-ptr self) yields the box (receiver path)
+  (check (ns:pair-total p) 42))                              ; defmethod dispatch -> unbox -> value survived
+
 ;; (D6) THROWS — ThrowsBridge → ns:cocoa-error (the 050/050 aw-swift-call/error consumer,
 ;; which releases the +1 NSError the bridge writes). Success returns the value; throw signals.
 (defun ns:risky (a0)
@@ -373,8 +401,7 @@
        nil)                                                    ; the restart works
 
 ;; Shapes that need a still-open leaf — RECORDED, never silently skipped (080 done-when).
-(record-pending "value-struct-owner method/init"
-                "needs leaf 090 (a value-struct CLOS object-model decision); the value-OPAQUE return is proven by D5")
+;; (value-struct-owner method/init is now PROVEN above — ADR-0042 / leaf 090.)
 (record-pending "async-method trampoline (AsyncBridge)"
                 "the Lisp async-completion consumer is a deferred follow-up (threading.lisp); the CallbackBounce family is proven by GATE B4")
 

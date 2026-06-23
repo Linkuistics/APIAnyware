@@ -914,17 +914,21 @@ fn collect_type_methods(
     }
 }
 
-/// Collect a **class** owner's bindable Swift-native instance-method trampolines (045)
-/// — the receiver-handle methods whose `(defmethod …)` the class file renders, in
-/// lockstep with the `defgeneric`s [`crate::emit_generics::collect_generics`] folds in.
-/// `methods` MUST be the owner's *declared* methods (`cls.methods`), matching the
+/// Collect an owner's bindable Swift-native instance-method trampolines — the
+/// receiver-handle methods whose `(defmethod …)` the owner's file renders, in lockstep
+/// with the `defgeneric`s [`crate::emit_generics::collect_generics`] folds in.
+/// `owner_is_class` picks the reference (`Unmanaged`, 045) vs value (`AwSbclValueBox`,
+/// ADR-0042) receiver path; it MUST match the global pass (`collect_trampolines`) so
+/// every rendered binding references an entry the `@_cdecl` pass produces. `methods`
+/// MUST be the owner's *declared* methods (`cls.methods` / `st.methods`), matching the
 /// global pass (the §6d agreement). Sync methods only: `async` residual methods are
 /// runtime-coupled (the completion-callback bridge) and deferred to a follow-up. Within
 /// the owner, two methods that collapse to the same generic name keep the **first** (a
 /// CLOS generic cannot carry two methods with one receiver specializer + arity).
-pub fn class_residual_methods(
+fn residual_methods(
     module: &str,
     owner: &str,
+    owner_is_class: bool,
     methods: &[Method],
 ) -> Vec<MethodTrampoline> {
     let no_value_structs = HashSet::new();
@@ -935,7 +939,7 @@ pub fn class_residual_methods(
             continue; // ObjC method — binds via msgSend, no trampoline
         }
         if let MethodDisposition::Method(t) =
-            classify_method(module, owner, true, m, methods, &no_value_structs, None)
+            classify_method(module, owner, owner_is_class, m, methods, &no_value_structs, None)
         {
             if t.is_async() {
                 continue; // async residual: runtime-coupled, follow-up leaf
@@ -948,11 +952,16 @@ pub fn class_residual_methods(
     out
 }
 
-/// Collect a **class** owner's bindable Swift-native initializer producers (045) — the
-/// `(defun ns:make-<owner>… )` constructors the class file renders. `methods` MUST be
+/// Collect an owner's bindable Swift-native initializer producers — the
+/// `(defun ns:make-<owner>… )` constructors the owner's file renders. `methods` MUST be
 /// the owner's declared methods (the §6d agreement). Two inits collapsing to one
 /// constructor symbol keep the first.
-pub fn class_residual_inits(module: &str, owner: &str, methods: &[Method]) -> Vec<InitTrampoline> {
+fn residual_inits(
+    module: &str,
+    owner: &str,
+    owner_is_class: bool,
+    methods: &[Method],
+) -> Vec<InitTrampoline> {
     let no_value_structs = HashSet::new();
     let mut out: Vec<InitTrampoline> = Vec::new();
     let mut seen: HashSet<String> = HashSet::new();
@@ -961,7 +970,7 @@ pub fn class_residual_inits(module: &str, owner: &str, methods: &[Method]) -> Ve
             continue;
         }
         if let MethodDisposition::Init(t) =
-            classify_method(module, owner, true, m, methods, &no_value_structs, None)
+            classify_method(module, owner, owner_is_class, m, methods, &no_value_structs, None)
         {
             if seen.insert(t.binding_symbol()) {
                 out.push(t);
@@ -969,6 +978,37 @@ pub fn class_residual_inits(module: &str, owner: &str, methods: &[Method]) -> Ve
         }
     }
     out
+}
+
+/// A **class** owner's method residual (045 reference receivers).
+pub fn class_residual_methods(
+    module: &str,
+    owner: &str,
+    methods: &[Method],
+) -> Vec<MethodTrampoline> {
+    residual_methods(module, owner, true, methods)
+}
+
+/// A **class** owner's init residual (045 reference-owner constructors).
+pub fn class_residual_inits(module: &str, owner: &str, methods: &[Method]) -> Vec<InitTrampoline> {
+    residual_inits(module, owner, true, methods)
+}
+
+/// A **value-struct** (population-B) owner's method residual (ADR-0042 value receivers):
+/// the `(defmethod ns:<gen> ((self ns:<struct>) …))` the `structs.lisp` file renders.
+pub fn struct_residual_methods(
+    module: &str,
+    owner: &str,
+    methods: &[Method],
+) -> Vec<MethodTrampoline> {
+    residual_methods(module, owner, false, methods)
+}
+
+/// A **value-struct** (population-B) owner's init residual (ADR-0042 value-owner
+/// constructors): the `(defun ns:make-<struct> … (make-instance 'ns:<struct> :ptr …))`
+/// the `structs.lisp` file renders.
+pub fn struct_residual_inits(module: &str, owner: &str, methods: &[Method]) -> Vec<InitTrampoline> {
+    residual_inits(module, owner, false, methods)
 }
 
 // ===========================================================================
@@ -2317,13 +2357,16 @@ impl InitTrampoline {
     }
 
     /// The init's result coercion: a **class** owner `aw-wrap`s the `+1`-retained id to
-    /// its exact bound type (ADR-0038 §4, always retained); a **value** owner hands the
-    /// raw opaque box straight back.
+    /// its exact bound type (ADR-0038 §4, always retained); a **value** owner wraps the
+    /// opaque box into its CLOS instance (`make-instance 'ns:<struct> :ptr <box>`, ADR-0042)
+    /// so the returned value dispatches through the struct's `defmethod`s and the
+    /// `ns:value-struct` finalizer reclaims the box. (`make-instance` here is the internal
+    /// wrap, not §3.3's ObjC alloc/init — a value struct has no `objc-class` metaclass.)
     fn coerce_init_result(&self, raw: &str) -> String {
         if self.owner_is_class {
             format!("({WRAP_FN} {raw} t)")
         } else {
-            raw.to_string()
+            format!("(make-instance '{} :ptr {})", qualified_class_name(&self.owner), raw)
         }
     }
 }
@@ -2752,7 +2795,7 @@ mod tests {
     }
 
     #[test]
-    fn init_constructor_value_owner_hands_back_raw_box() {
+    fn init_constructor_value_owner_wraps_box_into_instance() {
         let i = InitTrampoline {
             module: "TestKit".into(),
             owner: "IndexSet".into(),
@@ -2766,9 +2809,14 @@ mod tests {
         };
         assert_eq!(i.binding_symbol(), "ns:make-index-set-integer");
         let c = i.render_constructor();
-        // A value owner hands back the raw opaque box — no aw-wrap.
+        // ADR-0042: a value owner wraps the opaque box into its CLOS instance
+        // (`make-instance 'ns:<struct> :ptr <box>`) so methods dispatch on it — NOT the
+        // reference-owner `aw-wrap` (no live ObjC id to resolve).
         assert!(!c.contains("aw-wrap"), "{c}");
-        assert!(c.contains("(sb-alien:extern-alien \"aw_sbcl_swift_init_TestKit_IndexSet\""), "{c}");
+        assert!(
+            c.contains("(make-instance 'ns:index-set :ptr (sb-alien:alien-funcall (sb-alien:extern-alien \"aw_sbcl_swift_init_TestKit_IndexSet\""),
+            "{c}"
+        );
     }
 
     #[test]
@@ -2827,5 +2875,29 @@ mod tests {
         let is = class_residual_inits("TestKit", "Widget", &methods);
         assert_eq!(is.len(), 1);
         assert_eq!(is[0].binding_symbol(), "ns:make-widget-value");
+    }
+
+    #[test]
+    fn struct_residual_methods_and_inits_take_the_value_receiver_path() {
+        // A population-B value struct (ADR-0042): its instance methods become
+        // value-receiver trampolines and its inits value-owner constructors — the
+        // owner-is-class=false dual of the class collectors above.
+        let methods = vec![
+            swift_method("contains(_:)", false, prim("bool"), vec![param("_", prim("int64"))]),
+            swift_method("init(integer:)", true, idty(), vec![param("integer", prim("int64"))]),
+        ];
+        let ms = struct_residual_methods("Foundation", "IndexSet", &methods);
+        assert_eq!(ms.len(), 1, "{ms:?}");
+        assert_eq!(ms[0].generic_decl(), ("ns:contains".to_string(), 1));
+        assert!(
+            matches!(ms[0].recv, SelfMarshal::ValueBox { .. }),
+            "value struct method takes the box receiver: {:?}",
+            ms[0].recv
+        );
+
+        let is = struct_residual_inits("Foundation", "IndexSet", &methods);
+        assert_eq!(is.len(), 1);
+        assert!(!is[0].owner_is_class(), "value-owner constructor");
+        assert_eq!(is[0].binding_symbol(), "ns:make-index-set-integer");
     }
 }

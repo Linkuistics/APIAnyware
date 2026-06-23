@@ -15,6 +15,7 @@
     (unit "ffi.lisp")               ; the sb-alien seam + core helpers + string bridge
     (unit "objc.lisp")              ; the MOP object model: metaclass + hooks + make-instance
     (unit "swift-trampoline.lisp")  ; the Swift-native residual binding shape
+    (unit "value-struct.lisp")      ; the population-B value-struct object model (ADR-0042)
     (unit "subclass.lisp")          ; ObjC subclass synthesis + protocol conformance
     (unit "lifetime.lisp")          ; sb-ext:finalize + main-thread release queue + entry pool
     (unit "conditions.lisp")        ; the ns:objc-error hierarchy + signal-cocoa-error

@@ -25,7 +25,9 @@ use apianyware_macos_emit::test_fixtures::build_snapshot_test_framework;
 use apianyware_macos_emit_sbcl::class_graph::ClassRegistry;
 use apianyware_macos_emit_sbcl::protocol_registry::ProtocolRegistry;
 use apianyware_macos_emit_sbcl::SbclEmitter;
-use apianyware_macos_types::ir::{Class, Constant, Framework, Function, Method, Param, SwiftFnInfo};
+use apianyware_macos_types::ir::{
+    Class, Constant, Framework, Function, Method, Param, Struct, SwiftFnInfo,
+};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
 
 fn emit(fw: &Framework) -> tempfile::TempDir {
@@ -410,6 +412,95 @@ fn swift_native_method_and_init_residual_bind_on_the_owning_class() {
     assert!(
         facade.contains("ns::make-ns-thing-value"),
         "init constructor exported:\n{facade}"
+    );
+
+    for f in lisp_files(tmp.path()) {
+        let src = std::fs::read_to_string(&f).unwrap();
+        assert_eq!(paren_balance(&src), Ok(0), "{} unbalanced", f.display());
+    }
+}
+
+#[test]
+fn swift_native_value_struct_residual_binds_in_structs_lisp() {
+    // A population-B value struct (IndexSet) carrying a Swift-native method `contains(_:)`
+    // and init `init(integer:)`: ADR-0042 projects it to a plain CLOS class in
+    // structs.lisp, the method binds as a defmethod on it (its generic in lockstep), the
+    // init binds as a make-<struct> constructor that wraps the box into an instance, and
+    // both reach the facade's package surface.
+    let mut fw = build_snapshot_test_framework();
+    fw.name = "Foundation".into();
+    fw.classes.clear();
+    fw.protocols.clear();
+    fw.enums.clear();
+    fw.functions.clear();
+    fw.constants.clear();
+    fw.structs = vec![Struct {
+        name: "IndexSet".into(),
+        fields: vec![],
+        methods: vec![
+            swift_native_method(
+                "contains(_:)",
+                false,
+                TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Primitive { name: "bool".into() },
+                },
+                vec![Param {
+                    name: "_".into(),
+                    param_type: int64(),
+                }],
+            ),
+            swift_native_method(
+                "init(integer:)",
+                true,
+                TypeRef {
+                    nullable: false,
+                    kind: TypeRefKind::Instancetype,
+                },
+                vec![Param {
+                    name: "integer".into(),
+                    param_type: int64(),
+                }],
+            ),
+        ],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: false,
+    }];
+
+    let tmp = emit(&fw);
+
+    let structs = std::fs::read_to_string(tmp.path().join("foundation/structs.lisp")).unwrap();
+    assert!(
+        structs.contains("(defclass ns:index-set (ns:value-struct) ())"),
+        "value struct projects to a plain CLOS class:\n{structs}"
+    );
+    assert!(
+        structs.contains("(defmethod ns:contains ((self ns:index-set) arg0)"),
+        "method binds as a defmethod on the struct class:\n{structs}"
+    );
+    assert!(
+        structs.contains("(defun ns:make-index-set-integer (integer)")
+            && structs.contains("(make-instance 'ns:index-set :ptr"),
+        "init binds as a box-wrapping constructor:\n{structs}"
+    );
+    assert!(
+        structs.contains("(in-package #:apianyware-sbcl-impl)"),
+        "structs.lisp carries the impl package header:\n{structs}"
+    );
+
+    let generics = std::fs::read_to_string(tmp.path().join("foundation/generics.lisp")).unwrap();
+    assert!(
+        generics.contains("(defgeneric ns:contains"),
+        "the struct method's generic is declared (the lockstep):\n{generics}"
+    );
+
+    let facade = std::fs::read_to_string(tmp.path().join("foundation.lisp")).unwrap();
+    assert!(facade.contains("ns::index-set"), "struct class exported:\n{facade}");
+    assert!(
+        facade.contains("ns::make-index-set-integer"),
+        "struct constructor exported:\n{facade}"
     );
 
     for f in lisp_files(tmp.path()) {

@@ -109,7 +109,9 @@ use crate::ffi_type_mapping::{SbclFfiTypeMapper, SAP};
 use crate::method_filter::{is_error_out_method, is_supported_method_ctx};
 use crate::naming::{qualified_class_name, qualified_generic_name, selector_keyword_symbols};
 use crate::protocol_registry::ProtocolRegistry;
-use crate::trampoline::{class_residual_inits, class_residual_methods, MethodTrampoline};
+use crate::trampoline::{
+    class_residual_inits, class_residual_methods, struct_residual_methods, MethodTrampoline,
+};
 
 /// The `objc_msgSend` function SAP, runtime-owned + startup-re-resolved (ADR-0038).
 pub const MSGSEND_SAP: &str = "+objc-msgsend+";
@@ -171,11 +173,36 @@ pub fn collect_generics(frameworks: &[&Framework], protocols: &ProtocolRegistry)
                 by_name.entry(name).or_insert(arity);
             }
         }
+        // ADR-0042: a value struct's residual methods are `defmethod`s on the struct's
+        // CLOS class, so they extend the same selector-analogous generics — fold them
+        // into the one set (the lockstep, exactly like the class residual above).
+        for st in &fw.structs {
+            for t in struct_residual_methods(&fw.name, &st.name, &st.methods) {
+                let (name, arity) = t.generic_decl();
+                by_name.entry(name).or_insert(arity);
+            }
+        }
     }
     by_name
         .into_iter()
         .map(|(name, arity)| GenericDecl { name, arity })
         .collect()
+}
+
+/// The canonical (qualified-generic-name → arity) map for a framework's generic set —
+/// the first-wins arity `collect_generics` settled per name. Used to keep every emitted
+/// residual `defmethod` congruent with its `defgeneric` (ADR-0042): a selector that
+/// post-kebabs to an already-declared name at a DIFFERENT arity cannot share the generic.
+pub fn generic_arity_index(generics: &[GenericDecl]) -> BTreeMap<String, usize> {
+    generics.iter().map(|d| (d.name.clone(), d.arity)).collect()
+}
+
+/// True when a residual method named NAME at ARITY may extend the canonical generic — i.e.
+/// the generic is unknown to INDEX (no conflict possible) or declared at the same arity.
+/// A name present at a *different* arity is a CLOS congruence conflict; the caller drops
+/// that method's `defmethod` (it would crash at load).
+pub fn arity_consistent(name: &str, arity: usize, index: &BTreeMap<String, usize>) -> bool {
+    index.get(name).is_none_or(|&a| a == arity)
 }
 
 /// Selectors that kebab to one generic name under **two** different arities across
@@ -204,6 +231,14 @@ pub fn generic_arity_conflicts(frameworks: &[&Framework], protocols: &ProtocolRe
             // a residual method whose name clashes an ObjC selector at a *different*
             // arity is surfaced loudly here too (not silently mis-emitted).
             for t in class_residual_methods(&fw.name, &cls.name, &cls.methods) {
+                let (name, arity) = t.generic_decl();
+                record(name, arity);
+            }
+        }
+        // ADR-0042: value-struct residual generics share the one congruence namespace
+        // too, so a struct method clashing an ObjC selector at a different arity surfaces.
+        for st in &fw.structs {
+            for t in struct_residual_methods(&fw.name, &st.name, &st.methods) {
                 let (name, arity) = t.generic_decl();
                 record(name, arity);
             }
@@ -338,20 +373,26 @@ pub fn emit_swift_native_residual(
     framework: &str,
     error_selectors: &HashSet<String>,
     protocols: &ProtocolRegistry,
+    generic_arity: &BTreeMap<String, usize>,
 ) {
     let methods = class_residual_methods(framework, &cls.name, &cls.methods);
     let inits = class_residual_inits(framework, &cls.name, &cls.methods);
     if methods.is_empty() && inits.is_empty() {
         return;
     }
-    // The ObjC dispatch wins any generic-name collision.
+    // The ObjC dispatch wins any generic-name collision; an arity clash against the
+    // canonical generic (ADR-0042) is dropped too — its `defmethod` cannot share the
+    // generic and would crash at load (latent for class owners, manifest for structs).
     let objc_generics: HashSet<String> = class_dispatches(cls, error_selectors, protocols)
         .iter()
         .map(|d| d.generic_name())
         .collect();
     let visible: Vec<&MethodTrampoline> = methods
         .iter()
-        .filter(|t| !objc_generics.contains(&t.generic_decl().0))
+        .filter(|t| {
+            let (name, arity) = t.generic_decl();
+            !objc_generics.contains(&name) && arity_consistent(&name, arity, generic_arity)
+        })
         .collect();
     if visible.is_empty() && inits.is_empty() {
         return;
@@ -1182,6 +1223,41 @@ mod tests {
             decls.iter().any(|d| d.name == "ns:update-with" && d.arity == 1),
             "residual generic folded in: {decls:?}"
         );
+    }
+
+    #[test]
+    fn collect_generics_folds_in_struct_residual_method_generics() {
+        // ADR-0042: a value struct's Swift-native method `contains(_:)` extends the
+        // shared `ns:contains` generic (it is a `defmethod` on the struct's CLOS class,
+        // not a bare `defun`), so its `defgeneric` must be in the global set just like a
+        // class owner's.
+        let mut m = method(
+            "contains(_:)",
+            false,
+            ty(TypeRefKind::Primitive { name: "bool".into() }),
+            vec![param("_", TypeRefKind::Primitive { name: "int64".into() })],
+        );
+        m.objc_exposed = false;
+        m.swift_fn = Some(apianyware_macos_types::ir::SwiftFnInfo::default());
+        let mut f = fw("Foundation", vec![]);
+        f.structs = vec![value_struct("IndexSet", vec![m])];
+        let decls = collect_generics(&[&f], &ProtocolRegistry::new());
+        assert!(
+            decls.iter().any(|d| d.name == "ns:contains" && d.arity == 1),
+            "struct residual generic folded in: {decls:?}"
+        );
+    }
+
+    fn value_struct(name: &str, methods: Vec<Method>) -> apianyware_macos_types::ir::Struct {
+        apianyware_macos_types::ir::Struct {
+            name: name.into(),
+            fields: vec![],
+            methods,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            objc_exposed: false,
+        }
     }
 
     #[test]

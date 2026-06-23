@@ -34,9 +34,10 @@
 (in-package #:apianyware-sbcl-impl)
 
 (defparameter *aw-construct-specials*
-  '("generics" "protocols" "enums" "constants" "functions")
+  '("generics" "protocols" "enums" "constants" "functions" "structs")
   "The per-framework files loaded out of class-file order (generics before classes,
-   the rest after).")
+   the rest after). `structs` (the ADR-0042 value-struct residual) is residual-gated like
+   constants/functions.")
 
 (defun aw-app-load-framework (name &key (dlopen t) (load-residual t))
   "Load the generated binding tree for framework NAME (its base name, e.g.
@@ -61,7 +62,11 @@
         (maybe "enums.lisp")
         (when load-residual
           (maybe "constants.lisp")
-          (maybe "functions.lisp"))))
+          (maybe "functions.lisp")
+          ;; structs.lisp (ADR-0042): the value-struct residual. After generics (its
+          ;; defmethods extend them) + the value-struct root (runtime); entirely
+          ;; Swift-native, so residual-gated like functions.lisp.
+          (maybe "structs.lisp"))))
     name))
 
 (export 'aw-app-load-framework '#:apianyware-sbcl-impl)

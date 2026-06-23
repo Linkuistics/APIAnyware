@@ -30,6 +30,7 @@
 pub mod class_graph;
 pub mod emit_class;
 pub mod emit_constants;
+pub mod emit_struct;
 pub mod emit_enums;
 pub mod emit_functions;
 pub mod emit_generics;

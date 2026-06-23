@@ -53,9 +53,9 @@
 //! macros, not a `make-<proto>`, [`crate::emit_protocol`]), and two contributions
 //! of one name in the single `ns:` package are the *same symbol* — `export` is
 //! idempotent. The one residue is a post-kebab **arity** clash between two
-//! selectors ([`crate::emit_generics::generic_arity_conflicts`]); empty in
-//! practice and surfaced (not silently renamed) so a future framework that trips it
-//! fails loudly.
+//! selectors ([`crate::emit_generics::generic_arity_conflicts`]): the conflicting
+//! residual `defmethod` is **dropped** so every `defmethod` stays congruent with its
+//! `defgeneric` (ADR-0042), and the clash is surfaced (a `WARN`) for review.
 //!
 //! ## The 040 → 050 seam fixed here
 //!
@@ -78,9 +78,16 @@
 //! constructor (a class owner `aw-wrap`s the returned id; not §3.3's `make-instance`
 //! path — a Swift-native init calls `Owner(labels:)` through the trampoline, not ObjC
 //! `alloc`/`init`). The **fn/const** residual is bound alongside (its `render_binding`
-//! returns complete drop-in forms). **Value-struct (population-B) owners** are out of
-//! scope — they have no CLOS class to specialize on (an object-model decision deferred
-//! to a follow-up leaf); their residual is still *collected* for the §6d count.
+//! returns complete drop-in forms).
+//!
+//! ## The value-struct (population-B) residual (ADR-0042, leaf 090)
+//!
+//! A **value struct** with bindable residual is projected to a plain CLOS class on the
+//! runtime `ns:value-struct` root, emitted into a per-framework `structs.lisp`
+//! ([`crate::emit_struct`]): a `defclass` + its `defmethod`s (receiver via the same
+//! `(aw-ptr self)` as a class owner — the box rides the `ptr` slot) + box-wrapping
+//! `make-<struct>` constructors. Its method generics fold into `generics.lisp` like a
+//! class owner's; the class + constructor symbols export through the facade.
 
 use std::collections::BTreeSet;
 use std::io;
@@ -99,9 +106,10 @@ use crate::emit_enums::{defined_enum_symbols, generate_enums_file};
 use crate::emit_functions::{function_symbols, generate_functions_file};
 use crate::emit_generics::{
     collect_generics, emit_class_dispatch, emit_swift_native_residual, generic_arity_conflicts,
-    render_generics, GenericDecl,
+    generic_arity_index, render_generics, GenericDecl,
 };
 use crate::emit_protocol::{has_surface, protocol_generic_decls, render_protocol};
+use crate::emit_struct::generate_struct_file;
 use crate::naming::{class_name, PACKAGE};
 use crate::protocol_registry::ProtocolRegistry;
 use crate::trampoline::{
@@ -243,35 +251,41 @@ pub fn emit_framework(
     // file's defgeneric block, the protocol files' dedup, and the export surface.
     let generics = collect_generics(&[fw], protocols);
     let global_generic_names: BTreeSet<String> = generics.iter().map(|d| d.name.clone()).collect();
+    // The canonical (generic → arity) map: emission drops any residual `defmethod` whose
+    // arity disagrees (a post-kebab selector clash) so every defmethod stays congruent
+    // with its defgeneric (ADR-0042).
+    let generic_arity = generic_arity_index(&generics);
 
-    // A post-kebab arity clash is a CL congruence conflict the orchestrator would
-    // have to collision-rename; empty in practice, surfaced (not silenced) so a
-    // future framework that trips it fails loudly rather than emitting broken forms.
+    // A post-kebab arity clash is a CL congruence conflict: the conflicting residual
+    // `defmethod` is dropped from emission (the trampoline + §6d count stay), surfaced
+    // here (not silenced) so a future framework that trips it is reviewed.
     let conflicts = generic_arity_conflicts(&[fw], protocols);
     if !conflicts.is_empty() {
         eprintln!(
-            "WARN sbcl[{}]: generic arity conflicts (post-kebab), emitted first-arity-wins — review: {}",
+            "WARN sbcl[{}]: generic arity conflicts (post-kebab), conflicting defmethod dropped — review: {}",
             fw.name,
             conflicts.join(", ")
         );
     }
 
     // --- generics.lisp + one file per class (the gerbil per-class on-disk shape) --
-    // generics.lisp holds one `defgeneric` per selector across the framework's
-    // classes (a CL package unifies them, so it loads once before any class file's
-    // `defmethod` extends it — ADR-0034 §2/§3); each `<class>.lisp` then carries
-    // only that class's `defclass` + dispatch.
+    // generics.lisp holds one `defgeneric` per selector across the framework's classes
+    // AND value structs (a CL package unifies them, so it loads once before any class /
+    // struct file's `defmethod` extends it — ADR-0034 §2/§3); each `<class>.lisp` then
+    // carries only that class's `defclass` + dispatch. Written whenever the framework
+    // contributes any generic — a struct-only framework (no classes) still needs it
+    // (ADR-0042).
     let ordered = ordered_classes(fw, &graph);
+    if !generics.is_empty() {
+        std::fs::create_dir_all(&fw_dir)?;
+        std::fs::write(
+            fw_dir.join("generics.lisp"),
+            render_generics_file(&fw.name, &generics),
+        )?;
+        files_written += 1;
+    }
     if !fw.classes.is_empty() || !graph.synthesized.is_empty() {
         std::fs::create_dir_all(&fw_dir)?;
-
-        if !generics.is_empty() {
-            std::fs::write(
-                fw_dir.join("generics.lisp"),
-                render_generics_file(&fw.name, &generics),
-            )?;
-            files_written += 1;
-        }
 
         // Synthesized bare intermediate nodes (root on ns:ns-object) and collected
         // classes, each its own file. Superclass-before-subclass ordering is the
@@ -291,7 +305,7 @@ pub fn emit_framework(
                 .unwrap_or(&ParentRef::RuntimeRoot);
             std::fs::write(
                 fw_dir.join(format!("{}.lisp", class_file_stem(&cls.name))),
-                render_class_file(fw, cls, parent, protocols),
+                render_class_file(fw, cls, parent, protocols, &generic_arity),
             )?;
             files_written += 1;
         }
@@ -381,6 +395,37 @@ pub fn emit_framework(
         }
     }
 
+    // --- structs.lisp: the population-B value-struct residual (ADR-0042) ----------
+    // One file per framework (gerbil's per-struct modules collapsed to one), holding a
+    // plain CLOS class per bindable value struct + its `defmethod`s + box-wrapping
+    // constructors. Residual-gated by the loader (loaded like functions.lisp): a value
+    // struct is entirely Swift-native. The method generics already rode `generics.lisp`
+    // (collect_generics folds them in); only the class + constructor symbols export here.
+    {
+        let mut w = CodeWriter::new();
+        emit_file_header(
+            &mut w,
+            &fw.name,
+            "Swift-native value-struct residual (ADR-0042)",
+        );
+        w.blank_line();
+        let mut any = false;
+        for st in &fw.structs {
+            if let Some((forms, syms)) = generate_struct_file(st, &fw.name, &generic_arity) {
+                any = true;
+                w.line(forms.trim_end());
+                for s in syms {
+                    exports.add_qualified(&s);
+                }
+            }
+        }
+        if any {
+            std::fs::create_dir_all(&fw_dir)?;
+            std::fs::write(fw_dir.join("structs.lisp"), with_in_package(w.finish()))?;
+            files_written += 1;
+        }
+    }
+
     // --- the facade: <fw_low>.lisp -----------------------------------------------
     let facade = render_facade(&fw.name, &fw_low, &exports, files_written);
     std::fs::write(output_dir.join(format!("{fw_low}.lisp")), facade)?;
@@ -423,6 +468,7 @@ fn render_class_file(
     cls: &Class,
     parent: &ParentRef,
     protocols: &ProtocolRegistry,
+    generic_arity: &std::collections::BTreeMap<String, usize>,
 ) -> String {
     let mut w = CodeWriter::new();
     emit_file_header(
@@ -436,7 +482,7 @@ fn render_class_file(
     let error_selectors = class_error_selectors(fw.enrichment.as_ref(), &cls.name);
     emit_class_dispatch(&mut w, cls, &fw.name, &error_selectors, protocols);
     // The Swift-native method/init residual (leaf 045), after the direct ObjC dispatch.
-    emit_swift_native_residual(&mut w, cls, &fw.name, &error_selectors, protocols);
+    emit_swift_native_residual(&mut w, cls, &fw.name, &error_selectors, protocols, generic_arity);
     w.finish()
 }
 
