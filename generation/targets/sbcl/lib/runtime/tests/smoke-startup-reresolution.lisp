@@ -18,7 +18,12 @@
 ;;;;   (C) a GENUINE `save-lisp-and-die` -> relaunch round-trip (sub-process): the
 ;;;;       revived image relies on the `*init-hooks*`-registered pass alone, then
 ;;;;       dispatches — the real reason this leaf exists (an in-process test can never
-;;;;       re-stale a `dlopen`ed framework; only a fresh process can).
+;;;;       re-stale a `dlopen`ed framework; only a fresh process can). It ALSO proves
+;;;;       `define-objc-constant` re-resolution (060/pdfkit-viewer-k31): the dump
+;;;;       deliberately `setf`s the baked Foundation `NSString` constant to nil, so it
+;;;;       can ONLY be non-nil in the revived image if the pass re-ran its value form
+;;;;       (a discriminator robust to the dyld shared cache mapping a framework at the
+;;;;       same address across processes); the revived constant must match a fresh read.
 
 (in-package #:cl-user)
 (defparameter *here* (or *load-truename* *load-pathname*))
@@ -198,6 +203,10 @@
                   (sb-alien:function sb-alien:unsigned-long~%~
                     sb-alien:system-area-pointer sb-alien:system-area-pointer))~%~
                 (aw-ptr self) (aw-sel \"length\")))~%~
+             (define-objc-constant *rt-const*~%~
+               (aw-wrap (sb-alien:extern-alien \"NSLocalizedDescriptionKey\"~%~
+                          sb-alien:system-area-pointer)))~%~
+             (setf *rt-const* nil)~%~
              (sb-ext:save-lisp-and-die ~S)~%"
           (namestring (merge-pathnames "generation/targets/sbcl/lib/runtime/load.lisp" cl-user::*repo-root*))
           *core*))
@@ -213,6 +222,13 @@
                         (= 5 (ns:length (aw-wrap (aw-make-nsstring \"hello\") t))))~%~
                    (format t \"### ROUNDTRIP OK~~%\")~%~
                    (format t \"### ROUNDTRIP FAIL~~%\")))~%~
+             (let ((fresh (aw-wrap (sb-alien:extern-alien \"NSLocalizedDescriptionKey\"~%~
+                                     sb-alien:system-area-pointer))))~%~
+               (if (and *rt-const* fresh~%~
+                        (plusp (ns:length *rt-const*))~%~
+                        (= (ns:length *rt-const*) (ns:length fresh)))~%~
+                   (format t \"### CONST OK~~%\")~%~
+                   (format t \"### CONST FAIL~~%\")))~%~
              (sb-ext:exit)~%"))
 
 (flet ((run (args)
@@ -235,7 +251,8 @@
                  "--disable-debugger" "--load" *revive-lisp*))
     (format t "~A" out)
     (check code 0)
-    (check (and (search "ROUNDTRIP OK" out) t) t)))
+    (check (and (search "ROUNDTRIP OK" out) t) t)
+    (check (and (search "CONST OK" out) t) t)))   ; define-objc-constant re-resolved post-revive
 
 ;; tidy up the sub-process artifacts (recursive — an "rm -rf" of the scratch dir)
 (ignore-errors (sb-ext:delete-directory *tmp* :recursive t))

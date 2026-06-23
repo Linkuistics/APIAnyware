@@ -195,17 +195,50 @@
 ;;; `defconstant`: the value is a LIVE foreign read (a SAP-backed instance, a freshly
 ;;; bridged string), so it is neither compile-time-constant nor `eql`-stable across
 ;;; reloads — `defconstant` would error on the second load. An object/SAP-backed
-;;; constant is stale across a `save-lisp-and-die` dump (its foreign pointer dies with
-;;; the image); re-resolving the constant surface at startup is a 070-distribution
-;;; follow-up (the value form is re-evaluable, so the pass need only re-run it). For a
-;;; dev `sbcl --load` (and the 080 integration smoke) the load-time read is exact.
+;;; constant is stale across a `save-lisp-and-die` dump (its foreign pointer — e.g. a
+;;; framework `NSString *` notification name — dies with the generating process). The
+;;; macro therefore ALSO registers a re-evaluator: the value form is re-runnable, so
+;;; the mandatory startup pass (startup.lisp) re-derives the constant surface in a
+;;; revived image, AFTER frameworks are re-`dlopen`ed. (060/pdfkit-viewer-k31 — the
+;;; first ladder app to need a framework string constant, `PDFViewPageChangedNotification`,
+;;; inside a dumped image — surfaced this; previously deferred to 070-distribution.) The
+;;; re-eval is inert for a dev `sbcl --load` / the 080 integration smoke: `*init-hooks*`
+;;; ran at boot before any constant registered, and the load-time read is already exact.
 ;;; ===========================================================================
 
+(defvar *objc-constant-reresolvers* '()
+  "An alist (NAME . THUNK) of `define-objc-constant` re-evaluators. Each THUNK re-runs
+   the constant's foreign value form and re-`setf`s its `defparameter`, so an object/
+   SAP-backed constant is re-derived from the live (re-`dlopen`ed) framework in a revived
+   `save-lisp-and-die` image rather than holding a pointer into the dead generating
+   process. Populated as `constants.lisp` files load; replayed by the startup pass.
+   Keyed by NAME so a re-load replaces rather than duplicates.")
+
 (defmacro define-objc-constant (name value-form)
-  "Bind the `ns:`-qualified constant NAME to VALUE-FORM, read once at load. See the
-   section comment: a `defparameter` over the emitter's foreign read (object / string /
-   scalar). Returns NAME so a generated file's toplevel reads cleanly."
-  `(progn (defparameter ,name ,value-form) ',name))
+  "Bind the `ns:`-qualified constant NAME to VALUE-FORM, read once at load, AND register
+   a re-evaluator (see the section comment) so the startup pass re-derives NAME in a
+   revived dumped image. A `defparameter` over the emitter's foreign read (object /
+   string / scalar). Returns NAME so a generated file's toplevel reads cleanly."
+  `(progn
+     (defparameter ,name ,value-form)
+     (setf *objc-constant-reresolvers*
+           (cons (cons ',name (lambda () (setf ,name ,value-form)))
+                 (remove ',name *objc-constant-reresolvers* :key #'car)))
+     ',name))
+
+(defun aw-reresolve-objc-constants ()
+  "Re-run every registered `define-objc-constant` value form, re-`setf`ing its
+   `defparameter`. The startup pass runs this AFTER frameworks are re-`dlopen`ed (so the
+   `extern-alien` globals resolve). Each re-eval is guarded: a constant whose symbol no
+   longer resolves keeps its (stale) baked value rather than killing the image —
+   mirroring `aw-reresolve-classes`'s skip-on-miss. Empty (inert) until a `constants.lisp`
+   loads, so a residual-free app pays nothing."
+  (dolist (entry *objc-constant-reresolvers*)
+    (handler-case (funcall (cdr entry))
+      (error (e)
+        (warn "aw: constant ~A failed to re-resolve at startup: ~A" (car entry) e)))))
+
+(aw-register-startup-hook :objc-constants (lambda () (aw-reresolve-objc-constants)))
 
 ;;; ===========================================================================
 ;;; `make-instance` -> alloc/init (contract §3.3, ADR-0034 §5).

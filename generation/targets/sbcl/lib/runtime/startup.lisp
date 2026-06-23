@@ -18,8 +18,9 @@
 ;;;; complement: the **direct-msgSend** frameworks (`*loaded-frameworks*`) plus EVERY
 ;;;; `Class`/`SEL`/`objc_msgSend` SAP. Other subsystems that cache a live foreign
 ;;;; pointer across a dump (the release queue, the synthesized-class pairs, the dylib
-;;;; block-dispatcher registration) drop their stale state through the
-;;;; `*startup-reresolve-hooks*` seam (ffi.lisp); this pass runs them last.
+;;;; block-dispatcher registration, the object/SAP-backed `define-objc-constant`
+;;;; surface) drop their stale state through the `*startup-reresolve-hooks*` seam
+;;;; (ffi.lisp); this pass runs them last (after the framework re-`dlopen` they need).
 
 (in-package #:apianyware-sbcl-impl)
 
