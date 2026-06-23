@@ -189,16 +189,28 @@
 ;;; ===========================================================================
 
 (defun aw-selector->generic-name (selector)
-  "ObjC SELECTOR string (e.g. \"drawRect:\", \"tableView:objectValueForColumn:\") ->
-   the `ns:` generic-function symbol (e.g. `ns:draw-rect`). Drops colons; inserts a
-   hyphen before each interior uppercase run; downcases. The emitter's full naming uses
-   an acronym table; this is the colon/kebab slice `define-objc-method` needs and is
-   stable for the override + delegate selectors a subclass implements."
+  "ObjC SELECTOR string (e.g. \"reload:\", \"webView:didFinishNavigation:\") -> the `ns:`
+   generic-function symbol, following ADR-0039's selector-structure-preserving convention:
+   each colon becomes `_` and a hyphen is inserted before each interior uppercase run
+   (camelCase -> kebab); downcases. So `reload` -> `ns:reload` but `reload:` -> `ns:reload_`,
+   and `webView:didFinishNavigation:` -> `ns:web-view_did-finish-navigation_` — EXACTLY the
+   names the emitter mints for the same selectors (`SbclNaming`, ADR-0039).
+
+   Keeping the colon as `_` is load-bearing, not cosmetic: a hand-written delegate selector
+   often shares a name with a real framework method that differs only by arity — `reload:`
+   (a 1-arg target-action) vs WKWebView's 0-arg `reload`. The pre-ADR-0039 colon-DROP folded
+   both onto `ns:reload`, so `define-objc-method` tried to add a 2-arg method to the emitted
+   0-arg generic and CLOS rejected it (arity mismatch). Preserving the colon keeps the two
+   generics distinct, and — because every colon contributes both an `_` here and an argument
+   to the method — any selector that DOES match an emitted generic matches its arity too, so
+   the override composes instead of colliding. (The emitter additionally folds an acronym
+   table — `URL`/`HTTP`/… — which a hand-written delegate selector rarely contains; if one
+   does, name that generic to match.)"
   (let ((out (make-string-output-stream))
         (prev-lower nil))
     (loop for ch across selector
           do (cond
-               ((char= ch #\:) (setf prev-lower nil))   ; selector-part boundary
+               ((char= ch #\:) (write-char #\_ out) (setf prev-lower nil))  ; colon -> _ (ADR-0039)
                ((upper-case-p ch)
                 (when prev-lower (write-char #\- out))
                 (write-char (char-downcase ch) out)
