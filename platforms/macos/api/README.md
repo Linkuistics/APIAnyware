@@ -7,6 +7,10 @@ names rather than kebab-case). Each family holds the three-stage spec:
 side-channel), and `resolved.yaml` (the merged source-of-truth), plus a `docs/`
 subtree.
 
-TODO: family directories and the extracted/resolved material relocate from
-`analysis/ir/` in workstream 4 + `move-platforms-k6`; the `annotations.apiw`
-side-channel is workstream 5 (LLM analysis). No content this leaf.
+The git-tracked LLM annotation side-channel relocated here in `move-platforms-k6` as
+the transitional staging dir `_llm-annotations/` (flat `*.llm.json`, as-is — see its
+README).
+
+TODO: the per-family `<Family>/` directories and their `extracted.yaml` / `resolved.yaml`
+relocate from `analysis/ir/` in workstream 4 (platform model); the `_llm-annotations/`
+staging reshapes into per-family `annotations.apiw` in workstream 5 (LLM analysis).

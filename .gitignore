@@ -10,10 +10,10 @@ analysis/ir/annotated/
 analysis/ir/enriched/
 
 # LLM annotation pipeline intermediates: summaries are derivable from resolved IR
-# via `llm-extract`. Subagent-produced `analysis/ir/llm-annotations/*.llm.json`
+# via `llm-extract`. Subagent-produced `platforms/macos/api/_llm-annotations/*.llm.json`
 # files are versioned (durability: Option A — see
-# `analysis/scripts/llm-annotate-orchestration.md`); regenerating them costs
-# millions of tokens, while the JSON itself is <5 KB per framework.
+# `platforms/macos/tools/scripts/llm-annotate-orchestration.md`); regenerating them
+# costs millions of tokens, while the JSON itself is <5 KB per framework.
 analysis/ir/llm-summaries/
 
 # Generated language bindings (reproducible from enriched IR).

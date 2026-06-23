@@ -28,9 +28,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent.parent
+REPO = Path(__file__).resolve().parent.parent.parent.parent.parent
 RESOLVED = REPO / "analysis/ir/resolved"
-LLM_ANNS = REPO / "analysis/ir/llm-annotations"
+LLM_ANNS = REPO / "platforms/macos/api/_llm-annotations"
 MERGED = REPO / "analysis/ir/annotated"
 HEUR = Path("/tmp/heuristic-only-annotated")
 

@@ -587,7 +587,8 @@ mod tests {
     #[test]
     fn detect_all_patterns_on_foundation() {
         // Integration test: load real Foundation and detect patterns
-        let resolved_path = std::path::Path::new("../../analysis/ir/resolved/Foundation.json");
+        let resolved_path =
+            std::path::Path::new("../../../../analysis/ir/resolved/Foundation.json");
         if !resolved_path.exists() {
             // Skip if resolved IR not available (CI)
             return;

@@ -78,7 +78,7 @@ parameter is what carries the backing-storage reference type).
 Write JSON to:
 
 ```
-analysis/ir/llm-annotations/{FRAMEWORK}.llm.json
+platforms/macos/api/_llm-annotations/{FRAMEWORK}.llm.json
 ```
 
 Schema (every field below is required where shown; the optional
@@ -171,7 +171,7 @@ After writing the file, run:
 ```bash
 cargo run -q -p apianyware-analyze -- llm-validate \
   --methods-file analysis/ir/llm-summaries/{FRAMEWORK}.methods.json \
-  --llm-file    analysis/ir/llm-annotations/{FRAMEWORK}.llm.json
+  --llm-file    platforms/macos/api/_llm-annotations/{FRAMEWORK}.llm.json
 ```
 
 If it exits non-zero, fix the reported errors and re-run until it exits

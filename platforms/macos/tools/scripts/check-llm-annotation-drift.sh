@@ -7,25 +7,25 @@
 # Workflow:
 #   1. Re-run `llm-extract` against the current resolved IR so the
 #      `.methods.json` summaries match what the current extractor produces.
-#   2. For each `analysis/ir/llm-annotations/*.llm.json`, run `llm-validate`
-#      against its matching summary.
+#   2. For each `platforms/macos/api/_llm-annotations/*.llm.json`, run
+#      `llm-validate` against its matching summary.
 #   3. Print a summary; exit non-zero if any framework failed.
 #
 # Use as a post-extraction-fix verification step, or wire into a triage hook
 # to gate annotation drift between cycles.
 #
 # Usage:
-#   ./analysis/scripts/check-llm-annotation-drift.sh
-#   ./analysis/scripts/check-llm-annotation-drift.sh --skip-regen   # use existing summaries
+#   ./platforms/macos/tools/scripts/check-llm-annotation-drift.sh
+#   ./platforms/macos/tools/scripts/check-llm-annotation-drift.sh --skip-regen   # existing summaries
 
 set -euo pipefail
 IFS=$'\n\t'
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
-project_root="$(cd "${script_dir}/../.." && pwd)"
+project_root="$(cd "${script_dir}/../../../.." && pwd)"
 cd "${project_root}"
 
-annotations_dir="analysis/ir/llm-annotations"
+annotations_dir="platforms/macos/api/_llm-annotations"
 summaries_dir="analysis/ir/llm-summaries"
 resolved_dir="analysis/ir/resolved"
 
@@ -92,5 +92,5 @@ done
 echo >&2
 echo "next: re-run llm-validate per framework for full error detail, then" >&2
 echo "      dispatch subagents to refresh the affected .llm.json files" >&2
-echo "      (see analysis/scripts/llm-annotate-orchestration.md)." >&2
+echo "      (see platforms/macos/tools/scripts/llm-annotate-orchestration.md)." >&2
 exit 1

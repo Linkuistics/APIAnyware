@@ -31,7 +31,7 @@ resolved_dir = "analysis/ir/resolved"
 annotated_dir = "analysis/ir/annotated"
 
 # Prompt template file.
-prompt_template = "analysis/scripts/prompt-template.md"
+prompt_template = "platforms/macos/tools/scripts/prompt-template.md"
 
 [options]
 # Maximum methods to send per LLM request (to fit context windows).

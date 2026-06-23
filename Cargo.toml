@@ -7,12 +7,11 @@ members = [
     "semantic/tools/resolve",
     "semantic/tools/enrich",
     "semantic/tools/analyze-cli",
-    # Collection phase (→ platforms/macos/tools/, k6)
-    "collection/crates/extract-objc",
-    "collection/crates/extract-swift",
-    "collection/crates/cli",
-    # Analysis phase (annotate → platforms/macos/tools/, k6)
-    "analysis/crates/annotate",
+    # platforms/macos/ domain — extractors, annotate, collect CLI
+    "platforms/macos/tools/extract-objc",
+    "platforms/macos/tools/extract-swift",
+    "platforms/macos/tools/annotate",
+    "platforms/macos/tools/collect-cli",
     # Generation phase
     "generation/crates/emit",
     "generation/crates/emit-racket",
@@ -48,11 +47,11 @@ plist = "1.7"
 
 # Internal crates
 apianyware-types = { path = "semantic/tools/types" }
-apianyware-extract-objc = { path = "collection/crates/extract-objc" }
-apianyware-extract-swift = { path = "collection/crates/extract-swift" }
+apianyware-extract-objc = { path = "platforms/macos/tools/extract-objc" }
+apianyware-extract-swift = { path = "platforms/macos/tools/extract-swift" }
 apianyware-datalog = { path = "semantic/tools/datalog" }
 apianyware-resolve = { path = "semantic/tools/resolve" }
-apianyware-annotate = { path = "analysis/crates/annotate" }
+apianyware-annotate = { path = "platforms/macos/tools/annotate" }
 apianyware-enrich = { path = "semantic/tools/enrich" }
 apianyware-emit = { path = "generation/crates/emit" }
 apianyware-emit-racket = { path = "generation/crates/emit-racket" }

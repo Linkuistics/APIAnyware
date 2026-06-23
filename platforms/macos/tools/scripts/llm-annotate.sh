@@ -5,8 +5,8 @@
 # semantic annotation, and writes the results as FrameworkAnnotations JSON.
 #
 # Usage:
-#   ./analysis/scripts/llm-annotate.sh                    # annotate all frameworks
-#   ./analysis/scripts/llm-annotate.sh Foundation AppKit   # specific frameworks
+#   ./platforms/macos/tools/scripts/llm-annotate.sh                    # annotate all frameworks
+#   ./platforms/macos/tools/scripts/llm-annotate.sh Foundation AppKit   # specific frameworks
 #
 # Prerequisites:
 #   - Copy config.example.toml to config.toml and set your API key
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.toml"
 
 # --- Parse config ---

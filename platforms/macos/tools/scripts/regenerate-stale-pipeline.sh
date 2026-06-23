@@ -11,8 +11,9 @@
 # canonical case).
 #
 # Stages:
-#   1. analyze: inputs are analysis/crates/{datalog,resolve,annotate,enrich}/src
-#               + collection/ir/collected. Output: analysis/ir/enriched.
+#   1. analyze: inputs are semantic/tools/{datalog,resolve,enrich}/src
+#               + platforms/macos/tools/annotate/src + collection/ir/collected.
+#               Output: analysis/ir/enriched.
 #               LLM annotations in analysis/ir/annotated/*.llm.json are
 #               preserved across reruns by load_existing_llm_annotations()
 #               (which filters out heuristic-sourced entries) as long as
@@ -26,8 +27,8 @@
 # rather than source code changes, which is a manual decision.
 #
 # Usage:
-#   ./analysis/scripts/regenerate-stale-pipeline.sh           # all targets
-#   ./analysis/scripts/regenerate-stale-pipeline.sh --target racket
+#   ./platforms/macos/tools/scripts/regenerate-stale-pipeline.sh           # all targets
+#   ./platforms/macos/tools/scripts/regenerate-stale-pipeline.sh --target racket
 #
 # Exits non-zero on any cargo failure so a calling work-phase hook can
 # abort the cycle before launching claude.
@@ -35,7 +36,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$PROJECT_ROOT"
 
 LANG_FILTER=""
@@ -91,7 +92,7 @@ needs_regen() {
 ANALYZE_INPUTS=(
     semantic/tools/datalog/src
     semantic/tools/resolve/src
-    analysis/crates/annotate/src
+    platforms/macos/tools/annotate/src
     semantic/tools/enrich/src
     semantic/tools/analyze-cli/src
     semantic/tools/types/src
