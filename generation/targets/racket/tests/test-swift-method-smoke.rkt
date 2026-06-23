@@ -16,7 +16,7 @@
 ;;     write-back on one stable handle, all through aw_racket_swift_{init,m}_*.
 ;;
 ;;   pop-A — Foundation.URLSession.data(from:) (Swift-native ASYNC method, the
-;;     headline): the generated `urlsession-data-from` drives async-bridge.rkt's
+;;     headline): the generated `nsurlsession-data-from` drives async-bridge.rkt's
 ;;     callback runtime (R4) against a deterministic local file:// source. The
 ;;     completion delivers a real (Data, URLResponse) on the main thread.
 ;;
@@ -34,8 +34,12 @@
          ;; pop-B: Swift-native value-struct method trampolines (init/contains/insert).
          "../generated/foundation/indexset.rkt"
          ;; pop-A: Swift-native async method trampoline + the objc receiver/URL it needs.
-         (only-in "../generated/foundation/urlsession.rkt" urlsession-data-from)
-         (only-in "../generated/foundation/nsurlsession.rkt" nsurlsession-shared-session)
+         ;; After k38 (runtime-name class identity) the Swift-overlay `URLSession` class
+         ;; merged into the runtime-name `NSURLSession`, so the async `data(from:)` method
+         ;; binds as `nsurlsession-data-from` in the unified nsurlsession.rkt (the renamed-
+         ;; class auto-wrap path: the registry keys on the live class_getName "NSURLSession").
+         (only-in "../generated/foundation/nsurlsession.rkt"
+                  nsurlsession-shared-session nsurlsession-data-from)
          (only-in "../generated/foundation/nsurl.rkt" nsurl-file-url-with-path))
 
 ;; --- CFRunLoop pump (pop-A: the async binding never blocks; the smoke drives the
@@ -88,8 +92,8 @@
      (define err-box (box #f))
      (define done (box #f))
 
-     ;; The generated async binding: (urlsession-data-from session url complete).
-     (urlsession-data-from
+     ;; The generated async binding: (nsurlsession-data-from session url complete).
+     (nsurlsession-data-from
       session nsurl
       (lambda (handle err)
         (set-box! result-box handle)

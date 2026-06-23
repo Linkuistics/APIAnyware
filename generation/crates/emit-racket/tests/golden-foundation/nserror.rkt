@@ -110,7 +110,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PqP_P (id->ffi2-ptr NSError) (id->ffi2-ptr (sel_registerName "errorWithDomain:code:userInfo:")) (id->ffi2-ptr (coerce-arg domain)) code (id->ffi2-ptr (coerce-arg dict))))
    ))
-;; block param 1: async-copied (runtime-managed)
+;; block param 1: stored (retained across calls)
 (define (nserror-set-user-info-value-provider-for-domain-provider! error-domain provider)
   (define-values (_blk1 _blk1-id)
     (make-objc-block provider (list _id _id) _id))

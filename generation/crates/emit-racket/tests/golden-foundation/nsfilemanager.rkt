@@ -262,7 +262,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enumeratorAtPath:")) (id->ffi2-ptr (coerce-arg path))))
    ))
-;; block param 3: async-copied (runtime-managed)
+;; block param 3: stored (retained across calls)
 (define (nsfilemanager-enumerator-at-url-including-properties-for-keys-options-error-handler self url keys mask handler)
   (define-values (_blk3 _blk3-id)
     (make-objc-block handler (list _id _id) _bool))

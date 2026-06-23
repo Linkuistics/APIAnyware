@@ -538,6 +538,7 @@
   [nstextview-change-mode-with-event (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-change-spelling (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-character-index-for-insertion-at-point (c-> nstextview? any/c exact-nonnegative-integer?)]
+  [nstextview-character-index-for-point (c-> nstextview? any/c exact-nonnegative-integer?)]
   [nstextview-check-spelling (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-clicked-on-link-at-index (c-> nstextview? (or/c string? objc-object? #f) exact-nonnegative-integer? void?)]
   [nstextview-complete (c-> nstextview? (or/c string? objc-object? #f) void?)]
@@ -588,6 +589,7 @@
   [nstextview-display-rect! (c-> nstextview? any/c void?)]
   [nstextview-display-rect-ignoring-opacity! (c-> nstextview? any/c void?)]
   [nstextview-display-rect-ignoring-opacity-in-context! (c-> nstextview? any/c (or/c string? objc-object? #f) void?)]
+  [nstextview-do-command-by-selector (c-> nstextview? string? void?)]
   [nstextview-document-visible-rect (c-> nstextview? any/c)]
   [nstextview-dragging-ended (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-dragging-entered (c-> nstextview? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
@@ -610,6 +612,7 @@
   [nstextview-fraction-of-distance-through-glyph-for-point (c-> nstextview? any/c real?)]
   [nstextview-get-rects-being-drawn-count (c-> nstextview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nstextview-get-rects-exposed-during-live-resize-count (c-> nstextview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
+  [nstextview-has-marked-text (c-> nstextview? boolean?)]
   [nstextview-help-requested (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-hit-test (c-> nstextview? any/c (or/c nsview? objc-nil?))]
   [nstextview-identifier (c-> nstextview? (or/c nsstring? objc-nil?))]
@@ -678,6 +681,7 @@
   [nstextview-make-text-writing-direction-left-to-right (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-make-text-writing-direction-natural (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-make-text-writing-direction-right-to-left (c-> nstextview? (or/c string? objc-object? #f) void?)]
+  [nstextview-marked-range (c-> nstextview? any/c)]
   [nstextview-menu-for-event (c-> nstextview? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nstextview-mouse-in-rect (c-> nstextview? any/c any/c boolean?)]
   [nstextview-mouse-cancelled (c-> nstextview? (or/c string? objc-object? #f) void?)]
@@ -975,6 +979,7 @@
   [nstextview-turn-off-ligatures (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-underline (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-union-rect-in-visible-selected-range (c-> nstextview? any/c)]
+  [nstextview-unmark-text (c-> nstextview? void?)]
   [nstextview-unscript (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-update-drag-type-registration (c-> nstextview? void?)]
   [nstextview-update-dragging-items-for-drag (c-> nstextview? (or/c string? objc-object? #f) void?)]
@@ -985,6 +990,7 @@
   [nstextview-use-all-ligatures (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-use-standard-kerning (c-> nstextview? (or/c string? objc-object? #f) void?)]
   [nstextview-use-standard-ligatures (c-> nstextview? (or/c string? objc-object? #f) void?)]
+  [nstextview-valid-attributes-for-marked-text (c-> nstextview? any/c)]
   [nstextview-valid-requestor-for-send-type-return-type (c-> nstextview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nstextview-validate-menu-item (c-> nstextview? (or/c string? objc-object? #f) boolean?)]
   [nstextview-validate-user-interface-item (c-> nstextview? (or/c string? objc-object? #f) boolean?)]
@@ -2433,6 +2439,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeSpelling:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextview-character-index-for-insertion-at-point self point)
   (aw_racket_msg_O_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "characterIndexForInsertionAtPoint:")) (id->ffi2-ptr point)))
+(define (nstextview-character-index-for-point self point)
+  (aw_racket_msg_O_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "characterIndexForPoint:")) (id->ffi2-ptr point)))
 (define (nstextview-check-spelling self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "checkSpelling:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextview-clicked-on-link-at-index self link char-index)
@@ -2571,6 +2579,8 @@
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRectIgnoringOpacity:")) (id->ffi2-ptr rect)))
 (define (nstextview-display-rect-ignoring-opacity-in-context! self rect context)
   (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRectIgnoringOpacity:inContext:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg context))))
+(define (nstextview-do-command-by-selector self selector)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "doCommandBySelector:")) (id->ffi2-ptr (sel_registerName selector))))
 (define (nstextview-document-visible-rect self)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "documentVisibleRect")) (cpointer->ptr_t buf))
@@ -2621,6 +2631,8 @@
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRectsBeingDrawn:count:")) (id->ffi2-ptr rects) (id->ffi2-ptr count)))
 (define (nstextview-get-rects-exposed-during-live-resize-count self exposed-rects count)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRectsExposedDuringLiveResize:count:")) (id->ffi2-ptr exposed-rects) (id->ffi2-ptr count)))
+(define (nstextview-has-marked-text self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "hasMarkedText"))))
 (define (nstextview-help-requested self event-ptr)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "helpRequested:")) (id->ffi2-ptr (coerce-arg event-ptr))))
 (define (nstextview-hit-test self point)
@@ -2765,6 +2777,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextview-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextview-marked-range self)
+  (let ([buf (malloc _NSRange)])
+    (aw_racket_msg_0_G (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "markedRange")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRange)))
 (define (nstextview-menu-for-event self event)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "menuForEvent:")) (id->ffi2-ptr (coerce-arg event))))
@@ -3369,6 +3385,8 @@
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_0_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unionRectInVisibleSelectedRange")) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nstextview-unmark-text self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unmarkText"))))
 (define (nstextview-unscript self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unscript:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextview-update-drag-type-registration self)
@@ -3389,6 +3407,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "useStandardKerning:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextview-use-standard-ligatures self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "useStandardLigatures:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextview-valid-attributes-for-marked-text self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validAttributesForMarkedText"))))
+   ))
 (define (nstextview-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))

@@ -57,7 +57,7 @@
 (define-aw-msg aw_racket_msg_dbP_P (-> ptr_t ptr_t double_t bool_t ptr_t ptr_t))
 
 ;; --- Constructors ---
-;; block param 3: async-copied (runtime-managed)
+;; block param 3: stored (retained across calls)
 (define (make-nstimer-init-with-fire-date-interval-repeats-block date interval repeats block)
   (define-values (_blk3 _blk3-id)
     (make-objc-block block (list _id) _void))
@@ -102,7 +102,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_dPb_P (id->ffi2-ptr NSTimer) (id->ffi2-ptr (sel_registerName "scheduledTimerWithTimeInterval:invocation:repeats:")) ti (id->ffi2-ptr (coerce-arg invocation)) yes-or-no))
    ))
-;; block param 2: async-copied (runtime-managed)
+;; block param 2: stored (retained across calls)
 (define (nstimer-scheduled-timer-with-time-interval-repeats-block interval repeats block)
   (define-values (_blk2 _blk2-id)
     (make-objc-block block (list _id) _void))
@@ -117,7 +117,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_dPb_P (id->ffi2-ptr NSTimer) (id->ffi2-ptr (sel_registerName "timerWithTimeInterval:invocation:repeats:")) ti (id->ffi2-ptr (coerce-arg invocation)) yes-or-no))
    ))
-;; block param 2: async-copied (runtime-managed)
+;; block param 2: stored (retained across calls)
 (define (nstimer-timer-with-time-interval-repeats-block interval repeats block)
   (define-values (_blk2 _blk2-id)
     (make-objc-block block (list _id) _void))

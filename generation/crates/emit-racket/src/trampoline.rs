@@ -37,7 +37,7 @@
 //! short signature hash appended when a `(module, name)` is overloaded within its
 //! framework; constants are `aw_racket_swift_const_<Fw>_<name>`.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use apianyware_macos_types::ir::{Constant, Framework, Function, Method, Struct};
 use apianyware_macos_types::type_ref::{TypeRef, TypeRefKind};
@@ -870,6 +870,33 @@ pub fn collect_trampolines(frameworks: &[Framework]) -> TrampolineSet {
             );
         }
     }
+    // Remap each class-owner trampoline's `swift_owner` to the owning class's Swift name
+    // (the obsoleted ObjC runtime name does not compile as a Swift type — `NSScanner` →
+    // `Scanner`). The entry symbol + the racket dispatch identity keep the runtime `owner`;
+    // only the `@_cdecl` body's type reference uses `swift_owner`. Struct (value) owners are
+    // not overlay-renamed, so they keep the default (`owner`).
+    let swift_owner_of: HashMap<(&str, &str), &str> = frameworks
+        .iter()
+        .flat_map(|fw| {
+            fw.classes.iter().map(move |c| {
+                (
+                    (fw.name.as_str(), c.name.as_str()),
+                    c.swift_name.as_deref().unwrap_or(&c.name),
+                )
+            })
+        })
+        .collect();
+    for t in &mut set.methods {
+        if let Some(sn) = swift_owner_of.get(&(t.module.as_str(), t.owner.as_str())) {
+            t.swift_owner = sn.to_string();
+        }
+    }
+    for t in &mut set.inits {
+        if let Some(sn) = swift_owner_of.get(&(t.module.as_str(), t.owner.as_str())) {
+            t.swift_owner = sn.to_string();
+        }
+    }
+
     // The IR can carry the same decl twice (a category re-listing it, or a digester
     // duplicate), which would emit two `@_cdecl`s with the identical content-addressed
     // entry — a Swift redeclaration error. A duplicate entry *is* the same trampoline,
@@ -1490,8 +1517,15 @@ enum SelfMarshal {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MethodTrampoline {
     pub module: String,
-    /// The owning type (module-qualified at the call site as `module.owner`).
+    /// The owning type's **ObjC runtime name** — the entry-symbol stem and the racket
+    /// dispatch identity (`module.owner` at the binding call site / generic name). Equals
+    /// `swift_owner` unless the Swift overlay renamed the class.
     pub owner: String,
+    /// The owning type's **Swift name** — what the `@_cdecl` body spells as the receiver
+    /// type (`Unmanaged<module.swift_owner>`), since the obsoleted ObjC runtime name does
+    /// not compile as a Swift type (`NSScanner` → `Scanner`). Set to `owner` by
+    /// `classify_method`; remapped from the class's `swift_name` in [`collect_trampolines`].
+    pub swift_owner: String,
     /// Base method name (the selector up to `(`), used in the by-name call.
     pub swift_name: String,
     /// Content-addressed C entry symbol (`aw_racket_swift_m_<Fw>_<Owner>_<name>[_<hash>]`).
@@ -1519,6 +1553,11 @@ pub struct MethodTrampoline {
 pub struct InitTrampoline {
     pub module: String,
     pub owner: String,
+    /// The owning type's **Swift name** — what the `@_cdecl` body spells as the
+    /// constructed type (`module.swift_owner(labels:)`), since the obsoleted ObjC runtime
+    /// name does not compile as a Swift type. Set to `owner` by `classify_method`;
+    /// remapped from the class's `swift_name` in [`collect_trampolines`].
+    pub swift_owner: String,
     pub entry: String,
     /// Box a class instance via `Unmanaged.passRetained` (reference identity) vs a
     /// value via `awRacketBox` — picked from the owner's kind, not the lossy IR
@@ -1722,6 +1761,9 @@ pub fn classify_method(
         return MethodDisposition::Init(InitTrampoline {
             module: module.to_string(),
             owner: owner.to_string(),
+            // Defaults to the runtime `owner`; `collect_trampolines` remaps a
+            // Swift-overlay-renamed class to its `swift_name`.
+            swift_owner: owner.to_string(),
             entry: init_entry_name(module, owner, method, siblings),
             owner_is_class,
             labels,
@@ -1780,6 +1822,9 @@ pub fn classify_method(
     MethodDisposition::Method(MethodTrampoline {
         module: module.to_string(),
         owner: owner.to_string(),
+        // Defaults to the runtime `owner`; `collect_trampolines` remaps a
+        // Swift-overlay-renamed class to its `swift_name`.
+        swift_owner: owner.to_string(),
         swift_name: base.to_string(),
         entry: method_entry_name(module, owner, method, siblings),
         recv,
@@ -1973,7 +2018,7 @@ fn emit_async_method_tramp(s: &mut String, t: &MethodTrampoline) {
     // racket-owned handle dangles while the Task runs.
     s.push_str(&arg_prelude);
 
-    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.swift_owner);
     // The receiver pointer is captured into the `@Sendable` operation closure and
     // the receiver reconstructed *inside* (it lives only on the cooperative thread —
     // capturing the receiver object directly would fail Swift 6 Sendable checking for
@@ -2043,7 +2088,7 @@ fn emit_method_tramp(s: &mut String, t: &MethodTrampoline) {
 
     // Receiver reconstruction prelude, and (for a mutating value receiver) the
     // write-back line that must run after the call.
-    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.swift_owner);
     let (recv_prelude, writeback) = match &t.recv {
         SelfMarshal::ClassRef => (
             format!(
@@ -2134,7 +2179,7 @@ fn emit_init_tramp(s: &mut String, t: &InitTrampoline) {
     );
     s.push_str(&arg_prelude);
 
-    let owner = format!("{}.{}", swift_import_module(&t.module), t.owner);
+    let owner = format!("{}.{}", swift_import_module(&t.module), t.swift_owner);
     // Init params pass with their declared width (no `numericCast`): an overloaded
     // initializer (`Decimal(Int)` vs `Decimal(UInt)`) is selected *by* the param type,
     // so a width-agnostic cast would make the constructor call ambiguous.

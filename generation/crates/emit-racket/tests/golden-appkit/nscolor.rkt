@@ -697,7 +697,7 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_dddd_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithHue:saturation:brightness:alpha:")) hue saturation brightness alpha))
    ))
-;; block param 1: async-copied (runtime-managed)
+;; block param 1: stored (retained across calls)
 (define (nscolor-color-with-name-dynamic-provider color-name dynamic-provider)
   (define-values (_blk1 _blk1-id)
     (make-objc-block dynamic-provider (list _id) _id))
