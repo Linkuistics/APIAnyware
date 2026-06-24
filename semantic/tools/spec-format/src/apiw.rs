@@ -217,12 +217,14 @@ pub fn parse_apiw(source_name: &str, text: &str) -> Result<FrameworkAnnotations>
         match child.name().value() {
             "class" => classes.push(ctx.parse_class(child)?),
             "subagent-report" => subagent_report = Some(ctx.parse_subagent_report(child)?),
-            other => return Err(ctx.err(
-                child.span(),
-                format!(
+            other => {
+                return Err(ctx.err(
+                    child.span(),
+                    format!(
                     "unexpected node `{other}` in framework (want `class` or `subagent-report`)"
                 ),
-            )),
+                ))
+            }
         }
     }
 
