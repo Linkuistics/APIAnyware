@@ -1,0 +1,279 @@
+framework: Foundation
+methods:
+  - selector: "stringByAppendingString:"
+    is_instance: true
+    returns_ownership: owned
+    threading: any
+    param_ownership:
+      - param_index: 0
+        ownership: borrowed
+    patterns:
+      - stereotype: pure-derivation
+        note: "Produces a fresh string from receiver + argument — neither operand is mutated."
+    rationale: "Returns a brand-new NSString the caller owns; the argument is only read during concatenation — it's neither copied nor retained, so think of it as borrowed for the duration of the call."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsstring/1497519-stringbyappendingstring"
+    source: llm
+
+  - selector: "setObject:forKey:"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    param_ownership:
+      - param_index: 0
+        ownership: retained
+      - param_index: 1
+        ownership: copied
+    patterns:
+      - stereotype: collection-insert
+        note: "Mutating insert: the value is held strongly while the key is snapshotted."
+    rationale: "Classic NSMutableDictionary contract: the value is retained but the key is *copied* — Foundation needs an immutable snapshot of the key so a later mutation of the caller's key object can't corrupt the hash table's bucketing."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsmutabledictionary/1574190-setobject"
+    source: llm
+
+  - selector: "writeToURL:atomically:encoding:error:"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    error_pattern: nserror_out
+    patterns:
+      - stereotype: io-write
+        note: "Synchronous disk write; success/failure reported via BOOL + NSError**."
+    rationale: "Performs a (possibly blocking) write to disk and returns a BOOL — on a NO return you inspect the trailing NSError** out-param for the real cause; the \"atomically\" flag asks Foundation to write to a temp file and rename, so readers never see a half-written file."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsdata/1414800-writetourl"
+    source: llm
+
+  - selector: "replaceCharactersInRange:withString:"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    param_ownership:
+      - param_index: 1
+        ownership: borrowed
+    patterns:
+      - stereotype: in-place-mutation
+        note: "Mutates the receiver — only valid on NSMutableString."
+    rationale: "This one mutates the receiver in place rather than deriving a new value — the replacement string is read, not retained, and the range must lie within the current length or it raises an NSRangeException."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsmutablestring/1416352-replacecharactersinrange"
+    source: llm
+
+  - selector: "sortedArrayUsingComparator:"
+    is_instance: true
+    returns_ownership: owned
+    threading: any
+    block_parameters:
+      - param_index: 0
+        invocation: sync
+    patterns:
+      - stereotype: pure-derivation
+        note: "Returns a sorted copy; the comparator drives the ordering."
+    rationale: "The comparator block is invoked synchronously — many times — during the call and never stored, so it does not \"escape\"; the result is a new, sorted array the caller owns while the receiver is left untouched."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsarray/1413063-sortedarrayusingcomparator"
+    source: llm
+
+  - selector: "addObserverForName:object:queue:usingBlock:"
+    is_instance: true
+    returns_ownership: owned
+    threading: any
+    block_parameters:
+      - param_index: 3
+        invocation: stored
+    patterns:
+      - stereotype: observer-registration
+        note: "Returns an opaque token the caller must later hand to removeObserver:."
+    rationale: "The block is *stored* — retained by the center and invoked later (on `queue`, or synchronously on the posting thread when queue is nil) for every matching notification; the return value is an opaque observer token the caller owns and is responsible for passing to removeObserver: -> failing to do so leaks the block and risks calls into a dead object."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsnotificationcenter/1411723-addobserverforname"
+    source: llm
+
+  - selector: "data(for:delegate:)"
+    is_instance: true
+    returns_ownership: owned
+    threading: any
+    error_pattern: exception
+    patterns:
+      - stereotype: async-fetch
+        note: "Swift async/await; suspends until the response is complete."
+    rationale: "A Swift `async` method: it suspends the calling task, performs the network load, and resumes returning an owned (Data, URLResponse) tuple — or throws (a Swift error, surfaced here as the \"exception\" pattern) on failure or cancellation; \"threading: any\" because await can resume on any executor."
+    doc_ref: "https://developer.apple.com/documentation/foundation/urlsession/3919930-data"
+    source: llm
+
+  - selector: "combineLatest(_:_:_:_:)"
+    is_instance: true
+    returns_ownership: owned
+    threading: any
+    block_parameters:
+      - param_index: 3
+        invocation: stored
+    patterns:
+      - stereotype: operator-combinator
+        note: "Builds a derived publisher; the transform fires on every upstream emission."
+    rationale: "A Combine operator that returns a new (owned) publisher; the trailing transform closure is *stored* for the publisher's lifetime and re-invoked every time *any* of the combined upstreams emits — so it must be free of one-shot side effects and tolerate being held as long as the subscription lives."
+    doc_ref: "https://developer.apple.com/documentation/combine/publisher/combinelatest(_:_:_:_:)"
+    source: llm
+
+  - selector: "makeKeyAndOrderFront:"
+    is_instance: true
+    returns_ownership: none
+    threading: main-thread-only
+    patterns:
+      - stereotype: ui-mutation
+        note: "Brings the window forward and makes it key — AppKit, main thread only."
+    rationale: "Pure AppKit UI mutation: it makes the window key *and* orders it to the front of its level — like virtually all of AppKit it is main-thread-only, and calling it off the main thread yields undefined behavior (flicker, crashes, or a hung run loop)."
+    doc_ref: "https://developer.apple.com/documentation/appkit/nswindow/1419208-makekeyandorderfront"
+    source: llm
+
+  - selector: "contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:"
+    is_instance: true
+    returns_ownership: autoreleased
+    threading: any
+    error_pattern: nserror_out
+    patterns:
+      - stereotype: io-enumeration
+        note: "Shallow directory listing; nil + NSError** signals failure."
+    rationale: "Returns an autoreleased NSArray* of child URLs — or *nil* on failure, in which case the trailing NSError** out-param carries the reason; note the dual signal: an empty (non-nil) array means \"empty directory\", whereas nil means \"couldn't read it\"."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsfilemanager/1413768-contentsofdirectoryaturl"
+    source: llm
+
+  - selector: "valueForKeyPath:"
+    is_instance: true
+    returns_ownership: autoreleased
+    threading: any
+    error_pattern: exception
+    param_ownership:
+      - param_index: 0
+        ownership: borrowed
+    patterns:
+      - stereotype: kvc-access
+        note: "Traverses a dotted key path via Key-Value Coding."
+    rationale: "Key-Value Coding traversal across a dotted path (e.g. \"address.street\"); it returns an autoreleased value, but an unknown key along the path raises an NSUndefinedKeyException -> callers can't recover via a return code, only by overriding valueForUndefinedKey: or avoiding the bad path."
+    doc_ref: "https://developer.apple.com/documentation/objectivec/nsobject/1416468-valueforkeypath"
+    source: llm
+
+  - selector: "scanString:intoString:"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    param_ownership:
+      - param_index: 0
+        ownership: borrowed
+    patterns:
+      - stereotype: parse-step
+        note: "Conditional scan: advances the scan location only on a match."
+    rationale: "Returns YES if the literal string was found at the current scan location (advancing it past the match); the NSString** out-param is meaningful *only* on a YES return — on NO it's left untouched, so callers must branch on the BOOL before dereferencing it."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsscanner/1410emerge-scanstring"
+    source: llm
+
+  - selector: "colorWithRed:green:blue:alpha:"
+    is_instance: false
+    returns_ownership: autoreleased
+    threading: any
+    patterns:
+      - stereotype: factory
+        note: "Class-method factory in the sRGB / calibrated color space."
+    rationale: "A class-method factory — by Cocoa's \"create\" naming rules it does *not* begin with alloc/new/copy, so it returns an autoreleased NSColor the caller doesn't own outright; the four components are plain doubles (value types), so there's no ownership to track on the arguments."
+    doc_ref: "https://developer.apple.com/documentation/appkit/nscolor/1525316-colorwithred"
+    source: llm
+
+  - selector: "enumerateMatchesInString:options:range:usingBlock:"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    block_parameters:
+      - param_index: 3
+        invocation: sync
+    param_ownership:
+      - param_index: 0
+        ownership: borrowed
+    patterns:
+      - stereotype: callback-enumeration
+        note: "Synchronous per-match callback with a stop flag."
+    rationale: "Walks every match within the given range, invoking the block *synchronously* once per match (the block does not escape — set its `stop` out-flag to bail early); a hard rule: the block must not re-enter this same NSRegularExpression, since the matcher's internal state is live for the duration of the enumeration."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsregularexpression/1416174-enumeratematchesinstring"
+    source: llm
+
+  - selector: "async(execute:)"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    block_parameters:
+      - param_index: 0
+        invocation: escaping
+    patterns:
+      - stereotype: dispatch-submit
+        note: "Fire-and-forget submission to a GCD queue."
+    rationale: "Fire-and-forget submission: the work item is *escaping* — captured, returned-past, and run later on one of the queue's threads — so anything it captures must outlive this call; it returns immediately (no return value) and gives no completion signal beyond what the block itself arranges."
+    doc_ref: "https://developer.apple.com/documentation/dispatch/dispatchqueue/2300053-async"
+    source: llm
+
+  - selector: "writeObjects:"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    param_ownership:
+      - param_index: 0
+        ownership: retained
+    patterns:
+      - stereotype: io-write
+        note: "Serializes pasteboard-writable objects onto the board."
+    rationale: "Each element of the array (which must conform to NSPasteboardWriting) is retained by the pasteboard so its representations can be produced lazily, even after this call returns YES — meaning the caller can't assume the objects are dead the instant the method completes."
+    doc_ref: "https://developer.apple.com/documentation/appkit/nspasteboard/1525945-writeobjects"
+    source: llm
+
+  - selector: "addSubview:"
+    is_instance: true
+    returns_ownership: none
+    threading: main-thread-only
+    param_ownership:
+      - param_index: 0
+        ownership: retained
+    patterns:
+      - stereotype: view-hierarchy-mutation
+        note: "Inserts a child into the receiver's view tree."
+    rationale: "The parent view *retains* the added subview (and sets its superview pointer), so the caller can release its own reference safely; it mutates the live view hierarchy and is therefore main-thread-only — adding a view off the main thread can corrupt layout and tear down rendering invariants."
+    doc_ref: "https://developer.apple.com/documentation/appkit/nsview/1483430-addsubview"
+    source: llm
+
+  - selector: "dataTaskWithRequest:completionHandler:"
+    is_instance: true
+    returns_ownership: borrowed
+    threading: any
+    block_parameters:
+      - param_index: 1
+        invocation: escaping
+    param_ownership:
+      - param_index: 0
+        ownership: copied
+    patterns:
+      - stereotype: task-factory
+        note: "Builds a suspended task; you must call resume() to start it."
+    rationale: "Returns a *suspended* NSURLSessionDataTask owned-and-retained by its parent session (the caller holds a borrowed reference and must call resume() to start it); the request is copied at task-creation time, and the completion handler is escaping — invoked exactly once, later, on a background delegate queue — so don't assume main-thread context inside it."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsurlsession/1407613-datataskwithrequest"
+    source: llm
+
+  - selector: "writeToFile:atomically:encoding:error:"
+    is_instance: true
+    returns_ownership: none
+    threading: any
+    error_pattern: nserror_out
+    param_ownership:
+      - param_index: 0
+        ownership: borrowed
+    patterns:
+      - stereotype: io-write
+        note: "Path-based write — superseded by the URL variant."
+    rationale: "A path-based synchronous write returning BOOL with the usual trailing NSError** out-param — but it's *deprecated* in favor of writeToURL:atomically:encoding:error:, so new code should prefer the URL form; the path argument is read-only (borrowed) during the call."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsstring/1407654-writetofile"
+    source: llm
+
+  - selector: "stringFromDate:"
+    is_instance: true
+    returns_ownership: autoreleased
+    threading: owning-thread-only
+    param_ownership:
+      - param_index: 0
+        ownership: borrowed
+    patterns:
+      - stereotype: formatting
+        note: "Date -> string; receiver carries mutable internal state."
+    rationale: "Formats a date into an autoreleased string, but NSDateFormatter is *not* thread-safe: the receiver mutates internal caches during formatting, so concurrent calls from multiple threads must be externally synchronized — hence \"owning-thread-only\" unless the caller serializes access; the NSDate argument is merely read (borrowed)."
+    doc_ref: "https://developer.apple.com/documentation/foundation/nsdateformatter/1415241-stringfromdate"
+    source: llm

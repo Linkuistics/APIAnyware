@@ -877,7 +877,8 @@ _Avoid_: putting any target-projection or platform-specific extraction detail he
 The *source platform truth* domain — per-platform formal API specs, kept
 **projection-free** (§7.1/§45.10). `platforms/macos/` is the only live platform;
 `linux/` and `dotnet/` slot in without redesign. A family's spec is the three-stage
-`extracted.yaml` → `annotations.apiw` → `resolved.yaml` under `api/<family>/` (§14).
+**spec triad** `extracted.kdl` → `annotations.apiw` → `resolved.kdl` under `api/<family>/`
+(§14; **KDL** filenames per ADR-0046, superseding §14's `.yaml` literals — see *Spec format*).
 _Avoid_: "platform" meaning the generation destination (that is a *target*); any
 target-language detail leaking into a platform spec.
 
@@ -924,6 +925,57 @@ keeping each crate co-located with its subject (ADR-0043) while leaving the `api
 _Avoid_: a single central `tools/` at the repo root (rejected — D2/ADR-0043);
 splitting the `naming` table *data* out of the `emit` *code* (skeleton over-engineering,
 rejected).
+
+## Spec format / data model (refactor workstream 2)
+
+Introduced by the `structural-refactoring` grove, workstream 2 (`spec-format-k16`),
+replacing the JSON enriched IR. Settled 2026-06-24: ADR-0046 (format), ADR-0047 (conventions),
+PRD `prd/2026-06-24-spec-format-data-model.md`. Designed, not yet implemented — the staged
+child leaves realize it (pipeline stays buildable + goldens-green).
+
+**Spec triad**:
+The three per-API-family files under `platforms/macos/api/<Framework>/` (REFACTOR §14):
+`extracted.kdl` (mechanical extraction facts — the datalog fact base), `annotations.apiw` (the
+**one** authored semantic overlay — manual + accepted-LLM), and `resolved.kdl` (the
+deterministic merged graph; the generator input, ≈ the retired JSON `enriched`). Replaces
+today's four JSON checkpoints; the intermediate stages stay in-process, not on disk.
+_Avoid_: the `.yaml` filenames of §14 (KDL now, ADR-0046); calling `resolved.kdl` the
+"enriched IR" (that term is retired with the JSON).
+
+**KDL interchange / `.apiw`**:
+The single spec format (ADR-0046): **KDL 2.0** for both the authored overlay (`.apiw` extension)
+and the machine artifacts (`extracted.kdl`/`resolved.kdl`). No YAML; JSON retired from the
+interchange. Authored via the official `kdl` Rust crate; LLM-authored reliably (eval:
+`semantic/docs/research/2026-06-24-kdl-authoring-eval/`). Machine-side serde is **spike-gated**,
+with JSON the documented retreat.
+_Avoid_: "the YAML interchange" (superseded — §29's YAML choice was reversed); "a YAML dialect"
+(`.apiw` is KDL, not YAML).
+
+**`linked` (datalog stage)** _(rename, replacing the colliding "resolved" stage)_:
+The in-process datalog cross-reference stage (cross-class/protocol linking + convention rules),
+formerly confusingly also called *"resolved"* (`analysis/ir/resolved`). Renamed `linked` so the
+word **resolved** carries exactly one meaning: `resolved.kdl`, the final merged generator input.
+_Avoid_: "resolved" for the datalog linking stage (the collision ADR-0046 retires).
+
+**Convention rule (datalog)**:
+A "platform convention rule" (§28's precedence tier) expressed as a declarative compile-time
+`ascent` datalog rule over `extracted.kdl`, replacing the imperative `annotate/heuristics.rs`
+(ADR-0047). Same engine as resolution/ownership inference. Its derived facts land in
+`resolved.kdl` stamped `source="convention:<rule>"` — datalog's derivation trace **is** the
+provenance.
+_Avoid_: "heuristic classifier" (the retired imperative form); a runtime-loaded rule DSL
+(compile-time ascent — runtime is a deferred enhancement).
+
+**Provenance stamp / precedence / confidence** _(carried in-format; workflow is ws5)_:
+The data model's record of *where a fact came from and who won*. Every `resolved.kdl` fact has a
+`source ∈ {extraction, convention:<rule>, llm, manual}`; authored facts add `confidence`
+(enum **`high|medium|low`**, not a float) + `provenance` (doc URL/rationale). Precedence
+(`manual > accepted-LLM > convention > extraction > unknown`, §28) is applied in resolve — the
+winner stamped, losers kept as a `superseded-by` record; a fact with no producer is explicit
+`unknown`. The *format* carries this (ws2); the caching/regeneration/review-accept/diff
+*workflow* is ws5.
+_Avoid_: a float confidence (false precision — enum chosen); a separate provenance store keyed
+to facts (it is in-format); silently defaulting an unknown (it stays explicit).
 
 ## Example dialogue
 
