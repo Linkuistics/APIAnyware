@@ -49,13 +49,15 @@ pub fn driver_needs_dylib(driver: &Path) -> bool {
 
 /// Locate the built `libAPIAnywareSbcl.dylib`, building it with `swift build`
 /// when absent. Mirrors the dev `build.sh` step 0. Arch-agnostic: scans every
-/// `swift/.build/<triple>/{release,debug}/` for the artifact.
+/// `targets/sbcl/adapters/macos/.build/<triple>/{release,debug}/` for the
+/// artifact (the §18 per-target adapter package; `move-sbcl-material-k14` split
+/// it out of the shared `swift/.build` umbrella).
 pub fn ensure_swift_dylib(workspace_root: &Path) -> Result<PathBuf, BundleError> {
     if let Some(found) = discover_swift_dylib(workspace_root) {
         return Ok(found);
     }
-    // Not built yet — drive `swift build --product APIAnywareSbcl`.
-    let swift_dir = workspace_root.join("swift");
+    // Not built yet — drive `swift build --product APIAnywareSbcl` in the adapter.
+    let swift_dir = adapter_package_dir(workspace_root);
     let out = Command::new("swift")
         .args(["build", "--product", "APIAnywareSbcl"])
         .current_dir(&swift_dir)
@@ -75,9 +77,21 @@ pub fn ensure_swift_dylib(workspace_root: &Path) -> Result<PathBuf, BundleError>
     })
 }
 
-/// Scan `swift/.build/<triple>/{release,debug}/libAPIAnywareSbcl.dylib`.
+/// The §18 per-target Swift adapter package directory
+/// (`targets/sbcl/adapters/macos/`) under `workspace_root` — where
+/// `swift build --product APIAnywareSbcl` writes `.build/` since
+/// `move-sbcl-material-k14`.
+fn adapter_package_dir(workspace_root: &Path) -> PathBuf {
+    workspace_root
+        .join("targets")
+        .join("sbcl")
+        .join("adapters")
+        .join("macos")
+}
+
+/// Scan `targets/sbcl/adapters/macos/.build/<triple>/{release,debug}/libAPIAnywareSbcl.dylib`.
 pub fn discover_swift_dylib(workspace_root: &Path) -> Option<PathBuf> {
-    let build_root = workspace_root.join("swift").join(".build");
+    let build_root = adapter_package_dir(workspace_root).join(".build");
     let mut triple_dirs: Vec<PathBuf> = Vec::new();
     if let Ok(entries) = std::fs::read_dir(&build_root) {
         for e in entries.flatten() {

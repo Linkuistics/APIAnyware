@@ -10,8 +10,10 @@
 //! cargo test -p apianyware-bundle-sbcl -- --ignored --nocapture
 //! ```
 
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::OnceLock;
 
 use apianyware_bundle_sbcl::{bundle_app, driver_needs_dylib, AppSpec, BundleError};
 
@@ -23,11 +25,34 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+/// The sbcl app tree the bundler expects: a single `source_root` with an `apps/`
+/// child, from which it reads `apps/<script>/dump.lisp`. The §18 refactor
+/// (`move-sbcl-material-k14`) moved the apps to
+/// `targets/sbcl/app-implementations/macos/`, so we stitch that home back into
+/// the `apps/`-rooted shape the bundler expects with a symlink fixture — the same
+/// directory-symlink case the bundler already canonicalizes through (mirrors
+/// gerbil's `gerbil_root()`; sbcl needs only `apps/`, because each app's own
+/// `dump.lisp` loads the binding tree self-relative via `load-bindings.lisp`).
+///
+/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
+/// the apps-root / bindings-root split natively so this fixture isn't needed.
 fn sbcl_root() -> PathBuf {
-    workspace_root()
-        .join("generation")
-        .join("targets")
-        .join("sbcl")
+    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
+    FIXTURE
+        .get_or_init(|| {
+            let apps = workspace_root()
+                .join("targets")
+                .join("sbcl")
+                .join("app-implementations")
+                .join("macos");
+            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("sbcl-bundle-fixture");
+            let _ = fs::remove_dir_all(&fixture);
+            fs::create_dir_all(&fixture).expect("create sbcl bundle fixture root");
+            std::os::unix::fs::symlink(&apps, fixture.join("apps"))
+                .unwrap_or_else(|e| panic!("symlink apps -> {apps:?}: {e}"));
+            fixture
+        })
+        .clone()
 }
 
 fn driver(script: &str) -> PathBuf {

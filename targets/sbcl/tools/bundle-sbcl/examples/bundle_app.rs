@@ -7,7 +7,7 @@
 //! cargo run --example bundle_app -p apianyware-bundle-sbcl -- <script-name>
 //! ```
 //!
-//! Output: `generation/targets/sbcl/apps/<script-name>/build/<App Name>.app`.
+//! Output: `targets/sbcl/app-implementations/macos/<script-name>/build/<App Name>.app`.
 //!
 //! Drives the app's `dump.lisp` (`save-lisp-and-die :executable t`), compiles the
 //! DYLD_FALLBACK stub, vendors libzstd (+ the residual dylib), and signs. The
@@ -25,8 +25,16 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    let source_root = workspace.join("generation").join("targets").join("sbcl");
-    let output_dir = source_root.join("apps").join(&script).join("build");
+    // The bundler still expects `apps/<script>/dump.lisp` under one source_root;
+    // the §18 split (apps→app-implementations/macos, move-sbcl-material-k14) isn't
+    // taught to it yet — the bundle_apps.rs `sbcl_root()` symlink fixture stitches
+    // it for the tests. Output lands at the new app home.
+    let source_root = workspace.join("targets").join("sbcl");
+    let output_dir = source_root
+        .join("app-implementations")
+        .join("macos")
+        .join(&script)
+        .join("build");
 
     let mut spec = AppSpec::from_script_name(&script);
     let spec_path = workspace

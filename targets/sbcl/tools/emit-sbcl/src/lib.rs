@@ -14,7 +14,7 @@
 //! startup re-resolution pass live in the runtime (leaf 050).
 //!
 //! See the SBCL target design spec
-//! (`generation/targets/sbcl/docs/design/2026-06-20-sbcl-target-design.md`) for
+//! (`targets/sbcl/docs/design/2026-06-20-sbcl-target-design.md`) for
 //! the buildable design this crate implements.
 //!
 //! ## Module layout (grown per `040-build-emitter` child leaf)

@@ -7,7 +7,7 @@ cargo run --example bundle_app -p apianyware-bundle-sbcl -- hello-window
 ```
 
 Output lands at
-`generation/targets/sbcl/apps/<script-name>/build/<App Name>.app`.
+`targets/sbcl/app-implementations/macos/<script-name>/build/<App Name>.app`.
 
 ## Pipeline (ADR-0041)
 
