@@ -41,11 +41,31 @@ swift/Tests/APIAnyware<T>Tests   → targets/<t>/adapters/macos/tests
 `apianyware/`, racket into gitignored `generated/` with a hand-written top-level
 `runtime/`, gerbil/sbcl keep an emitted+runtime `lib/`. Each child brief states its own.)
 
-- **Package.swift:** keep the **one umbrella** at `swift/Package.swift`; each per-target
-  leaf adds an explicit `path:`/`exclude:` to *its* module/test target pointing at the
-  new `targets/<t>/adapters/macos/...` source dir. Repoint, don't split (lower-risk for
-  the skeleton; per-target `Package.swift` is a note for adapter-model workstream 6).
-  The shared-seam leaf finalizes the umbrella header + leaves the workstream-6 TODO.
+- **Package.swift — per-target split (CORRECTED in k11; the original "repoint the
+  umbrella" plan is infeasible).** SwiftPM **forbids a target `path:` outside the
+  package root** (`error: target '…' is outside the package root`), so a target
+  whose sources live under `targets/<t>/adapters/macos/` *cannot* be referenced
+  from `swift/Package.swift`. Instead, each target gets its **own**
+  `targets/<t>/adapters/macos/Package.swift` (in-root `sources/` + `tests/` paths)
+  and is **removed from the umbrella** — the per-target split the brief had deferred
+  to workstream 6, brought forward by necessity (user decision, k11). Racket did
+  this in k11. **For chez/gerbil/sbcl this is bigger than it was for racket:** they
+  have `swift build --product APIAnyware<T>` consumers (gerbil
+  `lib/runtime/tests/run-*.sh`, sbcl per-app `build.sh`/`run.lisp`/smokes, chez
+  `runtime/tests/smoke-*.sls`) plus dylib symlinks that all point at the umbrella's
+  `swift/.build/` — each per-target leaf must repoint **its** target's consumers +
+  symlink to the new per-target `…/adapters/macos/.build/`. The `.v26` platform
+  floor (ADR-0030) must carry into each per-target manifest. The shared-seam leaf
+  k15 finalizes whatever residual remains in `swift/Package.swift` (empty it / drop
+  it once all four have split out).
+- **Dylib home vs §42 `build/` (heads-up from k11).** The generic map sends
+  `<t>/lib/*.dylib → bindings/macos/build` per §42, but check whether the target's
+  runtime loads the dylib by a single hardcoded relative dir (racket: `../lib/`,
+  used identically in-tree *and* inside the bundle). If so, moving it to `build/`
+  forces that one load-path to diverge between contexts — a workstream-6
+  reconciliation. Racket therefore kept its dylib at `bindings/macos/lib/` (pure
+  relocate, TODO recorded in its `bindings/macos/README.md`). Assess per target;
+  prefer a behaviour-preserving home + TODO over a load-path change in the skeleton.
 - **`.gitignore`:** do **not** touch per-target — the gitignored emitted/`Generated/`
   files are *absent* in a clean checkout, so a stale pattern causes no `git status` noise
   and tracked files (moved by `git mv`) stay tracked regardless. The shared-seam leaf
