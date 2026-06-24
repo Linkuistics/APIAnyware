@@ -243,7 +243,7 @@ What it does for you:
 
 For unsupported arg/return types (packed struct literals, unions, bit
 fields), pass `#:arg-types` and `#:ret-type` explicitly. See
-`generation/targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md` for the
+`targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md` for the
 design rationale.
 
 Constructor synthesis (`make-<class>`) is deliberately absent from
@@ -671,7 +671,7 @@ What `bundle-racket` does:
   The kebab→Title conversion for the app name produces the bundle ID
   automatically: `hello-window` → `com.linkuistics.HelloWindow`.
 - **Display name:** read from the `# <Display Name>` H1 of
-  `docs/apps/<name>/spec.md` when present. The kebab→Title
+  `apps/macos/<name>/docs/spec.md` when present. The kebab→Title
   fallback mis-capitalises acronyms ("Ui Controls Gallery").
 - **Info.plist overrides:** `AppSpec.info_plist_overrides` is a
   `HashMap<String, plist::Value>` for ad-hoc keys (e.g.
@@ -686,7 +686,7 @@ What `bundle-racket` does:
 
 1. Create `apps/<name>/<name>.rkt` with an `(nsapplication-run app)`
    at the end.
-2. Create `docs/apps/<name>/spec.md` with `# <Display Name>` as
+2. Create `apps/macos/<name>/docs/spec.md` with `# <Display Name>` as
    the first heading.
 3. Append `<name>` to the `APPS` list in
    `generation/crates/emit-racket/tests/runtime_load_test.rs`.
@@ -810,14 +810,14 @@ Real-world details discovered while building the sample apps:
 
 ## Further reading
 
-- `generation/targets/racket/docs/reference.md` — concise target-specific learnings
+- `targets/racket/docs/reference.md` — concise target-specific learnings
   (internal notes, not a user guide).
-- `generation/targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md` — full
+- `targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md` — full
   analysis of why the target does not use `racket/class`, and the
   design rationale for `define-objc-subclass`.
-- `docs/specs/2026-04-16-sample-app-portfolio-design.md` — the app
+- `apps/macos/docs/2026-04-16-sample-app-portfolio-design.md` — the app
   portfolio shape and what each app exercises.
-- `docs/pipeline/memory-architecture.md` — the upstream ObjC ownership
+- `semantic/docs/memory-architecture.md` — the upstream ObjC ownership
   model that shapes the annotations the emitter consumes.
 - Sample apps (`apps/<name>/<name>.rkt`) — the best working references
   for each pattern:

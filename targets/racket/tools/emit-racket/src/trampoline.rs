@@ -1220,8 +1220,8 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     s.push_str("// One @_cdecl per retained `objc_exposed == false` Swift-native decl; each\n");
     s.push_str("// imports the owning framework and calls the API by name (swiftc owns ABI\n");
     s.push_str("// correctness). Bound from the generated Racket bindings against _aw-lib. See:\n");
-    s.push_str("//   docs/specs/2026-06-15-racket-trampoline.md\n");
-    s.push_str("//   docs/adr/0027-racket-trampoline-structure.md\n\n");
+    s.push_str("//   targets/racket/docs/design/2026-06-15-racket-trampoline.md\n");
+    s.push_str("//   adr/0027-racket-trampoline-structure.md\n\n");
     s.push_str("import Foundation\n");
 
     // One `import` per distinct module that has at least one emitted trampoline.

@@ -1,6 +1,6 @@
 #lang racket/base
 ;; test-swift-trampoline-smoke.rkt — end-to-end proof of the Swift-native
-;; trampoline (ADR-0027 / docs/specs/2026-06-15-racket-trampoline.md) on REAL
+;; trampoline (ADR-0027 / targets/racket/docs/design/2026-06-15-racket-trampoline.md) on REAL
 ;; recovered residual, not synthetic fixtures (grove leaf 040/030).
 ;;
 ;; Both exemplars are genuine Swift-native (`objc_exposed: false`, `s:` USR)

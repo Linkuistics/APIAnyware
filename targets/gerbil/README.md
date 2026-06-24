@@ -14,7 +14,7 @@ surfaces), self-contained `.app` distribution via the BOTTLE toolchain.
 
 For cross-cutting context shared by all targets, read the main `docs/` tier
 (pipeline, app-portfolio specs, emitter-contract, ADRs 0010/0011). Where the two
-Schemes agree, the chez reference (`generation/targets/chez/docs/reference.md`)
+Schemes agree, the chez reference (`targets/chez/docs/reference.md`)
 is the companion read.
 
 ## Target structure

@@ -13,7 +13,7 @@ how the pieces compose*, and points at the central ADRs + the main-tier CL-famil
 contract spec for the authoritative records.
 
 It deliberately does **not** restate the upper-layer **CL-family interface contract**
-(`docs/specs/2026-06-20-cl-family-interface-contract.md`, ADR-0033) — that is
+(`targets/_shared/docs/design/2026-06-20-cl-family-interface-contract.md`, ADR-0033) — that is
 cross-target within the CL family and main-tier. This spec is the *SBCL realization*
 of that contract plus the SBCL-private mechanism below it.
 
@@ -249,8 +249,8 @@ isolation + the CL-family exception), 0013 (content-addressed entry naming), 001
 (compiled FFI), 0024 (doc placement), 0025/0026 (complete-API model + `objc_exposed`),
 0027/0028/0029 (racket/chez/gerbil trampoline siblings), 0020/0023 (gerbil object-model /
 generics-cost precedents the SBCL design diverges from). Evidence:
-`docs/research/cl-cocoa-bridges-across-the-family.md`, the MOP + threading spikes under
-`generation/targets/sbcl/docs/research/`.
+`targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md`, the MOP + threading spikes under
+`targets/sbcl/docs/research/`.
 
 ## 8. Open items carried to build leaves
 

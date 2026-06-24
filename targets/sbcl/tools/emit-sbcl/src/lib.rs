@@ -2,7 +2,7 @@
 //!
 //! The fourth APIAnyware target after `racket`, `chez`, and `gerbil`, and the
 //! first member of the **CL family** (the spec-level CLOS interface contract,
-//! ADR-0033 / `docs/specs/2026-06-20-cl-family-interface-contract.md`).
+//! ADR-0033 / `targets/_shared/docs/design/2026-06-20-cl-family-interface-contract.md`).
 //!
 //! SBCL projects the macOS ObjC API into idiomatic CLOS, reaching ObjC
 //! **directly** through an `sb-alien` `objc_msgSend` seam (the trampoline elided,

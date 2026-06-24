@@ -1,4 +1,4 @@
-//! Read canonical sample-app metadata from `docs/apps/<script>/spec.md`.
+//! Read canonical sample-app metadata from `apps/macos/<script>/docs/spec.md`.
 //!
 //! Identical to bundle-racket's spec reader — the spec.md file is
 //! target-agnostic, so the chez bundler reuses the same convention:

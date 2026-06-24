@@ -3,7 +3,7 @@
 A design-phase spike that settles **D2 — the threading/callbacks model** for the
 `sbcl` target, run against **SBCL 2.6.5 (arm64, macOS)**. The grove leaf
 `030-design/030-lifetime-threading-conditions` mandated settling this first-hand:
-the prior-art survey (`docs/research/cl-cocoa-bridges-across-the-family.md` §D)
+the prior-art survey (`targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md` §D)
 left D2 **un-de-risked** (its gap 4), and the two in-repo precedents *diverge* —
 chez **activates** foreign threads (ADR-0016) while gerbil **bounces** them to
 main (ADR-0022) — so which one SBCL fits is an empirical question, not an

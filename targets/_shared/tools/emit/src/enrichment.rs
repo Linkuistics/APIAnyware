@@ -5,7 +5,7 @@
 //! the same set, never drifting. The first such helper is
 //! [`class_error_selectors`] (the `NSError**` out-param convenience methods),
 //! shared by `emit-racket` (native `…_e` dispatch entry) and `emit-gerbil`
-//! (in-Gerbil out-param crossing). See `docs/adr/0006-chez-nserror-shape.md`.
+//! (in-Gerbil out-param crossing). See `adr/0006-chez-nserror-shape.md`.
 
 use std::collections::HashSet;
 

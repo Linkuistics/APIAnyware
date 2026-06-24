@@ -2,7 +2,7 @@
 
 A verification **probe**, not a portfolio sample app. The method-frontier sibling of
 `swift-native-probe`: it proves the receiver-handle **method** trampoline mechanism
-(ADR-0030, spec `docs/specs/2026-06-15-racket-trampoline.md` §8/§9) works end-to-end
+(ADR-0030, spec `targets/racket/docs/design/2026-06-15-racket-trampoline.md` §8/§9) works end-to-end
 in a real GUI app — the project done-bar that the in-process CLI smoke does not satisfy.
 
 It opens an AppKit window showing two Swift-native (`objc_exposed: false`) method

@@ -11,7 +11,7 @@
 //!
 //! Drives the app's `dump.lisp` (`save-lisp-and-die :executable t`), compiles the
 //! DYLD_FALLBACK stub, vendors libzstd (+ the residual dylib), and signs. The
-//! display name comes from `docs/apps/<script>/spec.md`'s first H1 when present.
+//! display name comes from `apps/macos/<script>/docs/spec.md`'s first H1 when present.
 
 use std::path::PathBuf;
 use std::process::ExitCode;

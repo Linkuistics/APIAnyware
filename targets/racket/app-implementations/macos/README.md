@@ -5,13 +5,13 @@ complex.
 
 ## Before working on any app here
 
-1. Read the app spec: `{{PROJECT}}/docs/apps/{app}/spec.md`
-2. Read app-universal learnings: `{{PROJECT}}/docs/apps/{app}/learnings.md`
-3. Read the test strategy: `{{PROJECT}}/docs/apps/{app}/test-strategy.md`
+1. Read the app spec: `{{PROJECT}}/apps/macos/{app}/docs/spec.md`
+2. Read app-universal learnings: `{{PROJECT}}/apps/macos/{app}/docs/learnings.md`
+3. Read the test strategy: `{{PROJECT}}/apps/macos/{app}/docs/test-strategy.md`
 4. Read matrix learnings: `{{PROJECT}}/generation/targets/racket/apps/{app}/learnings.md` (if it exists)
-5. Check the target plan: `{{PROJECT}}/generation/targets/racket/docs/design/2026-05-22-racket-oo-completion-design.md`
-   and `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-oo-completion.md`
+5. Check the target plan: `{{PROJECT}}/targets/racket/docs/design/2026-05-22-racket-oo-completion-design.md`
+   and `{{PROJECT}}/process/plans/2026-05-22-racket-oo-completion.md`
 
 ## All GUI testing uses TestAnyware
 
-Never run apps directly. See `{{PROJECT}}/docs/testing/general.md` for workflow.
+Never run apps directly. See `{{PROJECT}}/semantic/docs/testing/general.md` for workflow.

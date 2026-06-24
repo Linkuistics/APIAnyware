@@ -1,6 +1,6 @@
 //! Shared bundling vocabulary for the sbcl target: the [`AppSpec`] an app is
 //! described by, the [`BundleError`] surface, the code-signing identity
-//! resolution, and the `docs/apps/<script>/spec.md` display-name reader.
+//! resolution, and the `apps/macos/<script>/docs/spec.md` display-name reader.
 //!
 //! The bundle *pipeline* lives in [`crate::standalone`]. An sbcl `.app` ships a
 //! `save-lisp-and-die :executable t` image (which embeds the SBCL runtime) plus
@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use apianyware_stub_launcher::StubError;
 use plist::Value as PlistValue;
 
-/// The persistent self-signed identity documented in docs/codesigning-identity.md.
+/// The persistent self-signed identity documented in platforms/macos/docs/codesigning-identity.md.
 /// Shared with bundle-racket / bundle-chez / bundle-gerbil: TCC grants attach to
 /// the bundle id and identity, not the target language.
 pub const LOCAL_SIGNING_IDENTITY: &str = "APIAnyware Local Signing";
@@ -29,7 +29,7 @@ pub fn resolve_signing_identity(is_available: impl Fn(&str) -> bool) -> Option<S
         tracing::warn!(
             identity = LOCAL_SIGNING_IDENTITY,
             "code-signing identity not found; bundling with ad-hoc signature \
-             (TCC grants will reset on rebuild — see docs/codesigning-identity.md)"
+             (TCC grants will reset on rebuild — see platforms/macos/docs/codesigning-identity.md)"
         );
         None
     }
@@ -139,7 +139,7 @@ pub enum BundleError {
     InfoPlist(#[from] plist::Error),
 }
 
-/// Read the first markdown H1 (`# Title`) from `docs/apps/<script>/spec.md` and
+/// Read the first markdown H1 (`# Title`) from `apps/macos/<script>/docs/spec.md` and
 /// return it as the display name. Returns `None` if the file is missing,
 /// unreadable, or has no leading H1. Identical convention to the peer bundlers —
 /// the spec.md is target-agnostic.

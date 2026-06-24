@@ -2,7 +2,7 @@
 //!
 //! Each target produces exactly one binding style by construction; the style
 //! is implicit in the target, never reified here. See
-//! `docs/adr/0004-retire-paradigm-dimension.md`.
+//! `adr/0004-retire-paradigm-dimension.md`.
 
 use std::io;
 use std::path::Path;

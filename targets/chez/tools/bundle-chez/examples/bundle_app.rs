@@ -12,7 +12,7 @@
 //! The whole-program compile is one-time-per-app and slow (~160 s / ~1.6 GB
 //! RSS for the AppKit closure; spike F7) — the shipped launch is ~50×
 //! faster than the retired source-exec bundle. Display name comes from
-//! `docs/apps/<script>/spec.md`'s first H1 when present.
+//! `apps/macos/<script>/docs/spec.md`'s first H1 when present.
 
 use std::path::PathBuf;
 use std::process::ExitCode;

@@ -1,7 +1,7 @@
 //! Generated C-ABI trampolines for the Swift-native residual — chez target.
 //!
 //! Leaf 060 ports the proven racket trampoline mechanism (ADR-0027 + spec
-//! `docs/specs/2026-06-15-racket-trampoline.md`) to chez. 030 made the
+//! `targets/racket/docs/design/2026-06-15-racket-trampoline.md`) to chez. 030 made the
 //! direct-vs-trampoline boundary an explicit IR fact (`objc_exposed`, ADR-0026)
 //! and *retained* top-level Swift-native (`s:` USR) functions/constants instead of
 //! dropping them. This module is the chez target acting on that fact: for every
@@ -1083,8 +1083,8 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     s.push_str("// imports the owning framework and calls the API by name (swiftc owns ABI\n");
     s.push_str("// correctness). Bound from the generated chez bindings with foreign-procedure\n");
     s.push_str("// against libAPIAnywareChez. See:\n");
-    s.push_str("//   docs/specs/2026-06-15-racket-trampoline.md (mechanism, ported to chez)\n");
-    s.push_str("//   docs/adr/0027-racket-trampoline-structure.md\n\n");
+    s.push_str("//   targets/racket/docs/design/2026-06-15-racket-trampoline.md (mechanism, ported to chez)\n");
+    s.push_str("//   adr/0027-racket-trampoline-structure.md\n\n");
     s.push_str("import Foundation\n");
 
     // One `import` per distinct module with an emitted trampoline; implementation-

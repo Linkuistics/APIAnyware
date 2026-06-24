@@ -1,6 +1,6 @@
 #lang racket/base
 ;; async-bridge.rkt — the racket-side driver for async method trampolines
-;; (R4; docs/specs/2026-06-15-racket-trampoline.md §method-async, ADR-0030).
+;; (R4; targets/racket/docs/design/2026-06-15-racket-trampoline.md §method-async, ADR-0030).
 ;;
 ;; An `async` Swift-native method cannot return a value across the C ABI. The
 ;; generated `@_cdecl` (emit-racket `trampoline.rs`) takes a trailing completion

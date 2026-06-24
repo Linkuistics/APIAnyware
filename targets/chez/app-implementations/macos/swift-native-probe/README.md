@@ -16,7 +16,7 @@ dylib:
 
 Both carry `objc_exposed: false` and have no C symbol in `CreateML.framework`, so a
 window that renders their live values is unambiguous evidence the Swift-native path
-is bound (spec `docs/specs/2026-06-15-racket-trampoline.md` §6a; chez slice §6c).
+is bound (spec `targets/racket/docs/design/2026-06-15-racket-trampoline.md` §6a; chez slice §6c).
 
 Per ADR-0015 the chez `String` coercion is **Scheme-side**: the constant trampoline
 returns an `id` (NSString) and `(apianyware createml constants)` coerces it with the

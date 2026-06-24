@@ -3,10 +3,10 @@
 **Status:** approved (output of
 `.grove/060-chez-self-contained-runtime/020-decide-spec-and-grow.md`)
 **Supersedes:** §8 ("Bundle-chez crate surface") of
-`generation/targets/chez/docs/design/2026-05-27-chez-target-design.md` — the source-exec / precompile
+`targets/chez/docs/design/2026-05-27-chez-target-design.md` — the source-exec / precompile
 bundling model described there is retired by this spec.
 **Companion ADR:** 0009 (chez apps bundle as self-contained binaries).
-**Evidence:** `generation/targets/chez/docs/research/2026-05-29-chez-standalone-spike.md` (the D1 spike
+**Evidence:** `targets/chez/docs/research/2026-05-29-chez-standalone-spike.md` (the D1 spike
 that proved the native standalone path, both modes, on a no-Chez VM).
 
 ## 1. Decision summary

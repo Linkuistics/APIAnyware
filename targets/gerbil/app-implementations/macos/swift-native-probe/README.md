@@ -16,7 +16,7 @@ It opens an AppKit window showing two Swift-native CreateML decls, each reached
 
 Both carry `objc_exposed: false` and have no C symbol in `CreateML.framework`, so a
 window that renders their live values is unambiguous evidence the Swift-native path
-is bound (spec `docs/specs/2026-06-15-racket-trampoline.md` §6a).
+is bound (spec `targets/racket/docs/design/2026-06-15-racket-trampoline.md` §6a).
 
 Per ADR-0015 the gerbil `String` coercion is **Scheme-side**: the constant
 trampoline returns an `id` (NSString) and `(gerbil-bindings createml constants)`

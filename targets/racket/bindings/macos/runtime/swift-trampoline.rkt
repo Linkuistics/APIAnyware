@@ -1,6 +1,6 @@
 #lang racket/base
 ;; swift-trampoline.rkt — racket-side support for the Swift-native trampolines
-;; (ADR-0027 / docs/specs/2026-06-15-racket-trampoline.md §4).
+;; (ADR-0027 / targets/racket/docs/design/2026-06-15-racket-trampoline.md §4).
 ;;
 ;; The generated `@_cdecl` trampolines in libAPIAnywareRacket's Generated/
 ;; Trampolines.swift re-export Swift-native (`s:`) APIs behind a flat C ABI. The

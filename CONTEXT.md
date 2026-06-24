@@ -207,7 +207,7 @@ The single Scheme record type wrapping an ObjC `id` pointer. Used uniformly by
 generated class files are namespaces of procedures keyed by class, not record
 hierarchies that mirror the ObjC class graph. For chez specifically, the
 record's lifetime is managed by a Chez guardian rather than per-instance
-finalizers — see `docs/adr/0007-chez-lifetime-model.md`.
+finalizers — see `adr/0007-chez-lifetime-model.md`.
 _Avoid_: `objc-handle`, `objc-ref`, `nsobject` (the last clashes with the
 class).
 
@@ -223,8 +223,8 @@ to the CL family** (ADR-0036 + ADR-0033 C1): the *user obligation* — wrap your
 non-runloop loops, the same rule Cocoa imposes on ObjC command-line tools — is
 family-level **observable behaviour**, but the *mechanism* is per-impl (sbcl: the
 pool boundary doubles as the main-thread release-queue drain — see *sbcl lifetime /
-main-thread release queue*). See `docs/adr/0007-chez-lifetime-model.md`,
-`docs/adr/0036-sbcl-lifetime-finalize-and-main-thread-release-queue.md`.
+main-thread release queue*). See `adr/0007-chez-lifetime-model.md`,
+`adr/0036-sbcl-lifetime-finalize-and-main-thread-release-queue.md`.
 _Avoid_: "main pool" (ambiguous with NSRunLoop's autorelease pool); calling it
 chez-only (it is now a family convention with per-impl realization).
 
@@ -237,7 +237,7 @@ and destroys a freshly-created thread context on exit. Unlike racket, chez does
 dual obligation: a *blocking* outbound `foreign-procedure` on a Scheme thread
 must also be `__collect_safe`, or it parks the thread off any GC safe point and
 deadlocks a background callback's stop-the-world collection. See
-`docs/adr/0016-chez-outbound-callbacks-with-thread-activation.md`.
+`adr/0016-chez-outbound-callbacks-with-thread-activation.md`.
 _Avoid_: "main-thread bounce" as the chez safety mechanism (that is racket's
 model — ADR-0014; chez bounces only for UI).
 
@@ -272,7 +272,7 @@ bridge (incl. `_id`-tagging via `ffi2-ptr->id`/`id->ffi2-ptr`) — lives in
 `runtime/ffi2-seam.rkt` (leaf 030); its ffi2 type-mapper counterpart is
 `RacketFfi2TypeMapper`. ffi2 is **not** in the minimal
 distribution — provision with `raco pkg install ffi2-lib`. Full map:
-`docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
+`targets/racket/docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
 _Avoid_: "the new FFI" (name it ffi2); conflating it with the retired
 class-system work.
 
@@ -506,7 +506,7 @@ a constructor that hands back the **raw box** (it would not dispatch through the
 methods); routing `make-instance 'ns:<struct>` through the trampoline (it is the standard
 CLOS make — the named `ns:make-<struct>` is the constructor surface).
 
-**CL-family interface contract** _(settled — ADR-0033 + `docs/specs/2026-06-20-cl-family-interface-contract.md`)_:
+**CL-family interface contract** _(settled — ADR-0033 + `targets/_shared/docs/design/2026-06-20-cl-family-interface-contract.md`)_:
 The **documented, specification-level interface that all Common Lisp targets share**,
 even though each compiles to a different FFI under the hood. The family roster is
 four confirmed members — **SBCL, CCL, AllegroCL, LispWorks** (two open-source, two
@@ -663,7 +663,7 @@ returns** where Racket otherwise pays to marshal a CGRect) is bought with
 generated code at zero hand-maintenance. libffi (the generic alternative) is
 actually *slower* than the typed status quo on non-struct shapes and is kept only
 as the escape hatch for signatures the emitter cannot type statically. See
-**ADR-0013** and `docs/specs/2026-05-31-racket-native-binding-design.md`.
+**ADR-0013** and `targets/racket/docs/design/2026-05-31-racket-native-binding-design.md`.
 _Avoid_: "msgSend wrapper" (ambiguous with the deleted `aw_common_msg_*`);
 "libffi dispatch" (libffi is only the rejected generic alternative / escape hatch).
 
@@ -805,29 +805,49 @@ racket/chez shape; gerbil compiles ObjC inline via gsc).
 
 ## Documentation structure
 
-**Main docs / main tier**:
-The cross-cutting documentation that applies to the project as a whole or to the
-shared `collect → analyse → generate` pipeline — not to any one target.
-Consolidated under a single top-level **`docs/`** tree: `adr/` (the central
-decision log, all targets), `pipeline/`, `specs/`, `research/`, `apps/`
-(language-agnostic app portfolio specs), `testing/` (TestAnyware methodology),
-`guides/`, and `docs/README.md` as the map. `README.md` and `CONTEXT.md` remain
-at the repo root. The former `knowledge/` tree is dissolved into this.
-_Avoid_: "knowledge base" (the `knowledge/` tree is retired); treating `docs/`
-as holding per-target material (ADRs are the sole per-target-flavoured content
-kept central — see below).
+Documentation **lives with its subject** (REFACTOR §10, ADR-0024/ADR-0045):
+there is **no large top-level `docs/` tree**. Each domain owns its docs under a
+local `docs/`, and the root `README.md` is a map only (§11). `README.md` and
+`CONTEXT.md` remain at the repo root.
 
-**Per-language docs / co-located target docs**:
-Target-specific documentation, co-located inside the target's own on-disk unit
-`generation/targets/<lang>/` (ADR-0011 hermetic isolation extended to docs):
-`docs/reference.md`, `docs/developer-guide.md`, `docs/design/`,
-`docs/research/`, and per-app `apps/<app>/learnings.md` +
-`test-results/<app>/report.md`. The **one exception** is ADRs: the decision log
-is a connected graph crossing target boundaries (supersession chains;
-later targets cite earlier ones), so *all* ADRs stay central in `docs/adr/` with
-global numbering.
-_Avoid_: a central `docs/targets/<lang>/` tree (re-centralizes what isolation
-separates); per-target ADR renumbering (breaks the cross-target decision graph).
+**Co-located docs / docs-with-subject** (the §10 placement rule):
+- semantic vocabulary → `semantic/docs/` (the analysis/enrich pipeline docs
+  `analysis.md`, `enrich-rules.md`, `api-pattern-catalog.md`,
+  `memory-architecture.md`; cross-cutting design specs under `semantic/docs/design/`;
+  TestAnyware methodology parked at `semantic/docs/testing/` pending workstream 9).
+- platform truth → `platforms/<platform>/docs/` (`collection.md`,
+  `annotation-workflow.md`, `codesigning-identity.md`).
+- shared target machinery → `targets/_shared/docs/` (the new-target guide
+  `adding-a-language-target.md`, `emitter-contract.md`, `type-mapping.md`;
+  the cl-family contract + IR ObjC-exposure boundary specs under `design/`; the
+  cross-family `research/`).
+- per-target docs → `targets/<target>/docs/` (`reference.md`,
+  `developer-guide.md`, `design/`, `research/`), ADR-0011 hermetic isolation
+  extended to docs; per-app `learnings.md` + `report.md` stay in the target unit.
+- common app docs → `apps/<platform>/<app>/docs/` (`spec.md`, `test-strategy.md`,
+  target-independent `learnings.md`); portfolio index + design at
+  `apps/<platform>/docs/`.
+- schema docs → `schemas/docs/`.
+_Avoid_: a "main tier" / single top-level `docs/` (dissolved by the
+`structural-refactoring` grove); treating `docs/` as a place at all.
+
+**Central record dirs / `adr/` + `prd/`**:
+The two cross-cutting *record* artifacts that resist co-location, kept as small,
+single-purpose **top-level** dirs (ADR-0045): `adr/` — the global decision log (a
+connected graph crossing every target: supersession chains, later targets citing
+earlier ones; global numbering, the sole per-target-flavoured content kept
+central) — and `prd/` — human-facing agreement checkpoints. A focused `adr/`/`prd/`
+is the deliberate §10 carve-out for record graphs owned by no single domain, *not*
+the banned top-level `docs/`.
+_Avoid_: co-locating or per-target-renumbering ADRs (severs the cross-target
+graph); reading `adr/`/`prd/` as a re-centralized `docs/` tree.
+
+**Process/tooling docs / `process/`**:
+Development-process artifacts owned by no domain (completed implementation plans,
+the grove/skill design spec) parked at root `process/`. TODO: a later maintenance
+pass owns their final home (possibly an external skills repo).
+_Avoid_: filing process docs under a domain `docs/` (they document *how we work*,
+not a subject).
 
 ## Repository domains (refactor structure)
 

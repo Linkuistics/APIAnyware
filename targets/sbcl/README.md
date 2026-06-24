@@ -28,13 +28,13 @@ For cross-cutting context shared by all targets, read the main `docs/` tier
 documents are **CL-family-wide** and live main-tier (not here), because they
 cross target boundaries:
 
-- `docs/specs/2026-06-20-cl-family-interface-contract.md` (ADR-0033) — the
+- `targets/_shared/docs/design/2026-06-20-cl-family-interface-contract.md` (ADR-0033) — the
   portable `ns:`/CLOS contract every CL target conforms to; this target is its
   SBCL realization.
-- `docs/research/cl-cocoa-bridges-across-the-family.md` — the 020 prior-art +
+- `targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md` — the 020 prior-art +
   landscape survey across SBCL/CCL/AllegroCL/LispWorks.
 
-All target ADRs are central in `docs/adr/` (the decision graph crosses targets):
+All target ADRs are central in `adr/` (the decision graph crosses targets):
 **0033** (family contract), **0034** (object model + dispatch), **0035**
 (callbacks / main-thread bounce), **0036** (lifetime), **0037** (conditions),
 **0038** (`libAPIAnywareSbcl`, the sole native unit), **0039** (selector-structure

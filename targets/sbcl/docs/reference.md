@@ -13,12 +13,12 @@ family whose members share a spec-level interface contract (ADR-0033). Two
 documents are CL-family-wide and main-tier, *not* in this unit; read them as the
 authoritative cross-target records:
 
-- Contract spec: `docs/specs/2026-06-20-cl-family-interface-contract.md` (ADR-0033)
+- Contract spec: `targets/_shared/docs/design/2026-06-20-cl-family-interface-contract.md` (ADR-0033)
   — the portable `ns:`/CLOS surface. This target is its **SBCL realization**.
-- 020 survey: `docs/research/cl-cocoa-bridges-across-the-family.md` — prior-art +
+- 020 survey: `targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md` — prior-art +
   landscape across SBCL/CCL/AllegroCL/LispWorks.
 
-Companion design + decisions (all central in `docs/adr/`):
+Companion design + decisions (all central in `adr/`):
 
 - Design spec: `docs/design/2026-06-20-sbcl-target-design.md` (the two-layer
   realization; read the ADRs below as the live state).
@@ -276,7 +276,7 @@ garbage on success.
 SBCL is a genuinely multi-threaded runtime (`sb-thread`, real preemptive OS
 threads), so — unlike gerbil's single-VM Gambit — the question "can a foreign
 thread run Lisp?" was open and had to be **spiked, not assumed**. The threading
-spike (`docs/research/2026-06-20-sbcl-threading-spike/`, SBCL 2.6.5 / arm64)
+spike (`targets/sbcl/docs/research/2026-06-20-sbcl-threading-spike/`, SBCL 2.6.5 / arm64)
 settled it:
 
 | Who runs the consing callback | Result |

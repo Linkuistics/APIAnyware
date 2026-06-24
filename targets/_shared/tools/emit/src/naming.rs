@@ -147,7 +147,7 @@ pub fn selector_to_snake_name(selector: &str) -> String {
 }
 
 /// Acronym-aware kebab-case for the CL-family contract's name mapper
-/// (`docs/specs/2026-06-20-cl-family-interface-contract.md` §3.1). Unlike
+/// (`targets/_shared/docs/design/2026-06-20-cl-family-interface-contract.md` §3.1). Unlike
 /// [`camel_to_kebab`], this honours a curated table of multi-letter acronyms and
 /// compound brand tokens so that
 ///

@@ -54,7 +54,7 @@ targets/*/app-implementations/macos/*/compiled/
 targets/*/app-implementations/macos/*/build/
 
 # AppSpec runner artifacts captured per-app (regenerable from runner output)
-docs/apps/*/artifacts/
+apps/macos/*/docs/artifacts/
 
 # Claude Code scheduled-task lock file (per-session tooling state)
 .claude/scheduled_tasks.lock

@@ -15,8 +15,8 @@
 ;; object arguments — the thin static seam of ADR-0010 (the native library *is*
 ;; the binding; ffi2 is the crossing, not the home of the logic).
 ;;
-;; Design: generation/targets/racket/docs/design/2026-05-31-racket-native-binding-design.md §2;
-;; docs/adr/0013-generated-typed-native-dispatch.md.
+;; Design: targets/racket/docs/design/2026-05-31-racket-native-binding-design.md §2;
+;; adr/0013-generated-typed-native-dispatch.md.
 
 (require racket/path
          "ffi2-seam.rkt") ; ffi2 (incl. ffi2-lib, define-ffi2-definer, ->) + the

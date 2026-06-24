@@ -10,7 +10,7 @@
 //! Output: `targets/racket/app-implementations/macos/<script-name>/build/<App Name>.app`
 //! per app.
 //!
-//! The display name comes from `docs/apps/<script>/spec.md`'s first
+//! The display name comes from `apps/macos/<script>/docs/spec.md`'s first
 //! H1 when present (so `ui-controls-gallery` correctly becomes
 //! `UI Controls Gallery`, not `Ui Controls Gallery`), falling back to a
 //! kebab→title conversion. The bundle id is derived from the display

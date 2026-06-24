@@ -12,7 +12,7 @@ practice*. Per project convention, gotcha entries carry a date and a
 
 Companion design + decisions:
 
-- Design spec: `generation/targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md` (§4 and §7
+- Design spec: `targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md` (§4 and §7
   carry inline corrections — read the ADRs below as the live state).
 - ADR-0017 — generated per-signature `define-c-lambda` dispatch; native core
   compiled by gsc into the exe, **no Swift dylib**.
@@ -227,7 +227,7 @@ The biggest chez→gerbil divergence. The bottle's Gambit is a **single-VM,
 single-threaded-VMs, green-thread** build (`___MAX_PROCESSORS 1`): the
 processor state is a process-global, so every OS thread shares one heap and
 one allocation pointer. The 080 spike
-(`generation/targets/gerbil/docs/research/2026-06-08-gerbil-threading-spike/FINDINGS.md`) measured:
+(`targets/gerbil/docs/research/2026-06-08-gerbil-threading-spike/FINDINGS.md`) measured:
 
 - **Serialized** foreign entry (worker enters Scheme while main is blocked)
   *survives* — a **false positive**: a sample app that happens to await its

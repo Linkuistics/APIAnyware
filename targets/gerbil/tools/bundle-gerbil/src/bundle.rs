@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use apianyware_stub_launcher::StubError;
 use plist::Value as PlistValue;
 
-/// The persistent self-signed identity documented in docs/codesigning-identity.md.
+/// The persistent self-signed identity documented in platforms/macos/docs/codesigning-identity.md.
 /// Shared with bundle-racket / bundle-chez: TCC grants attach to the bundle
 /// id and identity, not the target language.
 pub const LOCAL_SIGNING_IDENTITY: &str = "APIAnyware Local Signing";
@@ -28,7 +28,7 @@ pub fn resolve_signing_identity(is_available: impl Fn(&str) -> bool) -> Option<S
         tracing::warn!(
             identity = LOCAL_SIGNING_IDENTITY,
             "code-signing identity not found; bundling with ad-hoc signature \
-             (TCC grants will reset on rebuild — see docs/codesigning-identity.md)"
+             (TCC grants will reset on rebuild — see platforms/macos/docs/codesigning-identity.md)"
         );
         None
     }

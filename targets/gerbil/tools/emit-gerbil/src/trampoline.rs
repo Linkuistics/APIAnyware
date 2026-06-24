@@ -1,7 +1,7 @@
 //! Generated C-ABI trampolines for the Swift-native residual — gerbil target.
 //!
 //! Leaf 070/020 ports the proven trampoline mechanism (ADR-0027 racket /
-//! ADR-0028 chez, spec `docs/specs/2026-06-15-racket-trampoline.md`) to gerbil,
+//! ADR-0028 chez, spec `targets/racket/docs/design/2026-06-15-racket-trampoline.md`) to gerbil,
 //! the **hard case**: gerbil has no Swift dylib by design (ObjC-in-`gsc` native
 //! core, ADR-0017). A trampoline *must* be Swift — only Swift can call the Swift
 //! ABI — so ADR-0029 admits a small `libAPIAnywareGerbil.dylib` *for the
@@ -1128,8 +1128,8 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     s.push_str("// imports the owning framework and calls the API by name (swiftc owns ABI\n");
     s.push_str("// correctness). Bound from the generated gerbil bindings with define-c-lambda\n");
     s.push_str("// against libAPIAnywareGerbil. See:\n");
-    s.push_str("//   docs/specs/2026-06-15-racket-trampoline.md (mechanism, ported to gerbil)\n");
-    s.push_str("//   docs/adr/0029-gerbil-trampoline-grows-a-swift-dylib.md\n\n");
+    s.push_str("//   targets/racket/docs/design/2026-06-15-racket-trampoline.md (mechanism, ported to gerbil)\n");
+    s.push_str("//   adr/0029-gerbil-trampoline-grows-a-swift-dylib.md\n\n");
     s.push_str("import Foundation\n");
 
     // One `import` per distinct module with an emitted trampoline; implementation-

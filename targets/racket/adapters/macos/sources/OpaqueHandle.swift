@@ -1,6 +1,6 @@
 // OpaqueHandle.swift — opaque heap-boxed handles for non-bridged Swift values.
 //
-// The trampoline layer (ADR-0027 / docs/specs/2026-06-15-racket-trampoline.md §3)
+// The trampoline layer (ADR-0027 / targets/racket/docs/design/2026-06-15-racket-trampoline.md §3)
 // returns Swift-native values that have no Foundation bridge — non-bridged
 // `struct`s, payload `enum`s, tuples, value-backed existentials, opaque `some P`
 // returns — across the flat C ABI as **opaque handles**. The generated

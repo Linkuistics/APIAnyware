@@ -5,9 +5,9 @@ Racket object-oriented interaction with macOS APIs.
 
 ## Before working here
 
-1. Read `{{PROJECT}}/generation/targets/racket/docs/reference.md` for target-wide learnings
-2. Check `{{PROJECT}}/generation/targets/racket/docs/design/2026-05-22-racket-oo-completion-design.md`
-   and `{{PROJECT}}/docs/superpowers/plans/2026-05-22-racket-oo-completion.md` for
+1. Read `{{PROJECT}}/targets/racket/docs/reference.md` for target-wide learnings
+2. Check `{{PROJECT}}/targets/racket/docs/design/2026-05-22-racket-oo-completion-design.md`
+   and `{{PROJECT}}/process/plans/2026-05-22-racket-oo-completion.md` for
    the target's design and implementation plan
 
 ## For developers using the bindings

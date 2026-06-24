@@ -11,8 +11,8 @@
 ;; already resolved.
 ;;
 ;; Design refs:
-;;   generation/targets/racket/docs/design/2026-05-31-racket-native-binding-design.md §5 (ffi2 role + hybrid
-;;   boundary); generation/targets/racket/docs/research/2026-05-31-racket-9.2-ffi2-migration.md §2–§3.
+;;   targets/racket/docs/design/2026-05-31-racket-native-binding-design.md §5 (ffi2 role + hybrid
+;;   boundary); targets/racket/docs/research/2026-05-31-racket-9.2-ffi2-migration.md §2–§3.
 ;;
 ;; The `->` discipline (spike finding, 010): ffi2 and ffi/unsafe BOTH export
 ;; `->`. We keep ffi2's (it is needed for arrow types, including the *nested*

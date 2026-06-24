@@ -4,7 +4,7 @@ Design-phase spikes that de-risk the five mechanisms the `sbcl` object model
 (ADR-0034) depends on, run against **SBCL 2.6.5 (arm64, macOS)** and the **live
 ObjC runtime**. The grove leaf `030-design/020-object-model` mandated verifying
 these first-hand rather than assuming them — the prior-art survey
-(`docs/research/cl-cocoa-bridges-across-the-family.md`) is CCL-centric and left
+(`targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md`) is CCL-centric and left
 them un-de-risked (its §6 gaps), and §5.1 actively *refuted* a plausible
 assumption (that CCL routes ivars through `slot-value-using-class`).
 

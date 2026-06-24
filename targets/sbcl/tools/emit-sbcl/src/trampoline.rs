@@ -1,7 +1,7 @@
 //! Generated C-ABI trampolines for the Swift-native residual — sbcl target.
 //!
 //! Leaf `040/050` ports the proven trampoline mechanism (ADR-0027 racket /
-//! ADR-0028 chez / ADR-0029 gerbil, spec `docs/specs/2026-06-15-racket-trampoline.md`)
+//! ADR-0028 chez / ADR-0029 gerbil, spec `targets/racket/docs/design/2026-06-15-racket-trampoline.md`)
 //! to sbcl under **ADR-0038**: `libAPIAnywareSbcl` is the SBCL target's **sole native
 //! compilation unit** (a Lisp compiles neither ObjC nor Swift inline), so the Swift
 //! trampolines live there. A trampoline *must* be Swift — only Swift can call the
@@ -1661,8 +1661,8 @@ pub fn generate_trampolines_swift(set: &TrampolineSet) -> String {
     s.push_str("// imports the owning framework and calls the API by name (swiftc owns ABI\n");
     s.push_str("// correctness). Bound from the generated sbcl bindings with typed sb-alien\n");
     s.push_str("// against libAPIAnywareSbcl. See:\n");
-    s.push_str("//   docs/specs/2026-06-15-racket-trampoline.md (mechanism, ported to sbcl)\n");
-    s.push_str("//   docs/adr/0038-sbcl-trampoline-libapianywaresbcl-sole-native-unit.md\n\n");
+    s.push_str("//   targets/racket/docs/design/2026-06-15-racket-trampoline.md (mechanism, ported to sbcl)\n");
+    s.push_str("//   adr/0038-sbcl-trampoline-libapianywaresbcl-sole-native-unit.md\n\n");
     s.push_str("import Foundation\n");
 
     // One `import` per distinct module with an emitted trampoline; implementation-detail

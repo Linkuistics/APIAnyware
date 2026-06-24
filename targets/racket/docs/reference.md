@@ -27,7 +27,7 @@ the typed native dispatch table (ADR-0013, `runtime/ffi2-dispatch.rkt`) with
 values crossing the seam via `id->ffi2-ptr`/`ffi2-ptr->id`; `ffi/unsafe`/
 `ffi/unsafe/objc` is retained only where ffi2 has no equivalent (ObjC message
 dispatch boundary). See `CONTEXT.md` "ffi2" and
-`generation/targets/racket/docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
+`targets/racket/docs/research/2026-05-31-racket-9.2-ffi2-migration.md`.
 
 - **Three-way `->` conflict (new, 2026-05-31).** `ffi2` *also* exports `->`
   (its arrow type). A module that requires both `ffi2` and `ffi/unsafe` fails
@@ -533,7 +533,7 @@ canonical short name of the optional Swift helper dylib is
   deliberately absent — inferring inherited init FFI signatures at expansion
   time would drift per superclass. `drawing-canvas.rkt` is the canonical
   consumer; design rationale is in
-  `generation/targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md`.
+  `targets/racket/docs/design/2026-04-19-racket-oo-class-system-analysis.md`.
 - **Encoding parser.** ObjC encoding strings interleave stack-offset *digits*
   between type tokens (e.g. `q8@0:4`); the parser in `objc-subclass.rkt` must
   skip numeric characters explicitly between tokens. Struct and union tokens
@@ -759,7 +759,7 @@ polish.
 `cargo run --example bundle_app -p apianyware-bundle-racket -- <script>`
 (or `-- --all`). Built bundles land at `apps/<name>/build/<App Name>.app`
 (gitignored). The display name is read from the H1 of
-`docs/apps/<name>/spec.md` — a kebab→title conversion produces wrong
+`apps/macos/<name>/docs/spec.md` — a kebab→title conversion produces wrong
 capitalisation for acronyms (e.g. "Ui Controls Gallery"). The bundle id is
 `com.linkuistics.<NoSpaceTitle>`.
 
@@ -768,7 +768,7 @@ capitalisation for acronyms (e.g. "Ui Controls Gallery"). The bundle id is
 `generated/oo/<framework>/`, and an optional `lib/` directory.
 
 **A new app needs `spec.md` only.** Create `apps/<name>/<name>.rkt` and
-`docs/apps/<name>/spec.md` with `# <Display Name>` as the first heading.
+`apps/macos/<name>/docs/spec.md` with `# <Display Name>` as the first heading.
 The `bundle-racket` integration test auto-discovers apps via a directory
 walk, so no test edits are needed for a new app. (The runtime-load harness's
 `APPS` array is separate and *does* need the manual append — §8.)

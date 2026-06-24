@@ -13,7 +13,7 @@ work→reflect→triage phase cycle, with per-workstream state in `LLM_STATE/<na
 `session-log.yaml`, `*-baseline`, `latest-session.yaml`).
 
 The Core Pipeline Hardening effort
-(`docs/specs/2026-05-20-core-pipeline-hardening-design.md`) retired that
+(`semantic/docs/design/2026-05-20-core-pipeline-hardening-design.md`) retired that
 machinery for `LLM_STATE/core/`: it archived `memory.yaml` / `session-log.yaml`
 under `LLM_STATE/core/archive/`, deleted the phase machinery, distilled the
 durable learnings into `knowledge/pipeline/*`, and re-pointed
