@@ -34,10 +34,12 @@ risky data-model rewrite lands in a stable, well-homed tree). Materialized
 **lazily**: only the first node exists now; later nodes are grown as earlier ones
 retire (do not pre-spawn all nine — runaway-tree anti-pattern).
 
-1. **skeleton** *(first node — planning leaf `02`)* — create the 5 domains; rename
-   internal references; redistribute the crates into domains under one workspace
-   (ADR-0043); relocate existing material; co-locate docs; slim the README; add
-   placeholder skeletons. Keep the JSON-IR pipeline building throughout.
+1. **skeleton** ✅ *(node `skeleton-k2`, complete 2026-06-24)* — created the 5 domains;
+   renamed internal references (`apianyware-macos-*` → `apianyware-*`); redistributed
+   the crates into domains under one workspace (ADR-0043); relocated existing material;
+   co-located docs; slimmed the README to a map; added placeholder skeletons. JSON-IR
+   pipeline builds + 71 test suites green throughout. §45 holds structurally (content
+   rewrites remain for 2–9). See **Skeleton outcomes** below.
 2. **spec-format / data-model** — `.apiw` DSL + parser → canonical/resolved YAML,
    replacing the JSON enriched IR. (Done in place in the new tree.)
 3. **semantic model** — `semantic/`: pattern-kinds + relationship entities as
@@ -66,13 +68,31 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
 - `docs/adr/0043-toolchain-crates-distributed-into-domains.md` — D2/D3.
 - Foundational decisions D1–D4: planning leaf `plan-k1` running log.
 
+## Skeleton outcomes (promoted from `skeleton-k2` on retirement)
+
+Durable decisions later workstreams depend on:
+
+- **Crate-home convention.** Rust crates live under a `tools/` subdirectory of the
+  domain they serve: shared crates at `<domain>/tools/<crate>/`, per-target crates at
+  `targets/<t>/tools/<crate>/`. Refines ADR-0043 (toolchain distributed by domain).
+  Any workstream adding a crate (esp. ws6 target model) follows this. The current
+  crate→domain map is the root `Cargo.toml` `members` list (the README §11 is the
+  human-facing pipeline map).
+- **ADRs raised by the skeleton:** **0044** (shared `emit` substrate → `targets/_shared/`),
+  **0045** (central ADRs → root `adr/`, refines 0024). ADR-0043 (toolchain distribution)
+  pre-dates the node.
+- **Deferred content is pinned** by co-located `TODO (workstream N)` markers in each
+  placeholder README; `TODO.md` carries the per-workstream index + residual doc
+  path-drift (notably the IR relocation `analysis/ir/` → `platforms/macos/api/`, owned
+  by **ws4**). The skeleton authored **zero** new content artifacts (SC6).
+
 ## Notes
 
-**Rename mechanics (constraint, not yet a decision):** this grove runs in a
-worktree *inside* `APIAnyware-MacOS/.grove-worktrees/structural-refactoring`, so
-the **physical** directory rename `~/Development/APIAnyware-MacOS` →
-`~/Development/APIAnyware` cannot be done from inside the worktree and must be a
-final **manual** step after the grove merges to main and its worktree is removed.
-The grove does all **internal** renaming (Cargo package names `apianyware-macos-*`
-→ `apianyware-*`, path strings, doc/identity references). The skeleton node owns
-the precise split + a migration note for the post-merge `mv`.
+**Rename mechanics (post-merge manual step):** this grove runs in a worktree *inside*
+`APIAnyware-MacOS/.grove-worktrees/structural-refactoring`, so the **physical** directory
+rename `~/Development/APIAnyware-MacOS` → `~/Development/APIAnyware` cannot be done from
+inside the worktree and is a final **manual** step after the grove merges to main and its
+worktree is removed. The grove did all **internal** renaming (Cargo package names, path
+strings, doc/identity references) in `internal-rename-k4`. The precise post-merge step +
+host-side path references (Claude memory dir, GitHub repo URL) are documented in the root
+**`MIGRATION.md`** (authored by `migration-finalize-k10`).
