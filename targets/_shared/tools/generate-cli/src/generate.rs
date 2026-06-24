@@ -1,5 +1,5 @@
 //! Core generation orchestration — loads enriched IR, invokes emitters,
-//! writes output to `generation/targets/{target}/generated/`.
+//! writes output to `targets/{target}/bindings/macos/{generated_subdir}/` (§18).
 
 use std::path::{Path, PathBuf};
 
@@ -32,18 +32,26 @@ impl GenerationSummary {
 
 /// Build the output directory path for a target.
 ///
-/// Pattern: `{base_output_dir}/{info.id}/{info.generated_subdir}/`.
-/// Most targets use the conventional `generated` subdir; the chez target
-/// uses `apianyware` so Chez's default library-name resolution finds the
-/// emitted files with `--libdirs generation/targets/chez`.
+/// Pattern: `{base_output_dir}/{info.id}/bindings/macos/{info.generated_subdir}/`
+/// (REFACTOR.md §18). Most targets use the conventional `generated` subdir; the
+/// chez target uses `apianyware` so Chez's default library-name resolution finds
+/// the emitted files with `--libdirs targets/chez/bindings/macos`.
+///
+/// TODO(platform-neutrality workstream): the `bindings/macos` segment is hardcoded
+/// to the only platform that exists today; parameterize by platform when a second
+/// one (Linux/.NET) lands.
 pub fn output_dir_for_target(base_output_dir: &Path, info: &TargetInfo) -> PathBuf {
-    base_output_dir.join(info.id).join(info.generated_subdir)
+    base_output_dir
+        .join(info.id)
+        .join("bindings")
+        .join("macos")
+        .join(info.generated_subdir)
 }
 
 /// Generate bindings for the specified targets (or all if none specified).
 ///
 /// For each target, generates all enriched frameworks. Reads enriched IR
-/// from `input_dir`, writes to `{base_output_dir}/{target}/generated/`.
+/// from `input_dir`, writes to `{base_output_dir}/{target}/bindings/macos/{generated_subdir}/`.
 pub fn run_generation(
     registry: &EmitterRegistry,
     input_dir: &Path,
@@ -555,7 +563,7 @@ mod tests {
         };
         assert_eq!(
             output_dir_for_target(base, &racket),
-            PathBuf::from("/out/targets/racket/generated")
+            PathBuf::from("/out/targets/racket/bindings/macos/generated")
         );
 
         let chez = TargetInfo {
@@ -565,7 +573,7 @@ mod tests {
         };
         assert_eq!(
             output_dir_for_target(base, &chez),
-            PathBuf::from("/out/targets/chez/apianyware")
+            PathBuf::from("/out/targets/chez/bindings/macos/apianyware")
         );
     }
 
@@ -588,7 +596,7 @@ mod tests {
 
         // Verify output structure
         assert!(output_dir
-            .join("racket/generated/testkit/main.rkt")
+            .join("racket/bindings/macos/generated/testkit/main.rkt")
             .exists());
     }
 
@@ -607,8 +615,12 @@ mod tests {
 
         // Both frameworks generated
         assert_eq!(summaries[0].frameworks_generated, 2);
-        assert!(output_dir.join("racket/generated/foundation").exists());
-        assert!(output_dir.join("racket/generated/appkit").exists());
+        assert!(output_dir
+            .join("racket/bindings/macos/generated/foundation")
+            .exists());
+        assert!(output_dir
+            .join("racket/bindings/macos/generated/appkit")
+            .exists());
     }
 
     #[test]
@@ -694,7 +706,7 @@ mod tests {
         let targets = vec!["racket".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
-        let testkit_dir = output_dir.join("racket/generated/testkit");
+        let testkit_dir = output_dir.join("racket/bindings/macos/generated/testkit");
 
         // Per-class files
         for name in &["tkobject", "tkview", "tkbutton", "tkmanager", "tkhelper"] {
@@ -731,7 +743,7 @@ mod tests {
         let targets = vec!["racket".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
-        let testkit_dir = output_dir.join("racket/generated/testkit");
+        let testkit_dir = output_dir.join("racket/bindings/macos/generated/testkit");
 
         // main.rkt re-exports submodules
         let main = std::fs::read_to_string(testkit_dir.join("main.rkt")).unwrap();
@@ -838,9 +850,11 @@ mod tests {
         let targets = vec!["gerbil".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
-        // `generated_subdir = "lib"` (the gerbil package root).
-        let storage =
-            std::fs::read_to_string(output_dir.join("gerbil/lib/appkit/nstextstorage.ss")).unwrap();
+        // `generated_subdir = "generated"` (the gerbil package root).
+        let storage = std::fs::read_to_string(
+            output_dir.join("gerbil/bindings/macos/generated/appkit/nstextstorage.ss"),
+        )
+        .unwrap();
         assert!(
             storage.contains("(defclass (NSTextStorage NSMutableAttributedString)"),
             "child derives from the cross-framework parent:\n{storage}"
@@ -878,9 +892,10 @@ mod tests {
         run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
         // `generated_subdir = "generated"`; per-class file under the framework dir.
-        let storage =
-            std::fs::read_to_string(output_dir.join("sbcl/generated/appkit/nstextstorage.lisp"))
-                .unwrap();
+        let storage = std::fs::read_to_string(
+            output_dir.join("sbcl/bindings/macos/generated/appkit/nstextstorage.lisp"),
+        )
+        .unwrap();
         assert!(
             storage.contains(
                 "(defclass ns:ns-text-storage (ns:ns-mutable-attributed-string) () (:metaclass objc-class))"
@@ -952,7 +967,7 @@ mod tests {
         let targets = vec!["gerbil".to_string()];
         run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
 
-        let lib = output_dir.join("gerbil/lib");
+        let lib = output_dir.join("gerbil/bindings/macos/generated");
         // The facade re-exports the sharded declarations (ADR-0023): the
         // `(g:defgeneric …)` forms live in `generics/NNN.ss`, one site total.
         let facade = std::fs::read_to_string(lib.join("generics.ss")).unwrap();
@@ -1010,7 +1025,7 @@ mod tests {
         assert_eq!(summaries[0].frameworks_generated, 2);
 
         // Both output directories should exist with correct content
-        let generated_dir = output_dir.join("racket/generated");
+        let generated_dir = output_dir.join("racket/bindings/macos/generated");
         assert!(
             generated_dir.join("foundation/main.rkt").exists(),
             "Foundation output should exist"

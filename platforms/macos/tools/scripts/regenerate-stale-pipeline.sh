@@ -18,9 +18,11 @@
 #               preserved across reruns by load_existing_llm_annotations()
 #               (which filters out heuristic-sourced entries) as long as
 #               --llm-dir is omitted.
-#   2. generate: inputs are generation/crates/emit{,-*}/src
-#                + analysis/ir/enriched. Output: generation/targets/{lang}/
-#                generated. Runs all registered emitters by default.
+#   2. generate: inputs are the emit crates (targets/_shared/tools/emit,
+#                targets/<t>/tools/emit-<t>) + targets/_shared/tools/generate-cli
+#                + analysis/ir/enriched. Output:
+#                targets/<t>/bindings/macos/<generated_subdir>/. Runs all
+#                registered emitters by default.
 #
 # Collection (cargo run -p apianyware-collect) is intentionally not
 # regenerated here: it costs ~2 minutes and is gated on SDK header changes
@@ -127,9 +129,12 @@ fi
 # --- Stage 2: generate ---
 
 GENERATE_SRC_INPUTS=(
-    generation/crates/emit/src
-    generation/crates/emit-racket/src
-    generation/crates/cli/src
+    targets/_shared/tools/emit/src
+    targets/_shared/tools/generate-cli/src
+    targets/racket/tools/emit-racket/src
+    targets/chez/tools/emit-chez/src
+    targets/gerbil/tools/emit-gerbil/src
+    targets/sbcl/tools/emit-sbcl/src
 )
 GENERATE_SRC_PATHS=()
 for p in "${GENERATE_SRC_INPUTS[@]}"; do
@@ -152,10 +157,12 @@ if [[ -n "$LANG_FILTER" ]]; then
     TARGETS=("$LANG_FILTER")
 else
     TARGETS=()
-    if [[ -d generation/targets ]]; then
-        for d in generation/targets/*/; do
-            [[ -d "$d" ]] || continue
-            TARGETS+=("$(basename "$d")")
+    if [[ -d targets ]]; then
+        for d in targets/*/; do
+            tgt="$(basename "$d")"
+            [[ "$tgt" == "_shared" ]] && continue
+            [[ -d "${d}bindings/macos" ]] || continue
+            TARGETS+=("$tgt")
         done
     fi
 fi
@@ -168,7 +175,14 @@ fi
 # every run.
 STALE_TARGETS=()
 for tgt in "${TARGETS[@]}"; do
-    out="generation/targets/${tgt}/generated"
+    # Per-target emitted-bindings subdir under bindings/macos/: chez interleaves
+    # its emitted libraries with the runtime under apianyware/; the rest emit into
+    # generated/ (matches each emitter's TargetInfo::generated_subdir).
+    case "$tgt" in
+        chez) sub="apianyware" ;;
+        *) sub="generated" ;;
+    esac
+    out="targets/${tgt}/bindings/macos/${sub}"
     if [[ ! -d "$out" ]]; then
         echo "=== generate: skipping ${tgt} (no generated/ — run cargo manually for first-time generation) ==="
         continue

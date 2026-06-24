@@ -21,7 +21,7 @@
 //!   function of the signature, per-class emission needs no global counter: two
 //!   classes that share a signature independently compute the same entry name.
 //! - [`generate_dispatch_swift`] — emits one `@_cdecl` Swift entry per signature
-//!   into `swift/Sources/APIAnywareRacket/Generated/Dispatch.swift`. Each entry
+//!   into `targets/racket/adapters/macos/sources/Generated/Dispatch.swift`. Each entry
 //!   casts `objc_msgSend` (fetched via `dlsym(RTLD_DEFAULT, …)`, since the
 //!   ObjectiveC overlay marks the symbol unavailable in pure Swift) to the
 //!   concrete `@convention(c)` shape — the shipped form of the spike's `aw_t_*`
@@ -1283,12 +1283,13 @@ mod tests {
         let fw = build_snapshot_test_framework();
         let sigs = collect_global_signatures(std::slice::from_ref(&fw), &RacketFfiTypeMapper);
         let swift = generate_dispatch_swift(&sigs);
-        // TODO(move-target-material-k8): repoint depth + the `swift/Sources/APIAnywareRacket`
-        // adapter path once k8 moves `swift/Sources/APIAnyware<T>` → `targets/racket/adapters/macos/`.
-        // Stale until then (double-gated `#[ignore]` + `AW_WRITE_DISPATCH=1`, so it cannot break CI).
+        // Adapter sources moved to targets/racket/adapters/macos/ (move-racket-material-k11;
+        // depth + path reconciled here in shared-seam-k15). CARGO_MANIFEST_DIR is
+        // targets/racket/tools/emit-racket, so two levels up reaches targets/racket/.
+        // Double-gated (`#[ignore]` + `AW_WRITE_DISPATCH=1`), so it cannot break CI.
         let out = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../../swift/Sources/APIAnywareRacket/Generated/Dispatch.swift"
+            "/../../adapters/macos/sources/Generated/Dispatch.swift"
         );
         std::fs::write(out, swift).expect("write Dispatch.swift");
         eprintln!(

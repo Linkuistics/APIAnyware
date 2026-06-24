@@ -23,7 +23,7 @@
 //!   writes Gerbil **source** `.ss` modules; compilation to `.ssi`+`.o1` is the
 //!   runtime/CLI's job (leaf 050/060), not this crate's.
 //! - On disk (under the emitter's `output_dir`, the package root —
-//!   `generated_subdir = "lib"`, design §8):
+//!   `generated_subdir = "generated"` after the §18 move, design §8):
 //!   ```text
 //!   <fw>.ss                 facade — :gerbil-bindings/<fw>, re-exports siblings
 //!   <fw>/<cls>.ss           one module per class — :gerbil-bindings/<fw>/<cls>

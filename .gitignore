@@ -16,57 +16,42 @@ analysis/ir/enriched/
 # costs millions of tokens, while the JSON itself is <5 KB per framework.
 analysis/ir/llm-summaries/
 
-# Generated language bindings (reproducible from enriched IR).
-# Racket writes to <target>/generated/. Chez writes its emitted
-# framework libraries alongside the hand-written runtime/ tree, so
-# everything under apianyware/ is ignored EXCEPT runtime/ (see
-# docs/specs/2026-05-27-chez-target-design.md §8 for the rationale).
-generation/targets/*/generated/
-generation/targets/chez/apianyware/*
-!generation/targets/chez/apianyware/runtime
-# Gerbil's emitted framework libraries land in lib/<framework>/ (the
-# `gerbil-bindings` package root); the hand-written runtime/ + the static
-# gerbil.pkg live in the same package and are committed. See
-# docs/specs/2026-06-03-gerbil-target-design.md §8 (refined at leaf 050/010:
-# package root is lib/, runtime at lib/runtime/, forced by the emitter's
-# hardcoded :gerbil-bindings/<fw>/<cls> + :gerbil-bindings/runtime/objc imports).
-generation/targets/gerbil/lib/*
-!generation/targets/gerbil/lib/runtime
-!generation/targets/gerbil/lib/gerbil.pkg
+# Generated language bindings (reproducible from enriched IR), emitted under each
+# target's §18 bindings/macos/ home. racket/sbcl/gerbil emit per-framework source
+# into bindings/macos/generated/<framework>/; chez into
+# bindings/macos/apianyware/<framework>/. Each target's bindings/macos/README.md
+# documents its layout.
+targets/*/bindings/macos/generated/*
+# racket keeps a tracked placeholder README in its (otherwise emitted) generated/.
+!targets/racket/bindings/macos/generated/README.md
+# gerbil's package root IS generated/ (move-gerbil-material-k13): the hand-written
+# runtime/ + the static gerbil.pkg are committed beside the emitted <framework>/ dirs.
+!targets/gerbil/bindings/macos/generated/runtime
+!targets/gerbil/bindings/macos/generated/gerbil.pkg
+# chez interleaves emitted framework libraries with the hand-written runtime/ under
+# one apianyware/ package-root namespace tree (move-chez-material-k12), so everything
+# under apianyware/ is ignored EXCEPT runtime/.
+targets/chez/bindings/macos/apianyware/*
+!targets/chez/bindings/macos/apianyware/runtime
 
-# Generated typed native dispatch table (ADR-0013): one @_cdecl objc_msgSend
-# entry per ABI signature, emitted into the APIAnywareRacket Swift target by
-# `apianyware-generate` and compiled by `swift build`. Like the .rkt
-# bindings it is reproducible from the IR (build order: generate -> swift build).
-swift/Sources/APIAnywareRacket/Generated/
+# Generated typed native dispatch table (ADR-0013) + Swift-native trampolines
+# (ADR-0027/0029/0038): one @_cdecl per ABI signature / residual decl, emitted by
+# `apianyware-generate` into each target's adapter sources and compiled by that
+# target's own `swift build` (targets/<t>/adapters/macos/Package.swift). Reproducible
+# from the IR (build order: generate -> swift build).
+targets/racket/adapters/macos/sources/Generated/
+targets/chez/adapters/macos/sources/Generated/
+targets/gerbil/adapters/macos/sources/Generated/
+targets/sbcl/adapters/macos/sources/Generated/
 
-# Generated chez Swift-native trampolines (ADR-0027 ported to chez, leaf 060):
-# one @_cdecl per Swift-native residual decl, emitted into the APIAnywareChez
-# Swift target by `apianyware-generate` and compiled by `swift build`.
-# Reproducible from the IR (build order: generate -> swift build).
-swift/Sources/APIAnywareChez/Generated/
+# Bytecode / fasl caches beside each target's runtime (racket raco make, etc.).
+targets/*/bindings/macos/runtime/compiled/
+targets/chez/bindings/macos/apianyware/runtime/compiled/
+targets/gerbil/bindings/macos/generated/runtime/compiled/
 
-# Generated gerbil Swift-native trampolines (ADR-0029, leaf 070): one @_cdecl per
-# Swift-native residual decl, emitted into the APIAnywareGerbil Swift target by
-# `apianyware-generate` and compiled by `swift build` into
-# libAPIAnywareGerbil.dylib (the deliberate ADR-0017 deviation — gerbil grows a
-# `swift build` step). Reproducible from the IR (build order: generate -> swift build).
-swift/Sources/APIAnywareGerbil/Generated/
-
-# Generated sbcl Swift-native trampolines (ADR-0038, leaf 040/050): one @_cdecl per
-# Swift-native residual decl, emitted into the APIAnywareSbcl Swift target by
-# `apianyware-generate` and compiled by `swift build` into libAPIAnywareSbcl.dylib
-# (the SBCL target's sole native unit — a Lisp compiles neither ObjC nor Swift inline).
-# Reproducible from the IR (build order: generate -> swift build).
-swift/Sources/APIAnywareSbcl/Generated/
-
-# Racket bytecode caches
-generation/targets/*/runtime/compiled/
-generation/targets/*/apianyware/runtime/compiled/
-generation/targets/*/apps/*/compiled/
-
-# Built sample-app .app bundles (regenerable via bundle-racket)
-generation/targets/*/apps/*/build/
+# Sample-app bytecode caches + built .app bundles (regenerable via bundle-<t>).
+targets/*/app-implementations/macos/*/compiled/
+targets/*/app-implementations/macos/*/build/
 
 # AppSpec runner artifacts captured per-app (regenerable from runner output)
 docs/apps/*/artifacts/

@@ -26,9 +26,10 @@ struct Cli {
     #[arg(long, default_value = "analysis/ir/enriched")]
     input_dir: PathBuf,
 
-    /// Base output directory for generated targets.
-    /// Output goes to `{output-dir}/{target}/generated/`.
-    #[arg(long, default_value = "generation/targets")]
+    /// Base output directory: the `targets/` tree root.
+    /// Output goes to `{output-dir}/{target}/bindings/macos/{generated_subdir}/`
+    /// (REFACTOR.md §18) — e.g. `targets/racket/bindings/macos/generated/`.
+    #[arg(long, default_value = "targets")]
     output_dir: PathBuf,
 
     /// List available target emitters.
@@ -40,7 +41,7 @@ struct Cli {
     /// build` then compiles it into `libAPIAnywareRacket`.
     #[arg(
         long,
-        default_value = "swift/Sources/APIAnywareRacket/Generated/Dispatch.swift"
+        default_value = "targets/racket/adapters/macos/sources/Generated/Dispatch.swift"
     )]
     racket_dispatch_out: PathBuf,
 
@@ -54,7 +55,7 @@ struct Cli {
     /// build` then compiles it into `libAPIAnywareRacket`.
     #[arg(
         long,
-        default_value = "swift/Sources/APIAnywareRacket/Generated/Trampolines.swift"
+        default_value = "targets/racket/adapters/macos/sources/Generated/Trampolines.swift"
     )]
     racket_trampolines_out: PathBuf,
 
@@ -67,7 +68,7 @@ struct Cli {
     /// targets; `swift build` then compiles it into `libAPIAnywareChez`.
     #[arg(
         long,
-        default_value = "swift/Sources/APIAnywareChez/Generated/Trampolines.swift"
+        default_value = "targets/chez/adapters/macos/sources/Generated/Trampolines.swift"
     )]
     chez_trampolines_out: PathBuf,
 
@@ -81,7 +82,7 @@ struct Cli {
     /// generated targets; `swift build` then compiles it into libAPIAnywareGerbil.
     #[arg(
         long,
-        default_value = "swift/Sources/APIAnywareGerbil/Generated/Trampolines.swift"
+        default_value = "targets/gerbil/adapters/macos/sources/Generated/Trampolines.swift"
     )]
     gerbil_trampolines_out: PathBuf,
 
@@ -95,7 +96,7 @@ struct Cli {
     /// then compiles it into libAPIAnywareSbcl.
     #[arg(
         long,
-        default_value = "swift/Sources/APIAnywareSbcl/Generated/Trampolines.swift"
+        default_value = "targets/sbcl/adapters/macos/sources/Generated/Trampolines.swift"
     )]
     sbcl_trampolines_out: PathBuf,
 

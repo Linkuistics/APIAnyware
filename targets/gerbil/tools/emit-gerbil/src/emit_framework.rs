@@ -44,15 +44,14 @@ pub const PACKAGE: &str = "gerbil-bindings";
 pub const GERBIL_TARGET_INFO: TargetInfo = TargetInfo {
     id: "gerbil",
     display_name: "Gerbil Scheme",
-    // The emitter's `output_dir` is the package root; `generated_subdir = "lib"`
-    // places it at `<output_dir>/lib/` (design spec §8). After the §18 move
-    // (`move-gerbil-material-k13`) the binding package root lives at
-    // `targets/gerbil/bindings/macos/generated/`; reconciling the generate-cli
-    // `--output-dir` default + this subdir to emit straight there is the
-    // shared-seam leaf (k15) job. The static `gerbil.pkg` declaring
-    // `(package: gerbil-bindings)` is owned by the runtime setup (leaf 050), not
-    // emitted per run.
-    generated_subdir: "lib",
+    // The emitter's `output_dir` is the package root. After the §18 move
+    // (`move-gerbil-material-k13`) gerbil's binding package root lives at
+    // `targets/gerbil/bindings/macos/generated/`, so `generated_subdir = "generated"`
+    // and `output_dir_for_target` resolves straight to that home (reconciled in the
+    // shared-seam leaf `shared-seam-k15`; was `"lib"` pre-move, design spec §8). The
+    // static `gerbil.pkg` declaring `(package: gerbil-bindings)` is owned by the
+    // runtime setup (leaf 050), not emitted per run.
+    generated_subdir: "generated",
 };
 
 /// The Gerbil emitter. Carries the cross-framework [`ClassRegistry`] used to
@@ -424,7 +423,7 @@ mod tests {
         let e = GerbilEmitter::new();
         assert_eq!(e.target_info().id, "gerbil");
         assert_eq!(e.target_info().display_name, "Gerbil Scheme");
-        assert_eq!(e.target_info().generated_subdir, "lib");
+        assert_eq!(e.target_info().generated_subdir, "generated");
     }
 
     #[test]

@@ -15,12 +15,12 @@ pub struct TargetInfo {
     pub id: &'static str,
     /// Human-readable name (e.g., `"Racket"`).
     pub display_name: &'static str,
-    /// Subdirectory under `generation/targets/<id>/` that receives the
+    /// Subdirectory under `targets/<id>/bindings/macos/` that receives the
     /// emitter's framework output. Most targets use `"generated"`; the
     /// chez target uses `"apianyware"` so Chez's default library-name
     /// resolution (`(apianyware <fw> <cls>)` →
     /// `<libdir>/apianyware/<fw>/<cls>.sls`) finds emitted files with
-    /// `--libdirs generation/targets/chez`.
+    /// `--libdirs targets/chez/bindings/macos`.
     pub generated_subdir: &'static str,
 }
 
@@ -52,8 +52,8 @@ pub trait TargetEmitter {
     /// Emit bindings for a single framework.
     ///
     /// `output_dir` is the target's generated-bindings root (e.g.,
-    /// `generation/targets/racket/generated/` for racket,
-    /// `generation/targets/chez/apianyware/` for chez — see
+    /// `targets/racket/bindings/macos/generated/` for racket,
+    /// `targets/chez/bindings/macos/apianyware/` for chez — see
     /// `TargetInfo::generated_subdir`). The emitter creates a
     /// framework subdirectory within it.
     fn emit_framework(&self, framework: &Framework, output_dir: &Path) -> io::Result<EmitResult>;
