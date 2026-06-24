@@ -999,6 +999,85 @@ winner stamped, losers kept as a `superseded-by` record; a fact with no producer
 _Avoid_: a float confidence (false precision — enum chosen); a separate provenance store keyed
 to facts (it is in-format); silently defaulting an unknown (it stays explicit).
 
+## Semantic model (refactor workstream 3)
+
+Introduced by the `structural-refactoring` grove, workstream 3 (`semantic-model-k27`):
+patterns and relationships as **first-class semantic entities** under `semantic/`
+(REFACTOR §7.5/§12/§31/§32). Design settled 2026-06-25 (ADR-0048, PRD
+`prd/2026-06-25-semantic-pattern-kind-model.md`); the build children realize it. The
+spine ws2 (spec-format) provides the `.apiw` DSL + triad + provenance machinery this
+reuses. Projection stays in `targets/`, never here.
+
+**Pattern-kind** _(the broad first-class entity)_:
+A **reusable, framework- and target-independent definition** of a semantic shape —
+authored once as `semantic/pattern-kinds/<kind>.apiw`. A kind declares a set of
+**roles** and a set of **laws** (constraints). The word is deliberately **broad**: it
+covers *both* multi-operation **behavioral contracts** (`bracket`, `builder`,
+`observer` — operation-roles + ordering/threading laws, §32) *and* **structural
+relationships** (`parent-child`, `callback-destroy-notifier`, collection/element
+ownership — type-roles + ownership/lifetime/invalidation laws, §31). A relationship is
+the **degenerate pattern-kind**: no operation sequence, just typed endpoints and their
+ownership/invalidation laws (decision D4 — relationships fold *into* pattern-kinds, not
+a sibling entity). The 10 legacy `PatternStereotype` Rust enum variants become this
+*authored data registry* (D2), no longer a closed enum.
+_Avoid_: "pattern" alone (ambiguous with an *instance*); "stereotype" (the retired
+closed-enum framing); a separate "relationship entity" (D4 dissolved that — §31's
+relationships are pattern-kinds); reading "pattern-kind" as only-behavioral (it covers
+typed edges too).
+
+**Pattern-instance**:
+A **concrete occurrence** of a pattern-kind in a specific framework — it binds the
+kind's roles to concrete **participants** and carries the ADR-0046 §4 provenance stamp
+(`source`/`confidence`/`provenance`). An instance is **platform knowledge**, so it
+lives in the **platform spec triad** (`platforms/macos/api/<Framework>/resolved.json`),
+*not* in `semantic/` (decision D1 — the two-level kind/instance split that keeps
+`semantic/` projection-AND-platform-independent). Produced by three precedence tiers —
+**convention** (datalog detection, D3), **llm**, **manual** — resolved by the ws2
+precedence `manual > llm > convention > extraction` (D2). Supersedes the old
+`Framework.api_patterns: Vec<ApiPattern>` IR list.
+_Avoid_: storing an instance under `semantic/pattern-kinds/` (a binding to NSView is
+macOS knowledge — D1); "pattern-kind" for an instance (the kind is the reusable
+definition, the instance is the concrete binding).
+
+**Role / participant**:
+A pattern-kind declares **roles** (e.g. `bracket`'s `acquire`/`release`/`operation`);
+an instance binds each role to a **participant** drawn from **{type, operation/selector,
+another pattern-instance-ref}**. The pattern-instance-ref participant is how §32's
+"patterns compose operations **plus relationships**" is realized (decision D5): a
+`subscription` instance binds its `destroy` role to a `callback-destroy-notifier`
+relationship-*instance*. One schema serves both behavioral and structural kinds — the
+difference is only *which* roles (operation- vs type-) and *which* laws
+(ordering/threading vs ownership/invalidation) a kind declares.
+_Avoid_: participants being only types+operations (they also admit pattern-instance
+refs — that is the composition mechanism, D5); "compose" meaning a separate relationship
+entity (relationships are pattern-instances a role binds to).
+
+**Convention-tier pattern detection** _(datalog; D3)_:
+The cheap structural producer of pattern-*instances* — today's imperative
+`detect_patterns` re-expressed as **`ascent` datalog rules** (the same engine + the
+ADR-0047 precedent that put Cocoa naming heuristics in `platforms/macos/tools/`,
+*not* shared `semantic/tools/datalog` which holds only the engine). Each derived
+`pattern_instance` tuple names the rule that produced it, so the `source=convention:<rule>`
+provenance falls out of the derivation trace. Detection is Cocoa-specific → lives in
+`platforms/macos/tools/` (with/beside `conventions`).
+_Avoid_: imperative `detect_patterns` as the mechanism (retired into datalog, D3); a
+shared `semantic/tools` home for the *rules* (the engine is shared, the Cocoa rules are
+platform-specific — the ADR-0047 split).
+
+**Pattern-model crate homes** _(D8 / the ws3 seam)_:
+A **new `semantic/tools/patterns` crate** owns the pattern-kind **registry** + `.apiw`
+parsing (a dedicated home for the pattern-model code, diverging from folding into
+`spec-format`). Instance **detection** is datalog in `platforms/macos/tools/` (D3);
+instance **carriage** extends `types` + `resolve`. ws3 authors the pattern-kind
+**`.apiw` KDL Schema** + a focused in-crate validator
+(`schemas/spec-format/pattern-kinds.kdl-schema`, D7, mirroring ws2's
+`annotations.kdl-schema`); ws8 owns the machine JSON Schema + validation tooling/CI. The
+per-fact provenance *workflow* (cache/regen/review/diff/precedence-audit) is **ws5's**,
+not ws3's — ws3 defines the carriage only (D6, mirroring the k26 seam).
+_Avoid_: folding the kind registry into `spec-format` (D8 chose a dedicated crate);
+ws3 building the provenance workflow (that is ws5); ws3 authoring the machine JSON
+Schema (that is ws8).
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
