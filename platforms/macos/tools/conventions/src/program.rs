@@ -34,6 +34,23 @@ ascent! {
     /// parameter's declared type is an ObjC block.
     relation param(String, String, u32, String, bool);
 
+    /// param_count(receiver, selector, total_params)
+    ///
+    /// The method's parameter count, used by the block-invocation facet's
+    /// "block is the last parameter" rule (mirrors legacy
+    /// `param_index == total_params - 1`).
+    relation param_count(String, String, u32);
+
+    /// property(receiver, name, is_copy, is_block)
+    ///
+    /// One tuple per **instance** property the receiver declares directly
+    /// (class properties are excluded at load — the legacy block-setter rule
+    /// requires `!p.class_property`). `is_copy` is the ObjC `(copy)` attribute;
+    /// `is_block` is true when the property's declared type is a block. Consumed
+    /// by the copy-block-property-setter rule below; classes **and** protocols
+    /// contribute (a protocol may declare a `@property (copy)` block property).
+    relation property(String, String, bool, bool);
+
     // =======================================================================
     // Parameter-ownership facet
     // =======================================================================
@@ -83,6 +100,98 @@ ascent! {
         param(r, s, i, _name, is_block),
         if *is_block,
         !is_weak(r, s, i);
+
+    // =======================================================================
+    // Block-invocation facet
+    //
+    // Mirrors `heuristics::derive_block_parameters`: every block-typed
+    // parameter resolves to exactly one `BlockInvocationStyle` ∈ {synchronous,
+    // async_copied, stored} by a **6-level precedence cascade** (lower priority
+    // number wins, "first match" in the legacy `if/else if` ladder):
+    //
+    //   0  copy-block-property-setter (index 0)        → stored
+    //   1  sync selector pattern                       → synchronous
+    //   2  async selector token                        → async_copied
+    //   3  last param + async-method token             → async_copied
+    //   4  stored selector pattern                     → stored
+    //   5  default                                     → async_copied
+    //
+    // Each level is an independent rule emitting a `block_candidate` stamped
+    // with its priority, style, and rule name. The readback selects the
+    // lowest-priority candidate per parameter — the "explicit priority in the
+    // readback" precedence option (ADR-0047 / k23 brief), chosen over a deep
+    // stratified-negation chain because the six flat rules read as the legacy
+    // ladder does. Every block param matches at least level 5, so the cascade
+    // always classifies (matching the legacy `async_copied` fall-through).
+    // =======================================================================
+
+    /// block_copy_property_setter(receiver, selector)
+    ///
+    /// `selector` is the synthesised single-arg setter `set<Cap>:` for an
+    /// instance `@property (copy)` whose declared type is a block. Mirrors
+    /// `heuristics::is_copy_block_property_setter`: the join with `property`
+    /// reproduces its `class_properties.iter().any(...)`, with `!class_property`
+    /// already enforced at load.
+    relation block_copy_property_setter(String, String);
+    block_copy_property_setter(r.clone(), s.clone()) <--
+        param(r, s, 0, _name, is_block),
+        if *is_block,
+        property(r, pname, is_copy, prop_is_block),
+        if *is_copy,
+        if *prop_is_block,
+        if is_setter_for_property(s, pname);
+
+    /// block_candidate(receiver, selector, param_index, priority, style, rule)
+    ///
+    /// One candidate classification for a block parameter; the readback keeps
+    /// the lowest-`priority` candidate per `(receiver, selector, param_index)`.
+    /// `style` is the serde `snake_case` `BlockInvocationStyle` name; `rule`
+    /// becomes the `convention:<rule>` provenance stamp.
+    relation block_candidate(String, String, u32, u32, &'static str, &'static str);
+
+    // Priority 0 — `@property (copy)` block setter: stored (overrides the
+    // substring tables, exactly as the legacy `if is_copy_block_property_setter`
+    // short-circuit does).
+    block_candidate(r.clone(), s.clone(), 0, 0, "stored", "block-copy-property-setter") <--
+        block_copy_property_setter(r, s);
+
+    // Priority 1 — synchronous selector patterns (enumerate / sort / comparator
+    // / predicate / filter / index-of / passing-test): the block runs during
+    // the call and is not copied.
+    block_candidate(r.clone(), s.clone(), *i, 1, "synchronous", "block-sync") <--
+        param(r, s, i, _name, is_block),
+        if *is_block,
+        if selector_has_sync_pattern(s);
+
+    // Priority 2 — async selector tokens (completion / handler / callback /
+    // reply / withResponse): the block is copied for later invocation.
+    block_candidate(r.clone(), s.clone(), *i, 2, "async_copied", "block-async-token") <--
+        param(r, s, i, _name, is_block),
+        if *is_block,
+        if selector_has_async_token(s);
+
+    // Priority 3 — the block is the method's **last** parameter and the method
+    // name reads as an async operation (dataTask / download / upload / fetch /
+    // load / perform / animate).
+    block_candidate(r.clone(), s.clone(), *i, 3, "async_copied", "block-async-last-param") <--
+        param(r, s, i, _name, is_block),
+        if *is_block,
+        param_count(r, s, total),
+        if *i + 1 == *total,
+        if selector_has_async_method_token(s);
+
+    // Priority 4 — stored selector patterns (addObserver / observe /
+    // notification / addOperation): the receiver retains the block.
+    block_candidate(r.clone(), s.clone(), *i, 4, "stored", "block-stored-pattern") <--
+        param(r, s, i, _name, is_block),
+        if *is_block,
+        if selector_has_stored_pattern(s);
+
+    // Priority 5 — default: async-copied (the legacy fall-through; explicit
+    // free is only needed for the synchronous case).
+    block_candidate(r.clone(), s.clone(), *i, 5, "async_copied", "block-async-default") <--
+        param(r, s, i, _name, is_block),
+        if *is_block;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +233,84 @@ fn is_observer_first_param(selector: &str, param_name: &str) -> bool {
     }
     let first_segment = selector.split(':').next().unwrap_or("");
     first_segment.starts_with("add") && first_segment.ends_with("Observer")
+}
+
+// ---------------------------------------------------------------------------
+// Block-invocation predicates — ported verbatim from
+// `heuristics::classify_block_invocation` + `setter_target_property_name`. The
+// substring tables are matched case-insensitively against the whole selector,
+// exactly as the legacy `selector.to_lowercase().contains(pattern)` loop did.
+// ---------------------------------------------------------------------------
+
+/// The selector names a synchronous block use (run-during-the-call, not copied).
+fn selector_has_sync_pattern(selector: &str) -> bool {
+    const SYNC: [&str; 10] = [
+        "enumerate",
+        "sortedarray",
+        "sortusing",
+        "comparator",
+        "predicate",
+        "filteredarray",
+        "filtered",
+        "indexofobject",
+        "indexesofobjects",
+        "passingtest",
+    ];
+    let lower = selector.to_lowercase();
+    SYNC.iter().any(|p| lower.contains(p))
+}
+
+/// The selector carries an async-completion token (block copied for later use).
+fn selector_has_async_token(selector: &str) -> bool {
+    const ASYNC: [&str; 5] = ["completion", "handler", "callback", "reply", "withresponse"];
+    let lower = selector.to_lowercase();
+    ASYNC.iter().any(|p| lower.contains(p))
+}
+
+/// The method name reads as an async operation; only consulted when the block
+/// is the method's last parameter (the rule head enforces the position).
+fn selector_has_async_method_token(selector: &str) -> bool {
+    const METHODS: [&str; 7] = [
+        "datatask", "download", "upload", "fetch", "load", "perform", "animate",
+    ];
+    let lower = selector.to_lowercase();
+    METHODS.iter().any(|p| lower.contains(p))
+}
+
+/// The selector names a stored-block use (observer / notification / operation
+/// registration): the receiver retains the block for repeated invocation.
+fn selector_has_stored_pattern(selector: &str) -> bool {
+    const STORED: [&str; 4] = ["addobserver", "observe", "notification", "addoperation"];
+    let lower = selector.to_lowercase();
+    STORED.iter().any(|p| lower.contains(p))
+}
+
+/// True when `selector` is the synthesised single-arg setter for the property
+/// named `property_name`. Couples `setter_target_property_name` with the
+/// name-equality check into one relation-joinable predicate (the join in
+/// `block_copy_property_setter` needs both selector and property name bound).
+fn is_setter_for_property(selector: &str, property_name: &str) -> bool {
+    setter_target_property_name(selector).as_deref() == Some(property_name)
+}
+
+/// Map a synthesised setter selector `set<Cap><Rest>:` to the property name
+/// `<lower><Rest>`. Returns `None` for selectors that are not single-argument
+/// synthesised setters. Ported verbatim from
+/// `heuristics::setter_target_property_name`.
+fn setter_target_property_name(selector: &str) -> Option<String> {
+    let stripped = selector.strip_prefix("set")?.strip_suffix(':')?;
+    if stripped.split(':').count() != 1 {
+        return None;
+    }
+    let mut chars = stripped.chars();
+    let first = chars.next()?;
+    if !first.is_ascii_uppercase() {
+        return None;
+    }
+    let mut name = String::with_capacity(stripped.len());
+    name.push(first.to_ascii_lowercase());
+    name.extend(chars);
+    Some(name)
 }
 
 #[cfg(test)]
@@ -197,5 +384,122 @@ mod tests {
         // Param 0 (name) must not be weak; param 3 (block) is copy.
         assert!(!prog.weak_param.iter().any(|(_, _, i, _)| *i == 0));
         assert!(prog.copy_param.iter().any(|(_, _, i, _)| *i == 3));
+    }
+
+    // -----------------------------------------------------------------
+    // Block-invocation facet
+    // -----------------------------------------------------------------
+
+    /// Run the program over one method's parameters (with `param_count`) and
+    /// optional `(property_name, is_copy, is_block)` receiver properties, then
+    /// return the lowest-priority block candidate for `index` as `(style, rule)`.
+    fn winning_block(
+        selector: &str,
+        params: &[(&str, bool)],
+        properties: &[(&str, bool, bool)],
+        index: u32,
+    ) -> Option<(&'static str, &'static str)> {
+        let mut prog = ConventionProgram::default();
+        for (i, (name, is_block)) in params.iter().enumerate() {
+            prog.param.push((
+                "R".to_string(),
+                selector.to_string(),
+                i as u32,
+                name.to_string(),
+                *is_block,
+            ));
+        }
+        prog.param_count
+            .push(("R".to_string(), selector.to_string(), params.len() as u32));
+        for (name, is_copy, is_block) in properties {
+            prog.property
+                .push(("R".to_string(), name.to_string(), *is_copy, *is_block));
+        }
+        prog.run();
+        prog.block_candidate
+            .iter()
+            .filter(|(_, _, i, _, _, _)| *i == index)
+            .min_by_key(|(_, _, _, prio, _, _)| *prio)
+            .map(|(_, _, _, _, style, rule)| (*style, *rule))
+    }
+
+    #[test]
+    fn sync_pattern_wins_over_async_token() {
+        // `enumerate` (sync, priority 1) is checked before `handler` (async,
+        // priority 2) — sync wins, exactly as the legacy ladder orders it.
+        let win = winning_block("enumerateUsingHandlerBlock:", &[("block", true)], &[], 0);
+        assert_eq!(win, Some(("synchronous", "block-sync")));
+    }
+
+    #[test]
+    fn async_token_wins_over_stored_pattern() {
+        // `completion` (async, priority 2) beats `observe` (stored, priority 4).
+        let win = winning_block("observeWithCompletion:", &[("block", true)], &[], 0);
+        assert_eq!(win, Some(("async_copied", "block-async-token")));
+    }
+
+    #[test]
+    fn last_param_async_method_gating_flips_stored_vs_async() {
+        // `download` is an async-method token (priority 3) that only fires when
+        // the block is the **last** param; `observe` is a stored pattern
+        // (priority 4). Block last → async wins; block not last → stored wins.
+        // This is the one place the last-param gate changes the resulting
+        // *style*. (Note `observe` must appear exactly — `observing` would not
+        // match the stored table.)
+        let last = winning_block(
+            "downloadAndObserve:block:",
+            &[("arg", false), ("block", true)],
+            &[],
+            1,
+        );
+        assert_eq!(last, Some(("async_copied", "block-async-last-param")));
+
+        let not_last = winning_block(
+            "downloadAndObserveWithBlock:extra:",
+            &[("block", true), ("extra", false)],
+            &[],
+            0,
+        );
+        assert_eq!(not_last, Some(("stored", "block-stored-pattern")));
+    }
+
+    #[test]
+    fn copy_block_property_setter_overrides_classification() {
+        // `setCompletionHandler:` would classify async via its tokens, but a
+        // matching `(copy)` block property forces priority-0 stored.
+        let win = winning_block(
+            "setCompletionHandler:",
+            &[("completionHandler", true)],
+            &[("completionHandler", true, true)],
+            0,
+        );
+        assert_eq!(win, Some(("stored", "block-copy-property-setter")));
+    }
+
+    #[test]
+    fn non_copy_or_mismatched_property_does_not_force_stored() {
+        // Non-copy property → no override (falls to async via "handler").
+        let non_copy = winning_block(
+            "setHandler:",
+            &[("handler", true)],
+            &[("handler", false, true)],
+            0,
+        );
+        assert_eq!(non_copy, Some(("async_copied", "block-async-token")));
+
+        // Two-arg "setter" is not a synthesised single-arg setter → no override.
+        let two_arg = winning_block(
+            "setHandler:withOptions:",
+            &[("handler", true), ("options", false)],
+            &[("handler", true, true)],
+            0,
+        );
+        assert_eq!(two_arg, Some(("async_copied", "block-async-token")));
+    }
+
+    #[test]
+    fn default_async_when_no_pattern_matches() {
+        let win = winning_block("doThing:", &[("block", true)], &[], 0);
+        assert_eq!(win, Some(("async_copied", "block-async-default")));
     }
 }

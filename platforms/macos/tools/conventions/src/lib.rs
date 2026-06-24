@@ -7,13 +7,13 @@
 //! each derived fact records the rule that produced it (the `convention:<rule>`
 //! provenance of ADR-0046 §4 falls out of the derivation trace).
 //!
-//! **Status (k22):** only the **parameter-ownership** facet is ported. The
-//! block-invocation, threading, and error-pattern facets are later siblings,
-//! and the analysis pipeline is **not yet wired** to this crate — `annotate`
-//! still runs the imperative heuristics. The flip child swaps the pipeline over
-//! once every facet is ported and characterization-equivalent. Until then this
-//! crate is exercised only by its tests, which assert rule-for-rule equivalence
-//! against the legacy classifiers (goldens-as-truth).
+//! **Status (k23):** the **parameter-ownership** (k22) and **block-invocation**
+//! (k23) facets are ported. The threading and error-pattern facets are later
+//! siblings, and the analysis pipeline is **not yet wired** to this crate —
+//! `annotate` still runs the imperative heuristics. The flip child swaps the
+//! pipeline over once every facet is ported and characterization-equivalent.
+//! Until then this crate is exercised only by its tests, which assert
+//! rule-for-rule equivalence against the legacy classifiers (goldens-as-truth).
 
 pub mod fact_loader;
 pub mod program;
@@ -23,7 +23,7 @@ use std::collections::BTreeMap;
 
 use apianyware_types::ir::Framework;
 
-pub use readback::{MethodKey, OwnershipFacet};
+pub use readback::{BlockInvocationFacet, MethodKey, OwnershipFacet};
 
 /// Derive the parameter-ownership facet for every method across `frameworks`,
 /// keyed by `(receiver, selector)`.
@@ -44,4 +44,26 @@ pub fn derive_ownership(frameworks: &[Framework]) -> BTreeMap<MethodKey, Ownersh
         "convention ownership facet derived"
     );
     readback::ownership_facets(&prog)
+}
+
+/// Derive the block-invocation facet for every method across `frameworks`,
+/// keyed by `(receiver, selector)`.
+///
+/// Mirrors `heuristics::derive_block_parameters`: every block-typed parameter
+/// resolves to one `BlockInvocationStyle` via the program's 6-level precedence
+/// cascade, the lowest-priority candidate winning (see [`program`]).
+pub fn derive_block_invocations(
+    frameworks: &[Framework],
+) -> BTreeMap<MethodKey, BlockInvocationFacet> {
+    let mut prog = program::ConventionProgram::default();
+    for framework in frameworks {
+        fact_loader::load_framework_facts(&mut prog, framework);
+    }
+    prog.run();
+    tracing::info!(
+        properties = prog.property.len(),
+        candidates = prog.block_candidate.len(),
+        "convention block-invocation facet derived"
+    );
+    readback::block_invocation_facets(&prog)
 }

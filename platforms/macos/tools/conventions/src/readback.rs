@@ -7,7 +7,9 @@
 
 use std::collections::BTreeMap;
 
-use apianyware_types::annotation::{OwnershipKind, ParamOwnership};
+use apianyware_types::annotation::{
+    BlockInvocationStyle, BlockParamAnnotation, OwnershipKind, ParamOwnership,
+};
 
 use crate::program::ConventionProgram;
 
@@ -103,4 +105,78 @@ fn record(
         entry.0 = OwnershipKind::Weak;
     }
     entry.1.push(format!("convention:{rule}"));
+}
+
+/// The block-invocation facet derived for one method.
+///
+/// `provenance` carries, per parameter index, the `convention:<rule>` stamp of
+/// the winning candidate (ADR-0046 §4) — see [`OwnershipFacet`] for the carriage
+/// rationale; the on-disk stamp is finalized in the flip child.
+#[derive(Debug, Clone, Default)]
+pub struct BlockInvocationFacet {
+    /// Block-parameter invocation entries, ascending by `param_index`.
+    pub block_parameters: Vec<BlockParamAnnotation>,
+    /// `param_index` → the winning `convention:<rule>` stamp (one rule wins per
+    /// parameter, so each list holds exactly one entry).
+    pub provenance: BTreeMap<u32, Vec<String>>,
+}
+
+/// Collect the block-invocation facet for every method with at least one block
+/// parameter, keyed by `(receiver, selector)`.
+///
+/// The program emits a `block_candidate` per precedence level a parameter
+/// matches; this resolves the legacy "first match wins" ladder by keeping the
+/// **lowest-priority** candidate per `(receiver, selector, param_index)`.
+/// Priorities are unique per parameter (one rule per level), so there is no tie
+/// to break.
+pub fn block_invocation_facets(
+    prog: &ConventionProgram,
+) -> BTreeMap<MethodKey, BlockInvocationFacet> {
+    // (receiver, selector) -> param_index -> (priority, style, rule) winner.
+    let mut winners: BTreeMap<MethodKey, BTreeMap<u32, (u32, &'static str, &'static str)>> =
+        BTreeMap::new();
+
+    for (receiver, selector, index, priority, style, rule) in &prog.block_candidate {
+        let by_index = winners
+            .entry((receiver.clone(), selector.clone()))
+            .or_default();
+        let entry = by_index.entry(*index).or_insert((*priority, *style, *rule));
+        if *priority < entry.0 {
+            *entry = (*priority, *style, *rule);
+        }
+    }
+
+    winners
+        .into_iter()
+        .map(|(key, by_index)| {
+            // `by_index` is a BTreeMap, so iteration is ascending by index.
+            let mut block_parameters = Vec::with_capacity(by_index.len());
+            let mut provenance = BTreeMap::new();
+            for (index, (_priority, style, rule)) in by_index {
+                block_parameters.push(BlockParamAnnotation {
+                    param_index: index as usize,
+                    invocation: style_from_code(style),
+                });
+                provenance.insert(index, vec![format!("convention:{rule}")]);
+            }
+            (
+                key,
+                BlockInvocationFacet {
+                    block_parameters,
+                    provenance,
+                },
+            )
+        })
+        .collect()
+}
+
+/// Map the candidate's `snake_case` style code to the typed enum. The codes are
+/// produced only by the program's own rules, so an unknown value is a bug.
+fn style_from_code(style: &str) -> BlockInvocationStyle {
+    match style {
+        "synchronous" => BlockInvocationStyle::Synchronous,
+        "async_copied" => BlockInvocationStyle::AsyncCopied,
+        "stored" => BlockInvocationStyle::Stored,
+        other => unreachable!("unknown block invocation style code: {other}"),
+    }
 }
