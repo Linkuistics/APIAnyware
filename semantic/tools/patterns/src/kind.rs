@@ -57,6 +57,11 @@ pub struct Role {
     pub binds: RoleBinds,
     /// How many participants fill this role in an instance.
     pub cardinality: Cardinality,
+    /// The **designated primary role** (DP3): when an instance's roles span
+    /// frameworks, its deterministic *home* framework is drawn from this role's
+    /// participants (e.g. `parent-child`'s `parent`). At most one role per kind
+    /// is primary; when none is, the home rule falls back to all participants.
+    pub primary: bool,
 }
 
 /// What kind of participant a role binds to (ADR-0048 D5 — polymorphic

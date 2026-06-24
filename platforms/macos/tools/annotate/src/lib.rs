@@ -26,7 +26,6 @@
 //! deferred to ws5).
 
 pub mod llm;
-pub mod pattern_detection;
 pub mod validate;
 
 use std::collections::{BTreeMap, HashMap};
@@ -240,13 +239,15 @@ pub fn annotate_framework(
         }
     }
 
-    // Detect heuristic patterns
-    let heuristic_patterns = pattern_detection::detect_patterns(framework);
-
+    // Pattern-instances are now first-class (ADR-0048): authored kinds bound to
+    // concrete participants, produced by the convention (datalog)/llm/manual
+    // tiers — a later child. The imperative `detect_patterns` heuristic detector
+    // is retired here; `annotate` emits no pattern-instances until a producer
+    // lands, so `Framework.patterns` stays empty (carriage replaces the old
+    // `api_patterns` list; emit goldens are unaffected — nothing projected them).
     let mut annotated = framework.clone();
     annotated.checkpoint = "annotated".to_string();
     annotated.class_annotations = class_annotations;
-    annotated.api_patterns = heuristic_patterns;
     annotated
 }
 
@@ -635,7 +636,7 @@ mod tests {
             functions: vec![],
             constants: vec![],
             class_annotations: vec![],
-            api_patterns: vec![],
+            patterns: vec![],
             enrichment: None,
             verification: None,
         }

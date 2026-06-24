@@ -64,7 +64,7 @@ pub fn build_snapshot_test_framework() -> Framework {
             build_cfstr_constant(),
         ],
         class_annotations: vec![],
-        api_patterns: vec![],
+        patterns: vec![],
         // Enrichment carries the analysis-stage `convenience_error_methods`
         // relation (`ErrorPattern::ErrorOutParam`): `TKManager loadResource:error:`
         // is the local witness for NSError out-param native routing (leaf 050/040)

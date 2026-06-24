@@ -4,7 +4,7 @@
 
 use apianyware_types::annotation::{
     AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations, ErrorPattern,
-    MethodAnnotation, PatternStereotype, ThreadingConstraint,
+    MethodAnnotation, ThreadingConstraint,
 };
 use apianyware_types::enrichment::EnrichmentData;
 use apianyware_types::ir::{Class, Method, Param, Property, Protocol};
@@ -65,7 +65,7 @@ fn empty_framework() -> Framework {
         functions: vec![],
         constants: vec![],
         class_annotations: vec![],
-        api_patterns: vec![],
+        patterns: vec![],
         enrichment: None,
         verification: None,
     }
@@ -504,32 +504,6 @@ fn classified_block_no_violation() {
 }
 
 // -----------------------------------------------------------------------
-// Scoped resource tests (from api_patterns)
-// -----------------------------------------------------------------------
-
-#[test]
-fn scoped_resource_from_paired_state_pattern() {
-    let mut fw = empty_framework();
-    fw.api_patterns = vec![apianyware_types::annotation::ApiPattern {
-        stereotype: PatternStereotype::PairedState,
-        name: "NSLock critical section".to_string(),
-        participants: serde_json::json!({
-            "lock": { "class": "NSLock", "selector": "lock" },
-            "unlock": { "class": "NSLock", "selector": "unlock" }
-        }),
-        constraints: vec![],
-        source: AnnotationSource::Heuristic,
-        doc_ref: None,
-    }];
-
-    let (e, _) = enrich(&fw);
-    assert_eq!(e.scoped_resources.len(), 1);
-    assert_eq!(e.scoped_resources[0].class, "NSLock");
-    assert_eq!(e.scoped_resources[0].open_selector, "lock");
-    assert_eq!(e.scoped_resources[0].close_selector, "unlock");
-}
-
-// -----------------------------------------------------------------------
 // Foundation integration test
 // -----------------------------------------------------------------------
 
@@ -582,11 +556,6 @@ fn foundation_enrichment_integration() {
         e.collection_iterables.len() >= 5,
         "expected >=5 iterables, got {}",
         e.collection_iterables.len()
-    );
-    assert!(
-        e.scoped_resources.len() >= 3,
-        "expected >=3 scoped resources, got {}",
-        e.scoped_resources.len()
     );
 
     // Verification should pass
@@ -1157,7 +1126,8 @@ fn three_framework_comprehensive_enrichment_isolation() {
         ],
     }];
 
-    // FW_C: collection iterable + scoped resource
+    // FW_C: collection iterable (scoped resources are no longer derived in
+    // enrich — patterns are first-class, ADR-0048, and projected by ws6).
     let mut fw_c = empty_framework();
     fw_c.name = "AppKit".to_string();
     fw_c.classes = vec![Class {
@@ -1173,17 +1143,6 @@ fn three_framework_comprehensive_enrichment_isolation() {
         all_properties: vec![],
         objc_exposed: true,
         swift_name: None,
-    }];
-    fw_c.api_patterns = vec![apianyware_types::annotation::ApiPattern {
-        stereotype: PatternStereotype::PairedState,
-        name: "NSGraphicsContext save/restore".to_string(),
-        participants: serde_json::json!({
-            "open": { "class": "NSGraphicsContext", "selector": "saveGraphicsState" },
-            "close": { "class": "NSGraphicsContext", "selector": "restoreGraphicsState" }
-        }),
-        constraints: vec![],
-        source: AnnotationSource::Heuristic,
-        doc_ref: None,
     }];
 
     let enriched = apianyware_enrich::enrich_loaded_frameworks(&[fw_a, fw_b, fw_c]).unwrap();
@@ -1219,18 +1178,12 @@ fn three_framework_comprehensive_enrichment_isolation() {
     assert!(e_b.scoped_resources.is_empty());
     assert!(v_b.passed);
 
-    // FW_C: iterable + scoped resource, nothing else
+    // FW_C: iterable, nothing else
     assert_eq!(
         e_c.collection_iterables,
         vec!["NSArrayController".to_string()]
     );
-    assert_eq!(e_c.scoped_resources.len(), 1);
-    assert_eq!(e_c.scoped_resources[0].class, "NSGraphicsContext");
-    assert_eq!(e_c.scoped_resources[0].open_selector, "saveGraphicsState");
-    assert_eq!(
-        e_c.scoped_resources[0].close_selector,
-        "restoreGraphicsState"
-    );
+    assert!(e_c.scoped_resources.is_empty());
     assert!(e_c.sync_block_methods.is_empty());
     assert!(e_c.convenience_error_methods.is_empty());
     assert!(e_c.main_thread_classes.is_empty());

@@ -276,7 +276,7 @@ mod tests {
             functions: vec![],
             constants: vec![],
             class_annotations: annotations,
-            api_patterns: vec![],
+            patterns: vec![],
             enrichment: None,
             verification: None,
         }

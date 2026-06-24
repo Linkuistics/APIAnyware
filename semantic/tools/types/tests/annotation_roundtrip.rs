@@ -1,11 +1,13 @@
 //! Tests: round-trip serialization/deserialization of annotation types.
 
+use std::collections::BTreeMap;
+
 use apianyware_types::annotation::{
-    AnnotationOverride, AnnotationOverrides, AnnotationSource, ApiPattern, BlockInvocationStyle,
+    AnnotationOverride, AnnotationOverrides, AnnotationSource, BlockInvocationStyle,
     BlockParamAnnotation, ClassAnnotations, Confidence, ErrorPattern, FrameworkAnnotations,
-    MethodAnnotation, OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype,
-    SubagentReport, ThreadingConstraint,
+    MethodAnnotation, OwnershipKind, ParamOwnership, SubagentReport, ThreadingConstraint,
 };
+use apianyware_types::pattern_instance::{InstanceSource, Participant, PatternInstance};
 
 #[test]
 fn confidence_serialization() {
@@ -247,49 +249,44 @@ fn empty_optional_fields_skipped_in_serialization() {
 }
 
 #[test]
-fn api_pattern_roundtrip() {
-    let pattern = ApiPattern {
-        stereotype: PatternStereotype::ResourceLifecycle,
-        name: "NSMutableAttributedString editing session".to_string(),
-        participants: serde_json::json!({
-            "open": {"class": "NSMutableAttributedString", "selector": "beginEditing"},
-            "operations": [
-                {"class": "NSMutableAttributedString", "selector": "addAttribute:value:range:"}
-            ],
-            "close": {"class": "NSMutableAttributedString", "selector": "endEditing"}
-        }),
-        constraints: vec![
-            PatternConstraint {
-                kind: "ordering".to_string(),
-                description: "beginEditing must precede mutations; endEditing must follow"
-                    .to_string(),
-            },
-            PatternConstraint {
-                kind: "thread_safety".to_string(),
-                description: "not thread-safe; all calls must be on same thread".to_string(),
-            },
-        ],
-        source: AnnotationSource::Llm,
-        doc_ref: Some(
+fn pattern_instance_roundtrip() {
+    // A `bracket` instance bound to a real begin/end pair, provenance-stamped —
+    // the resolved.json carriage shape (ADR-0048, workstream-3 child 2).
+    let op = |selector: &str| {
+        vec![Participant::Operation {
+            framework: Some("Foundation".to_string()),
+            class: Some("NSMutableAttributedString".to_string()),
+            selector: selector.to_string(),
+        }]
+    };
+    let mut roles: BTreeMap<String, Vec<Participant>> = BTreeMap::new();
+    roles.insert("acquire".to_string(), op("beginEditing"));
+    roles.insert("operation".to_string(), op("addAttribute:value:range:"));
+    roles.insert("release".to_string(), op("endEditing"));
+
+    let instance = PatternInstance {
+        id: PatternInstance::compute_id("bracket", &roles),
+        kind: "bracket".to_string(),
+        home: "Foundation".to_string(),
+        roles,
+        source: InstanceSource::Llm,
+        confidence: Some(Confidence::Medium),
+        provenance: Some(
             "Attributed String Programming Guide > Changing an Attributed String".to_string(),
         ),
     };
 
-    let json = serde_json::to_string_pretty(&pattern).unwrap();
-    let deserialized: ApiPattern = serde_json::from_str(&json).unwrap();
+    let json = serde_json::to_string_pretty(&instance).unwrap();
+    // Wire-format pins: the participant tag and snake_case source enum.
+    assert!(json.contains("\"participant\": \"operation\""));
+    assert!(json.contains("\"source\": \"llm\""));
 
-    assert_eq!(
-        deserialized.stereotype,
-        PatternStereotype::ResourceLifecycle
-    );
-    assert_eq!(
-        deserialized.name,
-        "NSMutableAttributedString editing session"
-    );
-    assert_eq!(deserialized.constraints.len(), 2);
-    assert_eq!(deserialized.constraints[0].kind, "ordering");
-    assert_eq!(deserialized.source, AnnotationSource::Llm);
-    assert!(deserialized.doc_ref.is_some());
+    let deserialized: PatternInstance = serde_json::from_str(&json).unwrap();
+    assert_eq!(deserialized, instance, "instance round-trips losslessly");
+    assert_eq!(deserialized.kind, "bracket");
+    assert_eq!(deserialized.home, "Foundation");
+    assert_eq!(deserialized.roles.len(), 3);
+    assert_eq!(deserialized.confidence, Some(Confidence::Medium));
 }
 
 #[test]
@@ -351,25 +348,34 @@ fn subagent_report_omits_unset_fields_in_serialization() {
 }
 
 #[test]
-fn pattern_stereotype_serialization() {
+fn instance_source_serialization() {
+    // The ADR-0046 §4 provenance tiers serialize as snake_case tokens.
     assert_eq!(
-        serde_json::to_string(&PatternStereotype::ResourceLifecycle).unwrap(),
-        "\"resource_lifecycle\""
+        serde_json::to_string(&InstanceSource::Extraction).unwrap(),
+        "\"extraction\""
     );
     assert_eq!(
-        serde_json::to_string(&PatternStereotype::ObserverPair).unwrap(),
-        "\"observer_pair\""
+        serde_json::to_string(&InstanceSource::Convention).unwrap(),
+        "\"convention\""
     );
     assert_eq!(
-        serde_json::to_string(&PatternStereotype::PairedState).unwrap(),
-        "\"paired_state\""
+        serde_json::to_string(&InstanceSource::Llm).unwrap(),
+        "\"llm\""
     );
     assert_eq!(
-        serde_json::to_string(&PatternStereotype::FactoryCluster).unwrap(),
-        "\"factory_cluster\""
+        serde_json::to_string(&InstanceSource::Manual).unwrap(),
+        "\"manual\""
     );
-    assert_eq!(
-        serde_json::to_string(&PatternStereotype::TargetAction).unwrap(),
-        "\"target_action\""
-    );
+}
+
+#[test]
+fn pattern_ref_participant_roundtrip() {
+    // The §32-composition case: a role bound to another instance by content id.
+    let r = Participant::Pattern {
+        id: "callback-destroy-notifier-0123456789abcdef".to_string(),
+    };
+    let json = serde_json::to_string(&r).unwrap();
+    assert!(json.contains("\"participant\":\"pattern\""));
+    let back: Participant = serde_json::from_str(&json).unwrap();
+    assert_eq!(back, r);
 }

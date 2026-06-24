@@ -3,7 +3,7 @@
 // to the collection.
 pattern-kind "collection-element-ownership" {
     doc "A collection type owns or borrows its element type; element lifetime may be tied to the collection."
-    role "collection" binds="type" cardinality="1"
+    role "collection" binds="type" cardinality="1" primary=#true
     role "element"    binds="type" cardinality="1"
     law "relationship" {
         token "collection-owns-elements"

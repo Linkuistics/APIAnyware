@@ -55,7 +55,7 @@ pub fn extract_framework(
         functions: result.functions,
         constants: result.constants,
         class_annotations: vec![],
-        api_patterns: vec![],
+        patterns: vec![],
         enrichment: None,
         verification: None,
     })

@@ -1,17 +1,15 @@
 //! Build and write enriched Framework checkpoints.
 //!
 //! Maps enrichment Datalog results back into the Framework IR struct,
-//! populating the `enrichment` and `verification` fields. Also extracts
-//! scoped resources and delegate protocols from `api_patterns`.
+//! populating the `enrichment` and `verification` fields.
 
 use std::collections::HashSet;
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use apianyware_types::annotation::PatternStereotype;
 use apianyware_types::enrichment::{
-    BlockMethodEntry, ClassSelectorEntry, EnrichmentData, ScopedResourceEntry, VerificationReport,
-    Violation, WeakParamEntry,
+    BlockMethodEntry, ClassSelectorEntry, EnrichmentData, VerificationReport, Violation,
+    WeakParamEntry,
 };
 use apianyware_types::ir::Framework;
 
@@ -318,7 +316,7 @@ pub fn write_resolved_checkpoint(framework: &Framework, output_dir: &Path) -> Re
 /// - `verification` — pass/fail + violations
 pub fn build_resolved_framework(annotated: &Framework, prog: &EnrichmentProgram) -> Framework {
     let filtered = filter_results_for_framework(annotated, prog);
-    let enrichment = build_enrichment_data(annotated, &filtered);
+    let enrichment = build_enrichment_data(&filtered);
     let verification = VerificationReport {
         passed: filtered.violations.is_empty(),
         violations: filtered.violations,
@@ -331,32 +329,18 @@ pub fn build_resolved_framework(annotated: &Framework, prog: &EnrichmentProgram)
     resolved
 }
 
-/// Build EnrichmentData from pre-filtered Datalog results + framework api_patterns.
-fn build_enrichment_data(
-    framework: &Framework,
-    filtered: &FrameworkDerivedResults,
-) -> EnrichmentData {
-    // Merge delegate protocols from api_patterns (LLM-detected)
+/// Build EnrichmentData from the pre-filtered Datalog results.
+///
+/// `delegate_protocols` is the datalog convention tier's output. `scoped_resources`
+/// was the *only* enrichment derived from the former heuristic `api_patterns`
+/// list; with patterns now first-class (ADR-0048) and projected by the target
+/// layer (ws6), enrich no longer launders patterns into enrichment relations. No
+/// emitter ever consumed `scoped_resources` (or the pattern-derived half of
+/// `delegate_protocols`), so this leaves emit output unchanged.
+fn build_enrichment_data(filtered: &FrameworkDerivedResults) -> EnrichmentData {
     let mut delegate_protocols = filtered.delegate_protocols.clone();
-    for pattern in &framework.api_patterns {
-        if pattern.stereotype == PatternStereotype::DelegateProtocol {
-            if let Some(proto_name) = extract_delegate_protocol_name(&pattern.name) {
-                if !delegate_protocols.contains(&proto_name) {
-                    delegate_protocols.push(proto_name);
-                }
-            }
-        }
-    }
     delegate_protocols.sort();
     delegate_protocols.dedup();
-
-    // Collect scoped resources from api_patterns (already per-framework)
-    let mut scoped_resources = extract_scoped_resources(framework);
-    scoped_resources.sort_by(|a, b| {
-        a.class
-            .cmp(&b.class)
-            .then(a.open_selector.cmp(&b.open_selector))
-    });
 
     EnrichmentData {
         sync_block_methods: filtered.sync_block_methods.clone(),
@@ -365,7 +349,7 @@ fn build_enrichment_data(
         delegate_protocols,
         convenience_error_methods: filtered.convenience_error_methods.clone(),
         collection_iterables: filtered.collection_iterables.clone(),
-        scoped_resources,
+        scoped_resources: Vec::new(),
         main_thread_classes: filtered.main_thread_classes.clone(),
         weak_param_methods: filtered.weak_param_methods.clone(),
         protocol_sync_block_methods: filtered.protocol_sync_block_methods.clone(),
@@ -377,102 +361,12 @@ fn build_enrichment_data(
     }
 }
 
-/// Extract scoped resources from api_patterns with PairedState or ResourceLifecycle stereotypes.
-fn extract_scoped_resources(framework: &Framework) -> Vec<ScopedResourceEntry> {
-    let mut resources = Vec::new();
-
-    for pattern in &framework.api_patterns {
-        match pattern.stereotype {
-            PatternStereotype::PairedState | PatternStereotype::ResourceLifecycle => {
-                if let Some(entry) = extract_scoped_resource_from_pattern(pattern) {
-                    resources.push(entry);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    resources
-}
-
-/// Try to extract a ScopedResourceEntry from a pattern's participants JSON.
-///
-/// Looks for `open`/`close`, `begin`/`end`, `lock`/`unlock`, or `enable`/`disable` keys.
-fn extract_scoped_resource_from_pattern(
-    pattern: &apianyware_types::annotation::ApiPattern,
-) -> Option<ScopedResourceEntry> {
-    let participants = &pattern.participants;
-
-    // Try various key pairs for open/close
-    let open_close_pairs = [
-        ("open", "close"),
-        ("begin", "end"),
-        ("lock", "unlock"),
-        ("enable", "disable"),
-    ];
-
-    for (open_key, close_key) in &open_close_pairs {
-        if let (Some(open_val), Some(close_val)) =
-            (participants.get(open_key), participants.get(close_key))
-        {
-            let class = extract_class_from_participant(open_val)
-                .or_else(|| extract_class_from_participant(close_val));
-            let open_sel = extract_selector_from_participant(open_val)?;
-            let close_sel = extract_selector_from_participant(close_val)?;
-
-            return Some(ScopedResourceEntry {
-                class: class.unwrap_or_else(|| pattern.name.clone()),
-                open_selector: open_sel,
-                close_selector: close_sel,
-            });
-        }
-    }
-
-    None
-}
-
-/// Extract a class name from a pattern participant JSON value.
-fn extract_class_from_participant(value: &serde_json::Value) -> Option<String> {
-    value
-        .get("class")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-}
-
-/// Extract a selector from a pattern participant JSON value.
-fn extract_selector_from_participant(value: &serde_json::Value) -> Option<String> {
-    // Try "selector" first, then "function"
-    value
-        .get("selector")
-        .or_else(|| value.get("function"))
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-}
-
-/// Extract delegate protocol name from a pattern name like "NSWindow delegate (NSWindowDelegate)".
-fn extract_delegate_protocol_name(pattern_name: &str) -> Option<String> {
-    // Try to extract from parenthesized name
-    if let Some(start) = pattern_name.rfind('(') {
-        if let Some(end) = pattern_name.rfind(')') {
-            if start < end {
-                return Some(pattern_name[start + 1..end].to_string());
-            }
-        }
-    }
-    // If no parens, look for a protocol-like name
-    let parts: Vec<&str> = pattern_name.split_whitespace().collect();
-    parts
-        .iter()
-        .find(|p| p.ends_with("Delegate") || p.ends_with("DataSource"))
-        .map(|p| p.to_string())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use apianyware_types::annotation::{
-        AnnotationSource, ApiPattern, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations,
-        MethodAnnotation, OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype,
+        AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ClassAnnotations,
+        MethodAnnotation, OwnershipKind, ParamOwnership,
     };
     use apianyware_types::ir::{Class, Method, Protocol};
     use apianyware_types::type_ref::{TypeRef, TypeRefKind};
@@ -561,7 +455,7 @@ mod tests {
             functions: vec![],
             constants: vec![],
             class_annotations: annotations,
-            api_patterns: vec![],
+            patterns: vec![],
             enrichment: None,
             verification: None,
         }
@@ -574,65 +468,6 @@ mod tests {
         prog.run();
         let resolved = build_resolved_framework(framework, &prog);
         resolved.enrichment.expect("enrichment populated")
-    }
-
-    #[test]
-    fn extract_delegate_protocol_name_from_parens() {
-        assert_eq!(
-            extract_delegate_protocol_name("NSWindow delegate (NSWindowDelegate)"),
-            Some("NSWindowDelegate".to_string())
-        );
-    }
-
-    #[test]
-    fn extract_delegate_protocol_name_from_word() {
-        assert_eq!(
-            extract_delegate_protocol_name("NSTableViewDelegate"),
-            Some("NSTableViewDelegate".to_string())
-        );
-    }
-
-    #[test]
-    fn extract_scoped_resource_from_paired_state_pattern() {
-        let pattern = ApiPattern {
-            stereotype: PatternStereotype::PairedState,
-            name: "NSLock critical section".to_string(),
-            participants: serde_json::json!({
-                "lock": { "class": "NSLock", "selector": "lock" },
-                "unlock": { "class": "NSLock", "selector": "unlock" }
-            }),
-            constraints: vec![PatternConstraint {
-                kind: "nesting".to_string(),
-                description: "lock/unlock must be balanced".to_string(),
-            }],
-            source: AnnotationSource::Heuristic,
-            doc_ref: None,
-        };
-
-        let entry = extract_scoped_resource_from_pattern(&pattern).unwrap();
-        assert_eq!(entry.class, "NSLock");
-        assert_eq!(entry.open_selector, "lock");
-        assert_eq!(entry.close_selector, "unlock");
-    }
-
-    #[test]
-    fn extract_scoped_resource_from_begin_end_pattern() {
-        let pattern = ApiPattern {
-            stereotype: PatternStereotype::PairedState,
-            name: "NSUndoManager grouping".to_string(),
-            participants: serde_json::json!({
-                "begin": { "class": "NSUndoManager", "selector": "beginUndoGrouping" },
-                "end": { "class": "NSUndoManager", "selector": "endUndoGrouping" }
-            }),
-            constraints: vec![],
-            source: AnnotationSource::Heuristic,
-            doc_ref: None,
-        };
-
-        let entry = extract_scoped_resource_from_pattern(&pattern).unwrap();
-        assert_eq!(entry.class, "NSUndoManager");
-        assert_eq!(entry.open_selector, "beginUndoGrouping");
-        assert_eq!(entry.close_selector, "endUndoGrouping");
     }
 
     #[test]

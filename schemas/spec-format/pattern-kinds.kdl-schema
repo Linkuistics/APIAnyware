@@ -87,6 +87,16 @@ document {
                     type "string"
                     enum "1" "?" "*" "+"
                 }
+                // The designated PRIMARY role (ADR-0048 DP3): the home anchor for
+                // a cross-framework pattern-instance — an instance whose roles span
+                // frameworks takes its deterministic *home* framework from this
+                // role's participants. Optional boolean (absent means not primary);
+                // at most one role per kind may be primary (checked by the
+                // conforming validator — the KDL Schema cannot bound it across
+                // sibling nodes).
+                prop "primary" {
+                    type "boolean"
+                }
             }
 
             // Behavioral sequencing — a happens-before graph over role names.

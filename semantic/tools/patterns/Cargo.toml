@@ -7,6 +7,7 @@ description = "The semantic pattern-kind registry (ADR-0048): the reusable, fram
 
 [dependencies]
 apianyware-spec-format.workspace = true
+apianyware-types.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 kdl.workspace = true

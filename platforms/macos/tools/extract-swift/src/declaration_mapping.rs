@@ -146,7 +146,7 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
         functions,
         constants,
         class_annotations: vec![],
-        api_patterns: vec![],
+        patterns: vec![],
         enrichment: None,
         verification: None,
     }

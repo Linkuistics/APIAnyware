@@ -318,6 +318,7 @@ name = "apianyware-patterns"
 version = "0.1.0"
 dependencies = [
  "apianyware-spec-format",
+ "apianyware-types",
  "kdl",
  "miette",
  "serde",

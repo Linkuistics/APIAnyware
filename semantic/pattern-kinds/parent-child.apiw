@@ -1,9 +1,12 @@
 // parent-child — a structural relationship (REFACTOR §31): an ownership edge
 // between two object types. A relationship is the degenerate pattern-kind — only
 // typed roles + ownership/invalidation laws, no operation sequence (ADR-0048 D4).
+// `parent` is the designated primary role (ADR-0048 DP3): a cross-framework
+// instance (e.g. an AppKit NSView parenting a CoreAudio type) homes to the
+// parent's framework.
 pattern-kind "parent-child" {
     doc "An ownership edge between two object types: a parent and a child it contains."
-    role "parent" binds="type" cardinality="1"
+    role "parent" binds="type" cardinality="1" primary=#true
     role "child"  binds="type" cardinality="1"
     law "relationship" {
         token "parent-owns-child"

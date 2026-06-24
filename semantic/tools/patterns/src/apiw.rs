@@ -156,10 +156,21 @@ impl Ctx<'_> {
             Some(_) => self.enum_prop::<Cardinality>(node, "cardinality", "cardinality")?,
             None => Cardinality::One,
         };
+        // `primary` is an optional boolean; absent means not primary (DP3).
+        let primary = match node.get("primary") {
+            Some(value) => value.as_bool().ok_or_else(|| {
+                self.err(
+                    node.span(),
+                    "`role` property `primary` must be a boolean (#true/#false)",
+                )
+            })?,
+            None => false,
+        };
         Ok(Role {
             name,
             binds,
             cardinality,
+            primary,
         })
     }
 
@@ -242,6 +253,18 @@ impl Ctx<'_> {
                     ),
                 ));
             }
+        }
+
+        // At most one role is the designated primary (DP3 home anchor).
+        let primary_count = kind.roles.iter().filter(|r| r.primary).count();
+        if primary_count > 1 {
+            return Err(self.err(
+                node.span(),
+                format!(
+                    "pattern-kind `{}` marks {primary_count} roles `primary`; at most one is allowed",
+                    kind.name
+                ),
+            ));
         }
 
         // Every law token belongs to its category's §30 vocabulary (DP1).
@@ -337,6 +360,39 @@ pattern-kind "bracket" {
         let ordering = kind.ordering.as_ref().unwrap();
         assert_eq!(ordering.before.len(), 2);
         assert_eq!(kind.laws[0].category, LawCategory::Error);
+    }
+
+    #[test]
+    fn parses_primary_role_marker() {
+        // DP3: a role may be marked the designated primary (home anchor).
+        let text = r#"
+pattern-kind "parent-child" {
+    role "parent" binds="type" primary=#true
+    role "child"  binds="type"
+    law "relationship" { token "parent-owns-child" }
+}
+"#;
+        let kind = parse_kind("parent-child.apiw", text).expect("parses");
+        assert!(kind.role("parent").unwrap().primary, "parent is primary");
+        assert!(
+            !kind.role("child").unwrap().primary,
+            "an unmarked role is not primary"
+        );
+    }
+
+    #[test]
+    fn rejects_two_primary_roles() {
+        let text = r#"
+pattern-kind "x" {
+    role "a" binds="type" primary=#true
+    role "b" binds="type" primary=#true
+}
+"#;
+        let err = parse_kind("x.apiw", text).unwrap_err().to_string();
+        assert!(
+            err.contains("primary"),
+            "explains the duplicate primary, got: {err}"
+        );
     }
 
     #[test]

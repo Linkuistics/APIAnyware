@@ -10,7 +10,6 @@
 //! - `delegate_protocol` — protocol suitable for typed delegate builder
 //! - `convenience_error_method` — method with NSError** out-param
 //! - `collection_iterable` — class with indexed access + count
-//! - `scoped_resource` — begin/end or open/close pairs (from api_patterns)
 //! - `main_thread_class` — class with main-thread-only methods
 //!
 //! **Verification rules:**

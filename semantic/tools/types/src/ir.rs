@@ -6,8 +6,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::annotation::{ApiPattern, ClassAnnotations};
+use crate::annotation::ClassAnnotations;
 use crate::enrichment::{EnrichmentData, VerificationReport};
+use crate::pattern_instance::PatternInstance;
 use crate::provenance::{DeclarationSource, DocRefs, SourceProvenance};
 use crate::serde_helpers::null_as_empty_vec;
 use crate::type_ref::TypeRef;
@@ -83,9 +84,13 @@ pub struct Framework {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub class_annotations: Vec<ClassAnnotations>,
 
-    /// Multi-method behavioral patterns (populated by annotate step).
+    /// First-class **pattern-instances** — kinds bound to concrete framework
+    /// participants, provenance-stamped (ADR-0048; the carriage of workstream-3
+    /// child 2). Replaces the former heuristic `api_patterns` list. Produced by
+    /// the convention/llm/manual tiers (detection is a later child); empty until
+    /// a producer runs.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub api_patterns: Vec<ApiPattern>,
+    pub patterns: Vec<PatternInstance>,
 
     // --- Enriched phase additions ---
     /// Annotation-derived enrichment relations (populated by enrich step).

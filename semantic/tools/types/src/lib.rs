@@ -7,6 +7,7 @@
 pub mod annotation;
 pub mod enrichment;
 pub mod ir;
+pub mod pattern_instance;
 pub mod provenance;
 pub mod serde_helpers;
 pub mod skipped_symbol_reason;

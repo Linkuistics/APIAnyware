@@ -29,7 +29,7 @@ fn empty_framework(name: &str) -> Framework {
         functions: vec![],
         constants: vec![],
         class_annotations: vec![],
-        api_patterns: vec![],
+        patterns: vec![],
         enrichment: None,
         verification: None,
     }

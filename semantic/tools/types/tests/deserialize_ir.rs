@@ -42,7 +42,7 @@ fn post_minimum_fields_default_when_missing() {
     assert!(fw.checkpoint.is_empty());
     assert!(fw.skipped_symbols.is_empty());
     assert!(fw.class_annotations.is_empty());
-    assert!(fw.api_patterns.is_empty());
+    assert!(fw.patterns.is_empty());
     assert!(fw.enrichment.is_none());
     assert!(fw.verification.is_none());
 }

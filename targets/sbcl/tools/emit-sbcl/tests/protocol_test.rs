@@ -119,7 +119,7 @@ fn fw(name: &str, classes: Vec<Class>, protocols: Vec<Protocol>) -> Framework {
         functions: vec![],
         constants: vec![],
         class_annotations: vec![],
-        api_patterns: vec![],
+        patterns: vec![],
         enrichment: None,
         verification: None,
     }

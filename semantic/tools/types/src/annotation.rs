@@ -256,73 +256,11 @@ pub struct DisagreementResolution {
 }
 
 // ---------------------------------------------------------------------------
-// API Pattern types
+// Multi-method patterns
 // ---------------------------------------------------------------------------
-
-/// A recognized multi-method behavioral contract in a framework.
-///
-/// Patterns describe how groups of methods work together — lifecycle sequences,
-/// observer pairs, transaction brackets, etc. Each pattern instance names its
-/// stereotype, participants, and constraints so emitters can produce idiomatic
-/// constructs in the target language.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ApiPattern {
-    /// Which stereotype this is an instance of (e.g., `"resource_lifecycle"`,
-    /// `"observer_pair"`, `"paired_state"`).
-    pub stereotype: PatternStereotype,
-
-    /// Short descriptive name (e.g., `"CGPath construction"`, `"NSLock critical section"`).
-    pub name: String,
-
-    /// The methods, functions, or classes that play each role in this pattern.
-    /// Keys are role names (stereotype-specific), values describe participants.
-    pub participants: serde_json::Value,
-
-    /// Ordering, threading, ownership, and other constraints.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub constraints: Vec<PatternConstraint>,
-
-    /// Where this pattern came from.
-    pub source: AnnotationSource,
-
-    /// Apple documentation reference (programming guide section or URL).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub doc_ref: Option<String>,
-}
-
-/// The classification of a pattern — which well-known Cocoa idiom it represents.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum PatternStereotype {
-    /// open/create → use* → close/release.
-    ResourceLifecycle,
-    /// create mutable → configure* → finalize/copy to immutable.
-    BuilderSequence,
-    /// register → (callback)* → unregister.
-    ObserverPair,
-    /// begin → mutate* → commit/rollback.
-    TransactionBracket,
-    /// container → iterate → process elements.
-    Enumeration,
-    /// call with NSError** → check return → handle.
-    ErrorOut,
-    /// setDelegate → (callbacks)*.
-    DelegateProtocol,
-    /// setTarget + setAction → (trigger)*.
-    TargetAction,
-    /// enable/disable, lock/unlock, show/hide.
-    PairedState,
-    /// abstract class → concrete subclass via factory methods.
-    FactoryCluster,
-}
-
-/// A constraint on a pattern instance.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PatternConstraint {
-    /// What kind of constraint (e.g., `"ordering"`, `"thread_safety"`, `"ownership"`,
-    /// `"nesting"`, `"mutation"`).
-    pub kind: String,
-
-    /// Human-readable description of the constraint.
-    pub description: String,
-}
+//
+// The former heuristic `ApiPattern` / `PatternStereotype` / `PatternConstraint`
+// types (a closed Rust enum of stereotypes with an untyped `participants` blob)
+// are superseded by the first-class, authored pattern-kind model: a typed
+// [`crate::pattern_instance::PatternInstance`] referencing a kind in the
+// `apianyware-patterns` registry (ADR-0048). See `crate::pattern_instance`.
