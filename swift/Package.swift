@@ -20,7 +20,12 @@ let package = Package(
         // it absorbs the native pieces it uses and shares no common substrate.
         // APIAnywareCommon (and the inert Gerbil stub) were deleted once chez —
         // the last real consumer — de-shared.
-        .library(name: "APIAnywareRacket", type: .dynamic, targets: ["APIAnywareRacket"]),
+        //
+        // Racket left this umbrella in move-racket-material-k11: its adapter now
+        // lives in the §18 target tree with its own manifest at
+        // targets/racket/adapters/macos/Package.swift (SwiftPM forbids a target
+        // path outside the package root, so the relocated sources cannot be
+        // referenced from here). chez/gerbil/sbcl follow in their own leaves.
         .library(name: "APIAnywareChez", type: .dynamic, targets: ["APIAnywareChez"]),
         // Gerbil's Swift-native trampoline dylib (ADR-0029): the deliberate
         // ADR-0017 deviation. Gerbil's ObjC native core stays in `gsc`; this
@@ -34,11 +39,9 @@ let package = Package(
         .library(name: "APIAnywareSbcl", type: .dynamic, targets: ["APIAnywareSbcl"]),
     ],
     targets: [
-        .target(name: "APIAnywareRacket"),
         .target(name: "APIAnywareChez"),
         .target(name: "APIAnywareGerbil"),
         .target(name: "APIAnywareSbcl"),
-        .testTarget(name: "APIAnywareRacketTests", dependencies: ["APIAnywareRacket"]),
         .testTarget(name: "APIAnywareChezTests", dependencies: ["APIAnywareChez"]),
         .testTarget(name: "APIAnywareGerbilTests", dependencies: ["APIAnywareGerbil"]),
         .testTarget(name: "APIAnywareSbclTests", dependencies: ["APIAnywareSbcl"]),

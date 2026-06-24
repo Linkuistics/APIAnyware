@@ -22,7 +22,7 @@
 //! copies of the symlink targets' content. This is what makes bundles
 //! self-contained even when the source tree stitches in external
 //! resources via symlinks (Modaliser-Racket's `bindings/` →
-//! `APIAnyware/generation/targets/racket/` is the motivating
+//! `APIAnyware/targets/racket/bindings/macos/` is the motivating
 //! case). Reading file content still transparently follows symlinks,
 //! because `fs::read_to_string` and `fs::copy` do.
 
@@ -36,9 +36,9 @@ use crate::bundle::BundleError;
 /// absolute **logical** paths under `source_root`.
 ///
 /// `source_root` is the directory the generated bundle's `racket-app/`
-/// will mirror — e.g. `generation/targets/racket/` for the APIAnyware
-/// sample apps, or the project root for a Modaliser-style layout whose
-/// entry lives at `main.rkt`. Any discovered file whose logical path
+/// will mirror — the racket binding tree under `targets/racket/` for the
+/// APIAnyware sample apps, or the project root for a Modaliser-style layout
+/// whose entry lives at `main.rkt`. Any discovered file whose logical path
 /// escapes `source_root` is rejected as a bundle-layout error.
 pub fn collect_dependencies(
     entry: &Path,

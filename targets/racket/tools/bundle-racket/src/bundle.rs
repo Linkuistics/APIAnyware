@@ -183,7 +183,7 @@ pub fn bundle_app(
 /// the file's **logical** path relative to `source_root`. Symlinks inside
 /// the source tree are preserved in the bundle layout but resolved at
 /// read time, so a directory symlink (e.g. Modaliser-Racket's
-/// `bindings/` → `APIAnyware/generation/targets/racket/`) lands
+/// `bindings/` → `APIAnyware/targets/racket/bindings/macos/`) lands
 /// as a real copy under `bindings/` in the bundle rather than an
 /// absolute symlink. The `lib/` directory at `source_root` (if any) is
 /// copied to `Resources/racket-app/lib/`, with two distributability

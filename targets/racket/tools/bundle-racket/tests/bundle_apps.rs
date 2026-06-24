@@ -12,6 +12,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::OnceLock;
 
 use apianyware_bundle_racket::{
     bundle_app, bundle_app_with_entry, read_display_name_from_spec, AppSpec,
@@ -27,11 +28,50 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+/// The racket binding tree the bundler expects: a single root with `apps/`,
+/// `runtime/`, `generated/`, and `lib/` as siblings. The sample apps'
+/// `(require "../../{generated,runtime}/...")` paths and the bundler's
+/// logical-path copy both depend on that shape.
+///
+/// The §18 refactor (`move-racket-material-k11`) split that tree apart: apps now
+/// live under `targets/racket/app-implementations/macos/`, and the runtime /
+/// generated / dylib under `targets/racket/bindings/macos/`. We stitch the new
+/// homes back into the single-root shape the bundler expects with a symlink
+/// fixture — the same directory-symlink case the bundler already handles for
+/// Modaliser-Racket. `generated/` holds no emitted `.rkt` in a clean checkout
+/// (gitignored), so the three sample-app bundling tests still fail for the
+/// *same* environmental reason (`ResolveRequire: generated/... does not exist`),
+/// now referencing the new homes.
+///
+/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
+/// the apps-root / bindings-root split natively so this fixture isn't needed.
 fn racket_root() -> PathBuf {
-    workspace_root()
-        .join("generation")
-        .join("targets")
-        .join("racket")
+    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
+    FIXTURE
+        .get_or_init(|| {
+            let target = workspace_root().join("targets").join("racket");
+            let fixture =
+                PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("racket-bundle-fixture");
+            let _ = fs::remove_dir_all(&fixture);
+            fs::create_dir_all(&fixture).expect("create racket bundle fixture root");
+            let mut link = |src: PathBuf, name: &str| {
+                let dst = fixture.join(name);
+                // A dangling link (e.g. an absent emitted file under generated/)
+                // is fine — the bundler's existence check yields the same
+                // environmental failure it did when the tree was colocated.
+                std::os::unix::fs::symlink(&src, &dst)
+                    .unwrap_or_else(|e| panic!("symlink {dst:?} -> {src:?}: {e}"));
+            };
+            link(target.join("app-implementations").join("macos"), "apps");
+            link(target.join("bindings").join("macos").join("runtime"), "runtime");
+            link(
+                target.join("bindings").join("macos").join("generated"),
+                "generated",
+            );
+            link(target.join("bindings").join("macos").join("lib"), "lib");
+            fixture
+        })
+        .clone()
 }
 
 fn knowledge_apps_dir() -> PathBuf {

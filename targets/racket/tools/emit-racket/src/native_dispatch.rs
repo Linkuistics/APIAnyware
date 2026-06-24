@@ -668,7 +668,7 @@ pub fn generate_dispatch_swift(sigs: &BTreeSet<NativeSig>) -> String {
     s.push_str("// One @_cdecl entry per distinct ABI signature; each casts objc_msgSend\n");
     s.push_str("// to the concrete @convention(c) shape. Called from thin ffi2 bindings\n");
     s.push_str("// in the generated Racket class files. See:\n");
-    s.push_str("//   generation/targets/racket/docs/design/2026-05-31-racket-native-binding-design.md §2\n");
+    s.push_str("//   targets/racket/docs/design/2026-05-31-racket-native-binding-design.md §2\n");
     s.push_str("//   docs/adr/0013-generated-typed-native-dispatch.md\n\n");
     s.push_str("import Darwin // dlsym, RTLD_DEFAULT\n");
     s.push_str("// AppKit re-exports Foundation + CoreGraphics: the by-value geometry struct\n");

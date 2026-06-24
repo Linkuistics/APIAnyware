@@ -3,14 +3,15 @@
 #
 # Compiles the racket runtime sources + async-method-smoke.swift into a
 # libAPIAnywareRacket.dylib at the canonical path the runtime modules load
-# (generation/targets/racket/lib/), runs the racket driver, then restores the
+# (targets/racket/bindings/macos/lib/), runs the racket driver, then restores the
 # original symlink (the smoke build is non-destructive — a trap puts it back).
 set -euo pipefail
 cd "$(dirname "$0")"
-ROOT="$(cd ../../../../.. && pwd)"
-LIB="$ROOT/generation/targets/racket/lib/libAPIAnywareRacket.dylib"
+ROOT="$(cd ../../../../../.. && pwd)"
+LIB="$ROOT/targets/racket/bindings/macos/lib/libAPIAnywareRacket.dylib"
 
-# Remember the original (a symlink into swift/.build) and restore it on exit.
+# Remember the original (a symlink into the racket adapter package's .build) and
+# restore it on exit.
 ORIG_TARGET="$(readlink "$LIB" 2>/dev/null || true)"
 restore() {
   rm -f "$LIB"
@@ -26,7 +27,7 @@ rm -f "$LIB"
 swiftc -emit-library -swift-version 6 \
   -sdk "$SDK" -target arm64-apple-macos14 \
   -o "$LIB" \
-  "$ROOT"/swift/Sources/APIAnywareRacket/*.swift \
+  "$ROOT"/targets/racket/adapters/macos/sources/*.swift \
   async-method-smoke.swift
 
 echo "running racket async-method smoke…"

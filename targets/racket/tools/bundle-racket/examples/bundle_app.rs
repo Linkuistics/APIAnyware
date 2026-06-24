@@ -7,7 +7,7 @@
 //! cargo run --example bundle_app -p apianyware-bundle-racket -- --all
 //! ```
 //!
-//! Output: `generation/targets/racket/apps/<script-name>/build/<App Name>.app`
+//! Output: `targets/racket/app-implementations/macos/<script-name>/build/<App Name>.app`
 //! per app.
 //!
 //! The display name comes from `docs/apps/<script>/spec.md`'s first
@@ -33,7 +33,19 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    let source_root = workspace.join("generation").join("targets").join("racket");
+    // TODO(bindings/adapter-model workstream, root brief item 6): the §18 refactor
+    // (`move-racket-material-k11`) split the racket tree — sample apps now live
+    // under `targets/racket/app-implementations/macos/` while runtime/generated/lib
+    // moved to `targets/racket/bindings/macos/`. The bundler still expects them
+    // colocated under one `source_root` (`source_root/apps/...` + sibling
+    // runtime/generated/lib). Until it learns the apps-root/bindings-root split,
+    // this example cannot bundle from the new tree as-is; see the stitched symlink
+    // fixture in `tests/bundle_apps.rs::racket_root` for the shape it needs.
+    let source_root = workspace
+        .join("targets")
+        .join("racket")
+        .join("app-implementations")
+        .join("macos");
     let knowledge_apps = workspace.join("knowledge").join("apps");
 
     let scripts: Vec<String> = if arg == "--all" {

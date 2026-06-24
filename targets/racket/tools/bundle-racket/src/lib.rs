@@ -12,8 +12,8 @@
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");
-//! let source_root = Path::new("generation/targets/racket");
-//! let output_dir = Path::new("generation/targets/racket/apps/hello-window/build");
+//! let source_root = Path::new("targets/racket/app-implementations/macos");
+//! let output_dir = Path::new("targets/racket/app-implementations/macos/hello-window/build");
 //! let app_path = bundle_app(&spec, source_root, output_dir).unwrap();
 //! println!("built: {}", app_path.display());
 //! ```
