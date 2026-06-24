@@ -1,0 +1,12 @@
+// buffer-fill — the caller provides a buffer and the callee fills it without
+// taking ownership.
+pattern-kind "buffer-fill" {
+    doc "The caller provides a buffer and the callee fills it; the written length may be reported separately."
+    role "operation" binds="operation" cardinality="1"
+    role "buffer"    binds="parameter" cardinality="1"
+    law "buffer" {
+        token "caller-provides-buffer"
+        token "callee-fills-buffer"
+        doc "The caller owns the buffer; the callee writes into it without taking ownership."
+    }
+}

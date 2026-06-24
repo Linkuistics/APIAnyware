@@ -1,0 +1,14 @@
+// target-action — a control sends an action message to a target object when
+// triggered. The target is held weakly; a nil target sends the action up the
+// responder chain.
+pattern-kind "target-action" {
+    doc "A control sends an action message to a target object when triggered; the target is held weakly."
+    role "control"    binds="type"      cardinality="1"
+    role "target"     binds="type"      cardinality="1"
+    role "set-target" binds="operation" cardinality="1"
+    role "set-action" binds="operation" cardinality="1"
+    law "ownership" {
+        token "weak"
+        doc "The control references the target weakly; a nil target sends the action up the responder chain."
+    }
+}

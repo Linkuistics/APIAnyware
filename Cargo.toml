@@ -4,6 +4,7 @@ members = [
     # semantic/ domain — semantic-graph builders + analyze CLI
     "semantic/tools/types",
     "semantic/tools/spec-format",
+    "semantic/tools/patterns",
     "semantic/tools/datalog",
     "semantic/tools/resolve",
     "semantic/tools/enrich",
@@ -55,6 +56,7 @@ miette = "7"
 # Internal crates
 apianyware-types = { path = "semantic/tools/types" }
 apianyware-spec-format = { path = "semantic/tools/spec-format" }
+apianyware-patterns = { path = "semantic/tools/patterns" }
 apianyware-extract-objc = { path = "platforms/macos/tools/extract-objc" }
 apianyware-extract-swift = { path = "platforms/macos/tools/extract-swift" }
 apianyware-datalog = { path = "semantic/tools/datalog" }

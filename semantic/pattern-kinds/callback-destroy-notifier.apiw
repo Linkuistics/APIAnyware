@@ -1,0 +1,20 @@
+// callback-destroy-notifier — a structural relationship (REFACTOR §31), and the
+// doubt-pass DP2 case: a single registration operation takes a callback, a
+// user-data pointer, and a destroy-notifier, all bound to PARAMETERS of one
+// operation (a single-operation-scoped relationship). The user data is valid
+// until the destroy-notifier is called.
+pattern-kind "callback-destroy-notifier" {
+    doc "A single registration operation takes a callback, a user-data pointer, and a destroy-notifier; the user data is valid until the destroy-notifier is called. All roles bind to parameters of one operation."
+    role "callback"  binds="parameter" cardinality="1"
+    role "user-data" binds="parameter" cardinality="1"
+    role "destroy"   binds="parameter" cardinality="1"
+    law "callback" {
+        token "callback-with-destroy-notifier"
+        token "callback-with-user-data-pointer"
+        doc "The user-data pointer is passed to the callback and remains valid until the destroy-notifier runs."
+    }
+    law "lifetime" {
+        token "until-object-invalidation"
+        doc "The user data is valid until the destroy-notifier is invoked."
+    }
+}

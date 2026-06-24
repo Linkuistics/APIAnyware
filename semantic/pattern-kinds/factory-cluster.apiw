@@ -1,0 +1,13 @@
+// factory-cluster — a class cluster hides private concrete subclasses behind a
+// public abstract superclass; factory operations select the concrete class. The
+// concrete class is opaque and must never be named in a binding.
+pattern-kind "factory-cluster" {
+    doc "A class cluster hides private concrete subclasses behind a public abstract superclass; factory operations select the concrete class."
+    role "abstract-type" binds="type"      cardinality="1"
+    role "factory"       binds="operation" cardinality="+"
+    role "concrete-type" binds="type"      cardinality="*"
+    law "ownership" {
+        token "conditional-transfer"
+        doc "A factory operation returns a retained or autoreleased instance per Cocoa naming conventions; the concrete class is opaque."
+    }
+}

@@ -1,0 +1,15 @@
+// paired-state — two complementary operations toggle a binary state
+// (lock/unlock, show/hide, begin/end). The scoped form restores the state even
+// on failure.
+pattern-kind "paired-state" {
+    doc "Two complementary operations toggle a binary state (lock/unlock, show/hide, begin/end); the scoped form restores the state even on failure."
+    role "enter" binds="operation" cardinality="1"
+    role "exit"  binds="operation" cardinality="1"
+    ordering {
+        before "enter" "exit"
+    }
+    law "error" {
+        token "cleanup-required-after-partial-failure"
+        doc "The exit operation must run even if the bracketed work fails."
+    }
+}

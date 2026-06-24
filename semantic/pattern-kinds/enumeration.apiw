@@ -1,0 +1,17 @@
+// enumeration — a container exposes a block- or iterator-based interface for
+// processing its elements. The per-element block is invoked synchronously
+// during iteration; mutating the container during enumeration is undefined.
+pattern-kind "enumeration" {
+    doc "A container exposes a block- or iterator-based interface for processing its elements; the block is invoked synchronously during iteration."
+    role "container" binds="type"      cardinality="1"
+    role "enumerate" binds="operation" cardinality="1"
+    role "element"   binds="type"      cardinality="?"
+    law "callback" {
+        token "synchronous-callback"
+        doc "The per-element block is called during iteration and not copied."
+    }
+    law "relationship" {
+        token "iterator-invalidated-by-mutation"
+        doc "Mutating the container during enumeration invalidates the iteration (undefined behavior)."
+    }
+}

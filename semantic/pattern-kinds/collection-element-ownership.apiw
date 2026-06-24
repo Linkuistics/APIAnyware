@@ -1,0 +1,13 @@
+// collection-element-ownership — a structural relationship (REFACTOR §31): a
+// collection type owns or borrows its element type; element lifetime may be tied
+// to the collection.
+pattern-kind "collection-element-ownership" {
+    doc "A collection type owns or borrows its element type; element lifetime may be tied to the collection."
+    role "collection" binds="type" cardinality="1"
+    role "element"    binds="type" cardinality="1"
+    law "relationship" {
+        token "collection-owns-elements"
+        token "element-lifetime-tied-to-collection"
+        doc "The collection retains its elements; an element's lifetime is bounded by its membership. Instances may switch to borrowed elements."
+    }
+}

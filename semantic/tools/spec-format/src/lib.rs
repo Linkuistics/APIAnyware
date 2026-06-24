@@ -27,4 +27,4 @@ pub mod machine;
 pub mod schema;
 
 pub use error::{Result, SpecFormatError};
-pub use schema::validate_apiw;
+pub use schema::{validate_against_schema, validate_apiw};

@@ -1,0 +1,21 @@
+// bracket — resource lifecycle (acquire → operation* → release).
+// The release runs even when an operation fails: bracket totality. Projects to
+// Scheme `dynamic-wind` / Lisp `with-*` / Rust `Drop` / Haskell `bracket`.
+pattern-kind "bracket" {
+    doc "Acquire a resource, operate on it, then release it; the release runs even if operations fail (bracket totality)."
+    role "acquire"   binds="operation" cardinality="1"
+    role "operation" binds="operation" cardinality="*"
+    role "release"   binds="operation" cardinality="1"
+    ordering {
+        before "acquire" "operation"
+        before "operation" "release"
+    }
+    law "error" {
+        token "cleanup-required-after-partial-failure"
+        doc "The release operation must run even when an operation fails."
+    }
+    law "lifetime" {
+        token "scope-lifetime"
+        doc "The resource is valid only between acquire and release."
+    }
+}

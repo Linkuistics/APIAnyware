@@ -1,0 +1,18 @@
+// subscription — registering returns a token whose lifetime controls the
+// subscription. Tearing down may be modelled by a referenced destroy-notifier
+// relationship: the `destroy` role binds to another pattern-instance (ADR-0048
+// D5 composition — §32's "patterns compose operations plus relationships").
+pattern-kind "subscription" {
+    doc "Registering returns a token whose lifetime controls the subscription; tearing down may reference a callback-destroy-notifier relationship-instance."
+    role "register" binds="operation" cardinality="1"
+    role "token"    binds="type"      cardinality="?"
+    role "destroy"  binds="pattern"   cardinality="?"
+    law "relationship" {
+        token "subscription-token-controls-lifetime"
+        doc "The returned token controls the subscription lifetime; releasing it ends delivery."
+    }
+    law "callback" {
+        token "callback-lifetime-tied-to-subscription-token"
+        doc "Callback delivery is bounded by the token's lifetime."
+    }
+}

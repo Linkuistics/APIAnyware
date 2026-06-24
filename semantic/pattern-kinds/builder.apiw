@@ -1,0 +1,17 @@
+// builder — create a mutable object, configure it, then finalize (often by
+// copying to an immutable form). The mutable builder is thread-confined while
+// it is being configured.
+pattern-kind "builder" {
+    doc "Create a mutable object, configure it through a sequence of setters, then finalize it (often by copying to an immutable form)."
+    role "create"    binds="operation" cardinality="1"
+    role "configure" binds="operation" cardinality="*"
+    role "finalize"  binds="operation" cardinality="?"
+    ordering {
+        before "create" "configure"
+        before "configure" "finalize"
+    }
+    law "threading" {
+        token "thread-confined"
+        doc "The mutable builder is not thread-safe while it is being configured."
+    }
+}

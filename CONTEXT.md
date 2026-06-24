@@ -1040,17 +1040,34 @@ macOS knowledge — D1); "pattern-kind" for an instance (the kind is the reusabl
 definition, the instance is the concrete binding).
 
 **Role / participant**:
-A pattern-kind declares **roles** (e.g. `bracket`'s `acquire`/`release`/`operation`);
-an instance binds each role to a **participant** drawn from **{type, operation/selector,
-another pattern-instance-ref}**. The pattern-instance-ref participant is how §32's
-"patterns compose operations **plus relationships**" is realized (decision D5): a
-`subscription` instance binds its `destroy` role to a `callback-destroy-notifier`
-relationship-*instance*. One schema serves both behavioral and structural kinds — the
-difference is only *which* roles (operation- vs type-) and *which* laws
-(ordering/threading vs ownership/invalidation) a kind declares.
-_Avoid_: participants being only types+operations (they also admit pattern-instance
-refs — that is the composition mechanism, D5); "compose" meaning a separate relationship
-entity (relationships are pattern-instances a role binds to).
+A pattern-kind declares **roles** (e.g. `bracket`'s `acquire`/`release`/`operation`).
+A role's `binds` fixes *what kind* of participant fills it at instance time, drawn from
+**{type, operation/selector, parameter, another pattern-instance-ref}**. The **parameter**
+binding lets a role address one operation's *parameter* — a single-operation-scoped
+relationship like `callback-destroy-notifier`, whose `callback`/`user-data`/`destroy`
+roles all bind to params of one register call (DP2). The **pattern-instance-ref** binding
+is how §32's "patterns compose operations **plus relationships**" is realized (decision
+D5): a `subscription` instance binds its `destroy` role to a `callback-destroy-notifier`
+relationship-*instance*. Each role also carries a **cardinality** (`1`/`?`/`*`/`+`). One
+schema serves both behavioral and structural kinds — the difference is only *which* roles
+(operation- vs type-/parameter-) and *which* laws a kind declares.
+_Avoid_: participants being only types+operations (they also admit parameters and
+pattern-instance refs — DP2/D5); "compose" meaning a separate relationship entity
+(relationships are pattern-instances a role binds to).
+
+**Law / controlled vocabulary** _(the DP1 spine)_:
+A pattern-kind's constraints are **laws**, and a law is **not free prose**: it names a
+`category` and asserts one or more `token`s drawn from that category's **controlled
+vocabulary** — REFACTOR **§30**'s enumerated "source semantic weirdness" sets (ownership /
+lifetime / threading / error / callback / buffer / relationship). That controlled-token
+discipline is what keeps the registry **non-vacuous** (doubt-pass DP1); a free-text `doc`
+field carries only nuance the tokens cannot. Behavioral sequencing is a separate
+**`ordering`** construct (a happens-before graph over role names), present on behavioral
+kinds, absent on structural relationships. The §30 tables live in
+`apianyware-patterns::vocab`; the focused validator enforces token∈category (the KDL
+Schema cannot state a conditional enum — ADR-0046 §3 / ADR-0048 D7).
+_Avoid_: re-introducing free-prose laws (DP1 forbids it); inventing tokens outside §30;
+treating `ordering` as a law (it is a distinct, role-referencing construct).
 
 **Convention-tier pattern detection** _(datalog; D3)_:
 The cheap structural producer of pattern-*instances* — today's imperative

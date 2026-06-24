@@ -1,0 +1,14 @@
+// delegate — an object delegates behavior decisions to a separate delegate
+// object conforming to a protocol. The delegate is weakly held to avoid a
+// retain cycle.
+pattern-kind "delegate" {
+    doc "An object delegates behavior decisions to a separate delegate object conforming to a protocol; the delegate is weakly held."
+    role "delegator"    binds="type"      cardinality="1"
+    role "protocol"     binds="type"      cardinality="1"
+    role "set-delegate" binds="operation" cardinality="1"
+    role "callback"     binds="operation" cardinality="*"
+    law "relationship" {
+        token "delegate-weakly-held"
+        doc "The delegator holds the delegate weakly; the delegate must outlive the assignment."
+    }
+}

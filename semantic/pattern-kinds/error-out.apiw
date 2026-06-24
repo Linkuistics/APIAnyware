@@ -1,0 +1,13 @@
+// error-out — an operation takes a trailing error out-parameter and signals
+// failure by its return value. The out-error is valid only on failure; the
+// caller must not read it on success.
+pattern-kind "error-out" {
+    doc "An operation takes a trailing error out-parameter and signals failure by its return value; the out-error is valid only on failure."
+    role "operation"   binds="operation" cardinality="1"
+    role "error-param" binds="parameter" cardinality="1"
+    law "error" {
+        token "nserror-out-param"
+        token "out-error-valid-only-when-failure"
+        doc "The error out-parameter is populated only when the operation reports failure; the caller must not read it on success."
+    }
+}

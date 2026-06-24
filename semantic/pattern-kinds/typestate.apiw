@@ -1,0 +1,12 @@
+// typestate — an object moves through a sequence of states; operations are valid
+// only in particular states and drive transitions between them. A transition may
+// invalidate the prior state.
+pattern-kind "typestate" {
+    doc "An object moves through a sequence of states; operations are valid only in particular states and drive transitions between them."
+    role "state"      binds="type"      cardinality="+"
+    role "transition" binds="operation" cardinality="+"
+    law "lifetime" {
+        token "until-object-invalidation"
+        doc "A transition may invalidate the prior state; an operation is valid only in its permitted state."
+    }
+}

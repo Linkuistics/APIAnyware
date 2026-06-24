@@ -40,13 +40,41 @@ use crate::error::{Result, SpecFormatError};
 /// validator and the contract are one source of truth.
 const SCHEMA_TEXT: &str = include_str!("../../../../schemas/spec-format/annotations.kdl-schema");
 
-/// Validate `.apiw` (KDL 2.0) text against the embedded KDL Schema contract.
+/// Validate `.apiw` (KDL 2.0) text against the embedded annotation-overlay KDL
+/// Schema contract (`schemas/spec-format/annotations.kdl-schema`).
 ///
 /// `source_name` labels diagnostics (typically the file name). Returns `Ok(())`
 /// when the document conforms; otherwise the first located violation. Syntactic
 /// KDL errors (a malformed document) forward the `kdl` crate's rich diagnostic.
 pub fn validate_apiw(source_name: &str, text: &str) -> Result<()> {
-    let model = schema_model();
+    validate_with_model(schema_model(), source_name, text)
+}
+
+/// Validate an `.apiw` (KDL 2.0) document against an *arbitrary* KDL Schema
+/// contract supplied as text — the same generic engine [`validate_apiw`] uses,
+/// exposed so sibling crates can validate against their own contract without
+/// duplicating the validator (ADR-0048 PRD goal 5; e.g. `apianyware-patterns`
+/// validating a pattern-kind `.apiw` against `pattern-kinds.kdl-schema`).
+///
+/// `schema_text` is the KDL Schema document; a malformed schema (a crate bug in
+/// the caller — its embedded contract should be guarded by a unit test) yields a
+/// located [`SpecFormatError::Apiw`]. Otherwise behaves exactly like
+/// [`validate_apiw`].
+pub fn validate_against_schema(schema_text: &str, source_name: &str, text: &str) -> Result<()> {
+    let model = SchemaModel::parse(schema_text).map_err(|e| {
+        SpecFormatError::apiw(
+            source_name,
+            text,
+            SourceSpan::from(0..0),
+            format!("the supplied KDL Schema is invalid: {e}"),
+        )
+    })?;
+    validate_with_model(&model, source_name, text)
+}
+
+/// Validate a document against an already-parsed schema model — the shared body
+/// of both public entry points.
+fn validate_with_model(model: &SchemaModel, source_name: &str, text: &str) -> Result<()> {
     let doc = KdlDocument::parse(text)?;
     let ctx = Ctx { source_name, text };
     ctx.check_children(

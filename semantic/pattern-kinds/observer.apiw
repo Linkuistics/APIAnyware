@@ -1,0 +1,22 @@
+// observer — register for notifications, receive callbacks, then unregister to
+// avoid leaks or dangling references. Every register must be balanced by an
+// unregister.
+pattern-kind "observer" {
+    doc "Register an observer for notifications, receive callbacks, then unregister to avoid leaks or dangling references."
+    role "subject"    binds="type"      cardinality="1"
+    role "register"   binds="operation" cardinality="1"
+    role "callback"   binds="operation" cardinality="*"
+    role "unregister" binds="operation" cardinality="1"
+    ordering {
+        before "register" "callback"
+        before "callback" "unregister"
+    }
+    law "relationship" {
+        token "observer-strongly-retained"
+        doc "The subject retains the observer until it is unregistered; every register must be balanced by an unregister."
+    }
+    law "threading" {
+        token "callback-thread-unspecified"
+        doc "Callbacks may arrive on any thread or a specified queue unless an instance narrows this."
+    }
+}

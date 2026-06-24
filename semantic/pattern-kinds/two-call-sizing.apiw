@@ -1,0 +1,17 @@
+// two-call-sizing — a first call reports the required buffer size, the caller
+// allocates, and a second call fills the buffer.
+pattern-kind "two-call-sizing" {
+    doc "A first call reports the required buffer size, the caller allocates, and a second call fills the buffer."
+    role "size-call" binds="operation" cardinality="1"
+    role "data-call" binds="operation" cardinality="1"
+    role "buffer"    binds="parameter" cardinality="1"
+    ordering {
+        before "size-call" "data-call"
+    }
+    law "buffer" {
+        token "two-call-sizing-pattern"
+        token "caller-provides-buffer"
+        token "callee-writes-required-size"
+        doc "The size call writes the required length; the caller allocates and passes the buffer to the data call."
+    }
+}

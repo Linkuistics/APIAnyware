@@ -1,0 +1,17 @@
+[package]
+name = "apianyware-patterns"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The semantic pattern-kind registry (ADR-0048): the reusable, framework- and target-independent pattern/relationship definitions, their `.apiw` (KDL) parser/loader, and a focused validator against `pattern-kinds.kdl-schema`"
+
+[dependencies]
+apianyware-spec-format.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+kdl.workspace = true
+miette.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

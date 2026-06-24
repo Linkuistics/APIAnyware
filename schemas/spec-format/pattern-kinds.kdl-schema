@@ -1,0 +1,148 @@
+// pattern-kinds.kdl-schema — the authoritative, language-neutral contract for an
+// authored `pattern-kind` `.apiw` file (ADR-0048; PRD "Schema + crate homes",
+// decision D7).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring
+// the sibling `annotations.kdl-schema` (workstream 2). Any KDL tool in any
+// language can validate or consume a pattern-kind `.apiw` file. The Rust
+// `apianyware-patterns` crate is ONE conforming validator of this contract, not
+// its source of truth (ADR-0046 §3 / ADR-0048 D7).
+//
+// SCOPE — the authored pattern-*kind* definitions ONLY (the reusable, framework-
+// and target-independent vocabulary under `semantic/pattern-kinds/`). Pattern
+// *instances* (a kind's roles bound to a concrete framework's participants) are
+// platform knowledge carried in the machine `resolved.json` triad (ADR-0048 D1)
+// and get a JSON Schema in workstream 8 — NOT this contract.
+//
+// CONTROLLED VOCABULARY — a `law` is NON-VACUOUS: its `token` values are drawn
+// from REFACTOR §30's enumerated weirdness sets, partitioned by the law's
+// category (ownership / lifetime / threading / error / callback / buffer /
+// relationship). The KDL Schema Language cannot express a *conditional* enum
+// (token vocabulary depending on the sibling category), so this contract types
+// `token` as a free string and the conforming `apianyware-patterns` validator
+// adds the focused per-category membership check against the §30 tables (its
+// `vocab` module) — exactly as ws2's validator interprets a richer subset than
+// the generic schema language can state. The `binds`, `cardinality`, and law
+// `category` enums ARE expressed here and checked generically.
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE
+// CARDINALITY in a `value {…}` body (KDL Schema convention). `other-nodes-allowed`
+// / `other-props-allowed` default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware pattern-kind definition (.apiw)" lang="en"
+        description "A reusable, framework- and target-independent pattern-kind: a set of roles (typed participant slots) and a set of laws (constraints drawn from REFACTOR §30's controlled vocabularies). Covers both behavioral contracts (bracket, observer, …) and structural relationships (parent-child, callback-destroy-notifier, …) under one entity (ADR-0048 D4)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 3 (pattern-kind-registry-k28)"
+    }
+
+    // Exactly one top-level `pattern-kind "<name>"` node per file. The name is the
+    // kind's stable authored identity and matches the file stem (the conforming
+    // loader checks this); no content hash is needed at the kind level (kinds have
+    // authored names — ADR-0048; instance identity is a separate, child-2 concern).
+    node "pattern-kind" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Human-facing one-line description. Optional. The ONLY free-prose
+            // field at the kind top level (laws carry their own optional `doc`).
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // A role — a named, typed participant slot. One or more; role names
+            // are unique within a kind (checked by the conforming loader).
+            node "role" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                // What kind of participant binds to this role at instance time:
+                //   type      — a class / struct / protocol type
+                //   operation — a method / function / selector
+                //   parameter — a parameter of one operation (a single-operation-
+                //               scoped relationship, e.g. callback-destroy-notifier)
+                //   pattern   — another pattern-instance (composition: a role binds
+                //               to a referenced pattern-instance — ADR-0048 D5)
+                prop "binds" {
+                    type "string"
+                    required #true
+                    enum "type" "operation" "parameter" "pattern"
+                }
+                // How many participants fill this role in an instance:
+                //   1 (exactly one) · ? (zero or one) · * (zero or more) · + (one or more).
+                // Optional; absent means exactly one.
+                prop "cardinality" {
+                    type "string"
+                    enum "1" "?" "*" "+"
+                }
+            }
+
+            // Behavioral sequencing — a happens-before graph over role names.
+            // Optional; present on behavioral kinds (bracket, builder, …), absent
+            // on purely structural relationships. Each `before "<a>" "<b>"` edge
+            // asserts role <a> precedes role <b>; both must name declared roles
+            // (checked by the conforming loader).
+            node "ordering" {
+                max 1
+                children {
+                    node "before" {
+                        min 1
+                        value {
+                            type "string"
+                            min 2
+                            max 2
+                        }
+                    }
+                }
+            }
+
+            // A law — a constraint drawn from one of REFACTOR §30's controlled
+            // weirdness vocabularies. Zero or more. The category (the positional
+            // value) selects the vocabulary; the `token` children carry the
+            // controlled values; an optional `doc` carries human nuance the
+            // controlled tokens cannot.
+            node "law" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                    enum "ownership" "lifetime" "threading" "error" "callback" "buffer" "relationship"
+                }
+                children {
+                    // A controlled token from the law's §30 category. One or more.
+                    // Membership in the category's set is enforced by the conforming
+                    // validator (the KDL Schema cannot state a conditional enum).
+                    node "token" {
+                        min 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                    // Human nuance the controlled tokens cannot capture. Optional.
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
