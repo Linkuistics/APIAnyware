@@ -47,8 +47,13 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    rename); convention heuristics re-expressed as `ascent` datalog rules and
    `heuristics.rs` retired. The spine ws3–6 consume. See **Spec-format outcomes**
    below. (ADR-0046/0047; machine IR stayed JSON per the k17 KDL-serde NO-GO.)
-3. **semantic model** — `semantic/`: pattern-kinds + relationship entities as
-   first-class semantic entities; the semantic vocabulary docs.
+3. **semantic model** ✅ *(node `semantic-model-k27`, complete 2026-06-25)* —
+   `semantic/`: patterns + relationships unified as first-class authored
+   **pattern-kinds** (ADR-0048, relationships folded in); the `.apiw` kind schema +
+   `semantic/tools/patterns` registry + 16 authored kinds (k28); the `resolved.json`
+   pattern-**instance** carriage replacing `api_patterns` (k29); the
+   `apianyware-pattern-detection` convention datalog (k30); the semantic-vocabulary
+   docs (k31). Goldens unmoved throughout. See **Semantic-model outcomes** below.
 4. **platform model** — `platforms/macos/`: extracted/annotations/resolved per API
    family; app-kinds; platform-level semantic tests.
 5. **LLM analysis side-channel** — annotations cached / regenerable / diffable /
@@ -121,6 +126,38 @@ in `CONTEXT.md` "Spec format / data model" + ADR-0046/0047, read every session):
   `.apiw` KDL Schema + the `validate_apiw` step; ws8 owns validation tooling/CI, JSON
   Schema for the machine `extracted.json`/`resolved.json`, and the
   app-kind/AppSpec/capability-profile/conformance-report schemas.
+
+## Semantic-model outcomes (promoted from `semantic-model-k27` on retirement)
+
+Durable decisions/handoffs later workstreams depend on (the model vocabulary lives in
+`CONTEXT.md` "Semantic model" + ADR-0048 + the PRD
+`prd/2026-06-25-semantic-pattern-kind-model.md`; the prose in
+`semantic/docs/{overview,pattern-model,api-pattern-catalog}.md`):
+
+- **Two-level model, two domains.** A **pattern-kind** (roles + laws; framework- *and*
+  target-independent) is authored in `semantic/pattern-kinds/<kind>.apiw`; a
+  **pattern-instance** (a kind bound to a concrete framework, provenance-stamped) is
+  *platform* knowledge carried in `platforms/macos/api/<F>/resolved.json`, replacing the
+  old `Framework.api_patterns`. Relationships (§31) fold *into* pattern-kinds — one
+  entity, one schema, one registry, one provenance path (ADR-0048 D1/D4). Instance ids
+  are content-derived (DP4); cross-framework instances home to the kind's `primary` role's
+  framework (DP3).
+- **Crate homes:** kind registry + `.apiw` parse + §30 controlled vocab + focused validator
+  in the new `semantic/tools/patterns`; convention-tier instance **detection** (datalog) in
+  `platforms/macos/tools/pattern-detection`; instance **carriage** extends
+  `semantic/tools/{types,resolve}`.
+- **ws5 seam (D6):** ws3 defined only the instance provenance *carriage*
+  (`source`/`confidence`/`provenance`; precedence `manual > llm > convention > extraction`).
+  The per-fact cache / regen / review-accept / diff *workflow* + the disagreement-precedence
+  audit is **ws5's** — mirrors the k26 convention-fact seam.
+- **ws6 seam:** ws6 projects kinds to target idioms via the `emit/pattern_dispatch` seam; the
+  semantic model is ws6's *input*, **not** the projection spec (the model stays
+  target-independent — projection lives in `targets/`, never `semantic/`).
+- **ws8 seam (D7):** ws3 authored the pattern-kind `.apiw` KDL Schema + focused in-crate
+  validator (`schemas/spec-format/pattern-kinds.kdl-schema`); ws8 still owns the *machine*
+  JSON Schema (extracted/resolved), validation tooling/CI, and the app-kind/AppSpec/
+  conformance-report schemas.
+- **ws9:** the semantic model informs the semantic-layer tests (multi-layer test model).
 
 ## Notes
 
