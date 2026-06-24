@@ -39,9 +39,10 @@ fn workspace_root() -> PathBuf {
 /// homes back into the single-root shape the bundler expects with a symlink
 /// fixture — the same directory-symlink case the bundler already handles for
 /// Modaliser-Racket. `generated/` holds no emitted `.rkt` in a clean checkout
-/// (gitignored), so the three sample-app bundling tests still fail for the
-/// *same* environmental reason (`ResolveRequire: generated/... does not exist`),
-/// now referencing the new homes.
+/// (gitignored), so the three sample-app bundling tests skip-as-pass via
+/// `racket_emit_present()` when emit has not been run locally — they only
+/// resolve `(require "../../generated/appkit/...")` once `apianyware-generate`
+/// has produced it (`migration-finalize-k10`).
 ///
 /// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
 /// the apps-root / bindings-root split natively so this fixture isn't needed.
@@ -50,20 +51,23 @@ fn racket_root() -> PathBuf {
     FIXTURE
         .get_or_init(|| {
             let target = workspace_root().join("targets").join("racket");
-            let fixture =
-                PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("racket-bundle-fixture");
+            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("racket-bundle-fixture");
             let _ = fs::remove_dir_all(&fixture);
             fs::create_dir_all(&fixture).expect("create racket bundle fixture root");
-            let mut link = |src: PathBuf, name: &str| {
+            let link = |src: PathBuf, name: &str| {
                 let dst = fixture.join(name);
-                // A dangling link (e.g. an absent emitted file under generated/)
-                // is fine — the bundler's existence check yields the same
-                // environmental failure it did when the tree was colocated.
+                // The link targets are directories that always exist; the
+                // emitted `.rkt` files *under* generated/ may be absent (not yet
+                // emitted), which the bundling tests gate on via
+                // `racket_emit_present()` rather than letting the bundler fail.
                 std::os::unix::fs::symlink(&src, &dst)
                     .unwrap_or_else(|e| panic!("symlink {dst:?} -> {src:?}: {e}"));
             };
             link(target.join("app-implementations").join("macos"), "apps");
-            link(target.join("bindings").join("macos").join("runtime"), "runtime");
+            link(
+                target.join("bindings").join("macos").join("runtime"),
+                "runtime",
+            );
             link(
                 target.join("bindings").join("macos").join("generated"),
                 "generated",
@@ -74,8 +78,11 @@ fn racket_root() -> PathBuf {
         .clone()
 }
 
-fn knowledge_apps_dir() -> PathBuf {
-    workspace_root().join("knowledge").join("apps")
+/// The common, target-independent app specs, co-located by `co-locate-docs-k9`
+/// at `apps/macos/<app>/docs/spec.md` (§15). Each app's display name is the
+/// spec's first H1. (Was `knowledge/apps/<app>/spec.md` pre-refactor.)
+fn common_app_specs_dir() -> PathBuf {
+    workspace_root().join("apps").join("macos")
 }
 
 fn discover_app_scripts() -> Vec<String> {
@@ -113,6 +120,24 @@ fn entry_script_present() -> bool {
         .exists()
 }
 
+/// True when `apianyware-generate` has been run locally — the emitted binding
+/// tree under `generated/<fw>/` exists. The hand-written runtime, the dylib, and
+/// the sample-app entry scripts are committed, but the per-framework emitted
+/// `.rkt` libraries are gitignored (`.gitignore`: `generated/*`), so the
+/// bundling tests that resolve `(require "../../generated/appkit/…")` can only
+/// run once emit has produced them. Without this guard they fail with
+/// `ResolveRequire: generated/… does not exist` in any clean checkout that has
+/// `swiftc` — the same environmental failure noted on `racket_root`. Mirrors
+/// `gerbil_tree_present()` and the snapshot tests' skip-as-pass discipline for
+/// gitignored, pipeline-produced artifacts.
+fn racket_emit_present() -> bool {
+    racket_root()
+        .join("generated")
+        .join("appkit")
+        .join("nsapplication.rkt")
+        .is_file()
+}
+
 #[test]
 fn bundles_hello_window_into_app_directory() {
     if !swiftc_available() {
@@ -121,6 +146,10 @@ fn bundles_hello_window_into_app_directory() {
     }
     if !entry_script_present() {
         eprintln!("SKIPPED: hello-window source not present");
+        return;
+    }
+    if !racket_emit_present() {
+        eprintln!("SKIPPED: emitted binding tree not present (generate not run locally)");
         return;
     }
 
@@ -406,6 +435,10 @@ fn bundle_has_no_compiled_directories_anywhere() {
         eprintln!("SKIPPED: hello-window source not present");
         return;
     }
+    if !racket_emit_present() {
+        eprintln!("SKIPPED: emitted binding tree not present (generate not run locally)");
+        return;
+    }
 
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name(SCRIPT_NAME);
@@ -491,6 +524,10 @@ fn bundles_every_sample_app() {
         eprintln!("SKIPPED: swiftc not available");
         return;
     }
+    if !racket_emit_present() {
+        eprintln!("SKIPPED: emitted binding tree not present (generate not run locally)");
+        return;
+    }
     let scripts = discover_app_scripts();
     if scripts.is_empty() {
         eprintln!("SKIPPED: no sample apps discovered");
@@ -503,7 +540,10 @@ fn bundles_every_sample_app() {
         // Use the same spec-md → display name lookup that the CLI
         // example uses, so the test bundles match what real users get.
         let mut spec = AppSpec::from_script_name(script);
-        let spec_md = knowledge_apps_dir().join(script).join("spec.md");
+        let spec_md = common_app_specs_dir()
+            .join(script)
+            .join("docs")
+            .join("spec.md");
         if let Some(display) = read_display_name_from_spec(&spec_md) {
             spec.bundle_id = format!("com.linkuistics.{}", display.replace(' ', ""));
             spec.app_name = display;

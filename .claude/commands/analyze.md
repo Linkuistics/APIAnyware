@@ -64,4 +64,4 @@ This reads `analysis/ir/resolved/`, runs heuristics on all methods, merges with 
 
 ## Schema Reference
 
-See `analysis/scripts/prompt-template.md` for the complete annotation schema and classification guidance.
+See `platforms/macos/tools/scripts/prompt-template.md` for the complete annotation schema and classification guidance.

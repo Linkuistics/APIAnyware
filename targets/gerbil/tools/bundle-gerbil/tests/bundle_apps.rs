@@ -67,11 +67,22 @@ fn gerbil_root() -> PathBuf {
         .clone()
 }
 
+/// True when `apianyware-generate` has been run locally — the signal this
+/// closure-walk test skips on (it needs the emitted binding tree).
+///
+/// Gate on an **emitted** framework module (`lib/appkit/nsapplication.ss`), not
+/// the hand-written `lib/runtime/`. `move-gerbil-material-k13` made gerbil's
+/// `runtime/` a *committed* part of the package root (`.gitignore`:
+/// `generated/*` minus `runtime`) while the per-framework `appkit/`,
+/// `foundation/`, … libraries stay gitignored emit output. The committed
+/// `runtime/objc.ss` is therefore always present and is no longer a valid proxy
+/// for "emit was run" — gating on it made the test run (and fail with
+/// `ImportNotFound`) against an absent emitted tree in a clean checkout.
 fn gerbil_tree_present() -> bool {
     gerbil_root()
         .join("lib")
-        .join("runtime")
-        .join("objc.ss")
+        .join("appkit")
+        .join("nsapplication.ss")
         .is_file()
         && gerbil_root()
             .join("apps")

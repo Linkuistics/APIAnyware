@@ -7,8 +7,8 @@
 .PHONY: lint-annotations
 
 lint-annotations:
-	./analysis/scripts/check-llm-annotation-drift.sh --skip-regen
+	./platforms/macos/tools/scripts/check-llm-annotation-drift.sh --skip-regen
 	mkdir -p /tmp/empty-llm-dir /tmp/heuristic-only-annotated
 	cargo run --release -q -p apianyware-analyze -- annotate \
 		--output-dir /tmp/heuristic-only-annotated --llm-dir /tmp/empty-llm-dir
-	python3 ./analysis/scripts/audit-llm-redundancy.py
+	python3 ./platforms/macos/tools/scripts/audit-llm-redundancy.py
