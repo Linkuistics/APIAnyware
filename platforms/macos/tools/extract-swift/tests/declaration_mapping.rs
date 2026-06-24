@@ -18,7 +18,7 @@ fn map_test_framework_class() {
     let framework = map_abi_to_framework(&doc, "15.4");
 
     assert_eq!(framework.name, "TestFramework");
-    assert_eq!(framework.checkpoint, "collected");
+    assert_eq!(framework.checkpoint, "extracted");
     assert_eq!(framework.sdk_version.as_deref(), Some("15.4"));
 
     // Should have 1 class (Widget)

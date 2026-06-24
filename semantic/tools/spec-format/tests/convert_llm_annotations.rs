@@ -1,14 +1,16 @@
 //! The migration converter folds `_llm-annotations/*.llm.json` into the authored
-//! `annotations.apiw` overlay, losslessly.
+//! `annotations.apiw` overlay, losslessly. The `_llm-annotations` side-channel was
+//! retired by the pipeline cutover (k20); the committed `annotations.apiw` overlays
+//! are now the source of truth, so the real-data arm below validates *those*.
 
 use std::path::PathBuf;
 
 use apianyware_spec_format::{apiw, convert, validate_apiw};
 use apianyware_types::annotation::FrameworkAnnotations;
 
-/// Repo-root `platforms/macos/api/_llm-annotations`, located from this crate.
-fn llm_annotations_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../platforms/macos/api/_llm-annotations")
+/// Repo-root `platforms/macos/api`, located from this crate.
+fn api_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../platforms/macos/api")
 }
 
 fn same(a: &FrameworkAnnotations, b: &FrameworkAnnotations) -> bool {
@@ -57,43 +59,43 @@ fn converts_llm_json_to_apiw_losslessly() {
 }
 
 #[test]
-fn every_committed_llm_annotation_round_trips_through_apiw() {
-    let dir = llm_annotations_dir();
-    if !dir.is_dir() {
+fn every_committed_annotations_apiw_parses_and_validates() {
+    let root = api_root();
+    if !root.is_dir() {
         // Defensive: if the tree moved, don't fail the unit run — the deterministic
-        // test above still pins behaviour. (These files are committed, so this
-        // skip should not trigger in practice.)
-        eprintln!("skip: {} not found", dir.display());
+        // test above still pins converter behaviour.
+        eprintln!("skip: {} not found", root.display());
         return;
     }
 
     let mut checked = 0usize;
-    for entry in std::fs::read_dir(&dir).unwrap() {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|e| e.to_str()) != Some("json") {
+    for entry in std::fs::read_dir(&root).unwrap() {
+        let path = entry.unwrap().path().join("annotations.apiw");
+        if !path.is_file() {
             continue;
         }
-        let json = std::fs::read_to_string(&path).unwrap();
-        let original: FrameworkAnnotations =
-            serde_json::from_str(&json).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()));
+        let text = std::fs::read_to_string(&path).unwrap();
 
-        let apiw_text = convert::llm_annotations_to_apiw(&json)
-            .unwrap_or_else(|e| panic!("convert {}: {e}", path.display()));
-        let reparsed = apiw::parse_apiw(&path.to_string_lossy(), &apiw_text)
-            .unwrap_or_else(|e| panic!("reparse {}: {e:?}", path.display()));
-
+        // Every committed authored overlay must parse to the typed model and
+        // conform to the KDL Schema contract — the post-cutover invariant
+        // replacing the `_llm-annotations` round-trip arm (k19/k20).
+        let parsed: FrameworkAnnotations = apiw::parse_apiw(&path.to_string_lossy(), &text)
+            .unwrap_or_else(|e| panic!("parse {}: {e:?}", path.display()));
+        // Re-emitting the parsed overlay and re-parsing must be idempotent.
+        let reparsed = apiw::parse_apiw(&path.to_string_lossy(), &apiw::write_apiw(&parsed))
+            .unwrap_or_else(|e| panic!("re-emit {}: {e:?}", path.display()));
         assert!(
-            same(&original, &reparsed),
-            "{} did not round-trip through .apiw",
+            same(&parsed, &reparsed),
+            "{} is not stable under write_apiw round-trip",
             path.display()
         );
-
-        // Real-data evidence for `kdl-schema-k19`: every committed annotation,
-        // once folded into `.apiw`, must conform to the KDL Schema contract.
-        validate_apiw(&path.to_string_lossy(), &apiw_text)
+        validate_apiw(&path.to_string_lossy(), &text)
             .unwrap_or_else(|e| panic!("{} fails the .apiw schema: {e:?}", path.display()));
         checked += 1;
     }
-    assert!(checked > 0, "expected at least one .llm.json fixture");
-    eprintln!("round-tripped + schema-validated {checked} committed .llm.json files through .apiw");
+    assert!(
+        checked > 0,
+        "expected at least one committed annotations.apiw"
+    );
+    eprintln!("parsed + schema-validated {checked} committed annotations.apiw overlays");
 }

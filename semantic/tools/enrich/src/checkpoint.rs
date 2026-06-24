@@ -290,8 +290,13 @@ fn filter_results_for_framework(
     }
 }
 
-/// Write an enriched framework checkpoint to `{output_dir}/{framework.name}.json`.
-pub fn write_enriched_checkpoint(framework: &Framework, output_dir: &Path) -> Result<()> {
+/// Write a `resolved` framework checkpoint to `{output_dir}/{framework.name}.json`.
+///
+/// The enrichment pass (pass 2) produces the final merged graph — `resolved.json`
+/// in the spec triad (ADR-0046; ≈ the retired `enriched` checkpoint). This disk
+/// writer remains available for ad-hoc dumps; the live pipeline writes the
+/// per-family `resolved.json` from `apianyware-analyze`.
+pub fn write_resolved_checkpoint(framework: &Framework, output_dir: &Path) -> Result<()> {
     let path = output_dir.join(format!("{}.json", framework.name));
     let json = serde_json::to_string_pretty(framework)
         .with_context(|| format!("failed to serialize {}", framework.name))?;
@@ -299,18 +304,19 @@ pub fn write_enriched_checkpoint(framework: &Framework, output_dir: &Path) -> Re
     tracing::info!(
         framework = %framework.name,
         path = %path.display(),
-        "wrote enriched checkpoint"
+        "wrote resolved checkpoint"
     );
     Ok(())
 }
 
-/// Build an enriched framework from annotated IR + Datalog results.
+/// Build the `resolved` framework from annotated IR + Datalog results — the final
+/// merged graph and generator input (the spec triad's `resolved.json`).
 ///
 /// Clones the annotated framework and populates enrichment-phase fields:
-/// - `checkpoint` → `"enriched"`
+/// - `checkpoint` → `"resolved"`
 /// - `enrichment` — all annotation-derived relations
 /// - `verification` — pass/fail + violations
-pub fn build_enriched_framework(annotated: &Framework, prog: &EnrichmentProgram) -> Framework {
+pub fn build_resolved_framework(annotated: &Framework, prog: &EnrichmentProgram) -> Framework {
     let filtered = filter_results_for_framework(annotated, prog);
     let enrichment = build_enrichment_data(annotated, &filtered);
     let verification = VerificationReport {
@@ -318,11 +324,11 @@ pub fn build_enriched_framework(annotated: &Framework, prog: &EnrichmentProgram)
         violations: filtered.violations,
     };
 
-    let mut enriched = annotated.clone();
-    enriched.checkpoint = "enriched".to_string();
-    enriched.enrichment = Some(enrichment);
-    enriched.verification = Some(verification);
-    enriched
+    let mut resolved = annotated.clone();
+    resolved.checkpoint = "resolved".to_string();
+    resolved.enrichment = Some(enrichment);
+    resolved.verification = Some(verification);
+    resolved
 }
 
 /// Build EnrichmentData from pre-filtered Datalog results + framework api_patterns.
@@ -566,8 +572,8 @@ mod tests {
         let mut prog = EnrichmentProgram::default();
         load_framework_facts(&mut prog, framework);
         prog.run();
-        let enriched = build_enriched_framework(framework, &prog);
-        enriched.enrichment.expect("enrichment populated")
+        let resolved = build_resolved_framework(framework, &prog);
+        resolved.enrichment.expect("enrichment populated")
     }
 
     #[test]

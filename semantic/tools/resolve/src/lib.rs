@@ -43,7 +43,7 @@ pub fn resolve_frameworks(
     })?;
 
     for framework in &resolved {
-        checkpoint::write_resolved_checkpoint(framework, output_dir)?;
+        checkpoint::write_linked_checkpoint(framework, output_dir)?;
     }
 
     Ok(resolved)
@@ -71,11 +71,12 @@ pub fn resolve_loaded_frameworks(frameworks: &[Framework]) -> Result<Vec<Framewo
         "resolution complete"
     );
 
-    let mut resolved = Vec::with_capacity(frameworks.len());
+    let mut linked = Vec::with_capacity(frameworks.len());
     for framework in frameworks {
-        let enriched = checkpoint::build_resolved_framework(framework, &prog, frameworks);
-        resolved.push(enriched);
+        linked.push(checkpoint::build_linked_framework(
+            framework, &prog, frameworks,
+        ));
     }
 
-    Ok(resolved)
+    Ok(linked)
 }

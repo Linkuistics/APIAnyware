@@ -3,10 +3,12 @@ name = "apianyware-analyze"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "CLI: apianyware-analyze — resolve, annotate, enrich pipeline"
+description = "CLI: apianyware-analyze — in-process resolve (extracted.json + annotations.apiw -> resolved.json)"
 
 [dependencies]
 apianyware-types.workspace = true
+apianyware-spec-format.workspace = true
+apianyware-datalog.workspace = true
 apianyware-resolve.workspace = true
 apianyware-annotate.workspace = true
 apianyware-enrich.workspace = true

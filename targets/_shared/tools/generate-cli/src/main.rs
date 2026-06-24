@@ -1,4 +1,4 @@
-//! CLI for the generation pipeline: emit target bindings from enriched IR.
+//! CLI for the generation pipeline: emit target bindings from the resolved IR.
 //!
 //! Usage:
 //!   apianyware-generate                              # generate all targets
@@ -15,15 +15,16 @@ use clap::Parser;
 
 #[derive(Parser)]
 #[command(name = "apianyware-generate")]
-#[command(about = "Generate target bindings from enriched macOS API IR")]
+#[command(about = "Generate target bindings from the resolved macOS API IR")]
 struct Cli {
     /// Target(s) to generate bindings for (comma-separated or repeated).
     /// Default: all registered targets.
     #[arg(long, value_delimiter = ',')]
     target: Vec<String>,
 
-    /// Directory containing enriched IR JSON files.
-    #[arg(long, default_value = "analysis/ir/enriched")]
+    /// `api/` root holding the per-family resolved IR
+    /// (`<input-dir>/<Framework>/resolved.json`, ADR-0046 spec triad).
+    #[arg(long, default_value = "platforms/macos/api")]
     input_dir: PathBuf,
 
     /// Base output directory: the `targets/` tree root.

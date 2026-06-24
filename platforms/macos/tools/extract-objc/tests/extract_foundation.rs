@@ -31,7 +31,7 @@ fn foundation_has_classes() {
     let fw = foundation();
     assert_eq!(fw.name, "Foundation");
     assert_eq!(fw.format_version, "1.0");
-    assert_eq!(fw.checkpoint, "collected");
+    assert_eq!(fw.checkpoint, "extracted");
     assert!(fw.sdk_version.is_some());
     assert!(fw.collected_at.is_some());
 
@@ -299,7 +299,7 @@ fn foundation_serializes_to_json() {
     let fw = foundation();
     let json = serde_json::to_string_pretty(&fw).expect("should serialize to JSON");
     assert!(json.contains("\"name\": \"Foundation\""));
-    assert!(json.contains("\"checkpoint\": \"collected\""));
+    assert!(json.contains("\"checkpoint\": \"extracted\""));
 
     // Verify roundtrip
     let deserialized: apianyware_types::ir::Framework =

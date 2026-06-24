@@ -32,7 +32,7 @@ use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 pub fn build_snapshot_test_framework() -> Framework {
     Framework {
         format_version: "1.0".to_string(),
-        checkpoint: "enriched".to_string(),
+        checkpoint: "resolved".to_string(),
         name: "TestKit".to_string(),
         sdk_version: Some("15.4".to_string()),
         collected_at: Some("2026-01-01T00:00:00Z".to_string()),

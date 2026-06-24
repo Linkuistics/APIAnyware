@@ -199,7 +199,7 @@ mod tests {
     fn empty_framework(name: &str) -> ir::Framework {
         ir::Framework {
             format_version: "1.0".to_string(),
-            checkpoint: "collected".to_string(),
+            checkpoint: "extracted".to_string(),
             name: name.to_string(),
             sdk_version: Some("15.4".to_string()),
             collected_at: None,

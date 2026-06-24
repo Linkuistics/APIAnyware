@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# SUPERSEDED by the pipeline cutover (pipeline-cutover-k20, ADR-0046): the
+# `_llm-annotations/*.llm.json` side-channel is retired (folded into the per-family
+# `platforms/macos/api/<Framework>/annotations.apiw` overlay) and the
+# `analysis/ir/{resolved,llm-summaries}` checkpoints no longer exist (the machine IR
+# is `extracted.json` / `resolved.json`). The `.apiw` overlay is schema-validated by
+# `apianyware-spec-format::validate_apiw`; the drift check (annotations vs the current
+# method set) is reworked under workstream 5 (see TODO.md). The script below targets
+# the OLD layout.
+#
 # Validate every checked-in .llm.json against a freshly-regenerated method
 # summary. Catches annotation staleness immediately after an extraction fix
 # changes the method set for one or more frameworks (canonical case:

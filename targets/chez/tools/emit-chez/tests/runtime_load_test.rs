@@ -48,13 +48,14 @@ fn target_root() -> PathBuf {
         .join("macos")
 }
 
-/// Load Foundation from whichever IR tree is present — the enriched pipeline output
-/// if available, else the collected IR (the trampoline classification only needs
-/// collected-level facts: `objc_exposed`, `swift_fn`, `methods`).
+/// Load Foundation from whichever per-family IR is present — the `resolved.json`
+/// if available, else `extracted.json` (the trampoline classification only needs
+/// extraction-level facts: `objc_exposed`, `swift_fn`, `methods`). Both live in
+/// the spec triad under `platforms/macos/api/Foundation/` (ADR-0046).
 fn load_foundation() -> Option<Framework> {
     let candidates = [
-        project_root().join("analysis/ir/enriched/Foundation.json"),
-        project_root().join("collection/ir/collected/Foundation.json"),
+        project_root().join("platforms/macos/api/Foundation/resolved.json"),
+        project_root().join("platforms/macos/api/Foundation/extracted.json"),
     ];
     for path in candidates {
         if let Ok(json) = std::fs::read_to_string(&path) {

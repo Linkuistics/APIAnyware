@@ -718,7 +718,7 @@ mod tests {
     fn make_framework(name: &str, classes: Vec<Class>) -> Framework {
         Framework {
             format_version: String::new(),
-            checkpoint: "resolved".to_string(),
+            checkpoint: "linked".to_string(),
             name: name.to_string(),
             sdk_version: None,
             collected_at: None,

@@ -2485,7 +2485,7 @@ mod tests {
     fn collect_skips_objc_exposed_and_keeps_residual() {
         let mut fw = Framework {
             format_version: "1.0".into(),
-            checkpoint: "enriched".into(),
+            checkpoint: "resolved".into(),
             name: "TestKit".into(),
             sdk_version: None,
             collected_at: None,
@@ -2918,7 +2918,7 @@ mod tests {
     fn collect_walks_types_and_disambiguates_overloads() {
         let fw = Framework {
             format_version: "1.0".into(),
-            checkpoint: "enriched".into(),
+            checkpoint: "resolved".into(),
             name: "Foundation".into(),
             sdk_version: None,
             collected_at: None,

@@ -207,7 +207,7 @@ mod tests {
         fn fw(name: &str, protocols: Vec<Protocol>) -> Framework {
             Framework {
                 format_version: "1.0".into(),
-                checkpoint: "enriched".into(),
+                checkpoint: "resolved".into(),
                 name: name.into(),
                 sdk_version: None,
                 collected_at: None,

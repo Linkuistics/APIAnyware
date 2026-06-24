@@ -133,7 +133,7 @@ pub fn map_abi_to_framework(doc: &AbiDocument, sdk_version: &str) -> ir::Framewo
 
     ir::Framework {
         format_version: "1.0".to_string(),
-        checkpoint: "collected".to_string(),
+        checkpoint: "extracted".to_string(),
         name: root.name.clone(),
         sdk_version: Some(sdk_version.to_string()),
         collected_at: Some(chrono::Utc::now().to_rfc3339()),

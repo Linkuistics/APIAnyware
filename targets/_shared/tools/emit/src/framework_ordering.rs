@@ -97,7 +97,7 @@ mod tests {
     fn default_framework() -> Framework {
         Framework {
             format_version: "1.0".to_string(),
-            checkpoint: "enriched".to_string(),
+            checkpoint: "resolved".to_string(),
             name: String::new(),
             sdk_version: None,
             collected_at: None,

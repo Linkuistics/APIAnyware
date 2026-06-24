@@ -1,8 +1,11 @@
-//! Build and write resolved Framework checkpoints.
+//! Build and write `linked` Framework checkpoints.
 //!
 //! Maps Datalog resolution results back into the Framework IR struct,
 //! populating `ancestors`, `all_methods`, `all_properties`, and per-method
-//! `returns_retained` and `satisfies_protocol` fields.
+//! `returns_retained` and `satisfies_protocol` fields. This is pass 1 — the
+//! `linked` stage (ADR-0046 rename; formerly the on-disk `resolved` checkpoint,
+//! whose name collided with the final `resolved.json`). It runs in-process; the
+//! disk writer below remains available for ad-hoc dumps.
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -12,30 +15,30 @@ use apianyware_types::ir::{Framework, Method, Property};
 
 use crate::program::ResolutionProgram;
 
-/// Write a resolved framework checkpoint to `{output_dir}/{framework.name}.json`.
-pub fn write_resolved_checkpoint(framework: &Framework, output_dir: &Path) -> Result<()> {
+/// Write a `linked` framework checkpoint to `{output_dir}/{framework.name}.json`.
+pub fn write_linked_checkpoint(framework: &Framework, output_dir: &Path) -> Result<()> {
     let path = output_dir.join(format!("{}.json", framework.name));
     let json = serde_json::to_string_pretty(framework)
         .with_context(|| format!("failed to serialize {}", framework.name))?;
     std::fs::write(&path, json).with_context(|| format!("failed to write {}", path.display()))?;
-    tracing::info!(framework = %framework.name, path = %path.display(), "wrote resolved checkpoint");
+    tracing::info!(framework = %framework.name, path = %path.display(), "wrote linked checkpoint");
     Ok(())
 }
 
-/// Build a resolved framework from collected IR + Datalog results.
+/// Build a `linked` framework from extracted IR + Datalog results.
 ///
 /// `all_frameworks` provides the full set of loaded frameworks so that
 /// cross-framework inherited methods/properties can be looked up with full
 /// metadata (params, return types, etc.) instead of falling back to minimal
 /// stubs.
 ///
-/// Clones the collected framework and populates resolved-phase fields:
-/// - `checkpoint` → `"resolved"`
+/// Clones the extracted framework and populates linked-phase fields:
+/// - `checkpoint` → `"linked"`
 /// - `Class::ancestors` — transitive ancestor list
 /// - `Class::all_methods` — inheritance-flattened methods with `origin`, `returns_retained`, `satisfies_protocol`
 /// - `Class::all_properties` — inheritance-flattened properties with `origin`
-pub fn build_resolved_framework(
-    collected: &Framework,
+pub fn build_linked_framework(
+    extracted: &Framework,
     prog: &ResolutionProgram,
     all_frameworks: &[Framework],
 ) -> Framework {
@@ -59,10 +62,10 @@ pub fn build_resolved_framework(
             .or_insert(proto.as_str());
     }
 
-    let mut resolved = collected.clone();
-    resolved.checkpoint = "resolved".to_string();
+    let mut linked = extracted.clone();
+    linked.checkpoint = "linked".to_string();
 
-    for class in &mut resolved.classes {
+    for class in &mut linked.classes {
         // Populate ancestors
         class.ancestors = prog
             .ancestor
@@ -88,7 +91,7 @@ pub fn build_resolved_framework(
             build_effective_properties_for_class(&class.name, prog, &property_index);
     }
 
-    resolved
+    linked
 }
 
 /// Method lookup key: (class_name, selector, is_class_method)

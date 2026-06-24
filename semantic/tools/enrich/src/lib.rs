@@ -53,7 +53,7 @@ pub fn enrich_frameworks(
     })?;
 
     for framework in &enriched {
-        checkpoint::write_enriched_checkpoint(framework, output_dir)?;
+        checkpoint::write_resolved_checkpoint(framework, output_dir)?;
     }
 
     Ok(enriched)
@@ -88,7 +88,7 @@ pub fn enrich_loaded_frameworks(frameworks: &[Framework]) -> Result<Vec<Framewor
 
     let mut enriched = Vec::with_capacity(frameworks.len());
     for framework in frameworks {
-        let result = checkpoint::build_enriched_framework(framework, &prog);
+        let result = checkpoint::build_resolved_framework(framework, &prog);
         if let Some(ref e) = result.enrichment {
             tracing::info!(
                 framework = %result.name,

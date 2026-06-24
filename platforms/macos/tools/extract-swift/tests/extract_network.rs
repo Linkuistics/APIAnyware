@@ -54,7 +54,7 @@ fn network_framework_shape() {
     let fw = network();
     assert_eq!(fw.name, "Network");
     assert_eq!(fw.format_version, "1.0");
-    assert_eq!(fw.checkpoint, "collected");
+    assert_eq!(fw.checkpoint, "extracted");
     assert!(
         fw.sdk_version.is_some(),
         "Network framework should record sdk_version"

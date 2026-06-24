@@ -122,7 +122,7 @@ fn function_pointer_in_framework_roundtrip() {
 
     let fw = Framework {
         format_version: "1.0".to_string(),
-        checkpoint: "collected".to_string(),
+        checkpoint: "extracted".to_string(),
         name: "TestFramework".to_string(),
         sdk_version: None,
         collected_at: None,

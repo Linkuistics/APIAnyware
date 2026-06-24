@@ -7,6 +7,7 @@ description = "CLI: apianyware-collect — extract macOS API metadata from SDK"
 
 [dependencies]
 apianyware-types.workspace = true
+apianyware-spec-format.workspace = true
 apianyware-extract-objc.workspace = true
 apianyware-extract-swift.workspace = true
 serde_json.workspace = true

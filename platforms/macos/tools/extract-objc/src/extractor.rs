@@ -42,7 +42,7 @@ pub fn extract_framework(
 
     Ok(ir::Framework {
         format_version: "1.0".to_string(),
-        checkpoint: "collected".to_string(),
+        checkpoint: "extracted".to_string(),
         name: framework.name.clone(),
         sdk_version: Some(sdk.version.clone()),
         collected_at: Some(Utc::now().to_rfc3339()),

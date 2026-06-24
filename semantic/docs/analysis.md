@@ -1,5 +1,15 @@
 # Analysis Pipeline Learnings
 
+> **⚠️ Path note (`pipeline-cutover-k20`, ADR-0046).** The four checkpoints
+> (`collection/ir/collected`, `analysis/ir/{resolved,annotated,enriched}`) and the
+> `_llm-annotations/*.llm.json` side-channel below are **retired**. The pipeline now
+> uses the per-family spec triad `platforms/macos/api/<Framework>/{extracted.json,
+> annotations.apiw,resolved.json}`; the `linked` (datalog cross-ref) / annotate /
+> enrich passes run in-process. The *gotchas* (stale-checkpoint discipline, enrichment
+> filtering) still hold; the *paths/commands/LLM-workflow* describe the old shape and
+> are resynced under ws4/ws5. Some pre-skeleton crate paths (`collection/crates/…`,
+> `analysis/scripts/…`) are older doc-debt (see `TODO.md`).
+
 **2026-05-21 — distilled from the archived Ravel-Lite `memory.yaml` (observations made over sessions through 2026-04-28; each verified against the current tree):**
 
 - 🔴 A fresh `collected/` can coexist with a stale `resolved/` (or `annotated/`, `enriched/`) if a downstream stage was not re-run after an extraction fix landed. Symptom: a canary absent from `collected/*.json` but still present in `resolved/*.json`. Before forming any hypothesis from the IR, compare the `analysis/ir/` mtimes to `collection/crates/extract-{swift,objc}/src/**` mtimes — if source is newer, regenerate downstream first. `analysis/scripts/regenerate-stale-pipeline.sh` automates the check. `collection/ir/` is gitignored, so re-run the collector before grepping JSON to confirm a fix.

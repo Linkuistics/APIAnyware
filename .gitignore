@@ -3,20 +3,17 @@ target/
 *.swp
 .DS_Store
 
-# Generated IR checkpoints (large JSON files, reproducible from pipeline)
-collection/ir/collected/
-analysis/ir/resolved/
-analysis/ir/annotated/
-analysis/ir/enriched/
+# Machine IR of the per-family spec triad (ADR-0046): large JSON files,
+# regenerable from the SDK + the authored overlay. The authored `annotations.apiw`
+# is committed; `extracted.json` (collect) and `resolved.json` (analyze) are not.
+platforms/macos/api/*/extracted.json
+platforms/macos/api/*/resolved.json
 
-# LLM annotation pipeline intermediates: summaries are derivable from resolved IR
-# via `llm-extract`. Subagent-produced `platforms/macos/api/_llm-annotations/*.llm.json`
-# files are versioned (durability: Option A — see
-# `platforms/macos/tools/scripts/llm-annotate-orchestration.md`); regenerating them
-# costs millions of tokens, while the JSON itself is <5 KB per framework.
+# LLM annotation pipeline intermediates: the `.methods.json` summaries are derivable
+# from the resolved IR. (The authored overlay itself is committed `annotations.apiw`.)
 analysis/ir/llm-summaries/
 
-# Generated language bindings (reproducible from enriched IR), emitted under each
+# Generated language bindings (reproducible from the resolved IR), emitted under each
 # target's §18 bindings/macos/ home. racket/sbcl/gerbil emit per-framework source
 # into bindings/macos/generated/<framework>/; chez into
 # bindings/macos/apianyware/<framework>/. Each target's bindings/macos/README.md

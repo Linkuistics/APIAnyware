@@ -1,4 +1,4 @@
-//! Core generation orchestration — loads enriched IR, invokes emitters,
+//! Core generation orchestration — loads the resolved IR, invokes emitters,
 //! writes output to `targets/{target}/bindings/macos/{generated_subdir}/` (§18).
 
 use std::path::{Path, PathBuf};
@@ -50,19 +50,24 @@ pub fn output_dir_for_target(base_output_dir: &Path, info: &TargetInfo) -> PathB
 
 /// Generate bindings for the specified targets (or all if none specified).
 ///
-/// For each target, generates all enriched frameworks. Reads enriched IR
-/// from `input_dir`, writes to `{base_output_dir}/{target}/bindings/macos/{generated_subdir}/`.
+/// For each target, generates every family from its `resolved.json`. Reads the
+/// resolved IR per family under `input_dir` (the `api/` root), writes to
+/// `{base_output_dir}/{target}/bindings/macos/{generated_subdir}/`.
 pub fn run_generation(
     registry: &EmitterRegistry,
     input_dir: &Path,
     base_output_dir: &Path,
     target_filter: Option<&[String]>,
 ) -> Result<Vec<GenerationSummary>> {
-    // Load all enriched frameworks
-    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
+    // Load every family's resolved IR (the generator input).
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
 
     if frameworks.is_empty() {
-        bail!("no enriched IR found in {}", input_dir.display());
+        bail!(
+            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
     }
 
     // Sort frameworks in dependency order
@@ -72,7 +77,7 @@ pub fn run_generation(
         .filter_map(|name| frameworks.iter().find(|fw| &fw.name == name))
         .collect();
 
-    tracing::info!(frameworks = ordered_frameworks.len(), "loaded enriched IR");
+    tracing::info!(frameworks = ordered_frameworks.len(), "loaded resolved IR");
 
     // Determine which emitters to run
     let emitters: Vec<&dyn TargetEmitter> = if let Some(targets) = target_filter {
@@ -204,9 +209,13 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
         collect_global_signatures, generate_dispatch_swift,
     };
 
-    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
     if frameworks.is_empty() {
-        bail!("no enriched IR found in {}", input_dir.display());
+        bail!(
+            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
     }
 
     let sigs = collect_global_signatures(&frameworks, &RacketFfiTypeMapper);
@@ -239,9 +248,13 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
 pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
     use apianyware_emit_racket::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
     if frameworks.is_empty() {
-        bail!("no enriched IR found in {}", input_dir.display());
+        bail!(
+            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
     }
 
     let set = collect_trampolines(&frameworks);
@@ -285,9 +298,13 @@ pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
 pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
     use apianyware_emit_chez::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
     if frameworks.is_empty() {
-        bail!("no enriched IR found in {}", input_dir.display());
+        bail!(
+            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
     }
 
     let set = collect_trampolines(&frameworks);
@@ -338,9 +355,13 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
 pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
     use apianyware_emit_gerbil::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
     if frameworks.is_empty() {
-        bail!("no enriched IR found in {}", input_dir.display());
+        bail!(
+            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
     }
 
     let set = collect_trampolines(&frameworks);
@@ -387,9 +408,13 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
 pub fn run_sbcl_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
     use apianyware_emit_sbcl::trampoline::{collect_trampolines, generate_trampolines_swift};
 
-    let frameworks = apianyware_datalog::loading::load_all_frameworks(input_dir, None)?;
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
     if frameworks.is_empty() {
-        bail!("no enriched IR found in {}", input_dir.display());
+        bail!(
+            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
     }
 
     let set = collect_trampolines(&frameworks);
@@ -428,28 +453,33 @@ mod tests {
 
     /// **The §6d invariant** (ADR-0038 §7 / racket spec §6d) — the hard done-bar for the
     /// sbcl trampoline leaf (`040/050`). The Swift-native residual is a deterministic
-    /// function of the *shared* enriched IR, so the sbcl classification must reproduce
+    /// function of the *shared* resolved IR, so the sbcl classification must reproduce
     /// racket's/chez's/gerbil's **exactly**: 51 function + 7 constant + 576 init + 554
     /// method trampolines. The strongest evidence the hermetic port is faithful (ADR-0011).
     ///
-    /// The enriched IR is gitignored (16/90 MB, regenerated from the SDK + LLM pipeline),
-    /// so this test **skips-as-pass** when the IR is absent — local checkouts and CI without
-    /// a regeneration step — and asserts the counts when it is present (post-regeneration,
+    /// The resolved IR is gitignored (regenerated from the SDK + LLM pipeline), so this
+    /// test **skips-as-pass** when the IR is absent — local checkouts and CI without a
+    /// regeneration step — and asserts the counts when it is present (post-regeneration,
     /// the release gate, exactly as the racket snapshot tests gate on local IR).
     #[test]
     fn sbcl_residual_reproduces_the_6d_invariant() {
         use apianyware_emit_sbcl::trampoline::collect_trampolines;
 
-        // The enriched IR lives at the workspace root, four levels up from this crate.
-        let enriched =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../analysis/ir/enriched");
-        let frameworks = match apianyware_datalog::loading::load_all_frameworks(&enriched, None) {
+        // The resolved IR lives per family under the `api/` root (ADR-0046 spec triad),
+        // four levels up from this crate.
+        let api_root =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../platforms/macos/api");
+        let frameworks = match apianyware_datalog::loading::load_all_family_artifacts(
+            &api_root,
+            "resolved.json",
+            None,
+        ) {
             Ok(fws) if !fws.is_empty() => fws,
             _ => {
                 eprintln!(
-                    "SKIP sbcl_residual_reproduces_the_6d_invariant: no enriched IR at {} \
+                    "SKIP sbcl_residual_reproduces_the_6d_invariant: no resolved.json under {} \
                          (gitignored — run the regeneration pipeline to exercise this gate)",
-                    enriched.display()
+                    api_root.display()
                 );
                 return;
             }
@@ -468,23 +498,23 @@ mod tests {
     /// returns the entry total. Skips-as-pass when the gitignored IR is absent.
     #[test]
     fn sbcl_run_trampolines_reproduces_6d_end_to_end() {
-        let enriched =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../analysis/ir/enriched");
-        if apianyware_datalog::loading::load_all_frameworks(&enriched, None)
+        let api_root =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../platforms/macos/api");
+        if apianyware_datalog::loading::load_all_family_artifacts(&api_root, "resolved.json", None)
             .map(|f| f.is_empty())
             .unwrap_or(true)
         {
             eprintln!(
-                "SKIP sbcl_run_trampolines_reproduces_6d_end_to_end: no enriched IR at {} \
+                "SKIP sbcl_run_trampolines_reproduces_6d_end_to_end: no resolved.json under {} \
                  (gitignored — run the regeneration pipeline to exercise this gate)",
-                enriched.display()
+                api_root.display()
             );
             return;
         }
 
         let tmp = tempfile::tempdir().unwrap();
         let swift_out = tmp.path().join("Generated/Trampolines.swift");
-        let entries = run_sbcl_trampolines(&enriched, &swift_out).unwrap();
+        let entries = run_sbcl_trampolines(&api_root, &swift_out).unwrap();
 
         // 51 fn + 7 const + 576 init + 554 method = 1188 (the node's hard done-bar),
         // and the pass actually wrote the residual `.swift`.
@@ -495,7 +525,7 @@ mod tests {
     fn make_test_framework(name: &str) -> Framework {
         Framework {
             format_version: "1.0".to_string(),
-            checkpoint: "enriched".to_string(),
+            checkpoint: "resolved".to_string(),
             name: name.to_string(),
             sdk_version: None,
             collected_at: None,
@@ -548,11 +578,13 @@ mod tests {
         }
     }
 
-    fn write_test_framework(dir: &Path, fw: &Framework) {
-        std::fs::create_dir_all(dir).unwrap();
-        let path = dir.join(format!("{}.json", fw.name));
+    /// Write a family's `resolved.json` into the per-family spec layout the
+    /// generator reads: `<api_root>/<Framework>/resolved.json` (ADR-0046).
+    fn write_test_framework(api_root: &Path, fw: &Framework) {
+        let family_dir = api_root.join(&fw.name);
+        std::fs::create_dir_all(&family_dir).unwrap();
         let json = serde_json::to_string_pretty(fw).unwrap();
-        std::fs::write(path, json).unwrap();
+        std::fs::write(family_dir.join("resolved.json"), json).unwrap();
     }
 
     #[test]
@@ -670,7 +702,7 @@ mod tests {
 
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("no enriched IR"));
+        assert!(err.contains("no resolved.json"));
     }
 
     // -----------------------------------------------------------------------

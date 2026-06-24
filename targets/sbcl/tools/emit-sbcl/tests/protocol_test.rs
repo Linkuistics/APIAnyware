@@ -106,7 +106,7 @@ fn class(
 fn fw(name: &str, classes: Vec<Class>, protocols: Vec<Protocol>) -> Framework {
     Framework {
         format_version: "1.0".into(),
-        checkpoint: "enriched".into(),
+        checkpoint: "resolved".into(),
         name: name.into(),
         sdk_version: None,
         collected_at: None,

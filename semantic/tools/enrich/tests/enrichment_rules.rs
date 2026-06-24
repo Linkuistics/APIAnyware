@@ -597,7 +597,7 @@ fn foundation_enrichment_integration() {
     );
 
     // Checkpoint should be enriched
-    assert_eq!(enriched[0].checkpoint, "enriched");
+    assert_eq!(enriched[0].checkpoint, "resolved");
 }
 
 // -----------------------------------------------------------------------

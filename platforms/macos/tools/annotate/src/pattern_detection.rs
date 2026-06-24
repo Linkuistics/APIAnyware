@@ -359,7 +359,7 @@ mod tests {
     fn empty_framework() -> Framework {
         Framework {
             format_version: "1.0".to_string(),
-            checkpoint: "resolved".to_string(),
+            checkpoint: "linked".to_string(),
             name: "TestKit".to_string(),
             sdk_version: None,
             collected_at: None,

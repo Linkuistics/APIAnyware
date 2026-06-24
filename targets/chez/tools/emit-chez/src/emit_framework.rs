@@ -287,7 +287,7 @@ mod tests {
     fn make_minimal_framework(name: &str) -> Framework {
         Framework {
             format_version: "1.0".into(),
-            checkpoint: "enriched".into(),
+            checkpoint: "resolved".into(),
             name: name.into(),
             sdk_version: None,
             collected_at: None,

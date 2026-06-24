@@ -1,5 +1,13 @@
 # LLM Annotation Orchestration
 
+> **⚠️ Superseded by the pipeline cutover (`pipeline-cutover-k20`, ADR-0046).** The
+> flat `_llm-annotations/*.llm.json` side-channel is retired — folded into the
+> per-family `platforms/macos/api/<Framework>/annotations.apiw` overlay — and the
+> `analysis/ir/{resolved,annotated,enriched,llm-summaries}` checkpoints no longer
+> exist (the passes run in-process; the machine IR is `extracted.json` /
+> `resolved.json`). This page describes the **old** flow; reworking the LLM
+> side-channel workflow over `.apiw` is **workstream 5** (see `TODO.md`).
+
 This is the workflow the **main Claude Code agent** follows to drive LLM
 annotation across the whole SDK using parallel subagents. The constraint
 (see project memory `LLM annotation must run within Claude Code`) is that

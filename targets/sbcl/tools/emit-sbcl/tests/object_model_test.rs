@@ -99,7 +99,7 @@ fn fixture() -> Framework {
 
     Framework {
         format_version: "1.0".into(),
-        checkpoint: "enriched".into(),
+        checkpoint: "resolved".into(),
         name: "AppKit".into(),
         sdk_version: None,
         collected_at: None,

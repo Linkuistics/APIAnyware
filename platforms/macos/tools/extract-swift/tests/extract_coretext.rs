@@ -50,7 +50,7 @@ fn coretext_framework_shape() {
     let fw = coretext();
     assert_eq!(fw.name, "CoreText");
     assert_eq!(fw.format_version, "1.0");
-    assert_eq!(fw.checkpoint, "collected");
+    assert_eq!(fw.checkpoint, "extracted");
     assert!(
         fw.sdk_version.is_some(),
         "CoreText framework should record sdk_version"

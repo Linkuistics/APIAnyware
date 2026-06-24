@@ -931,8 +931,11 @@ rejected).
 
 Introduced by the `structural-refactoring` grove, workstream 2 (`spec-format-k16`),
 replacing the JSON enriched IR. Settled 2026-06-24: ADR-0046 (format), ADR-0047 (conventions),
-PRD `prd/2026-06-24-spec-format-data-model.md`. Designed, not yet implemented — the staged
-child leaves realize it (pipeline stays buildable + goldens-green).
+PRD `prd/2026-06-24-spec-format-data-model.md`. **Implemented** by `pipeline-cutover-k20`: the
+live pipeline reads/writes the per-family triad (collect→`extracted.json`; analyze runs the
+in-process `linked`→annotate→enrich passes folding in `annotations.apiw`→`resolved.json`;
+generate consumes `resolved.json`). Remaining child leaf: `conventions-datalog-k21` (retire
+imperative `heuristics.rs` for ascent rules, ADR-0047).
 
 **Spec triad**:
 The three per-API-family files under `platforms/macos/api/<Framework>/` (REFACTOR §14):

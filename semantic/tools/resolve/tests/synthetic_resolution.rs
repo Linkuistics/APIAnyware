@@ -16,7 +16,7 @@ use apianyware_types::Framework;
 fn empty_framework(name: &str) -> Framework {
     Framework {
         format_version: "1.0".to_string(),
-        checkpoint: "collected".to_string(),
+        checkpoint: "extracted".to_string(),
         name: name.to_string(),
         sdk_version: None,
         collected_at: None,
@@ -1027,7 +1027,7 @@ fn checkpoint_set_to_resolved() {
     fw.classes = vec![make_class("MyClass", "")];
 
     let resolved = resolve(&[fw]);
-    assert_eq!(resolved[0].checkpoint, "resolved");
+    assert_eq!(resolved[0].checkpoint, "linked");
 }
 
 #[test]

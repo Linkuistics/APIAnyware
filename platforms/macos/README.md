@@ -9,8 +9,12 @@ output lands, ADR-0043).
 
 The `tools/` crates (`extract-objc`, `extract-swift`, `annotate`, `collect-cli`)
 landed here in `move-platforms-k6`, alongside the LLM-annotation operational scripts
-(`tools/scripts/`) and the git-tracked annotation data (`api/_llm-annotations/`).
+(`tools/scripts/`). The git-tracked annotation data now lives as the per-family
+authored overlay `api/<family>/annotations.apiw` (the flat `api/_llm-annotations/`
+staging dir was folded in and retired by `pipeline-cutover-k20`; the LLM side-channel
+*workflow* over the overlay is workstream 5).
 
-TODO: `platform.yaml`, the per-family API specs (`extracted.yaml` / `resolved.yaml`),
-app-kinds, and platform-level tests are filled by workstream 4 (platform model); the
-existing emitted/extracted material relocates in `move-target-material-k8`.
+TODO: `platform.yaml`, app-kinds, and platform-level tests are filled by workstream 4
+(platform model). The per-family API specs are the spec triad under `api/<family>/`
+(`extracted.json` / `annotations.apiw` / `resolved.json`, ADR-0046) — landed and live
+as of `pipeline-cutover-k20`.

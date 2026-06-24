@@ -34,8 +34,9 @@ struct Cli {
     #[arg(long, value_delimiter = ',')]
     only: Vec<String>,
 
-    /// Output directory for collected IR JSON files.
-    #[arg(long, default_value = "collection/ir/collected")]
+    /// `api/` root: the extracted IR is written per family to
+    /// `<output-dir>/<Framework>/extracted.json` (ADR-0046 spec triad).
+    #[arg(long, default_value = "platforms/macos/api")]
     output_dir: PathBuf,
 
     /// Skip Swift module extraction (ObjC headers only).
@@ -232,9 +233,12 @@ fn write_framework_json(
     ir: &apianyware_types::ir::Framework,
     output_dir: &std::path::Path,
 ) -> Result<()> {
-    let output_path = output_dir.join(format!("{}.json", ir.name));
-    let json = serde_json::to_string_pretty(ir).context("failed to serialize IR to JSON")?;
-    fs::write(&output_path, json)
+    // Per-family spec triad (ADR-0046): `<api_root>/<Framework>/extracted.json`.
+    let family_dir = output_dir.join(&ir.name);
+    fs::create_dir_all(&family_dir)
+        .with_context(|| format!("failed to create {}", family_dir.display()))?;
+    let output_path = family_dir.join("extracted.json");
+    apianyware_spec_format::machine::write_framework(ir, &output_path)
         .with_context(|| format!("failed to write {}", output_path.display()))?;
     tracing::info!(
         framework = %ir.name,

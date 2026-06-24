@@ -527,7 +527,7 @@ mod tests {
 
         Framework {
             format_version: "1.0".to_string(),
-            checkpoint: "resolved".to_string(),
+            checkpoint: "linked".to_string(),
             name: "TestTransferable".to_string(),
             sdk_version: None,
             collected_at: None,

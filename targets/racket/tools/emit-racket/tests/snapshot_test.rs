@@ -139,16 +139,17 @@ fn snapshot_racket_testkit() {
     }
 }
 
-/// Load a real enriched IR framework from the analysis pipeline output.
+/// Load a real resolved IR framework from the per-family spec triad
+/// (`platforms/macos/api/<Framework>/resolved.json`, ADR-0046).
 fn load_enriched_framework(name: &str) -> Option<apianyware_types::ir::Framework> {
-    let enriched_dir = crate_root()
+    let api_root = crate_root()
         .parent() // emit-racket → tools
         .and_then(|p| p.parent()) // tools → racket
         .and_then(|p| p.parent()) // racket → targets
         .and_then(|p| p.parent()) // targets → project root
-        .map(|p| p.join("analysis").join("ir").join("enriched"))?;
+        .map(|p| p.join("platforms").join("macos").join("api"))?;
 
-    let framework_path = enriched_dir.join(format!("{name}.json"));
+    let framework_path = api_root.join(name).join("resolved.json");
     if !framework_path.exists() {
         return None;
     }

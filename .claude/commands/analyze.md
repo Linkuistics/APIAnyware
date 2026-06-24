@@ -4,7 +4,13 @@ description: Run LLM analysis on all frameworks that have resolved IR. Discovers
 
 # Analyze All Frameworks
 
-Discover all frameworks with resolved IR and produce semantic annotations for each.
+> **⚠️ Superseded by the pipeline cutover (`pipeline-cutover-k20`, ADR-0046).** The
+> `analysis/ir/resolved/` + `analysis/ir/annotated/` checkpoints and the
+> `.llm.json` side-channel are retired: the authored overlay is now the committed
+> per-family `platforms/macos/api/<Framework>/annotations.apiw`, and the pipeline
+> reads `extracted.json` → (in-process `linked` → annotate → enrich) → `resolved.json`.
+> This command describes the **old** LLM-annotation flow; reworking it to author
+> `.apiw` overlays is **workstream 5** (see `TODO.md`).
 
 ## Process
 

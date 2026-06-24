@@ -14,8 +14,8 @@ README. This index confirms those markers are in place, by workstream:
 |----|--------------|-----------|
 | 2 — spec-format / `.apiw` DSL | the `.apiw` DSL the pattern-kind / app-kind / annotation files are written in | `semantic/pattern-kinds/README.md`, `platforms/macos/app-kinds/README.md` |
 | 3 — semantic model | pattern-kind definitions + semantic vocabulary docs | `semantic/README.md`, `semantic/docs/README.md`, `semantic/pattern-kinds/README.md` |
-| 4 — platform model | `platform.yaml`, per-family `extracted.yaml`/`resolved.yaml`, app-kinds, platform tests/docs, **and the IR relocation `analysis/ir/` → `platforms/macos/api/`** | `platforms/README.md`, `platforms/macos/README.md`, `platforms/macos/api/README.md`, `platforms/macos/app-kinds/README.md`, `platforms/macos/docs/README.md`, `platforms/macos/tests/README.md` |
-| 5 — LLM analysis side-channel | reshape flat `*.llm.json` set into per-family `annotations.apiw` | `platforms/macos/api/_llm-annotations/README.md` |
+| 4 — platform model | `platform.yaml`, app-kinds, platform tests/docs (**the IR relocation `analysis/ir/` → per-family `platforms/macos/api/<Framework>/{extracted,resolved}.json` was reassigned to and done by ws2's `pipeline-cutover-k20`**) | `platforms/README.md`, `platforms/macos/README.md`, `platforms/macos/app-kinds/README.md`, `platforms/macos/docs/README.md`, `platforms/macos/tests/README.md` |
+| 5 — LLM analysis side-channel | the LLM side-channel **workflow** over the overlay — caching, regeneration, propose→review→accept, diff/provenance/confidence — **and reworking the workflow tooling to operate on `.apiw`** (currently superseded-banner'd: `check-llm-annotation-drift.sh`, `audit-llm-redundancy.py`, `llm-annotate-orchestration.md`, `llm-annotate-subagent.md`, `config.example.toml`, `.claude/commands/analyze.md`, `Makefile` `lint-annotations`). The flat `*.llm.json` → per-family `annotations.apiw` **reshape itself was done by ws2's `pipeline-cutover-k20`** | (the `_llm-annotations/` staging dir is retired) |
 | 6 — target model | generated bindings, app-implementations, capability profiles, idiom catalogues, policies, per-target `Package.swift` reshape; re-sync the new-target guide's step paths | `targets/README.md`, `targets/racket/bindings/macos/README.md`, `targets/chez/bindings/macos/README.md`, `targets/_shared/docs/adding-a-language-target.md` |
 | 7 — apps | author/extract `apps/macos/<app>/` specs; finalize the spec structure | `apps/README.md`, `apps/macos/README.md` |
 | 8 — schemas + validation | formal schema definitions | `schemas/README.md`, `schemas/docs/README.md` |
@@ -28,10 +28,13 @@ scripts were repointed in `migration-finalize-k10` (the `Makefile` drift-check
 target and `.claude/commands/analyze.md`). What remains is prose:
 
 - **IR-checkpoint paths** (`analysis/ir/{resolved,annotated,enriched,llm-summaries}`,
-  `collection/ir/collected`) in the pipeline how-to docs, the annotate scripts, and
-  `.gitignore` are **correct as written** — IR relocation is deferred to **ws4**, so
-  those paths still describe where the pipeline writes today. They resolve when ws4
-  moves the IR under `platforms/macos/api/`.
+  `collection/ir/collected`) are **gone from the active pipeline** as of ws2's
+  `pipeline-cutover-k20`: collect/analyze/generate, `.gitignore`, and
+  `regenerate-stale-pipeline.sh` now use the per-family triad under
+  `platforms/macos/api/<Framework>/` (`extracted.json` / `annotations.apiw` /
+  `resolved.json`). The LLM side-channel **workflow** scripts/docs that still name the
+  old paths carry a superseded→ws5 banner (they describe the retired flow); reworking
+  them over `.apiw` is the ws5 row above.
 - **Moved-script / moved-crate paths** (`analysis/scripts/`, `collection/crates/`,
   `generation/targets/`) survive in *live reference* docs
   (`platforms/macos/docs/annotation-workflow.md`, `semantic/docs/analysis.md`). These

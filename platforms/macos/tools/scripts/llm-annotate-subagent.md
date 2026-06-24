@@ -1,5 +1,10 @@
 # LLM Annotation Subagent Prompt
 
+> **⚠️ Superseded by the pipeline cutover (`pipeline-cutover-k20`, ADR-0046).** The
+> `.methods.json` → `.llm.json` side-channel is retired (overlays are now the
+> committed per-family `annotations.apiw`); reworking the LLM authoring workflow
+> over `.apiw` is **workstream 5** (see `TODO.md`).
+
 This file contains the prompt template that an orchestrator dispatches to a
 Claude Code subagent (one subagent per framework). The subagent reads a
 `.methods.json` summary, consults Apple documentation, writes a `.llm.json`

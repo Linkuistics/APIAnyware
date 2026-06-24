@@ -346,7 +346,7 @@ fn resolved_framework_has_ancestors() {
     let resolved = apianyware_resolve::resolve_loaded_frameworks(&[fw]).unwrap();
     let foundation = &resolved[0];
 
-    assert_eq!(foundation.checkpoint, "resolved");
+    assert_eq!(foundation.checkpoint, "linked");
 
     let nsms = foundation
         .classes
@@ -486,6 +486,6 @@ fn resolved_checkpoint_roundtrips_as_json() {
     let roundtripped: Framework = serde_json::from_str(&json).unwrap();
 
     assert_eq!(roundtripped.name, "Foundation");
-    assert_eq!(roundtripped.checkpoint, "resolved");
+    assert_eq!(roundtripped.checkpoint, "linked");
     assert!(!roundtripped.classes.is_empty());
 }

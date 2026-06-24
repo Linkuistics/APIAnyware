@@ -41,6 +41,66 @@ pub fn load_framework_from_file(path: &Path) -> Result<Framework> {
     Ok(framework)
 }
 
+/// Discover per-family artifact files under an `api/` root.
+///
+/// The per-family spec layout (ADR-0046) is `<api_root>/<Framework>/<filename>`
+/// — e.g. `platforms/macos/api/Foundation/resolved.json`. Returns the path to
+/// each family's `filename` artifact that exists, sorted by family name. Plain
+/// files and the leading-`_` staging dirs (e.g. a transitional `_llm-annotations`)
+/// are skipped — only real `<Family>/` directories are families.
+pub fn discover_family_artifacts(api_root: &Path, filename: &str) -> Result<Vec<PathBuf>> {
+    let mut files: Vec<PathBuf> = std::fs::read_dir(api_root)
+        .with_context(|| format!("failed to read api root: {}", api_root.display()))?
+        .filter_map(|entry| {
+            let path = entry.ok()?.path();
+            if !path.is_dir() {
+                return None;
+            }
+            let name = path.file_name()?.to_str()?;
+            if name.starts_with('_') {
+                return None;
+            }
+            let artifact = path.join(filename);
+            artifact.is_file().then_some(artifact)
+        })
+        .collect();
+    files.sort();
+    Ok(files)
+}
+
+/// Load every per-family artifact named `filename` (`"extracted.json"` or
+/// `"resolved.json"`) under an `api/` root, sorted by family name. If `only` is
+/// provided, only frameworks whose names match the list are loaded.
+pub fn load_all_family_artifacts(
+    api_root: &Path,
+    filename: &str,
+    only: Option<&[String]>,
+) -> Result<Vec<Framework>> {
+    let files = discover_family_artifacts(api_root, filename)?;
+    let mut frameworks = Vec::new();
+
+    for file in &files {
+        let framework = load_framework_from_file(file)?;
+
+        if let Some(filter) = only {
+            if !filter.iter().any(|name| name == &framework.name) {
+                continue;
+            }
+        }
+
+        tracing::info!(
+            framework = %framework.name,
+            classes = framework.classes.len(),
+            protocols = framework.protocols.len(),
+            artifact = filename,
+            "loaded framework"
+        );
+        frameworks.push(framework);
+    }
+
+    Ok(frameworks)
+}
+
 /// Load all framework JSON files from a directory.
 ///
 /// Returns frameworks sorted by file name. If `only` is provided,

@@ -27,8 +27,10 @@ pub struct Framework {
     #[serde(default)]
     pub format_version: String,
 
-    /// Pipeline phase that produced this checkpoint: `"collected"`, `"resolved"`,
-    /// `"annotated"`, or `"enriched"`.
+    /// Pipeline phase that produced this checkpoint. On-disk values are
+    /// `"extracted"` (machine fact base) and `"resolved"` (the final merged
+    /// graph); the in-process passes are `"linked"` (datalog cross-reference,
+    /// formerly `"resolved"`) then `"annotated"` (ADR-0046 spec triad).
     #[serde(default)]
     pub checkpoint: String,
 

@@ -1,5 +1,13 @@
 # Annotation Workflow
 
+> **⚠️ Superseded by the pipeline cutover (`pipeline-cutover-k20`, ADR-0046).** The
+> flat `_llm-annotations/*.llm.json` side-channel is retired — folded into the
+> per-family `platforms/macos/api/<Framework>/annotations.apiw` overlay — and the
+> `analysis/ir/{resolved,annotated,enriched,llm-summaries}` checkpoints no longer
+> exist (the passes run in-process; the machine IR is `extracted.json` /
+> `resolved.json`). This page describes the **old** flow; reworking the LLM
+> side-channel workflow over `.apiw` is **workstream 5** (see `TODO.md`).
+
 API annotations classify each ObjC/Swift method with semantic metadata — parameter ownership, block invocation style, threading constraints, and error patterns. These annotations drive the emitter's wrapping decisions and the Datalog verification rules.
 
 ## When to run

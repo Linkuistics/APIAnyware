@@ -5,22 +5,25 @@
 # fix hypotheses against artifacts produced by an older source revision.
 #
 # Freshness rule per stage: regen iff the newest mtime among the stage's
-# inputs (source code + upstream checkpoint) is strictly greater than the
-# oldest mtime among the stage's outputs. Catches both source edits and
-# upstream drift (fresh `collected/` above stale `enriched/` is the
-# canonical case).
+# inputs (source code + upstream artifact) is strictly greater than the
+# newest mtime among the stage's outputs. Catches both source edits and
+# upstream drift (a fresh `extracted.json` above a stale `resolved.json` is
+# the canonical case).
+#
+# The spec triad (ADR-0046) is co-located per family under
+# `platforms/macos/api/<Framework>/`: `extracted.json` + `annotations.apiw`
+# (analyze inputs) beside `resolved.json` (analyze output), so the analyze
+# freshness check is filtered by file name, not by directory.
 #
 # Stages:
-#   1. analyze: inputs are semantic/tools/{datalog,resolve,enrich}/src
-#               + platforms/macos/tools/annotate/src + collection/ir/collected.
-#               Output: analysis/ir/enriched.
-#               LLM annotations in analysis/ir/annotated/*.llm.json are
-#               preserved across reruns by load_existing_llm_annotations()
-#               (which filters out heuristic-sourced entries) as long as
-#               --llm-dir is omitted.
+#   1. analyze: inputs are semantic/tools/{datalog,resolve,enrich,spec-format}/src
+#               + platforms/macos/tools/annotate/src + the per-family
+#               `extracted.json` + `annotations.apiw`. Output: the per-family
+#               `resolved.json`. The authored overlay is the committed
+#               `annotations.apiw`; analyze folds it in (§28 precedence).
 #   2. generate: inputs are the emit crates (targets/_shared/tools/emit,
 #                targets/<t>/tools/emit-<t>) + targets/_shared/tools/generate-cli
-#                + analysis/ir/enriched. Output:
+#                + the per-family `resolved.json`. Output:
 #                targets/<t>/bindings/macos/<generated_subdir>/. Runs all
 #                registered emitters by default.
 #
@@ -78,6 +81,16 @@ newest_mtime() {
     echo "${result:-0}"
 }
 
+# Newest mtime among files named <name> under <root>. 0 if none / no root.
+# Used for the co-located spec triad, where input (`extracted.json` /
+# `annotations.apiw`) and output (`resolved.json`) share one directory tree.
+newest_mtime_named() {
+    local name="$1" root="$2" result
+    [[ -d "$root" ]] || { echo 0; return; }
+    result=$(find "$root" -type f -name "$name" -exec stat -f '%m' {} + 2>/dev/null | sort -rn | head -1)
+    echo "${result:-0}"
+}
+
 # Returns 0 (true) if regen is needed: input is strictly newer than
 # output, or output is empty/missing.
 needs_regen() {
@@ -91,39 +104,45 @@ needs_regen() {
 
 # --- Stage 1: analyze ---
 
-ANALYZE_INPUTS=(
+ANALYZE_SRC_INPUTS=(
     semantic/tools/datalog/src
     semantic/tools/resolve/src
     platforms/macos/tools/annotate/src
     semantic/tools/enrich/src
+    semantic/tools/spec-format/src
     semantic/tools/analyze-cli/src
     semantic/tools/types/src
-    collection/ir/collected
 )
-ANALYZE_OUTPUT=analysis/ir/enriched
+API_ROOT=platforms/macos/api
 
-# Filter to existing paths only so missing dirs don't break find.
-ANALYZE_INPUT_PATHS=()
-for p in "${ANALYZE_INPUTS[@]}"; do
-    [[ -e "$p" ]] && ANALYZE_INPUT_PATHS+=("$p")
+# Filter to existing source paths only so missing dirs don't break find.
+ANALYZE_SRC_PATHS=()
+for p in "${ANALYZE_SRC_INPUTS[@]}"; do
+    [[ -e "$p" ]] && ANALYZE_SRC_PATHS+=("$p")
 done
 
-if [[ ${#ANALYZE_INPUT_PATHS[@]} -eq 0 ]]; then
-    echo "Error: no analyze input paths exist under $PROJECT_ROOT" >&2
+if [[ ${#ANALYZE_SRC_PATHS[@]} -eq 0 ]]; then
+    echo "Error: no analyze source paths exist under $PROJECT_ROOT" >&2
     exit 1
 fi
 
-ANALYZE_INPUT_NEWEST=$(newest_mtime "${ANALYZE_INPUT_PATHS[@]}")
-ANALYZE_OUTPUT_NEWEST=0
-[[ -d "$ANALYZE_OUTPUT" ]] && ANALYZE_OUTPUT_NEWEST=$(newest_mtime "$ANALYZE_OUTPUT")
+# Analyze inputs: source code, plus the per-family machine `extracted.json` and
+# the authored `annotations.apiw`. Output: the per-family `resolved.json`.
+ANALYZE_INPUT_NEWEST=$(newest_mtime "${ANALYZE_SRC_PATHS[@]}")
+for n in \
+    "$(newest_mtime_named extracted.json "$API_ROOT")" \
+    "$(newest_mtime_named annotations.apiw "$API_ROOT")"; do
+    [[ "$n" -gt "$ANALYZE_INPUT_NEWEST" ]] && ANALYZE_INPUT_NEWEST=$n
+done
+ANALYZE_OUTPUT_NEWEST=$(newest_mtime_named resolved.json "$API_ROOT")
 
 if needs_regen "$ANALYZE_INPUT_NEWEST" "$ANALYZE_OUTPUT_NEWEST"; then
-    echo "=== analyze: sources newer than enriched IR — regenerating ==="
+    echo "=== analyze: inputs newer than resolved IR — regenerating ==="
     cargo run --quiet -p apianyware-analyze
     # Refresh after regen so the generation stage sees the new mtime.
-    ANALYZE_OUTPUT_NEWEST=$(newest_mtime "$ANALYZE_OUTPUT")
+    ANALYZE_OUTPUT_NEWEST=$(newest_mtime_named resolved.json "$API_ROOT")
 else
-    echo "=== analyze: enriched IR up to date ==="
+    echo "=== analyze: resolved IR up to date ==="
 fi
 
 # --- Stage 2: generate ---
@@ -146,7 +165,7 @@ if [[ ${#GENERATE_SRC_PATHS[@]} -gt 0 ]]; then
     GENERATE_SRC_NEWEST=$(newest_mtime "${GENERATE_SRC_PATHS[@]}")
 fi
 
-# Generation input is newest of (gen sources, enriched IR newest).
+# Generation input is newest of (gen sources, resolved IR newest).
 GENERATE_INPUT_NEWEST=$GENERATE_SRC_NEWEST
 if [[ "$ANALYZE_OUTPUT_NEWEST" -gt "$GENERATE_INPUT_NEWEST" ]]; then
     GENERATE_INPUT_NEWEST=$ANALYZE_OUTPUT_NEWEST

@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 """
+SUPERSEDED by the pipeline cutover (pipeline-cutover-k20, ADR-0046): the
+`_llm-annotations/*.llm.json` side-channel is retired (folded into the per-family
+`platforms/macos/api/<Framework>/annotations.apiw` overlay) and the
+`analysis/ir/{resolved,annotated,enriched,llm-summaries}` checkpoints no longer
+exist. This script targets the OLD layout; reworking the LLM redundancy audit over
+`.apiw` is workstream 5 (see TODO.md).
+
 Audit which frameworks' `.llm.json` annotations are now redundant given the
 current heuristic coverage. Three categories:
 
