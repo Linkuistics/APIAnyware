@@ -7,7 +7,7 @@ cargo run --example bundle_app -p apianyware-bundle-gerbil -- hello-window
 ```
 
 Output lands at
-`generation/targets/gerbil/apps/<script-name>/build/<App Name>.app`.
+`targets/gerbil/app-implementations/macos/<script-name>/build/<App Name>.app`.
 
 ## Pipeline
 

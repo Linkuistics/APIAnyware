@@ -45,9 +45,13 @@ pub const GERBIL_TARGET_INFO: TargetInfo = TargetInfo {
     id: "gerbil",
     display_name: "Gerbil Scheme",
     // The emitter's `output_dir` is the package root; `generated_subdir = "lib"`
-    // places it at `generation/targets/gerbil/lib/` (design spec §8). The static
-    // `gerbil.pkg` declaring `(package: gerbil-bindings)` is owned by the runtime
-    // setup (leaf 050), not emitted per run.
+    // places it at `<output_dir>/lib/` (design spec §8). After the §18 move
+    // (`move-gerbil-material-k13`) the binding package root lives at
+    // `targets/gerbil/bindings/macos/generated/`; reconciling the generate-cli
+    // `--output-dir` default + this subdir to emit straight there is the
+    // shared-seam leaf (k15) job. The static `gerbil.pkg` declaring
+    // `(package: gerbil-bindings)` is owned by the runtime setup (leaf 050), not
+    // emitted per run.
     generated_subdir: "lib",
 };
 

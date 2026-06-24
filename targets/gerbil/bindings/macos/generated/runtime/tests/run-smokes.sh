@@ -67,13 +67,16 @@ done
 # pipeline + swift build have run).
 echo "== smoke-swift-trampoline (ADR-0029 Swift-native guard) =="
 TRAMPOLINE_DYLIB=""
-for triple_dir in "$LIB"/../../../../swift/.build/*/; do
+# The Swift dylib now builds into the per-target adapter package's .build
+# (gerbil left the umbrella swift/.build in move-gerbil-material-k13): $LIB is the
+# gerbil-bindings package root, so ../../../adapters/macos reaches the adapter.
+for triple_dir in "$LIB"/../../../adapters/macos/.build/*/; do
   for profile in release debug; do
     [ -f "$triple_dir$profile/libAPIAnywareGerbil.dylib" ] && TRAMPOLINE_DYLIB="found" && break 2
   done
 done
 if [ -z "$TRAMPOLINE_DYLIB" ] || [ ! -f "$LIB/createml/functions.ss" ]; then
-  echo "   SKIP — needs generate --target gerbil + swift build -c release --product APIAnywareGerbil"
+  echo "   SKIP — needs generate --target gerbil + (cd targets/gerbil/adapters/macos && swift build -c release --product APIAnywareGerbil)"
 elif "$HERE/run-swift-trampoline-smoke.sh" | sed 's/^/   /'; then
   echo "   smoke-swift-trampoline OK"
 else
@@ -91,7 +94,7 @@ fi
 # foundation bindings + the built dylib; SKIP with a build instruction otherwise.
 echo "== smoke-swift-method (ADR-0030/0032 Swift-native METHOD guard) =="
 if [ -z "$TRAMPOLINE_DYLIB" ] || [ ! -f "$LIB/foundation/indexset.ss" ] || [ ! -f "$LIB/foundation/urlsession.ss" ]; then
-  echo "   SKIP — needs generate --target gerbil + swift build -c release --product APIAnywareGerbil"
+  echo "   SKIP — needs generate --target gerbil + (cd targets/gerbil/adapters/macos && swift build -c release --product APIAnywareGerbil)"
 elif "$HERE/run-swift-method-smoke.sh" | sed 's/^/   /'; then
   echo "   smoke-swift-method OK"
 else

@@ -45,14 +45,19 @@ pub fn bundle_app(
     // 1. Walk the binding-library compile closure (deps-first).
     let closure = collect_closure(&entry, &lib_root)?;
 
-    // Locate the Swift-native trampoline dylib (ADR-0029). The repo root is the
-    // parent of `generation/` — three levels above `<root>/generation/targets/gerbil`.
-    // `None` when no `swift build` artifact exists (an app with no Swift-native
-    // residual still bundles; one that references the trampolines fails loudly at
-    // the gxc link).
+    // Locate the Swift-native trampoline dylib (ADR-0029). After the §18 move
+    // (`move-gerbil-material-k13`) the bundler's source root is `targets/gerbil/`,
+    // so the repo root is two levels above it; [`discover_swift_dylib`] then
+    // descends to the per-target adapter package's `.build`. `None` when no
+    // `swift build` artifact exists (an app with no Swift-native residual still
+    // bundles; one that references the trampolines fails loudly at the gxc link).
+    // TODO(w6, root brief item 6): the bundler still assumes apps/ + lib/ are
+    // direct children of source_root (stitched via the test's gerbil_root()
+    // fixture); teaching it the apps-root / bindings-root split natively will
+    // settle this walk-up depth for good.
     let workspace_root = abs_root
         .ancestors()
-        .nth(3)
+        .nth(2)
         .map(Path::to_path_buf)
         .unwrap_or_else(|| abs_root.clone());
     let swift_dylib = discover_swift_dylib(&workspace_root);

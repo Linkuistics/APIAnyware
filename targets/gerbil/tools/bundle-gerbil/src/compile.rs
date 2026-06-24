@@ -54,12 +54,14 @@ const GENERICS_MODULE_STEM: &str = "generics";
 /// [`crate::relocate::SWIFT_DYLIB_NAME`].
 const SWIFT_DYLIB_LINK_NAME: &str = "APIAnywareGerbil";
 
-/// Locate the built `libAPIAnywareGerbil.dylib` under the repo's
-/// `swift/.build/<triple>/{release,debug}/` (ADR-0029). The dylib is the
-/// `swift build` artifact for the `APIAnywareGerbil` SwiftPM target; gerbil
-/// **links** it (`-lAPIAnywareGerbil`) rather than dlopen'ing it (the chez
-/// divergence, ADR-0029 §4), so its directory becomes a `-L`/`-rpath` on the
-/// gerbil app link line.
+/// Locate the built `libAPIAnywareGerbil.dylib` under the per-target adapter
+/// package's `targets/gerbil/adapters/macos/.build/<triple>/{release,debug}/`
+/// (ADR-0029). The dylib is the `swift build` artifact for the `APIAnywareGerbil`
+/// SwiftPM target; gerbil **links** it (`-lAPIAnywareGerbil`) rather than
+/// dlopen'ing it (the chez divergence, ADR-0029 §4), so its directory becomes a
+/// `-L`/`-rpath` on the gerbil app link line. Gerbil left the shared umbrella
+/// `swift/.build` in `move-gerbil-material-k13` (the §18 per-target adapter
+/// split), so the artifact now lands under the relocated adapter package.
 ///
 /// Prefers `release` over `debug` (a bundled app should ship the optimized
 /// build when both exist), and the host triple's build dir over others. Returns
@@ -67,9 +69,14 @@ const SWIFT_DYLIB_LINK_NAME: &str = "APIAnywareGerbil";
 /// app with no Swift-native residual still bundles, and one that *does* reference
 /// the trampolines fails loudly at the `gxc` link (undefined `aw_gerbil_swift_*`)
 /// with the build instruction in the app README. `workspace_root` is the repo
-/// root (the parent of `swift/`).
+/// root (the parent of `targets/`).
 pub fn discover_swift_dylib(workspace_root: &Path) -> Option<PathBuf> {
-    let build_root = workspace_root.join("swift").join(".build");
+    let build_root = workspace_root
+        .join("targets")
+        .join("gerbil")
+        .join("adapters")
+        .join("macos")
+        .join(".build");
     let base = crate::relocate::SWIFT_DYLIB_NAME;
     // Host triple's conventional dir name (e.g. arm64-apple-macosx); also scan
     // any sibling triple dirs so a cross/older build layout still resolves.

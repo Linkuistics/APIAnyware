@@ -13,8 +13,10 @@
 //! That ignored test is the in-crate proof of the node's first two done-bars
 //! (a dylib-clean `.app`); the GUI-draws bar is grove leaf 070/040 (VM).
 
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::OnceLock;
 
 use apianyware_bundle_gerbil::{bundle_app, collect_closure, AppSpec, BundleError};
 
@@ -26,11 +28,43 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+/// The gerbil binding tree the bundler expects: a single root with `apps/` and
+/// `lib/` (the `gerbil-bindings` package root — `runtime/` + emitted `<fw>/`)
+/// as siblings. The closure walk resolves `:gerbil-bindings/…` names under
+/// `<root>/lib/` and reads apps from `<root>/apps/`.
+///
+/// The §18 refactor (`move-gerbil-material-k13`) split that tree apart: apps now
+/// live under `targets/gerbil/app-implementations/macos/`, and the package root
+/// under `targets/gerbil/bindings/macos/generated/`. We stitch the new homes
+/// back into the single-root shape the bundler expects with a symlink fixture —
+/// the same directory-symlink case the bundler already handles (mirrors chez's
+/// `chez_root()`). The emitted `lib/<fw>/` libraries are gitignored (absent in a
+/// clean checkout), so the closure-walk test behaves identically, now
+/// referencing the new homes.
+///
+/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
+/// the apps-root / bindings-root split natively so this fixture isn't needed.
 fn gerbil_root() -> PathBuf {
-    workspace_root()
-        .join("generation")
-        .join("targets")
-        .join("gerbil")
+    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
+    FIXTURE
+        .get_or_init(|| {
+            let target = workspace_root().join("targets").join("gerbil");
+            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("gerbil-bundle-fixture");
+            let _ = fs::remove_dir_all(&fixture);
+            fs::create_dir_all(&fixture).expect("create gerbil bundle fixture root");
+            let link = |src: PathBuf, name: &str| {
+                let dst = fixture.join(name);
+                std::os::unix::fs::symlink(&src, &dst)
+                    .unwrap_or_else(|e| panic!("symlink {dst:?} -> {src:?}: {e}"));
+            };
+            link(target.join("app-implementations").join("macos"), "apps");
+            link(
+                target.join("bindings").join("macos").join("generated"),
+                "lib",
+            );
+            fixture
+        })
+        .clone()
 }
 
 fn gerbil_tree_present() -> bool {

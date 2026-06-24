@@ -279,7 +279,7 @@ mod tests {
 
     /// Real `otool -L` output for the hello-window exe (070/020).
     const HELLO_OTOOL: &str = "\
-generation/targets/gerbil/apps/hello-window/build/hello-window:
+targets/gerbil/app-implementations/macos/hello-window/build/hello-window:
 \t/usr/lib/libobjc.A.dylib (compatibility version 1.0.0, current version 228.0.0)
 \t/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit (compatibility version 45.0.0, current version 2685.60.104)
 \t/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 5026.5.4)

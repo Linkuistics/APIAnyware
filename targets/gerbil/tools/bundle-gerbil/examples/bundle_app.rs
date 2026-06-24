@@ -7,7 +7,7 @@
 //! cargo run --example bundle_app -p apianyware-bundle-gerbil -- <script-name>
 //! ```
 //!
-//! Output: `generation/targets/gerbil/apps/<script-name>/build/<App Name>.app`.
+//! Output: `targets/gerbil/app-implementations/macos/<script-name>/build/<App Name>.app`.
 //!
 //! The build drives the bottle gerbil toolchain: clang the block companion,
 //! `gxc -O` the binding closure into a persistent cache, `gxc -exe -O` the
@@ -26,8 +26,16 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    let source_root = workspace.join("generation").join("targets").join("gerbil");
-    let output_dir = source_root.join("apps").join(&script).join("build");
+    // NOTE (w6): the bundler still expects apps/ + lib/ as direct children of
+    // source_root; the §18 split (apps→app-implementations/macos,
+    // lib→bindings/macos/generated) isn't taught to it yet — see the
+    // gerbil_root() symlink fixture in tests/bundle_apps.rs.
+    let source_root = workspace.join("targets").join("gerbil");
+    let output_dir = source_root
+        .join("app-implementations")
+        .join("macos")
+        .join(&script)
+        .join("build");
 
     let mut spec = AppSpec::from_script_name(&script);
     let spec_path = workspace

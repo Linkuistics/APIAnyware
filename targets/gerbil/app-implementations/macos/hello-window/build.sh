@@ -15,9 +15,9 @@
 # (runtime README "Building") joins every link line.
 set -euo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"          # apps/hello-window
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"          # app-implementations/macos/hello-window
 ROOT="$(cd "$HERE/../../../../.." && pwd)"                    # repo root
-LIB="$ROOT/generation/targets/gerbil/lib"
+LIB="$ROOT/targets/gerbil/bindings/macos/generated"          # gerbil-bindings package root
 
 export PATH="/opt/homebrew/Cellar/gerbil-scheme/0.18.2/bin:$PATH"
 unset GERBIL_HOME || true

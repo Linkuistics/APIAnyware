@@ -10,7 +10,7 @@
 # Prerequisites (run from the repo root):
 #   SDKROOT=macosx ./target/debug/apianyware-generate --target gerbil \
 #       --input-dir collection/ir/collected
-#   (cd swift && SDKROOT=macosx swift build --product APIAnywareGerbil)
+#   (cd targets/gerbil/adapters/macos && SDKROOT=macosx swift build --product APIAnywareGerbil)
 set -euo pipefail
 
 GERBIL_BREW="$(brew --prefix gerbil-scheme)"
@@ -18,15 +18,17 @@ export PATH="$GERBIL_BREW/bin:$PATH"
 unset GERBIL_HOME || true
 export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"      # .../lib/runtime/tests
-LIB="$(cd "$HERE/../.." && pwd)"                           # .../lib  (package root)
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"      # .../generated/runtime/tests
+LIB="$(cd "$HERE/../.." && pwd)"                           # .../generated  (gerbil-bindings package root)
 RT="$LIB/runtime"
-REPO="$(cd "$LIB/../../../.." && pwd)"                     # repo root
+# The Swift dylib now builds into the per-target adapter package's .build (gerbil
+# left the umbrella swift/.build in move-gerbil-material-k13).
+ADAPTER="$(cd "$LIB/../../../adapters/macos" && pwd)"     # targets/gerbil/adapters/macos
 FW="$LIB/foundation"
 
 # Locate the swift build artifact — prefer release over debug.
 DYLIB_DIR=""
-for triple_dir in "$REPO"/swift/.build/*/; do
+for triple_dir in "$ADAPTER"/.build/*/; do
   for profile in release debug; do
     if [ -f "$triple_dir$profile/libAPIAnywareGerbil.dylib" ]; then
       DYLIB_DIR="$triple_dir$profile"; break 2
@@ -34,8 +36,8 @@ for triple_dir in "$REPO"/swift/.build/*/; do
   done
 done
 if [ -z "$DYLIB_DIR" ]; then
-  echo "!! libAPIAnywareGerbil.dylib not found under $REPO/swift/.build/*/{release,debug}" >&2
-  echo "   build it: (cd swift && SDKROOT=macosx swift build --product APIAnywareGerbil)" >&2
+  echo "!! libAPIAnywareGerbil.dylib not found under $ADAPTER/.build/*/{release,debug}" >&2
+  echo "   build it: (cd targets/gerbil/adapters/macos && SDKROOT=macosx swift build --product APIAnywareGerbil)" >&2
   exit 2
 fi
 if [ ! -f "$FW/indexset.ss" ] || [ ! -f "$FW/nsurlsession.ss" ]; then

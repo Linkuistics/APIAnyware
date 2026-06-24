@@ -54,6 +54,6 @@ Build the standalone bundle (compiles the whole closure, links + relocates the d
 
 ```
 SDKROOT=macosx cargo run -p apianyware-generate -- --target gerbil
-(cd swift && SDKROOT=macosx swift build -c release --product APIAnywareGerbil)
+(cd targets/gerbil/adapters/macos && SDKROOT=macosx swift build -c release --product APIAnywareGerbil)
 cargo run --example bundle_app -p apianyware-bundle-gerbil -- swift-native-method-probe
 ```

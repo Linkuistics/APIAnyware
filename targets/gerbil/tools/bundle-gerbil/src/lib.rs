@@ -2,7 +2,7 @@
 //!
 //! A gerbil `.app` is built by **driving the bottle (Homebrew) gerbil
 //! toolchain** end-to-end and then packaging the resulting native binary
-//! (ADR-0009; design spec `generation/targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md` §7,
+//! (ADR-0009; design spec `targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md` §7,
 //! corrected at grove leaf 070/020). The pipeline, per app:
 //!
 //! 1. **Walk the import closure** ([`deps`]) — parse the app's `.ss`
@@ -34,8 +34,13 @@
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");
-//! let source_root = Path::new("generation/targets/gerbil");
-//! let output_dir = Path::new("generation/targets/gerbil/apps/hello-window/build");
+//! // NOTE (w6): the bundler still expects apps/ + lib/ as direct children of
+//! // source_root; the §18 split (apps→app-implementations/macos,
+//! // lib→bindings/macos/generated) is stitched via the gerbil_root() symlink
+//! // fixture in tests until the bundler is taught the split natively.
+//! let source_root = Path::new("targets/gerbil");
+//! let output_dir =
+//!     Path::new("targets/gerbil/app-implementations/macos/hello-window/build");
 //! let app_path = bundle_app(&spec, source_root, output_dir).unwrap();
 //! println!("built: {}", app_path.display());
 //! ```

@@ -26,7 +26,8 @@
 //! Skip behaviour (the emit-racket / emit-chez opt-in pattern):
 //!  - SKIPPED unless `RUNTIME_LOAD_TEST=1` (drives the gerbil bottle toolchain).
 //!  - SKIPPED if `gxc` is not on PATH.
-//!  - SKIPPED if `libAPIAnywareGerbil.dylib` is not built (`swift/.build` probe).
+//!  - SKIPPED if `libAPIAnywareGerbil.dylib` is not built (the per-target
+//!    `targets/gerbil/adapters/macos/.build` probe).
 //!  - SKIPPED if the generated Foundation bindings are missing (run generate first).
 
 use std::path::PathBuf;
@@ -45,16 +46,21 @@ fn project_root() -> PathBuf {
 }
 
 fn target_root() -> PathBuf {
-    project_root()
-        .join("generation")
-        .join("targets")
-        .join("gerbil")
+    project_root().join("targets").join("gerbil")
+}
+
+/// The `gerbil-bindings` package root — `runtime/` + emitted `<fw>/` — under the
+/// §18 home (`move-gerbil-material-k13`; was `generation/targets/gerbil/lib`).
+fn generated_root() -> PathBuf {
+    target_root()
+        .join("bindings")
+        .join("macos")
+        .join("generated")
 }
 
 /// The method-smoke runner — the whole-closure gxc driver this guard wraps.
 fn smoke_script() -> PathBuf {
-    target_root()
-        .join("lib")
+    generated_root()
         .join("runtime")
         .join("tests")
         .join("run-swift-method-smoke.sh")
@@ -79,10 +85,12 @@ fn gxc_on_path() -> bool {
         .unwrap_or(false)
 }
 
-/// The freshly built dylib, probed where the smoke script looks for it
-/// (`swift/.build/<triple>/{release,debug}/` or the profile symlinks).
+/// The freshly built dylib, probed where the smoke script looks for it: the
+/// per-target adapter package's `.build` (`targets/gerbil/adapters/macos/.build/
+/// <triple>/{release,debug}/` or the profile symlinks). Gerbil left the umbrella
+/// `swift/.build` in `move-gerbil-material-k13`.
 fn dylib_built() -> bool {
-    let build = project_root().join("swift").join(".build");
+    let build = target_root().join("adapters").join("macos").join(".build");
     let name = "libAPIAnywareGerbil.dylib";
     if let Ok(entries) = std::fs::read_dir(&build) {
         for e in entries.flatten() {
@@ -107,7 +115,7 @@ fn dylib_built() -> bool {
 
 /// Generated Foundation bindings the two exemplars import.
 fn bindings_present() -> bool {
-    let fw = target_root().join("lib").join("foundation");
+    let fw = generated_root().join("foundation");
     fw.join("indexset.ss").is_file() && fw.join("urlsession.ss").is_file()
 }
 
@@ -126,7 +134,7 @@ fn skip_unless_enabled(test_name: &str) -> bool {
     if !dylib_built() {
         eprintln!(
             "SKIPPED: {test_name} (libAPIAnywareGerbil.dylib not built; run \
-             `cd swift && swift build -c release --product APIAnywareGerbil`)"
+             `cd targets/gerbil/adapters/macos && swift build -c release --product APIAnywareGerbil`)"
         );
         return true;
     }

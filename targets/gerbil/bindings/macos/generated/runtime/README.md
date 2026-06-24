@@ -163,17 +163,19 @@ FINDINGS-§0 symlink dance + `SDKROOT`.
 export PATH="/opt/homebrew/Cellar/gerbil-scheme/0.18.2/bin:$PATH"
 unset GERBIL_HOME
 export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
-export GERBIL_LOADPATH="$PWD/generation/targets/gerbil/lib"   # package root
+# The gerbil-bindings package root after the §18 move (move-gerbil-material-k13):
+cd targets/gerbil/bindings/macos/generated
+export GERBIL_LOADPATH="$PWD"                                 # package root
 
 # 1. Compile the clang companion (the ONE block-literal TU gcc-15 can't parse).
 #    Self-contained, so it links onto every subsequent link line.
-clang -fblocks -isysroot "$SDKROOT" -c lib/runtime/native_block.c -o native_block.o
+clang -fblocks -isysroot "$SDKROOT" -c runtime/native_block.c -o native_block.o
 
 # 2. Compile the runtime modules to the static cache. Order: objc.ss imports
 #    native-core.ss imports ffi.ss. -lobjc is REQUIRED here AND the companion .o
 #    (native-core's loadable object references its block-maker symbols).
 gxc -O -ld-options "-lobjc native_block.o" \
-    lib/runtime/ffi.ss lib/runtime/native-core.ss lib/runtime/objc.ss
+    runtime/ffi.ss runtime/native-core.ss runtime/objc.ss
 
 # 3. Build a program. Link -lobjc + the companion .o + every framework whose
 #    classes it touches (-framework Foundation gives NSString etc.; libobjc
