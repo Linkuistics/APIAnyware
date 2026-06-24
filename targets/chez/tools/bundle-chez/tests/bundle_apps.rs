@@ -2,7 +2,7 @@
 //!
 //! chez apps ship as self-contained binaries that embed the Chez kernel
 //! (ADR-0009; design spec
-//! `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). The
+//! `targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). The
 //! source-exec / system-Chez path it replaced is gone, so these tests
 //! cover only what is cheap and deterministic to assert in a unit run:
 //! the entry-point/dylib prechecks [`bundle_app`] performs *before* any
@@ -10,7 +10,7 @@
 //!
 //! The heavy end-to-end path — whole-program compile → `make-boot-file` →
 //! `cc`-link → assemble + codesign, then *launch* — is proven by the 060/010
-//! spike (`generation/targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`) and re-verified
+//! spike (`targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`) and re-verified
 //! per app on a no-Chez VM in node-leaf 050. It is not re-run here: a single
 //! standalone build is ~160 s for an AppKit app and needs `cc`, the Chez
 //! kernel artifacts, and codesign — environment a default `cargo test` should
@@ -19,6 +19,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::OnceLock;
 
 use apianyware_bundle_chez::{bundle_app, compute_collisions, AppSpec, BundleError, Collisions};
 
@@ -30,11 +31,48 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+/// The chez binding tree the bundler expects: a single root with `apps/`,
+/// `apianyware/` (the package root — runtime + emitted libraries), and `lib/`
+/// (the mandatory dylib, ADR-0005) as siblings. The dependency walk resolves
+/// `(apianyware ...)` names under `<root>/apianyware/`, reads apps from
+/// `<root>/apps/`, and requires `<root>/lib/libAPIAnywareChez.dylib`.
+///
+/// The §18 refactor (`move-chez-material-k12`) split that tree apart: apps now
+/// live under `targets/chez/app-implementations/macos/`, and the `apianyware/`
+/// package root + dylib under `targets/chez/bindings/macos/`. We stitch the new
+/// homes back into the single-root shape the bundler expects with a symlink
+/// fixture — the same directory-symlink case the bundler already handles. The
+/// emitted `apianyware/<fw>/` libraries are gitignored (absent in a clean
+/// checkout), so the heavy collision-set test behaves identically, now
+/// referencing the new homes.
+///
+/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
+/// the apps-root / bindings-root split natively so this fixture isn't needed.
 fn chez_root() -> PathBuf {
-    workspace_root()
-        .join("generation")
-        .join("targets")
-        .join("chez")
+    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
+    FIXTURE
+        .get_or_init(|| {
+            let target = workspace_root().join("targets").join("chez");
+            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("chez-bundle-fixture");
+            let _ = fs::remove_dir_all(&fixture);
+            fs::create_dir_all(&fixture).expect("create chez bundle fixture root");
+            let mut link = |src: PathBuf, name: &str| {
+                let dst = fixture.join(name);
+                // A dangling link (e.g. the absent built dylib under lib/) is
+                // fine — the bundler's existence check yields the same outcome it
+                // did when the tree was colocated under generation/targets/chez.
+                std::os::unix::fs::symlink(&src, &dst)
+                    .unwrap_or_else(|e| panic!("symlink {dst:?} -> {src:?}: {e}"));
+            };
+            link(target.join("app-implementations").join("macos"), "apps");
+            link(
+                target.join("bindings").join("macos").join("apianyware"),
+                "apianyware",
+            );
+            link(target.join("bindings").join("macos").join("lib"), "lib");
+            fixture
+        })
+        .clone()
 }
 
 fn chez_available() -> bool {

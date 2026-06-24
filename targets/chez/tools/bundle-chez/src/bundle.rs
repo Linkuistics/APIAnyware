@@ -4,7 +4,7 @@
 //!
 //! The bundle *pipeline* itself lives in [`crate::standalone`] — chez apps
 //! ship as self-contained binaries that embed the Chez kernel (ADR-0009;
-//! `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). There is
+//! `targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). There is
 //! no longer a source-exec / system-Chez path: this module holds only the
 //! types and helpers that pipeline drives.
 

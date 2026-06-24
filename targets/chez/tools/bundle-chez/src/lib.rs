@@ -3,7 +3,7 @@
 //! A chez `.app` is a **standalone open-world** binary that embeds the
 //! Chez kernel and a whole-program boot image — it launches on a machine
 //! with no Chez Scheme installed (ADR-0009; design spec
-//! `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). The
+//! `targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`). The
 //! host Chez is a *build-time* dependency only (the kernel artifacts are
 //! discovered from it). There is no source-exec / system-Chez path.
 //!
@@ -14,8 +14,14 @@
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");
-//! let source_root = Path::new("generation/targets/chez");
-//! let output_dir = Path::new("generation/targets/chez/apps/hello-window/build");
+//! // The §18 refactor (move-chez-material-k12) split the chez tree: the
+//! // package root (`apianyware/`) + dylib (`lib/`) live under the binding
+//! // root, while apps moved to `app-implementations/macos/`. The bundler
+//! // still expects `apps/`, `apianyware/`, `lib/` colocated under one
+//! // source_root, so callers stitch the split homes (see the bundle_apps
+//! // test fixture; w6 TODO: teach the bundler the split natively).
+//! let source_root = Path::new("targets/chez/bindings/macos");
+//! let output_dir = Path::new("targets/chez/app-implementations/macos/hello-window/build");
 //! let app_path = bundle_app(&spec, source_root, output_dir).unwrap();
 //! println!("built: {}", app_path.display());
 //! ```

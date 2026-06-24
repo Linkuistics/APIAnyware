@@ -11,7 +11,7 @@ let package = Package(
     // package's minimum — raising the floor clears the bulk of the
     // availability errors that the IR cannot gate (provenance: null, or the
     // owning type's availability exceeding the method's). Package-wide platform
-    // ⇒ chez/gerbil inherit the bump; acceptable because all three dylibs are
+    // ⇒ gerbil/sbcl inherit the bump; acceptable because both dylibs are
     // HOST tools (VM golden macos-tahoe/26), never shippable apps. Requires
     // swift-tools-version ≥ 6.1 to expose `.v26`.
     platforms: [.macOS(.v26)],
@@ -21,12 +21,12 @@ let package = Package(
         // APIAnywareCommon (and the inert Gerbil stub) were deleted once chez —
         // the last real consumer — de-shared.
         //
-        // Racket left this umbrella in move-racket-material-k11: its adapter now
-        // lives in the §18 target tree with its own manifest at
-        // targets/racket/adapters/macos/Package.swift (SwiftPM forbids a target
-        // path outside the package root, so the relocated sources cannot be
-        // referenced from here). chez/gerbil/sbcl follow in their own leaves.
-        .library(name: "APIAnywareChez", type: .dynamic, targets: ["APIAnywareChez"]),
+        // Racket left this umbrella in move-racket-material-k11, and chez in
+        // move-chez-material-k12: each adapter now lives in the §18 target tree
+        // with its own manifest at targets/<t>/adapters/macos/Package.swift
+        // (SwiftPM forbids a target path outside the package root, so the
+        // relocated sources cannot be referenced from here). gerbil/sbcl follow
+        // in their own leaves.
         // Gerbil's Swift-native trampoline dylib (ADR-0029): the deliberate
         // ADR-0017 deviation. Gerbil's ObjC native core stays in `gsc`; this
         // dylib carries ONLY the Swift-native trampoline + hermetic helpers.
@@ -39,10 +39,8 @@ let package = Package(
         .library(name: "APIAnywareSbcl", type: .dynamic, targets: ["APIAnywareSbcl"]),
     ],
     targets: [
-        .target(name: "APIAnywareChez"),
         .target(name: "APIAnywareGerbil"),
         .target(name: "APIAnywareSbcl"),
-        .testTarget(name: "APIAnywareChezTests", dependencies: ["APIAnywareChez"]),
         .testTarget(name: "APIAnywareGerbilTests", dependencies: ["APIAnywareGerbil"]),
         .testTarget(name: "APIAnywareSbclTests", dependencies: ["APIAnywareSbcl"]),
     ]

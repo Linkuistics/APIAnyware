@@ -8,7 +8,7 @@ cargo run --example bundle_app -p apianyware-bundle-chez -- --all
 ```
 
 Output lands at
-`generation/targets/chez/apps/<script-name>/build/<App Name>.app`.
+`targets/chez/app-implementations/macos/<script-name>/build/<App Name>.app`.
 
 ## Pipeline
 

@@ -7,7 +7,7 @@
 //! cargo run --example bundle_app -p apianyware-bundle-chez -- <script-name>
 //! ```
 //!
-//! Output: `generation/targets/chez/apps/<script-name>/build/<App Name>.app`.
+//! Output: `targets/chez/app-implementations/macos/<script-name>/build/<App Name>.app`.
 //!
 //! The whole-program compile is one-time-per-app and slow (~160 s / ~1.6 GB
 //! RSS for the AppKit closure; spike F7) — the shipped launch is ~50×

@@ -1,10 +1,10 @@
 //! Build a self-contained, **open-world** chez `.app` whose
 //! `Contents/MacOS/<bin>` embeds the Chez kernel and a whole-program boot
 //! image — no system Chez at runtime (ADR-0009; design spec
-//! `generation/targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`).
+//! `targets/chez/docs/design/2026-05-29-chez-standalone-distribution-design.md`).
 //!
 //! This is the productionised form of the 060/010 spike
-//! (`generation/targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`). The pipeline,
+//! (`targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`). The pipeline,
 //! per app (spec §2):
 //!
 //! 1. **Generate a top-level-program wrapper** around the app entry. The

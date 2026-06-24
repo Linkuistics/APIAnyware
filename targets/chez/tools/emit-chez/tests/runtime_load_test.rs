@@ -39,10 +39,13 @@ fn project_root() -> PathBuf {
 }
 
 fn target_root() -> PathBuf {
+    // The chez binding root after move-chez-material-k12 (§18): the `apianyware/`
+    // package tree + `lib/` dylib live here, and this is the `--libdirs` value.
     project_root()
-        .join("generation")
         .join("targets")
         .join("chez")
+        .join("bindings")
+        .join("macos")
 }
 
 /// Load Foundation from whichever IR tree is present — the enriched pipeline output
@@ -134,7 +137,7 @@ fn skip_unless_enabled(test_name: &str) -> bool {
     if !dylib_path().exists() {
         eprintln!(
             "SKIPPED: {test_name} (libAPIAnywareChez.dylib not built; \
-             run `cd swift && swift build --product APIAnywareChez`)"
+             run `cd targets/chez/adapters/macos && swift build --product APIAnywareChez`)"
         );
         return true;
     }
