@@ -105,3 +105,19 @@ hard-to-reverse choice — unaffected. The triad is now `extracted.json` / `anno
 `.apiw` KDL parser + `_llm-annotations`→`annotations.apiw` converter), k19 (KDL Schema covers
 `.apiw`; machine artifacts get JSON Schema or defer to ws8), k20 (cutover writes `.json` machine
 files), k21 (datalog fact base is `extracted.json`, derived facts stamped into `resolved.json`).
+
+## Update — per-fact provenance carriage deferred to ws5 (2026-06-24, leaf `flip-retire-k26`)
+
+§4 above is the decided *carriage model*; this update records its **implementation status** after
+the convention flip. The convention facets (`apianyware-conventions`, ADR-0047) *compute* a
+per-fact/per-index `convention:<rule>` stamp, but the flip keeps it **off-disk**: `annotate`
+assembles convention annotations **byte-identical to the legacy heuristic output** (`source =
+Heuristic` at method level; no per-fact `source`, no `superseded-by`). The full §4 rollout —
+per-fact `source` stamps on `ParamOwnership`/`BlockParamAnnotation` + per-method threading/error,
+the `.apiw` schema/writer + machine serde extension, emit consumers, and the disagreement/precedence
+audit (winner stamped + losers `superseded-by`) — is **workstream 5's** (it owns the
+provenance/precedence *mechanism*; §4 line 54 already scopes the workflow to ws5, and no consumer of
+per-fact provenance exists until ws5 builds one). This honours the seam **ws2 defines the carriage,
+ws5 builds the mechanism** without speculatively reshaping the schema. Steer (user, k26): `annotate`
+runs once per SDK update, so the carriage is kept minimal. Equivalence proven by goldens-as-truth
+(Foundation `resolved.json` byte-identical pre/post-flip; emit goldens green on all four targets).

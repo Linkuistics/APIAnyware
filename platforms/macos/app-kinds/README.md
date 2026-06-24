@@ -7,5 +7,6 @@ The kinds of macOS application a target can be asked to build (REFACTOR.md §14)
 and test obligations. App-kinds are platform truth (process model, bundle shape) —
 distinct from the target-independent app *specs* under `apps/macos/`.
 
-TODO: `kind.apiw` definitions authored in workstream 4 (platform model); the
-`.apiw` DSL is workstream 2. No content this leaf (SC6).
+TODO: `kind.apiw` definitions authored in workstream 4 (platform model). The
+`.apiw` DSL is provided by workstream 2 (spec-format), **complete 2026-06-24**
+(ADR-0046/0047). No content this leaf (SC6).

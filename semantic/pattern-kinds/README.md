@@ -8,5 +8,6 @@ is defined once here as a reusable semantic shape that platform specs reference
 and targets project.
 
 TODO: `.apiw` pattern-kind definitions are authored in workstream 3 (semantic
-model); the `.apiw` DSL they are written in is workstream 2 (spec-format). No
-content this leaf (SC6 forbids new content artifacts in the skeleton).
+model). The `.apiw` DSL they are written in is provided by workstream 2
+(spec-format), **complete 2026-06-24** (ADR-0046/0047). No content this leaf
+(SC6 forbids new content artifacts in the skeleton).

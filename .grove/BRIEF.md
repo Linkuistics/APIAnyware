@@ -40,8 +40,13 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    co-located docs; slimmed the README to a map; added placeholder skeletons. JSON-IR
    pipeline builds + 71 test suites green throughout. §45 holds structurally (content
    rewrites remain for 2–9). See **Skeleton outcomes** below.
-2. **spec-format / data-model** — `.apiw` DSL + parser → canonical/resolved YAML,
-   replacing the JSON enriched IR. (Done in place in the new tree.)
+2. **spec-format / data-model** ✅ *(node `spec-format-k16`, complete 2026-06-24)* —
+   `.apiw` KDL DSL + parser + KDL Schema + the per-family spec triad
+   (`extracted.json` / `annotations.apiw` / `resolved.json`), replacing the JSON
+   enriched IR; pipeline cut over to the triad (4→3 stages, `resolved`→`linked`
+   rename); convention heuristics re-expressed as `ascent` datalog rules and
+   `heuristics.rs` retired. The spine ws3–6 consume. See **Spec-format outcomes**
+   below. (ADR-0046/0047; machine IR stayed JSON per the k17 KDL-serde NO-GO.)
 3. **semantic model** — `semantic/`: pattern-kinds + relationship entities as
    first-class semantic entities; the semantic vocabulary docs.
 4. **platform model** — `platforms/macos/`: extracted/annotations/resolved per API
@@ -85,6 +90,37 @@ Durable decisions later workstreams depend on:
   placeholder README; `TODO.md` carries the per-workstream index + residual doc
   path-drift (notably the IR relocation `analysis/ir/` → `platforms/macos/api/`, owned
   by **ws4**). The skeleton authored **zero** new content artifacts (SC6).
+
+## Spec-format outcomes (promoted from `spec-format-k16` on retirement)
+
+Durable decisions/handoffs later workstreams depend on (the format detail itself lives
+in `CONTEXT.md` "Spec format / data model" + ADR-0046/0047, read every session):
+
+- **Per-fact `convention:<rule>` provenance carriage → deferred to ws5.** The
+  convention facets (`apianyware-conventions`) *compute* a per-fact/per-index
+  `convention:<rule>` stamp, but the `flip-retire-k26` cutover keeps it **off-disk**:
+  assembled convention annotations stay byte-identical to the legacy heuristic output
+  (`source = Heuristic`, no provenance). The richer rollout — per-fact stamps on
+  `ParamOwnership`/`BlockParamAnnotation` + per-method threading/error, the `.apiw`
+  schema/writer + machine serde, emit consumers, and the ADR-0046 §4
+  disagreement/precedence audit (winner stamped + losers as `superseded-by`) — is
+  **ws5's** (it owns "provenance-tracked" + "fact-precedence rules"; no consumer exists
+  yet). The seam (ADR-0046 §4 / ws2 running-log D): **ws2 defines the carriage, ws5
+  builds the mechanism.** Steer (user, k26): `annotate` runs *once per SDK update*, so
+  keep the carriage minimal — annotate the canonical API, don't over-engineer
+  prose-derived extras.
+- **Convention tier is `ascent` datalog rules** (ADR-0047): `apianyware-conventions`
+  is now the convention producer; `annotate` consumes its four facet maps by
+  `(receiver, selector)`. `heuristics.rs` is retired. Runtime-loadable rules remain a
+  deferred enhancement; any later rule change is a normal pipeline rebuild.
+- **Goldens-as-truth is the convention-equivalence gate.** Emit goldens (Foundation +
+  AppKit curated subsets + TestKit synthetic, across racket/chez/gerbil/sbcl) are the
+  standing regression guard now that the `*_equivalence.rs` characterization scaffold is
+  gone. Foundation `resolved.json` regenerates byte-identical pre/post-flip.
+- **ws8 boundary** (recorded in `CONTEXT.md` + `schemas/`): ws2 authored only the
+  `.apiw` KDL Schema + the `validate_apiw` step; ws8 owns validation tooling/CI, JSON
+  Schema for the machine `extracted.json`/`resolved.json`, and the
+  app-kind/AppSpec/capability-profile/conformance-report schemas.
 
 ## Notes
 
