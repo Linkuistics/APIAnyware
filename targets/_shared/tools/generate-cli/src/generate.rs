@@ -441,7 +441,8 @@ mod tests {
         use apianyware_emit_sbcl::trampoline::collect_trampolines;
 
         // The enriched IR lives at the workspace root, four levels up from this crate.
-        let enriched = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../analysis/ir/enriched");
+        let enriched =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../analysis/ir/enriched");
         let frameworks = match apianyware_datalog::loading::load_all_frameworks(&enriched, None) {
             Ok(fws) if !fws.is_empty() => fws,
             _ => {
@@ -467,7 +468,8 @@ mod tests {
     /// returns the entry total. Skips-as-pass when the gitignored IR is absent.
     #[test]
     fn sbcl_run_trampolines_reproduces_6d_end_to_end() {
-        let enriched = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../analysis/ir/enriched");
+        let enriched =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../analysis/ir/enriched");
         if apianyware_datalog::loading::load_all_frameworks(&enriched, None)
             .map(|f| f.is_empty())
             .unwrap_or(true)
