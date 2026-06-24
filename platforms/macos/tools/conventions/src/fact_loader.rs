@@ -6,7 +6,9 @@
 //! `all_methods` (falling back to direct `methods` when unresolved) plus its
 //! category methods, and every protocol's required + optional methods. For each
 //! method it also pushes a `param_count` tuple (the block-invocation
-//! last-parameter rule needs the arity).
+//! last-parameter rule and the error-pattern trailing-out-param rule need the
+//! arity) and, for each `Pointer`-typed parameter, a `pointer_param` tuple (the
+//! error-pattern facet's `NSError**` test needs the last param's pointer-ness).
 //!
 //! Additionally pushes one `property` tuple per **instance** property each
 //! receiver declares **directly** — classes use `properties` (not
@@ -92,6 +94,13 @@ fn load_method_params(prog: &mut ConventionProgram, receiver: &str, method: &Met
             param.name.clone(),
             is_block,
         ));
+        // Pointer-ness carriage for the error-pattern facet (the `param`
+        // relation records name but not type kind). Pushed for every pointer
+        // param; the error rule restricts to the last one via `param_count`.
+        if matches!(param.param_type.kind, TypeRefKind::Pointer) {
+            prog.pointer_param
+                .push((receiver.to_string(), method.selector.clone(), index as u32));
+        }
     }
     prog.param_count.push((
         receiver.to_string(),

@@ -8,7 +8,8 @@
 use std::collections::BTreeMap;
 
 use apianyware_types::annotation::{
-    BlockInvocationStyle, BlockParamAnnotation, OwnershipKind, ParamOwnership, ThreadingConstraint,
+    BlockInvocationStyle, BlockParamAnnotation, ErrorPattern, OwnershipKind, ParamOwnership,
+    ThreadingConstraint,
 };
 
 use crate::program::ConventionProgram;
@@ -230,6 +231,60 @@ pub fn threading_facets(prog: &ConventionProgram) -> BTreeMap<MethodKey, Threadi
                 key,
                 ThreadingFacet {
                     threading: ThreadingConstraint::MainThreadOnly,
+                    provenance,
+                },
+            )
+        })
+        .collect()
+}
+
+/// The error-pattern facet derived for one method.
+///
+/// A **method-level** facet (not per-parameter): the value is the method's
+/// single error pattern. The heuristic only ever derives `ErrorOutParam` (it
+/// never emits `ThrowsException` / `NilOnFailure`), so the pattern field is
+/// `ErrorOutParam` for every method present — a method's *absence* from the map
+/// is "no error pattern" (the legacy `None`).
+///
+/// `provenance` carries the `convention:<rule>` stamp (ADR-0046 §4) — see
+/// [`OwnershipFacet`] for the carriage rationale; the on-disk stamp is finalized
+/// in the flip child. The single rule fires at most once per method, so the list
+/// holds exactly one entry (`convention:error-out-param`).
+#[derive(Debug, Clone)]
+pub struct ErrorPatternFacet {
+    /// The error pattern — always `ErrorOutParam` (the only value the convention
+    /// rule derives).
+    pub error_pattern: ErrorPattern,
+    /// `convention:<rule>` stamp for the rule that fired (exactly one entry).
+    pub provenance: Vec<String>,
+}
+
+/// Collect the error-pattern facet for every method that derived an
+/// `ErrorOutParam` fact, keyed by `(receiver, selector)`.
+///
+/// The program emits one `error_out_param` fact per matching method (the rule
+/// fires at most once — there is exactly one last parameter); this maps each to
+/// its facet, recording the firing rule's `convention:<rule>` stamp. Methods
+/// with no `error_out_param` fact are absent — the legacy `None`.
+pub fn error_pattern_facets(prog: &ConventionProgram) -> BTreeMap<MethodKey, ErrorPatternFacet> {
+    let mut stamps: BTreeMap<MethodKey, Vec<String>> = BTreeMap::new();
+
+    for (receiver, selector, rule) in &prog.error_out_param {
+        stamps
+            .entry((receiver.clone(), selector.clone()))
+            .or_default()
+            .push(format!("convention:{rule}"));
+    }
+
+    stamps
+        .into_iter()
+        .map(|(key, mut provenance)| {
+            provenance.sort();
+            provenance.dedup();
+            (
+                key,
+                ErrorPatternFacet {
+                    error_pattern: ErrorPattern::ErrorOutParam,
                     provenance,
                 },
             )

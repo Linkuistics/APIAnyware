@@ -38,8 +38,20 @@ ascent! {
     ///
     /// The method's parameter count, used by the block-invocation facet's
     /// "block is the last parameter" rule (mirrors legacy
-    /// `param_index == total_params - 1`).
+    /// `param_index == total_params - 1`) and the error-pattern facet's
+    /// trailing-out-param gate.
     relation param_count(String, String, u32);
+
+    /// pointer_param(receiver, selector, param_index)
+    ///
+    /// One tuple per parameter whose declared type is a raw `Pointer`
+    /// (`TypeRefKind::Pointer`) — the carriage the error-pattern facet needs for
+    /// its `NSError**` out-param test, since `param` records the parameter
+    /// *name* but not its pointer-ness. Presence means the parameter is a
+    /// pointer; non-pointer parameters contribute no tuple. The error rule gates
+    /// this to the **last** parameter via `param_count`, so the loader pushes
+    /// every pointer parameter (not just the last) and stays logic-free.
+    relation pointer_param(String, String, u32);
 
     /// property(receiver, name, is_copy, is_block)
     ///
@@ -264,6 +276,36 @@ ascent! {
     main_thread(r.clone(), s.clone(), "ui-selector") <--
         receiver_method(r, s, _is_class),
         if is_ui_main_thread_selector(s);
+
+    // =======================================================================
+    // Error-pattern facet
+    //
+    // Mirrors `heuristics::derive_error_pattern`: a method carries the
+    // `ErrorOutParam` pattern — the *only* error pattern the heuristic ever
+    // derives (`ThrowsException` / `NilOnFailure` are never emitted) — when its
+    // **last** parameter is a trailing `NSError**` out-param: named `error` or
+    // ending in `error` (case-insensitive) **and** declared as a raw `Pointer`.
+    // A single rule, one constraint — no disjunction, no precedence ladder
+    // (simpler even than threading). Receiver-kind-agnostic: it consults only
+    // the last parameter, never the receiver kind, so classes and protocols
+    // classify identically (no class/protocol collision concern, unlike
+    // threading).
+    // =======================================================================
+
+    /// error_out_param(receiver, selector, rule)
+    ///
+    /// The `(receiver, selector)` method's last parameter is an `NSError**`
+    /// out-param, so the method follows the `ErrorOutParam` convention; `rule`
+    /// becomes the `convention:<rule>` provenance stamp. Fires at most once per
+    /// method (there is exactly one last parameter).
+    relation error_out_param(String, String, &'static str);
+
+    error_out_param(r.clone(), s.clone(), "error-out-param") <--
+        param_count(r, s, total),
+        param(r, s, i, name, _is_block),
+        if *i + 1 == *total,
+        if name_is_errorish(name),
+        pointer_param(r, s, i);
 }
 
 // ---------------------------------------------------------------------------
@@ -437,6 +479,22 @@ fn is_ui_main_thread_selector(selector: &str) -> bool {
         "updateLayer",
     ];
     SELECTORS.contains(&selector)
+}
+
+// ---------------------------------------------------------------------------
+// Error-pattern predicate — ported verbatim from
+// `heuristics::derive_error_pattern`. The last-parameter gate (`param_count`)
+// and the pointer test (the `pointer_param` join) live in the rule; this is
+// only the parameter-name predicate.
+// ---------------------------------------------------------------------------
+
+/// The parameter name reads as an `NSError**` out-param: exactly `error`, or
+/// ending in `error`, case-insensitive. Ported verbatim from the name test in
+/// `heuristics::derive_error_pattern` (the `== "error"` arm is subsumed by
+/// `ends_with("error")`, kept for fidelity with the legacy expression).
+fn name_is_errorish(name: &str) -> bool {
+    let lower = name.to_lowercase();
+    lower == "error" || lower.ends_with("error")
 }
 
 #[cfg(test)]
@@ -755,5 +813,88 @@ mod tests {
             out,
             vec![("classMethod".to_string(), "main-actor-attribute")]
         );
+    }
+
+    // -----------------------------------------------------------------
+    // Error-pattern facet
+    // -----------------------------------------------------------------
+
+    /// Run the program over one method whose parameters are `(name, is_pointer)`
+    /// (with the `param_count` and per-pointer `pointer_param` facts the error
+    /// rule needs) and report whether it classified the method `ErrorOutParam`.
+    fn is_error_out_param(selector: &str, params: &[(&str, bool)]) -> bool {
+        let mut prog = ConventionProgram::default();
+        for (i, (name, is_pointer)) in params.iter().enumerate() {
+            prog.param.push((
+                "R".to_string(),
+                selector.to_string(),
+                i as u32,
+                name.to_string(),
+                false, // is_block — irrelevant to the error facet
+            ));
+            if *is_pointer {
+                prog.pointer_param
+                    .push(("R".to_string(), selector.to_string(), i as u32));
+            }
+        }
+        prog.param_count
+            .push(("R".to_string(), selector.to_string(), params.len() as u32));
+        prog.run();
+        prog.error_out_param.iter().any(|(_, s, _)| s == selector)
+    }
+
+    #[test]
+    fn trailing_error_pointer_is_out_param() {
+        // Last param named exactly "error" + pointer → ErrorOutParam.
+        assert!(is_error_out_param(
+            "contentsOfDirectoryAtPath:error:",
+            &[("path", false), ("error", true)],
+        ));
+    }
+
+    #[test]
+    fn error_suffix_name_matches() {
+        // "outError" → "outerror" ends_with "error" → matches.
+        assert!(is_error_out_param(
+            "parseWithOptions:outError:",
+            &[("options", false), ("outError", true)],
+        ));
+    }
+
+    #[test]
+    fn named_error_but_not_pointer_does_not_match() {
+        // The name gate passes but the pointer gate fails → no out-param.
+        assert!(!is_error_out_param(
+            "validate:error:",
+            &[("value", false), ("error", false)],
+        ));
+    }
+
+    #[test]
+    fn error_pointer_not_last_does_not_match() {
+        // A pointer named "error" that is not the method's last param → no match.
+        assert!(!is_error_out_param(
+            "error:then:",
+            &[("error", true), ("completion", false)],
+        ));
+    }
+
+    #[test]
+    fn non_error_last_param_does_not_match() {
+        // A trailing pointer not named error-ishly → no match.
+        assert!(!is_error_out_param(
+            "doThing:value:",
+            &[("thing", false), ("value", true)],
+        ));
+    }
+
+    #[test]
+    fn error_substring_not_suffix_does_not_match() {
+        // "errorHandler" neither equals nor ends with "error" → no match, even
+        // as a trailing pointer.
+        assert!(!is_error_out_param(
+            "setErrorHandler:",
+            &[("errorHandler", true)],
+        ));
     }
 }
