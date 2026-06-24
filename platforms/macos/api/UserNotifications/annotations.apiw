@@ -1,0 +1,76 @@
+framework UserNotifications {
+    class UNMutableNotificationContent {
+        method contentByUpdatingWithProvider:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class UNNotificationAttachment {
+        method attachmentWithIdentifier:URL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class UNNotificationContent {
+        method contentByUpdatingWithProvider:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class UNNotificationServiceExtension {
+        method didReceiveNotificationRequest:withContentHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class UNUserNotificationCenter {
+        method addNotificationRequest:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method getDeliveredNotificationsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method getNotificationCategoriesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method getNotificationSettingsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method getPendingNotificationRequestsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestAuthorizationWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setBadgeCount:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 7
+        block-stored 1
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 7
+        error-pattern 3
+    }
+}

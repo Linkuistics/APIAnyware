@@ -1,0 +1,402 @@
+framework CoreData {
+    class NSAsynchronousFetchRequest {
+        method initWithFetchRequest:completionBlock: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class NSAtomicStore {
+        method load: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadMetadata: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method metadataForPersistentStoreWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method save: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMetadata:forPersistentStoreWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSBatchInsertRequest {
+        method batchInsertRequestWithEntityName:dictionaryHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method batchInsertRequestWithEntityName:managedObjectHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithEntity:dictionaryHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithEntity:managedObjectHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithEntityName:dictionaryHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithEntityName:managedObjectHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method setDictionaryHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setManagedObjectHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSCoreDataCoreSpotlightDelegate {
+        method deleteSpotlightIndexWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method searchableIndex:reindexAllSearchableItemsWithAcknowledgementHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method searchableIndex:reindexSearchableItemsWithIdentifiers:acknowledgementHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class NSCustomMigrationStage {
+        method setDidMigrateHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setWillMigrateHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSEntityMigrationPolicy {
+        method beginEntityMapping:manager:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createDestinationInstancesForSourceInstance:entityMapping:manager:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createRelationshipsForDestinationInstance:entityMapping:manager:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method endEntityMapping:manager:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method endInstanceCreationForEntityMapping:manager:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method endRelationshipCreationForEntityMapping:manager:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performCustomValidationForEntityMapping:manager:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSFetchRequest {
+        method execute: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSFetchRequestExpression {
+        method expressionForBlock:arguments: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSFetchedResultsController {
+        method performFetch: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSIncrementalStore {
+        method executeRequest:withContext:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadMetadata: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method metadataForPersistentStoreWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method newValueForRelationship:forObjectWithID:withContext:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newValuesForObjectWithID:withContext:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method obtainPermanentIDsForObjects:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMetadata:forPersistentStoreWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSManagedObject {
+        method validateForDelete: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method validateForInsert: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method validateForUpdate: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method validateValue:forKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSManagedObjectContext {
+        method countForFetchRequest:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method executeFetchRequest:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method executeRequest:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method existingObjectWithID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method obtainPermanentIDsForObjects:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method "perform(schedule:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "performAndWait(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method performBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method performBlockAndWait: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method save: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setQueryGenerationFromToken:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSManagedObjectModel {
+        method checksumsForVersionedModelAtURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMappingModel {
+        method inferredMappingModelForSourceModel:destinationModel:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMergePolicy {
+        method resolveConflicts:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method resolveConstraintConflicts:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method resolveOptimisticLockingVersionConflicts:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMigrationManager {
+        method migrateStoreFromURL:type:options:withMappingModel:toDestinationURL:destinationType:destinationOptions:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSPersistentCloudKitContainer {
+        method initializeCloudKitSchemaWithOptions:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadPersistentStoresWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "performBackgroundTask(_:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method performBackgroundTask: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSPersistentContainer {
+        method loadPersistentStoresWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "performBackgroundTask(_:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method performBackgroundTask: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSPersistentStore {
+        method loadMetadata: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method metadataForPersistentStoreWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMetadata:forPersistentStoreWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSPersistentStoreCoordinator {
+        method addPersistentStoreWithDescription:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addPersistentStoreWithType:configuration:URL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method cachedModelForPersistentStoreAtURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method destroyPersistentStoreAtURL:withType:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method executeRequest:withContext:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method finishDeferredLightweightMigration: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method finishDeferredLightweightMigrationTask: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method importStoreWithIdentifier:fromExternalRecordsDirectory:toURL:options:withType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method metadataForPersistentStoreOfType:URL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method metadataForPersistentStoreOfType:URL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method metadataForPersistentStoreWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method migratePersistentStore:toURL:options:withType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method "perform(_:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "performAndWait(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method performBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method performBlockAndWait: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method removePersistentStore:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeUbiquitousContentAndPersistentStoreAtURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method replacePersistentStoreAtURL:destinationOptions:withPersistentStoreFromURL:sourceOptions:storeType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMetadata:forPersistentStoreOfType:URL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMetadata:forPersistentStoreOfType:URL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+}

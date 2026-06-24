@@ -1,0 +1,66 @@
+framework MetalPerformanceShadersGraph {
+    class MPSGraph {
+        method controlDependencyWithOperations:dependentBlock:name: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method ifWithPredicateTensor:thenBlock:elseBlock:name: is-instance=#true {
+            block-param 1 invocation=synchronous
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method whileWithInitialInputs:before:after:name: is-instance=#true {
+            block-param 1 invocation=synchronous
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method forLoopWithLowerBound:upperBound:step:initialBodyArguments:body:name: is-instance=#true {
+            block-param 4 invocation=synchronous
+            source llm
+        }
+        method forLoopWithNumberOfIterations:initialBodyArguments:body:name: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MPSGraphCompilationDescriptor {
+        method setCompilationCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MPSGraphExecutableExecutionDescriptor {
+        method setCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setScheduledHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MPSGraphExecutionDescriptor {
+        method setCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setScheduledHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 7
+        block-async-copied 5
+        block-stored 0
+        parameter-ownership 5
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

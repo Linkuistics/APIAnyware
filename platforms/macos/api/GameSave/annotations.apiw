@@ -1,0 +1,25 @@
+framework GameSave {
+    class GSSyncedDirectory {
+        method finishSyncing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method finishSyncingWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method triggerPendingUploadWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 3
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

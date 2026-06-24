@@ -1,0 +1,18 @@
+framework SwiftUICore {
+    class ImageRenderer {
+        method "render(rasterizationScale:renderer:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 1
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

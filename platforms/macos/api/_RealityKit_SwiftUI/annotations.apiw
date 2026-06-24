@@ -1,0 +1,44 @@
+framework _RealityKit_SwiftUI {
+    class Entity {
+        method "animate(_:body:completion:)" is-instance=#false {
+            block-param 1 invocation=synchronous
+            block-param 2 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 4
+        block-async-copied 1
+        block-stored 2
+        parameter-ownership 0
+        threading-main-thread-only 6
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

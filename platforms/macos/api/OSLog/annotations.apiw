@@ -1,0 +1,33 @@
+framework OSLog {
+    class OSLogStore {
+        method entriesEnumeratorAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method entriesEnumeratorWithOptions:position:predicate:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method localStoreAndReturnError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method storeWithScope:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method storeWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 5
+    }
+}

@@ -1,0 +1,25 @@
+framework _PhotosUI_SwiftUI {
+    class PHLivePhoto {
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method requestLivePhotoWithResourceFileURLs:placeholderImage:targetSize:contentMode:resultHandler: is-instance=#false {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "withExportedFile(contentType:fileHandler:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        block-stored 1
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 1
+    }
+}

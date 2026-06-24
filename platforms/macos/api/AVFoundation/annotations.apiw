@@ -1,0 +1,941 @@
+framework AVFoundation {
+    class AVAggregateAssetDownloadTask {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVAsset {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadTrackWithTrackID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadMetadataForFormat:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadChapterMetadataGroupsWithTitleLocale:containingItemsWithCommonKeys:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadChapterMetadataGroupsBestMatchingPreferredLanguages:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadMediaSelectionGroupForMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method findUnusedTrackIDWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAssetDownloadTask {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVAssetDownloadURLSession {
+        method dataTaskWithRequest:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method dataTaskWithURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method downloadTaskWithRequest:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method downloadTaskWithResumeData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method downloadTaskWithURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method flushWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method getAllTasksWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method getTasksWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method resetWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method uploadTaskWithRequest:fromData:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method uploadTaskWithRequest:fromFile:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAssetExportSession {
+        method exportAsynchronouslyWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method determineCompatibilityOfExportPreset:withAsset:outputFileType:completionHandler: is-instance=#false {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method determineCompatibleFileTypesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method estimateMaximumDurationWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method estimateOutputFileLengthWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAssetImageGenerator {
+        method copyCGImageAtTime:actualTime:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method generateCGImageAsynchronouslyForTime:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method generateCGImagesAsynchronouslyForTimes:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAssetPlaybackAssistant {
+        method loadPlaybackConfigurationOptionsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAssetReader {
+        method assetReaderWithAsset:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithAsset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAssetReaderOutputCaptionAdaptor {
+        method setValidationDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVAssetResourceLoader {
+        method setDelegate:queue: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVAssetResourceLoadingRequest {
+        method streamingContentKeyRequestDataForApp:contentIdentifier:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method persistentContentKeyFromKeyVendorResponse:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAssetTrack {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadSegmentForTrackTime:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadSamplePresentationTimeForTrackTime:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadMetadataForFormat:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadAssociatedTracksOfType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAssetWriter {
+        method assetWriterWithURL:fileType:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method finishWritingWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithURL:fileType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVAssetWriterInput {
+        method requestMediaDataWhenReadyOnQueue:usingBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method respondToEachPassDescriptionOnQueue:usingBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class AVCaptionConversionValidator {
+        method validateCaptionConversionWithWarningHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVCaptionFormatConformer {
+        method conformedCaptionForCaption:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVCaptureDeskViewApplication {
+        method presentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method presentWithLaunchConfiguration:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVCaptureDevice {
+        method lockForConfiguration: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setTorchModeOnWithLevel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method requestAccessForMediaType:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVCaptureDeviceInput {
+        method deviceInputWithDevice:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithDevice:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVCaptureIndexPicker {
+        method initWithLocalizedTitle:symbolName:numberOfIndexes:localizedTitleTransform: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method setActionQueue:action: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class AVCapturePhotoOutputReadinessCoordinator {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVCaptureSlider {
+        method setActionQueue:action: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class AVCaptureStillImageOutput {
+        method captureStillImageAsynchronouslyFromConnection:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVCaptureSystemExposureBiasSlider {
+        method initWithDevice:action: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class AVCaptureSystemZoomSlider {
+        method initWithDevice:action: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class AVCaptureVideoPreviewLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVComposition {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadTrackWithTrackID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVCompositionTrack {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVContentKeyRequest {
+        method makeStreamingContentKeyRequestDataForApp:contentIdentifier:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method respondByRequestingPersistableContentKeyRequestAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVContentKeySession {
+        method invalidateAllPersistableContentKeysForApp:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method invalidatePersistableContentKey:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method makeSecureTokenForExpirationDateOfPersistableContentKey:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setDelegate:queue: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVDelegatingPlaybackCoordinator {
+        method initWithPlaybackControlDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVDepthData {
+        method depthDataByReplacingDepthDataMapWithPixelBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method depthDataFromDictionaryRepresentation:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVExternalStorageDevice {
+        method nextAvailableURLsWithPathExtensions:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method requestAccessWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVFragmentedAsset {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadTrackWithTrackID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVFragmentedAssetTrack {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVFragmentedMovie {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadTrackWithTrackID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVFragmentedMovieTrack {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVMetadataItem {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method metadataItemWithPropertiesOfMetadataItem:valueLoadingHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class AVMovie {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method movieHeaderWithFileType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeMovieHeaderToURL:fileType:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadTrackWithTrackID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVMovieTrack {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVMutableComposition {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method insertTimeRange:ofAsset:atTime:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method insertTimeRange:ofAsset:atTime:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method loadTrackWithTrackID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVMutableCompositionTrack {
+        method insertTimeRange:ofTrack:atTime:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method insertTimeRanges:ofTracks:atTime:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method validateTrackSegments:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVMutableMetadataItem {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVMutableMovie {
+        method initWithData:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithSettingsFromMovie:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method movieWithData:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method movieWithSettingsFromMovie:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method movieWithURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method insertTimeRange:ofAsset:atTime:copySampleData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadTrackWithTrackID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadTracksWithMediaCharacteristic:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVMutableMovieTrack {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method insertTimeRange:ofTrack:atTime:copySampleData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method appendSampleBuffer:decodeTime:presentationTime:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVMutableVideoComposition {
+        method videoCompositionWithPropertiesOfAsset:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method videoCompositionWithPropertiesOfAsset:prototypeInstruction:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method videoCompositionWithAsset:applyingCIFiltersWithHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method videoCompositionWithAsset:applyingCIFiltersWithHandler:completionHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class AVPersistableContentKeyRequest {
+        method makeStreamingContentKeyRequestDataForApp:contentIdentifier:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method persistableContentKeyFromKeyVendorResponse:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method respondByRequestingPersistableContentKeyRequestAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVPlayer {
+        method seekToDate:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method seekToTime:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method seekToTime:toleranceBefore:toleranceAfter:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method prerollAtRate:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addPeriodicTimeObserverForInterval:queue:usingBlock: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method addBoundaryTimeObserverForTimes:queue:usingBlock: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class AVPlayerItem {
+        method seekToTime:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method seekToTime:toleranceBefore:toleranceAfter:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method seekToDate:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method requestContentAuthorizationAsynchronouslyWithTimeoutInterval:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVPlayerItemIntegratedTimeline {
+        method seekToTime:toleranceBefore:toleranceAfter:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method seekToDate:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addPeriodicTimeObserverForInterval:queue:usingBlock: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method addBoundaryTimeObserverForSegment:offsetsIntoSegment:queue:usingBlock: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class AVPlayerItemLegibleOutput {
+        method setDelegate:queue: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPlayerItemMetadataCollector {
+        method setDelegate:queue: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPlayerItemMetadataOutput {
+        method setDelegate:queue: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPlayerItemRenderedLegibleOutput {
+        method setDelegate:queue: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPlayerItemVideoOutput {
+        method setDelegate:queue: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPlayerLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPlayerPlaybackCoordinator {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method coordinateUsingCoordinationMedium:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVPortraitEffectsMatte {
+        method portraitEffectsMatteByReplacingPortraitEffectsMatteWithPixelBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method portraitEffectsMatteFromDictionaryRepresentation:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVSampleBufferAudioRenderer {
+        method requestMediaDataWhenReadyOnQueue:usingBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method flushFromSourceTime:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVSampleBufferDisplayLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method requestMediaDataWhenReadyOnQueue:usingBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class AVSampleBufferGenerator {
+        method createSampleBufferForRequest:addingToBatch:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createSampleBufferForRequest:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method notifyOfDataReadyForSampleBuffer:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVSampleBufferGeneratorBatch {
+        method makeDataReadyWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVSampleBufferRenderSynchronizer {
+        method removeRenderer:atTime:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method addPeriodicTimeObserverForInterval:queue:usingBlock: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method addBoundaryTimeObserverForTimes:queue:usingBlock: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class AVSampleBufferVideoRenderer {
+        method flushWithRemovalOfDisplayedImage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method requestMediaDataWhenReadyOnQueue:usingBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method loadVideoPerformanceMetricsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVSemanticSegmentationMatte {
+        method semanticSegmentationMatteByReplacingSemanticSegmentationMatteWithPixelBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method semanticSegmentationMatteFromImageSourceAuxiliaryDataType:dictionaryRepresentation:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVSynchronizedLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVURLAsset {
+        method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method statusOfValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method findCompatibleTrackForCompositionTrack:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVVideoComposition {
+        method videoCompositionWithPropertiesOfAsset:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method videoCompositionWithAsset:applyingCIFiltersWithHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method videoCompositionWithAsset:applyingCIFiltersWithHandler:completionHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method determineValidityForAsset:timeRange:validationDelegate:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 103
+        block-stored 21
+        parameter-ownership 18
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 58
+    }
+}

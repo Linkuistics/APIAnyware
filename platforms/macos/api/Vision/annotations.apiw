@@ -1,0 +1,903 @@
+framework Vision {
+    class VNAnimalBodyPoseObservation {
+        method keypointsMultiArrayAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForJointName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForGroupKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForJointsGroupName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNCalculateImageAestheticsScoresRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNClassifyImageRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method knownClassificationsForRevision:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedIdentifiersAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNContour {
+        method childContourAtIndex:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method polygonApproximationWithEpsilon:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNContoursObservation {
+        method contourAtIndex:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method contourAtIndexPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNCoreMLModel {
+        method modelForMLModel:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNCoreMLRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithModel:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectAnimalBodyPoseRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method supportedJointNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointsGroupNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNDetectBarcodesRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method supportedSymbologiesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNDetectContoursRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectDocumentSegmentationRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectFaceCaptureQualityRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectFaceLandmarksRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectFaceRectanglesRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectHorizonRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectHumanBodyPose3DRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method supportedJointNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointsGroupNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNDetectHumanBodyPoseRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method supportedJointNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointNamesForRevision:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointsGroupNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointsGroupNamesForRevision:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNDetectHumanHandPoseRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method supportedJointNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointNamesForRevision:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointsGroupNamesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedJointsGroupNamesForRevision:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNDetectHumanRectanglesRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectRectanglesRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectTextRectanglesRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNDetectTrajectoriesRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:trajectoryLength:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class VNFeaturePrintObservation {
+        method computeDistance:toFeaturePrintObservation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNGenerateAttentionBasedSaliencyImageRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNGenerateForegroundInstanceMaskRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNGenerateImageFeaturePrintRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNGenerateObjectnessBasedSaliencyImageRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNGenerateOpticalFlowRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class VNGeneratePersonInstanceMaskRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNGeneratePersonSegmentationRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method supportedOutputPixelFormatsAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNGeometryUtils {
+        method boundingCircleForContour:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method boundingCircleForPoints:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method boundingCircleForSIMDPoints:pointCount:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method calculateArea:forContour:orientedArea:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method calculatePerimeter:forContour:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNHomographicImageRegistrationRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class VNHumanBodyPose3DObservation {
+        method getCameraRelativePosition:forJointName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method pointInImageForJointName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForJointName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForGroupKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForJointsGroupName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNHumanBodyPoseObservation {
+        method keypointsMultiArrayAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForJointName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForGroupKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForJointsGroupName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNHumanHandPoseObservation {
+        method keypointsMultiArrayAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForJointName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForGroupKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForJointsGroupName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNImageBasedRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class VNImageRegistrationRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class VNImageRequestHandler {
+        method performRequests:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNInstanceMaskObservation {
+        method generateMaskForInstances:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method generateMaskedImageOfInstances:fromRequestHandler:croppedToInstancesExtent:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method generateScaledMaskForImageForInstances:fromRequestHandler:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNRecognizeAnimalsRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method knownAnimalIdentifiersForRevision:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedIdentifiersAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNRecognizeTextRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setProgressHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method supportedRecognitionLanguagesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method supportedRecognitionLanguagesForTextRecognitionLevel:revision:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNRecognizedPoints3DObservation {
+        method recognizedPointForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForGroupKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNRecognizedPointsObservation {
+        method keypointsMultiArrayAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method recognizedPointsForGroupKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNRecognizedText {
+        method boundingBoxForRange:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method supportedComputeStageDevicesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNSequenceRequestHandler {
+        method performRequests:onCGImage:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onCGImage:orientation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onCIImage:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onCIImage:orientation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onCMSampleBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onCMSampleBuffer:orientation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onCVPixelBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onCVPixelBuffer:orientation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onImageData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onImageData:orientation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onImageURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performRequests:onImageURL:orientation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNStatefulRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class VNTargetedImageRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class VNTrackHomographicImageRegistrationRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class VNTrackObjectRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithDetectedObjectObservation:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method supportedNumberOfTrackersAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNTrackOpticalFlowRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class VNTrackRectangleRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithRectangleObservation:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method supportedNumberOfTrackersAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNTrackTranslationalImageRegistrationRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithFrameAnalysisSpacing:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class VNTrackingRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method supportedNumberOfTrackersAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VNTranslationalImageRegistrationRequest {
+        method initWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCGImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCIImage:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCMSampleBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedCVPixelBuffer:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageData:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTargetedImageURL:orientation:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class VNVideoProcessor {
+        method addRequest:processingOptions:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method addRequest:withProcessingOptions:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method analyzeTimeRange:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method analyzeWithTimeRange:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeRequest:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 112
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 83
+    }
+}

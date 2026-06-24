@@ -1,0 +1,228 @@
+framework SecurityInterface {
+    class SFAuthorizationView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFCertificatePanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:certificates:showGroup: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:trust:showGroup: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFCertificateTrustPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:certificates:showGroup: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:trust:message: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:trust:showGroup: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFChooseIdentityPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:identities:message: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFKeychainSavePanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForDirectory:file:modalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetModalForWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFKeychainSettingsPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:settings:keychain: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 27
+        block-stored 0
+        parameter-ownership 14
+        threading-main-thread-only 41
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

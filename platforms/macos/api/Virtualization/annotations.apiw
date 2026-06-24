@@ -1,0 +1,318 @@
+framework Virtualization {
+    class VZDiskBlockDeviceStorageDeviceAttachment {
+        method initWithFileHandle:readOnly:synchronizationMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZDiskImageStorageDeviceAttachment {
+        method initWithURL:readOnly:cachingMode:synchronizationMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithURL:readOnly:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZEFIVariableStore {
+        method initCreatingVariableStoreAtURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZFileSerialPortAttachment {
+        method initWithURL:append:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZGraphicsDisplay {
+        method addObserver: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method reconfigureWithConfiguration:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method reconfigureWithSizeInPixels:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method removeObserver: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class VZLinuxRosettaAbstractSocketCachingOptions {
+        method initWithName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZLinuxRosettaDirectoryShare {
+        method initWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method installRosettaWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class VZLinuxRosettaUnixSocketCachingOptions {
+        method initWithPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZMacAuxiliaryStorage {
+        method initCreatingStorageAtURL:hardwareModel:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZMacGraphicsDisplay {
+        method addObserver: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method reconfigureWithConfiguration:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method reconfigureWithSizeInPixels:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method removeObserver: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class VZMacOSInstaller {
+        method "install(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method installWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class VZMacOSRestoreImage {
+        method "fetchLatestSupported(completionHandler:)" is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method fetchLatestSupportedWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "load(from:completionHandler:)" is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFileURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class VZMultipleDirectoryShare {
+        method validateName:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZNetworkBlockDeviceStorageDeviceAttachment {
+        method initWithURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithURL:timeout:forcedReadOnly:synchronizationMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method validateURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZUSBController {
+        method attachDevice:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method detachDevice:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class VZVirtioBlockDeviceConfiguration {
+        method validateBlockDeviceIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZVirtioConsoleDevice {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class VZVirtioFileSystemDeviceConfiguration {
+        method validateTag:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZVirtioGraphicsScanout {
+        method addObserver: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method reconfigureWithConfiguration:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method reconfigureWithSizeInPixels:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method removeObserver: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class VZVirtioSocketDevice {
+        method "connect(toPort:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method connectToPort:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class VZVirtioSocketListener {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class VZVirtualMachine {
+        method "pause(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method pauseWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestStopWithError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method restoreMachineStateFromURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "resume(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method resumeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method saveMachineStateToURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method "start(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method startWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method startWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method stopWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class VZVirtualMachineConfiguration {
+        method validateWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method validateSaveRestoreSupportWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VZXHCIController {
+        method attachDevice:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method detachDevice:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 23
+        block-stored 0
+        parameter-ownership 4
+        threading-main-thread-only 32
+        threading-any-thread 5
+        error-pattern 24
+    }
+}

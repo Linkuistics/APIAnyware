@@ -1,0 +1,95 @@
+framework CoreHaptics {
+    class CHHapticEngine {
+        method createAdvancedPlayerWithPattern:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createPlayerWithPattern:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithAudioSession:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method notifyWhenPlayersFinished: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method playPatternFromData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method playPatternFromURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method registerAudioResource:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setResetHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setStoppedHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method startAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method stopWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method unregisterAudioResource:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CHHapticPattern {
+        method exportDictionaryAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithDictionary:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithEvents:parameterCurves:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithEvents:parameters:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 3
+        block-stored 2
+        parameter-ownership 2
+        threading-main-thread-only 0
+        threading-any-thread 2
+        error-pattern 14
+    }
+}

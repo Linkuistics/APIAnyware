@@ -1,0 +1,441 @@
+framework HealthKit {
+    class HKActivitySummaryQuery {
+        method initWithPredicate:resultsHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setUpdateHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class HKAnchoredObjectQuery {
+        method initWithQueryDescriptors:anchor:limit:resultsHandler: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method initWithType:predicate:anchor:limit:completionHandler: is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method initWithType:predicate:anchor:limit:resultsHandler: is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method setUpdateHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class HKAttachmentStore {
+        method "addAttachment(to:name:contentType:url:metadata:completion:)" is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method addAttachmentToObject:name:contentType:URL:metadata:completion: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method getAttachmentsForObject:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method getDataForAttachment:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method removeAttachment:fromObject:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method streamDataForAttachment:dataHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class HKAudiogramSensitivityPoint {
+        method sensitivityPointWithFrequency:leftEarSensitivity:rightEarSensitivity:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class HKCDADocumentSample {
+        method CDADocumentSampleWithData:startDate:endDate:metadata:validationError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class HKCorrelationQuery {
+        method initWithType:predicate:samplePredicates:completion: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class HKDocumentQuery {
+        method initWithDocumentType:predicate:limit:sortDescriptors:includeDocumentData:resultsHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+    }
+    class HKElectrocardiogramQuery {
+        method "init(_:dataHandler:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithElectrocardiogram:dataHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class HKHealthStore {
+        method activityMoveModeWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method biologicalSexWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method bloodTypeWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method dateOfBirthComponentsWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method dateOfBirthWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method deleteObject:withCompletion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method deleteObjects:withCompletion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method deleteObjectsOfType:predicate:withCompletion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method fitzpatrickSkinTypeWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method getRequestStatusForAuthorizationToShareTypes:readTypes:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method handleAuthorizationForExtensionWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method requestAuthorizationToShareTypes:readTypes:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method requestPerObjectReadAuthorizationForType:predicate:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method saveObject:withCompletion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method saveObjects:withCompletion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method splitTotalEnergy:startDate:endDate:resultsHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method wheelchairUseWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method addSamples:toWorkout:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method startWatchAppWithWorkoutConfiguration:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setWorkoutSessionMirroringStartHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method enableBackgroundDeliveryForType:frequency:withCompletion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method disableBackgroundDeliveryForType:withCompletion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method disableAllBackgroundDeliveryWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method preferredUnitsForQuantityTypes:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method recalibrateEstimatesForSampleType:atDate:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method relateWorkoutEffortSample:withWorkout:activity:completion: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method unrelateWorkoutEffortSample:fromWorkout:activity:completion: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class HKHeartbeatSeriesBuilder {
+        method addHeartbeatWithTimeIntervalSinceSeriesStartDate:precededByGap:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method addMetadata:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method finishSeriesWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class HKHeartbeatSeriesQuery {
+        method initWithHeartbeatSeries:dataHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class HKLiveWorkoutBuilder {
+        method addMetadata:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addSamples:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addWorkoutActivity:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addWorkoutEvents:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method beginCollectionWithStartDate:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method endCollectionWithEndDate:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method finishWorkoutWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method updateActivityWithUUID:addMedatata:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method updateActivityWithUUID:endDate:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class HKObserverQuery {
+        method initWithQueryDescriptors:updateHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithSampleType:predicate:updateHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class HKQuantitySeriesSampleBuilder {
+        method finishSeriesWithMetadata:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method finishSeriesWithMetadata:endDate:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method insertQuantity:date:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method insertQuantity:dateInterval:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class HKQuantitySeriesSampleQuery {
+        method initWithQuantityType:predicate:quantityHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method initWithSample:quantityHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class HKSampleQuery {
+        method initWithQueryDescriptors:limit:resultsHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithQueryDescriptors:limit:sortDescriptors:resultsHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method initWithSampleType:predicate:limit:sortDescriptors:resultsHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+    }
+    class HKSourceQuery {
+        method initWithSampleType:samplePredicate:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class HKStatisticsCollection {
+        method enumerateStatisticsFromDate:toDate:withBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class HKStatisticsCollectionQuery {
+        method setInitialResultsHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setStatisticsUpdateHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class HKStatisticsQuery {
+        method initWithQuantityType:quantitySamplePredicate:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class HKUserAnnotatedMedicationQuery {
+        method initWithPredicate:limit:resultsHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class HKVerifiableClinicalRecordQuery {
+        method initWithRecordTypes:predicate:resultsHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithRecordTypes:sourceTypes:predicate:resultsHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class HKWorkoutBuilder {
+        method addMetadata:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addSamples:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addWorkoutActivity:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method addWorkoutEvents:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method beginCollectionWithStartDate:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method endCollectionWithEndDate:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method finishWorkoutWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method updateActivityWithUUID:addMedatata:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method updateActivityWithUUID:endDate:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class HKWorkoutEffortRelationshipQuery {
+        method initWithPredicate:anchor:options:resultsHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class HKWorkoutRouteBuilder {
+        method addMetadata:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method finishRouteWithWorkout:metadata:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method insertRouteData:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class HKWorkoutRouteQuery {
+        method initWithRoute:dataHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithRoute:dateInterval:dataHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class HKWorkoutSession {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 64
+        block-stored 16
+        parameter-ownership 2
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 11
+    }
+}

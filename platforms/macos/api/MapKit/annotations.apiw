@@ -1,0 +1,142 @@
+framework MapKit {
+    class MKDirections {
+        method calculateDirectionsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method calculateETAWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MKDistanceFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MKGeocodingRequest {
+        method getMapItemsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MKLocalSearch {
+        method startWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MKLocalSearchCompleter {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class MKLookAroundSceneRequest {
+        method getSceneWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MKLookAroundSnapshotter {
+        method getSnapshotWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MKLookAroundViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class MKMapItem {
+        method openInMapsWithLaunchOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method openMapsWithItems:launchOptions:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class MKMapItemDetailViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class MKMapItemRequest {
+        method getMapItemWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MKMapSnapshotter {
+        method startWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method startWithQueue:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class MKMapView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class MKReverseGeocodingRequest {
+        method getMapItemsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MKTileOverlay {
+        method loadTileAtPath:result: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 13
+        block-stored 0
+        parameter-ownership 4
+        threading-main-thread-only 7
+        threading-any-thread 0
+        error-pattern 5
+    }
+}

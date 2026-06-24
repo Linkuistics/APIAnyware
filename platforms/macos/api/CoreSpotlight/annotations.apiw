@@ -1,0 +1,120 @@
+framework CoreSpotlight {
+    class CSImportExtension {
+        method updateAttributes:forFileAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CSIndexExtensionRequestHandler {
+        method dataForSearchableIndex:itemIdentifier:typeIdentifier:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method fileURLForSearchableIndex:itemIdentifier:typeIdentifier:inPlace:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method searchableIndex:reindexAllSearchableItemsWithAcknowledgementHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method searchableIndex:reindexSearchableItemsWithIdentifiers:acknowledgementHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method searchableItemsForIdentifiers:searchableItemsHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class CSLocalizedString {
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CSSearchQuery {
+        method setCompletionHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setFoundItemsHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CSSearchableIndex {
+        method deleteAllSearchableItemsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method deleteSearchableItemsWithDomainIdentifiers:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method deleteSearchableItemsWithIdentifiers:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method indexSearchableItems:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setIndexDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method endIndexBatchWithExpectedClientState:newClientState:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method endIndexBatchWithClientState:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method fetchLastClientStateWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method fetchDataForBundleIdentifier:itemIdentifier:contentType:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class CSUserQuery {
+        method setCompletionHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setFoundItemsHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setFoundSuggestionsHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 9
+        block-stored 8
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 9
+        error-pattern 4
+    }
+}

@@ -1,0 +1,18 @@
+framework RealityKit {
+    class ARView {
+        method "snapshot(saveToHDR:completion:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 1
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 1
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

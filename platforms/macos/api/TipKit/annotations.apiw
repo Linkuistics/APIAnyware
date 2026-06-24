@@ -1,0 +1,35 @@
+framework TipKit {
+    class TipGroup {
+        method "init(_:_:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class TipNSPopover {
+        method "init(_:delegate:actionHandler:)" is-instance=#true {
+            block-param 2 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class TipNSView {
+        method "init(_:arrowEdge:actionHandler:)" is-instance=#true {
+            block-param 2 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        block-stored 2
+        parameter-ownership 0
+        threading-main-thread-only 3
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

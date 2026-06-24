@@ -1,0 +1,812 @@
+framework GameKit {
+    class GKAccessPoint {
+        method "trigger(gameActivity:handler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "trigger(gameActivityDefinitionID:handler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointForArcadeWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointForChallengesWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointForFriendingWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointForPlayTogetherWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithAchievementID:handler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithChallengeDefinitionID:handler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithGameActivity:handler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithGameActivityDefinitionID:handler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithLeaderboardID:playerScope:timeScope:handler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithLeaderboardSetID:handler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithPlayer:handler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method triggerAccessPointWithState:handler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKAchievement {
+        method loadAchievementsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method reportAchievements:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method resetAchievementsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method reportAchievementWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method selectChallengeablePlayers:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method reportAchievements:withEligibleChallenges:withCompletionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method selectChallengeablePlayerIDs:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method challengeComposeControllerWithMessage:players:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method challengeComposeControllerWithMessage:players:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class GKAchievementChallenge {
+        method loadReceivedChallengesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKAchievementDescription {
+        method loadAchievementDescriptionsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadImageWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKAchievementViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setAchievementDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKChallenge {
+        method loadReceivedChallengesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKChallengeDefinition {
+        method loadImageWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadChallengeDefinitionsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method hasActiveChallengesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKChallengeEventHandler {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class GKChallengesViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setChallengeDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKCloudPlayer {
+        method getCurrentSignedInPlayerForContainer:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class GKFriendRequestComposeViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setComposeViewDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKGameActivity {
+        method startWithDefinition:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method startWithDefinition:partyCode:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method findMatchWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method findPlayersForHostedMatchWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method checkPendingGameActivityExistenceWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKGameActivityDefinition {
+        method loadAchievementDescriptionsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadImageWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadLeaderboardsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadGameActivityDefinitionsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadGameActivityDefinitionsWithIDs:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class GKGameCenterViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setGameCenterDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKGameSession {
+        method clearBadgeForPlayers:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method createSessionInContainer:withTitle:maxConnectedPlayers:completionHandler: is-instance=#false {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method getShareURLWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadDataWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadSessionWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadSessionsInContainer:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method removeSessionWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method saveData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method sendData:withTransportType:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method sendMessageWithLocalizedFormatKey:arguments:data:toPlayers:badgePlayers:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method setConnectionState:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class GKLeaderboard {
+        method loadEntriesForPlayerScope:timeScope:range:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method loadEntriesForPlayers:timeScope:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadLeaderboardsWithIDs:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadPreviousOccurrenceWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method submitScore:context:player:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method submitScore:context:player:leaderboardIDs:completionHandler: is-instance=#false {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method loadCategoriesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDefaultLeaderboard:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadScoresWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadLeaderboardsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadImageWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKLeaderboardEntry {
+        method challengeComposeControllerWithMessage:players:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method challengeComposeControllerWithMessage:players:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class GKLeaderboardSet {
+        method loadLeaderboardSetsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadLeaderboardsWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadLeaderboardsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadImageWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKLeaderboardViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setLeaderboardDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKLocalPlayer {
+        method fetchItemsForIdentityVerificationSignature: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadChallengableFriendsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadRecentPlayersWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDefaultLeaderboardCategoryID:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadDefaultLeaderboardCategoryIDWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method authenticateWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadFriendPlayersWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method generateIdentityVerificationSignatureWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadDefaultLeaderboardIdentifierWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDefaultLeaderboardIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadFriendsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadFriendsAuthorizationStatus: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadFriends: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadFriendsWithIdentifiers:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method presentFriendRequestCreatorFromWindow:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setAuthenticateHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method fetchSavedGamesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method saveGameData:withName:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method deleteSavedGamesWithName:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method resolveConflictingSavedGames:withData:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class GKMatch {
+        method chooseBestHostingPlayerWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method rematchWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method sendData:toPlayers:dataMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDataToAllPlayers:withDataMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method chooseBestHostPlayerWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method sendData:toPlayers:withDataMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class GKMatchRequest {
+        method setInviteeResponseHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecipientResponseHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class GKMatchmaker {
+        method addPlayersToMatch:matchRequest:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method findMatchForRequest:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method findMatchedPlayers:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method findPlayersForHostedRequest:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method matchForInvite:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method queryActivityWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method queryPlayerGroupActivity:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method queryQueueActivity:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method startBrowsingForNearbyPlayersWithHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method startGroupActivityWithPlayerHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setInviteHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method startBrowsingForNearbyPlayersWithReachableHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method findPlayersForHostedMatchRequest:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class GKMatchmakerViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setMatchmakerDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKNotificationBanner {
+        method showBannerWithTitle:message:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method showBannerWithTitle:message:duration:completionHandler: is-instance=#false {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKPlayer {
+        method loadPhotoForSize:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadPlayersForIdentifiers:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class GKSavedGame {
+        method loadDataWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKScore {
+        method reportScores:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method reportScoreWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method reportScores:withEligibleChallenges:withCompletionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method reportLeaderboardScores:withEligibleChallenges:withCompletionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method challengeComposeControllerWithMessage:players:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method challengeComposeControllerWithMessage:players:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class GKScoreChallenge {
+        method loadReceivedChallengesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class GKSession {
+        method acceptConnectionFromPeer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method sendData:toPeers:withDataMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDataToAllPeers:withDataMode:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class GKTurnBasedEventHandler {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class GKTurnBasedExchange {
+        method cancelWithLocalizableMessageKey:arguments:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method replyWithLocalizableMessageKey:arguments:data:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class GKTurnBasedMatch {
+        method acceptInviteWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method declineInviteWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method endMatchInTurnWithMatchData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method endMatchInTurnWithMatchData:leaderboardScores:achievements:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method endMatchInTurnWithMatchData:scores:achievements:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method endTurnWithNextParticipant:matchData:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method endTurnWithNextParticipants:turnTimeout:matchData:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method findMatchForRequest:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadMatchDataWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method loadMatchWithID:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadMatchesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method participantQuitInTurnWithOutcome:nextParticipant:matchData:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method participantQuitInTurnWithOutcome:nextParticipants:turnTimeout:matchData:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method participantQuitOutOfTurnWithOutcome:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method rematchWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method removeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method saveCurrentTurnWithMatchData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method saveMergedMatchData:withResolvedExchanges:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method sendExchangeToParticipants:data:localizableMessageKey:arguments:timeout:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method sendReminderToParticipants:localizableMessageKey:arguments:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class GKTurnBasedMatchmakerViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setTurnBasedMatchmakerDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class GKVoiceChat {
+        method setPlayerVoiceChatStateDidChangeHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPlayerStateUpdateHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 132
+        block-stored 9
+        parameter-ownership 11
+        threading-main-thread-only 38
+        threading-any-thread 0
+        error-pattern 16
+    }
+}

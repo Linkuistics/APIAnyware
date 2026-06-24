@@ -1,0 +1,77 @@
+framework CoreLocation {
+    class CLGeocoder {
+        method geocodeAddressDictionary:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method geocodeAddressString:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method geocodeAddressString:inRegion:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method geocodeAddressString:inRegion:preferredLocale:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method reverseGeocodeLocation:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method reverseGeocodeLocation:preferredLocale:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method geocodePostalAddress:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method geocodePostalAddress:preferredLocale:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class CLLocationManager {
+        method requestTemporaryFullAccuracyAuthorizationWithPurposeKey:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class CLLocationUpdater {
+        method liveUpdaterWithConfiguration:queue:handler: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method liveUpdaterWithQueue:handler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class CLMonitor {
+        method requestMonitorWithConfiguration:completion: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class CLMonitorConfiguration {
+        method configWithMonitorName:queue:eventHandler: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 10
+        block-stored 3
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

@@ -1,0 +1,192 @@
+framework Network {
+    class NetworkBrowser {
+        method "onStateUpdate(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "run(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class NWEthernetChannel {
+        method "send(content:to:vlanTag:completion:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NetworkListener {
+        method "onServiceRegistrationUpdate(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "onStateUpdate(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "run(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class NetworkConnection {
+        method "inboundStreams(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "inboundStreams(prepending:_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            block-param 1 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "onBetterPathUpdate(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "onPathUpdate(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "onStateUpdate(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "onViabilityUpdate(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "openStream(directionality:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NetworkChannel {
+        method "close(code:reason:metadata:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "ping(_:metadata:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "pong(_:metadata:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "send(_:endOfStream:metadata:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "send(_:lastMessage:metadata:other:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "send(_:metadata:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "send(_:type:lastMessage:metadata:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sendIdempotent(_:endOfStream:metadata:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sendIdempotent(_:metadata:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sendIdempotent(_:type:lastMessage:metadata:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startReceive(_:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startSend(_:metadata:handler:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NWConnection {
+        method "batch(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+        method "receive(minimumIncompleteLength:maximumLength:completion:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "receiveDiscontiguous(minimumIncompleteLength:maximumLength:completion:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "receiveMessage(completion:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "receiveMessageDiscontiguous(completion:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "requestEstablishmentReport(queue:completion:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NWConnectionGroup {
+        method "send(content:to:message:completion:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "setReceiveHandler(maximumMessageSize:rejectOversizedMessages:handler:)" is-instance=#true {
+            block-param 2 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 2
+        block-async-copied 20
+        block-stored 13
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 33
+        error-pattern 0
+    }
+}

@@ -1,0 +1,58 @@
+framework AudioVideoBridging {
+    class AVB17221ACMPInterface {
+        method sendACMPCommandMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sendACMPResponseMessage:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVB17221AECPInterface {
+        method sendCommand:toMACAddress:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sendResponse:toMACAddress:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendVendorUniqueCommand:toMACAddress:expectResponseWithinTimeout:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class AVB17221EntityDiscovery {
+        method addLocalEntity:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method changeEntityWithEntityID:toNewGPTPGrandmasterID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeLocalEntity:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDiscoveryDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 3
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 5
+        error-pattern 5
+    }
+}

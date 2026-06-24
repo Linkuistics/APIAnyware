@@ -1,0 +1,21 @@
+framework SecurityFoundation {
+    class SFAuthorization {
+        method obtainWithRight:flags:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method obtainWithRights:flags:environment:authorizedRights:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 2
+    }
+}

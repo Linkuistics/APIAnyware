@@ -1,0 +1,292 @@
+framework CoreML {
+    class MLArrayBatchProvider {
+        method initWithDictionary:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MLComputePlan {
+        method loadContentsOfURL:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadModelAsset:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class MLDictionaryFeatureProvider {
+        method initWithDictionary:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MLFeatureValue {
+        method featureValueWithDictionary:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithImageAtURL:pixelsWide:pixelsHigh:pixelFormatType:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithImageAtURL:constraint:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithCGImage:pixelsWide:pixelsHigh:pixelFormatType:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithCGImage:constraint:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithImageAtURL:orientation:pixelsWide:pixelsHigh:pixelFormatType:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithImageAtURL:orientation:constraint:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithCGImage:orientation:pixelsWide:pixelsHigh:pixelFormatType:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method featureValueWithCGImage:orientation:constraint:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MLModel {
+        method "compileModel(at:completionHandler:)" is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "load(contentsOf:configuration:completionHandler:)" is-instance=#false {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadContentsOfURL:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadModelAsset:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method modelWithContentsOfURL:configuration:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method modelWithContentsOfURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method parameterValueForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method predictionFromFeatures:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method predictionFromFeatures:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method predictionFromFeatures:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method predictionFromFeatures:options:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method predictionsFromBatch:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method predictionsFromBatch:options:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method compileModelAtURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method compileModelAtURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method predictionFromFeatures:usingState:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method predictionFromFeatures:usingState:options:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method predictionFromFeatures:usingState:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class MLModelAsset {
+        method functionNamesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method modelAssetWithSpecificationData:blobMapping:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method modelAssetWithSpecificationData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method modelAssetWithURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method modelDescriptionOfFunctionNamed:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method modelDescriptionWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class MLModelCollection {
+        method beginAccessingModelCollectionWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method endAccessingModelCollectionWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class MLModelStructure {
+        method loadContentsOfURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadModelAsset:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class MLMultiArray {
+        method "withUnsafeBufferPointer(ofType:_:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method "withUnsafeBytes(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method "withUnsafeMutableBufferPointer(ofType:_:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method "withUnsafeMutableBytes(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method initWithShape:dataType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithDataPointer:shape:dataType:strides:deallocator:error: is-instance=#true {
+            block-param 4 invocation=stored
+            error-pattern error_out_param
+            source llm
+        }
+        method getBytesWithHandler: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method getMutableBytesWithHandler: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class MLState {
+        method getMultiArrayForStateNamed:handler: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method "withMultiArray(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method "withMultiArray(for:_:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class MLUpdateProgressHandlers {
+        method initForEvents:progressHandler:completionHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class MLUpdateTask {
+        method updateTaskForModelAtURL:trainingData:completionHandler:error: is-instance=#false {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method updateTaskForModelAtURL:trainingData:configuration:completionHandler:error: is-instance=#false {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method updateTaskForModelAtURL:trainingData:configuration:progressHandlers:error: is-instance=#false {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method updateTaskForModelAtURL:trainingData:progressHandlers:error: is-instance=#false {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 9
+        block-async-copied 19
+        block-stored 3
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 25
+        error-pattern 30
+    }
+}

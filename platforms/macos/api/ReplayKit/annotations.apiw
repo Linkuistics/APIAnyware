@@ -1,0 +1,88 @@
+framework ReplayKit {
+    class RPBroadcastActivityController {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method showBroadcastPickerAtPoint:fromWindow:preferredExtensionIdentifier:completionHandler: is-instance=#false {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class RPBroadcastController {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method startBroadcastWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method finishBroadcastWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class RPPreviewViewController {
+        method setPreviewControllerDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class RPScreenRecorder {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method startRecordingWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method stopRecordingWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method stopRecordingWithOutputURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method discardRecordingWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method startCaptureWithHandler:completionHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method stopCaptureWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method startClipBufferingWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method stopClipBufferingWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method exportClipToURL:duration:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 12
+        block-stored 1
+        parameter-ownership 4
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 1
+    }
+}

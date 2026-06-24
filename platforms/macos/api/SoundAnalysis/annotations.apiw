@@ -1,0 +1,43 @@
+framework SoundAnalysis {
+    class SNAudioFileAnalyzer {
+        method addRequest:withObserver:error: is-instance=#true {
+            param-ownership 1 ownership=weak
+            error-pattern error_out_param
+            source llm
+        }
+        method analyzeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class SNAudioStreamAnalyzer {
+        method addRequest:withObserver:error: is-instance=#true {
+            param-ownership 1 ownership=weak
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class SNClassifySoundRequest {
+        method initWithClassifierIdentifier:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithMLModel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 1
+        block-stored 0
+        parameter-ownership 2
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 5
+    }
+}

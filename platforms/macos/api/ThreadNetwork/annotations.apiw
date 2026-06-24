@@ -1,0 +1,49 @@
+framework ThreadNetwork {
+    class THClient {
+        method checkPreferredNetworkForActiveOperationalDataset:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method deleteCredentialsForBorderAgent:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method isPreferredNetworkAvailableWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method retrieveAllActiveCredentials: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method retrieveAllCredentials: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method retrieveCredentialsForBorderAgent:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method retrieveCredentialsForExtendedPANID:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method retrievePreferredCredentials: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method storeCredentialsForBorderAgent:activeOperationalDataSet:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 9
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

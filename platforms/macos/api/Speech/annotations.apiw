@@ -1,0 +1,71 @@
+framework Speech {
+    class SFSpeechLanguageModel {
+        method prepareCustomLanguageModelForUrl:clientIdentifier:configuration:completion: is-instance=#false {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method prepareCustomLanguageModelForUrl:clientIdentifier:configuration:ignoresCache:completion: is-instance=#false {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method prepareCustomLanguageModelForUrl:configuration:completion: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method prepareCustomLanguageModelForUrl:configuration:ignoresCache:completion: is-instance=#false {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class SFSpeechRecognizer {
+        method recognitionTaskWithRequest:delegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method recognitionTaskWithRequest:resultHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method requestAuthorization: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SpeechAnalyzer {
+        method "init(inputAudioFile:modules:options:analysisContext:finishAfterFile:volatileRangeChangedHandler:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(inputSequence:modules:options:analysisContext:volatileRangeChangedHandler:)" is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "prepareToAnalyze(in:withProgressReadyHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "setVolatileRangeChangedHandler(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class SFCustomLanguageModelData {
+        method "init(locale:identifier:version:builder:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 6
+        block-stored 4
+        parameter-ownership 2
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

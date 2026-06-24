@@ -1,0 +1,35 @@
+framework VideoSubscriberAccount {
+    class VSAccountManager {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class VSUserAccountManager {
+        method deleteAutoSignInTokenWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method queryAutoSignInTokenWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method queryUserAccountsWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method updateUserAccount:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 4
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

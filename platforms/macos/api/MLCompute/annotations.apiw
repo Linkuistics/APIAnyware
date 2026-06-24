@@ -1,0 +1,65 @@
+framework MLCompute {
+    class MLCInferenceGraph {
+        method executeWithInputsData:batchSize:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method executeWithInputsData:lossLabelsData:lossLabelWeightsData:batchSize:options:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method executeWithInputsData:lossLabelsData:lossLabelWeightsData:outputsData:batchSize:options:completionHandler: is-instance=#true {
+            block-param 6 invocation=async_copied
+            source llm
+        }
+        method executeWithInputsData:outputsData:batchSize:options:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+    }
+    class MLCTensorData {
+        method dataWithBytesNoCopy:length:deallocator: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class MLCTrainingGraph {
+        method executeForwardWithBatchSize:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method executeForwardWithBatchSize:options:outputsData:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method executeGradientWithBatchSize:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method executeGradientWithBatchSize:options:outputsData:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method executeOptimizerUpdateWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method executeWithInputsData:lossLabelsData:lossLabelWeightsData:batchSize:options:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method executeWithInputsData:lossLabelsData:lossLabelWeightsData:outputsData:batchSize:options:completionHandler: is-instance=#true {
+            block-param 6 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 11
+        block-stored 1
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

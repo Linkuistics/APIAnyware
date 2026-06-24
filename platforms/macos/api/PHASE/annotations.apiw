@@ -1,0 +1,113 @@
+framework PHASE {
+    class PHASEAssetRegistry {
+        method registerGlobalMetaParameter:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method registerSoundAssetAtURL:identifier:assetType:channelLayout:normalizationMode:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method registerSoundAssetWithData:identifier:format:normalizationMode:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method registerSoundEventAssetWithRootNode:identifier:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method unregisterAssetWithIdentifier:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class PHASEEngine {
+        method startAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PHASEListener {
+        method addChild:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PHASEObject {
+        method addChild:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PHASEOccluder {
+        method addChild:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PHASEPullStreamNode {
+        method setRenderBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class PHASEPushStreamNode {
+        method scheduleBuffer:atTime:options:completionCallbackType:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method scheduleBuffer:completionCallbackType:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class PHASESoundEvent {
+        method initWithEngine:assetIdentifier:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithEngine:assetIdentifier:mixerParameters:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method prepareWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method seekToTime:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method seekToTime:resumeAtEngineTime:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method startAtTime:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method startWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class PHASESource {
+        method addChild:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 8
+        block-stored 1
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 4
+        error-pattern 11
+    }
+}

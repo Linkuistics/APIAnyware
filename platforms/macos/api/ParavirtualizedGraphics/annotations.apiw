@@ -1,0 +1,80 @@
+framework ParavirtualizedGraphics {
+    class PGDeviceDescriptor {
+        method setAddTraceRange: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setCreateTask: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setDestroyTask: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setMapMemory: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setRaiseInterrupt: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setReadMemory: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setRemoveTraceRange: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setUnmapMemory: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class PGDisplayDescriptor {
+        method setCursorGlyphHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setCursorMoveHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setCursorShowHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setModeChangeHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setNewFrameEventHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 13
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 13
+        error-pattern 0
+    }
+}

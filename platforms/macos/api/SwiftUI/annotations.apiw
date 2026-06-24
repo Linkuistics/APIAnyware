@@ -1,0 +1,49 @@
+framework SwiftUI {
+    class NSHostingController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSHostingMenu {
+        method delegate is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method "palette(colors:titles:template:onSelectionChange:)" is-instance=#false {
+            block-param 3 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSHostingSceneRepresentation {
+        method "init(rootScene:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        block-stored 1
+        parameter-ownership 1
+        threading-main-thread-only 7
+        threading-any-thread 0
+        error-pattern 1
+    }
+}

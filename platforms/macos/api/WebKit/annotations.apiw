@@ -1,0 +1,380 @@
+framework WebKit {
+    class WKContentRuleListStore {
+        method compileContentRuleListForIdentifier:encodedContentRuleList:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getAvailableContentRuleListIdentifiers: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method lookUpContentRuleListForIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method removeContentRuleListForIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WKDownload {
+        method cancel: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WKHTTPCookieStore {
+        method addObserver: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method deleteCookie:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getAllCookies: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getCookiePolicy: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method removeObserver: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setCookie:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setCookiePolicy:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setCookies:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WKWebExtension {
+        method extensionWithAppExtensionBundle:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method extensionWithResourceBaseURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WKWebExtensionContext {
+        method loadBackgroundContentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WKWebExtensionController {
+        method fetchDataRecordOfTypes:forExtensionContext:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method fetchDataRecordsOfTypes:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method loadExtensionContext:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method removeDataOfTypes:fromDataRecords:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method unloadExtensionContext:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class WKWebExtensionMatchPattern {
+        method initWithScheme:host:path:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithString:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class WKWebExtensionMessagePort {
+        method sendMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDisconnectHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method setMessageHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WKWebView {
+        method "callAsyncJavaScript(_:arguments:in:in:completionHandler:)" is-instance=#true {
+            block-param 4 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method callAsyncJavaScript:arguments:inFrame:inContentWorld:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method closeAllMediaPresentationsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "createPDF(configuration:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method createPDFWithConfiguration:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "createWebArchiveData(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method createWebArchiveDataWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "evaluateJavaScript(_:in:in:completionHandler:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method evaluateJavaScript:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method evaluateJavaScript:inFrame:inContentWorld:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method fetchDataOfTypes:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "find(_:configuration:completionHandler:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method findString:withConfiguration:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method pauseAllMediaPlayback: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method pauseAllMediaPlaybackWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestMediaPlaybackState: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestMediaPlaybackStateWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method restoreData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method resumeAllMediaPlayback: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method resumeDownloadFromResumeData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setAllMediaPlaybackSuspended:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setCameraCaptureState:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setMicrophoneCaptureState:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setNavigationDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setUIDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method startDownloadUsingRequest:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method suspendAllMediaPlayback: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method takeSnapshotWithConfiguration:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WKWebsiteDataStore {
+        method fetchAllDataStoreIdentifiers: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method fetchDataOfTypes:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method fetchDataRecordsOfTypes:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method removeDataOfTypes:forDataRecords:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method removeDataOfTypes:modifiedSince:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method removeDataStoreForIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method restoreData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class WebHistory {
+        method loadFromURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class WebView {
+        method setDownloadDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setFrameLoadDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setPolicyDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setResourceLoadDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setUIDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setEditingDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class WebPage {
+        method "withExportedFile(contentType:fileHandler:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+}

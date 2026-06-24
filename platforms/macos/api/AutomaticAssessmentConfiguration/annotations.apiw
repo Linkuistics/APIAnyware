@@ -1,0 +1,17 @@
+framework AutomaticAssessmentConfiguration {
+    class AEAssessmentSession {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

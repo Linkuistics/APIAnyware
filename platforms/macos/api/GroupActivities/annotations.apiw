@@ -1,0 +1,19 @@
+framework GroupActivities {
+    class GroupSessionMessenger {
+        method "send(_:to:completion:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 1
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 1
+        error-pattern 1
+    }
+}

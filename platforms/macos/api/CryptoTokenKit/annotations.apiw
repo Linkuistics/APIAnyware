@@ -1,0 +1,186 @@
+framework CryptoTokenKit {
+    class TKSmartCard {
+        method beginSessionWithReply: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "send(ins:p1:p2:data:le:reply:)" is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method transmitRequest:reply: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "withSession(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method sendIns:p1:p2:data:le:reply: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method inSessionWithError:executeBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            error-pattern error_out_param
+            source llm
+        }
+        method sendIns:p1:p2:data:le:sw:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class TKSmartCardATR {
+        method initWithSource: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class TKSmartCardSlotManager {
+        method getSlotWithName:reply: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class TKSmartCardToken {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKSmartCardTokenDriver {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKSmartCardTokenSession {
+        method getSmartCardWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKSmartCardUserInteraction {
+        method runWithReply: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKSmartCardUserInteractionForPINOperation {
+        method runWithReply: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKSmartCardUserInteractionForSecurePINChange {
+        method runWithReply: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKSmartCardUserInteractionForSecurePINVerification {
+        method runWithReply: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKToken {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKTokenAuthOperation {
+        method finishWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class TKTokenConfiguration {
+        method certificateForObjectID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method keyForObjectID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class TKTokenDriver {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKTokenKeychainContents {
+        method certificateForObjectID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method keyForObjectID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class TKTokenPasswordAuthOperation {
+        method finishWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class TKTokenSession {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class TKTokenSmartCardPINAuthOperation {
+        method finishWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class TKTokenWatcher {
+        method addRemovalHandler:forTokenID: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method initWithInsertionHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setInsertionHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 3
+        block-async-copied 9
+        block-stored 3
+        parameter-ownership 10
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 10
+    }
+}

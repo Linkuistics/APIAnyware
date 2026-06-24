@@ -1,0 +1,27 @@
+framework MailKit {
+    class MEExtensionManager {
+        method reloadContentBlockerWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method reloadVisibleMessagesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MEExtensionViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 2
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 1
+    }
+}

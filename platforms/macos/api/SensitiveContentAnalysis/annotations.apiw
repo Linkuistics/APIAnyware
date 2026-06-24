@@ -1,0 +1,28 @@
+framework SensitiveContentAnalysis {
+    class SCSensitivityAnalyzer {
+        method analyzeCGImage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method analyzeImageFile:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method analyzeVideoFile:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 3
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 3
+        error-pattern 0
+    }
+}

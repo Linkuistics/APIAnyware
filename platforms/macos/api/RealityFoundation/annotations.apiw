@@ -1,0 +1,494 @@
+framework RealityFoundation {
+    class TextureResource {
+        method "copyAsync(to:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class RealityRenderer {
+        method "subscribe(to:on:componentType:_:)" is-instance=#true {
+            block-param 3 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "updateAndRender(deltaTime:cameraOutput:whenScheduled:onComplete:actionsBeforeRender:actionsAfterRender:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class LowLevelBuffer {
+        method "replaceUnsafeMutableBytes(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+        method "withUnsafeBytes(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+        method "withUnsafeMutableBytes(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+    }
+    class AnchorEntity {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class PerspectiveCamera {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SpotLight {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class DirectionalLight {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class PointLight {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class ModelEntity {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class TriggerVolume {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class Scene {
+        method "subscribe(to:on:_:)" is-instance=#true {
+            block-param 2 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "subscribe(to:on:componentType:_:)" is-instance=#true {
+            block-param 3 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    class LowLevelMesh {
+        method "replaceUnsafeMutableBytes(bufferIndex:_:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "replaceUnsafeMutableIndices(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsafeBytes(bufferIndex:_:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsafeIndices(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsafeMutableBytes(bufferIndex:_:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsafeMutableIndices(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class Entity {
+        method "moveCharacter(by:deltaTime:relativeTo:collisionHandler:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method "playAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "prepareAudio(configuration:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method "requestOwnership(timeout:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method "withUnsynchronized(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class LowLevelInstanceData {
+        method "replaceMutableTransforms(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+        method "withMutableTransforms(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+        method "withTransforms(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+    }
+    class LoadRequest {
+        method "allSatisfy(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "breakpoint(receiveSubscription:receiveOutput:receiveCompletion:)" is-instance=#true {
+            block-param 0 invocation=stored
+            block-param 1 invocation=stored
+            block-param 2 invocation=stored
+            source llm
+        }
+        method "catch(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "combineLatest(_:_:_:_:)" is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method "compactMap(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "contains(where:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "drop(while:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "filter(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "first(where:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "flatMap(maxPublishers:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method "handleEvents(receiveSubscription:receiveOutput:receiveCompletion:receiveCancel:receiveRequest:)" is-instance=#true {
+            block-param 0 invocation=stored
+            block-param 1 invocation=stored
+            block-param 2 invocation=stored
+            block-param 3 invocation=stored
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "last(where:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "map(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "mapError(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "max(by:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "min(by:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "multicast(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "prefix(while:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "reduce(_:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method "removeDuplicates(by:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "scan(_:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method "sink(receiveCompletion:receiveValue:)" is-instance=#true {
+            block-param 0 invocation=stored
+            block-param 1 invocation=stored
+            source llm
+        }
+        method "sink(receiveValue:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "timeout(_:scheduler:options:customError:)" is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method "tryAllSatisfy(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryCatch(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryCompactMap(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryContains(where:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryDrop(while:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryFilter(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryFirst(where:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryLast(where:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryMap(_:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryMax(by:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryMin(by:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryPrefix(while:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryReduce(_:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method "tryRemoveDuplicates(by:)" is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method "tryScan(_:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method "zip(_:_:_:_:)" is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 28
+        block-async-copied 11
+        block-stored 66
+        parameter-ownership 0
+        threading-main-thread-only 50
+        threading-any-thread 7
+        error-pattern 0
+    }
+}

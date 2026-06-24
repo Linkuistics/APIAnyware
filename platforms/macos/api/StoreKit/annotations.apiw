@@ -1,0 +1,125 @@
+framework StoreKit {
+    class SKArcadeService {
+        method arcadeSubscriptionStatusWithNonce:resultHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method registerArcadeAppWithRandomFromLib:randomFromLibLength:resultHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class SKCloudServiceController {
+        method requestAuthorization: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestCapabilitiesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestStorefrontCountryCodeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestStorefrontIdentifierWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestUserTokenForDeveloperToken:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class SKPaymentQueue {
+        method addTransactionObserver: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method removeTransactionObserver: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SKProductStorePromotionController {
+        method fetchStorePromotionOrderWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method fetchStorePromotionVisibilityForProduct:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method updateStorePromotionOrder:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method updateStorePromotionVisibility:forProduct:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class SKProductsRequest {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SKReceiptRefreshRequest {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SKRequest {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SKStoreProductViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method loadProductWithParameters:completionBlock: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 12
+        block-stored 0
+        parameter-ownership 7
+        threading-main-thread-only 4
+        threading-any-thread 11
+        error-pattern 1
+    }
+}

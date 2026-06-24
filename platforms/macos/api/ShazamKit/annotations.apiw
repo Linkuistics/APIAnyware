@@ -1,0 +1,73 @@
+framework ShazamKit {
+    class SHCustomCatalog {
+        method addCustomCatalogFromURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method addReferenceSignature:representingMediaItems:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithDataRepresentation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class SHMatchedMediaItem {
+        method fetchMediaItemWithShazamID:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SHMediaItem {
+        method fetchMediaItemWithShazamID:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SHMediaLibrary {
+        method addMediaItems:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SHSession {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SHSignature {
+        method initWithDataRepresentation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method signatureWithDataRepresentation:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class SHSignatureGenerator {
+        method appendBuffer:atTime:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method generateSignatureFromAsset:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 4
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 7
+    }
+}

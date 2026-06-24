@@ -1,0 +1,29 @@
+framework Accounts {
+    class ACAccountStore {
+        method removeAccount:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method renewCredentialsForAccount:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method requestAccessToAccountsWithType:options:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method saveAccount:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 4
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

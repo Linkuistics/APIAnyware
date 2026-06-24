@@ -1,0 +1,63 @@
+framework iTunesLibrary {
+    class ITLibMediaEntity {
+        method enumerateValuesExceptForProperties:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateValuesForProperties:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class ITLibMediaItem {
+        method enumerateValuesExceptForProperties:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateValuesForProperties:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class ITLibPlaylist {
+        method enumerateValuesExceptForProperties:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateValuesForProperties:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class ITLibrary {
+        method initWithAPIVersion:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithAPIVersion:options:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method libraryWithAPIVersion:error: is-instance=#false {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method libraryWithAPIVersion:options:error: is-instance=#false {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 6
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 4
+        error-pattern 4
+    }
+}

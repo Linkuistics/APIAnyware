@@ -1,0 +1,89 @@
+framework IOBluetooth {
+    class IOBluetoothDevice {
+        method openRFCOMMChannelAsync:withChannelID:delegate: is-instance=#true {
+            param-ownership 2 ownership=weak
+            source llm
+        }
+        method openRFCOMMChannelSync:withChannelID:delegate: is-instance=#true {
+            param-ownership 2 ownership=weak
+            source llm
+        }
+    }
+    class IOBluetoothDeviceInquiry {
+        method initWithDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method inquiryWithDelegate: is-instance=#false {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class IOBluetoothDevicePair {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class IOBluetoothHandsFree {
+        method initWithDevice:delegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class IOBluetoothHandsFreeAudioGateway {
+        method initWithDevice:delegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class IOBluetoothHandsFreeDevice {
+        method initWithDevice:delegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class IOBluetoothHostController {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class IOBluetoothRFCOMMChannel {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class OBEXFileTransferServices {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 15
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

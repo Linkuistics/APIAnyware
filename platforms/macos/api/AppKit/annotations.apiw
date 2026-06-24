@@ -1,0 +1,2178 @@
+framework AppKit {
+    class NSAccessibilityCustomAction {
+        method initWithName:handler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method setHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSAccessibilityCustomRotor {
+        method initWithLabel:itemSearchDelegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method initWithRotorType:itemSearchDelegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method setItemLoadingDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setItemSearchDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSActionCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSAlert {
+        method beginSheetModalForWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetModalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSAnimation {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSAnimationContext {
+        method runAnimationGroup: is-instance=#false {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method runAnimationGroup:completionHandler: is-instance=#false {
+            block-param 0 invocation=synchronous
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSAppearance {
+        method performAsCurrentDrawingAppearance: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class NSApplication {
+        method enumerateWindowsWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:modalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method restoreWindowWithIdentifier:state:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSArrayController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSBrowser {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSBrowserCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSButtonCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCandidateListTouchBarItem {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSClickGestureRecognizer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCollectionLayoutGroup {
+        method customGroupWithLayoutSize:itemProvider: is-instance=#false {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCollectionLayoutSection {
+        method setVisibleItemsInvalidationHandler: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCollectionView {
+        method performBatchUpdates:completionHandler: is-instance=#true {
+            block-param 0 invocation=synchronous
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setPrefetchDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCollectionViewCompositionalLayout {
+        method initWithSectionProvider: is-instance=#true {
+            block-param 0 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+        method initWithSectionProvider:configuration: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCollectionViewDiffableDataSource {
+        method initWithCollectionView:itemProvider: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method setSupplementaryViewProvider: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSCollectionViewFlowLayoutInvalidationContext {
+        method invalidateDataSourceCounts is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setInvalidateFlowLayoutDelegateMetrics: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCollectionViewItem {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSCollectionViewLayoutInvalidationContext {
+        method invalidateDataSourceCounts is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSColor {
+        method colorWithName:dynamicProvider: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class NSColorPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSColorSampler {
+        method showSamplerWithSelectionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSComboBox {
+        method setDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setUsesDataSource: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSComboBoxCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setUsesDataSource: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSControl {
+        method editWithFrame:editor:delegate:event: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:editor:delegate:start:length: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSCustomImageRep {
+        method initWithDrawSelector:delegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method initWithSize:flipped:drawingHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class NSDatePicker {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSDatePickerCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSDictionaryController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSDocument {
+        method accommodatePresentedItemDeletionWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method accommodatePresentedItemEvictionWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method accommodatePresentedSubitemDeletionAtURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method autosaveDocumentWithDelegate:didAutosaveSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method autosaveWithImplicitCancellability:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method canCloseDocumentWithDelegate:shouldCloseSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method checkAutosavingSafetyAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method continueActivityUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method dataOfType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method duplicateAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method duplicateDocumentWithDelegate:didDuplicateSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method fileAttributesToWriteToURL:ofType:forSaveOperation:originalContentsURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method fileWrapperOfType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method initForURL:withContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method lockDocumentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method lockWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method moveDocumentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method moveToURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method performActivityWithSynchronousWaiting:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method performSynchronousFileAccessUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method printDocumentWithSettings:showPrintPanel:delegate:didPrintSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method printOperationWithSettings:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method readFromData:ofType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readFromFileWrapper:ofType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readFromURL:ofType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method revertToContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method runModalPageLayoutWithPrintInfo:delegate:didRunSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method runModalPrintOperation:delegate:didRunSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method runModalSavePanelForSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method saveDocumentWithDelegate:didSaveSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method savePresentedItemChangesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method saveToURL:ofType:forSaveOperation:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method shareDocumentWithSharingService:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method shouldCloseWindowController:delegate:shouldCloseSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method stopBrowsingVersionsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method unlockDocumentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method unlockWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method writeSafelyToURL:ofType:forSaveOperation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToURL:ofType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToURL:ofType:forSaveOperation:originalContentsURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveToURL:ofType:forSaveOperation:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method saveToFile:saveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method restoreDocumentWindowWithIdentifier:state:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSDocumentController {
+        method beginOpenPanel:forTypes:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginOpenPanelWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method closeAllDocumentsWithDelegate:didCloseAllSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method duplicateDocumentWithContentsOfURL:copying:displayName:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method makeDocumentForURL:withContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method makeDocumentWithContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method makeUntitledDocumentOfType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method openDocumentWithContentsOfURL:display:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method openUntitledDocumentAndDisplay:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method reopenDocumentForURL:withContentsOfURL:display:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method reviewUnsavedDocumentsWithAlertTitle:cancellable:delegate:didReviewAllSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method typeForContentsOfURL:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method openDocumentWithContentsOfURL:display:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method reopenDocumentForURL:withContentsOfURL:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSDraggingItem {
+        method setImageComponentsProvider: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSDraggingSession {
+        method enumerateDraggingItemsWithOptions:forView:classes:searchOptions:usingBlock: is-instance=#true {
+            block-param 4 invocation=synchronous
+            source llm
+        }
+    }
+    class NSDrawer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSEvent {
+        method addGlobalMonitorForEventsMatchingMask:handler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method addLocalMonitorForEventsMatchingMask:handler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class NSFilePromiseProvider {
+        method initWithFileType:delegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSFilePromiseReceiver {
+        method receivePromisedFilesAtDestination:options:operationQueue:reader: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class NSFontAssetRequest {
+        method downloadFontAssetsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSFontCollection {
+        method hideFontCollectionWithName:visibility:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method renameFontCollectionWithName:visibility:toName:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method showFontCollection:withName:visibility:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSFontManager {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSFontPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSForm {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSFormCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSGestureRecognizer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSImage {
+        method imageWithSize:flipped:drawingHandler: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSImageCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSInputServer {
+        method initWithDelegate:name: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSLayoutManager {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSLevelIndicatorCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSMagnificationGestureRecognizer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSMatrix {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSMenu {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSMenuItemCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSMutableFontCollection {
+        method hideFontCollectionWithName:visibility:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method renameFontCollectionWithName:visibility:toName:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method showFontCollection:withName:visibility:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSObjectController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method fetchWithRequest:merge:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSOpenPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetModalForWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForDirectory:file:types:modalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
+            param-ownership 4 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginForDirectory:file:types:modelessDelegate:didEndSelector:contextInfo: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSOutlineView {
+        method enumerateAvailableRowViewsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method setDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPDFPanel {
+        method beginSheetWithPDFInfo:modalForWindow:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPageController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPageLayout {
+        method beginSheetUsingPrintInfo:onWindow:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetWithPrintInfo:modalForWindow:delegate:didEndSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPanGestureRecognizer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPasteboard {
+        method detectMetadataForTypes:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method detectPatternsForPatterns:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method detectValuesForPatterns:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class NSPasteboardItem {
+        method detectMetadataForTypes:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method detectPatternsForPatterns:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method detectValuesForPatterns:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class NSPathCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method panel:validateURL:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPathComponentCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPathControl {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPersistentDocument {
+        method accommodatePresentedItemDeletionWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method accommodatePresentedItemEvictionWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method accommodatePresentedSubitemDeletionAtURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method autosaveDocumentWithDelegate:didAutosaveSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method autosaveWithImplicitCancellability:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method canCloseDocumentWithDelegate:shouldCloseSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method checkAutosavingSafetyAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method configurePersistentStoreCoordinatorForURL:ofType:modelConfiguration:storeOptions:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method continueActivityUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method dataOfType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method duplicateAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method duplicateDocumentWithDelegate:didDuplicateSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method fileAttributesToWriteToURL:ofType:forSaveOperation:originalContentsURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method fileWrapperOfType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method initForURL:withContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method lockDocumentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method lockWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method moveDocumentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method moveToURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method performActivityWithSynchronousWaiting:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method performSynchronousFileAccessUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method printDocumentWithSettings:showPrintPanel:delegate:didPrintSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method printOperationWithSettings:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method readFromData:ofType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readFromFileWrapper:ofType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readFromURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method revertToContentsOfURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method runModalPageLayoutWithPrintInfo:delegate:didRunSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method runModalPrintOperation:delegate:didRunSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method runModalSavePanelForSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method saveDocumentWithDelegate:didSaveSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method savePresentedItemChangesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method saveToURL:ofType:forSaveOperation:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method shareDocumentWithSharingService:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method shouldCloseWindowController:delegate:shouldCloseSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method stopBrowsingVersionsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method unlockDocumentWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method unlockWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method writeSafelyToURL:ofType:forSaveOperation:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToURL:ofType:forSaveOperation:originalContentsURL:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method configurePersistentStoreCoordinatorForURL:ofType:error: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSPopUpButtonCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPopover {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPredicateEditor {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPressGestureRecognizer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPrintOperation {
+        method runOperationModalForWindow:delegate:didRunSelector:contextInfo: is-instance=#true {
+            param-ownership 1 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSPrintPanel {
+        method beginSheetUsingPrintInfo:onWindow:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetWithPrintInfo:modalForWindow:delegate:didEndSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSResponder {
+        method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
+            param-ownership 2 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSRotationGestureRecognizer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSRuleEditor {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSavePanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetModalForWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheetForDirectory:file:modalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSScrubber {
+        method performSequentialBatchUpdates: is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method setDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSearchField {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSearchFieldCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSecureTextField {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSecureTextFieldCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSegmentedCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSharingService {
+        method initWithTitle:image:alternateImage:handler: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSSharingServicePicker {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSSharingServicePickerToolbarItem {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSharingServicePickerTouchBarItem {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSliderAccessoryBehavior {
+        method behaviorWithHandler: is-instance=#false {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSliderCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSound {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSSpeechRecognizer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSSpeechSynthesizer {
+        method objectForProperty:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setObject:forProperty:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSSpellChecker {
+        method requestCandidatesForSelectedRange:inString:types:options:inSpellDocumentWithTag:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method requestCheckingOfString:range:types:options:inSpellDocumentWithTag:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method showCorrectionIndicatorOfType:primaryString:alternativeStrings:forStringInRect:view:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+    }
+    class NSSplitView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSplitViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSSplitViewItemAccessoryViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSStackView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSStepperCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSStepperTouchBarItem {
+        method stepperTouchBarItemWithIdentifier:drawingHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSStoryboard {
+        method instantiateControllerWithIdentifier:creator: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method instantiateInitialControllerWithCreator: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class NSStoryboardSegue {
+        method segueWithIdentifier:source:destination:performHandler: is-instance=#false {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class NSTabView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTabViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTableHeaderCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTableView {
+        method enumerateAvailableRowViewsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+        method setDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTableViewDiffableDataSource {
+        method applySnapshot:animatingDifferences:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithTableView:cellProvider: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method setRowViewProvider: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setSectionHeaderViewProvider: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSTableViewRowAction {
+        method rowActionWithStyle:title:handler: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class NSText {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTextAttachmentCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTextContentManager {
+        method enumerateTextElementsFromLocation:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method performEditingTransactionUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSTextContentStorage {
+        method enumerateTextElementsFromLocation:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method performEditingTransactionForTextStorage:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method performEditingTransactionUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSTextField {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTextFieldCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTextInsertionIndicator {
+        method setEffectsViewInserter: is-instance=#true {
+            block-param 0 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTextLayoutManager {
+        method enumerateCaretOffsetsInLineFragmentAtLocation:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateContainerBoundariesFromLocation:reverse:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateRenderingAttributesFromLocation:reverse:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateSubstringsFromLocation:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateTextLayoutFragmentsFromLocation:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateTextSegmentsInRange:type:options:usingBlock: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSTextSelectionNavigation {
+        method initWithDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSTextStorage {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setTextStorageObserver: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSTextView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTextViewportLayoutController {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSTitlebarAccessoryViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTokenField {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTokenFieldCell {
+        method editWithFrame:inView:editor:delegate:event: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
+            param-ownership 3 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSToolbar {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTouchBar {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSTreeController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSUserDefaultsController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSView {
+        method showDefinitionForAttributedString:range:options:baselineOriginProvider: is-instance=#true {
+            block-param 3 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSViewAnimation {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transitionFromViewController:toViewController:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSWindow {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method trackEventsMatchingMask:timeout:mode:handler: is-instance=#true {
+            block-param 3 invocation=synchronous
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSWorkspace {
+        method duplicateURLs:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method openApplicationAtURL:configuration:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method openURL:configuration:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method openURLs:withApplicationAtURL:configuration:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method recycleURLs:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setDefaultApplicationAtURL:toOpenContentType:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method setDefaultApplicationAtURL:toOpenContentTypeOfFileAtURL:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method setDefaultApplicationAtURL:toOpenFileAtURL:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method setDefaultApplicationAtURL:toOpenURLsWithScheme:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method unmountAndEjectDeviceAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDesktopImageURL:forScreen:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method requestAuthorizationOfType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method launchApplicationAtURL:options:configuration:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method openURL:options:configuration:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method openURLs:withApplicationAtURL:options:configuration:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method typeOfFile:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSWritingToolsCoordinator {
+        method delegate is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method initWithDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class NSWritingToolsCoordinatorAnimationParameters {
+        method setCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 29
+        block-async-copied 101
+        block-stored 21
+        parameter-ownership 174
+        threading-main-thread-only 273
+        threading-any-thread 0
+        error-pattern 73
+    }
+}

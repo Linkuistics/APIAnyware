@@ -1,0 +1,854 @@
+framework CloudKit {
+    class CKAcceptSharesOperation {
+        method setAcceptSharesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerShareCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKContainer {
+        method "accept(_:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "configuredWith(configuration:group:body:)" is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method "discoverUserIdentities(forEmailAddresses:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "discoverUserIdentities(forPhoneNumbers:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "discoverUserIdentities(forUserRecordIDs:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetchAllLongLivedOperationIDs(completionHandler:)" is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "fetchLongLivedOperation(withID:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetchShareMetadatas(for:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetchShareParticipants(forEmailAddresses:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetchShareParticipants(forPhoneNumbers:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetchShareParticipants(forUserRecordIDs:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method accountStatusWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method statusForApplicationPermission:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method requestApplicationPermission:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchUserRecordIDWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method discoverAllIdentitiesWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method discoverUserIdentityWithEmailAddress:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method discoverUserIdentityWithPhoneNumber:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method discoverUserIdentityWithUserRecordID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchShareParticipantWithEmailAddress:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchShareParticipantWithPhoneNumber:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchShareParticipantWithUserRecordID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchShareMetadataWithURL:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method acceptShareMetadata:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchAllLongLivedOperationIDsWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method fetchLongLivedOperationWithID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class CKDatabase {
+        method "configuredWith(configuration:group:body:)" is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method "delete(withSubscriptionID:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetch(withCursor:desiredKeys:resultsLimit:completionHandler:)" is-instance=#true {
+            param-ownership 3 ownership=copy
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method "fetch(withQuery:inZoneWith:desiredKeys:resultsLimit:completionHandler:)" is-instance=#true {
+            param-ownership 4 ownership=copy
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method "fetch(withRecordIDs:desiredKeys:completionHandler:)" is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "fetch(withRecordZoneIDs:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetch(withSubscriptionID:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetch(withSubscriptionIDs:completionHandler:)" is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "fetchDatabaseChanges(since:resultsLimit:completionHandler:)" is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "fetchRecordZoneChanges(inZoneWith:since:desiredKeys:resultsLimit:completionHandler:)" is-instance=#true {
+            param-ownership 4 ownership=copy
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method "modifyRecordZones(saving:deleting:completionHandler:)" is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "modifyRecords(saving:deleting:savePolicy:atomically:completionHandler:)" is-instance=#true {
+            param-ownership 4 ownership=copy
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method "modifySubscriptions(saving:deleting:completionHandler:)" is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method fetchRecordWithID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method saveRecord:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method deleteRecordWithID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method performQuery:inZoneWithID:completionHandler: is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method fetchAllRecordZonesWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method fetchRecordZoneWithID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method saveRecordZone:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method deleteRecordZoneWithID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchSubscriptionWithID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method fetchAllSubscriptionsWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method saveSubscription:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method deleteSubscriptionWithID:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class CKDatabaseOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class CKDiscoverAllUserIdentitiesOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDiscoverAllUserIdentitiesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setUserIdentityDiscoveredBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKDiscoverUserIdentitiesOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDiscoverUserIdentitiesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setUserIdentityDiscoveredBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchDatabaseChangesOperation {
+        method setChangeTokenUpdatedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchDatabaseChangesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setRecordZoneWithIDChangedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordZoneWithIDWasDeletedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordZoneWithIDWasDeletedDueToUserEncryptedDataResetBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordZoneWithIDWasPurgedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchNotificationChangesOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class CKFetchRecordChangesOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchRecordChangesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setRecordChangedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordWithIDWasDeletedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchRecordZoneChangesOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchRecordZoneChangesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setRecordChangedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordWasChangedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordWithIDWasDeletedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordZoneChangeTokensUpdatedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordZoneFetchCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchRecordZonesOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchRecordZonesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerRecordZoneCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchRecordsOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchRecordsCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerRecordCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPerRecordProgressBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchShareMetadataOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchShareMetadataCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerShareMetadataBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchShareParticipantsOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchShareParticipantsCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerShareParticipantCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setShareParticipantFetchedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchSubscriptionsOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchSubscriptionCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerSubscriptionCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKFetchWebAuthTokenOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setFetchWebAuthTokenCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class CKLocationSortDescriptor {
+        method "init(keyPath:ascending:comparator:)" is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=stored
+            source llm
+        }
+        method initWithKey:ascending:comparator: is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=stored
+            source llm
+        }
+        method sortDescriptorWithKey:ascending:comparator: is-instance=#false {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class CKMarkNotificationsReadOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class CKModifyBadgeOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class CKModifyRecordZonesOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setModifyRecordZonesCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerRecordZoneDeleteBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPerRecordZoneSaveBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKModifyRecordsOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setModifyRecordsCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerRecordCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPerRecordDeleteBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPerRecordProgressBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPerRecordSaveBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKModifySubscriptionsOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setModifySubscriptionsCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerSubscriptionDeleteBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPerSubscriptionSaveBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class CKQueryOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setQueryCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setRecordFetchedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setRecordMatchedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class CKShareRequestAccessOperation {
+        method setCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setLongLivedOperationWasPersistedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setPerShareAccessRequestCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setShareRequestAccessCompletionBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class CKSyncEngine {
+        method cancelOperationsWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method fetchChangesWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method fetchChangesWithOptions:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method sendChangesWithCompletionHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method sendChangesWithOptions:completionHandler: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class CKSyncEngineConfiguration {
+        method initWithDatabase:stateSerialization:delegate: is-instance=#true {
+            param-ownership 2 ownership=weak
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class CKSyncEngineRecordZoneChangeBatch {
+        method initWithPendingChanges:recordProvider: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class CKSystemSharingUIObserver {
+        method setSystemSharingUIDidSaveShareBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setSystemSharingUIDidStopSharingBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 3
+        block-async-copied 115
+        block-stored 38
+        parameter-ownership 158
+    }
+}

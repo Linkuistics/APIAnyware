@@ -1,0 +1,159 @@
+framework SafariServices {
+    class SFContentBlockerManager {
+        method getStateOfContentBlockerWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method reloadContentBlockerWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class SFSafariApplication {
+        method dispatchMessageWithName:toExtensionWithIdentifier:userInfo:completionHandler: is-instance=#false {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getActiveWindowWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getAllWindowsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getHostApplicationWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method openWindowWithURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method showPreferencesForExtensionWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFSafariExtension {
+        method getBaseURIWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFSafariExtensionHandler {
+        method additionalRequestHeadersForURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method validateContextMenuItemWithCommand:inPage:userInfo:validationHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method validateToolbarItemInWindow:validationHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFSafariExtensionManager {
+        method getStateOfSafariExtensionWithIdentifier:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFSafariExtensionViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFSafariPage {
+        method getContainingTabWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getPagePropertiesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getScreenshotOfVisibleAreaWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFSafariTab {
+        method activateWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getActivePageWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getContainingWindowWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getPagesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SFSafariWindow {
+        method getActiveTabWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getAllTabsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method getToolbarItemWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method openTabWithURL:makeActiveIfPossible:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 24
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 24
+        threading-any-thread 2
+        error-pattern 1
+    }
+}

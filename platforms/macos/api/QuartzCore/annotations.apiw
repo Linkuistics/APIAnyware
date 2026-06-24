@@ -1,0 +1,144 @@
+framework QuartzCore {
+    class CAAnimation {
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAAnimationGroup {
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CABasicAnimation {
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAEmitterLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAGradientLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAKeyframeAnimation {
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CALayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAMetalDisplayLink {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAMetalLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAOpenGLLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAPropertyAnimation {
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAReplicatorLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAScrollLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CAShapeLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CASpringAnimation {
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CATextLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CATiledLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CATransaction {
+        method setCompletionBlock: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CATransformLayer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class CATransition {
+        method setDelegate: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 1
+        block-stored 0
+        parameter-ownership 12
+        threading-main-thread-only 20
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

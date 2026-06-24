@@ -1,0 +1,31 @@
+framework DiscRecording {
+    class DRMSFFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class DRNotificationCenter {
+        method addObserver:selector:name:object: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 3
+    }
+}

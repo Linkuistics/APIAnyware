@@ -1,0 +1,140 @@
+framework LocalAuthentication {
+    class LAContext {
+        method canEvaluatePolicy:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method evaluateAccessControl:operation:localizedReason:reply: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method evaluatePolicy:localizedReason:reply: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class LAEnvironment {
+        method addObserver: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class LAPersistedRight {
+        method authorizeWithLocalizedReason:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method checkCanAuthorizeWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method deauthorizeWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class LAPrivateKey {
+        method decryptData:secKeyAlgorithm:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method exchangeKeysWithPublicKey:secKeyAlgorithm:secKeyParameters:completion: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method signData:secKeyAlgorithm:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class LAPublicKey {
+        method encryptData:secKeyAlgorithm:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method exportBytesWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method verifyData:signature:secKeyAlgorithm:completion: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class LARight {
+        method authorizeWithLocalizedReason:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method checkCanAuthorizeWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method deauthorizeWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class LARightStore {
+        method removeAllRightsWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeRight:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeRightForIdentifier:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method rightForIdentifier:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveRight:identifier:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveRight:identifier:secret:completion: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class LASecret {
+        method loadDataWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 21
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 21
+        error-pattern 1
+    }
+}

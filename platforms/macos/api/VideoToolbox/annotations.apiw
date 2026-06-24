@@ -1,0 +1,35 @@
+framework VideoToolbox {
+    class VTFrameProcessor {
+        method processWithParameters:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method processWithParameters:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method processWithParameters:frameOutputHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method startSessionWithConfiguration:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class VTSuperResolutionScalerConfiguration {
+        method downloadConfigurationModelWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 3
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 2
+    }
+}

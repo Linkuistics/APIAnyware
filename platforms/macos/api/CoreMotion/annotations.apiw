@@ -1,0 +1,41 @@
+framework CoreMotion {
+    class CMHeadphoneActivityManager {
+        method startActivityUpdatesToQueue:withHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method startStatusUpdatesToQueue:withHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class CMHeadphoneMotionManager {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method startDeviceMotionUpdatesToQueue:withHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class CMPedometer {
+        method queryPedometerDataFromDate:toDate:withHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method startPedometerUpdatesFromDate:withHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 1
+        block-stored 4
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

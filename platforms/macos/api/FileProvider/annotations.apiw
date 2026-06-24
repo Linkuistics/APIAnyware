@@ -1,0 +1,129 @@
+framework FileProvider {
+    class NSFileProviderManager {
+        method addDomain:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method getDomainsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method getIdentifierForUserVisibleFileAtURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method getUserVisibleURLForItemIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method registerURLSessionTask:forItemWithIdentifier:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method removeAllDomainsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method removeDomain:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method removeDomain:mode:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "requestDownloadForItem(withIdentifier:requestedRange:completionHandler:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method signalEnumeratorForContainerItemIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method signalErrorResolved:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method temporaryDirectoryURLWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method importDomain:fromDirectoryAtURL:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method reimportItemsBelowItemWithIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method requestModificationOfFields:forItemWithIdentifier:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method evictItemWithIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method waitForChangesOnItemsBelowItemWithIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method waitForStabilizationWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method disconnectWithReason:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method reconnectWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method requestDownloadForItemWithIdentifier:requestedRange:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method stateDirectoryURLWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method checkDomainsCanBeStored:onVolumeAtURL:unsupportedReason:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method requestDiagnosticCollectionForItemWithIdentifier:errorReason:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method getServiceWithName:itemIdentifier:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method listAvailableTestingOperationsWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method runTestingOperations:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method claimKnownFolders:localizedReason:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method releaseKnownFolders:localizedReason:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 24
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 5
+    }
+}

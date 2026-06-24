@@ -1,0 +1,39 @@
+framework FinderSync {
+    class FIFinderSync {
+        method makeListenerEndpointForServiceName:itemURL:andReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method valuesForAttributes:forItemWithURL:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class FIFinderSyncController {
+        method completeRequestReturningItems:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method openURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setLastUsedDate:forItemWithURL:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method setTagData:forItemWithURL:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 5
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 1
+    }
+}

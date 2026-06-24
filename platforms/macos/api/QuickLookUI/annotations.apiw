@@ -1,0 +1,65 @@
+framework QuickLookUI {
+    class QLPreviewPanel {
+        method beginCriticalSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method beginSheet:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method requestSharingOfWindowUsingPreview:title:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDataSource: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method transferWindowSharingToWindow:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+    }
+    class QLPreviewReply {
+        method initWithContextSize:isBitmap:drawingBlock: is-instance=#true {
+            block-param 2 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method initWithDataOfContentType:contentSize:dataCreationBlock: is-instance=#true {
+            block-param 2 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method initForPDFWithPageSize:documentCreationBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 5
+        block-stored 3
+        parameter-ownership 2
+        threading-main-thread-only 7
+        threading-any-thread 3
+        error-pattern 0
+    }
+}

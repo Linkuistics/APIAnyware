@@ -1,0 +1,339 @@
+framework SpriteKit {
+    class SK3DNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKAction {
+        method setTimingFunction: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method runBlock: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method runBlock:queue: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method customActionWithDuration:actionBlock: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class SKAudioNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKCameraNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKCropNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKEffectNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKEmitterNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKFieldNode {
+        method customFieldWithEvaluationBlock: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKLabelNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKLightNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKMutableTexture {
+        method modifyPixelDataWithBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method preloadTextures:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method preloadWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class SKNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKPhysicsWorld {
+        method enumerateBodiesAlongRayStart:end:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateBodiesAtPoint:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateBodiesInRect:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method setContactDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SKReferenceNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKScene {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class SKShapeNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKSpriteNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKTexture {
+        method preloadTextures:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method preloadWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class SKTextureAtlas {
+        method preloadTextureAtlases:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method preloadTextureAtlasesNamed:withCompletionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method preloadWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class SKTileMapNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKTransformNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKVideoNode {
+        method enumerateChildNodesWithName:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method nodeWithFileNamed:securelyWithClasses:andError: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method runAction:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class SKView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 21
+        block-async-copied 24
+        block-stored 5
+        parameter-ownership 3
+        threading-main-thread-only 2
+        threading-any-thread 0
+        error-pattern 17
+    }
+}

@@ -1,0 +1,77 @@
+framework BrowserEngineKit {
+    class BENetworkingProcess {
+        method makeLibXPCConnectionError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method networkProcessWithBundleID:interruptionHandler:completion: is-instance=#false {
+            block-param 1 invocation=stored
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method networkProcessWithInterruptionHandler:completion: is-instance=#false {
+            block-param 0 invocation=stored
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method grantCapability:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class BEProcessCapability {
+        method requestWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class BERenderingProcess {
+        method makeLibXPCConnectionError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method renderingProcessWithBundleID:interruptionHandler:completion: is-instance=#false {
+            block-param 1 invocation=stored
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method renderingProcessWithInterruptionHandler:completion: is-instance=#false {
+            block-param 0 invocation=stored
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method grantCapability:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class BEWebContentProcess {
+        method makeLibXPCConnectionError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method webContentProcessWithBundleID:interruptionHandler:completion: is-instance=#false {
+            block-param 1 invocation=stored
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method webContentProcessWithInterruptionHandler:completion: is-instance=#false {
+            block-param 0 invocation=stored
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method grantCapability:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 6
+        block-stored 6
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 7
+    }
+}

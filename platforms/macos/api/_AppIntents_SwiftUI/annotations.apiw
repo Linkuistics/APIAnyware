@@ -1,0 +1,285 @@
+framework _AppIntents_SwiftUI {
+    class IntentParameter {
+        method "init(description:controlStyle:inclusiveRange:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:controlStyle:inclusiveRange:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:currencyCodes:inclusiveRange:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(description:default:currencyCodes:inclusiveRange:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:displayName:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:displayStyle:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:displayStyle:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:inputOptions:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:kind:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:kind:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:mode:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:mode:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "init(description:default:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:supportedValues:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:size:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "init(description:default:supportedContentTypes:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:supportedContentTypes:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:default:supportedContentTypes:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(description:default:supportedContentTypes:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(description:default:supportedContentTypes:size:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:defaultValue:defaultUnit:defaultUnitAdjustForLocale:supportsNegativeNumbers:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(description:defaultValue:unit:unitAdjustForLocale:supportsNegativeNumbers:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(description:inputOptions:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(description:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "init(description:requestValueDialog:inputConnectionBehavior:resolvers:optionsProvider:)" is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method "init(title:description:controlStyle:inclusiveRange:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:currencyCodes:inclusiveRange:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:currencyCodes:inclusiveRange:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:controlStyle:inclusiveRange:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:currencyCodes:inclusiveRange:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 8 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:currencyCodes:inclusiveRange:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:displayName:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:displayStyle:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:displayStyle:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:inputOptions:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:kind:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:kind:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:mode:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:mode:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:supportedValues:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:size:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:supportedContentTypes:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:supportedContentTypes:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:supportedContentTypes:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 8 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:supportedContentTypes:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 7 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:supportedContentTypes:size:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:default:supportedTypeIdentifiers:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:defaultValue:defaultUnit:defaultUnitAdjustForLocale:supportsNegativeNumbers:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 8 invocation=stored
+            source llm
+        }
+        method "init(title:description:defaultValue:unit:unitAdjustForLocale:supportsNegativeNumbers:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 8 invocation=stored
+            source llm
+        }
+        method "init(title:description:displayStyle:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:displayStyle:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(title:description:inputOptions:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:kind:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:kind:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(title:description:mode:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:mode:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(title:description:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 5 invocation=stored
+            source llm
+        }
+        method "init(title:description:requestValueDialog:inputConnectionBehavior:resolvers:)" is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "init(title:description:requestValueDialog:inputConnectionBehavior:resolvers:optionsProvider:)" is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method "init(title:description:requestValueDialog:requestDisambiguationDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+        method "init(title:description:supportedTypeIdentifiers:requestValueDialog:inputConnectionBehavior:optionsProvider:resolvers:)" is-instance=#true {
+            block-param 6 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 68
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

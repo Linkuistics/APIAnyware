@@ -1,0 +1,24 @@
+framework PDFKit {
+    class PDFDocument {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class PDFView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 2
+        threading-main-thread-only 1
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

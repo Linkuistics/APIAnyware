@@ -1,0 +1,37 @@
+framework FoundationModels {
+    class LanguageModelSession {
+        method "respond(generating:includeSchemaInPrompt:options:prompt:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method "respond(options:prompt:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method "respond(schema:includeSchemaInPrompt:options:prompt:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method "streamResponse(generating:includeSchemaInPrompt:options:prompt:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method "streamResponse(options:prompt:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method "streamResponse(schema:includeSchemaInPrompt:options:prompt:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 6
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

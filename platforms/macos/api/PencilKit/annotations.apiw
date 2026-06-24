@@ -1,0 +1,31 @@
+framework PencilKit {
+    class PKDrawing {
+        method initWithData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PKStrokePath {
+        method enumerateInterpolatedPointsInRange:strideByDistance:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateInterpolatedPointsInRange:strideByParametricStep:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateInterpolatedPointsInRange:strideByTime:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 3
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 1
+    }
+}

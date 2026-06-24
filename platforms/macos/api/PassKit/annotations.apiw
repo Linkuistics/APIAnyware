@@ -1,0 +1,132 @@
+framework PassKit {
+    class PKAddIdentityDocumentConfiguration {
+        method configurationForMetadata:completion: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class PKAddShareablePassConfiguration {
+        method configurationForPassMetadata:primaryAction:completion: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method configurationForPassMetadata:provisioningPolicyIdentifier:primaryAction:completion: is-instance=#false {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class PKPass {
+        method initWithData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PKPassLibrary {
+        method activatePaymentPass:withActivationCode:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method activatePaymentPass:withActivationData:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method activateSecureElementPass:withActivationData:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method addPasses:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method encryptedServiceProviderDataForSecureElementPass:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestAuthorizationForCapability:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestAutomaticPassPresentationSuppressionWithResponseHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method serviceProviderDataForSecureElementPass:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method signData:withSecureElementPass:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class PKPaymentAuthorizationController {
+        method dismissWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method presentWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class PKPaymentAuthorizationViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class PKPaymentPass {
+        method initWithData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PKSecureElementPass {
+        method initWithData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PKVehicleConnectionSession {
+        method sendData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method sessionForPass:delegate:completion: is-instance=#false {
+            param-ownership 1 ownership=weak
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 15
+        block-stored 0
+        parameter-ownership 3
+        threading-main-thread-only 5
+        threading-any-thread 9
+        error-pattern 5
+    }
+}

@@ -1,0 +1,147 @@
+framework CoreImage {
+    class CIBlendKernel {
+        method applyWithExtent:roiCallback:arguments: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=stored
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelsWithMetalString:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CIColorKernel {
+        method applyWithExtent:roiCallback:arguments: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=stored
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelsWithMetalString:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CIContext {
+        method startTaskToRender:fromRect:toDestination:atPoint:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startTaskToRender:toDestination:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method prepareRender:fromRect:toDestination:atPoint:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startTaskToClear:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CIFilter {
+        method filterArrayFromSerializedXMP:inputImageExtent:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CIImageProcessorKernel {
+        method applyWithExtent:inputs:arguments:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method processWithInputs:arguments:output:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method processWithInputs:arguments:outputs:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method applyWithExtents:inputs:arguments:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CIKernel {
+        method applyWithExtent:roiCallback:arguments: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=stored
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelsWithMetalString:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CIRenderDestination {
+        method initWithWidth:height:pixelFormat:commandBuffer:mtlTextureProvider: is-instance=#true {
+            param-ownership 4 ownership=copy
+            block-param 4 invocation=stored
+            source llm
+        }
+    }
+    class CIRenderTask {
+        method waitUntilCompletedAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CIWarpKernel {
+        method applyWithExtent:roiCallback:arguments: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=stored
+            source llm
+        }
+        method applyWithExtent:roiCallback:inputImage:arguments: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=stored
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelWithFunctionName:fromMetalLibraryData:outputPixelFormat:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method kernelsWithMetalString:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 6
+        parameter-ownership 6
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 22
+    }
+}

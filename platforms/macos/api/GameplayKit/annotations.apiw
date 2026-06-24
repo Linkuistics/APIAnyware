@@ -1,0 +1,43 @@
+framework GameplayKit {
+    class GKAgent {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class GKAgent2D {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class GKAgent3D {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class GKNSPredicateRule {
+        method ruleWithBlockPredicate:action: is-instance=#false {
+            block-param 0 invocation=stored
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class GKRule {
+        method ruleWithBlockPredicate:action: is-instance=#false {
+            block-param 0 invocation=stored
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 4
+        parameter-ownership 3
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

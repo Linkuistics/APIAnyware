@@ -1,0 +1,122 @@
+framework Contacts {
+    class CNContact {
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CNContactFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CNContactStore {
+        method containersMatchingPredicate:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateContactsWithFetchRequest:error:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enumeratorForChangeHistoryFetchRequest:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enumeratorForContactFetchRequest:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method executeSaveRequest:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method groupsMatchingPredicate:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method requestAccessForEntityType:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method unifiedContactWithIdentifier:keysToFetch:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method unifiedContactsMatchingPredicate:keysToFetch:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method unifiedMeContactWithKeysToFetch:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CNContactVCardSerialization {
+        method contactsWithData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method dataWithContacts:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CNMutableContact {
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CNPostalAddressFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 3
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 10
+        error-pattern 19
+    }
+}

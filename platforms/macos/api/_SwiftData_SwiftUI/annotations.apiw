@@ -1,0 +1,21 @@
+framework _SwiftData_SwiftUI {
+    class ModelContext {
+        method "enumerate(_:batchSize:allowEscapingMutations:block:)" is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method "transaction(block:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 2
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

@@ -1,0 +1,23 @@
+framework MetricKit {
+    class MXMetricManager {
+        method extendLaunchMeasurementForTaskID:error: is-instance=#false {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method finishExtendedLaunchMeasurementForTaskID:error: is-instance=#false {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 2
+        threading-any-thread 0
+        error-pattern 2
+    }
+}

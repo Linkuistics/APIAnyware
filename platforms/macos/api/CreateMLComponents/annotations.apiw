@@ -1,0 +1,21 @@
+framework CreateMLComponents {
+    class UniformRandomIntegerParameter {
+        method "applied(to:generator:eventHandler:)" is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method "init(range:_:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        block-stored 1
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

@@ -1,0 +1,587 @@
+framework AVFAudio {
+    class AVAudioApplication {
+        method requestRecordPermissionWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setInputMuteStateChangeHandler:error: is-instance=#true {
+            block-param 0 invocation=stored
+            error-pattern error_out_param
+            source llm
+        }
+        method setInputMuted:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioConverter {
+        method convertToBuffer:error:withInputFromBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method convertToBuffer:fromBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioEngine {
+        method connectMIDI:to:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method connectMIDI:to:format:eventListBlock: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method connectMIDI:toNodes:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method connectMIDI:toNodes:format:eventListBlock: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method enableManualRenderingMode:format:maximumFrameCount:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method renderOffline:toBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioEnvironmentNode {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class AVAudioFile {
+        method initForReading:commonFormat:interleaved:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initForReading:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initForWriting:settings:commonFormat:interleaved:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initForWriting:settings:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readIntoBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readIntoBuffer:frameCount:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeFromBuffer:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioIONode {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method setVoiceProcessingEnabled:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioInputNode {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method setManualRenderingInputPCMFormat:inputBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method setMutedSpeechActivityEventListener: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setVoiceProcessingEnabled:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioMixerNode {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class AVAudioNode {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class AVAudioOutputNode {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method setVoiceProcessingEnabled:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioPCMBuffer {
+        method initWithPCMFormat:bufferListNoCopy:deallocator: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class AVAudioPlayer {
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfURL:fileTypeHint:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithData:fileTypeHint:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVAudioPlayerNode {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method scheduleBuffer:atTime:options:completionCallbackType:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method scheduleBuffer:atTime:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method scheduleBuffer:completionCallbackType:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method scheduleBuffer:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method scheduleFile:atTime:completionCallbackType:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method scheduleFile:atTime:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method scheduleSegment:startingFrame:frameCount:atTime:completionCallbackType:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method scheduleSegment:startingFrame:frameCount:atTime:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAudioRecorder {
+        method initWithURL:format:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithURL:settings:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVAudioRoutingArbiter {
+        method beginArbitrationWithCategory:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class AVAudioSequencer {
+        method dataWithSMPTEResolution:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadFromData:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadFromURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setUserCallback: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method writeToURL:SMPTEResolution:replaceExisting:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method hostTimeForBeats:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method beatsForHostTime:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioSinkNode {
+        method initWithReceiverBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class AVAudioSourceNode {
+        method initWithFormat:renderBlock: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method initWithRenderBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class AVAudioUnit {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitComponentManager {
+        method componentsPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class AVAudioUnitDelay {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitDistortion {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitEQ {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitEffect {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitGenerator {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitMIDIInstrument {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitReverb {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitSampler {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioFilesAtURLs:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadInstrumentAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadSoundBankInstrumentAtURL:program:bankMSB:bankLSB:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitTimeEffect {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitTimePitch {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVAudioUnitVarispeed {
+        method installTapOnBus:bufferSize:format:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method loadAudioUnitPresetAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AVMIDIPlayer {
+        method initWithContentsOfURL:soundBankURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithData:soundBankURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method play: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class AVMusicTrack {
+        method enumerateEventsInRange:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class AVSpeechSynthesisProviderAudioUnit {
+        method allocateRenderResourcesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method deleteUserPreset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method disableProfile:cable:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enableProfile:cable:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithComponentDescription:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithComponentDescription:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method presetStateFor:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveUserPreset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMIDIOutputEventBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setMIDIOutputEventListBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setMusicalContextBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setProfileChangedBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setSpeechSynthesisOutputMetadataBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setTransportStateBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method tokenByAddingRenderObserver: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class AVSpeechSynthesizer {
+        method requestPersonalVoiceAuthorizationWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method writeUtterance:toBufferCallback: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method writeUtterance:toBufferCallback:toMarkerCallback: is-instance=#true {
+            block-param 1 invocation=synchronous
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 6
+        block-async-copied 25
+        block-stored 40
+        parameter-ownership 3
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 54
+    }
+}

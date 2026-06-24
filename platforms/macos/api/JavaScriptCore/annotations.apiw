@@ -1,0 +1,23 @@
+framework JavaScriptCore {
+    class JSContext {
+        method setExceptionHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class JSValue {
+        method valueWithNewPromiseInContext:fromExecutor: is-instance=#false {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        block-stored 1
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

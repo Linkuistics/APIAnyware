@@ -1,0 +1,21 @@
+framework ClassKitUI {
+    class AssignedDocumentMenuItem {
+        method "init(documentURL:willSubmit:didSubmit:willWithdraw:didWithdraw:)" is-instance=#true {
+            block-param 1 invocation=stored
+            block-param 2 invocation=stored
+            block-param 3 invocation=stored
+            block-param 4 invocation=stored
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 4
+        parameter-ownership 0
+        threading-main-thread-only 1
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

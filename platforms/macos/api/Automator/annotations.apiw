@@ -1,0 +1,87 @@
+framework Automator {
+    class AMAction {
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method runWithInput:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AMAppleScriptAction {
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method runWithInput:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AMBundleAction {
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method runWithInput:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AMShellScriptAction {
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method runWithInput:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AMWorkflow {
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method runWorkflowAtURL:withInput:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AMWorkflowController {
+        method commitEditingAndReturnError: is-instance=#true {
+            threading main_thread_only
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            threading main_thread_only
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class AMWorkspace {
+        method runWorkflowAtPath:withInput:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 3
+        threading-any-thread 0
+        error-pattern 13
+    }
+}

@@ -1,0 +1,17 @@
+framework _WebKit_SwiftUI {
+    class WebPage {
+        method "withExportedFile(contentType:fileHandler:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

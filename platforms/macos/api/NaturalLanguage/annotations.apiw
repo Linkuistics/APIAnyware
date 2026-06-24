@@ -1,0 +1,105 @@
+framework NaturalLanguage {
+    class NLContextualEmbedding {
+        method embeddingResultForString:language:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadWithError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method requestEmbeddingAssetsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NLContextualEmbeddingResult {
+        method enumerateTokenVectorsInRange:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class NLEmbedding {
+        method embeddingWithContentsOfURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateNeighborsForString:maximumCount:distanceType:usingBlock: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method enumerateNeighborsForString:maximumCount:maximumDistance:distanceType:usingBlock: is-instance=#true {
+            block-param 4 invocation=synchronous
+            source llm
+        }
+        method enumerateNeighborsForVector:maximumCount:distanceType:usingBlock: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method enumerateNeighborsForVector:maximumCount:maximumDistance:distanceType:usingBlock: is-instance=#true {
+            block-param 4 invocation=synchronous
+            source llm
+        }
+        method writeEmbeddingForDictionary:language:revision:toURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NLGazetteer {
+        method gazetteerWithContentsOfURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithDictionary:language:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeGazetteerForDictionary:language:toURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NLModel {
+        method modelWithContentsOfURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method modelWithMLModel:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NLTagger {
+        method enumerateTagsInRange:unit:scheme:options:usingBlock: is-instance=#true {
+            block-param 4 invocation=synchronous
+            source llm
+        }
+        method requestAssetsForLanguage:tagScheme:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class NLTokenizer {
+        method enumerateTokensInRange:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 7
+        block-async-copied 2
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 11
+    }
+}

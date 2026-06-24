@@ -1,0 +1,126 @@
+framework ImageCaptureCore {
+    class ICCameraDevice {
+        method requestCloseSessionWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestDeleteFiles:deleteFailed:completion: is-instance=#true {
+            block-param 1 invocation=stored
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method requestEjectWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestOpenSessionWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestSendPTPCommand:outData:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setPtpEventHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class ICCameraFile {
+        method requestDownloadWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestFingerprintWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestMetadataDictionaryWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestReadDataAtOffset:length:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestSecurityScopedURLWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestThumbnailDataWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class ICDevice {
+        method requestCloseSessionWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestEjectWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestOpenSessionWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class ICDeviceBrowser {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class ICScannerDevice {
+        method requestCloseSessionWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestEjectWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method requestOpenSessionWithOptions:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 17
+        block-stored 2
+        parameter-ownership 4
+        threading-main-thread-only 0
+        threading-any-thread 16
+        error-pattern 0
+    }
+}

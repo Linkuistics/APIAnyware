@@ -1,0 +1,1181 @@
+framework NetworkExtension {
+    class NEAppProxyFlow {
+        method "open(withLocalEndpoint:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "open(withLocalFlowEndpoint:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method openWithLocalEndpoint:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method openWithLocalFlowEndpoint:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEAppProxyProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "handleAppMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method handleAppMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "setTunnelNetworkSettings(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setTunnelNetworkSettings:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startProxy(options:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startProxyWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopProxy(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopProxyWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEAppProxyProviderManager {
+        method "loadAllFromPreferences(completionHandler:)" is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadAllFromPreferencesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEAppProxyTCPFlow {
+        method "open(withLocalEndpoint:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "open(withLocalFlowEndpoint:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method openWithLocalEndpoint:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method openWithLocalFlowEndpoint:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "readData(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method readDataWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "write(_:withCompletionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method writeData:withCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEAppProxyUDPFlow {
+        method "open(withLocalEndpoint:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "open(withLocalFlowEndpoint:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method openWithLocalEndpoint:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method openWithLocalFlowEndpoint:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "readDatagrams(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method readDatagramsAndFlowEndpointsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method readDatagramsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "writeDatagrams(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "writeDatagrams(_:sentBy:completionHandler:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method writeDatagrams:sentByEndpoints:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method writeDatagrams:sentByFlowEndpoints:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEDNSProxyManager {
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEDNSProxyProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startProxy(options:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startProxyWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopProxy(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopProxyWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEDNSSettingsManager {
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEEthernetTunnelProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "createTCPConnectionThroughTunnel(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionThroughTunnelToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "handleAppMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method handleAppMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "setTunnelNetworkSettings(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setTunnelNetworkSettings:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startTunnel(options:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startTunnelWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopTunnel(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopTunnelWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEFilterDataProvider {
+        method "apply(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method applySettings:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startFilter(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startFilterWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopFilter(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopFilterWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEFilterManager {
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEFilterPacketProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setPacketHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startFilter(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startFilterWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopFilter(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopFilterWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEFilterProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startFilter(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startFilterWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopFilter(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopFilterWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEPacketTunnelFlow {
+        method "readPacketObjects(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method readPacketObjectsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "readPackets(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method readPacketsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEPacketTunnelProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "createTCPConnectionThroughTunnel(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionThroughTunnelToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "handleAppMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method handleAppMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "setTunnelNetworkSettings(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setTunnelNetworkSettings:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startTunnel(options:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startTunnelWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopTunnel(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopTunnelWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NERelayManager {
+        method "getLastClientErrors(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method getLastClientErrors:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "loadAllManagersFromPreferences(completionHandler:)" is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadAllManagersFromPreferencesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NETransparentProxyManager {
+        method "loadAllFromPreferences(completionHandler:)" is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadAllFromPreferencesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NETransparentProxyProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "handleAppMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method handleAppMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "setTunnelNetworkSettings(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setTunnelNetworkSettings:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "startProxy(options:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startProxyWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "stopProxy(with:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method stopProxyWithReason:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NETunnelProvider {
+        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
+            param-ownership 3 ownership=weak
+            source llm
+        }
+        method "displayMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method displayMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "handleAppMessage(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method handleAppMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "setTunnelNetworkSettings(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method setTunnelNetworkSettings:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sleep(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sleepWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NETunnelProviderManager {
+        method "loadAllFromPreferences(completionHandler:)" is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadAllFromPreferencesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NETunnelProviderSession {
+        method "fetchLastDisconnectError(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method fetchLastDisconnectErrorWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "sendProviderMessage(_:responseHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method sendProviderMessage:returnError:responseHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startTunnelWithOptions:andReturnError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method startVPNTunnelAndReturnError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method startVPNTunnelWithOptions:andReturnError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NEURLFilter {
+        method verdictForURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NEVPNConnection {
+        method "fetchLastDisconnectError(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method fetchLastDisconnectErrorWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method startVPNTunnelAndReturnError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method startVPNTunnelWithOptions:andReturnError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NEVPNManager {
+        method "loadFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method loadFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "removeFromPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method removeFromPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "saveToPreferences(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method saveToPreferencesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NWTCPConnection {
+        method "readLength(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method readLength:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "readMinimumLength(_:maximumLength:completionHandler:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method readMinimumLength:maximumLength:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "write(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method write:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NWUDPSession {
+        method "setReadHandler(_:maxDatagrams:)" is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setReadHandler:maxDatagrams: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method "writeDatagram(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method writeDatagram:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "writeMultipleDatagrams(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method writeMultipleDatagrams:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 196
+        block-stored 3
+        parameter-ownership 24
+        threading-main-thread-only 0
+        threading-any-thread 204
+        error-pattern 5
+    }
+}

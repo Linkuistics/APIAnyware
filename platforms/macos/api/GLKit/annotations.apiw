@@ -1,0 +1,87 @@
+framework GLKit {
+    class GLKMesh {
+        method initWithMesh:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newMeshesFromAsset:sourceMeshes:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class GLKTextureLoader {
+        method cubeMapWithContentsOfFile:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method cubeMapWithContentsOfFile:options:queue:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method cubeMapWithContentsOfFiles:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method cubeMapWithContentsOfFiles:options:queue:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method cubeMapWithContentsOfURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method cubeMapWithContentsOfURL:options:queue:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method textureWithCGImage:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method textureWithCGImage:options:queue:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method textureWithContentsOfData:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method textureWithContentsOfData:options:queue:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method textureWithContentsOfFile:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method textureWithContentsOfFile:options:queue:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method textureWithContentsOfURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method textureWithContentsOfURL:options:queue:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method textureWithName:scaleFactor:bundle:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method textureWithName:scaleFactor:bundle:options:queue:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 8
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 10
+    }
+}

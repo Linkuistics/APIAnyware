@@ -1,0 +1,128 @@
+framework ModelIO {
+    class MDLAreaLight {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLAsset {
+        method exportAssetToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithURL:vertexDescriptor:bufferAllocator:preserveTopology:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MDLCamera {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLLight {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLLightProbe {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLMaterialPropertyGraph {
+        method initWithInputs:outputs:evaluationFunction: is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=stored
+            source llm
+        }
+        method setEvaluationFunction: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class MDLMaterialPropertyNode {
+        method initWithInputs:outputs:evaluationFunction: is-instance=#true {
+            param-ownership 2 ownership=copy
+            block-param 2 invocation=stored
+            source llm
+        }
+        method setEvaluationFunction: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class MDLMesh {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method makeVerticesUniqueAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MDLMeshBufferMap {
+        method initWithBytes:deallocator: is-instance=#true {
+            param-ownership 1 ownership=copy
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class MDLObject {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLPackedJointAnimation {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLPhotometricLight {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLPhysicallyPlausibleLight {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLSkeleton {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLStereoscopicCamera {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class MDLVoxelArray {
+        method enumerateChildObjectsOfClass:root:usingBlock:stopPointer: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 12
+        block-async-copied 0
+        block-stored 5
+        parameter-ownership 5
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 3
+    }
+}

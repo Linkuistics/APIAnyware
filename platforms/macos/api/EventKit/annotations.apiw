@@ -1,0 +1,74 @@
+framework EventKit {
+    class EKEventStore {
+        method commit: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateEventsMatchingPredicate:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method fetchRemindersMatchingPredicate:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method removeCalendar:commit:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeEvent:span:commit:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeEvent:span:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeReminder:commit:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method requestAccessToEntityType:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method requestFullAccessToEventsWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method requestFullAccessToRemindersWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method requestWriteOnlyAccessToEventsWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method saveCalendar:commit:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveEvent:span:commit:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveEvent:span:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveReminder:commit:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class EKVirtualConferenceProvider {
+        method fetchAvailableRoomTypesWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method fetchVirtualConferenceForIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+}

@@ -1,0 +1,94 @@
+framework MetalKit {
+    class MTKMesh {
+        method initWithMesh:device:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newMeshesFromAsset:device:sourceMeshes:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MTKTextureLoader {
+        method newTextureWithCGImage:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method newTextureWithCGImage:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newTextureWithContentsOfURL:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method newTextureWithContentsOfURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newTextureWithData:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method newTextureWithData:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newTextureWithMDLTexture:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method newTextureWithMDLTexture:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newTextureWithName:scaleFactor:bundle:options:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method newTextureWithName:scaleFactor:bundle:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newTextureWithName:scaleFactor:displayGamut:bundle:options:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+        method newTextureWithName:scaleFactor:displayGamut:bundle:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newTexturesWithContentsOfURLs:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method newTexturesWithContentsOfURLs:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method newTexturesWithNames:scaleFactor:bundle:options:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method newTexturesWithNames:scaleFactor:displayGamut:bundle:options:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            source llm
+        }
+    }
+    class MTKView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 9
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 1
+        threading-any-thread 0
+        error-pattern 9
+    }
+}

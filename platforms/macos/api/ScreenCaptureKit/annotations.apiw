@@ -1,0 +1,106 @@
+framework ScreenCaptureKit {
+    class SCContentSharingPicker {
+        method addObserver: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class SCRecordingOutput {
+        method initWithConfiguration:delegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+    }
+    class SCScreenshotManager {
+        method captureImageInRect:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method captureImageWithFilter:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method captureSampleBufferWithFilter:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method captureScreenshotWithFilter:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method captureScreenshotWithRect:configuration:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class SCShareableContent {
+        method getCurrentProcessShareableContentWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method getShareableContentExcludingDesktopWindows:onScreenWindowsOnly:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method getShareableContentExcludingDesktopWindows:onScreenWindowsOnlyAboveWindow:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method getShareableContentExcludingDesktopWindows:onScreenWindowsOnlyBelowWindow:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method getShareableContentWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class SCStream {
+        method addRecordingOutput:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method addStreamOutput:type:sampleHandlerQueue:error: is-instance=#true {
+            param-ownership 0 ownership=weak
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithFilter:configuration:delegate: is-instance=#true {
+            param-ownership 2 ownership=weak
+            source llm
+        }
+        method removeRecordingOutput:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeStreamOutput:type:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startCaptureWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method stopCaptureWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method updateConfiguration:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method updateContentFilter:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 14
+        block-stored 0
+        parameter-ownership 4
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 4
+    }
+}

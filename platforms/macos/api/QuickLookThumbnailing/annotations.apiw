@@ -1,0 +1,45 @@
+framework QuickLookThumbnailing {
+    class QLThumbnailGenerator {
+        method generateBestRepresentationForRequest:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method generateRepresentationsForRequest:updateHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method saveBestRepresentationForRequest:toFileAtURL:asContentType:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method saveBestRepresentationForRequest:toFileAtURL:withContentType:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class QLThumbnailProvider {
+        method provideThumbnailForFileRequest:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class QLThumbnailReply {
+        method replyWithContextSize:currentContextDrawingBlock: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method replyWithContextSize:drawingBlock: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 4
+        block-stored 3
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

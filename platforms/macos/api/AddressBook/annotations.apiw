@@ -1,0 +1,43 @@
+framework AddressBook {
+    class ABAddressBook {
+        method addRecord:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeRecord:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class ABGroup {
+        method setValue:forProperty:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class ABPerson {
+        method setValue:forProperty:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class ABRecord {
+        method setValue:forProperty:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 6
+    }
+}

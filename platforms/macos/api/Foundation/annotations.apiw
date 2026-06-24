@@ -1,0 +1,2029 @@
+framework Foundation {
+    class NSAppleEventDescriptor {
+        method sendEventWithOptions:timeout:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSArray {
+        method writeToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateObjectsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateObjectsWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateObjectsAtIndexes:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexOfObjectPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexOfObjectWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexOfObjectAtIndexes:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexesOfObjectsPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexesOfObjectsWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexesOfObjectsAtIndexes:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method sortedArrayUsingComparator: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method sortedArrayWithOptions:usingComparator: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexOfObject:inSortedRange:options:usingComparator: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method arrayWithContentsOfURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method differenceFromArray:withOptions:usingEquivalenceTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method addObserver:toObjectsAtIndexes:forKeyPath:options:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method addObserver:forKeyPath:options:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSAttributedString {
+        method enumerateAttributesInRange:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateAttribute:inRange:options:usingBlock: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method initWithContentsOfMarkdownFileAtURL:options:baseURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithMarkdown:options:baseURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithMarkdownString:options:baseURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSBackgroundActivityScheduler {
+        method scheduleWithBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSBlockOperation {
+        method addExecutionBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method blockOperationWithBlock: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setCompletionBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSBundle {
+        method loadAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method preflightAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSByteCountFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSCache {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSCalendar {
+        method enumerateDatesStartingAfterDate:matchingComponents:options:usingBlock: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+    }
+    class NSCoder {
+        method decodeTopLevelObjectAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method decodeTopLevelObjectForKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method decodeTopLevelObjectOfClass:forKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method decodeTopLevelObjectOfClasses:forKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSComparisonPredicate {
+        method allowEvaluationWithValidator:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method predicateWithBlock: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSCompoundPredicate {
+        method allowEvaluationWithValidator:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method predicateWithBlock: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSConnection {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSConstantString {
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSData {
+        method enumerateByteRangesUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method initWithBytesNoCopy:length:deallocator: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method decompressedDataUsingAlgorithm:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method compressedDataUsingAlgorithm:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSDataDetector {
+        method dataDetectorWithTypes:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithPattern:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithTypes:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method regularExpressionWithPattern:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSDateComponentsFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSDateFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method getObjectValue:forString:range:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSDateIntervalFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSDictionary {
+        method writeToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateKeysAndObjectsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateKeysAndObjectsWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method keysSortedByValueUsingComparator: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method keysSortedByValueWithOptions:usingComparator: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method keysOfEntriesPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method keysOfEntriesWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method initWithContentsOfURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method dictionaryWithContentsOfURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSDistributedNotificationCenter {
+        method addObserver:selector:name:object: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method addObserver:selector:name:object:suspensionBehavior: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method addObserverForName:object:queue:usingBlock: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class NSEnergyFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSError {
+        method setUserInfoValueProviderForDomain:provider: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class NSExpression {
+        method expressionForBlock:arguments: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSExtensionContext {
+        method completeRequestReturningItems:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method openURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class NSFileCoordinator {
+        method coordinateAccessWithIntents:queue:byAccessor: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method coordinateReadingItemAtURL:options:error:byAccessor: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method coordinateReadingItemAtURL:options:writingItemAtURL:options:error:byAccessor: is-instance=#true {
+            block-param 5 invocation=synchronous
+            source llm
+        }
+        method coordinateWritingItemAtURL:options:error:byAccessor: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method coordinateWritingItemAtURL:options:writingItemAtURL:options:error:byAccessor: is-instance=#true {
+            block-param 5 invocation=synchronous
+            source llm
+        }
+        method prepareForReadingItemsAtURLs:options:writingItemsAtURLs:options:error:byAccessor: is-instance=#true {
+            block-param 5 invocation=synchronous
+            source llm
+        }
+    }
+    class NSFileHandle {
+        method closeAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method getOffset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readDataToEndOfFileAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readDataUpToLength:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method seekToEndReturningOffset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method seekToOffset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method synchronizeAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method truncateAtOffset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method fileHandleForReadingFromURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method fileHandleForWritingToURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method fileHandleForUpdatingURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method setReadabilityHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setWriteabilityHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSFileManager {
+        method URLForDirectory:inDomain:appropriateForURL:create:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method URLForPublishingUbiquitousItemAtURL:expirationDate:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method attributesOfFileSystemForPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method attributesOfItemAtPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method contentsOfDirectoryAtPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method copyItemAtPath:toPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method copyItemAtURL:toURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createDirectoryAtPath:withIntermediateDirectories:attributes:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createDirectoryAtURL:withIntermediateDirectories:attributes:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createSymbolicLinkAtPath:withDestinationPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method createSymbolicLinkAtURL:withDestinationURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method destinationOfSymbolicLinkAtPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumeratorAtURL:includingPropertiesForKeys:options:errorHandler: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method evictUbiquitousItemAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method fetchLatestRemoteVersionOfItemAtURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method getFileProviderServicesForItemAtURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method getRelationship:ofDirectory:inDomain:toItemAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method getRelationship:ofDirectoryAtURL:toItemAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method linkItemAtPath:toPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method linkItemAtURL:toURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method moveItemAtPath:toPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method moveItemAtURL:toURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method pauseSyncForUbiquitousItemAtURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method removeItemAtPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeItemAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method replaceItemAtURL:withItemAtURL:backupItemName:options:resultingItemURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method resumeSyncForUbiquitousItemAtURL:withBehavior:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method setAttributes:ofItemAtPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setUbiquitous:itemAtURL:destinationURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startDownloadingUbiquitousItemAtURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method subpathsOfDirectoryAtPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method trashItemAtURL:resultingItemURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method unmountVolumeAtURL:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method uploadLocalVersionOfUbiquitousItemAtURL:withConflictResolutionPolicy:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class NSFileProviderService {
+        method getFileProviderConnectionWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSFileVersion {
+        method addVersionOfItemAtURL:withContentsOfURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method getNonlocalVersionsOfItemAtURL:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method removeAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method removeOtherVersionsOfItemAtURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method replaceItemAtURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSFileWrapper {
+        method initWithURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method readFromURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToURL:options:originalContentsURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSHTTPCookieStorage {
+        method getCookiesForTask:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class NSISO8601DateFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSIndexSet {
+        method enumerateIndexesInRange:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateIndexesUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateIndexesWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateRangesInRange:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateRangesUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateRangesWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexInRange:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexesInRange:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexesPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexesWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class NSInputStream {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSInvocationOperation {
+        method setCompletionBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSItemProvider {
+        method loadDataRepresentationForTypeIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadFileRepresentationForTypeIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadInPlaceFileRepresentationForTypeIdentifier:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadItemForTypeIdentifier:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "loadObject(ofClass:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method loadObjectOfClass:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method registerDataRepresentationForTypeIdentifier:visibility:loadHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method registerFileRepresentationForTypeIdentifier:fileOptions:visibility:loadHandler: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method registerItemForTypeIdentifier:loadHandler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method "registerObject(ofClass:visibility:loadHandler:)" is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method registerObjectOfClass:visibility:loadHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method loadPreviewImageWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method setPreviewImageHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSJSONSerialization {
+        method JSONObjectWithData:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method JSONObjectWithStream:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method dataWithJSONObject:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeJSONObject:toStream:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSKeyValueSharedObservers {
+        method addObserver:forKeyPath:options:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method addSharedObserver:forKey:options:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSKeyedArchiver {
+        method archivedDataWithRootObject:requiringSecureCoding:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSKeyedUnarchiver {
+        method initForReadingFromData:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method unarchiveTopLevelObjectWithData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method unarchivedArrayOfObjectsOfClass:fromData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method unarchivedArrayOfObjectsOfClasses:fromData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method unarchivedDictionaryWithKeysOfClass:objectsOfClass:fromData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method unarchivedDictionaryWithKeysOfClasses:objectsOfClasses:fromData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method unarchivedObjectOfClass:fromData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method unarchivedObjectOfClasses:fromData:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSLengthFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSLinguisticTagger {
+        method enumerateTagsForString:range:unit:scheme:options:orthography:usingBlock: is-instance=#false {
+            block-param 6 invocation=synchronous
+            source llm
+        }
+        method enumerateTagsInRange:scheme:options:usingBlock: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method enumerateTagsInRange:unit:scheme:options:usingBlock: is-instance=#true {
+            block-param 4 invocation=synchronous
+            source llm
+        }
+    }
+    class NSListFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMachPort {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSMassFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMeasurementFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMessagePort {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSMetadataQuery {
+        method enumerateResultsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateResultsWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSMorphology {
+        method setCustomPronoun:forLanguage:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMutableArray {
+        method sortUsingComparator: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method sortWithOptions:usingComparator: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class NSMutableData {
+        method decompressUsingAlgorithm:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method compressUsingAlgorithm:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSMutableIndexSet {
+        method enumerateIndexesInRange:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateIndexesUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateIndexesWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateRangesInRange:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateRangesUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateRangesWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexInRange:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexesInRange:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexesPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexesWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class NSMutableOrderedSet {
+        method sortUsingComparator: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method sortWithOptions:usingComparator: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method sortRange:options:usingComparator: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class NSMutableString {
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSNetService {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSNetServiceBrowser {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSNotificationCenter {
+        method addObserver:selector:name:object: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method addObserverForName:object:queue:usingBlock: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class NSNumberFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method getObjectValue:forString:range:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSOperation {
+        method setCompletionBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSOperationQueue {
+        method addBarrierBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method addOperationWithBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSOrderedCollectionDifference {
+        method differenceByTransformingChangesWithBlock: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSOrderedSet {
+        method enumerateObjectsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateObjectsWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method enumerateObjectsAtIndexes:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexOfObjectPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexOfObjectWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexOfObjectAtIndexes:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexesOfObjectsPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method indexesOfObjectsWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method indexesOfObjectsAtIndexes:options:passingTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method indexOfObject:inSortedRange:options:usingComparator: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+        method sortedArrayUsingComparator: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method sortedArrayWithOptions:usingComparator: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method differenceFromOrderedSet:withOptions:usingEquivalenceTest: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method addObserver:forKeyPath:options:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSOutputStream {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSPersonNameComponentsFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSPort {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSPredicate {
+        method allowEvaluationWithValidator:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method predicateWithBlock: is-instance=#false {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSProcessInfo {
+        method performActivityWithOptions:reason:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+    }
+    class NSProgress {
+        method addSubscriberForFileURL:withPublishingHandler: is-instance=#false {
+            block-param 1 invocation=stored
+            source llm
+        }
+        method performAsCurrentWithPendingUnitCount:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method setCancellationHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setPausingHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setResumingHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class NSPropertyListSerialization {
+        method dataWithPropertyList:format:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method propertyListWithData:options:format:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method propertyListWithStream:options:format:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method writePropertyList:toStream:format:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSRegularExpression {
+        method initWithPattern:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method regularExpressionWithPattern:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateMatchesInString:options:range:usingBlock: is-instance=#true {
+            block-param 3 invocation=synchronous
+            source llm
+        }
+    }
+    class NSRelativeDateTimeFormatter {
+        method getObjectValue:forString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:newEditingString:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSRunLoop {
+        method performInModes:block: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method performBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSSet {
+        method enumerateObjectsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateObjectsWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method objectsPassingTest: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method objectsWithOptions:passingTest: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+        method addObserver:forKeyPath:options:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSSimpleCString {
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSSocketPort {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSSortDescriptor {
+        method "init(keyPath:ascending:comparator:)" is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method initWithKey:ascending:comparator: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method sortDescriptorWithKey:ascending:comparator: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class NSSpellServer {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSStream {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSString {
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateSubstringsInRange:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateLinesUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method writeToURL:atomically:encoding:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeToFile:atomically:encoding:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithCharactersNoCopy:length:deallocator: is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method initWithValidatedFormat:validFormatSpecifiers:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithValidatedFormat:validFormatSpecifiers:locale:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithValidatedFormat:validFormatSpecifiers:arguments:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithValidatedFormat:validFormatSpecifiers:locale:arguments:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithBytesNoCopy:length:encoding:deallocator: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method stringWithValidatedFormat:validFormatSpecifiers:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method localizedStringWithValidatedFormat:validFormatSpecifiers:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfURL:encoding:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfFile:encoding:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithContentsOfURL:encoding:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithContentsOfFile:encoding:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfURL:usedEncoding:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithContentsOfFile:usedEncoding:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithContentsOfURL:usedEncoding:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithContentsOfFile:usedEncoding:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method enumerateLinguisticTagsInRange:scheme:options:orthography:usingBlock: is-instance=#true {
+            block-param 4 invocation=synchronous
+            source llm
+        }
+    }
+    class NSTask {
+        method launchAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setTerminationHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method launchedTaskWithExecutableURL:arguments:error:terminationHandler: is-instance=#false {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class NSThread {
+        method detachNewThreadWithBlock: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSTimer {
+        method initWithFireDate:interval:repeats:block: is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+        method scheduledTimerWithTimeInterval:repeats:block: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+        method timerWithTimeInterval:repeats:block: is-instance=#false {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class NSURL {
+        method URLByResolvingAliasFileAtURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method URLByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method bookmarkDataWithContentsOfURL:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method getResourceValue:forKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initByResolvingBookmarkData:options:relativeToURL:bookmarkDataIsStale:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method resourceValuesForKeys:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setResourceValue:forKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setResourceValues:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method writeBookmarkData:toURL:options:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method getPromisedItemResourceValue:forKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method promisedItemResourceValuesForKeys:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method checkPromisedItemIsReachableAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method checkResourceIsReachableAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSURLCache {
+        method getCachedResponseForDataTask:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class NSURLConnection {
+        method sendSynchronousRequest:returningResponse:error: is-instance=#false {
+            error-pattern error_out_param
+            source llm
+        }
+        method sendAsynchronousRequest:queue:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class NSURLCredentialStorage {
+        method getCredentialsForProtectionSpace:task:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method getDefaultCredentialForProtectionSpace:task:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class NSURLSession {
+        method flushWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method getAllTasksWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method getTasksWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method resetWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method dataTaskWithRequest:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method dataTaskWithURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method uploadTaskWithRequest:fromFile:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method uploadTaskWithRequest:fromData:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method uploadTaskWithResumeData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method downloadTaskWithRequest:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method downloadTaskWithURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method downloadTaskWithResumeData:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class NSURLSessionDownloadTask {
+        method cancelByProducingResumeData: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSURLSessionStreamTask {
+        method readDataOfMinLength:maxLength:timeout:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method writeData:timeout:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class NSURLSessionUploadTask {
+        method cancelByProducingResumeData: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSURLSessionWebSocketTask {
+        method receiveMessageWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method sendMessage:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method sendPingWithPongReceiveHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class NSUndoManager {
+        method registerUndoWithTarget:handler: is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class NSUserActivity {
+        method deleteAllSavedUserActivitiesWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method deleteSavedUserActivitiesWithPersistentIdentifiers:completionHandler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method getContinuationStreamsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSUserAppleScriptTask {
+        method executeWithAppleEvent:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method executeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSUserAutomatorTask {
+        method executeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method executeWithInput:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method initWithURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSUserNotificationCenter {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSUserScriptTask {
+        method executeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSUserUnixTask {
+        method executeWithArguments:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method executeWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method initWithURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSXMLDTD {
+        method initWithContentsOfURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithData:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method nodesForXPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:constants:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSXMLDTDNode {
+        method nodesForXPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:constants:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSXMLDocument {
+        method initWithContentsOfURL:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithData:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithXMLString:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method nodesForXPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectByApplyingXSLT:arguments:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectByApplyingXSLTAtURL:arguments:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectByApplyingXSLTString:arguments:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:constants:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method validateAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSXMLElement {
+        method initWithXMLString:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method nodesForXPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:constants:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSXMLNode {
+        method nodesForXPath:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:constants:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method objectsForXQuery:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class NSXMLParser {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class NSXPCConnection {
+        method remoteObjectProxyWithErrorHandler: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method scheduleSendBarrierBlock: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method setInterruptionHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setInvalidationHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method synchronousRemoteObjectProxyWithErrorHandler: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class NSXPCListener {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class RunLoop {
+        method "schedule(_:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:interval:_:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:interval:tolerance:_:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:interval:tolerance:options:_:)" is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:tolerance:_:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:tolerance:options:_:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method "schedule(options:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class FileManager {
+        method "enumerator(at:includingPropertiesForKeys:options:errorHandler:)" is-instance=#true {
+            block-param 3 invocation=stored
+            source llm
+        }
+    }
+    class NotificationCenter {
+        method "addObserver(of:for:using:)" is-instance=#true {
+            block-param 2 invocation=stored
+            source llm
+        }
+    }
+    class UndoManager {
+        method "registerUndo(withTarget:handler:)" is-instance=#true {
+            block-param 1 invocation=stored
+            source llm
+        }
+    }
+    class OperationQueue {
+        method "schedule(_:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:interval:_:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:interval:tolerance:_:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:interval:tolerance:options:_:)" is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:tolerance:_:)" is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method "schedule(after:tolerance:options:_:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method "schedule(options:_:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class URLSessionWebSocketTask {
+        method "receive(completionHandler:)" is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method "send(_:completionHandler:)" is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class Progress {
+        method "performAsCurrent(withPendingUnitCount:using:)" is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 88
+        block-async-copied 85
+        block-stored 41
+        parameter-ownership 29
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 204
+    }
+}

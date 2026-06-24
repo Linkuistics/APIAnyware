@@ -1,0 +1,61 @@
+framework FSKit {
+    class FSBlockDeviceResource {
+        method readInto:startingAt:length:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "read(into:startingAt:length:completionHandler:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method writeFrom:startingAt:length:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+        method "write(from:startingAt:length:completionHandler:)" is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class FSClient {
+        method fetchInstalledExtensionsWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class FSMutableFileDataBuffer {
+        method "withUnsafeMutableBytes(_:)" is-instance=#true {
+            block-param 0 invocation=synchronous
+            threading any_thread
+            source llm
+        }
+    }
+    class FSTask {
+        method setCancellationHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class FSUnaryFileSystem {
+        method wipeResource:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 6
+        block-stored 1
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 8
+        error-pattern 0
+    }
+}

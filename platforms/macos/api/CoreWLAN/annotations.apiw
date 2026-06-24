@@ -1,0 +1,79 @@
+framework CoreWLAN {
+    class CWInterface {
+        method associateToEnterpriseNetwork:identity:username:password:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method associateToNetwork:password:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitConfiguration:authorization:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method scanForNetworksWithName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method scanForNetworksWithName:includeHidden:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method scanForNetworksWithSSID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method scanForNetworksWithSSID:includeHidden:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setPairwiseMasterKey:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setPower:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setWEPKey:flags:index:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setWLANChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startIBSSModeWithSSID:security:channel:password:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class CWWiFiClient {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method startMonitoringEventWithType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method stopMonitoringAllEventsAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method stopMonitoringEventWithType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 0
+        block-stored 0
+        parameter-ownership 1
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 15
+    }
+}

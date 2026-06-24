@@ -1,0 +1,196 @@
+framework Photos {
+    class PHAsset {
+        method requestContentEditingInputWithOptions:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class PHAssetResourceManager {
+        method requestDataForAssetResource:options:dataReceivedHandler:completionHandler: is-instance=#true {
+            block-param 2 invocation=stored
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method writeDataForAssetResource:toFile:options:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+    }
+    class PHAssetResourceRequestOptions {
+        method setProgressHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class PHCachingImageManager {
+        method requestAVAssetForVideo:options:resultHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method requestExportSessionForVideo:options:exportPreset:resultHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method requestImageDataAndOrientationForAsset:options:resultHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method requestImageForAsset:targetSize:contentMode:options:resultHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method requestLivePhotoForAsset:targetSize:contentMode:options:resultHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method requestPlayerItemForVideo:options:resultHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class PHContentEditingInputRequestOptions {
+        method setCanHandleAdjustmentData: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setProgressHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class PHContentEditingOutput {
+        method renderedContentURLForType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PHFetchResult {
+        method enumerateObjectsAtIndexes:options:usingBlock: is-instance=#true {
+            block-param 2 invocation=synchronous
+            source llm
+        }
+        method enumerateObjectsUsingBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+        method enumerateObjectsWithOptions:usingBlock: is-instance=#true {
+            block-param 1 invocation=synchronous
+            source llm
+        }
+    }
+    class PHFetchResultChangeDetails {
+        method enumerateMovesWithBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class PHImageManager {
+        method requestAVAssetForVideo:options:resultHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method requestExportSessionForVideo:options:exportPreset:resultHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method requestImageDataAndOrientationForAsset:options:resultHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method requestImageForAsset:targetSize:contentMode:options:resultHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method requestLivePhotoForAsset:targetSize:contentMode:options:resultHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+        method requestPlayerItemForVideo:options:resultHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class PHImageRequestOptions {
+        method setProgressHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class PHLivePhoto {
+        method requestLivePhotoWithResourceFileURLs:placeholderImage:targetSize:contentMode:resultHandler: is-instance=#false {
+            block-param 4 invocation=async_copied
+            source llm
+        }
+    }
+    class PHLivePhotoEditingContext {
+        method prepareLivePhotoForPlaybackWithTargetSize:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method saveLivePhotoToOutput:options:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method setFrameProcessor: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class PHLivePhotoRequestOptions {
+        method setProgressHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class PHPersistentChange {
+        method changeDetailsForObjectType:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class PHPersistentChangeFetchResult {
+        method enumerateChangesWithBlock: is-instance=#true {
+            block-param 0 invocation=synchronous
+            source llm
+        }
+    }
+    class PHPhotoLibrary {
+        method fetchPersistentChangesSinceToken:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method performChanges:completionHandler: is-instance=#true {
+            block-param 0 invocation=synchronous
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method performChangesAndWait:error: is-instance=#true {
+            block-param 0 invocation=synchronous
+            error-pattern error_out_param
+            source llm
+        }
+        method requestAuthorization: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method requestAuthorizationForAccessLevel:handler: is-instance=#false {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class PHVideoRequestOptions {
+        method setProgressHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 7
+        block-async-copied 21
+        block-stored 8
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 4
+    }
+}

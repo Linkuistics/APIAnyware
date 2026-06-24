@@ -1,0 +1,78 @@
+framework CoreMIDI {
+    class MIDICIDiscoveryManager {
+        method discoverWithHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class MIDICISession {
+        method disableProfile:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enableProfile:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithDiscoveredNode:dataReadyHandler:disconnectHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method setProfileChangedCallback: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setProfileSpecificDataHandler: is-instance=#true {
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class MIDIUMPCIProfile {
+        method setProfileState:enabledChannelCount:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MIDIUMPMutableEndpoint {
+        method initWithName:deviceInfo:productInstanceID:MIDIProtocol:destinationCallback: is-instance=#true {
+            block-param 4 invocation=stored
+            source llm
+        }
+        method registerFunctionBlocks:markAsStatic:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setEnabled:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class MIDIUMPMutableFunctionBlock {
+        method reconfigureWithFirstGroup:direction:MIDI1Info:UIHint:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setEnabled:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setName:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 3
+        block-stored 3
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 0
+        error-pattern 9
+    }
+}

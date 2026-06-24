@@ -1,0 +1,630 @@
+framework IOUSBHost {
+    class IOUSBHostCIControllerStateMachine {
+        method enqueueUpdatedFrame:timestamp:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithInterface:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method inspectCommand:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method respondToCommand:status:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method respondToCommand:status:frame:timestamp:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostCIDeviceStateMachine {
+        method initWithInterface:command:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method inspectCommand:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method respondToCommand:status:deviceAddress:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method respondToCommand:status:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostCIEndpointStateMachine {
+        method enqueueTransferCompletionForMessage:status:transferLength:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithInterface:command:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method inspectCommand:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method processDoorbell:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method respondToCommand:status:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostCIPortStateMachine {
+        method initWithInterface:portNumber:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method inspectCommand:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method respondToCommand:status:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method updateLinkState:speed:inhibitLinkStateChange:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostControllerInterface {
+        method enqueueInterrupt:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueInterrupt:expedite:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueInterrupts:count:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueInterrupts:count:expedite:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method getPortStateMachineForCommand:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method getPortStateMachineForPort:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithCapabilities:queue:interruptRateHz:error:commandHandler:doorbellHandler:interestHandler: is-instance=#true {
+            block-param 4 invocation=stored
+            block-param 5 invocation=stored
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostDevice {
+        method abortDeviceRequestsWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method abortDeviceRequestsWithOption:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configurationDescriptorWithConfigurationValue:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configurationDescriptorWithIndex:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configureWithValue:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configureWithValue:matchInterfaces:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method currentMicroframeWithTime:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:index:languageID:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:index:languageID:requestType:requestRecipient:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:data:completionTimeout:error:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:data:error:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:error:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithIOService:options:queue:error:interestHandler: is-instance=#true {
+            block-param 4 invocation=stored
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithIOService:queue:error:interestHandler: is-instance=#true {
+            block-param 3 invocation=stored
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method ioDataWithCapacity:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method referenceMicroframeWithTime:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method resetWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:data:bytesTransferred:completionTimeout:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:data:bytesTransferred:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithIndex:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithIndex:languageID:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostInterface {
+        method abortDeviceRequestsWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method abortDeviceRequestsWithOption:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configurationDescriptorWithConfigurationValue:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configurationDescriptorWithIndex:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method copyPipeWithAddress:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method currentMicroframeWithTime:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:index:languageID:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:index:languageID:requestType:requestRecipient:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:data:completionTimeout:error:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:data:error:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:error:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithIOService:options:queue:error:interestHandler: is-instance=#true {
+            block-param 4 invocation=stored
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithIOService:queue:error:interestHandler: is-instance=#true {
+            block-param 3 invocation=stored
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method ioDataWithCapacity:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method referenceMicroframeWithTime:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method selectAlternateSetting:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:data:bytesTransferred:completionTimeout:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:data:bytesTransferred:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method setIdleTimeout:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithIndex:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithIndex:languageID:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostObject {
+        method abortDeviceRequestsWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method abortDeviceRequestsWithOption:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configurationDescriptorWithConfigurationValue:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method configurationDescriptorWithIndex:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method currentMicroframeWithTime:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:index:languageID:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method descriptorWithType:length:index:languageID:requestType:requestRecipient:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:data:completionTimeout:error:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:data:error:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueDeviceRequest:error:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithIOService:options:queue:error:interestHandler: is-instance=#true {
+            block-param 4 invocation=stored
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithIOService:queue:error:interestHandler: is-instance=#true {
+            block-param 3 invocation=stored
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method ioDataWithCapacity:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method referenceMicroframeWithTime:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:data:bytesTransferred:completionTimeout:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:data:bytesTransferred:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendDeviceRequest:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithIndex:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method stringWithIndex:languageID:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostPipe {
+        method abortWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method abortWithOption:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method adjustPipeWithDescriptors:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method clearStallWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method copyStreamWithStreamID:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method disableStreamsWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enableStreamsWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueControlRequest:data:completionTimeout:error:completionHandler: is-instance=#true {
+            block-param 4 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueControlRequest:data:error:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueControlRequest:error:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueIORequestWithData:completionTimeout:error:completionHandler: is-instance=#true {
+            block-param 3 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueIORequestWithData:frameList:frameListCount:firstFrameNumber:error:completionHandler: is-instance=#true {
+            block-param 5 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueIORequestWithData:transactionList:transactionListCount:firstFrameNumber:options:error:completionHandler: is-instance=#true {
+            block-param 6 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendControlRequest:data:bytesTransferred:completionTimeout:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendControlRequest:data:bytesTransferred:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendControlRequest:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendIORequestWithData:bytesTransferred:completionTimeout:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendIORequestWithData:frameList:frameListCount:firstFrameNumber:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendIORequestWithData:transactionList:transactionListCount:firstFrameNumber:options:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method setIdleTimeout:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class IOUSBHostStream {
+        method abortWithError: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method abortWithOption:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method enqueueIORequestWithData:error:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+        method sendIORequestWithData:bytesTransferred:error: is-instance=#true {
+            threading any_thread
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 16
+        block-stored 8
+        parameter-ownership 0
+        threading-main-thread-only 0
+        threading-any-thread 115
+        error-pattern 115
+    }
+}

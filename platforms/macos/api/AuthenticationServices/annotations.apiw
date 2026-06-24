@@ -1,0 +1,234 @@
+framework AuthenticationServices {
+    class ASAuthorizationAppleIDProvider {
+        method getCredentialStateForUserID:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class ASAuthorizationController {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class ASAuthorizationProviderExtensionAuthorizationRequest {
+        method presentAuthorizationViewControllerWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class ASAuthorizationProviderExtensionLoginConfiguration {
+        method configurationWithOpenIDConfigurationURL:clientID:issuer:completion: is-instance=#false {
+            block-param 3 invocation=async_copied
+            source llm
+        }
+        method setCustomAssertionRequestBodyClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomAssertionRequestHeaderClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomKeyExchangeRequestBodyClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomKeyExchangeRequestHeaderClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomKeyRequestBodyClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomKeyRequestHeaderClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomLoginRequestBodyClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomLoginRequestHeaderClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomRefreshRequestBodyClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomRefreshRequestHeaderClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class ASAuthorizationProviderExtensionLoginManager {
+        method attestKey:clientDataHash:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method attestPendingKey:clientDataHash:completion: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method presentRegistrationViewControllerWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method saveLoginConfiguration:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveUserLoginConfiguration:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method userNeedsReauthenticationWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class ASAuthorizationProviderExtensionUserLoginConfiguration {
+        method setCustomAssertionRequestBodyClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomAssertionRequestHeaderClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomLoginRequestBodyClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setCustomLoginRequestHeaderClaims:returningError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class ASAuthorizationWebBrowserPublicKeyCredentialManager {
+        method platformCredentialsForRelyingParty:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method requestAuthorizationForPublicKeyCredentials: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class ASCredentialIdentityStore {
+        method getCredentialIdentitiesForService:credentialIdentityTypes:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method getCredentialIdentityStoreStateWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method removeAllCredentialIdentitiesWithCompletion: is-instance=#true {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method removeCredentialIdentities:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method removeCredentialIdentityEntries:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method replaceCredentialIdentitiesWithIdentities:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method replaceCredentialIdentityEntries:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method saveCredentialIdentities:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method saveCredentialIdentityEntries:completion: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class ASCredentialProviderExtensionContext {
+        method completeAssertionRequestWithSelectedPasskeyCredential:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method completeOneTimeCodeRequestWithSelectedCredential:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method completeRegistrationRequestWithSelectedPasskeyCredential:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method completeRequestReturningItems:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method completeRequestWithSelectedCredential:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+        method openURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            source llm
+        }
+    }
+    class ASCredentialProviderViewController {
+        method commitEditingAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class ASSettingsHelper {
+        method openCredentialProviderAppSettingsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method openVerificationCodeAppSettingsWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+        method requestToTurnOnCredentialProviderExtensionWithCompletionHandler: is-instance=#false {
+            block-param 0 invocation=async_copied
+            source llm
+        }
+    }
+    class ASWebAuthenticationSession {
+        method initWithURL:callback:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method initWithURL:callbackURLScheme:completionHandler: is-instance=#true {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+    }
+    class ASWebAuthenticationSessionRequest {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 29
+        block-stored 0
+        parameter-ownership 3
+        threading-main-thread-only 1
+        threading-any-thread 0
+        error-pattern 17
+    }
+}

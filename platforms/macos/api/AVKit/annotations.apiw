@@ -1,0 +1,60 @@
+framework AVKit {
+    class AVCaptureView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class AVLegibleMediaOptionsMenuController {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPictureInPictureController {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+    }
+    class AVPictureInPictureControllerContentSource {
+        method initWithSampleBufferDisplayLayer:playbackDelegate: is-instance=#true {
+            param-ownership 1 ownership=weak
+            source llm
+        }
+    }
+    class AVPlayerView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+        method beginTrimmingWithCompletionHandler: is-instance=#true {
+            block-param 0 invocation=async_copied
+            threading main_thread_only
+            source llm
+        }
+        method setPictureInPictureDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    class AVRoutePickerView {
+        method setDelegate: is-instance=#true {
+            param-ownership 0 ownership=weak
+            threading main_thread_only
+            source llm
+        }
+    }
+    subagent-report {
+        block-synchronous 0
+        block-async-copied 1
+        block-stored 0
+        parameter-ownership 7
+        threading-main-thread-only 5
+        threading-any-thread 0
+        error-pattern 0
+    }
+}

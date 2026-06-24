@@ -1,0 +1,306 @@
+framework AudioToolbox {
+    class AUAudioUnit {
+        method allocateRenderResourcesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method deleteUserPreset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method disableProfile:cable:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enableProfile:cable:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithComponentDescription:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithComponentDescription:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method presetStateFor:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveUserPreset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMIDIOutputEventBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setMIDIOutputEventListBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setMusicalContextBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setProfileChangedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setTransportStateBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingRenderObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setDeviceID:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method startHardwareAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setOutputProvider: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setInputHandler: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class AUAudioUnitBus {
+        method setFormat:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithFormat:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AUAudioUnitBusArray {
+        method addObserverToAllBusses:forKeyPath:options:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method removeObserverFromAllBusses:forKeyPath:context: is-instance=#true {
+            param-ownership 0 ownership=weak
+            source llm
+        }
+        method setBusCount:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+    class AUAudioUnitV2Bridge {
+        method allocateRenderResourcesAndReturnError: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method deleteUserPreset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method disableProfile:cable:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method enableProfile:cable:onChannel:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithComponentDescription:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method initWithComponentDescription:options:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method instantiateWithComponentDescription:options:completionHandler: is-instance=#false {
+            block-param 2 invocation=async_copied
+            source llm
+        }
+        method presetStateFor:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method saveUserPreset:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+        method setMIDIOutputEventBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setMIDIOutputEventListBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setMusicalContextBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setProfileChangedBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setTransportStateBlock: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingRenderObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class AUParameter {
+        method tokenByAddingParameterAutomationObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterRecordingObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class AUParameterGroup {
+        method tokenByAddingParameterAutomationObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterRecordingObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    class AUParameterNode {
+        method tokenByAddingParameterAutomationObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterRecordingObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setImplementorValueObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setImplementorValueProvider: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method setImplementorStringFromValueCallback: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setImplementorValueFromStringCallback: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+        method setImplementorDisplayNameWithLengthCallback: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            source llm
+        }
+    }
+    class AUParameterTree {
+        method tokenByAddingParameterAutomationObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+        method tokenByAddingParameterRecordingObserver: is-instance=#true {
+            param-ownership 0 ownership=copy
+            block-param 0 invocation=stored
+            threading any_thread
+            source llm
+        }
+    }
+    subagent-report {
+        block-async-copied 2
+        block-stored 31
+        parameter-ownership 33
+        threading-any-thread 26
+        error-pattern 21
+    }
+}
