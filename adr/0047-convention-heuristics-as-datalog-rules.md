@@ -6,6 +6,12 @@
 
 **Relates to:** ADR-0046 (the spec format; supplies the `convention:<rule>` provenance source).
 
+> **Note (2026-06-24, ADR-0046 k17 amendment):** this ADR names the fact base `extracted.kdl` and
+> the output `resolved.kdl`. Per ADR-0046's machine-side JSON retreat those are now
+> **`extracted.json`** / **`resolved.json`** (machine IR is JSON; only the authored overlay is KDL).
+> This decision — convention heuristics as `ascent` datalog rules — is **unaffected** by the
+> serialization format; read the filenames below as `.json`.
+
 ## Context
 
 Semantic annotations come from four producers ranked by §28's precedence ladder

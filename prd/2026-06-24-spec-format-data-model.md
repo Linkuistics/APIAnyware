@@ -1,7 +1,13 @@
 # PRD — Spec format & data model (`.apiw` + KDL interchange)
 
 **Date:** 2026-06-24
-**Status:** Agreed (grilling complete; see `.grove/03-spec-format-k16/BRIEF.md` running log)
+**Status:** Agreed (grilling complete; see `.grove/03-spec-format-k16/BRIEF.md` running log) —
+**amended 2026-06-24 by the k17 spike: the "Open risk" retreat is invoked.** Machine
+`extracted`/`resolved` stay **JSON** (`extracted.json`/`resolved.json`); the KDL is the **authored
+`annotations.apiw`** only. KDL parse measured ~80–100× slower than `serde_json` on the real
+multi-MB IR (lossless but too slow). Evidence + numbers:
+`semantic/docs/research/2026-06-24-kdl-machine-serde-spike/`; ADR-0046 "Update — spike outcome".
+Read this PRD's "One format: KDL everywhere" and the triad table as **authored-KDL + machine-JSON**.
 **Grove:** `structural-refactoring`, workstream 2 (`spec-format-k16`)
 **Decisions:** [ADR-0046](../adr/0046-spec-interchange-format-kdl-everywhere.md) ·
 [ADR-0047](../adr/0047-convention-heuristics-as-datalog-rules.md)

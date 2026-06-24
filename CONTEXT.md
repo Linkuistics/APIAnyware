@@ -877,8 +877,9 @@ _Avoid_: putting any target-projection or platform-specific extraction detail he
 The *source platform truth* domain — per-platform formal API specs, kept
 **projection-free** (§7.1/§45.10). `platforms/macos/` is the only live platform;
 `linux/` and `dotnet/` slot in without redesign. A family's spec is the three-stage
-**spec triad** `extracted.kdl` → `annotations.apiw` → `resolved.kdl` under `api/<family>/`
-(§14; **KDL** filenames per ADR-0046, superseding §14's `.yaml` literals — see *Spec format*).
+**spec triad** `extracted.json` → `annotations.apiw` → `resolved.json` under `api/<family>/`
+(§14; machine `.json` + authored `.apiw` KDL per ADR-0046 as amended by the k17 retreat — see
+*Spec format*).
 _Avoid_: "platform" meaning the generation destination (that is a *target*); any
 target-language detail leaking into a platform spec.
 
@@ -935,39 +936,43 @@ child leaves realize it (pipeline stays buildable + goldens-green).
 
 **Spec triad**:
 The three per-API-family files under `platforms/macos/api/<Framework>/` (REFACTOR §14):
-`extracted.kdl` (mechanical extraction facts — the datalog fact base), `annotations.apiw` (the
-**one** authored semantic overlay — manual + accepted-LLM), and `resolved.kdl` (the
-deterministic merged graph; the generator input, ≈ the retired JSON `enriched`). Replaces
-today's four JSON checkpoints; the intermediate stages stay in-process, not on disk.
-_Avoid_: the `.yaml` filenames of §14 (KDL now, ADR-0046); calling `resolved.kdl` the
-"enriched IR" (that term is retired with the JSON).
+`extracted.json` (mechanical extraction facts — the datalog fact base), `annotations.apiw` (the
+**one** authored semantic overlay — manual + accepted-LLM), and `resolved.json` (the
+deterministic merged graph; the generator input, ≈ the retired `enriched`). Replaces today's four
+JSON checkpoints with **one** per-family triad; the intermediate stages stay in-process, not on
+disk. The machine files are `.json` (not `.kdl`): the k17 spike returned **no-go** on machine KDL
+and the JSON retreat was invoked (ADR-0046 Update); only the authored overlay is KDL.
+_Avoid_: the `.yaml` filenames of §14 (superseded); `extracted.kdl`/`resolved.kdl` (machine side
+is JSON since the k17 retreat); calling `resolved.json` the "enriched IR" (that term is retired).
 
-**KDL interchange / `.apiw`**:
-The single spec format (ADR-0046): **KDL 2.0** for both the authored overlay (`.apiw` extension)
-and the machine artifacts (`extracted.kdl`/`resolved.kdl`). No YAML; JSON retired from the
-interchange. Authored via the official `kdl` Rust crate; LLM-authored reliably (eval:
-`semantic/docs/research/2026-06-24-kdl-authoring-eval/`). Machine-side serde is **spike-gated**,
-with JSON the documented retreat.
-_Avoid_: "the YAML interchange" (superseded — §29's YAML choice was reversed); "a YAML dialect"
-(`.apiw` is KDL, not YAML).
+**KDL interchange / `.apiw`** _(authored only, post-k17)_:
+The authored overlay format (ADR-0046, amended): **KDL 2.0** for the **authored** overlay
+(`.apiw` extension) only. The **machine** artifacts (`extracted.json`/`resolved.json`) are
+**JSON** — the k17 spike measured the only production-grade KDL-2.0 library (the official
+document-model `kdl` crate) at ~80–100× slower to parse than `serde_json` on the real multi-MB
+IR, so its §5 JSON retreat was invoked. KDL stays where it earns its place: the human/LLM-authored
+overlay, where the authoring eval backs it (`semantic/docs/research/2026-06-24-kdl-authoring-eval/`)
+and format-preserving diagnostics matter. No YAML anywhere.
+_Avoid_: "KDL everywhere / KDL for the machine IR" (the machine side reverted to JSON, k17);
+"the YAML interchange" (§29's YAML was reversed); "a YAML dialect" (`.apiw` is KDL, not YAML).
 
 **`linked` (datalog stage)** _(rename, replacing the colliding "resolved" stage)_:
 The in-process datalog cross-reference stage (cross-class/protocol linking + convention rules),
 formerly confusingly also called *"resolved"* (`analysis/ir/resolved`). Renamed `linked` so the
-word **resolved** carries exactly one meaning: `resolved.kdl`, the final merged generator input.
+word **resolved** carries exactly one meaning: `resolved.json`, the final merged generator input.
 _Avoid_: "resolved" for the datalog linking stage (the collision ADR-0046 retires).
 
 **Convention rule (datalog)**:
 A "platform convention rule" (§28's precedence tier) expressed as a declarative compile-time
-`ascent` datalog rule over `extracted.kdl`, replacing the imperative `annotate/heuristics.rs`
+`ascent` datalog rule over `extracted.json`, replacing the imperative `annotate/heuristics.rs`
 (ADR-0047). Same engine as resolution/ownership inference. Its derived facts land in
-`resolved.kdl` stamped `source="convention:<rule>"` — datalog's derivation trace **is** the
+`resolved.json` stamped `source="convention:<rule>"` — datalog's derivation trace **is** the
 provenance.
 _Avoid_: "heuristic classifier" (the retired imperative form); a runtime-loaded rule DSL
 (compile-time ascent — runtime is a deferred enhancement).
 
 **Provenance stamp / precedence / confidence** _(carried in-format; workflow is ws5)_:
-The data model's record of *where a fact came from and who won*. Every `resolved.kdl` fact has a
+The data model's record of *where a fact came from and who won*. Every `resolved.json` fact has a
 `source ∈ {extraction, convention:<rule>, llm, manual}`; authored facts add `confidence`
 (enum **`high|medium|low`**, not a float) + `provenance` (doc URL/rationale). Precedence
 (`manual > accepted-LLM > convention > extraction > unknown`, §28) is applied in resolve — the

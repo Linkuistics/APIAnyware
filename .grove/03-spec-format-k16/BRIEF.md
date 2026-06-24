@@ -12,8 +12,9 @@ workstreams 3 (semantic), 4 (platform), 5 (LLM side-channel), 6 (target) consume
 ## Settled design (the children build to this — do NOT re-grill)
 
 - **PRD:** [`prd/2026-06-24-spec-format-data-model.md`](../../../prd/2026-06-24-spec-format-data-model.md) — the design spec.
-- **ADR-0046** — KDL is the single spec interchange (supersedes §29's YAML); per-family triad
-  `extracted.kdl`/`annotations.apiw`/`resolved.kdl`; provenance/confidence carried in-format.
+- **ADR-0046** (amended by k17) — KDL is the **authored** overlay format; per-family triad
+  `extracted.json`/`annotations.apiw`/`resolved.json` (machine side is JSON since the k17
+  no-go/retreat — see running-log **H**); provenance/confidence carried in-format.
 - **ADR-0047** — convention heuristics are `ascent` datalog rules (retire imperative `heuristics.rs`).
 - **Evidence:** [`semantic/docs/research/2026-06-24-kdl-authoring-eval/`](../../../semantic/docs/research/2026-06-24-kdl-authoring-eval/README.md) — LLM KDL-authoring eval.
 - **Glossary:** `CONTEXT.md` → "Spec format / data model" section (spec triad, KDL interchange,
@@ -24,11 +25,15 @@ workstreams 3 (semantic), 4 (platform), 5 (LLM side-channel), 6 (target) consume
 ws2 **owns** the `analysis/ir/` → `platforms/macos/api/` relocation (reassigned from ws4 —
 format+location are one op over gitignored artifacts; ws4 inherits the populated tree).
 
-1. **`kdl-serde-spike-k17`** — gate: KDL machine-serde + large-IR perf on one framework.
-   go/no-go; JSON retreat if no-go. *(gates k20)*
-2. **`spec-format-crate-k18`** — `semantic/tools/spec-format`: `.apiw` parser + IR-as-KDL serde + converters.
-3. **`kdl-schema-k19`** — KDL Schema for the triad → `schemas/spec-format/` (language-neutral contract).
-4. **`pipeline-cutover-k20`** — rewire pipeline to KDL at per-family paths; 4→3; rename `resolved`→`linked`; fold `_llm-annotations`→`annotations.apiw`.
+1. **`kdl-serde-spike-k17`** ✅ *(done 2026-06-24 — **NO-GO**, JSON retreat invoked; running-log H)* —
+   gated: KDL machine-serde + large-IR perf. Result: lossless but ~80–100× slower parse → machine
+   IR stays JSON; authored `.apiw` stays KDL.
+2. **`spec-format-crate-k18`** — `semantic/tools/spec-format`: `.apiw` KDL parser + machine-IR
+   `serde_json` (status quo, per k17 retreat) + converters (`_llm-annotations`→`annotations.apiw`).
+3. **`kdl-schema-k19`** — KDL Schema for **`annotations.apiw`** → `schemas/spec-format/`; machine
+   `extracted.json`/`resolved.json` get JSON Schema (or defer to ws8).
+4. **`pipeline-cutover-k20`** — rewire pipeline to the triad at per-family paths (machine `.json`);
+   4→3; rename `resolved`→`linked`; fold `_llm-annotations`→`annotations.apiw`.
 5. **`conventions-datalog-k21`** — retire `heuristics.rs` for ascent rules (ADR-0047).
 
 After k21 retires, ws2 likely has no live leaf → the retire-cascade asks before treating
@@ -168,3 +173,38 @@ Grilling complete (A–G). Produced: PRD `prd/2026-06-24-spec-format-data-model.
 ADR-0047, research doc `semantic/docs/research/2026-06-24-kdl-authoring-eval/`, `CONTEXT.md`
 "Spec format / data model" section + `platforms/` `.yaml`→`.kdl` fix. Decomposed into k17–k21.
 Leaf `spec-format-k16` converted to this node.
+
+### H — Machine-KDL spike outcome: **NO-GO → JSON retreat** *(k17, 2026-06-24)*
+
+Spike (`kdl-serde-spike-k17`) gated ADR-0046 §5. Real input: regenerated AppKit (12.7 MB) +
+Foundation (8.7 MB) extracted-shape IR via the live extractor. Probe: a generic, bijective
+`serde_json::Value ⇄ kdl::KdlDocument` bridge (canonical JSON-in-KDL) over the official `kdl`
+crate (=6.3.4) — chosen because `Framework → serde_json::Value` already works, sidestepping the
+IR's one serde landmine (`TypeRef` = `flatten` + internally-tagged enum). Full evidence:
+`semantic/docs/research/2026-06-24-kdl-machine-serde-spike/`.
+
+**Numbers (release, arm64):**
+
+| | AppKit | Foundation |
+|-|--:|--:|
+| json parse / **kdl parse** | 23 ms / **1795 ms** | 12 ms / **1205 ms** |
+| KDL/JSON parse ratio | **~77×** | **~104×** |
+| json emit / kdl serialize | 12 ms / 279 ms (~23×) | 7 ms / 190 ms (~28×) |
+| size kdl ÷ pretty-json / gzip | 1.21× / 1.06× | 1.22× / 1.06× |
+
+**Findings.** (1) **Correctness ✅** — IR round-trips JSON↔KDL **losslessly** (structural equality,
+both frameworks). One library footgun: the `kdl` crate emits the strings `null`/`true`/`false`/
+`nan`/`inf`/`-inf` **bare**, then its own parser rejects them — a write-side round-trip defect a
+production writer must force-quote around (real IR has a selector `"null"`, params `"true"`/
+`"false"`/`"nan"`). (2) **Performance ❌** — the official document-model crate (the *only*
+production-grade KDL-2.0 path; `serde_kdl` is abandoned on KDL 1.0, the `*-kdl` derive crates are
+0.x non-serde) parses ~80–100× slower than `serde_json`; format-preservation overhead is right for
+authored files, far too heavy for bulk machine IR under "regenerate aggressively". (3) **Size** —
+a wash (~1.06× gzipped).
+
+**Decision.** Machine `extracted`/`resolved` **stay JSON** (`extracted.json`/`resolved.json`;
+status-quo `serde_json`, a back-end swap since the IR is serde-based). Authored `annotations.apiw`
+**stays KDL** (small, eval-backed, hard-to-reverse). Propagated: ADR-0046 Status + "Update —
+spike outcome"; `CONTEXT.md` triad/KDL-interchange/convention/provenance entries; PRD status note;
+k18/k19/k20/k21 leaf briefs adjusted; spike code is throwaway (scratchpad), not in-tree — its
+source archived in the research doc for reproducibility.

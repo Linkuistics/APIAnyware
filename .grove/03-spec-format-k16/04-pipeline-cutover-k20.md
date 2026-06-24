@@ -4,16 +4,18 @@
 
 ## Goal
 
-Cut the live pipeline over from JSON to the **KDL spec triad at the new per-family paths**
-(`platforms/macos/api/<Framework>/`), collapsing the four checkpoints to three, renaming the
-colliding stage, and folding the LLM annotations into the authored overlay — keeping the pipeline
-buildable + **goldens green** throughout (PRD "Migration"; ADR-0046).
+Cut the live pipeline over to the **per-family spec triad** at the new paths
+(`platforms/macos/api/<Framework>/`) — machine `extracted.json` + `resolved.json` (JSON, per the
+k17 retreat) and authored `annotations.apiw` (KDL) — collapsing the four checkpoints to three,
+renaming the colliding stage, and folding the LLM annotations into the authored overlay; keep the
+pipeline buildable + **goldens green** throughout (PRD "Migration"; ADR-0046 amended).
 
 ## Context
 
 Design source (do not re-grill): **PRD `prd/2026-06-24-spec-format-data-model.md`**, **ADR-0046**.
-Uses the `spec-format` crate (k18) + schema (k19); honours the spike (k17) go/no-go (if no-go,
-`extracted`/`resolved` stay JSON per the retreat — adjust this leaf accordingly). **ws2 owns this
+Uses the `spec-format` crate (k18) + schema (k19). **k17 returned NO-GO → `extracted`/`resolved`
+stay JSON** (`extracted.json`/`resolved.json`; this leaf is the JSON form of the cutover — relocate
++ collapse + rename + overlay-fold, *without* a format change for the machine IR). **ws2 owns this
 relocation** (the brief's ws4 TODO is reassigned — format+location are one op over gitignored
 artifacts; ws4 inherits the populated tree). Current paths: collect→`collection/ir/collected`,
 resolve(datalog)→`analysis/ir/resolved`, annotate→`analysis/ir/annotated`, enrich→`analysis/ir/
@@ -21,10 +23,10 @@ enriched`, generate reads `enriched`.
 
 ## Done when
 
-- Pipeline reads/writes the **triad** at `platforms/macos/api/<Framework>/` (`extracted.kdl`,
-  `annotations.apiw`, `resolved.kdl`); generators consume `resolved.kdl`.
+- Pipeline reads/writes the **triad** at `platforms/macos/api/<Framework>/` (`extracted.json`,
+  `annotations.apiw`, `resolved.json`); generators consume `resolved.json`.
 - Four checkpoints collapsed to three on-disk files; the datalog cross-ref stage **renamed
-  `resolved`→`linked`** (glossary already updated) so `resolved` means only `resolved.kdl`.
+  `resolved`→`linked`** (glossary already updated) so `resolved` means only `resolved.json`.
 - `_llm-annotations/*.llm.json` converted to `annotations.apiw` (via the k18 converter) and the
   old JSON side-channel retired; resolve applies §28 precedence + stamps provenance/`superseded-by`.
 - Full pipeline regenerates green; **all goldens + the 71 test suites pass** (regenerate
