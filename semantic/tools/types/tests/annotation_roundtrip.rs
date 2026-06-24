@@ -2,10 +2,64 @@
 
 use apianyware_types::annotation::{
     AnnotationOverride, AnnotationOverrides, AnnotationSource, ApiPattern, BlockInvocationStyle,
-    BlockParamAnnotation, ClassAnnotations, ErrorPattern, FrameworkAnnotations, MethodAnnotation,
-    OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype, SubagentReport,
-    ThreadingConstraint,
+    BlockParamAnnotation, ClassAnnotations, Confidence, ErrorPattern, FrameworkAnnotations,
+    MethodAnnotation, OwnershipKind, ParamOwnership, PatternConstraint, PatternStereotype,
+    SubagentReport, ThreadingConstraint,
 };
+
+#[test]
+fn confidence_serialization() {
+    // The authored-overlay confidence is a coarse enum (ADR-0046 §4) — not a float.
+    assert_eq!(
+        serde_json::to_string(&Confidence::High).unwrap(),
+        "\"high\""
+    );
+    assert_eq!(
+        serde_json::to_string(&Confidence::Medium).unwrap(),
+        "\"medium\""
+    );
+    assert_eq!(serde_json::to_string(&Confidence::Low).unwrap(), "\"low\"");
+}
+
+#[test]
+fn method_annotation_carries_provenance_stamp() {
+    // ADR-0046 §4: authored facts carry confidence + provenance alongside source.
+    let annotation = MethodAnnotation {
+        selector: "sortedArrayUsingComparator:".to_string(),
+        is_instance: true,
+        parameter_ownership: vec![],
+        block_parameters: vec![],
+        threading: None,
+        error_pattern: None,
+        source: AnnotationSource::Llm,
+        confidence: Some(Confidence::High),
+        provenance: Some("Foundation Release Notes".to_string()),
+    };
+
+    let json = serde_json::to_string_pretty(&annotation).unwrap();
+    let back: MethodAnnotation = serde_json::from_str(&json).unwrap();
+
+    assert_eq!(back.confidence, Some(Confidence::High));
+    assert_eq!(back.provenance.as_deref(), Some("Foundation Release Notes"));
+}
+
+#[test]
+fn provenance_stamp_omitted_when_absent_and_backward_compatible() {
+    // Legacy .llm.json has neither field — it must still parse, and a stamp-free
+    // annotation must not emit the keys (keeps machine JSON stable).
+    let legacy = r#"{
+        "selector": "init",
+        "is_instance": true,
+        "source": "heuristic"
+    }"#;
+    let parsed: MethodAnnotation = serde_json::from_str(legacy).unwrap();
+    assert_eq!(parsed.confidence, None);
+    assert_eq!(parsed.provenance, None);
+
+    let json = serde_json::to_string(&parsed).unwrap();
+    assert!(!json.contains("confidence"));
+    assert!(!json.contains("provenance"));
+}
 
 #[test]
 fn method_annotation_roundtrip() {
@@ -23,6 +77,8 @@ fn method_annotation_roundtrip() {
         threading: Some(ThreadingConstraint::AnyThread),
         error_pattern: None,
         source: AnnotationSource::Llm,
+        confidence: None,
+        provenance: None,
     };
 
     let json = serde_json::to_string_pretty(&annotation).unwrap();
@@ -63,6 +119,8 @@ fn framework_annotations_roundtrip() {
                     threading: None,
                     error_pattern: None,
                     source: AnnotationSource::Heuristic,
+                    confidence: None,
+                    provenance: None,
                 },
                 MethodAnnotation {
                     selector: "writeToURL:error:".to_string(),
@@ -72,6 +130,8 @@ fn framework_annotations_roundtrip() {
                     threading: None,
                     error_pattern: Some(ErrorPattern::ErrorOutParam),
                     source: AnnotationSource::Llm,
+                    confidence: None,
+                    provenance: None,
                 },
             ],
         }],
@@ -174,6 +234,8 @@ fn empty_optional_fields_skipped_in_serialization() {
         threading: None,
         error_pattern: None,
         source: AnnotationSource::Heuristic,
+        confidence: None,
+        provenance: None,
     };
 
     let json = serde_json::to_string(&annotation).unwrap();

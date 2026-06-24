@@ -339,6 +339,8 @@ mod tests {
             threading: None,
             error_pattern: None,
             source,
+            confidence: None,
+            provenance: None,
         }
     }
 

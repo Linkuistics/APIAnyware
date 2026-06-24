@@ -1041,6 +1041,8 @@ mod tests {
             threading: None,
             error_pattern: None,
             source: AnnotationSource::Llm,
+            confidence: None,
+            provenance: None,
         }
     }
 
@@ -1163,6 +1165,8 @@ mod tests {
                     threading: None,
                     error_pattern: None,
                     source: AnnotationSource::Llm,
+                    confidence: None,
+                    provenance: None,
                 }],
             }],
             subagent_report: None,
@@ -1264,6 +1268,8 @@ mod tests {
                     threading: None,
                     error_pattern: None,
                     source: AnnotationSource::Heuristic,
+                    confidence: None,
+                    provenance: None,
                 }],
             }],
             subagent_report: None,
@@ -1442,6 +1448,8 @@ mod tests {
             threading: None,
             error_pattern: None,
             source: AnnotationSource::Llm,
+            confidence: None,
+            provenance: None,
         }
     }
 
@@ -1460,6 +1468,8 @@ mod tests {
             threading: None,
             error_pattern: None,
             source: AnnotationSource::Llm,
+            confidence: None,
+            provenance: None,
         }
     }
 

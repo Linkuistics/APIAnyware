@@ -91,6 +91,35 @@ pub struct MethodAnnotation {
 
     /// Where this annotation came from.
     pub source: AnnotationSource,
+
+    /// Authoring confidence for this fact (ADR-0046 §4). A coarse enum, never a
+    /// float — false precision in LLM self-assessment is the failure mode the
+    /// enum avoids. `None` on mechanically-derived (extraction/heuristic) facts;
+    /// carried on authored facts in the `.apiw` overlay.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<Confidence>,
+
+    /// Provenance for this fact (ADR-0046 §4): a documentation URL or short
+    /// rationale backing an authored annotation. `None` when the fact has no
+    /// authored provenance (e.g. heuristic/extraction facts).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<String>,
+}
+
+/// Coarse authoring-confidence level for an annotated fact (ADR-0046 §4).
+///
+/// Deliberately a three-valued enum rather than a numeric score: an LLM's
+/// self-reported certainty does not warrant the false precision of a float, and
+/// `high`/`medium`/`low` stays legible in the authored `.apiw` overlay.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Confidence {
+    /// Well-supported by documentation or an unambiguous signal.
+    High,
+    /// Reasonable inference; some ambiguity remains.
+    Medium,
+    /// Weak signal; flagged for review.
+    Low,
 }
 
 /// Ownership kind for a method parameter.

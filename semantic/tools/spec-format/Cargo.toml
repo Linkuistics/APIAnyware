@@ -1,0 +1,17 @@
+[package]
+name = "apianyware-spec-format"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Spec interchange format: the `.apiw` KDL authored overlay parser/writer, the machine-IR (JSON) serde seam, and the `_llm-annotations` → `annotations.apiw` converter (ADR-0046)"
+
+[dependencies]
+apianyware-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+kdl.workspace = true
+miette.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

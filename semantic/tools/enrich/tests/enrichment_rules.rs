@@ -123,6 +123,8 @@ fn sync_block_method_derived() {
             threading: None,
             error_pattern: None,
             source: AnnotationSource::Heuristic,
+            confidence: None,
+            provenance: None,
         }],
     }];
 
@@ -181,6 +183,8 @@ fn async_and_stored_block_methods() {
                 threading: None,
                 error_pattern: None,
                 source: AnnotationSource::Heuristic,
+                confidence: None,
+                provenance: None,
             },
             MethodAnnotation {
                 selector: "addObserver:".to_string(),
@@ -193,6 +197,8 @@ fn async_and_stored_block_methods() {
                 threading: None,
                 error_pattern: None,
                 source: AnnotationSource::Heuristic,
+                confidence: None,
+                provenance: None,
             },
         ],
     }];
@@ -241,6 +247,8 @@ fn main_thread_class_derived_from_threading_annotation() {
             threading: Some(ThreadingConstraint::MainThreadOnly),
             error_pattern: None,
             source: AnnotationSource::Heuristic,
+            confidence: None,
+            provenance: None,
         }],
     }];
 
@@ -283,6 +291,8 @@ fn convenience_error_method_derived() {
             threading: None,
             error_pattern: Some(ErrorPattern::ErrorOutParam),
             source: AnnotationSource::Heuristic,
+            confidence: None,
+            provenance: None,
         }],
     }];
 
@@ -484,6 +494,8 @@ fn classified_block_no_violation() {
             threading: None,
             error_pattern: None,
             source: AnnotationSource::Heuristic,
+            confidence: None,
+            provenance: None,
         }],
     }];
 
@@ -701,6 +713,8 @@ fn enrichment_data_is_per_framework_not_global() {
             threading: Some(ThreadingConstraint::MainThreadOnly),
             error_pattern: None,
             source: AnnotationSource::Heuristic,
+            confidence: None,
+            provenance: None,
         }],
     }];
 
@@ -869,6 +883,8 @@ fn multi_framework_block_violations_scoped_correctly() {
             threading: None,
             error_pattern: None,
             source: AnnotationSource::Heuristic,
+            confidence: None,
+            provenance: None,
         }],
     }];
 
@@ -1058,6 +1074,8 @@ fn three_framework_comprehensive_enrichment_isolation() {
                 threading: None,
                 error_pattern: Some(ErrorPattern::ErrorOutParam),
                 source: AnnotationSource::Heuristic,
+                confidence: None,
+                provenance: None,
             },
             MethodAnnotation {
                 selector: "setUbiquitous:".to_string(),
@@ -1067,6 +1085,8 @@ fn three_framework_comprehensive_enrichment_isolation() {
                 threading: Some(ThreadingConstraint::MainThreadOnly),
                 error_pattern: None,
                 source: AnnotationSource::Heuristic,
+                confidence: None,
+                provenance: None,
             },
         ],
     }];
@@ -1117,6 +1137,8 @@ fn three_framework_comprehensive_enrichment_isolation() {
                 threading: None,
                 error_pattern: None,
                 source: AnnotationSource::Heuristic,
+                confidence: None,
+                provenance: None,
             },
             MethodAnnotation {
                 selector: "setMergePolicy:".to_string(),
@@ -1129,6 +1151,8 @@ fn three_framework_comprehensive_enrichment_isolation() {
                 threading: None,
                 error_pattern: None,
                 source: AnnotationSource::Heuristic,
+                confidence: None,
+                provenance: None,
             },
         ],
     }];

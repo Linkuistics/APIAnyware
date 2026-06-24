@@ -42,6 +42,8 @@ pub fn annotate_method_heuristic_for(
         threading,
         error_pattern,
         source: AnnotationSource::Heuristic,
+        confidence: None,
+        provenance: None,
     }
 }
 

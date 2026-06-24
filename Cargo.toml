@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     # semantic/ domain — semantic-graph builders + analyze CLI
     "semantic/tools/types",
+    "semantic/tools/spec-format",
     "semantic/tools/datalog",
     "semantic/tools/resolve",
     "semantic/tools/enrich",
@@ -44,9 +45,15 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 clang = { version = "2", features = ["clang_10_0", "runtime"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
 plist = "1.7"
+# KDL 2.0 authored-overlay (`.apiw`) parsing. Pinned to =6.3.4: the latest (6.5+)
+# requires rustc 1.95 and this repo is on 1.93.1 (ADR-0046; k17 spike). Brings in
+# `miette` for format-preserving diagnostics.
+kdl = "=6.3.4"
+miette = "7"
 
 # Internal crates
 apianyware-types = { path = "semantic/tools/types" }
+apianyware-spec-format = { path = "semantic/tools/spec-format" }
 apianyware-extract-objc = { path = "platforms/macos/tools/extract-objc" }
 apianyware-extract-swift = { path = "platforms/macos/tools/extract-swift" }
 apianyware-datalog = { path = "semantic/tools/datalog" }

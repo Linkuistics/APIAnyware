@@ -261,6 +261,8 @@ mod tests {
             threading,
             error_pattern,
             source,
+            confidence: None,
+            provenance: None,
         }
     }
 

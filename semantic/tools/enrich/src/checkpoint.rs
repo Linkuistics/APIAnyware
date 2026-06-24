@@ -645,6 +645,8 @@ mod tests {
                 threading: None,
                 error_pattern: None,
                 source: AnnotationSource::Heuristic,
+                confidence: None,
+                provenance: None,
             }],
         }];
         let framework = make_framework(
@@ -687,6 +689,8 @@ mod tests {
                     threading: None,
                     error_pattern: None,
                     source: AnnotationSource::Heuristic,
+                    confidence: None,
+                    provenance: None,
                 }],
             },
             ClassAnnotations {
@@ -702,6 +706,8 @@ mod tests {
                     threading: None,
                     error_pattern: None,
                     source: AnnotationSource::Heuristic,
+                    confidence: None,
+                    provenance: None,
                 }],
             },
         ];
