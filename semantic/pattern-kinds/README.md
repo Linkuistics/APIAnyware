@@ -62,5 +62,14 @@ Structural relationships (§31): `parent-child`, `callback-destroy-notifier`,
 A pattern-**instance** (a kind's roles bound to a concrete framework's
 participants, provenance-stamped) is *platform* knowledge carried in the machine
 triad (`platforms/macos/api/<F>/resolved.json`), **not** here (ADR-0048 D1). Its
-carriage (workstream-3 child 2), the convention-tier datalog detection (child 3),
-and the semantic-vocabulary docs (child 4) follow.
+carriage extends `semantic/tools/types` + `resolve`; the convention-tier datalog
+detection lives in
+[`platforms/macos/tools/pattern-detection`](../../platforms/macos/tools/pattern-detection).
+
+## Documentation
+
+The conceptual prose for this model lives in [`../docs/`](../docs/):
+[`overview.md`](../docs/overview.md) (the domain + the kind/instance split),
+[`pattern-model.md`](../docs/pattern-model.md) (roles, laws, ordering,
+composition), and [`api-pattern-catalog.md`](../docs/api-pattern-catalog.md) (the
+per-kind roster). The glossary is `CONTEXT.md → "Semantic model"`.
