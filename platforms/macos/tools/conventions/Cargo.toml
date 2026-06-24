@@ -1,0 +1,22 @@
+[package]
+name = "apianyware-conventions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Cocoa naming-convention heuristics as declarative ascent datalog rules (ADR-0047)"
+
+[dependencies]
+apianyware-types.workspace = true
+apianyware-datalog.workspace = true
+ascent.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+# The legacy imperative classifiers this crate is replacing — the
+# characterization test asserts rule-for-rule equivalence against them. A
+# dev-only edge (annotate has no dependency on conventions until the flip
+# child wires the pipeline over), so no cycle.
+apianyware-annotate.workspace = true
+
+[lints]
+workspace = true

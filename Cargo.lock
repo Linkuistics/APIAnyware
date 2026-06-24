@@ -183,6 +183,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-conventions"
+version = "0.1.0"
+dependencies = [
+ "apianyware-annotate",
+ "apianyware-datalog",
+ "apianyware-types",
+ "ascent",
+ "tracing",
+]
+
+[[package]]
 name = "apianyware-datalog"
 version = "0.1.0"
 dependencies = [
