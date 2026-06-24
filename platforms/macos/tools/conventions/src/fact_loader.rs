@@ -14,6 +14,12 @@
 //! `&class.properties`, so the copy-block-property-setter join sees the same
 //! property set the legacy `.any(...)` did. Class properties are filtered out
 //! at load (the legacy rule requires `!p.class_property`).
+//!
+//! For the **threading** facet it pushes one `receiver_method` tuple per method
+//! (tagged `is_class`, so the class-only `@MainActor` signal cannot leak to a
+//! same-named protocol's methods) and one `swift_attribute` tuple per attribute
+//! on each **class** (protocols carry none — the IR records no Swift attributes
+//! on protocols, mirroring the legacy `&[]` slice).
 
 use apianyware_types::ir::{Framework, Method, Property};
 use apianyware_types::type_ref::TypeRefKind;
@@ -33,15 +39,28 @@ pub fn load_framework_facts(prog: &mut ConventionProgram, framework: &Framework)
         };
         for method in methods {
             load_method_params(prog, &class.name, method);
+            // Threading is method-level (not per-param) and must enumerate
+            // zero-param methods too — hence a tuple per method, tagged as a
+            // class receiver (`is_class = true`).
+            prog.receiver_method
+                .push((class.name.clone(), method.selector.clone(), true));
         }
         for group in &class.category_methods {
             for method in &group.methods {
                 load_method_params(prog, &class.name, method);
+                prog.receiver_method
+                    .push((class.name.clone(), method.selector.clone(), true));
             }
         }
         // Direct (not flattened) properties: the legacy block-setter check
         // consults `class.properties`, even for inherited methods.
         load_receiver_properties(prog, &class.name, &class.properties);
+        // Class-level Swift attributes feed the `@MainActor` threading signal —
+        // classes only (protocols carry none in the IR).
+        for attr in &class.swift_attributes {
+            prog.swift_attribute
+                .push((class.name.clone(), attr.clone()));
+        }
     }
 
     for protocol in &framework.protocols {
@@ -51,6 +70,11 @@ pub fn load_framework_facts(prog: &mut ConventionProgram, framework: &Framework)
             .chain(&protocol.optional_methods)
         {
             load_method_params(prog, &protocol.name, method);
+            // Protocol methods: `is_class = false`, so the class-only
+            // `@MainActor` signal cannot stamp them (mirrors the legacy `&[]`
+            // swift-attributes passed for protocols).
+            prog.receiver_method
+                .push((protocol.name.clone(), method.selector.clone(), false));
         }
         load_receiver_properties(prog, &protocol.name, &protocol.properties);
     }

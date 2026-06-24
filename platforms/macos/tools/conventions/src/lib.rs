@@ -7,10 +7,10 @@
 //! each derived fact records the rule that produced it (the `convention:<rule>`
 //! provenance of ADR-0046 §4 falls out of the derivation trace).
 //!
-//! **Status (k23):** the **parameter-ownership** (k22) and **block-invocation**
-//! (k23) facets are ported. The threading and error-pattern facets are later
-//! siblings, and the analysis pipeline is **not yet wired** to this crate —
-//! `annotate` still runs the imperative heuristics. The flip child swaps the
+//! **Status (k24):** the **parameter-ownership** (k22), **block-invocation**
+//! (k23), and **threading** (k24) facets are ported. The error-pattern facet is
+//! a later sibling, and the analysis pipeline is **not yet wired** to this crate
+//! — `annotate` still runs the imperative heuristics. The flip child swaps the
 //! pipeline over once every facet is ported and characterization-equivalent.
 //! Until then this crate is exercised only by its tests, which assert
 //! rule-for-rule equivalence against the legacy classifiers (goldens-as-truth).
@@ -23,7 +23,7 @@ use std::collections::BTreeMap;
 
 use apianyware_types::ir::Framework;
 
-pub use readback::{BlockInvocationFacet, MethodKey, OwnershipFacet};
+pub use readback::{BlockInvocationFacet, MethodKey, OwnershipFacet, ThreadingFacet};
 
 /// Derive the parameter-ownership facet for every method across `frameworks`,
 /// keyed by `(receiver, selector)`.
@@ -66,4 +66,28 @@ pub fn derive_block_invocations(
         "convention block-invocation facet derived"
     );
     readback::block_invocation_facets(&prog)
+}
+
+/// Derive the threading facet for every method across `frameworks`, keyed by
+/// `(receiver, selector)`.
+///
+/// Mirrors `heuristics::derive_threading`: a method is `MainThreadOnly` when any
+/// of the three signals fires (class-level `@MainActor`, the hardcoded UIKit
+/// class list, or the UI selector list). The facet is a simple disjunction with
+/// no precedence ladder, so a method may carry several `convention:<rule>`
+/// stamps (see [`ThreadingFacet`]); methods with no signal are absent from the
+/// map (the legacy `None`).
+pub fn derive_threading(frameworks: &[Framework]) -> BTreeMap<MethodKey, ThreadingFacet> {
+    let mut prog = program::ConventionProgram::default();
+    for framework in frameworks {
+        fact_loader::load_framework_facts(&mut prog, framework);
+    }
+    prog.run();
+    tracing::info!(
+        methods = prog.receiver_method.len(),
+        attributes = prog.swift_attribute.len(),
+        main_thread = prog.main_thread.len(),
+        "convention threading facet derived"
+    );
+    readback::threading_facets(&prog)
 }

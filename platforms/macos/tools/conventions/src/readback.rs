@@ -8,7 +8,7 @@
 use std::collections::BTreeMap;
 
 use apianyware_types::annotation::{
-    BlockInvocationStyle, BlockParamAnnotation, OwnershipKind, ParamOwnership,
+    BlockInvocationStyle, BlockParamAnnotation, OwnershipKind, ParamOwnership, ThreadingConstraint,
 };
 
 use crate::program::ConventionProgram;
@@ -179,4 +179,60 @@ fn style_from_code(style: &str) -> BlockInvocationStyle {
         "stored" => BlockInvocationStyle::Stored,
         other => unreachable!("unknown block invocation style code: {other}"),
     }
+}
+
+/// The threading facet derived for one method.
+///
+/// A **class/receiver-level** facet (not per-parameter): the value is the
+/// method's single threading constraint. The heuristic only ever derives
+/// `MainThreadOnly` (it never emits `AnyThread`), so the constraint field is
+/// `MainThreadOnly` for every method present — a method's *absence* from the map
+/// is "no constraint" (the legacy `None`).
+///
+/// `provenance` carries the `convention:<rule>` stamp(s) (ADR-0046 §4) of every
+/// signal that fired. Unlike block-invocation (one winning rule per parameter),
+/// threading is a **disjunction** with no precedence ladder, so several rules
+/// may agree on `MainThreadOnly` and the list holds **all** of them, sorted and
+/// de-duplicated.
+#[derive(Debug, Clone)]
+pub struct ThreadingFacet {
+    /// The threading constraint — always `MainThreadOnly` (the only value the
+    /// convention rules derive).
+    pub threading: ThreadingConstraint,
+    /// Sorted, de-duplicated `convention:<rule>` stamps for the signals that
+    /// fired (≥ 1 entry).
+    pub provenance: Vec<String>,
+}
+
+/// Collect the threading facet for every method that derived a main-thread
+/// constraint, keyed by `(receiver, selector)`.
+///
+/// The program emits one `main_thread` fact per signal that fired; this unions
+/// them into one facet per method, recording every firing rule's
+/// `convention:<rule>` stamp. Methods with no `main_thread` fact are absent —
+/// the legacy `None`.
+pub fn threading_facets(prog: &ConventionProgram) -> BTreeMap<MethodKey, ThreadingFacet> {
+    let mut stamps: BTreeMap<MethodKey, Vec<String>> = BTreeMap::new();
+
+    for (receiver, selector, rule) in &prog.main_thread {
+        stamps
+            .entry((receiver.clone(), selector.clone()))
+            .or_default()
+            .push(format!("convention:{rule}"));
+    }
+
+    stamps
+        .into_iter()
+        .map(|(key, mut provenance)| {
+            provenance.sort();
+            provenance.dedup();
+            (
+                key,
+                ThreadingFacet {
+                    threading: ThreadingConstraint::MainThreadOnly,
+                    provenance,
+                },
+            )
+        })
+        .collect()
 }

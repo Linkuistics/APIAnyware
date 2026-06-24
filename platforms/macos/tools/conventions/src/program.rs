@@ -51,6 +51,30 @@ ascent! {
     /// contribute (a protocol may declare a `@property (copy)` block property).
     relation property(String, String, bool, bool);
 
+    /// receiver_method(receiver, selector, is_class)
+    ///
+    /// One tuple per method (class **or** protocol), the **method-level**
+    /// enumeration the threading facet keys on — emitted even for zero-parameter
+    /// selectors (`display`, `layout`, `updateLayer`), which carry no `param`
+    /// fact. `is_class` is true for class receivers, false for protocols, so the
+    /// class-only `@MainActor` signal cannot leak to a **same-named** protocol's
+    /// methods (the legacy `annotate_protocol_method_heuristic` passes `&[]`
+    /// swift-attributes for protocols). Because the program keys by bare receiver
+    /// name, this per-method kind bit is the only thing that keeps a class `Foo`
+    /// with `@MainActor` from main-thread-stamping a colliding protocol `Foo`'s
+    /// methods.
+    relation receiver_method(String, String, bool);
+
+    /// swift_attribute(class, attribute)
+    ///
+    /// One tuple per Swift attribute on a **class** (`class.swift_attributes` —
+    /// classes only; the IR records no Swift attributes on protocols, and the
+    /// legacy protocol path passes an empty slice). `attribute` is the bare
+    /// digester name without the `@` prefix, possibly module-qualified
+    /// (`MainActor`, `_Concurrency.MainActor`). Consumed by the main-actor
+    /// threading signal.
+    relation swift_attribute(String, String);
+
     // =======================================================================
     // Parameter-ownership facet
     // =======================================================================
@@ -192,6 +216,54 @@ ascent! {
     block_candidate(r.clone(), s.clone(), *i, 5, "async_copied", "block-async-default") <--
         param(r, s, i, _name, is_block),
         if *is_block;
+
+    // =======================================================================
+    // Threading facet
+    //
+    // Mirrors `heuristics::derive_threading`: a method is constrained to the
+    // main thread (`ThreadingConstraint::MainThreadOnly` — the *only* constraint
+    // the heuristic ever derives) when **any** of three independent signals
+    // fires. There is **no precedence ladder** (unlike block-invocation): the
+    // facet is a simple disjunction, so each signal is its own rule emitting a
+    // `main_thread` fact stamped with the rule that fired. The readback unions
+    // the stamps per method — a method may match several signals (e.g. a
+    // `@MainActor` `UIView` calling `drawRect:` matches all three), all agreeing
+    // on `MainThreadOnly`.
+    // =======================================================================
+
+    /// main_thread(receiver, selector, rule)
+    ///
+    /// The `(receiver, selector)` method is main-thread-only; `rule` becomes the
+    /// `convention:<rule>` provenance stamp. Several rules may derive the same
+    /// method (disjunction), so the readback keeps every stamp.
+    relation main_thread(String, String, &'static str);
+
+    // Signal 1 — class-level `@MainActor` propagates to **every** method on the
+    // class (instance and class methods alike). Scoped to **class** receivers
+    // (`is_class`): the legacy protocol path passes `&[]` swift-attributes, so a
+    // protocol never carries this signal — and the `is_class` gate stops a class
+    // `Foo`'s attribute from leaking onto a same-named protocol `Foo`'s methods
+    // (the bare-name-keying collision the brief flags).
+    main_thread(r.clone(), s.clone(), "main-actor-attribute") <--
+        receiver_method(r, s, is_class),
+        if *is_class,
+        swift_attribute(r, attr),
+        if is_main_actor_attribute(attr);
+
+    // Signal 2 — the hardcoded UIKit class list. Keyed on the receiver **name**
+    // for any receiver kind, exactly as the legacy `main_thread_classes.contains`
+    // check ran for both class and protocol receivers (no UIKit-named protocol
+    // exists, so the kind-agnostic match is faithful and inconsequential).
+    main_thread(r.clone(), s.clone(), "uikit-class") <--
+        receiver_method(r, s, _is_class),
+        if is_uikit_main_thread_class(r);
+
+    // Signal 3 — the UI selector list, on any class. Selector-only, so it applies
+    // to class and protocol receivers alike (mirrors the legacy
+    // `main_thread_selectors.contains(&selector)` check).
+    main_thread(r.clone(), s.clone(), "ui-selector") <--
+        receiver_method(r, s, _is_class),
+        if is_ui_main_thread_selector(s);
 }
 
 // ---------------------------------------------------------------------------
@@ -311,6 +383,60 @@ fn setter_target_property_name(selector: &str) -> Option<String> {
     name.push(first.to_ascii_lowercase());
     name.extend(chars);
     Some(name)
+}
+
+// ---------------------------------------------------------------------------
+// Threading predicates — ported verbatim from `heuristics::derive_threading`
+// (the hardcoded UIKit class list, the UI selector list) and
+// `heuristics::is_main_actor_attribute`. The conventions crate is
+// self-contained — it depends on `apianyware-types`, not `annotate` — so these
+// are copied rather than referenced (the flip child reverses the dependency,
+// making `annotate` depend on `conventions`).
+// ---------------------------------------------------------------------------
+
+/// Recognise the swift-api-digester representations of `@MainActor`.
+///
+/// Match conservatively: equality after stripping a leading module qualifier,
+/// so `MainActor` and `_Concurrency.MainActor` match (and a future
+/// `Swift._Concurrency.MainActor` would too), while unrelated attributes like
+/// `Available`, `HasStorage`, `MacroRole` do not. Ported verbatim from
+/// `heuristics::is_main_actor_attribute`.
+fn is_main_actor_attribute(attr: &str) -> bool {
+    attr.rsplit('.').next().unwrap_or(attr) == "MainActor"
+}
+
+/// The receiver is one of the hardcoded UIKit classes that are main-thread-only.
+/// AppKit classes are deliberately absent — they reach the heuristic via their
+/// `@MainActor` / `NS_SWIFT_UI_ACTOR` swift-attributes (signal 1), so a hardcoded
+/// AppKit list would be dead code. Ported verbatim from the `main_thread_classes`
+/// array in `heuristics::derive_threading`.
+fn is_uikit_main_thread_class(receiver: &str) -> bool {
+    const UIKIT: [&str; 8] = [
+        "UIView",
+        "UIWindow",
+        "UIButton",
+        "UILabel",
+        "UITextField",
+        "UITableView",
+        "UICollectionView",
+        "UIViewController",
+    ];
+    UIKIT.contains(&receiver)
+}
+
+/// The selector is one of the UI-drawing/layout selectors that must run on the
+/// main thread, on **any** class. Ported verbatim from the
+/// `main_thread_selectors` array in `heuristics::derive_threading`.
+fn is_ui_main_thread_selector(selector: &str) -> bool {
+    const SELECTORS: [&str; 6] = [
+        "display",
+        "setNeedsDisplay",
+        "setNeedsLayout",
+        "layout",
+        "drawRect:",
+        "updateLayer",
+    ];
+    SELECTORS.contains(&selector)
 }
 
 #[cfg(test)]
@@ -501,5 +627,133 @@ mod tests {
     fn default_async_when_no_pattern_matches() {
         let win = winning_block("doThing:", &[("block", true)], &[], 0);
         assert_eq!(win, Some(("async_copied", "block-async-default")));
+    }
+
+    // -----------------------------------------------------------------
+    // Threading facet
+    // -----------------------------------------------------------------
+
+    /// Run the program over one receiver's methods (with `is_class` and optional
+    /// class swift-attributes) and return the set of `(selector, rule)` stamps
+    /// the threading facet derived for that receiver, sorted.
+    fn threading_stamps(
+        receiver: &str,
+        is_class: bool,
+        selectors: &[&str],
+        swift_attrs: &[&str],
+    ) -> Vec<(String, &'static str)> {
+        let mut prog = ConventionProgram::default();
+        for selector in selectors {
+            prog.receiver_method
+                .push((receiver.to_string(), selector.to_string(), is_class));
+        }
+        for attr in swift_attrs {
+            prog.swift_attribute
+                .push((receiver.to_string(), attr.to_string()));
+        }
+        prog.run();
+        let mut out: Vec<(String, &'static str)> = prog
+            .main_thread
+            .iter()
+            .map(|(_, s, rule)| (s.clone(), *rule))
+            .collect();
+        out.sort();
+        out
+    }
+
+    #[test]
+    fn main_actor_attribute_propagates_to_all_methods() {
+        // `@MainActor` on a class stamps every method (instance and class
+        // method alike — the facet does not consult `class_method`).
+        let stamps = threading_stamps("C", true, &["foo", "barClass:"], &["MainActor"]);
+        assert_eq!(
+            stamps,
+            vec![
+                ("barClass:".to_string(), "main-actor-attribute"),
+                ("foo".to_string(), "main-actor-attribute"),
+            ]
+        );
+    }
+
+    #[test]
+    fn module_qualified_main_actor_matches() {
+        let stamps = threading_stamps("C", true, &["foo"], &["_Concurrency.MainActor"]);
+        assert_eq!(stamps, vec![("foo".to_string(), "main-actor-attribute")]);
+    }
+
+    #[test]
+    fn unrelated_attributes_do_not_trigger_main_thread() {
+        let stamps = threading_stamps(
+            "C",
+            true,
+            &["foo"],
+            &["Available", "HasStorage", "MacroRole"],
+        );
+        assert!(stamps.is_empty());
+    }
+
+    #[test]
+    fn uikit_class_list_fires_by_name() {
+        let stamps = threading_stamps("UIView", true, &["someMethod"], &[]);
+        assert_eq!(stamps, vec![("someMethod".to_string(), "uikit-class")]);
+    }
+
+    #[test]
+    fn ui_selector_fires_on_any_class() {
+        let stamps = threading_stamps("MyCustomView", true, &["drawRect:", "length"], &[]);
+        // Only `drawRect:` is a UI selector; `length` is unconstrained.
+        assert_eq!(stamps, vec![("drawRect:".to_string(), "ui-selector")]);
+    }
+
+    #[test]
+    fn all_three_signals_stamp_the_same_method() {
+        // A `@MainActor` `UIView` calling `drawRect:` matches every signal; the
+        // disjunction keeps all three stamps (no precedence ladder).
+        let stamps = threading_stamps("UIView", true, &["drawRect:"], &["MainActor"]);
+        // Sorted by `(selector, rule)` — the rule names sort alphabetically.
+        assert_eq!(
+            stamps,
+            vec![
+                ("drawRect:".to_string(), "main-actor-attribute"),
+                ("drawRect:".to_string(), "ui-selector"),
+                ("drawRect:".to_string(), "uikit-class"),
+            ]
+        );
+    }
+
+    #[test]
+    fn protocol_receiver_gets_no_main_actor_signal() {
+        // A protocol carries no swift-attributes (the loader pushes none); even
+        // if one were present, the `is_class` gate would block signal 1. The UI
+        // selector signal still applies to protocols (selector-only).
+        let stamps = threading_stamps("MyProto", false, &["doStuff", "layout"], &["MainActor"]);
+        assert_eq!(stamps, vec![("layout".to_string(), "ui-selector")]);
+    }
+
+    #[test]
+    fn same_named_class_attr_does_not_leak_to_protocol_methods() {
+        // The collision case: a class `Foo` with `@MainActor` and a same-named
+        // protocol `Foo` whose method is *not* declared on the class. The class
+        // method is main-thread; the protocol-only method is not — the `is_class`
+        // bit on `receiver_method` keeps the bare-name-keyed attribute from
+        // leaking across.
+        let mut prog = ConventionProgram::default();
+        prog.receiver_method
+            .push(("Foo".to_string(), "classMethod".to_string(), true));
+        prog.receiver_method
+            .push(("Foo".to_string(), "protoOnly".to_string(), false));
+        prog.swift_attribute
+            .push(("Foo".to_string(), "MainActor".to_string()));
+        prog.run();
+        let mut out: Vec<(String, &'static str)> = prog
+            .main_thread
+            .iter()
+            .map(|(_, s, rule)| (s.clone(), *rule))
+            .collect();
+        out.sort();
+        assert_eq!(
+            out,
+            vec![("classMethod".to_string(), "main-actor-attribute")]
+        );
     }
 }
