@@ -14,6 +14,7 @@ members = [
     "platforms/macos/tools/extract-swift",
     "platforms/macos/tools/annotate",
     "platforms/macos/tools/conventions",
+    "platforms/macos/tools/pattern-detection",
     "platforms/macos/tools/collect-cli",
     # targets/_shared/ domain — shared projection substrate + generate CLI
     "targets/_shared/tools/emit",
@@ -63,6 +64,7 @@ apianyware-datalog = { path = "semantic/tools/datalog" }
 apianyware-resolve = { path = "semantic/tools/resolve" }
 apianyware-annotate = { path = "platforms/macos/tools/annotate" }
 apianyware-conventions = { path = "platforms/macos/tools/conventions" }
+apianyware-pattern-detection = { path = "platforms/macos/tools/pattern-detection" }
 apianyware-enrich = { path = "semantic/tools/enrich" }
 apianyware-emit = { path = "targets/_shared/tools/emit" }
 apianyware-emit-racket = { path = "targets/racket/tools/emit-racket" }

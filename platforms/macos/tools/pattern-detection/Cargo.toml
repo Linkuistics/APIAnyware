@@ -1,0 +1,18 @@
+[package]
+name = "apianyware-pattern-detection"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Convention-tier pattern-instance detection as declarative ascent datalog rules (ADR-0048 D3)"
+
+[dependencies]
+apianyware-types.workspace = true
+apianyware-patterns.workspace = true
+ascent.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

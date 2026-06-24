@@ -1069,14 +1069,21 @@ Schema cannot state a conditional enum — ADR-0046 §3 / ADR-0048 D7).
 _Avoid_: re-introducing free-prose laws (DP1 forbids it); inventing tokens outside §30;
 treating `ordering` as a law (it is a distinct, role-referencing construct).
 
-**Convention-tier pattern detection** _(datalog; D3)_:
-The cheap structural producer of pattern-*instances* — today's imperative
+**Convention-tier pattern detection** _(datalog; D3 — realized, `apianyware-pattern-detection`, ws3 child 3)_:
+The cheap structural producer of pattern-*instances* — the (retired) imperative
 `detect_patterns` re-expressed as **`ascent` datalog rules** (the same engine + the
 ADR-0047 precedent that put Cocoa naming heuristics in `platforms/macos/tools/`,
 *not* shared `semantic/tools/datalog` which holds only the engine). Each derived
-`pattern_instance` tuple names the rule that produced it, so the `source=convention:<rule>`
+tuple names the rule that produced it, so the `source=convention` + `convention:<rule>`
 provenance falls out of the derivation trace. Detection is Cocoa-specific → lives in
-`platforms/macos/tools/` (with/beside `conventions`).
+the **`apianyware-pattern-detection` crate** (`platforms/macos/tools/pattern-detection`,
+beside `conventions`). Five detectors (factory-cluster, observer, paired-state, delegate,
+bracket) bind the authored kinds' roles, then each instance is content-id'd (DP4),
+home-resolved (DP3) and **registry-validated** at the producer (an ill-formed instance —
+e.g. a class cluster with no public factory class methods — is dropped, not emitted).
+The CLI (`apianyware-analyze`) loads the kind registry once (`--pattern-kinds-dir`) and
+populates `Framework.patterns` per family. No consumer projects instances yet (ws6), so
+emit goldens are unmoved.
 _Avoid_: imperative `detect_patterns` as the mechanism (retired into datalog, D3); a
 shared `semantic/tools` home for the *rules* (the engine is shared, the Cocoa rules are
 platform-specific — the ADR-0047 split).
@@ -1084,8 +1091,9 @@ platform-specific — the ADR-0047 split).
 **Pattern-model crate homes** _(D8 / the ws3 seam)_:
 A **new `semantic/tools/patterns` crate** owns the pattern-kind **registry** + `.apiw`
 parsing (a dedicated home for the pattern-model code, diverging from folding into
-`spec-format`). Instance **detection** is datalog in `platforms/macos/tools/` (D3);
-instance **carriage** extends `types` + `resolve`. ws3 authors the pattern-kind
+`spec-format`). Instance **detection** is datalog in the `apianyware-pattern-detection`
+crate (`platforms/macos/tools/pattern-detection`, beside `conventions`; D3); instance
+**carriage** extends `types` + `resolve`. ws3 authors the pattern-kind
 **`.apiw` KDL Schema** + a focused in-crate validator
 (`schemas/spec-format/pattern-kinds.kdl-schema`, D7, mirroring ws2's
 `annotations.kdl-schema`); ws8 owns the machine JSON Schema + validation tooling/CI. The

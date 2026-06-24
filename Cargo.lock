@@ -102,6 +102,8 @@ dependencies = [
  "apianyware-annotate",
  "apianyware-datalog",
  "apianyware-enrich",
+ "apianyware-pattern-detection",
+ "apianyware-patterns",
  "apianyware-resolve",
  "apianyware-spec-format",
  "apianyware-types",
@@ -311,6 +313,17 @@ dependencies = [
  "tempfile",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "apianyware-pattern-detection"
+version = "0.1.0"
+dependencies = [
+ "apianyware-patterns",
+ "apianyware-types",
+ "ascent",
+ "serde_json",
+ "tracing",
 ]
 
 [[package]]

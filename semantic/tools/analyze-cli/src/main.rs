@@ -29,6 +29,12 @@ struct Cli {
     #[arg(long, default_value = "platforms/macos/api")]
     api_root: PathBuf,
 
+    /// Directory of authored pattern-kind definitions
+    /// (`semantic/pattern-kinds/*.apiw`) the convention-tier detector binds and
+    /// validates instances against (ADR-0048).
+    #[arg(long, default_value = "semantic/pattern-kinds")]
+    pattern_kinds_dir: PathBuf,
+
     /// Process only specific framework(s) (comma-separated or repeated).
     #[arg(long, value_delimiter = ',')]
     only: Vec<String>,
@@ -49,7 +55,7 @@ fn main() -> Result<()> {
         Some(cli.only.as_slice())
     };
 
-    run_pipeline(&cli.api_root, only)
+    run_pipeline(&cli.api_root, &cli.pattern_kinds_dir, only)
 }
 
 /// The full in-process resolve. Loads `extracted.json` per family, runs the
@@ -58,7 +64,7 @@ fn main() -> Result<()> {
 /// §28 precedence (`manual > accepted-LLM > convention > extraction`), runs the
 /// enrichment pass (pass 2: annotation-derived relations + verification), and
 /// writes `resolved.json` per family — the generator input.
-fn run_pipeline(api_root: &Path, only: Option<&[String]>) -> Result<()> {
+fn run_pipeline(api_root: &Path, pattern_kinds_dir: &Path, only: Option<&[String]>) -> Result<()> {
     let extracted =
         apianyware_datalog::loading::load_all_family_artifacts(api_root, "extracted.json", only)?;
     if extracted.is_empty() {
@@ -69,6 +75,17 @@ fn run_pipeline(api_root: &Path, only: Option<&[String]>) -> Result<()> {
     }
     tracing::info!(count = extracted.len(), "loaded extracted IR");
 
+    // The authored pattern-kind registry: the convention-tier detector binds and
+    // validates its instances against it (ADR-0048). Loaded once for the run.
+    let pattern_kinds = apianyware_patterns::PatternKindRegistry::load_dir(pattern_kinds_dir)
+        .with_context(|| {
+            format!(
+                "failed to load pattern-kinds from {}",
+                pattern_kinds_dir.display()
+            )
+        })?;
+    tracing::info!(kinds = pattern_kinds.len(), "loaded pattern-kind registry");
+
     // Pass 1 — `linked`: all families share one Datalog program so cross-framework
     // inheritance (e.g. AppKit classes inheriting Foundation) resolves.
     let linked = apianyware_resolve::resolve_loaded_frameworks(&extracted)?;
@@ -76,13 +93,15 @@ fn run_pipeline(api_root: &Path, only: Option<&[String]>) -> Result<()> {
 
     // Merge each family's authored overlay (heuristics + accepted-LLM facts; LLM
     // precedence on conflict). A family with no `annotations.apiw` is heuristics-only.
+    // Then run the convention-tier pattern detector, populating the first-class
+    // `patterns` carriage (ADR-0048) with `source=convention` instances.
     let mut annotated = Vec::with_capacity(linked.len());
     for fw in &linked {
         let overlay = load_overlay(api_root, &fw.name)?;
-        annotated.push(apianyware_annotate::annotate_framework(
-            fw,
-            overlay.as_ref(),
-        ));
+        let mut result = apianyware_annotate::annotate_framework(fw, overlay.as_ref());
+        result.patterns =
+            apianyware_pattern_detection::detect_pattern_instances(&result, &pattern_kinds);
+        annotated.push(result);
     }
     tracing::info!(frameworks = annotated.len(), "annotated");
 
