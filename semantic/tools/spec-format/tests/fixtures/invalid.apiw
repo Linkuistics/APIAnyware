@@ -1,0 +1,12 @@
+// A deliberately-failing `.apiw` overlay — the negative schema fixture.
+// `ownership="owns"` is not in the schema's enum
+// (strong | weak | copy | unsafe_unretained), so a schema-driven validator
+// must reject it with a located error that names the offending value.
+framework "Foundation" {
+    class "NSArray" {
+        method "initWithArray:" is-instance=#true {
+            param-ownership 0 ownership="owns"
+            source "llm"
+        }
+    }
+}

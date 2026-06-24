@@ -208,3 +208,33 @@ status-quo `serde_json`, a back-end swap since the IR is serde-based). Authored 
 spike outcome"; `CONTEXT.md` triad/KDL-interchange/convention/provenance entries; PRD status note;
 k18/k19/k20/k21 leaf briefs adjusted; spike code is throwaway (scratchpad), not in-tree — its
 source archived in the research doc for reproducibility.
+
+### I — KDL Schema authored + validator step *(k19, 2026-06-24)*
+
+`kdl-schema-k19` done. Realizes decision **F** (ADR-0046 §3): the language-neutral KDL Schema
+contract for the authored `.apiw` overlay at `schemas/spec-format/annotations.kdl-schema`, covering
+the full data model — framework→class→method tree, the §4 provenance stamp (`source` required,
+`confidence`/`provenance` optional), `param-ownership` / `block-param` / `threading` /
+`error-pattern`, and the optional `subagent-report`. Enum value sets mirror
+`apianyware-types::annotation` (the serde `snake_case` vocabulary shared with the machine JSON).
+
+**Validator step.** `apianyware-spec-format::validate_apiw(name, text)` is the §29 validator step
+(wired here; the pipeline calls it at k20). It embeds the schema (`include_str!` from `schemas/`) so
+the validator and contract never drift, and is **schema-driven** (interprets the contract, not
+hardcoded `.apiw` knowledge). Tests: fixtures `tests/fixtures/{valid,invalid}.apiw` (pass + fail),
+a conforming-impl cross-check (everything `write_apiw` emits validates), and **real data — all 152
+committed `_llm-annotations`, folded to `.apiw`, validate against the schema**.
+
+**Tooling reality (new fact — F assumed off-the-shelf tooling).** There is **no maintained KDL-2.0
+schema validator**: the KDL Schema Language is frozen at SCHEMA-SPEC 1.0 (2021, "not finalized" for
+2.0) and the only Rust validator (`kdl-schema-check`, 2022) is KDL-1.0/`knuffel`, incompatible with
+our `kdl = 6.3.4`. So the crate interprets the **subset** of the schema language the contract uses
+(node/value/prop/children, occurrence + value-cardinality min/max, scalar type, enum, default-deny
+other-nodes/props-allowed). Below the ADR bar (follows directly from F, not hard-to-reverse) —
+recorded here + in `schemas/docs/spec-format-schema.md`, not a new ADR. **Handed to ws8:** whether
+to adopt/author a general KDL-2.0 validator.
+
+**ws8 boundary recorded** (`CONTEXT.md` "Schema contract" entry + `schemas/README.md` +
+`schemas/docs/`): ws8 owns validation tooling/CI, the JSON Schema for the machine
+`extracted.json`/`resolved.json`, and the app-kind/AppSpec/capability-profile/conformance-report
+schemas. ws2 owns only the `.apiw` schema + the `validate_apiw` step.

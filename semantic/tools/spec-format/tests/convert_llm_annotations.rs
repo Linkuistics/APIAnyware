@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-use apianyware_spec_format::{apiw, convert};
+use apianyware_spec_format::{apiw, convert, validate_apiw};
 use apianyware_types::annotation::FrameworkAnnotations;
 
 /// Repo-root `platforms/macos/api/_llm-annotations`, located from this crate.
@@ -87,8 +87,13 @@ fn every_committed_llm_annotation_round_trips_through_apiw() {
             "{} did not round-trip through .apiw",
             path.display()
         );
+
+        // Real-data evidence for `kdl-schema-k19`: every committed annotation,
+        // once folded into `.apiw`, must conform to the KDL Schema contract.
+        validate_apiw(&path.to_string_lossy(), &apiw_text)
+            .unwrap_or_else(|e| panic!("{} fails the .apiw schema: {e:?}", path.display()));
         checked += 1;
     }
     assert!(checked > 0, "expected at least one .llm.json fixture");
-    eprintln!("round-tripped {checked} committed .llm.json files through .apiw");
+    eprintln!("round-tripped + schema-validated {checked} committed .llm.json files through .apiw");
 }

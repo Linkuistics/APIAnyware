@@ -1,0 +1,183 @@
+// annotations.kdl-schema — the authoritative, language-neutral contract for the
+// authored `annotations.apiw` overlay (ADR-0046 §3; PRD "Schema").
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), so any
+// KDL tool in any language can validate or consume an `.apiw` file. The Rust
+// `apianyware-spec-format` crate is ONE conforming validator of this contract,
+// not its source of truth (ADR-0046 §3 / running-log F).
+//
+// SCOPE — the authored `.apiw` overlay ONLY. The machine `extracted.json` /
+// `resolved.json` artifacts are JSON (ADR-0046 k17 retreat) and get a JSON
+// Schema in workstream 8 (ws8), which also owns the app-kind / AppSpec /
+// capability-profile / conformance-report schemas and the validation tooling/CI.
+//
+// VOCABULARY — enum value spellings are the serde `snake_case` tokens shared with
+// the machine JSON (ADR-0046 §4); a value's `.apiw` spelling always matches its
+// `extracted.json` / `resolved.json` spelling. Keep these enum lists in lockstep
+// with `apianyware-types::annotation`.
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE
+// CARDINALITY in a `value {…}` body (KDL Schema convention). `other-nodes-allowed`
+// / `other-props-allowed` default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware authored annotation overlay (.apiw)" lang="en"
+        description "Per-framework semantic annotations: manual + accepted-LLM facts over a framework's class/protocol methods, each carrying the ADR-0046 §4 provenance stamp (source / confidence / provenance)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 2 (spec-format-k16)"
+    }
+
+    // Exactly one top-level `framework "<name>"` node per file.
+    node "framework" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Per-class / per-protocol method annotations. Zero or more.
+            // (Despite the node name, the value may also be a protocol name.)
+            node "class" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    node "method" {
+                        // The Objective-C / Swift selector.
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        // Instance method (#true) vs class method (#false).
+                        prop "is-instance" {
+                            type "boolean"
+                            required #true
+                        }
+                        children {
+                            // Per-parameter ownership. Zero or more. The value is
+                            // a non-negative parameter index (the conforming
+                            // parser rejects negatives).
+                            node "param-ownership" {
+                                value {
+                                    type "number"
+                                    min 1
+                                    max 1
+                                }
+                                prop "ownership" {
+                                    type "string"
+                                    required #true
+                                    enum "strong" "weak" "copy" "unsafe_unretained"
+                                }
+                            }
+                            // Block-parameter invocation style. Zero or more.
+                            node "block-param" {
+                                value {
+                                    type "number"
+                                    min 1
+                                    max 1
+                                }
+                                prop "invocation" {
+                                    type "string"
+                                    required #true
+                                    enum "synchronous" "async_copied" "stored"
+                                }
+                            }
+                            // Threading constraint. Optional.
+                            node "threading" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                    enum "main_thread_only" "any_thread"
+                                }
+                            }
+                            // Error-handling pattern. Optional.
+                            node "error-pattern" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                    enum "error_out_param" "throws_exception" "nil_on_failure"
+                                }
+                            }
+                            // Provenance stamp — where the fact came from. Required.
+                            node "source" {
+                                min 1
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                    enum "heuristic" "llm" "human_reviewed"
+                                }
+                            }
+                            // Authoring confidence — a coarse enum, never a float. Optional.
+                            node "confidence" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                    enum "high" "medium" "low"
+                                }
+                            }
+                            // Doc URL / rationale backing an authored fact. Optional.
+                            node "provenance" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Subagent's self-reported aggregate counts. Optional; downstream
+            // cross-checks these against the file content (warning, not error).
+            // Each count is a non-negative integer.
+            node "subagent-report" {
+                max 1
+                children {
+                    node "block-synchronous" {
+                        max 1
+                        value { type "number"; min 1; max 1; }
+                    }
+                    node "block-async-copied" {
+                        max 1
+                        value { type "number"; min 1; max 1; }
+                    }
+                    node "block-stored" {
+                        max 1
+                        value { type "number"; min 1; max 1; }
+                    }
+                    node "parameter-ownership" {
+                        max 1
+                        value { type "number"; min 1; max 1; }
+                    }
+                    node "threading-main-thread-only" {
+                        max 1
+                        value { type "number"; min 1; max 1; }
+                    }
+                    node "threading-any-thread" {
+                        max 1
+                        value { type "number"; min 1; max 1; }
+                    }
+                    node "error-pattern" {
+                        max 1
+                        value { type "number"; min 1; max 1; }
+                    }
+                }
+            }
+        }
+    }
+}

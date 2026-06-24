@@ -956,6 +956,20 @@ and format-preserving diagnostics matter. No YAML anywhere.
 _Avoid_: "KDL everywhere / KDL for the machine IR" (the machine side reverted to JSON, k17);
 "the YAML interchange" (§29's YAML was reversed); "a YAML dialect" (`.apiw` is KDL, not YAML).
 
+**Schema contract (`annotations.kdl-schema`)** _(authored overlay only; ws2 owns it)_:
+The authoritative, **language-neutral** contract for the authored `.apiw` overlay, written in the
+**KDL Schema Language** (KDL-in-KDL) at `schemas/spec-format/annotations.kdl-schema` (ADR-0046 §3,
+`kdl-schema-k19`). The Rust serde types are *one conforming implementation*, not the source of
+truth; any KDL tool in any language validates an `.apiw` file against it. There is **no maintained
+KDL-2.0 schema validator** (the language is frozen at SCHEMA-SPEC 1.0), so the `spec-format` crate
+ships a focused in-crate validator of the contract's subset as the §29 validator step; adopting a
+general one is ws8's. The machine `extracted.json`/`resolved.json` get a **JSON Schema** owned by
+**ws8**, which also owns validation tooling/CI and the
+app-kind/AppSpec/capability-profile/conformance-report schemas.
+_Avoid_: deriving the contract from the Rust types (types conform to the schema, not vice-versa);
+a JSON Schema over a projection of the KDL (rejected — reintroduces JSON); putting the `.apiw`
+schema or its validator in ws8 (ws2 owns the `.apiw` schema + validator step; ws8 owns the rest).
+
 **`linked` (datalog stage)** _(rename, replacing the colliding "resolved" stage)_:
 The in-process datalog cross-reference stage (cross-class/protocol linking + convention rules),
 formerly confusingly also called *"resolved"* (`analysis/ir/resolved`). Renamed `linked` so the

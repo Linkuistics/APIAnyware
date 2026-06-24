@@ -13,13 +13,18 @@
 //! - [`convert`] — the one-time migration that folds today's committed
 //!   `_llm-annotations/*.llm.json` into the authored `annotations.apiw` overlay.
 //!
-//! The schema-validation hookup (the KDL Schema for `.apiw`) lands in the next
-//! leaf (`kdl-schema-k19`); this crate is the parser/writer it will validate
-//! against. Pipeline rewiring to the per-family triad paths is `pipeline-cutover-k20`.
+//! - [`schema`] — the **validator step**. Validates an authored `.apiw` document
+//!   against the language-neutral KDL Schema contract
+//!   (`schemas/spec-format/annotations.kdl-schema`, ADR-0046 §3), embedded so the
+//!   validator and the contract never drift.
+//!
+//! Pipeline rewiring to the per-family triad paths is `pipeline-cutover-k20`.
 
 pub mod apiw;
 pub mod convert;
 pub mod error;
 pub mod machine;
+pub mod schema;
 
 pub use error::{Result, SpecFormatError};
+pub use schema::validate_apiw;

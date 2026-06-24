@@ -1,0 +1,37 @@
+// A well-formed authored `.apiw` overlay — the passing schema fixture.
+// Exercises every node kind and provenance stamp in the contract.
+framework "Foundation" {
+    class "NSArray" {
+        method "enumerateObjectsUsingBlock:" is-instance=#true {
+            param-ownership 0 ownership="copy"
+            block-param 0 invocation="synchronous"
+            threading "any_thread"
+            source "heuristic"
+        }
+        method "writeToURL:error:" is-instance=#true {
+            error-pattern "error_out_param"
+            source "llm"
+            confidence "high"
+            provenance "Foundation Release Notes"
+        }
+        method "array" is-instance=#false {
+            source "human_reviewed"
+            confidence "medium"
+        }
+    }
+    class "NSObject" {
+        method "performSelectorOnMainThread:withObject:waitUntilDone:" is-instance=#true {
+            threading "main_thread_only"
+            source "llm"
+            confidence "low"
+            provenance #"Threadsafety is documented as "main thread only" for UI work."#
+        }
+    }
+    subagent-report {
+        block-synchronous 1
+        block-async-copied 0
+        threading-any-thread 1
+        threading-main-thread-only 1
+        error-pattern 1
+    }
+}
