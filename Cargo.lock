@@ -115,6 +115,7 @@ name = "apianyware-annotate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "apianyware-conventions",
  "apianyware-datalog",
  "apianyware-types",
  "serde",
@@ -186,7 +187,6 @@ dependencies = [
 name = "apianyware-conventions"
 version = "0.1.0"
 dependencies = [
- "apianyware-annotate",
  "apianyware-datalog",
  "apianyware-types",
  "ascent",

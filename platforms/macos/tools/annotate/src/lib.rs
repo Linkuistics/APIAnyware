@@ -1,37 +1,112 @@
-//! Heuristic annotation classification and LLM annotation merge.
+//! Convention-facet assembly and LLM annotation merge.
 //!
 //! Annotations classify ObjC/Swift API methods with semantic metadata
 //! (parameter ownership, block invocation style, threading constraints,
 //! error patterns). Two sources produce annotations:
 //!
-//! 1. **Heuristics** (`heuristics`) — naming convention classifiers that
-//!    run in Rust as part of the annotate step. Fast, deterministic,
+//! 1. **Convention facets** ([`apianyware_conventions`]) — the Cocoa
+//!    naming-convention rules, expressed as declarative `ascent` datalog rules
+//!    (ADR-0047) rather than the imperative classifiers they replaced. Run once
+//!    per framework, keyed by `(receiver, selector)`, and assembled per method
+//!    into a `MethodAnnotation` ([`ConventionFacets`]). Fast, deterministic,
 //!    always available. Handle clear cases (enumerate = sync, setDelegate = weak).
 //!
 //! 2. **LLM analysis** — an external process reads Apple documentation and
-//!    produces structured annotations for ambiguous cases. Output is checked
-//!    into `analysis/ir/annotated/*.json`.
+//!    produces the authored `annotations.apiw` overlay for ambiguous cases.
 //!
-//! The `validate` module compares heuristic and LLM annotations, flags
+//! The `validate` module compares the convention and LLM annotations, flags
 //! disagreements for human review, and merges the two sources with LLM
 //! taking precedence.
+//!
+//! Per-fact `convention:<rule>` provenance is computed inside
+//! [`apianyware_conventions`] but **not** carried on-disk here: the rich
+//! provenance/precedence rollout (per-fact stamps, the disagreement audit) is
+//! owned by workstream 5 (the LLM side-channel), so assembled convention facts
+//! are byte-identical to the legacy heuristic output (ADR-0046 §4 carriage
+//! deferred to ws5).
 
-pub mod heuristics;
 pub mod llm;
 pub mod pattern_detection;
 pub mod validate;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 
 use anyhow::{Context, Result};
+use apianyware_conventions::{
+    derive_block_invocations, derive_error_pattern, derive_ownership, derive_threading,
+    BlockInvocationFacet, ErrorPatternFacet, MethodKey, OwnershipFacet, ThreadingFacet,
+};
 use apianyware_datalog::loading;
 use apianyware_types::annotation::{
-    AnnotationOverrides, ClassAnnotations, FrameworkAnnotations, MethodAnnotation,
+    AnnotationOverrides, AnnotationSource, ClassAnnotations, FrameworkAnnotations, MethodAnnotation,
 };
-use apianyware_types::ir::Framework;
+use apianyware_types::ir::{Framework, Method};
 
-/// Annotate all resolved frameworks: load, run heuristics, merge with existing LLM annotations.
+/// The four convention facets derived once over a framework set, each keyed by
+/// `(receiver, selector)` ([`MethodKey`]).
+///
+/// Replaces the per-method imperative `heuristics.rs` classifiers (ADR-0047):
+/// the convention rules now live in [`apianyware_conventions`] as `ascent`
+/// datalog rules; this bundle runs them once and exposes the result as the
+/// per-method `MethodAnnotation` the annotate step consumes. A method absent
+/// from a facet map gets that facet's empty/`None` default — exactly the legacy
+/// per-method result for a method with no signal.
+///
+/// Derivation is **per framework** (`derive(std::slice::from_ref(fw))`): the
+/// convention rules are per-method and never cross frameworks, so per-framework
+/// derivation matches the characterization tests that gated each facet port, and
+/// — since `annotate` runs only once per SDK update — the four independent
+/// program runs are not worth consolidating.
+struct ConventionFacets {
+    ownership: BTreeMap<MethodKey, OwnershipFacet>,
+    block: BTreeMap<MethodKey, BlockInvocationFacet>,
+    threading: BTreeMap<MethodKey, ThreadingFacet>,
+    error: BTreeMap<MethodKey, ErrorPatternFacet>,
+}
+
+impl ConventionFacets {
+    /// Run the convention rules over `frameworks` and collect the four facets.
+    fn derive(frameworks: &[Framework]) -> Self {
+        Self {
+            ownership: derive_ownership(frameworks),
+            block: derive_block_invocations(frameworks),
+            threading: derive_threading(frameworks),
+            error: derive_error_pattern(frameworks),
+        }
+    }
+
+    /// Assemble the convention `MethodAnnotation` for `method` on `receiver`
+    /// (class or protocol name) by looking its `(receiver, selector)` up in the
+    /// four facet maps. Byte-identical to the legacy `heuristics.rs` output:
+    /// `source = Heuristic`, no confidence/provenance carried (the
+    /// `convention:<rule>` stamps the facets compute land on-disk only once
+    /// ws5's provenance mechanism consumes them).
+    fn annotation_for(&self, receiver: &str, method: &Method) -> MethodAnnotation {
+        let key = (receiver.to_string(), method.selector.clone());
+        MethodAnnotation {
+            selector: method.selector.clone(),
+            is_instance: !method.class_method,
+            parameter_ownership: self
+                .ownership
+                .get(&key)
+                .map(|f| f.parameter_ownership.clone())
+                .unwrap_or_default(),
+            block_parameters: self
+                .block
+                .get(&key)
+                .map(|f| f.block_parameters.clone())
+                .unwrap_or_default(),
+            threading: self.threading.get(&key).map(|f| f.threading),
+            error_pattern: self.error.get(&key).map(|f| f.error_pattern),
+            source: AnnotationSource::Heuristic,
+            confidence: None,
+            provenance: None,
+        }
+    }
+}
+
+/// Annotate all resolved frameworks: load, run convention rules, merge with existing LLM annotations.
 ///
 /// Loads resolved frameworks from `input_dir`, runs heuristic classification on all methods,
 /// merges with LLM annotations (from `llm_dir` if provided, otherwise from existing annotated
@@ -86,13 +161,20 @@ pub fn annotate_frameworks(
     Ok(annotated)
 }
 
-/// Annotate a single framework: run heuristics on all methods, merge with existing LLM annotations.
+/// Annotate a single framework: derive the convention facets, assemble per-method
+/// annotations, and merge with existing LLM annotations.
 pub fn annotate_framework(
     framework: &Framework,
     existing_annotations: Option<&FrameworkAnnotations>,
 ) -> Framework {
     // Build index of existing LLM annotations: (class_name, selector) → MethodAnnotation
     let llm_index = build_llm_annotation_index(existing_annotations);
+
+    // Run the convention rules once over this framework (ADR-0047). The facet
+    // maps are keyed by (receiver, selector); the per-method assembly below
+    // looks each method up in them, replacing the per-method `heuristics.rs`
+    // calls this leaf retired.
+    let facets = ConventionFacets::derive(std::slice::from_ref(framework));
 
     let mut class_annotations = Vec::new();
 
@@ -108,13 +190,13 @@ pub fn annotate_framework(
         };
 
         for method in methods {
-            annotate_and_push(class, method, &llm_index, &mut method_annotations);
+            annotate_and_push(class, method, &facets, &llm_index, &mut method_annotations);
         }
 
         // Also annotate category methods (e.g., NSExtendedArray on NSArray).
         for category_group in &class.category_methods {
             for method in &category_group.methods {
-                annotate_and_push(class, method, &llm_index, &mut method_annotations);
+                annotate_and_push(class, method, &facets, &llm_index, &mut method_annotations);
             }
         }
 
@@ -144,6 +226,7 @@ pub fn annotate_framework(
             annotate_protocol_method_and_push(
                 protocol,
                 method,
+                &facets,
                 &llm_index,
                 &mut method_annotations,
             );
@@ -167,37 +250,39 @@ pub fn annotate_framework(
     annotated
 }
 
-/// Run heuristics on a class method, merge with its LLM annotation if
-/// available, and push to results.
+/// Assemble a class method's convention annotation, merge with its LLM
+/// annotation if available, and push to results.
 fn annotate_and_push(
     class: &apianyware_types::ir::Class,
     method: &apianyware_types::ir::Method,
+    facets: &ConventionFacets,
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
 ) {
-    let heuristic = heuristics::annotate_method_heuristic(class, method);
-    merge_and_push(&class.name, method, heuristic, llm_index, results);
+    let convention = facets.annotation_for(&class.name, method);
+    merge_and_push(&class.name, method, convention, llm_index, results);
 }
 
-/// Run heuristics on a protocol method, merge with its LLM annotation if
-/// available, and push to results.
+/// Assemble a protocol method's convention annotation, merge with its LLM
+/// annotation if available, and push to results.
 fn annotate_protocol_method_and_push(
     protocol: &apianyware_types::ir::Protocol,
     method: &apianyware_types::ir::Method,
+    facets: &ConventionFacets,
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
 ) {
-    let heuristic = heuristics::annotate_protocol_method_heuristic(protocol, method);
-    merge_and_push(&protocol.name, method, heuristic, llm_index, results);
+    let convention = facets.annotation_for(&protocol.name, method);
+    merge_and_push(&protocol.name, method, convention, llm_index, results);
 }
 
-/// Merge a method's heuristic annotation with its LLM annotation — looked up
+/// Merge a method's convention annotation with its LLM annotation — looked up
 /// by `(receiver_name, selector)`, where `receiver_name` is the class or
 /// protocol name — and push the merged result.
 fn merge_and_push(
     receiver_name: &str,
     method: &apianyware_types::ir::Method,
-    heuristic: MethodAnnotation,
+    convention: MethodAnnotation,
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
 ) {
@@ -206,7 +291,7 @@ fn merge_and_push(
         .copied();
 
     let overrides = AnnotationOverrides::default();
-    let merged = validate::merge_annotations(&heuristic, llm_ann, &overrides);
+    let merged = validate::merge_annotations(&convention, llm_ann, &overrides);
 
     results.push(merged);
 }
