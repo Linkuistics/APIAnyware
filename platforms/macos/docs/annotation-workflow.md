@@ -1,224 +1,227 @@
 # Annotation Workflow
 
-> **⚠️ Superseded by the pipeline cutover (`pipeline-cutover-k20`, ADR-0046).** The
-> flat `_llm-annotations/*.llm.json` side-channel is retired — folded into the
-> per-family `platforms/macos/api/<Framework>/annotations.apiw` overlay — and the
-> `analysis/ir/{resolved,annotated,enriched,llm-summaries}` checkpoints no longer
-> exist (the passes run in-process; the machine IR is `extracted.json` /
-> `resolved.json`). This page describes the **old** flow; reworking the LLM
-> side-channel workflow over `.apiw` is **workstream 5** (see `TODO.md`).
+API annotations classify each Objective-C / Swift method with the semantic
+metadata the emitter needs but the headers do not state outright — parameter
+ownership, block-invocation style, threading constraints, and error patterns.
+They drive the emitter's wrapping decisions and the Datalog verification rules.
 
-API annotations classify each ObjC/Swift method with semantic metadata — parameter ownership, block invocation style, threading constraints, and error patterns. These annotations drive the emitter's wrapping decisions and the Datalog verification rules.
+Annotations live in **one authored, committed overlay per framework**,
+`platforms/macos/api/<Framework>/annotations.apiw` (KDL — the `.apiw` DSL,
+ADR-0046). Everything below is the operating layer over that overlay: how it is
+produced, regenerated when the SDK drifts, reviewed, and accepted (ADR-0050).
 
-## When to run
+## The spec triad
 
-| Event | What to run | Why |
-|---|---|---|
-| **First time setup** | Full pipeline: `collect` then `analyze` | Establish baseline annotations |
-| **SDK update** (new Xcode/macOS) | Re-run `collect` then `analyze` | New/changed methods need analysis |
-| **Adding a new framework** | `collect --only NewFramework` then `analyze --only NewFramework` | Existing frameworks are unaffected |
-| **After LLM annotation** | `analyze annotate` then `analyze enrich` | Merge new LLM annotations with heuristics |
-| **After editing heuristics** | `analyze annotate` then `analyze enrich` | Re-run heuristics against current IR |
-| **Normal development** | Nothing | Annotations are checked in and stable |
+Each framework family has three artifacts under
+`platforms/macos/api/<Framework>/`:
 
-## Pipeline Overview
+| Artifact | Produced by | Committed? | Role |
+|---|---|---|---|
+| `extracted.json` | `apianyware-collect` | no (gitignored) | mechanical extraction facts — the Datalog fact base |
+| `annotations.apiw` | the LLM side-channel (this doc) | **yes** | the one authored semantic overlay — manual + accepted-LLM facts, KDL |
+| `resolved.json` | `apianyware-analyze` (resolve) | no (gitignored) | the resolved graph — the generator input |
+
+`extracted.json` and `resolved.json` are regenerable from the SDK + the
+committed overlay, so they are gitignored; **only `annotations.apiw` is
+authored and committed.** It *is* the cache: there is no separate staging store.
+
+## Pipeline overview
+
+`apianyware-analyze` (the resolve flow) reads a family's `extracted.json`, folds
+in its committed `annotations.apiw`, and writes `resolved.json`. The three passes
+— `linked` (inheritance/conformance flattening, ownership families), `annotate`
+(merge the overlay + the convention-tier Datalog facts under §28 precedence), and
+`enrich` (annotation-derived relations + verification) — all run **in-process**;
+only `extracted.json` and `resolved.json` touch disk.
 
 ```mermaid
 flowchart LR
-    A["collection/ir/collected/*.json"] -->|resolve| B["analysis/ir/resolved/*.json"]
-    B -->|annotate| C["analysis/ir/annotated/*.json"]
-    C -->|enrich| D["analysis/ir/enriched/*.json"]
-    E["LLM annotations<br/>(external)"] -.->|merge| C
+    SDK["macOS SDK headers<br/>+ Swift modules"] -->|"apianyware-collect"| EX["extracted.json"]
+    OV["annotations.apiw<br/><i>authored overlay (committed)</i>"]
 
-    style A fill:#e3f2fd
-    style B fill:#fff3e0
-    style C fill:#e8f5e9
-    style D fill:#f3e5f5
+    subgraph inproc["apianyware-analyze (resolve) — in-process, no checkpoints"]
+        direction LR
+        L["linked<br/><i>flatten inheritance<br/>+ conformance</i>"] --> AN["annotate<br/><i>merge overlay +<br/>convention datalog</i>"] --> EN["enrich<br/><i>derive relations<br/>+ verify</i>"]
+    end
+
+    EX --> L
+    OV -.->|"folded in: §28 precedence"| AN
+    EN --> RES["resolved.json"]
+
+    style EX fill:#e3f2fd
+    style OV fill:#e8f5e9
+    style RES fill:#f3e5f5
+    style inproc fill:#fff3e0
 ```
 
-Each step reads checkpoint files from the previous step and writes its own. No in-memory coupling between steps. Each checkpoint is a self-contained JSON file per framework that carries forward all fields from prior steps.
+### Source precedence (§28)
 
-## Step 1: Collection (Rust CLI)
-
-Extract API metadata from macOS SDK headers and Swift modules:
-
-```
-apianyware-collect                    # all SDK frameworks
-apianyware-collect --only Foundation   # specific framework
-apianyware-collect --list              # list available frameworks
-```
-
-**Output:** `collection/ir/collected/{Framework}.json` per framework.
-
-**Duration:** ~10 seconds for Foundation (ObjC + Swift merge).
-
-## Step 2: Resolution (Datalog Pass 1)
-
-Flatten inheritance, detect ownership families, resolve protocol conformance:
+`annotate` merges every producing tier per fact-slot — one semantic claim, e.g. a
+parameter's ownership or a method's threading — under the precedence ladder
 
 ```
-apianyware-analyze resolve
-apianyware-analyze resolve --only Foundation
+manual  >  accepted-LLM  >  convention  >  extraction  >  unknown
 ```
 
-**Input:** `collection/ir/collected/*.json`
-**Output:** `analysis/ir/resolved/{Framework}.json`
+`accepted-LLM` is simply a `source llm` fact in the *committed* overlay (see
+[Git is the accept boundary](#git-is-the-accept-boundary)). The **convention**
+tier is pure Datalog (ADR-0047) recomputed every run from `extracted.json` —
+nothing to cache. The winning *value* is what the generator sees; the audit
+(below) additionally stamps each winner's `source` and records disagreeing losers
+as `superseded-by`, **provenance only** — emit projects the facts, never their
+`source`, so provenance is emit-invisible and the goldens cannot move.
 
-**Duration:** < 1 second for Foundation.
+### Two source vocabularies, two homes
 
-## Step 3: Annotation (Heuristics + LLM Merge)
-
-Run deterministic heuristic classification on every method and merge with any existing LLM annotations:
-
-```
-apianyware-analyze annotate
-apianyware-analyze annotate --only Foundation
-```
-
-**Input:** `analysis/ir/resolved/*.json` + existing `analysis/ir/annotated/{Framework}.json` (if present)
-**Output:** `analysis/ir/annotated/{Framework}.json`
-
-**Duration:** < 1 second for Foundation.
-
-### Heuristic classifications
-
-The `annotate` crate applies these rules deterministically:
-
-| Pattern | Detection | Classification |
+| | tokens | home |
 |---|---|---|
-| Block parameters | Selector contains `enumerate`, `sort`, `compare`, `predicate`, `filter` | `synchronous` |
-| Block parameters | Selector contains `completion`, `handler`, `callback`, `reply` | `async_copied` |
-| Block parameters | Selector contains `observer`, `notification`, `timer` | `stored` |
-| Parameter ownership | Parameter named `delegate` or `dataSource` | `weak` |
-| Threading | Class is AppKit UI class (NSView, NSWindow, etc.) or selector is `setNeedsDisplay:`, etc. | `main_thread_only` |
-| Error pattern | Last param named `error` with pointer-to-pointer type | `error_out_param` |
+| **authored overlay** | `llm`, `manual` | `annotations.apiw` (committed) |
+| **resolved graph** | `extraction`, `convention:<rule>`, `llm`, `manual`, `unknown` | `resolved.json` `fact_provenance` (derived) |
 
-### API pattern detection
+Subagents author `source llm`; `manual` is a human hand-edit. The full ladder
+(with `convention:<rule>` stamps and `superseded-by` losers) exists only in the
+derived `resolved.json`, never in the overlay.
 
-The `annotate` step also detects multi-method behavioral patterns:
+## When to run
 
-| Pattern | Detection signal | Example |
-|---|---|---|
-| Factory cluster | `NSMutable{X}` / `NS{X}` class pairs | NSMutableArray / NSArray |
-| Observer pair | `addObserver:` / `removeObserver:` selector pairs | NSNotificationCenter |
-| Paired state | `begin{X}` / `end{X}`, `lock` / `unlock` pairs | NSUndoManager, NSLock |
-| Delegate protocol | `setDelegate:` + matching `*Delegate` protocol | NSWindow + NSWindowDelegate |
-| Resource lifecycle | `beginAccessing*` / `endAccessing*` pairs | NSBundleResourceRequest |
+`annotate` runs **once per SDK update** — keep the workflow lean.
 
-Patterns are stored in the `api_patterns` field on the Framework checkpoint.
+| Event | What to run |
+|---|---|
+| **SDK update** (new Xcode / macOS) | `collect` → `resolve` → `annotations stale` → regenerate stale families → `resolve` → `annotations audit` → commit |
+| **Adding a framework** | `collect --only NewFramework` (with its deps) → `resolve` → `annotations stale --only NewFramework` → regenerate → `resolve` → commit |
+| **Editing convention rules / `annotate` code** | `resolve` — recomputes the convention tier; the overlay is unaffected |
+| **Normal development** | nothing — the overlay is committed and stable |
 
-## Step 4: LLM Annotation (External Process)
-
-LLM analysis reads resolved IR + Apple documentation and produces annotations matching the schema. This is NOT part of the Rust pipeline — it's a separate process.
-
-### Option A: Claude Code
+## Step 1 — Collect
 
 ```
-/analyze
+cargo run -p apianyware-collect                    # all SDK frameworks
+cargo run -p apianyware-collect -- --only Foundation
+cargo run -p apianyware-collect -- --list
 ```
 
-The `/analyze` command discovers frameworks with resolved IR and processes them. It reads Apple documentation to classify methods that heuristics can't handle.
+Writes `platforms/macos/api/<Framework>/extracted.json`.
 
-### Option B: Script
-
-```
-./analysis/scripts/llm-annotate.sh
-```
-
-Provider-agnostic script that calls any OpenAI-compatible API (Anthropic, OpenAI, Ollama, vLLM). Configure via `analysis/scripts/config.example.toml`:
-
-```toml
-[provider]
-url = "https://api.anthropic.com/v1/messages"
-model = "claude-sonnet-4-20250514"
-api_key_env = "ANTHROPIC_API_KEY"
-
-[paths]
-resolved_dir = "analysis/ir/resolved"
-annotated_dir = "analysis/ir/annotated"
-prompt_template = "analysis/scripts/prompt-template.md"
-
-[options]
-batch_size = 20
-temperature = 0.0
-```
-
-### Option C: Manual editing
-
-Edit `analysis/ir/annotated/{Framework}.json` directly. Set `source: "human_reviewed"` on manually reviewed annotations — these take highest precedence during merge.
-
-### Merge precedence
-
-When the `annotate` step merges annotations:
-
-1. `human_reviewed` — highest priority, never overridden
-2. `llm` — LLM-generated, overrides heuristics
-3. `heuristic` — deterministic, fills gaps
-
-## Step 5: Enrichment (Datalog Pass 2)
-
-Derive generation-facing relations from annotations + type facts:
+## Step 2 — Resolve
 
 ```
-apianyware-analyze enrich
-apianyware-analyze enrich --only Foundation
+cargo run -p apianyware-analyze                    # resolve every family
+cargo run -p apianyware-analyze -- --only Foundation
 ```
 
-**Input:** `analysis/ir/annotated/*.json`
-**Output:** `analysis/ir/enriched/{Framework}.json`
+Writes `platforms/macos/api/<Framework>/resolved.json` — the inheritance- and
+conformance-flattened, Swift-renamed surface the overlay is authored over, plus
+the per-fact-slot `fact_provenance` carriage the audit populates.
 
-**Duration:** < 1 second for Foundation.
+## Step 3 — Detect staleness
 
-The enriched checkpoint includes a `verification` section. If verification fails, the framework has unclassified block parameters or ownership flag mismatches that must be resolved before generation.
-
-## Full Pipeline
-
-Run all steps sequentially with a single command:
+Staleness is computed **live** — set-diffing each committed overlay against the
+current **resolved API surface** (`resolved.json`), with no stored content hash.
+The comparison surface is the *resolved* graph, not raw `extracted.json`: the
+overlay is authored over the flattened/renamed surface, so diffing against
+pre-resolve `extracted.json` mis-reports ~⅓ of facts as orphaned (a fact keyed
+under a subclass for an inherited method; `FileManager` vs `NSFileManager`).
+`resolved.json` is self-contained, so the check is a pure file read — **resolve
+must be current first**.
 
 ```
-apianyware-analyze                      # resolve -> annotate -> enrich
-apianyware-analyze --only Foundation     # single framework
+cargo run -p apianyware-analyze -- annotations stale            # every family; gates (exit 1 if any stale)
+cargo run -p apianyware-analyze -- annotations stale --only Foundation --json
 ```
 
-## How the pieces connect
+Three signals per family:
 
-```mermaid
-flowchart TD
-    SDK["macOS SDK Headers<br/>+ Swift Modules"] -->|"apianyware-collect"| Collected["collection/ir/collected/*.json"]
-    Collected -->|"analyze resolve"| Resolved["analysis/ir/resolved/*.json"]
-    Resolved -->|"analyze annotate<br/>(heuristics)"| Annotated["analysis/ir/annotated/*.json"]
-    AppleDocs["Apple Docs<br/>+ Programming Guides"] -->|"/analyze or<br/>llm-annotate.sh"| LLM["LLM annotations<br/>(temp .llm.json)"]
-    LLM -->|"analyze annotate<br/>(merge)"| Annotated
-    Annotated -->|"analyze enrich"| Enriched["analysis/ir/enriched/*.json"]
-    Enriched -->|"apianyware-generate"| Bindings["generation/targets/{lang}/generated/"]
+- **orphaned** — an overlay fact names a `(receiver, selector)` absent from the
+  current surface (the method was removed/renamed) → drop the fact.
+- **new-surface** — a current method of *annotatable shape* with no overlay fact
+  → add a fact.
+- **shape-changed** — an overlay fact targets a `param_index` that no longer
+  holds its kind (block / object) → fix or re-evaluate.
 
-    style SDK fill:#e3f2fd
-    style Collected fill:#e3f2fd
-    style Resolved fill:#fff3e0
-    style Annotated fill:#e8f5e9
-    style LLM fill:#e8f5e9,stroke-dasharray: 5 5
-    style Enriched fill:#f3e5f5
-    style Bindings fill:#fce4ec
-    style AppleDocs fill:#e8f5e9,stroke-dasharray: 5 5
+**Annotatable shape** is the *structural* predicate
+(`apianyware_annotate::surface::is_annotatable`): a method carries a **block
+parameter** or an **`NSError **` out-param**. These are the two shapes the LLM
+reliably annotates; the legacy `delegate` / `observer` **selector-substring**
+signal is excluded (it surfaces accessor getters the LLM declines — ~75%
+steady-state noise).
+
+`stale` exits 1 when any family is stale, so it gates in CI / `make`. The
+`--json` form emits a stable-schema worklist (`worklist: [<family>, …]` plus the
+per-family slot lists) for the orchestrator to consume.
+
+## Step 4 — Regenerate (LLM side-channel, in Claude Code)
+
+Regeneration runs **inside Claude Code** — never an external paid API (the
+economic constraint, [[llm_annotation_constraint]]). The `/analyze` command is
+the orchestration skill: it runs `annotations stale --json`, then dispatches one
+**Claude Code subagent per stale family**. Each subagent reads its family's
+resolved surface + Apple headers/docs, classifies the four fact kinds, and writes
+its `annotations.apiw` **directly** with `source llm` (+ optional `confidence` /
+`provenance`), scoped to the annotatable shape.
+
+The per-family subagent prompt is
+[`annotation-subagent-prompt.md`](annotation-subagent-prompt.md). To drive the
+whole loop, run `/analyze` (see `.claude/commands/analyze.md`).
+
+The `.apiw` shape one subagent authors:
+
+```kdl
+framework Foundation {
+    class NSURLSession {
+        method dataTaskWithURL:completionHandler: is-instance=#true {
+            block-param 1 invocation=async_copied
+            threading any_thread
+            source llm
+        }
+    }
+    class NSArray {
+        method writeToURL:error: is-instance=#true {
+            error-pattern error_out_param
+            source llm
+        }
+    }
+}
 ```
 
-## Overrides
+## Step 5 — Review and accept
 
-If heuristic and LLM annotations disagree on a method, the `annotate` step's `validate` module detects the disagreement and resolves it (LLM wins by default). To override manually, edit the annotated checkpoint directly and set `source: "human_reviewed"`.
+There is **no propose/accept state machine**: git is the boundary. A freshly
+regenerated overlay is an uncommitted diff in the working tree; the human reviews
+it and commits (accept) or discards (reject). A committed `source llm` fact *is*
+`accepted-LLM` (the §28 tier) — the human accepted it by committing.
 
-## Checking annotation coverage
+Re-resolve, then read the disagreement audit before committing:
 
-After running the pipeline, check the enriched checkpoint's verification section:
-
-```bash
-# Check if verification passed
-jq '.verification.passed' analysis/ir/enriched/Foundation.json
-
-# List any violations
-jq '.verification.violations' analysis/ir/enriched/Foundation.json
-
-# Count annotated methods
-jq '.class_annotations | map(.methods | length) | add' analysis/ir/annotated/Foundation.json
+```
+cargo run -p apianyware-analyze                                 # re-resolve with the new overlay
+cargo run -p apianyware-analyze -- annotations audit            # disagreements + per-tier win distribution
+cargo run -p apianyware-analyze -- annotations audit --only Foundation --json
+git diff platforms/macos/api                                    # the review surface
+git add -p && git commit                                        # = accept
 ```
 
-A verification failure means there are unclassified block parameters or ownership mismatches that need LLM annotation or manual review.
+`audit` is informational (always exits 0). Per family it reports, from the
+`resolved.json` `fact_provenance`:
+
+- **disagreements** — every fact-slot whose winner superseded ≥1 *disagreeing*
+  lower tier: the winning `{source, value}` plus each loser. The high-value
+  review targets.
+- **win distribution** — how many producing slots each §28 tier won.
+- **redundancy** — `convention-won` slots (convention sufficed, the LLM
+  annotation was unneeded) and `uncontested-llm` slots. The carriage records only
+  *disagreeing* losers, so `uncontested-llm` cannot separate LLM-original facts
+  from LLM facts that merely reproduce convention — the report says so.
+
+## Verifying coverage
+
+After re-resolving, confirm the regenerated families are no longer stale:
+
+```
+cargo run -p apianyware-analyze -- annotations stale --only Foundation
+# ok: ... no orphaned / new-surface / shape-changed slots
+```
+
+A remaining `new-surface` count is expected when a method is *structurally*
+annotatable but Apple's docs do not support a fact — partial annotation is
+correct, and the convention tier fills defensible gaps at resolve time.

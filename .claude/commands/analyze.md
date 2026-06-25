@@ -1,73 +1,96 @@
 ---
-description: Run LLM analysis on all frameworks that have resolved IR. Discovers frameworks automatically.
+description: Regenerate stale LLM annotation overlays (.apiw) for drifted framework families, in Claude Code subagents.
 ---
 
-# Analyze All Frameworks
+# Analyze — regenerate stale annotation overlays
 
-> **⚠️ Superseded by the pipeline cutover (`pipeline-cutover-k20`, ADR-0046).** The
-> `analysis/ir/resolved/` + `analysis/ir/annotated/` checkpoints and the
-> `.llm.json` side-channel are retired: the authored overlay is now the committed
-> per-family `platforms/macos/api/<Framework>/annotations.apiw`, and the pipeline
-> reads `extracted.json` → (in-process `linked` → annotate → enrich) → `resolved.json`.
-> This command describes the **old** LLM-annotation flow; reworking it to author
-> `.apiw` overlays is **workstream 5** (see `TODO.md`).
+Drive the LLM analysis side-channel (ADR-0050): find framework families whose
+authored `annotations.apiw` overlay has drifted from the current resolved API
+surface, dispatch one Claude Code subagent per stale family to re-author its
+overlay, then re-resolve and review. This is the `regenerable` adjective made
+operational — the loop runs **inside Claude Code**, never an external paid API
+([[llm_annotation_constraint]]).
+
+`annotate` runs **once per SDK update**, so keep the run lean: only stale
+families need a subagent. The canonical reference is
+[`platforms/macos/docs/annotation-workflow.md`](../../platforms/macos/docs/annotation-workflow.md).
+
+## Precondition
+
+`resolved.json` must be current (the staleness check reads it). After an SDK bump
+or extraction change, run collect + resolve first:
+
+```bash
+cargo run -p apianyware-collect          # refresh extracted.json (optionally --only <F>)
+cargo run -p apianyware-analyze          # resolve → resolved.json (the comparison surface)
+```
 
 ## Process
 
-1. List all `*.json` files in `analysis/ir/resolved/` to find available frameworks
-2. For each framework, check if `analysis/ir/annotated/{Framework}.json` already has LLM annotations (check for non-empty `class_annotations` with `source: "llm"` entries)
-3. For frameworks needing analysis, follow the per-framework process below
-4. After all frameworks are processed, run the heuristic merge to re-merge
+1. **Find the stale families** — the regeneration worklist:
 
-## Per-Framework Analysis
+   ```bash
+   cargo run -q -p apianyware-analyze -- annotations stale --json
+   ```
 
-For each framework:
+   The `worklist` array names the families needing regeneration; each family
+   record lists its `orphaned` / `new-surface` / `shape-changed` slots. If the
+   worklist is empty, every overlay is current — stop, there is nothing to do.
 
-1. Read `analysis/ir/resolved/{Framework}.json` to get the class/method list
-2. Identify methods needing LLM analysis: those with block parameters, delegate/weak patterns, error out-params, or ambiguous threading constraints
-3. For those classes, fetch Apple documentation via WebFetch at `https://developer.apple.com/documentation/{framework}/{classname}` (lowercase)
-4. Also consult Apple programming guides for pattern recognition (e.g., "Key-Value Observing Programming Guide", "Cocoa Drawing Guide")
-5. Analyze each method's documentation to classify:
-   - **block_invocation**: `synchronous` / `async_copied` / `stored`
-   - **parameter_ownership**: `weak` / `copy` / `strong` (only annotate non-strong)
-   - **threading**: `main_thread_only` / `any_thread` (only if determinable)
-   - **error_pattern**: `error_out_param` / `nil_on_failure`
-6. Write LLM annotations as a temporary `FrameworkAnnotations` JSON
+2. **Dispatch one subagent per stale family.** Fan them out concurrently. Give
+   each subagent the prompt at
+   [`platforms/macos/docs/annotation-subagent-prompt.md`](../../platforms/macos/docs/annotation-subagent-prompt.md)
+   with `{FRAMEWORK}` substituted, and hand it that family's stale slots. Each
+   subagent reads `platforms/macos/api/<Framework>/resolved.json` + Apple
+   headers/docs, classifies the four fact kinds (block invocation, parameter
+   ownership, threading, error pattern) over the **structural annotatable shape**
+   (a block param or an `NSError **` out-param — the `delegate`/`observer`
+   selector-substring signal is excluded as noise), and writes
+   `platforms/macos/api/<Framework>/annotations.apiw` **directly** with
+   `source llm` (+ optional `confidence` / `provenance`). The subagent validates
+   its own output by re-resolving + re-running `stale --only <Framework>`.
 
-## Output Format (Temporary LLM Annotations)
+3. **Re-resolve** with the regenerated overlays:
 
-Write a temporary file at `analysis/ir/annotated/{Framework}.llm.json`:
+   ```bash
+   cargo run -p apianyware-analyze
+   ```
 
-```json
-{
-  "framework": "Foundation",
-  "classes": [
-    {
-      "class_name": "NSArray",
-      "methods": [
-        {
-          "selector": "enumerateObjectsUsingBlock:",
-          "is_instance": true,
-          "block_parameters": [{"param_index": 0, "invocation": "synchronous"}],
-          "source": "llm"
-        }
-      ]
-    }
-  ]
-}
-```
+4. **Review the disagreement audit** — the high-value review targets before you
+   accept:
 
-Sort classes and methods alphabetically. Only include methods with interesting annotations. Set `source` to `"llm"`.
+   ```bash
+   cargo run -q -p apianyware-analyze -- annotations audit            # all families
+   cargo run -q -p apianyware-analyze -- annotations audit --only Foundation --json
+   ```
 
-## After Analysis
+   It reports, per family, fact-slots where the LLM winner superseded a
+   *disagreeing* lower tier, the per-§28-tier win distribution, and the
+   carriage-faithful redundancy signals (`convention-won` / `uncontested-llm`).
 
-Run the heuristic merge to combine heuristic + LLM annotations into the annotated checkpoint:
-```bash
-cargo run -p apianyware-analyze -- annotate
-```
+5. **Confirm coverage** — no family should remain stale (beyond methods
+   deliberately left unannotated):
 
-This reads `analysis/ir/resolved/`, runs heuristics on all methods, merges with any existing LLM annotations in `analysis/ir/annotated/`, and writes the final annotated checkpoint.
+   ```bash
+   cargo run -q -p apianyware-analyze -- annotations stale
+   ```
 
-## Schema Reference
+6. **Accept by committing.** Git is the propose → review → accept boundary
+   (ADR-0050): a committed `source llm` fact *is* `accepted-LLM`. Review the diff
+   and commit (accept) or discard (reject):
 
-See `platforms/macos/tools/scripts/prompt-template.md` for the complete annotation schema and classification guidance.
+   ```bash
+   git diff platforms/macos/api      # the review surface (the overlay is the only committed artifact)
+   git add -p && git commit
+   ```
+
+## Notes
+
+- **No staging store, no propose/accept flag** — the working tree holds proposals,
+  a commit is acceptance. `extracted.json` / `resolved.json` are gitignored; only
+  `annotations.apiw` is committed.
+- **Two source vocabularies:** the overlay carries `{llm, manual}`; the full
+  ladder (`extraction` / `convention:<rule>` / `llm` / `manual` / `unknown`, with
+  `superseded-by` losers) lives only in the derived `resolved.json` provenance.
+- **Provenance is emit-invisible** — the audit stamps `source`, never the winning
+  value, so regenerating annotations cannot move the emit goldens.

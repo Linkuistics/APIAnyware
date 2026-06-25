@@ -139,7 +139,7 @@ platform-neutrality success criterion (§45.8).
 
 This `docs/` directory also holds the pre-existing operational prose
 ([`collection.md`](collection.md) — extraction learnings;
-[`annotation-workflow.md`](annotation-workflow.md) — the *superseded* annotation
-flow, reworked by ws5; [`codesigning-identity.md`](codesigning-identity.md) — the
-local signing identity). See [`README.md`](README.md) for the full map of this
-directory.
+[`annotation-workflow.md`](annotation-workflow.md) — the LLM analysis side-channel
+over the `annotations.apiw` overlay (ADR-0050);
+[`codesigning-identity.md`](codesigning-identity.md) — the local signing identity).
+See [`README.md`](README.md) for the full map of this directory.

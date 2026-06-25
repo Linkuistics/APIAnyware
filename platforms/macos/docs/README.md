@@ -37,11 +37,14 @@ documentation:
 - **[`collection.md`](collection.md)** — extraction/collection learnings (libclang
   pitfalls, availability filtering, the Swift-overlay-name unification, the
   synthetic-framework pattern).
-- **[`annotation-workflow.md`](annotation-workflow.md)** — ⚠️ **superseded**. It
-  describes the *retired* flat `_llm-annotations` side-channel and the old IR
-  checkpoints; its *when to run* table and heuristic reference remain useful but its
-  paths are stale. Reworking the LLM side-channel workflow over the `.apiw` overlay
-  is **workstream 5**.
+- **[`annotation-workflow.md`](annotation-workflow.md)** — the LLM analysis
+  side-channel over the committed `annotations.apiw` overlay (ADR-0050): the spec
+  triad, §28 source precedence, live staleness detection (`annotations stale`), the
+  resolve-time disagreement audit (`annotations audit`), and git-as-accept. The
+  *when to run* cadence is once per SDK update.
+- **[`annotation-subagent-prompt.md`](annotation-subagent-prompt.md)** — the prompt
+  `/analyze` dispatches to one Claude Code subagent per stale family to re-author
+  its `annotations.apiw` over the structural annotatable shape.
 - **[`codesigning-identity.md`](codesigning-identity.md)** — the persistent local
   code-signing identity that keeps sample-app CDHashes (and TCC grants) stable
   across rebuilds.
