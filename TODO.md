@@ -15,7 +15,7 @@ README. This index confirms those markers are in place, by workstream:
 | 2 — spec-format / `.apiw` DSL | ✅ **DONE 2026-06-24** (`spec-format-k16` retired): the `.apiw` KDL DSL + parser + KDL Schema + the per-family triad + the convention-datalog tier all shipped (ADR-0046/0047). The pattern-kind / app-kind / annotation *content* written in it is ws3/ws4/ws7 (rows below). | `semantic/pattern-kinds/README.md`, `platforms/macos/app-kinds/README.md` (DSL reference discharged) |
 | 3 — semantic model | ✅ **DONE 2026-06-25** (`semantic-model-k27` node, children k28–k31 retired): the pattern-kind `.apiw` KDL Schema + `semantic/tools/patterns` registry crate + 16 authored kind definitions (k28); first-class pattern-instance carriage in `resolved.json` (k29); the `apianyware-pattern-detection` convention datalog (k30); and the semantic-vocabulary docs — `semantic/docs/{overview,pattern-model}.md` + the `api-pattern-catalog.md` rewrite — with the `semantic/README.md`, `semantic/docs/README.md`, and `semantic/pattern-kinds/README.md` placeholders discharged (k31). ADR-0048 (D1–D8, DP1–DP4); PRD `prd/2026-06-25-semantic-pattern-kind-model.md`. | placeholders discharged |
 | 4 — platform model | `platform.yaml`, app-kinds, platform tests/docs (**the IR relocation `analysis/ir/` → per-family `platforms/macos/api/<Framework>/{extracted,resolved}.json` was reassigned to and done by ws2's `pipeline-cutover-k20`**) | `platforms/README.md`, `platforms/macos/README.md`, `platforms/macos/app-kinds/README.md`, `platforms/macos/docs/README.md`, `platforms/macos/tests/README.md` |
-| 5 — LLM analysis side-channel | the LLM side-channel **workflow** over the overlay — caching, regeneration, propose→review→accept, diff/provenance/confidence — **and reworking the workflow tooling to operate on `.apiw`** (currently superseded-banner'd: `check-llm-annotation-drift.sh`, `audit-llm-redundancy.py`, `llm-annotate-orchestration.md`, `llm-annotate-subagent.md`, `config.example.toml`, `.claude/commands/analyze.md`, `Makefile` `lint-annotations`). The flat `*.llm.json` → per-family `annotations.apiw` **reshape itself was done by ws2's `pipeline-cutover-k20`** | (the `_llm-annotations/` staging dir is retired) |
+| 5 — LLM analysis side-channel | ✅ **DONE 2026-06-25** (`llm-side-channel-k43` node, children k44–k49 retired): realized as a **lean mechanism over git + the pipeline** (ADR-0050), not a staging subsystem — git is the propose→review→accept boundary (`accepted-LLM` ≡ a committed `source llm` fact). The §4 disagreement/precedence audit stamps per-fact `source` + `superseded-by` into `resolved.json` at resolve time (emit-invisible → golden-neutral; `AnnotationSource` reconciled to the §4 vocab in k44, the resolve-time audit in k45); `apianyware-analyze annotations stale` (k46) + `annotations audit` (k47) replace the two analysis scripts; the `analyze` command/skill + `annotation-{workflow,subagent-prompt}.md` reworked over `.apiw` (k48); and `retire-tooling-k49` deleted the dead bash/python/external-API scaffolding (`check-llm-annotation-drift.sh`, `audit-llm-redundancy.py`, `regenerate-stale-pipeline.sh`, `llm-annotate.sh`, `config.example.toml`, `llm-annotate-orchestration.md`, `prompt-template.md`) and repointed `Makefile` `lint-annotations` onto the subcommands. The flat `*.llm.json` → per-family `annotations.apiw` **reshape itself was done by ws2's `pipeline-cutover-k20`**. | scaffolding retired; `Makefile` `lint-annotations` repointed |
 | 6 — target model | generated bindings, app-implementations, capability profiles, idiom catalogues, policies, per-target `Package.swift` reshape; re-sync the new-target guide's step paths | `targets/README.md`, `targets/racket/bindings/macos/README.md`, `targets/chez/bindings/macos/README.md`, `targets/_shared/docs/adding-a-language-target.md` |
 | 7 — apps | author/extract `apps/macos/<app>/` specs; finalize the spec structure | `apps/README.md`, `apps/macos/README.md` |
 | 8 — schemas + validation | formal schema definitions | `schemas/README.md`, `schemas/docs/README.md` |
@@ -29,18 +29,21 @@ target and `.claude/commands/analyze.md`). What remains is prose:
 
 - **IR-checkpoint paths** (`analysis/ir/{resolved,annotated,enriched,llm-summaries}`,
   `collection/ir/collected`) are **gone from the active pipeline** as of ws2's
-  `pipeline-cutover-k20`: collect/analyze/generate, `.gitignore`, and
-  `regenerate-stale-pipeline.sh` now use the per-family triad under
-  `platforms/macos/api/<Framework>/` (`extracted.json` / `annotations.apiw` /
-  `resolved.json`). The LLM side-channel **workflow** scripts/docs that still name the
-  old paths carry a superseded→ws5 banner (they describe the retired flow); reworking
-  them over `.apiw` is the ws5 row above.
+  `pipeline-cutover-k20`: collect/analyze/generate + `.gitignore` use the per-family
+  triad under `platforms/macos/api/<Framework>/` (`extracted.json` / `annotations.apiw` /
+  `resolved.json`). The LLM side-channel **workflow** scripts that still named the old
+  paths were **retired** by ws5's `retire-tooling-k49` (`check-llm-annotation-drift.sh`,
+  `audit-llm-redundancy.py`, `regenerate-stale-pipeline.sh`, `llm-annotate*`,
+  `prompt-template.md`); their function now lives in `apianyware-analyze annotations
+  {stale,audit}` + the `.claude/commands/analyze.md` orchestration.
 - **Moved-script / moved-crate paths** (`analysis/scripts/`, `collection/crates/`,
-  `generation/targets/`) survive in *live reference* docs
-  (`platforms/macos/docs/annotation-workflow.md`, `semantic/docs/analysis.md`). These
-  are non-build-critical and were left at skeleton stage (SC6 — no doc-prose rewrite);
-  fold the resync into the workstream that next edits each doc (ws4/ws5 for the
-  annotation pipeline docs).
+  `generation/targets/`) — `platforms/macos/docs/annotation-workflow.md` was **reworked
+  over `.apiw`** by ws5's `orchestration-skill-k48`, so the residual is
+  `semantic/docs/analysis.md`: a non-dated analysis-gotchas doc still describing the
+  **pre-cutover** pipeline (`.llm.json`, `analysis/ir/` checkpoints) and the now-**deleted**
+  annotation scripts. Broadly stale vs ws2's cutover, not just this leaf — non-build-critical;
+  fold its rewrite into the next workstream that edits `semantic/` analysis docs (a standalone
+  doc-resync, no longer owned by ws4/ws5).
 - **Historical records** (ADRs, dated `process/` plans, PRDs, captured spike `.txt`)
   keep their original path strings deliberately — rewriting them would falsify the
   record.

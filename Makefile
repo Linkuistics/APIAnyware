@@ -1,17 +1,22 @@
 # APIAnyware task runner.
 #
-# lint-annotations — gate against stale / redundant LLM annotations.
-#   SUPERSEDED by the pipeline cutover (pipeline-cutover-k20, ADR-0046): the
-#   `_llm-annotations` side-channel + `analysis/ir/` checkpoints are retired, and
-#   `apianyware-analyze` no longer has an `annotate --llm-dir` subcommand (the
-#   authored overlay is the committed per-family `annotations.apiw`). This target
-#   targets the OLD layout; reworking the lint over `.apiw` is workstream 5 (TODO.md).
+# lint-annotations — the LLM annotation side-channel gate + report (ADR-0050 §5;
+#   ws5 `retire-tooling-k49`). Replaces the retired bash/python scaffolding with
+#   the typed `apianyware-analyze annotations` subcommands.
+#
+#   `annotations stale` is the gate: it exits 1 when any family's committed
+#   `annotations.apiw` overlay has drifted from the current resolved API surface
+#   (orphaned / new-surface / shape-changed) — so this target fails CI exactly
+#   when an overlay needs regenerating. `annotations audit` is informational
+#   (always exit 0): per-family disagreement + per-tier win distribution read
+#   from each `resolved.json`'s `fact_provenance` carriage.
+#
+#   PRECONDITION: both read the gitignored per-family `resolved.json`. Run the
+#   resolve pipeline first (`apianyware-collect` then `apianyware-analyze`) so the
+#   surface is current; each subcommand emits an actionable error if it is absent.
 
 .PHONY: lint-annotations
 
 lint-annotations:
-	./platforms/macos/tools/scripts/check-llm-annotation-drift.sh --skip-regen
-	mkdir -p /tmp/empty-llm-dir /tmp/heuristic-only-annotated
-	cargo run --release -q -p apianyware-analyze -- annotate \
-		--output-dir /tmp/heuristic-only-annotated --llm-dir /tmp/empty-llm-dir
-	python3 ./platforms/macos/tools/scripts/audit-llm-redundancy.py
+	cargo run --release -q -p apianyware-analyze -- annotations stale
+	cargo run --release -q -p apianyware-analyze -- annotations audit
