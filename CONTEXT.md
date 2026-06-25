@@ -1362,18 +1362,29 @@ uncommitted (constraint 4).
 _Avoid_: committing the per-API status (derivable → rots against SDK/binding drift); authoring it
 in `platforms/` (the §30 weirdness is platform truth, but the *status* is ws6 — the ws4 D4 line).
 
-**Idiom catalogue + the `pattern_dispatch` seam** _(`targets/<t>/idioms/<category>.apiw`; authored; D3)_:
-The §21 source-concept → target-construct mapping (`bracket → with-macro + unwind-protect`,
-`error-out → condition + multiple-values`, …), authored `.apiw` + generated §21 idiom docs under
-`idioms/docs/`. It is the **authored data** the shared `emit/pattern_dispatch` classifier reads —
-ws6 refactors `classify_pattern` (today a hardcoded Rust `match` with scheme-flavoured names baked
-in, **zero callers**) to consume the per-target catalogue (golden-neutral: every emitter is
-pattern-blind today). **Applying** projection — emitters consuming pattern-instances to emit
-`with-bracket`/`make-foo` wrappers — **moves goldens + needs per-target VM-verify** and is a
-clearly-scoped, golden-INTENTIONAL follow-on, not folded into the authored-layer work.
+**Idiom catalogue + the `pattern_dispatch` seam** _(`targets/<t>/idioms/catalogue.apiw`; authored; D3; child `idioms-k53`)_:
+The §21 source-concept → target-construct catalogue, **one file per target** keyed by a §21 idiom
+**category** (a shared 25-token vocab in `targets/_shared` `vocab.rs`, lockstep with REFACTOR §21 —
+like the capability dimensions, validator-enforced not a schema enum). Each `idiom "<category>"`
+authors this target's `construct` (open prose, grounded in the target's shipped idiom) and — for the
+minority of categories with an emit projection — `projects "<kind>" { emit "<construct>"; name "<id>" }`
+mapping a ws3 pattern-**kind** to the closed **`EmitConstruct`** taxonomy + a generated identifier.
+**Two axes:** the *source-concept* category (coarse, §21) and the *pattern-kind* projection (finer,
+ws3) — one category may project several kinds (`bracketed-use` → `bracket` + `paired-state`). The
+catalogue is the **authored data** the shared `emit/pattern_dispatch::classify_pattern` reads: it
+keys on a pattern-instance's `kind`, looks up the catalogue's kind→projection index, and renders the
+authored `EmitConstruct` + name (a kind no idiom projects → pass-through). The refactor was
+**golden-neutral** (`classify_pattern` had zero callers, every emitter pattern-blind — the mapping
+moved from a hardcoded Rust match into authored `.apiw`). The eight emit-relevant kinds project
+uniform `with-*`/`make-*`/`-sequence` names across the scheme family (they share the convention; the
+model permits a future non-Lisp target to author its own). **Applying** projection — emitters
+consuming pattern-instances to emit `with-bracket`/`make-foo` wrappers — **moves goldens + needs
+per-target VM-verify** and is a clearly-scoped, golden-INTENTIONAL follow-on, not folded in. §21
+idiom docs live under `idioms/docs/`.
 _Avoid_: leaving the idiom map Rust-baked (D1 — the catalogue is authored `.apiw`); turning on
 generation this grove (goldens move — deferred); a target-neutral catalogue (each target authors
-its own idioms — the maximize-idiom rule).
+its own idioms — the maximize-idiom rule); putting the `EmitConstruct` taxonomy in `emit` (it is
+authored target-model data — `emit` depends on `target-model`, never the reverse).
 
 **Projection policy** _(`targets/<t>/policies/<platform>/*.apiw`; authored; §23)_:
 The per-platform projection *choices* a target makes — e.g. `safe-adapter` vs `thin-direct`

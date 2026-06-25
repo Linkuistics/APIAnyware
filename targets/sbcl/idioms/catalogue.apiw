@@ -1,0 +1,96 @@
+// The sbcl idiom catalogue (REFACTOR §21; structural-refactoring grove ws6, idioms-k53).
+// Contract: schemas/spec-format/idioms.kdl-schema. Per-target (each target authors its own
+// idioms — the maximize-idiom rule). Constructs grounded in the CLOS/MOP binding over sb-alien
+// + the ADRs (0034 objc-class metaclass object model, 0035 main-thread bounce, 0036
+// finalize/release-queue, 0037 ns:objc-error conditions, 0038 native trampolines/subclass-IMP,
+// 0042 value structs). The `projects` emit dispatch is the data the shared emit/pattern_dispatch
+// reads; the generated identifiers are notional projection names the deferred apply-projection
+// follow-on will consume (golden-neutral here — classify_pattern has zero callers, D3).
+idiom-catalogue "sbcl" {
+    doc "How source concepts appear in the SBCL/CLOS binding (CLOS/MOP over sb-alien, GC finalization, main-thread bounce)."
+
+    idiom "owned-resource" {
+        construct "A CLOS object on the objc-class metaclass graph (ADR-0034) holding the foreign pointer + closed-state; sb-ext:finalize releases it at GC via a main-thread release-queue drain (ADR-0036)."
+    }
+    idiom "borrowed-value" {
+        construct "A borrowed sb-alien pointer handed out for the borrow window; validity is a documented convention, not enforced."
+    }
+    idiom "shared-resource" {
+        construct "Retain/release bridged through the ObjC runtime; the CLOS object holds a +1 reference dropped by its finalizer."
+    }
+    idiom "explicit-release" {
+        construct "A `close-NAME` generic function releases eagerly and marks the object closed (idempotent); deterministic release is a convention, finalize the backstop (ADR-0036)."
+    }
+    idiom "bracketed-use" {
+        construct "A `with-NAME` macro over `unwind-protect`; the cleanup form runs even on a non-local exit."
+        doc "Both the acquire/release bracket and the paired-state guard expand to unwind-protect."
+        projects "bracket"      { emit "scoped-resource"; name "with-bracket" }
+        projects "paired-state" { emit "scoped-guard";    name "with-paired-state" }
+    }
+    idiom "builder" {
+        construct "Keyword-argument `make-NAME` / make-instance constructors; staged configuration via a let*-threaded builder; class clusters become smart constructors."
+        projects "builder"         { emit "builder-dsl";       name "builder" }
+        projects "factory-cluster" { emit "smart-constructor"; name "make-factory-cluster" }
+    }
+    idiom "typestate" {
+        construct "State preconditions are runtime `check-type`/`assert`s, not static types."
+    }
+    idiom "nullable-result" {
+        construct "A NULL return surfaces as `nil`; callers use `when`/`if`."
+    }
+    idiom "error-side-channel" {
+        construct "An NSError** out-param is captured and signalled as an ns:objc-error condition (ADR-0037); the result wrapper hides the out-param and returns the value via multiple-values on success."
+        projects "error-out" { emit "result-wrapper"; name "error-out" }
+    }
+    idiom "exception-like-failure" {
+        construct "ObjC exceptions (NSException) are caught at the trampoline and signalled as the ns:objc-error condition hierarchy (ADR-0037), handled with `handler-case`."
+    }
+    idiom "callback" {
+        construct "A Lisp closure wrapped as an sb-alien callback; the synchronous variant runs on the calling thread (ADR-0038 trampolines)."
+    }
+    idiom "escaping-callback" {
+        construct "Escaping callbacks are rooted in the callback registry for their subscription lifetime so the GC keeps them live while ObjC may still invoke them."
+    }
+    idiom "subscription" {
+        construct "A `with-NAME` macro registers an observer and unregisters in its unwind-protect cleanup; observers and subscriptions share the scoped-observer shape."
+        projects "observer"     { emit "scoped-observer"; name "with-observer" }
+        projects "subscription" { emit "scoped-observer"; name "with-subscription" }
+    }
+    idiom "delegate" {
+        construct "A delegate is a CLOS object whose methods are exposed as ObjC IMPs via subclass-IMP synthesis in libAPIAnywareSbcl (ADR-0038)."
+    }
+    idiom "async-completion" {
+        construct "Completion blocks are Lisp closures bridged as ObjC blocks; results are delivered on the bounced main thread."
+    }
+    idiom "thread-affinity" {
+        construct "Thread-confined APIs are called from the owning thread by convention (entry-point pools, the main-thread rule); native sb-threads run real concurrent Lisp."
+    }
+    idiom "main-thread-requirement" {
+        construct "Main-thread-only APIs and foreign-thread callbacks BOUNCE to the main thread (ADR-0035) — a foreign OS thread must never run Lisp, so the native trampoline bounces; a conventional mechanism, not chez's activation."
+    }
+    idiom "buffer-fill" {
+        construct "A caller-allocated sb-alien buffer is passed in and filled in place by the callee."
+    }
+    idiom "two-call-sizing" {
+        construct "A helper calls once for the required length, allocates an sb-alien buffer, then calls again to fill."
+    }
+    idiom "array-slice-view" {
+        construct "NSArray ↔ CL sequence conversion is exact; an enumeration is iterated as a CL sequence / via `dolist`."
+        projects "enumeration" { emit "iteration-adapter"; name "enumeration-sequence" }
+    }
+    idiom "string-encoding" {
+        construct "NSString ↔ CL string conversion is exact (UTF-8/UTF-16 bridged at the boundary)."
+    }
+    idiom "foreign-struct" {
+        construct "sb-alien open-codes C struct-by-value, projected to a CLOS value-struct surface (ADR-0042)."
+    }
+    idiom "foreign-enum-flags" {
+        construct "Enums map to CL keywords / integers; option-sets to `logior` of flag constants."
+    }
+    idiom "global-singleton" {
+        construct "A process-global singleton (e.g. NSApplication) is a memoized accessor returning the shared instance."
+    }
+    idiom "unsafe-escape-hatch" {
+        construct "The raw sb-alien pointer is reachable via an explicit unsafe accessor for APIs the binding does not model."
+    }
+}

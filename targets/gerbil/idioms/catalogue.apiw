@@ -1,0 +1,96 @@
+// The gerbil idiom catalogue (REFACTOR §21; structural-refactoring grove ws6, idioms-k53).
+// Contract: schemas/spec-format/idioms.kdl-schema. Per-target (each target authors its own
+// idioms — the maximize-idiom rule). Constructs grounded in the Gerbil Scheme define-c-lambda
+// binding + the ADRs (0017 define-c-lambda, 0020 defclass object model + transparent
+// subclassing, 0022 main-thread bounce, 0023 sharded generics). The `projects` emit dispatch
+// is the data the shared emit/pattern_dispatch reads; the generated identifiers are notional
+// projection names the deferred apply-projection follow-on will consume (golden-neutral here —
+// classify_pattern has zero callers, D3).
+idiom-catalogue "gerbil" {
+    doc "How source concepts appear in the Gerbil Scheme binding (define-c-lambda, defclass object graph, main-thread bounce)."
+
+    idiom "owned-resource" {
+        construct "A `defclass` instance wrapping the foreign pointer + closed-state slot; a will/finalizer releases it at GC if not closed first."
+    }
+    idiom "borrowed-value" {
+        construct "A borrowed foreign pointer handed out for the borrow window; validity is a documented convention, not enforced."
+    }
+    idiom "shared-resource" {
+        construct "Retain/release bridged through the ObjC runtime; the defclass instance holds a +1 reference dropped by its finalizer."
+    }
+    idiom "explicit-release" {
+        construct "A `close-NAME!` method releases eagerly and marks the instance closed (idempotent)."
+    }
+    idiom "bracketed-use" {
+        construct "A `with-NAME` macro (defrules) over `dynamic-wind`/`unwind-protect`; cleanup runs even on a non-local exit."
+        doc "Both the acquire/release bracket and the paired-state guard expand to the same unwinding form."
+        projects "bracket"      { emit "scoped-resource"; name "with-bracket" }
+        projects "paired-state" { emit "scoped-guard";    name "with-paired-state" }
+    }
+    idiom "builder" {
+        construct "Keyword-argument `make-NAME` constructors; staged configuration via a let-threaded builder; class clusters become smart constructors."
+        projects "builder"         { emit "builder-dsl";       name "builder" }
+        projects "factory-cluster" { emit "smart-constructor"; name "make-factory-cluster" }
+    }
+    idiom "typestate" {
+        construct "State preconditions are runtime checks (`error` on misuse), not static types."
+    }
+    idiom "nullable-result" {
+        construct "A NULL return surfaces as `#f`; callers pattern-match or use `cond`."
+    }
+    idiom "error-side-channel" {
+        construct "An NSError** out-param is captured and raised via `:std/error` (the result wrapper hides the out-param)."
+        projects "error-out" { emit "result-wrapper"; name "error-out" }
+    }
+    idiom "exception-like-failure" {
+        construct "ObjC exceptions are caught at the foreign boundary and `raise`d as :std/error objects, catchable with `try`/`with-catch`."
+    }
+    idiom "callback" {
+        construct "A Gerbil procedure wrapped as a C callback (define-c-lambda closure); the synchronous variant runs on the calling thread."
+    }
+    idiom "escaping-callback" {
+        construct "Escaping callbacks are registry-rooted for their subscription lifetime so the collector keeps them live while ObjC may still call them."
+    }
+    idiom "subscription" {
+        construct "A `with-NAME` macro registers an observer and unregisters in its dynamic-wind after-thunk; observers and subscriptions share the scoped-observer shape."
+        projects "observer"     { emit "scoped-observer"; name "with-observer" }
+        projects "subscription" { emit "scoped-observer"; name "with-subscription" }
+    }
+    idiom "delegate" {
+        construct "A delegate is a defclass instance whose methods are exposed as ObjC IMPs via transparent subclassing (ADR-0020)."
+    }
+    idiom "async-completion" {
+        construct "Completion blocks are Gerbil procedures bridged as ObjC blocks; results are delivered on the bounced main thread."
+    }
+    idiom "thread-affinity" {
+        construct "Thread-confined APIs are called from the owning thread by convention; Gerbil threads run real concurrent Scheme."
+    }
+    idiom "main-thread-requirement" {
+        construct "Main-thread-only APIs and foreign-thread callbacks BOUNCE to the main thread (ADR-0022) — a runtime mechanism the binding upholds conventionally."
+    }
+    idiom "buffer-fill" {
+        construct "A caller-allocated `u8vector`/foreign buffer is passed in and filled in place by the callee."
+    }
+    idiom "two-call-sizing" {
+        construct "A helper calls once for the required length, allocates, then calls again to fill."
+    }
+    idiom "array-slice-view" {
+        construct "NSArray ↔ Gerbil list/vector conversion; an `in-NAME` sequence iterates the collection."
+        projects "enumeration" { emit "iteration-adapter"; name "enumeration-sequence" }
+    }
+    idiom "string-encoding" {
+        construct "NSString ↔ Gerbil string conversion is exact (UTF-8/UTF-16 bridged at the boundary)."
+    }
+    idiom "foreign-struct" {
+        construct "C structs by value map to foreign struct accessors generated by define-c-lambda; fields accessed as Gerbil getters/setters."
+    }
+    idiom "foreign-enum-flags" {
+        construct "Enums map to Gerbil symbols / fixnums; option-sets to `fxior` of flag constants."
+    }
+    idiom "global-singleton" {
+        construct "A process-global singleton (e.g. NSApplication) is a memoized accessor returning the shared instance."
+    }
+    idiom "unsafe-escape-hatch" {
+        construct "The raw foreign pointer is reachable via an explicit unsafe accessor for APIs the binding does not model."
+    }
+}

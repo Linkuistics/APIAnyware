@@ -34,6 +34,15 @@ of each; any KDL tool in any language can validate against them.
   per-app-kind support. Workstream 6 (`capability-k52`, ADR-0051); validated by
   `apianyware-target-model` (the `capability/` submodule). The face-conditional `dimension`
   vocabulary is enforced by that validator, not the schema (cf. `api-semantics.kdl-schema`).
+- **`idioms.kdl-schema`** — the §21 per-implementation idiom catalogue
+  (`targets/<t>/idioms/catalogue.apiw`): a per-target map from a §21 idiom `category` to this
+  target's `construct`, plus — for the categories with an emit projection — the ws3 pattern-kinds
+  that category `projects`, each to an `emit` construct (the closed `EmitConstruct` taxonomy, a
+  schema `enum`) + a generated `name`. The authored data the shared `emit/pattern_dispatch`
+  classifier reads. Workstream 6 (`idioms-k53`); validated by `apianyware-target-model` (the
+  `idioms/` submodule). The §21 `category` vocabulary is enforced by that validator, not the schema
+  (cf. `capability.kdl-schema`). Identity (`idiom-catalogue "<id>"`) matches the *target* directory,
+  the file's grandparent (the `idioms/docs/` home forces the extra `idioms/` level).
 
 The Rust `apianyware-spec-format` crate is *one conforming validator* of this contract (its
 `validate_apiw` step embeds this file); any KDL tool in any language can validate an `.apiw` file

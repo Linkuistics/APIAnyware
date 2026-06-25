@@ -3,7 +3,7 @@ name = "apianyware-target-model"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "The shared target-model layer (structural-refactoring grove, workstream 6): authored .apiw parsers/loaders + focused validators for the per-target descriptor, capability profile, idiom catalogue, projection policy, adapter spec, and conformance report, plus the shared capability vocabulary + the derived representability floor. Target-INDEPENDENT machinery over per-target authored data under targets/<t>/. Ships the `descriptor/` + `capability/` submodules (with `vocab`/`derive`); later children add the rest."
+description = "The shared target-model layer (structural-refactoring grove, workstream 6): authored .apiw parsers/loaders + focused validators for the per-target descriptor, capability profile, idiom catalogue, projection policy, adapter spec, and conformance report, plus the shared capability vocabulary + the derived representability floor. Target-INDEPENDENT machinery over per-target authored data under targets/<t>/. Ships the `descriptor/` + `capability/` + `idioms/` submodules (with `vocab`/`derive`); later children add the rest."
 
 [dependencies]
 apianyware-spec-format.workspace = true

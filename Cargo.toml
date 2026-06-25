@@ -73,6 +73,7 @@ apianyware-platform-manifest = { path = "platforms/macos/tools/platform-manifest
 apianyware-app-kinds = { path = "platforms/macos/tools/app-kinds" }
 apianyware-platform-tests = { path = "platforms/macos/tools/platform-tests" }
 apianyware-enrich = { path = "semantic/tools/enrich" }
+apianyware-target-model = { path = "targets/_shared/tools/target-model" }
 apianyware-emit = { path = "targets/_shared/tools/emit" }
 apianyware-emit-racket = { path = "targets/racket/tools/emit-racket" }
 apianyware-emit-chez = { path = "targets/chez/tools/emit-chez" }

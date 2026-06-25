@@ -12,17 +12,28 @@
 //! - Zig: `defer path.close();`
 //! - Smalltalk: `path ensure: [path close]`
 //!
-//! Classification keys on the **kind name** (the authored registry identity —
-//! ADR-0048), not a closed Rust enum; an instance carries its `kind`, the kind's
-//! roles/laws, and a provenance stamp.
+//! Classification is **data-driven** (ws6 `idioms-k53`, node-brief D3): it reads the
+//! per-target **idiom catalogue** (`targets/<t>/idioms/catalogue.apiw`, parsed by
+//! `apianyware-target-model`) rather than a hardcoded match. The catalogue maps a ws3
+//! pattern-**kind** to an [`apianyware_target_model::EmitConstruct`] + a generated
+//! identifier; this module maps that authored taxonomy to its [`IdiomaticConstruct`]
+//! rendering interface. The per-target `.apiw` supplies the construct + naming; the shared
+//! `emit` crate keeps the plumbing. A kind no idiom projects passes through.
+//!
+//! Relocating the mapping from Rust into authored data is **golden-neutral**:
+//! `classify_pattern` has zero callers and every emitter is pattern-blind today, so no
+//! generated output moves. *Applying* projection — emitters consuming pattern-instances to
+//! emit `with-bracket`/`make-foo` wrappers — is the deferred, golden-INTENTIONAL follow-on.
 
+use apianyware_target_model::{EmitConstruct, IdiomCatalogue};
 use apianyware_types::pattern_instance::PatternInstance;
 
 /// Describes what idiomatic construct a pattern should generate.
 ///
 /// Each language emitter maps kinds to its own [`IdiomaticConstruct`] variants.
 /// The shared `emit` crate provides the dispatch logic; per-language emitters
-/// supply the rendering.
+/// supply the rendering. This is the rendering interface; the authored taxonomy it
+/// renders is [`apianyware_target_model::EmitConstruct`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IdiomaticConstruct {
     /// `(with-resource body ...)` — scoped resource management.
@@ -79,55 +90,126 @@ pub enum IdiomaticConstruct {
     PassThrough,
 }
 
-/// Classify what kind of idiomatic construct a pattern-instance should generate.
+/// Classify what kind of idiomatic construct a pattern-instance should generate, by reading
+/// the target's authored idiom `catalogue`.
 ///
-/// This is the shared dispatch that all emitters use. Each emitter then renders
-/// the construct in its own syntax. The mapping keys on the instance's authored
-/// `kind`; unrecognised or structural kinds fall through to [`PassThrough`].
+/// This is the shared dispatch all emitters use. Each emitter then renders the construct in
+/// its own syntax. The mapping keys on the instance's authored `kind`: a kind the catalogue
+/// projects yields the authored construct + name; an unprojected kind (a structural
+/// relationship, or a class-level idiom emitted as part of class generation) falls through
+/// to [`PassThrough`].
 ///
 /// [`PassThrough`]: IdiomaticConstruct::PassThrough
-pub fn classify_pattern(instance: &PatternInstance) -> IdiomaticConstruct {
-    let base = kebab(&instance.kind);
-    match instance.kind.as_str() {
-        "bracket" => IdiomaticConstruct::ScopedResource {
-            wrapper_name: format!("with-{base}"),
-        },
-        "builder" => IdiomaticConstruct::BuilderDsl {
-            builder_name: format!("{base}-builder"),
-        },
-        "observer" | "subscription" => IdiomaticConstruct::ScopedObserver {
-            wrapper_name: format!("with-{base}"),
-        },
-        "enumeration" => IdiomaticConstruct::IterationAdapter {
-            sequence_name: format!("{base}-sequence"),
-        },
-        "error-out" => IdiomaticConstruct::ResultWrapper {
-            result_function_name: base,
-        },
-        "factory-cluster" => IdiomaticConstruct::SmartConstructor {
-            constructor_name: format!("make-{base}"),
-        },
-        "paired-state" => IdiomaticConstruct::ScopedGuard {
-            wrapper_name: format!("with-{base}"),
-        },
-        // `delegate`/`target-action` are emitted as part of class generation;
-        // structural relationships project structurally — both pass through.
-        _ => IdiomaticConstruct::PassThrough,
+pub fn classify_pattern(
+    catalogue: &IdiomCatalogue,
+    instance: &PatternInstance,
+) -> IdiomaticConstruct {
+    match catalogue.projection_for(&instance.kind) {
+        Some(projection) => render(projection.emit, projection.name.clone()),
+        None => IdiomaticConstruct::PassThrough,
     }
 }
 
-/// Convert a kind name to kebab-case for use in generated identifiers.
-fn kebab(name: &str) -> String {
-    name.to_ascii_lowercase().replace([' ', '_'], "-")
+/// Map an authored [`EmitConstruct`] taxonomy token + its generated identifier to the
+/// [`IdiomaticConstruct`] rendering interface. Exhaustive over the closed taxonomy.
+fn render(emit: EmitConstruct, name: String) -> IdiomaticConstruct {
+    match emit {
+        EmitConstruct::ScopedResource => IdiomaticConstruct::ScopedResource { wrapper_name: name },
+        EmitConstruct::BuilderDsl => IdiomaticConstruct::BuilderDsl { builder_name: name },
+        EmitConstruct::ScopedObserver => IdiomaticConstruct::ScopedObserver { wrapper_name: name },
+        EmitConstruct::IterationAdapter => IdiomaticConstruct::IterationAdapter {
+            sequence_name: name,
+        },
+        EmitConstruct::ResultWrapper => IdiomaticConstruct::ResultWrapper {
+            result_function_name: name,
+        },
+        EmitConstruct::SmartConstructor => IdiomaticConstruct::SmartConstructor {
+            constructor_name: name,
+        },
+        EmitConstruct::ScopedGuard => IdiomaticConstruct::ScopedGuard { wrapper_name: name },
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
 
+    use apianyware_target_model::{Idiom, IdiomCatalogue, Projection};
     use apianyware_types::pattern_instance::{InstanceSource, PatternInstance};
 
     use super::*;
+
+    /// A tiny in-memory catalogue projecting the emit-relevant kinds, mirroring what the
+    /// authored `targets/<t>/idioms/catalogue.apiw` files supply (the integration test
+    /// `idiom_catalogues.rs` in `apianyware-target-model` guards the real ones).
+    fn catalogue() -> IdiomCatalogue {
+        fn idiom(category: &str, projects: Vec<Projection>) -> Idiom {
+            Idiom {
+                category: category.to_string(),
+                construct: "test construct".to_string(),
+                doc: None,
+                projects,
+            }
+        }
+        fn p(kind: &str, emit: EmitConstruct, name: &str) -> Projection {
+            Projection {
+                kind: kind.to_string(),
+                emit,
+                name: name.to_string(),
+            }
+        }
+        IdiomCatalogue {
+            id: "test".to_string(),
+            doc: None,
+            idioms: vec![
+                idiom(
+                    "bracketed-use",
+                    vec![
+                        p("bracket", EmitConstruct::ScopedResource, "with-bracket"),
+                        p(
+                            "paired-state",
+                            EmitConstruct::ScopedGuard,
+                            "with-paired-state",
+                        ),
+                    ],
+                ),
+                idiom(
+                    "builder",
+                    vec![
+                        p("builder", EmitConstruct::BuilderDsl, "builder"),
+                        p(
+                            "factory-cluster",
+                            EmitConstruct::SmartConstructor,
+                            "make-factory-cluster",
+                        ),
+                    ],
+                ),
+                idiom(
+                    "subscription",
+                    vec![
+                        p("observer", EmitConstruct::ScopedObserver, "with-observer"),
+                        p(
+                            "subscription",
+                            EmitConstruct::ScopedObserver,
+                            "with-subscription",
+                        ),
+                    ],
+                ),
+                idiom(
+                    "array-slice-view",
+                    vec![p(
+                        "enumeration",
+                        EmitConstruct::IterationAdapter,
+                        "enumeration-sequence",
+                    )],
+                ),
+                idiom(
+                    "error-side-channel",
+                    vec![p("error-out", EmitConstruct::ResultWrapper, "error-out")],
+                ),
+            ],
+        }
+    }
 
     fn instance(kind: &str) -> PatternInstance {
         let roles = BTreeMap::new();
@@ -144,7 +226,7 @@ mod tests {
 
     #[test]
     fn classify_bracket_is_scoped_resource() {
-        match classify_pattern(&instance("bracket")) {
+        match classify_pattern(&catalogue(), &instance("bracket")) {
             IdiomaticConstruct::ScopedResource { wrapper_name } => {
                 assert_eq!(wrapper_name, "with-bracket");
             }
@@ -154,7 +236,7 @@ mod tests {
 
     #[test]
     fn classify_observer_is_scoped_observer() {
-        match classify_pattern(&instance("observer")) {
+        match classify_pattern(&catalogue(), &instance("observer")) {
             IdiomaticConstruct::ScopedObserver { wrapper_name } => {
                 assert_eq!(wrapper_name, "with-observer");
             }
@@ -164,7 +246,7 @@ mod tests {
 
     #[test]
     fn classify_factory_cluster_is_smart_constructor() {
-        match classify_pattern(&instance("factory-cluster")) {
+        match classify_pattern(&catalogue(), &instance("factory-cluster")) {
             IdiomaticConstruct::SmartConstructor { constructor_name } => {
                 assert_eq!(constructor_name, "make-factory-cluster");
             }
@@ -174,7 +256,7 @@ mod tests {
 
     #[test]
     fn classify_paired_state_is_scoped_guard() {
-        match classify_pattern(&instance("paired-state")) {
+        match classify_pattern(&catalogue(), &instance("paired-state")) {
             IdiomaticConstruct::ScopedGuard { wrapper_name } => {
                 assert_eq!(wrapper_name, "with-paired-state");
             }
@@ -184,7 +266,7 @@ mod tests {
 
     #[test]
     fn classify_error_out_is_result_wrapper() {
-        match classify_pattern(&instance("error-out")) {
+        match classify_pattern(&catalogue(), &instance("error-out")) {
             IdiomaticConstruct::ResultWrapper {
                 result_function_name,
             } => assert_eq!(result_function_name, "error-out"),
@@ -194,7 +276,7 @@ mod tests {
 
     #[test]
     fn classify_enumeration_is_iteration_adapter() {
-        match classify_pattern(&instance("enumeration")) {
+        match classify_pattern(&catalogue(), &instance("enumeration")) {
             IdiomaticConstruct::IterationAdapter { sequence_name } => {
                 assert_eq!(sequence_name, "enumeration-sequence");
             }
@@ -204,9 +286,9 @@ mod tests {
 
     #[test]
     fn classify_builder_is_builder_dsl() {
-        match classify_pattern(&instance("builder")) {
+        match classify_pattern(&catalogue(), &instance("builder")) {
             IdiomaticConstruct::BuilderDsl { builder_name } => {
-                assert_eq!(builder_name, "builder-builder");
+                assert_eq!(builder_name, "builder");
             }
             other => panic!("Expected BuilderDsl, got {other:?}"),
         }
@@ -214,8 +296,9 @@ mod tests {
 
     #[test]
     fn classify_delegate_is_passthrough() {
+        // `delegate` is a class-level idiom the catalogue does not project → pass-through.
         assert_eq!(
-            classify_pattern(&instance("delegate")),
+            classify_pattern(&catalogue(), &instance("delegate")),
             IdiomaticConstruct::PassThrough
         );
     }
@@ -223,7 +306,7 @@ mod tests {
     #[test]
     fn classify_structural_relationship_is_passthrough() {
         assert_eq!(
-            classify_pattern(&instance("parent-child")),
+            classify_pattern(&catalogue(), &instance("parent-child")),
             IdiomaticConstruct::PassThrough
         );
     }

@@ -1,0 +1,95 @@
+// The racket idiom catalogue (REFACTOR §21; structural-refactoring grove ws6, idioms-k53).
+// Contract: schemas/spec-format/idioms.kdl-schema. Per-target (each target authors its
+// own idioms — the maximize-idiom rule). Constructs grounded in the Racket CS racket/foreign
+// binding + the trampoline/bounce ADRs (0010/0011 native-lib-is-the-binding, 0014 main-thread
+// bounce). The `projects` emit dispatch is the data the shared emit/pattern_dispatch reads;
+// the generated identifiers are the notional projection names the deferred apply-projection
+// follow-on will consume (golden-neutral here — classify_pattern has zero callers, D3).
+idiom-catalogue "racket" {
+    doc "How source concepts appear in the Racket CS binding (racket/foreign, will-executor finalization, main-thread bounce)."
+
+    idiom "owned-resource" {
+        construct "An opaque struct wrapping the foreign pointer + a closed? flag; a will-executor releases it at GC if not closed first."
+    }
+    idiom "borrowed-value" {
+        construct "A transient _cpointer handed out for the borrow window; validity is a documented convention, not enforced."
+    }
+    idiom "shared-resource" {
+        construct "Retain/release bridged through the ObjC runtime; the wrapper holds a +1 reference dropped by its will."
+    }
+    idiom "explicit-release" {
+        construct "A `close-NAME!` procedure releases eagerly and marks the wrapper closed (idempotent)."
+    }
+    idiom "bracketed-use" {
+        construct "A `with-NAME` macro over `dynamic-wind`; the after-thunk releases even on a non-local escape."
+        doc "Both the acquire/release bracket and the paired-state guard expand to dynamic-wind."
+        projects "bracket"      { emit "scoped-resource"; name "with-bracket" }
+        projects "paired-state" { emit "scoped-guard";    name "with-paired-state" }
+    }
+    idiom "builder" {
+        construct "Keyword-argument constructor procedures; staged configuration via a let*-threaded builder; class clusters become smart constructors."
+        projects "builder"         { emit "builder-dsl";       name "builder" }
+        projects "factory-cluster" { emit "smart-constructor"; name "make-factory-cluster" }
+    }
+    idiom "typestate" {
+        construct "State preconditions are runtime contracts (`raise-argument-error` on misuse), not static types."
+    }
+    idiom "nullable-result" {
+        construct "A NULL return surfaces as `#f`; callers pattern-match or use `cond`."
+    }
+    idiom "error-side-channel" {
+        construct "An NSError** out-param is captured and re-raised as an exn:fail:objc exception (the result wrapper hides the out-param)."
+        projects "error-out" { emit "result-wrapper"; name "error-out" }
+    }
+    idiom "exception-like-failure" {
+        construct "ObjC exceptions are caught at the trampoline and raised as Racket exceptions (`exn:fail`), catchable with `with-handlers`."
+    }
+    idiom "callback" {
+        construct "A Racket procedure wrapped as an FFI callback; the synchronous variant runs on the calling thread."
+    }
+    idiom "escaping-callback" {
+        construct "Escaping callbacks are rooted in a registry hash for their subscription lifetime so the GC keeps them live while ObjC may still call them."
+    }
+    idiom "subscription" {
+        construct "A `with-NAME` macro registers an observer and unregisters in its dynamic-wind after-thunk; observers and subscriptions share the scoped-observer shape."
+        projects "observer"     { emit "scoped-observer"; name "with-observer" }
+        projects "subscription" { emit "scoped-observer"; name "with-subscription" }
+    }
+    idiom "delegate" {
+        construct "A delegate is a Racket object whose methods are exposed as ObjC IMPs via a synthesized delegate subclass."
+    }
+    idiom "async-completion" {
+        construct "Completion blocks are Racket procedures bridged as ObjC blocks; results are delivered on the bounced main thread."
+    }
+    idiom "thread-affinity" {
+        construct "Thread-confined APIs are called from the owning thread by convention; Racket places run real concurrent threads."
+    }
+    idiom "main-thread-requirement" {
+        construct "Main-thread-only APIs and foreign-thread callbacks BOUNCE to the main thread through the trampoline (ADR-0014) — a runtime mechanism the binding upholds conventionally."
+    }
+    idiom "buffer-fill" {
+        construct "A caller-allocated `_bytes`/`make-bytes` buffer is passed in and filled in place by the callee."
+    }
+    idiom "two-call-sizing" {
+        construct "A helper calls once for the required length, allocates, then calls again to fill."
+    }
+    idiom "array-slice-view" {
+        construct "NSArray ↔ Racket list/vector conversion; an `in-NAME` sequence iterates the collection."
+        projects "enumeration" { emit "iteration-adapter"; name "enumeration-sequence" }
+    }
+    idiom "string-encoding" {
+        construct "NSString ↔ Racket string conversion is exact (UTF-8/UTF-16 bridged at the boundary)."
+    }
+    idiom "foreign-struct" {
+        construct "C structs by value map to `define-cstruct` types; fields accessed as Racket struct accessors."
+    }
+    idiom "foreign-enum-flags" {
+        construct "Enums map to Racket symbols / fixnums; option-sets to `bitwise-ior` of flag constants."
+    }
+    idiom "global-singleton" {
+        construct "A process-global singleton (e.g. NSApplication) is a memoized accessor returning the shared instance."
+    }
+    idiom "unsafe-escape-hatch" {
+        construct "The raw `_cpointer` is reachable via an explicit unsafe accessor for APIs the binding does not model."
+    }
+}

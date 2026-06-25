@@ -225,6 +225,7 @@ dependencies = [
 name = "apianyware-emit"
 version = "0.1.0"
 dependencies = [
+ "apianyware-target-model",
  "apianyware-types",
  "serde",
  "serde_json",

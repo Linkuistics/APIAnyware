@@ -1,0 +1,147 @@
+// idioms.kdl-schema — the authoritative, language-neutral contract for an authored
+// **idiom catalogue** `.apiw` file (`structural-refactoring` grove, workstream 6;
+// node-brief decision D3, child `idioms-k53`).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring the
+// siblings `capability.kdl-schema` / `target.kdl-schema` (the other target-model
+// entities), `app-kind.kdl-schema` / `platform.kdl-schema` (workstream 4),
+// `pattern-kinds.kdl-schema` (workstream 3), and `annotations.kdl-schema` (workstream 2).
+// Any KDL tool in any language can validate or consume an idiom catalogue. The Rust
+// `apianyware-target-model` crate is ONE conforming validator of this contract, not its
+// source of truth (ADR-0046 §3).
+//
+// SCOPE — the REFACTOR §21 target idiom catalogue: a per-target map answering "when the
+// platform docs say X, how does that appear in this target?". Each entry maps a §21 idiom
+// CATEGORY to this target's CONSTRUCT (open prose), and — for the minority of categories
+// that have an emit projection — maps the ws3 pattern-KINDS that category projects to an
+// emit construct + the generated identifier. Two axes meet here: the source-concept
+// CATEGORY (coarse, §21) and the pattern-KIND projection (finer, ws3); one category may
+// project several kinds (e.g. `bracketed-use` projects both `bracket` and `paired-state`).
+// The catalogue is the authored DATA the shared `emit/pattern_dispatch` classifier reads.
+//
+// IDENTITY — each target is one directory `targets/<id>/idioms/catalogue.apiw`; the
+// `idiom-catalogue "<id>"` value is the target's stable identity and matches the TARGET
+// directory (the conventional short name — `racket`, `chez`, `gerbil`, `sbcl`), the same
+// id its sibling `target.apiw` / `capability.apiw` carry. The catalogue lives one level
+// deeper than those (under `idioms/`, because the §21 docs home `idioms/docs/` forces a
+// directory), so the conforming loader checks the id against the file's GRANDPARENT.
+//
+// CONTROLLED VOCABULARY — the `emit` value is the closed taxonomy of idiomatic constructs
+// the emitters render, expressed here as a schema `enum` (a genuinely bounded, code-bound
+// set — the `EmitConstruct` variants — like `capability.kdl-schema`'s `rung` ladder and
+// `target.kdl-schema`'s `runtime-model`). The `idiom` CATEGORY token is NOT a schema enum:
+// it is a REFACTOR §21 domain vocabulary kept in lockstep with the spec (so a §21 revision
+// is a one-line vocab edit, not a schema change), and the conforming `apianyware-target-model`
+// validator enforces membership + per-catalogue uniqueness (exactly as `capability.kdl-schema`
+// defers its face-conditional `dimension` vocabulary and `api-semantics.kdl-schema` its §30
+// `weirdness` vocabulary). The `projects` KIND token is an open string (the targets-domain
+// crate does not depend on the semantic-domain pattern registry); the validator only checks
+// a kind is projected by at most one idiom, so the kind → projection index is unambiguous.
+// Keep the category vocabulary in lockstep with REFACTOR.md §21.
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE CARDINALITY in a
+// `value {…}` body (KDL Schema convention). `other-nodes-allowed` / `other-props-allowed`
+// default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware target idiom catalogue (.apiw)" lang="en"
+        description "The REFACTOR §21 catalogue answering 'when the platform docs say X, how does that appear in this target?': a per-target map from a §21 idiom category to this target's construct, plus — for the categories with an emit projection — the ws3 pattern-kinds that category projects, each mapped to an emit construct + generated identifier. The authored data the shared emit/pattern_dispatch classifier reads. Per-target (each target authors its own idioms — the maximize-idiom rule). The authored target-model knowledge layer over an already-built binding (REFACTOR §21)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 6 (target model, idioms-k53)"
+    }
+
+    // Exactly one top-level `idiom-catalogue "<id>"` node per file. The id is the target's
+    // stable identity and matches its target directory (`targets/<id>/`, e.g. "sbcl"); the
+    // conforming loader checks this against the file's grandparent.
+    node "idiom-catalogue" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // One idiom per §21 category the catalogue covers. At least one. The positional
+            // value is the §21 category token (a REFACTOR §21 vocabulary — the conforming
+            // validator checks membership and per-catalogue uniqueness, NOT a schema enum).
+            node "idiom" {
+                min 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    // How the concept appears in this target — the open authored construct
+                    // description (the human-facing §21 answer). Required; exactly one.
+                    node "construct" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                    // Optional one-line elaboration (typically citing the grounding
+                    // ADR / CONTEXT fact).
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                    // The ws3 pattern-kinds this idiom projects, with their emit dispatch.
+                    // Zero or more — the many documentation-only categories carry none. The
+                    // positional value is the open pattern-kind token (validator checks each
+                    // kind is projected by at most one idiom across the catalogue).
+                    node "projects" {
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        children {
+                            // The idiomatic construct the emitter renders for this kind.
+                            // Required; exactly one; the closed `EmitConstruct` taxonomy.
+                            node "emit" {
+                                min 1
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                    enum "scoped-resource" "builder-dsl" "scoped-observer" "iteration-adapter" "result-wrapper" "smart-constructor" "scoped-guard"
+                                }
+                            }
+                            // The generated identifier the construct uses (e.g.
+                            // "with-bracket"). Required; exactly one.
+                            node "name" {
+                                min 1
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

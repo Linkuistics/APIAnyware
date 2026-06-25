@@ -33,9 +33,14 @@
 //!     ladder + the **representability floor** that derives a per-API status from a
 //!     profile and the platform §30 weirdness an API carries.
 //!
-//! Later ws6 children add `idioms/`, `policy/`, `adapter_spec/`, and `conformance/`
-//! submodules (extending `derive` with conformance-coverage derivation) to **this same
-//! crate**.
+//! - [`idioms`] — the §21 per-implementation **idiom catalogue**
+//!   (`idioms/catalogue.apiw`): the source-concept → target-construct map + the
+//!   per-pattern-kind emit dispatch the shared `emit/pattern_dispatch` classifier
+//!   consumes, their parser, focused validator, and registry. The §21 idiom *categories*
+//!   are a controlled vocab in [`vocab`]. *(Child `idioms-k53`.)*
+//!
+//! Later ws6 children add `policy/`, `adapter_spec/`, and `conformance/` submodules
+//! (extending `derive` with conformance-coverage derivation) to **this same crate**.
 //!
 //! Each entity follows the three-layer validation the platform-model crates
 //! established (ADR-0046 §3): **structural** against a language-neutral
@@ -49,6 +54,7 @@ pub mod capability;
 pub mod derive;
 pub mod descriptor;
 pub mod error;
+pub mod idioms;
 pub mod vocab;
 
 pub use capability::{
@@ -59,4 +65,8 @@ pub use descriptor::{
     parse_target, validate_target, RuntimeModel, TargetDescriptor, TargetRegistry,
 };
 pub use error::{Result, TargetModelError};
-pub use vocab::{capability_for, is_valid_dimension, Face};
+pub use idioms::{
+    parse_idioms, validate_idioms, EmitConstruct, Idiom, IdiomCatalogue, IdiomCatalogueRegistry,
+    Projection,
+};
+pub use vocab::{capability_for, is_valid_dimension, is_valid_idiom_category, Face};

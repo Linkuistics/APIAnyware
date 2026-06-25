@@ -67,6 +67,48 @@ pub const APP_FORM: &[&str] = &[
     "native-runtime-embedding",
 ];
 
+/// REFACTOR §21 **idiom categories** — the controlled set of source-concept slots an
+/// authored idiom catalogue (`targets/<t>/idioms/catalogue.apiw`; child `idioms-k53`)
+/// answers "*when the platform docs say X, how does that appear in this target?*" for.
+///
+/// Like the capability dimensions above (and unlike the closed `Representability` /
+/// [`EmitConstruct`](crate::idioms::EmitConstruct) ladders, which are code-bound serde
+/// enums), this is a domain **vocabulary** the focused validator enforces — kept in
+/// lockstep with REFACTOR.md §21, not frozen into the KDL Schema, so a §21 revision is a
+/// one-line vocab edit rather than a schema-and-enum change. A catalogue's `idiom "<c>"`
+/// entries draw `<c>` from this set; [`is_valid_idiom_category`] is the membership check.
+///
+/// The categories are a *source-concept* axis — coarser than, and orthogonal to, the
+/// ws3 pattern-**kind** axis a catalogue's `projects` children dispatch on (one category
+/// may project several kinds — `bracketed-use` covers both `bracket` and `paired-state`).
+pub const IDIOM_CATEGORIES: &[&str] = &[
+    "owned-resource",
+    "borrowed-value",
+    "shared-resource",
+    "explicit-release",
+    "bracketed-use",
+    "builder",
+    "typestate",
+    "nullable-result",
+    "error-side-channel",
+    "exception-like-failure",
+    "callback",
+    "escaping-callback",
+    "subscription",
+    "delegate",
+    "async-completion",
+    "thread-affinity",
+    "main-thread-requirement",
+    "buffer-fill",
+    "two-call-sizing",
+    "array-slice-view",
+    "string-encoding",
+    "foreign-struct",
+    "foreign-enum-flags",
+    "global-singleton",
+    "unsafe-escape-hatch",
+];
+
 /// The two faces of a capability profile (REFACTOR §20 — D2's "two profile faces"):
 /// the per-API *semantic* face that feeds representability, and the *app-form* face
 /// that feeds per-app-kind feasibility. The face fixes which controlled vocabulary a
@@ -101,6 +143,12 @@ impl Face {
 /// face-conditional check the focused validator runs (the KDL Schema cannot state it).
 pub fn is_valid_dimension(face: Face, dimension: &str) -> bool {
     face.dimensions().contains(&dimension)
+}
+
+/// Whether `category` is a member of the REFACTOR §21 [`IDIOM_CATEGORIES`] vocabulary —
+/// the membership check the idiom-catalogue validator runs on each `idiom "<category>"`.
+pub fn is_valid_idiom_category(category: &str) -> bool {
+    IDIOM_CATEGORIES.contains(&category)
 }
 
 /// The **semantic** capability dimension a §30 source-weirdness `tag` demands, or
@@ -245,6 +293,22 @@ mod tests {
             Face::AppForm,
             "definitely-not-a-36-dimension"
         ));
+    }
+
+    /// The §21 idiom-category vocabulary is the 25 REFACTOR §21 categories, and a token
+    /// outside it is rejected. (Lockstep guard: the count is asserted so a §21 revision
+    /// that edits the list without updating REFACTOR — or vice versa — trips here.)
+    #[test]
+    fn idiom_categories_are_the_25_section_21_slots() {
+        assert_eq!(
+            IDIOM_CATEGORIES.len(),
+            25,
+            "REFACTOR §21 lists 25 idiom categories"
+        );
+        for c in ["bracketed-use", "error-side-channel", "unsafe-escape-hatch"] {
+            assert!(is_valid_idiom_category(c), "`{c}` is a §21 category");
+        }
+        assert!(!is_valid_idiom_category("definitely-not-a-21-category"));
     }
 
     /// The canonical map entry from the design (CONTEXT.md / node-brief D2).

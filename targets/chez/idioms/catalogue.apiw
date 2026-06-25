@@ -1,0 +1,95 @@
+// The chez idiom catalogue (REFACTOR §21; structural-refactoring grove ws6, idioms-k53).
+// Contract: schemas/spec-format/idioms.kdl-schema. Per-target (each target authors its own
+// idioms — the maximize-idiom rule). Constructs grounded in the Chez Scheme define-c-lambda
+// binding + the ADRs (0015 compiled-FFI, 0016 foreign-thread ACTIVATION — chez's key
+// differentiator). The `projects` emit dispatch is the data the shared emit/pattern_dispatch
+// reads; the generated identifiers are notional projection names the deferred apply-projection
+// follow-on will consume (golden-neutral here — classify_pattern has zero callers, D3).
+idiom-catalogue "chez" {
+    doc "How source concepts appear in the Chez Scheme binding (define-c-lambda compiled FFI, guardian finalization, foreign-thread activation)."
+
+    idiom "owned-resource" {
+        construct "A `define-record-type` instance wrapping the foreign pointer + a closed? field; a guardian reclaims it at GC if not closed first."
+    }
+    idiom "borrowed-value" {
+        construct "A borrowed `ftype-pointer` handed out for the borrow window; validity is a documented convention, not enforced."
+    }
+    idiom "shared-resource" {
+        construct "Retain/release bridged through the ObjC runtime; the record holds a +1 reference dropped by its guardian."
+    }
+    idiom "explicit-release" {
+        construct "A `close-NAME!` procedure releases eagerly and marks the record closed (idempotent)."
+    }
+    idiom "bracketed-use" {
+        construct "A `with-NAME` syntax-rules macro over `dynamic-wind`; the after-thunk releases even on a non-local exit."
+        doc "Both the acquire/release bracket and the paired-state guard expand to dynamic-wind."
+        projects "bracket"      { emit "scoped-resource"; name "with-bracket" }
+        projects "paired-state" { emit "scoped-guard";    name "with-paired-state" }
+    }
+    idiom "builder" {
+        construct "Keyword-style constructor procedures; staged configuration via a let*-threaded builder; class clusters become smart constructors."
+        projects "builder"         { emit "builder-dsl";       name "builder" }
+        projects "factory-cluster" { emit "smart-constructor"; name "make-factory-cluster" }
+    }
+    idiom "typestate" {
+        construct "State preconditions are runtime `assert`ions, not static types."
+    }
+    idiom "nullable-result" {
+        construct "A NULL return surfaces as `#f`; callers pattern-match or use `cond`."
+    }
+    idiom "error-side-channel" {
+        construct "An NSError** out-param is captured and raised as an R6RS condition (the result wrapper hides the out-param)."
+        projects "error-out" { emit "result-wrapper"; name "error-out" }
+    }
+    idiom "exception-like-failure" {
+        construct "ObjC exceptions are caught at the foreign boundary and `raise`d as R6RS condition objects, catchable with `guard`."
+    }
+    idiom "callback" {
+        construct "A Scheme procedure wrapped as a `foreign-callable`; the synchronous variant runs on the calling thread."
+    }
+    idiom "escaping-callback" {
+        construct "Escaping callbacks are `lock-object`-rooted (and registry-tracked) for their subscription lifetime so the collector keeps them live."
+    }
+    idiom "subscription" {
+        construct "A `with-NAME` macro registers an observer and unregisters in its dynamic-wind after-thunk; observers and subscriptions share the scoped-observer shape."
+        projects "observer"     { emit "scoped-observer"; name "with-observer" }
+        projects "subscription" { emit "scoped-observer"; name "with-subscription" }
+    }
+    idiom "delegate" {
+        construct "A delegate is a Scheme record whose methods are exposed as ObjC IMPs via a synthesized delegate subclass."
+    }
+    idiom "async-completion" {
+        construct "Completion blocks are Scheme procedures bridged as ObjC blocks; results can be delivered on the activating foreign thread or bounced as needed."
+    }
+    idiom "thread-affinity" {
+        construct "Thread-confined APIs are called from the owning thread; Chez threads (and activated foreign threads) run real concurrent Scheme."
+    }
+    idiom "main-thread-requirement" {
+        construct "Main-thread-only APIs dispatch to the main thread at runtime. Foreign-thread callbacks ACTIVATE the foreign OS thread as a Chez thread (ADR-0016) — real Scheme runs on it, an exact-runtime mechanism, not a bounce (chez's key differentiator from racket/gerbil/sbcl)."
+    }
+    idiom "buffer-fill" {
+        construct "A caller-allocated `bytevector`/`foreign-alloc` buffer is passed in and filled in place by the callee."
+    }
+    idiom "two-call-sizing" {
+        construct "A helper calls once for the required length, allocates, then calls again to fill."
+    }
+    idiom "array-slice-view" {
+        construct "NSArray ↔ Scheme list/vector conversion; an `in-NAME` sequence iterates the collection."
+        projects "enumeration" { emit "iteration-adapter"; name "enumeration-sequence" }
+    }
+    idiom "string-encoding" {
+        construct "NSString ↔ Scheme string conversion is exact (UTF-8/UTF-16 bridged at the boundary)."
+    }
+    idiom "foreign-struct" {
+        construct "C structs by value map to `define-ftype` struct types; fields accessed via `ftype-ref`/`ftype-set!`."
+    }
+    idiom "foreign-enum-flags" {
+        construct "Enums map to Scheme symbols / fixnums; option-sets to `fxlogor` of flag constants."
+    }
+    idiom "global-singleton" {
+        construct "A process-global singleton (e.g. NSApplication) is a memoized accessor returning the shared instance."
+    }
+    idiom "unsafe-escape-hatch" {
+        construct "The raw `ftype-pointer`/address is reachable via an explicit unsafe accessor for APIs the binding does not model."
+    }
+}
