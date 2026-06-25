@@ -344,6 +344,7 @@ mod tests {
                         source: AnnotationSource::Convention,
                         confidence: None,
                         provenance: None,
+                        fact_provenance: None,
                     },
                     MethodAnnotation {
                         selector: "performBlock:".to_string(),
@@ -358,6 +359,7 @@ mod tests {
                         source: AnnotationSource::Convention,
                         confidence: None,
                         provenance: None,
+                        fact_provenance: None,
                     },
                 ],
             }],
@@ -387,6 +389,7 @@ mod tests {
                         source: AnnotationSource::Convention,
                         confidence: None,
                         provenance: None,
+                        fact_provenance: None,
                     },
                     MethodAnnotation {
                         selector: "saveToURL:error:".to_string(),
@@ -398,6 +401,7 @@ mod tests {
                         source: AnnotationSource::Convention,
                         confidence: None,
                         provenance: None,
+                        fact_provenance: None,
                     },
                 ],
             }],
@@ -429,6 +433,7 @@ mod tests {
                     source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
+                    fact_provenance: None,
                 }],
             }],
         );

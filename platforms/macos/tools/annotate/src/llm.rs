@@ -1043,6 +1043,7 @@ mod tests {
             source: AnnotationSource::Llm,
             confidence: None,
             provenance: None,
+            fact_provenance: None,
         }
     }
 
@@ -1167,6 +1168,7 @@ mod tests {
                     source: AnnotationSource::Llm,
                     confidence: None,
                     provenance: None,
+                    fact_provenance: None,
                 }],
             }],
             subagent_report: None,
@@ -1270,6 +1272,7 @@ mod tests {
                     source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
+                    fact_provenance: None,
                 }],
             }],
             subagent_report: None,
@@ -1450,6 +1453,7 @@ mod tests {
             source: AnnotationSource::Llm,
             confidence: None,
             provenance: None,
+            fact_provenance: None,
         }
     }
 
@@ -1470,6 +1474,7 @@ mod tests {
             source: AnnotationSource::Llm,
             confidence: None,
             provenance: None,
+            fact_provenance: None,
         }
     }
 

@@ -488,6 +488,7 @@ mod tests {
                 source: AnnotationSource::Convention,
                 confidence: None,
                 provenance: None,
+                fact_provenance: None,
             }],
         }];
         let framework = make_framework(
@@ -532,6 +533,7 @@ mod tests {
                     source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
+                    fact_provenance: None,
                 }],
             },
             ClassAnnotations {
@@ -549,6 +551,7 @@ mod tests {
                     source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
+                    fact_provenance: None,
                 }],
             },
         ];

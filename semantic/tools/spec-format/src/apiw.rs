@@ -390,6 +390,9 @@ impl Ctx<'_> {
             source,
             confidence,
             provenance,
+            // Resolved-only (ADR-0050 D3): the authored overlay never carries
+            // per-fact provenance — the resolve-time audit produces it.
+            fact_provenance: None,
         })
     }
 

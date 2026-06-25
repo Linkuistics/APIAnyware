@@ -36,6 +36,7 @@ fn method_annotation_carries_provenance_stamp() {
         source: AnnotationSource::Llm,
         confidence: Some(Confidence::High),
         provenance: Some("Foundation Release Notes".to_string()),
+        fact_provenance: None,
     };
 
     let json = serde_json::to_string_pretty(&annotation).unwrap();
@@ -81,6 +82,7 @@ fn method_annotation_roundtrip() {
         source: AnnotationSource::Llm,
         confidence: None,
         provenance: None,
+        fact_provenance: None,
     };
 
     let json = serde_json::to_string_pretty(&annotation).unwrap();
@@ -123,6 +125,7 @@ fn framework_annotations_roundtrip() {
                     source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
+                    fact_provenance: None,
                 },
                 MethodAnnotation {
                     selector: "writeToURL:error:".to_string(),
@@ -134,6 +137,7 @@ fn framework_annotations_roundtrip() {
                     source: AnnotationSource::Llm,
                     confidence: None,
                     provenance: None,
+                    fact_provenance: None,
                 },
             ],
         }],
@@ -238,6 +242,7 @@ fn empty_optional_fields_skipped_in_serialization() {
         source: AnnotationSource::Convention,
         confidence: None,
         provenance: None,
+        fact_provenance: None,
     };
 
     let json = serde_json::to_string(&annotation).unwrap();

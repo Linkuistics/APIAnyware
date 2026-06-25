@@ -14,16 +14,18 @@
 //! 2. **LLM analysis** — an external process reads Apple documentation and
 //!    produces the authored `annotations.apiw` overlay for ambiguous cases.
 //!
-//! The `validate` module compares the convention and LLM annotations, flags
-//! disagreements for human review, and merges the two sources with LLM
-//! taking precedence.
+//! The `validate` module runs the resolve-time **precedence audit**: per
+//! fact-slot it applies §28 precedence (`manual > accepted-LLM > convention >
+//! extraction > unknown`), stamps the winning tier's `source`, and retains each
+//! disagreeing loser as a `superseded-by` record (ADR-0046 §4 / ADR-0050 §3).
 //!
-//! Per-fact `convention:<rule>` provenance is computed inside
-//! [`apianyware_conventions`] but **not** carried on-disk here: the rich
-//! provenance/precedence rollout (per-fact stamps, the disagreement audit) is
-//! owned by workstream 5 (the LLM side-channel), so assembled convention facts
-//! are byte-identical to the legacy heuristic output (ADR-0046 §4 carriage
-//! deferred to ws5).
+//! The per-fact `convention:<rule>` stamps the [`apianyware_conventions`] facets
+//! compute — formerly discarded by the k26 cutover — are carried here into the
+//! convention tier's `fact_provenance` so the audit can attribute a
+//! convention-won slot to its backing rule. The audit stamps *provenance* only;
+//! the winning *value* of every slot is byte-identical to the legacy
+//! `llm`-over-convention merge, so provenance is emit-invisible and the goldens
+//! cannot move (ADR-0050 D4).
 
 pub mod llm;
 pub mod validate;
@@ -38,7 +40,8 @@ use apianyware_conventions::{
 };
 use apianyware_datalog::loading;
 use apianyware_types::annotation::{
-    AnnotationOverrides, AnnotationSource, ClassAnnotations, FrameworkAnnotations, MethodAnnotation,
+    AnnotationSource, ClassAnnotations, FrameworkAnnotations, MethodAnnotation,
+    MethodFactProvenance, SlotProvenance,
 };
 use apianyware_types::ir::{Framework, Method};
 
@@ -77,30 +80,88 @@ impl ConventionFacets {
 
     /// Assemble the convention `MethodAnnotation` for `method` on `receiver`
     /// (class or protocol name) by looking its `(receiver, selector)` up in the
-    /// four facet maps. Byte-identical to the legacy `heuristics.rs` output:
-    /// `source = Convention`, no confidence/provenance carried (the
-    /// `convention:<rule>` stamps the facets compute land on-disk only once
-    /// ws5's provenance mechanism consumes them).
+    /// four facet maps. The fact *values* are byte-identical to the legacy
+    /// `heuristics.rs` output; ws5's `precedence-audit-k45` lands the per-fact
+    /// `convention:<rule>` stamps the facets compute (formerly discarded by
+    /// k26) into `fact_provenance`, so the resolve-time audit can stamp a
+    /// convention-won slot with its backing rule. Every slot here is
+    /// `Convention`-sourced with no losers — the audit reconciles against the
+    /// authored overlay (ADR-0046 §4 / ADR-0050 §3).
     fn annotation_for(&self, receiver: &str, method: &Method) -> MethodAnnotation {
         let key = (receiver.to_string(), method.selector.clone());
+
+        let ownership_facet = self.ownership.get(&key);
+        let block_facet = self.block.get(&key);
+        let threading_facet = self.threading.get(&key);
+        let error_facet = self.error.get(&key);
+
+        let parameter_ownership = ownership_facet
+            .map(|f| f.parameter_ownership.clone())
+            .unwrap_or_default();
+        let block_parameters = block_facet
+            .map(|f| f.block_parameters.clone())
+            .unwrap_or_default();
+        let threading = threading_facet.map(|f| f.threading);
+        let error_pattern = error_facet.map(|f| f.error_pattern);
+
+        // Build the convention tier's per-slot provenance. The facet
+        // `provenance` maps are keyed by `param_index` (`u32`); the scalar
+        // facets carry a method-level stamp list.
+        let mut prov = MethodFactProvenance::default();
+        for po in &parameter_ownership {
+            prov.parameter_ownership.push(SlotProvenance {
+                param_index: Some(po.param_index),
+                source: AnnotationSource::Convention,
+                rules: ownership_facet
+                    .and_then(|f| f.provenance.get(&(po.param_index as u32)))
+                    .cloned()
+                    .unwrap_or_default(),
+                superseded_by: Vec::new(),
+            });
+        }
+        for bp in &block_parameters {
+            prov.block_parameters.push(SlotProvenance {
+                param_index: Some(bp.param_index),
+                source: AnnotationSource::Convention,
+                rules: block_facet
+                    .and_then(|f| f.provenance.get(&(bp.param_index as u32)))
+                    .cloned()
+                    .unwrap_or_default(),
+                superseded_by: Vec::new(),
+            });
+        }
+        if threading.is_some() {
+            prov.threading = Some(SlotProvenance {
+                param_index: None,
+                source: AnnotationSource::Convention,
+                rules: threading_facet
+                    .map(|f| f.provenance.clone())
+                    .unwrap_or_default(),
+                superseded_by: Vec::new(),
+            });
+        }
+        if error_pattern.is_some() {
+            prov.error_pattern = Some(SlotProvenance {
+                param_index: None,
+                source: AnnotationSource::Convention,
+                rules: error_facet
+                    .map(|f| f.provenance.clone())
+                    .unwrap_or_default(),
+                superseded_by: Vec::new(),
+            });
+        }
+
         MethodAnnotation {
             selector: method.selector.clone(),
             is_instance: !method.class_method,
-            parameter_ownership: self
-                .ownership
-                .get(&key)
-                .map(|f| f.parameter_ownership.clone())
-                .unwrap_or_default(),
-            block_parameters: self
-                .block
-                .get(&key)
-                .map(|f| f.block_parameters.clone())
-                .unwrap_or_default(),
-            threading: self.threading.get(&key).map(|f| f.threading),
-            error_pattern: self.error.get(&key).map(|f| f.error_pattern),
+            parameter_ownership,
+            block_parameters,
+            threading,
+            error_pattern,
             source: AnnotationSource::Convention,
             confidence: None,
             provenance: None,
+            fact_provenance: Some(prov),
         }
     }
 }
@@ -277,9 +338,10 @@ fn annotate_protocol_method_and_push(
     merge_and_push(&protocol.name, method, convention, llm_index, results);
 }
 
-/// Merge a method's convention annotation with its LLM annotation — looked up
-/// by `(receiver_name, selector)`, where `receiver_name` is the class or
-/// protocol name — and push the merged result.
+/// Audit a method's convention annotation against its authored-overlay
+/// annotation — looked up by `(receiver_name, selector)`, where `receiver_name`
+/// is the class or protocol name — applying §28 precedence per fact-slot, and
+/// push the resolved (provenance-stamped) result.
 fn merge_and_push(
     receiver_name: &str,
     method: &apianyware_types::ir::Method,
@@ -287,14 +349,11 @@ fn merge_and_push(
     llm_index: &HashMap<(&str, &str), &MethodAnnotation>,
     results: &mut Vec<MethodAnnotation>,
 ) {
-    let llm_ann = llm_index
+    let overlay = llm_index
         .get(&(receiver_name, method.selector.as_str()))
         .copied();
 
-    let overrides = AnnotationOverrides::default();
-    let merged = validate::merge_annotations(&convention, llm_ann, &overrides);
-
-    results.push(merged);
+    results.push(validate::audit_annotations(&convention, overlay));
 }
 
 /// Load LLM-sourced annotations from a previously-written annotated checkpoint.
@@ -427,6 +486,7 @@ mod tests {
             source,
             confidence: None,
             provenance: None,
+            fact_provenance: None,
         }
     }
 

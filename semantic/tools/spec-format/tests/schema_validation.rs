@@ -56,6 +56,7 @@ fn written_overlay_validates_against_the_schema() {
                 source: AnnotationSource::Manual,
                 confidence: Some(Confidence::Medium),
                 provenance: Some("AppKit Release Notes".to_string()),
+                fact_provenance: None,
             }],
         }],
         subagent_report: Some(SubagentReport {

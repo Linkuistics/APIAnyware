@@ -1251,14 +1251,24 @@ tree / a PR branch. Git is the propose→review→accept boundary (ADR-0050).
 _Avoid_: a `status proposed|accepted` flag (git carries it); reading `accepted-LLM` as a
 distinct *source* value (it is just committed `llm`).
 
-**Disagreement audit / `superseded-by`** _(ADR-0046 §4, built by ws5 `precedence-audit`)_:
+**Disagreement audit / `superseded-by`** _(ADR-0046 §4; realized by ws5 `precedence-audit-k45`)_:
 The resolve-time merge: per `(receiver, selector)` **fact-slot** (one semantic claim — a
 param's ownership, a method's threading, etc.), gather every producing tier, apply §28
 precedence (`manual > accepted-LLM > convention > extraction > unknown`), **stamp the
 winner's `source`** on the resolved fact, and record each *disagreeing* loser as a
 `superseded-by { source; value }` entry. A fact-slot with no producer stays **explicit
 `unknown`** (never silently defaulted). Lands in `resolved.json` only; emit-invisible →
-goldens unmoved. Surfaced by the `annotations audit` report.
+goldens unmoved. Surfaced by the `annotations audit` report (ws5 `disagreement-report`).
+**Realized carriage** (`apianyware_types::annotation`): a resolved-only
+`MethodAnnotation.fact_provenance: Option<MethodFactProvenance>` — one `SlotProvenance
+{ param_index?, source, rules, superseded_by: Vec<SupersededFact{source,value}> }` per producing
+slot (ownership/block keyed by `param_index`, threading/error method-level). `rules` carries the
+winner's `convention:<rule>` stamp(s) (empty for non-convention winners). The winner is chosen by
+`AnnotationSource::precedence()` (lower rank wins). The legacy `AnnotationDisagreement`/`compare_annotations`
+record is retired in its favour. Two realized nuances: (i) a **fact-less method** carries
+method-level `source = Unknown` (not a silent `Convention`); (ii) blocks stay **all-or-nothing**
+(a non-empty overlay block list replaces convention's wholesale — golden-neutral), so a convention
+block on a param the overlay omits is dropped with **no** `superseded-by` slot (no winning fact to attach to).
 _Avoid_: writing the audit into the overlay (it is derived → resolved.json); dropping a
 loser that merely *agrees* (only disagreements are `superseded-by`); a winning *value* change
 (precedence here only stamps provenance — the winning value already matches today's merge, so

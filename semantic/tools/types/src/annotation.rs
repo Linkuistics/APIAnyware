@@ -104,6 +104,80 @@ pub struct MethodAnnotation {
     /// authored provenance (e.g. heuristic/extraction facts).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub provenance: Option<String>,
+
+    /// Resolved-only per-fact provenance from the §28 precedence audit
+    /// (ADR-0050 §3). Populated *only* at resolve time, after the convention
+    /// and authored-overlay tiers are reconciled per fact-slot; `None` in the
+    /// authored `annotations.apiw` overlay (ADR-0050 D3 — per-fact provenance
+    /// lives in `resolved.json`, never the overlay). Emit-invisible: the audit
+    /// stamps *provenance*, never a winning value, so this field cannot move a
+    /// golden.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fact_provenance: Option<MethodFactProvenance>,
+}
+
+/// Per-fact-slot provenance for a resolved method annotation (ADR-0046 §4 /
+/// ADR-0050 §3 disagreement audit).
+///
+/// One entry per *producing* fact-slot: the §28 tier that won the slot, the
+/// `convention:<rule>` stamp(s) backing a convention win, and any *disagreeing*
+/// losing tiers retained as [`SupersededFact`]s. A fact-slot with no producer
+/// has **no entry** — its unknown-ness is the absence (the audit never
+/// fabricates a tier for a slot nobody produced; ADR-0050 §3 "explicit
+/// `unknown`, never silently defaulted"). Populated solely by the resolve-time
+/// audit; absent in the authored overlay.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MethodFactProvenance {
+    /// Provenance per ownership fact-slot, keyed by `param_index` (ascending).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parameter_ownership: Vec<SlotProvenance>,
+    /// Provenance per block-invocation fact-slot, keyed by `param_index`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub block_parameters: Vec<SlotProvenance>,
+    /// Provenance for the method-level threading fact-slot, if produced.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub threading: Option<SlotProvenance>,
+    /// Provenance for the method-level error-pattern fact-slot, if produced.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_pattern: Option<SlotProvenance>,
+}
+
+/// Provenance for a single resolved fact-slot: the winning §28 tier plus any
+/// disagreeing losers (ADR-0046 §4).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SlotProvenance {
+    /// `param_index` for per-parameter slots (ownership / block); `None` for the
+    /// method-level scalar slots (threading / error pattern).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub param_index: Option<usize>,
+    /// The §28 tier that produced the winning value.
+    pub source: AnnotationSource,
+    /// The `convention:<rule>` stamp(s) backing a `Convention` win (ADR-0046 §4,
+    /// `convention:<rule>`). Empty for non-convention winners.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rules: Vec<String>,
+    /// Disagreeing losing tiers — a producing tier whose value differs from the
+    /// winner's. Tiers that *agree* with the winner are redundant, not
+    /// disagreeing, and are **not** recorded here (ADR-0050 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub superseded_by: Vec<SupersededFact>,
+}
+
+/// A disagreeing losing fact retained by the precedence audit (ADR-0046 §4
+/// `superseded-by { source; value }`).
+///
+/// Evolves the legacy `AnnotationDisagreement` heuristic/llm value pair into a
+/// per-loser `{ source, value }` record: each loser names its own §28 tier and
+/// its rendered value, so an N-tier disagreement is N − 1 records against the
+/// one winner rather than a single fixed heuristic-vs-llm pair.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SupersededFact {
+    /// The losing tier.
+    pub source: AnnotationSource,
+    /// The losing value, rendered to the slot's serde token (e.g. `"strong"`,
+    /// `"main_thread_only"`) so the audit/diff report reads without the
+    /// producing types.
+    pub value: String,
 }
 
 /// Coarse authoring-confidence level for an annotated fact (ADR-0046 §4).
@@ -192,18 +266,54 @@ pub enum ErrorPattern {
     NilOnFailure,
 }
 
-/// Where an annotation came from (ADR-0046 §4 / ADR-0050 provenance vocabulary).
+/// Where a resolved fact came from — the §28 precedence ladder (ADR-0046 §4 /
+/// ADR-0050 D3 provenance vocabulary).
+///
+/// Two homes (ADR-0050 D3): the authored `annotations.apiw` overlay carries only
+/// `{Llm, Manual}`; the derived `resolved.json` carries the full ladder after the
+/// precedence audit. As a *method-level* tag (`MethodAnnotation::source`) the
+/// variant is the coarsest producing tier; the `convention:<rule>` rule payload
+/// rides per fact-slot on [`SlotProvenance::rules`], not on this enum, so the one
+/// enum serves both the method-level tag and the per-fact stamp.
+///
+/// Precedence, high → low: `Manual > Llm (accepted) > Convention > Extraction >
+/// Unknown` (see [`AnnotationSource::precedence`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnnotationSource {
-    /// Derived from a platform convention rule (`apianyware-conventions` datalog).
-    /// The `<rule>` payload + `Extraction`/`Unknown` tiers arrive with the resolved-side
-    /// per-fact carriage (ws5 `precedence-audit`); ws5 `provenance-vocab-k44` only renamed it.
-    Convention,
-    /// Derived from LLM analysis of Apple documentation.
-    Llm,
-    /// Authored/resolved by a human directly (the highest-precedence authored tier).
+    /// Authored/resolved by a human directly (the highest-precedence tier).
     Manual,
+    /// Derived from LLM analysis of Apple documentation. `accepted-LLM` ≡ a
+    /// committed `source llm` fact (ADR-0050 D2 — git is the accept boundary).
+    Llm,
+    /// Derived from a platform convention rule (`apianyware-conventions`
+    /// datalog). The backing `convention:<rule>` stamp(s) ride per-slot on
+    /// [`SlotProvenance::rules`].
+    Convention,
+    /// Mechanically extracted from the SDK headers (the datalog fact base).
+    /// Lowest *producing* tier. No producer wires these four fact-slots
+    /// (ownership/block/threading/error) today — reserved for the §4 ladder's
+    /// completeness; ownership-family extraction (`returns_retained`) is carried
+    /// elsewhere on the IR, not as an annotation fact-slot.
+    Extraction,
+    /// No tier produced the fact-slot. Carried as the method-level `source` of a
+    /// method with no producing facts, so a fact-less method is *explicitly*
+    /// unknown rather than silently defaulted to `Convention` (ADR-0050 §3).
+    Unknown,
+}
+
+impl AnnotationSource {
+    /// The §28 precedence rank — **lower is higher precedence** (`Manual` = 0).
+    /// The audit picks the minimum rank among a fact-slot's producing tiers.
+    pub fn precedence(self) -> u8 {
+        match self {
+            AnnotationSource::Manual => 0,
+            AnnotationSource::Llm => 1,
+            AnnotationSource::Convention => 2,
+            AnnotationSource::Extraction => 3,
+            AnnotationSource::Unknown => 4,
+        }
+    }
 }
 
 /// Override file: human-reviewed resolutions stored separately for merging.
@@ -230,32 +340,11 @@ pub struct AnnotationOverride {
     pub reason: String,
 }
 
-/// A disagreement between heuristic and LLM annotations for human review.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AnnotationDisagreement {
-    /// Class name.
-    pub class_name: String,
-    /// Selector name.
-    pub selector: String,
-    /// What the heuristic says.
-    pub heuristic_value: String,
-    /// What the LLM says.
-    pub llm_value: String,
-    /// Which annotation field disagrees (e.g., `"threading"`, `"parameter_ownership[0]"`).
-    pub field: String,
-    /// Human resolution (if any).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub resolution: Option<DisagreementResolution>,
-}
-
-/// Human resolution of a disagreement.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DisagreementResolution {
-    /// Which source to trust: `"convention"` or `"llm"`.
-    pub trust: String,
-    /// Reason for the decision.
-    pub reason: String,
-}
+// The legacy `AnnotationDisagreement` / `DisagreementResolution` records (a fixed
+// heuristic-vs-llm value pair plus a manual `trust` resolution) are superseded by
+// the resolve-time precedence audit: disagreeing losers are now retained per
+// fact-slot as [`SupersededFact`]s on [`SlotProvenance`], and "resolution" is git
+// — a human accepts by committing the overlay (ADR-0050 D2). See [`SupersededFact`].
 
 // ---------------------------------------------------------------------------
 // Multi-method patterns
