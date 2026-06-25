@@ -1,0 +1,65 @@
+// errors.apiw — the macOS **errors** api-semantic declarations
+// (`structural-refactoring` grove, workstream 4; node-brief D3/D4, `api-semantics-k40`).
+//
+// The declaration half of the errors facet (↔ the `apianyware-conventions` error map,
+// whose `ErrorPattern` the heuristic derives as ErrorOutParam): for concrete
+// Foundation/AppKit shapes, the §30 error weirdness they exhibit, plus projection-free
+// expectations of the error-reporting behaviour a binding must preserve. Platform truth,
+// schema-validated against `api-semantics.kdl-schema`, NOT executed (workstream 9
+// executes). `weirdness` tags draw on REFACTOR §30 error.
+
+api-semantics "errors" {
+    doc "Error-reporting conventions of macOS Foundation/AppKit shapes a binding must preserve."
+
+    // The canonical Cocoa error pattern: nil return + NSError** out-parameter, where the
+    // out-error is meaningful ONLY on failure. The ErrorPattern `ErrorOutParam` case (nil
+    // variant).
+    api "NSString" "initWithContentsOfFile:encoding:error:" {
+        doc "An initializer returning nil on failure with an NSError out-parameter, valid only on failure."
+        weirdness "nserror-out-param"
+        weirdness "return-null-means-failure"
+        weirdness "out-error-valid-only-when-failure"
+        expect "nil-result-signals-failure" {
+            doc "A nil return signals failure; a binding must treat nil as the failure indicator, not a value."
+        }
+        expect "out-error-only-on-failure" {
+            doc "The NSError out-parameter is set only when the call fails; a binding must not read it on success, and must surface it (mapped to the target's error idiom) only on the nil path."
+        }
+    }
+
+    // The BOOL variant of the same pattern: NO return + NSError** out-parameter. Same
+    // ErrorOutParam convention, different success sentinel — bindings must not conflate the
+    // two return shapes.
+    api "NSFileManager" "removeItemAtPath:error:" {
+        doc "A method returning NO on failure with an NSError out-parameter, valid only on failure."
+        weirdness "nserror-out-param"
+        weirdness "out-error-valid-only-when-failure"
+        expect "false-result-signals-failure" {
+            doc "A NO (false) return signals failure and a YES return success; a binding must key error handling on the BOOL, not on whether the out-error pointer is non-null."
+        }
+        expect "out-error-only-on-failure" {
+            doc "The NSError out-parameter is populated only when the method returns NO; a binding must read it solely on the failure path."
+        }
+    }
+
+    // The legitimate-nil case: nil is a valid result (absent key), NOT an error. The
+    // contrast that stops a binding from mechanically treating every nil as failure.
+    api "NSUserDefaults" "stringForKey:" {
+        doc "An accessor whose nil result is a legitimate 'absent' value, not a failure."
+        weirdness "return-null-may-be-legitimate"
+        expect "nil-means-absent-not-error" {
+            doc "A nil return means the key is absent, not that an error occurred; a binding must surface nil as an empty/absent value (e.g. an option/None), never as an error."
+        }
+    }
+
+    // Objective-C exceptions: a raised exception unwinds the stack and signals programmer
+    // error, not a recoverable condition. Bindings must map these to the target's
+    // panic/abort path, not its normal error flow.
+    api "NSException" "raise:format:" {
+        doc "Raising an Objective-C exception, which unwinds the stack as a programmer-error signal."
+        weirdness "exception"
+        expect "exception-unwinds-stack" {
+            doc "Raising throws an Objective-C exception that unwinds the stack; a binding must map it to the target's unrecoverable-error path (panic/abort/condition), not its routine error-return idiom, since Cocoa exceptions signal programmer error and leave process state undefined."
+        }
+    }
+}

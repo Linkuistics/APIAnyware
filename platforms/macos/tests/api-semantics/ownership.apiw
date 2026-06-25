@@ -1,0 +1,83 @@
+// ownership.apiw — the macOS **ownership / lifetime** api-semantic declarations
+// (`structural-refactoring` grove, workstream 4; node-brief D3/D4, `api-semantics-k40`).
+//
+// The declaration half of the ownership facet (↔ the `apianyware-conventions`
+// `ParamOwnership` map): for concrete Foundation/AppKit shapes, the §30 source-semantic
+// ownership + lifetime weirdness they exhibit, plus projection-free expectations of the
+// memory behaviour a binding must preserve. Platform truth — what the API *means* —
+// never a target projection (workstream 6) and never a representability status
+// (workstream 6/§20). Schema-validated against `api-semantics.kdl-schema`, NOT executed
+// (workstream 9 executes). `weirdness` tags draw on REFACTOR §30 ownership + lifetime.
+
+api-semantics "ownership" {
+    doc "Ownership and lifetime semantics of macOS Foundation/AppKit shapes a binding must preserve."
+
+    // A class factory ("convenience constructor"): vends an object the caller does NOT
+    // own. Under MRR the result is autoreleased; under ARC the compiler elides the
+    // retain. The classic over-release trap for a hand-written binding.
+    api "NSString" "stringWithString:" {
+        doc "A class-factory convenience constructor returning a +0 (autoreleased) instance."
+        weirdness "autoreleased"
+        expect "result-not-owned" {
+            doc "The result is autoreleased (+0); a binding must not release it as if it owned a +1 reference."
+        }
+        expect "valid-past-call" {
+            doc "The result stays valid after the call returns (until the autorelease pool drains); a binding may retain it to extend its lifetime."
+        }
+    }
+
+    // The NSCopying / +1 family: copy/mutableCopy/alloc/new return an object the caller
+    // OWNS (a balanced retain). The mirror image of the autoreleased case.
+    api "NSObject" "copy" {
+        doc "An NSCopying method returning a +1 (owned) instance the caller is responsible for."
+        weirdness "owned"
+        weirdness "retained"
+        expect "result-owned" {
+            doc "The result carries a +1 retain the caller owns; a binding must transfer that ownership (release exactly once when done), matching the alloc/new/copy/mutableCopy rule."
+        }
+    }
+
+    // Container element access returns a BORROWED reference: the collection owns the
+    // element, and the returned reference is only valid while the collection retains it.
+    api "NSArray" "objectAtIndex:" {
+        doc "Element access returning a reference the container owns; borrowed for the container's retention of it."
+        weirdness "container-owned"
+        weirdness "borrowed"
+        expect "element-borrowed" {
+            doc "The returned element is owned by the array, not the caller; a binding must not release it, and must retain it before use that outlives the array's hold."
+        }
+    }
+
+    // An interior-pointer accessor: returns a pointer INTO the receiver's storage, valid
+    // only until the receiver is mutated or (for an autoreleased temporary) the pool
+    // drains. The canonical dangling-pointer trap.
+    api "NSString" "UTF8String" {
+        doc "An interior-pointer accessor returning a C string into transient storage."
+        weirdness "borrowed-until-owner-mutated"
+        weirdness "autorelease-pool-lifetime"
+        expect "pointer-transient" {
+            doc "The returned C string is valid only until the receiver is mutated or the autorelease pool drains; a binding must copy it to retain it beyond the immediate call."
+        }
+    }
+
+    // A weak-held parameter: AppKit delegates are NOT retained by the setter (to avoid
+    // retain cycles). The binding owns keeping the delegate alive — the ParamOwnership
+    // `weak` case.
+    api "NSWindow" "setDelegate:" {
+        doc "A delegate setter that holds its argument weakly (no retain), to avoid a retain cycle."
+        weirdness "weak"
+        expect "delegate-not-retained" {
+            doc "The delegate argument is stored weakly; the binding must keep its own strong reference to the delegate object, or it will be deallocated and leave a dangling delegate."
+        }
+    }
+
+    // A retaining parameter: a mutable collection retains what it stores. The mirror of
+    // the weak-delegate case — here the callee DOES take ownership of a reference.
+    api "NSMutableArray" "addObject:" {
+        doc "An insertion method that retains its argument for the lifetime of the collection's hold on it."
+        weirdness "retained"
+        expect "argument-retained" {
+            doc "The collection retains the added object; a binding need not (and must not additionally) keep it alive on the collection's behalf, and may release its own reference after insertion."
+        }
+    }
+}

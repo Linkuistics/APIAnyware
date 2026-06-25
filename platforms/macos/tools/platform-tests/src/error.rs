@@ -50,10 +50,11 @@ pub enum PlatformTestError {
     #[diagnostic(transparent)]
     Schema(#[from] apianyware_spec_format::SpecFormatError),
 
-    /// The declaration's name does not match its file stem
-    /// (`tests/app-kinds/<name>.apiw`). Raised by the registry (the path-aware
-    /// entry), since identity is the flat-file stem (every kind's obligations live
-    /// in one file, named for the kind).
+    /// The declaration's name does not match its file stem — an app-kind-tests
+    /// `tests/app-kinds/<kind>.apiw` whose `<kind>` ≠ stem, or an api-semantics
+    /// `tests/api-semantics/<facet>.apiw` whose `<facet>` ≠ stem. Raised by either
+    /// registry (the path-aware entry), since identity is the flat-file stem (each
+    /// file is named for the kind / facet it declares).
     #[error(
         "declaration name `{name}` does not match its file stem `{stem}` (expected `\"{stem}\"`)"
     )]

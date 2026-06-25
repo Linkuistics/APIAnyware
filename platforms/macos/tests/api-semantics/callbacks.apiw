@@ -1,0 +1,70 @@
+// callbacks.apiw — the macOS **callbacks** api-semantic declarations
+// (`structural-refactoring` grove, workstream 4; node-brief D3/D4, `api-semantics-k40`).
+//
+// The declaration half of the callbacks facet (↔ the `apianyware-conventions`
+// `BlockParamAnnotation` map, whose `BlockInvocationStyle` is synchronous / async-copied
+// / stored): for concrete Foundation/AppKit shapes that take a block, the §30 callback
+// weirdness they exhibit, plus projection-free expectations of the invocation behaviour a
+// binding must preserve. Platform truth, schema-validated against `api-semantics.kdl-schema`,
+// NOT executed (workstream 9 executes). `weirdness` tags draw on REFACTOR §30 callback.
+
+api-semantics "callbacks" {
+    doc "Block / callback invocation semantics of macOS Foundation/AppKit shapes a binding must preserve."
+
+    // A synchronous (non-escaping) enumeration block: called on the calling thread,
+    // once per element, entirely before the method returns; never stored. The simplest
+    // BlockInvocationStyle — `synchronous`.
+    api "NSArray" "enumerateObjectsUsingBlock:" {
+        doc "A synchronous enumeration: the block runs on the calling thread before the method returns."
+        weirdness "synchronous-callback"
+        expect "invoked-synchronously" {
+            doc "The block is invoked synchronously on the calling thread and is not retained past the call; a binding may pass a non-escaping closure and need not extend its lifetime."
+        }
+        expect "invoked-once-per-element" {
+            doc "The block is called exactly once per array element, in index order, with no concurrency unless the *WithOptions: concurrent variant is used."
+        }
+    }
+
+    // An escaping completion handler: copied to the heap, run once, on a background
+    // (delegate) queue — NOT the calling thread. The BlockInvocationStyle `async-copied`,
+    // and the canonical "callback on a foreign thread" trap.
+    api "NSURLSession" "dataTaskWithURL:completionHandler:" {
+        doc "An escaping completion handler, copied and invoked exactly once on a background queue."
+        weirdness "escaping-callback"
+        weirdness "callback-called-exactly-once"
+        weirdness "callback-called-from-foreign-thread"
+        expect "completion-escapes-and-copied" {
+            doc "The handler outlives the call: a binding must keep its captured state (and the closure itself) alive until the handler runs, since the block is copied to the heap."
+        }
+        expect "completion-on-background-thread" {
+            doc "The handler is invoked on a background (URLSession delegate) queue, not the caller's thread; a binding must marshal back to a UI thread itself if it touches AppKit."
+        }
+    }
+
+    // A stored block whose lifetime is tied to a subscription token: invoked zero or more
+    // times until the returned observer is removed. The BlockInvocationStyle `stored`, and
+    // the token-controlled-lifetime case.
+    api "NSNotificationCenter" "addObserverForName:object:queue:usingBlock:" {
+        doc "A stored observer block invoked zero or more times until the returned token is removed."
+        weirdness "escaping-callback"
+        weirdness "callback-called-zero-or-more-times"
+        weirdness "callback-lifetime-tied-to-subscription-token"
+        expect "block-stored-until-removed" {
+            doc "The block is retained by the notification center until the returned observer token is passed to removeObserver:; a binding must keep both the block and the token alive for the subscription's duration."
+        }
+        expect "invoked-zero-or-more-times" {
+            doc "The block may be called any number of times (including never); a binding must not assume single-shot semantics."
+        }
+    }
+
+    // An escaping operation block: copied and run once on a queue-managed worker thread.
+    // Another `stored`/escaping case, contrasting the synchronous enumeration above.
+    api "NSOperationQueue" "addOperationWithBlock:" {
+        doc "An escaping work block, copied and executed once asynchronously on a queue-managed thread."
+        weirdness "escaping-callback"
+        weirdness "callback-called-exactly-once"
+        expect "block-escapes-runs-once" {
+            doc "The block is copied and executed exactly once on a worker thread the queue chooses; a binding must keep its captures alive until it runs and must not assume the calling thread."
+        }
+    }
+}

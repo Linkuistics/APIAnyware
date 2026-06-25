@@ -112,6 +112,25 @@ crate-root file collision) and the "platform test declaration" umbrella stays on
 home. This *applies* ADR-0049 rather than making a new hard-to-reverse decision —
 running-log + this brief suffice, no new ADR.
 
+### D7 — api-semantics weirdness is a facet-conditional semantic-layer vocab
+
+`api-semantics-k40` realized the sibling family. The §30 `weirdness` vocabulary
+(brief's open question) is settled as a **controlled vocabulary**, but enforced in the
+**focused validator** (`api_semantics::vocab`), not the schema — because it is
+**facet-conditional** (the `api-semantics "<facet>"` value selects the allowed set:
+ownership unions §30 ownership + lifetime; callbacks/threading/errors map 1:1; §30
+buffer/relationship are out of scope, no convention facet). KDL-Schema cannot state a
+conditional enum, so `weirdness` is a plain string in `api-semantics.kdl-schema` and the
+validator checks per-facet membership — the **category-conditional** controlled-vocab
+shape (cf. `pattern-kinds.kdl-schema`), in contrast to the app-kind **flat enums**
+(`enum` in-schema). The §30 token table is the crate's **own** copy (kept in lockstep
+with REFACTOR §30), deliberately **not** reused from `apianyware-patterns::vocab` — the
+platforms domain does not depend on the semantic domain, and the four facets do not line
+up one-to-one with the seven law categories. Grammar: `api "<receiver>" "<selector>"` ⟶
+`weirdness` (≥1) + `expect` (≥1); facet = file stem; shapes self-contained (no
+cross-entity ref). This *applies* D6/ADR-0049 + the patterns precedent — running-log +
+glossary suffice, no new ADR. (Full term in `CONTEXT.md` "api-semantics declaration".)
+
 ## Notes (steers)
 
 - **Projection-free + target-independent.** A declaration says what the *platform*

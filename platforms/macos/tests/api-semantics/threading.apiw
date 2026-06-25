@@ -1,0 +1,70 @@
+// threading.apiw — the macOS **threading** api-semantic declarations
+// (`structural-refactoring` grove, workstream 4; node-brief D3/D4, `api-semantics-k40`).
+//
+// The declaration half of the threading facet (↔ the `apianyware-conventions` threading
+// map, whose `ThreadingConstraint` the heuristic derives as MainThreadOnly): for concrete
+// Foundation/AppKit shapes, the §30 threading weirdness they exhibit, plus projection-free
+// expectations of the thread/run-loop behaviour a binding must preserve. Platform truth,
+// schema-validated against `api-semantics.kdl-schema`, NOT executed (workstream 9
+// executes). `weirdness` tags draw on REFACTOR §30 threading.
+
+api-semantics "threading" {
+    doc "Threading and run-loop constraints of macOS Foundation/AppKit shapes a binding must preserve."
+
+    // The AppKit main-thread rule: view mutation must happen on the main thread. The
+    // ThreadingConstraint `MainThreadOnly` case — the most common cross-target trap, since
+    // a target's worker threads must bounce to the main thread.
+    api "NSView" "setNeedsDisplay:" {
+        doc "AppKit UI mutation that must occur on the main thread."
+        weirdness "main-thread-only"
+        expect "main-thread-required" {
+            doc "Marking a view for redisplay must happen on the main thread; a binding must bounce the call to the main thread (e.g. the main run loop / dispatch main queue) if invoked elsewhere."
+        }
+    }
+
+    // The application bootstrap: must run on the main thread and installs the main run
+    // loop. Combines `main-thread-only` with `requires-run-loop`.
+    api "NSApplication" "run" {
+        doc "The AppKit main loop: must be entered on the main thread and drives the main run loop."
+        weirdness "main-thread-only"
+        weirdness "requires-run-loop"
+        expect "main-thread-entry" {
+            doc "[NSApp run] must be called on the process's main thread; a binding must reserve the main thread for it (no embedding it on a worker)."
+        }
+        expect "owns-the-run-loop" {
+            doc "The call does not return until termination and drives the main run loop; a binding's own event/scheduling work must integrate with that run loop, not block it."
+        }
+    }
+
+    // A thread-compatible mutable collection: safe only under external synchronization.
+    // Contrasts the immutable thread-safe case below — Foundation's documented two-tier
+    // model.
+    api "NSMutableDictionary" "setObject:forKey:" {
+        doc "Mutation of a thread-compatible collection: concurrent access requires external synchronization."
+        weirdness "thread-compatible"
+        expect "external-synchronization-required" {
+            doc "A mutable Foundation collection is thread-compatible, not thread-safe; a binding must not allow concurrent mutation/read without its own lock or serial queue."
+        }
+    }
+
+    // An immutable read: documented thread-safe for concurrent readers. The reassuring
+    // counterpart that bindings may exploit (no marshalling needed).
+    api "NSString" "length" {
+        doc "A read on an immutable object: safe for concurrent readers."
+        weirdness "thread-safe"
+        expect "concurrent-reads-safe" {
+            doc "Reading an immutable NSString is thread-safe; a binding need not serialize concurrent reads of an object it knows to be immutable."
+        }
+    }
+
+    // A nested run loop: re-enters event processing, so handlers may run reentrantly
+    // (e.g. a modal panel pumping events). The `may-reenter` + `requires-run-loop` case.
+    api "NSRunLoop" "run" {
+        doc "Running a run loop, which processes (and may nest / re-enter) event handling."
+        weirdness "requires-run-loop"
+        weirdness "may-reenter"
+        expect "handlers-may-reenter" {
+            doc "Running (or nesting) a run loop processes input sources and timers, so a binding's handlers may be invoked reentrantly; binding state touched from handlers must tolerate re-entry."
+        }
+    }
+}

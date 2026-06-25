@@ -1177,7 +1177,28 @@ per-app-kind obligations `tests/app-kinds/<kind>.apiw` — plus raw **fixtures**
 test *model* (§33), the runner, and TestAnyware/AppSpec *execution* (§34) are **ws9**
 (per-target hooks ws6) — the declare-now / execute-later seam (mirrors ws3→ws8).
 _Avoid_: building a runner under `platforms/` (execution is ws9); target-specific
-expectations (declarations are platform truth — target-independent).
+expectations (declarations are platform truth — target-independent). The two families
+are **distinct entities sharing one mechanism** (D6, ADR-0049): two sibling KDL-Schemas
+(`app-kind-tests.kdl-schema`, `api-semantics.kdl-schema`) + two submodules
+(`src/app_kind_tests/`, `src/api_semantics/`) in **one crate**
+(`apianyware-platform-tests`).
+
+**api-semantics declaration** _(`tests/api-semantics/<facet>.apiw`; `api-semantics-k40`)_:
+One file per **convention facet** (the four `apianyware-conventions` maps:
+`ownership` ↔ ParamOwnership, `callbacks` ↔ BlockParamAnnotation, `threading`, `errors`);
+**facet = file stem**, a flat schema `enum`. Grammar: `api-semantics "<facet>"` ⟶
+`api "<receiver>" "<selector>"` (a concrete Foundation/AppKit shape) ⟶ `weirdness "<tag>"`
+(≥1) + `expect "<id>" { doc }` (≥1). The **`weirdness` tag** is a §30 source-semantic
+weirdness term whose allowed set is **facet-conditional** (ownership unions §30 ownership +
+lifetime; the others map 1:1; §30 buffer/relationship are out of scope — no convention
+facet). Because KDL-Schema cannot state a conditional enum, `weirdness` is a plain string
+in the schema and a **focused validator vocab** (`api_semantics::vocab`, an own §30 token
+table kept in lockstep with REFACTOR §30 — *not* reused from `apianyware-patterns`, the
+domain rule) enforces per-facet membership — the **category-conditional** controlled-vocab
+shape (cf. `pattern-kinds.kdl-schema` law tokens), in contrast to the app-kind flat enums.
+The §30 weirdness is the platform truth **ws6 consumes** to compute representability; it is
+never itself a status. _Avoid_: putting `weirdness` in the schema as an `enum`
+(facet-conditional → semantic check); a representability status here (ws6/§20).
 
 > Representability note (D4): the §7.7 statuses (`fully-`/`conventionally-`/
 > `lossily-represented`, `unsafe-only`, `unsupported`, `research`) are per
