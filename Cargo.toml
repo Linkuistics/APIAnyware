@@ -9,13 +9,14 @@ members = [
     "semantic/tools/resolve",
     "semantic/tools/enrich",
     "semantic/tools/analyze-cli",
-    # platforms/macos/ domain — extractors, annotate, collect CLI, platform manifest
+    # platforms/macos/ domain — extractors, annotate, collect CLI, platform manifest, app-kinds
     "platforms/macos/tools/extract-objc",
     "platforms/macos/tools/extract-swift",
     "platforms/macos/tools/annotate",
     "platforms/macos/tools/conventions",
     "platforms/macos/tools/pattern-detection",
     "platforms/macos/tools/platform-manifest",
+    "platforms/macos/tools/app-kinds",
     "platforms/macos/tools/collect-cli",
     # targets/_shared/ domain — shared projection substrate + generate CLI
     "targets/_shared/tools/emit",
@@ -67,6 +68,7 @@ apianyware-annotate = { path = "platforms/macos/tools/annotate" }
 apianyware-conventions = { path = "platforms/macos/tools/conventions" }
 apianyware-pattern-detection = { path = "platforms/macos/tools/pattern-detection" }
 apianyware-platform-manifest = { path = "platforms/macos/tools/platform-manifest" }
+apianyware-app-kinds = { path = "platforms/macos/tools/app-kinds" }
 apianyware-enrich = { path = "semantic/tools/enrich" }
 apianyware-emit = { path = "targets/_shared/tools/emit" }
 apianyware-emit-racket = { path = "targets/racket/tools/emit-racket" }

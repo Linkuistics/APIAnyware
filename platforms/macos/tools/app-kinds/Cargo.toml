@@ -1,0 +1,17 @@
+[package]
+name = "apianyware-app-kinds"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The macOS app-kind registry (node-brief D2): the authored process-model definitions (cli-tool, gui-app, menu-bar-daemon, …), their `.apiw` (KDL) parser/loader, and a focused validator against `app-kind.kdl-schema`"
+
+[dependencies]
+apianyware-spec-format.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+kdl.workspace = true
+miette.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

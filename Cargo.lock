@@ -127,6 +127,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-app-kinds"
+version = "0.1.0"
+dependencies = [
+ "apianyware-spec-format",
+ "kdl",
+ "miette",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "apianyware-bundle-chez"
 version = "0.1.0"
 dependencies = [

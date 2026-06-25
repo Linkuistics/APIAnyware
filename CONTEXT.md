@@ -1149,6 +1149,20 @@ _Avoid_: confusing app-kind (platform category, `platforms/`) with app-spec (one
 app, `apps/`) or with pattern-kind (API-usage shape, `semantic/`); any projection in
 `kind.apiw`; folding app-kinds into the `apianyware-patterns` crate (domain violation —
 platform truth stays in `platforms/`).
+_Realized_ (`mechanism-k35`; **ADR-0049**, contract `schemas/spec-format/app-kind.kdl-schema`):
+`kind.apiw` carries a `process` block (`entry` ∈ {`c-main`, `ns-application-main`,
+`host-loaded`} · `run-loop` ∈ {`none`, `ns-application`, `cf-run-loop`, `host-driven`} ·
+`termination` ∈ {`return`, `ns-application-terminate`, `signal`, `host-controlled`}), an
+`activation` policy ∈ {`regular`, `accessory`=`LSUIElement`, `background`=`LSBackgroundOnly`,
+`hosted`}, a `bundle` ∈ {`none`, `app`, `mdimporter`, `appex`} (with optional
+`package-type` / `principal-class-key` / `extension-point` / `info-plist { require … }`),
+and `test-obligation` refs. These are **flat enums** → expressed as schema `enum`s + serde
+enums (unlike a pattern law's category-conditional tokens — no side `vocab` table); the
+focused validator adds only cross-field semantics (`none` carries no bundle metadata;
+`extension-point` ⟹ hosted bundle; `require`/`obligation` uniqueness). **Identity is the
+containing directory** (every file is `kind.apiw`, so the loader checks `app-kind "<name>"`
+= dir name, not file stem). `gui-app` authored as the exemplar; the other six follow in
+child 2.
 
 **Platform-semantic test / expectation declaration** _(`platforms/macos/tests/`; D3)_:
 An **authored, projection-free, target-independent** statement of what a macOS API

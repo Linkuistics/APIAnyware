@@ -1,0 +1,37 @@
+// gui-app — a bundled, windowed Cocoa application.
+//
+// The canonical macOS app: an `.app` bundle launched by Launch Services, bootstrapped
+// through `NSApplicationMain`, driven by AppKit's main run loop, and quit via
+// `-[NSApplication terminate:]`. It has a regular Dock + menu-bar presence. This is
+// platform truth — the process model a `gui-app` IS — with no statement of how any
+// target language builds it (the domain rule; that is `targets/`, workstream 6).
+//
+// See `docs/` for the lifecycle, bundle structure, and test obligations in prose.
+
+app-kind "gui-app" {
+    doc "A bundled, windowed Cocoa application: NSApplicationMain bootstrap, the AppKit main run loop, and terminate:-driven quit, with a regular Dock and menu-bar presence."
+
+    process {
+        entry "ns-application-main"
+        run-loop "ns-application"
+        termination "ns-application-terminate"
+    }
+
+    activation "regular"
+
+    bundle "app" {
+        package-type "APPL"
+        principal-class-key "NSPrincipalClass"
+        info-plist {
+            require "CFBundleName"
+            require "CFBundleIdentifier"
+            require "CFBundleExecutable"
+            require "CFBundlePackageType"
+            require "CFBundleInfoDictionaryVersion"
+            require "LSMinimumSystemVersion"
+        }
+    }
+
+    test-obligation "lifecycle"
+    test-obligation "bundle-structure"
+}

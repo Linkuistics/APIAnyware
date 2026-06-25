@@ -1,0 +1,227 @@
+// app-kind.kdl-schema — the authoritative, language-neutral contract for an
+// authored macOS **app-kind** `.apiw` file (`structural-refactoring` grove,
+// workstream 4; node-brief decision D2).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring
+// the siblings `platform.kdl-schema` and `pattern-kinds.kdl-schema` (workstream 3)
+// and `annotations.kdl-schema` (workstream 2). Any KDL tool in any language can
+// validate or consume an app-kind. The Rust `apianyware-app-kinds` crate is ONE
+// conforming validator of this contract, not its source of truth (ADR-0046 §3).
+//
+// SCOPE — an authored macOS **process-model** definition: how a program of this
+// kind starts, runs, and stops (`process`); how it presents to the window server
+// (`activation`); what on-disk container + Info.plist keys it requires (`bundle`);
+// and which platform-level test obligations it carries (`test-obligation`). This
+// is platform TRUTH — what a kind of macOS application *is*. It must NOT carry any
+// PROJECTION (no statement about how any target language builds it — that is
+// `targets/`, workstream 6; the domain rule). An app-kind is a DISTINCT entity
+// from a semantic pattern-kind (an API-usage axis, `semantic/`) and from a common
+// app-spec (one concrete app that NAMES its kind, `apps/macos/`, workstream 7).
+//
+// IDENTITY — each kind is one directory `app-kinds/<kind>/kind.apiw`; the
+// `app-kind "<name>"` value is the kind's stable identity and matches its
+// CONTAINING DIRECTORY (not the file stem — every file is named `kind.apiw`). The
+// conforming loader checks this.
+//
+// CONTROLLED VOCABULARY — `entry` / `run-loop` / `termination` / `activation` /
+// `bundle` draw from FLAT enumerated sets (unlike a pattern law's category-
+// conditional token set), so they are expressed directly as `enum` constraints
+// here and checked generically. The cross-field semantics the KDL Schema cannot
+// state — `bundle "none"` carries no bundle metadata; `extension-point` implies a
+// hosted bundle; `require`/`test-obligation` uniqueness — are added by the
+// conforming `apianyware-app-kinds` validator (its `apiw` semantic checks).
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE
+// CARDINALITY in a `value {…}` body (KDL Schema convention). `other-nodes-allowed`
+// / `other-props-allowed` default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware macOS app-kind definition (.apiw)" lang="en"
+        description "An authored macOS process-model definition: the entry / run-loop / termination model, the window-server activation policy, the on-disk bundle type + required Info.plist keys, and the platform-level test obligations of one kind of macOS application (cli-tool, gui-app, menu-bar-daemon, …). Projection-free platform truth (REFACTOR §13/§14)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 4 (app-kinds, mechanism-k35)"
+    }
+
+    // Exactly one top-level `app-kind "<name>"` node per file. The name is the
+    // kind's stable identity and matches its containing directory
+    // (`app-kinds/<name>/`, e.g. "gui-app"); the conforming loader checks this.
+    node "app-kind" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The PROCESS model — how a program of this kind starts, runs, and
+            // stops. Required; exactly one.
+            node "process" {
+                min 1
+                max 1
+                children {
+                    // The entry-point model — what runs first:
+                    //   c-main              — a C `main()` the program owns
+                    //   ns-application-main — `NSApplicationMain()` / `NSApp` bootstrap
+                    //   host-loaded         — no own entry; a host process loads the
+                    //                         bundle's principal class (extensions, importers)
+                    node "entry" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                            enum "c-main" "ns-application-main" "host-loaded"
+                        }
+                    }
+
+                    // The run-loop model — what drives the main loop:
+                    //   none           — runs to completion and returns (a batch tool)
+                    //   ns-application — `[NSApp run]` (the AppKit main loop)
+                    //   cf-run-loop    — a manual `CFRunLoop` / `dispatch_main()`
+                    //                    (a daemon servicing events without AppKit)
+                    //   host-driven    — the host process owns the run loop
+                    node "run-loop" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                            enum "none" "ns-application" "cf-run-loop" "host-driven"
+                        }
+                    }
+
+                    // The termination model — how it ends:
+                    //   return                  — `main` returns / `exit()`
+                    //   ns-application-terminate — `-[NSApplication terminate:]` / Quit
+                    //   signal                  — terminated by signal (SIGTERM from launchd)
+                    //   host-controlled         — the host unloads the bundle
+                    node "termination" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                            enum "return" "ns-application-terminate" "signal" "host-controlled"
+                        }
+                    }
+                }
+            }
+
+            // The window-server ACTIVATION policy — how the program presents:
+            //   regular   — a normal app: Dock icon + menu bar
+            //   accessory — `LSUIElement`: no Dock icon, menu-bar/status-item only
+            //   background — `LSBackgroundOnly`: no GUI session at all (a daemon)
+            //   hosted    — no activation policy of its own; runs inside a host
+            // Required; exactly one.
+            node "activation" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                    enum "regular" "accessory" "background" "hosted"
+                }
+            }
+
+            // The on-disk BUNDLE the kind produces, or `none` for a bare Mach-O
+            // executable. Required; exactly one. The bundle metadata children are
+            // present only for a real bundle — a `bundle "none"` carries none (the
+            // conforming validator enforces this; the KDL Schema cannot condition
+            // child occurrence on the node's value).
+            //   none       — a bare Mach-O executable (no `.app`, no Info.plist)
+            //   app        — a `.app` bundle
+            //   mdimporter — a `.mdimporter` Spotlight-importer bundle
+            //   appex      — a `.appex` app-extension bundle
+            node "bundle" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                    enum "none" "app" "mdimporter" "appex"
+                }
+                children {
+                    // `CFBundlePackageType` (a 4-char OSType, e.g. "APPL"). Optional.
+                    node "package-type" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+
+                    // The Info.plist key that names the bundle's principal class
+                    // (e.g. `NSPrincipalClass`, or an extension's principal-class
+                    // key). Optional.
+                    node "principal-class-key" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+
+                    // The `NSExtensionPointIdentifier` the bundle plugs into (e.g.
+                    // "com.apple.FinderSync", "com.apple.quicklook.preview"). Optional;
+                    // meaningful only for a hosted bundle (mdimporter / appex) — the
+                    // conforming validator enforces that.
+                    node "extension-point" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+
+                    // The Info.plist keys this kind REQUIRES. Optional block; when
+                    // present it must list one or more `require "<key>"` (each key
+                    // unique — the conforming validator checks uniqueness).
+                    node "info-plist" {
+                        max 1
+                        children {
+                            node "require" {
+                                min 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // A forward reference to a platform-level test obligation this kind
+            // carries (the obligation BODY is authored later in
+            // `tests/app-kinds/<kind>.apiw`, workstream 4 child 3). Zero or more;
+            // refs unique (the conforming validator checks uniqueness).
+            node "test-obligation" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+        }
+    }
+}
