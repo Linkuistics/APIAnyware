@@ -1,0 +1,25 @@
+// cli-tool — a bare command-line tool.
+//
+// The simplest macOS program: a Mach-O executable launched directly (by a shell,
+// `exec`, or another process), run to completion, and exited by returning from
+// `main`. No `.app` bundle, no Info.plist, no window-server presence. This is
+// platform truth — the process model a `cli-tool` IS — with no statement of how any
+// target language builds it (the domain rule; that is `targets/`, workstream 6).
+//
+// See `docs/` for the lifecycle and test obligations in prose.
+
+app-kind "cli-tool" {
+    doc "A bare command-line tool: a Mach-O executable launched directly, run to completion, and exited by returning from main — no bundle, no Info.plist, no window-server presence."
+
+    process {
+        entry "c-main"
+        run-loop "none"
+        termination "return"
+    }
+
+    activation "background"
+
+    bundle "none"
+
+    test-obligation "lifecycle"
+}

@@ -1,0 +1,39 @@
+// finder-sync-extension — a Finder Sync extension.
+//
+// A `.appex` app-extension bundle the Finder loads to badge files, add toolbar and
+// context-menu items, and react to changes in watched folders (the sync-status
+// overlays used by cloud-storage clients). It has no entry point, run loop, or
+// termination of its own — the host (Finder) owns the process, instantiates the
+// bundle's `NSExtensionPrincipalClass` (an `FIFinderSync` subclass), and drives it
+// through the `com.apple.FinderSync` extension point. This is platform truth — the
+// process model a `finder-sync-extension` IS — with no statement of how any target
+// language builds it (the domain rule; that is `targets/`, workstream 6).
+//
+// See `docs/` for the app-extension bundle shape and the test obligations.
+
+app-kind "finder-sync-extension" {
+    doc "A Finder Sync extension: a .appex app-extension bundle the Finder loads to badge files and add toolbar/context-menu items for watched folders, via the com.apple.FinderSync extension point. The host owns the entry, run loop, and termination."
+
+    process {
+        entry "host-loaded"
+        run-loop "host-driven"
+        termination "host-controlled"
+    }
+
+    activation "hosted"
+
+    bundle "appex" {
+        package-type "XPC!"
+        principal-class-key "NSExtensionPrincipalClass"
+        extension-point "com.apple.FinderSync"
+        info-plist {
+            require "CFBundleIdentifier"
+            require "CFBundleExecutable"
+            require "CFBundlePackageType"
+            require "NSExtension"
+        }
+    }
+
+    test-obligation "extension-bundle"
+    test-obligation "sync-badging"
+}

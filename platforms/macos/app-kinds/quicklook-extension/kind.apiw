@@ -1,0 +1,41 @@
+// quicklook-extension — a Quick Look preview extension.
+//
+// A `.appex` app-extension bundle the Quick Look host loads to render previews for
+// documents of declared content types (the space-bar / column-view preview). It has
+// no entry point, run loop, or termination of its own — the host owns the process,
+// instantiates the bundle's `NSExtensionPrincipalClass` (a `QLPreviewingController`
+// subclass), and drives it through the `com.apple.quicklook.preview` extension point.
+// The sibling thumbnail role is a separate extension point
+// (`com.apple.quicklook.thumbnail`, a `QLThumbnailProvider`) and would be its own
+// appex. This is platform truth — the process model a `quicklook-extension` IS —
+// with no statement of how any target language builds it (the domain rule; that is
+// `targets/`, workstream 6).
+//
+// See `docs/` for the app-extension bundle shape and the test obligations.
+
+app-kind "quicklook-extension" {
+    doc "A Quick Look preview extension: a .appex app-extension bundle the Quick Look host loads to render previews for documents of declared content types, via the com.apple.quicklook.preview extension point. The host owns the entry, run loop, and termination."
+
+    process {
+        entry "host-loaded"
+        run-loop "host-driven"
+        termination "host-controlled"
+    }
+
+    activation "hosted"
+
+    bundle "appex" {
+        package-type "XPC!"
+        principal-class-key "NSExtensionPrincipalClass"
+        extension-point "com.apple.quicklook.preview"
+        info-plist {
+            require "CFBundleIdentifier"
+            require "CFBundleExecutable"
+            require "CFBundlePackageType"
+            require "NSExtension"
+        }
+    }
+
+    test-obligation "extension-bundle"
+    test-obligation "preview"
+}

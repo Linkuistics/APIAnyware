@@ -1161,8 +1161,12 @@ enums (unlike a pattern law's category-conditional tokens — no side `vocab` ta
 focused validator adds only cross-field semantics (`none` carries no bundle metadata;
 `extension-point` ⟹ hosted bundle; `require`/`obligation` uniqueness). **Identity is the
 containing directory** (every file is `kind.apiw`, so the loader checks `app-kind "<name>"`
-= dir name, not file stem). `gui-app` authored as the exemplar; the other six follow in
-child 2.
+= dir name, not file stem). **All seven kinds authored** (`gui-app` exemplar in
+`mechanism-k35`; the other six in `remaining-kinds-k36`) — spanning standalone programs
+(`cli-tool`/`launch-agent` bare `none`; `gui-app`/`menu-bar-daemon` `.app`, the latter an
+`accessory` `LSUIElement`) and hosted plug-ins (`spotlight-importer` a legacy `.mdimporter`
+CFPlugIn — C factory, no principal class; `quicklook-extension`/`finder-sync-extension`
+NSExtension `.appex`, `XPC!`). The grammar absorbed all six with **no** crate/schema change.
 
 **Platform-semantic test / expectation declaration** _(`platforms/macos/tests/`; D3)_:
 An **authored, projection-free, target-independent** statement of what a macOS API

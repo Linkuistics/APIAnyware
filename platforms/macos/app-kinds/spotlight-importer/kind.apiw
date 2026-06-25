@@ -1,0 +1,38 @@
+// spotlight-importer — a Spotlight metadata importer.
+//
+// A legacy `.mdimporter` **CFPlugIn** bundle the Spotlight indexing host (`mdworker`)
+// loads to extract searchable attributes from documents of declared content types.
+// It has no entry point, run loop, or termination of its own — the host owns all
+// three: it loads the plug-in, calls the importer's factory function for a file, and
+// unloads it. A CFPlugIn registers a C **factory function** (via `CFPlugInFactories`
+// / `CFPlugInTypes`), not an Objective-C principal class, so this kind carries no
+// `principal-class-key`. This is platform truth — the process model a
+// `spotlight-importer` IS — with no statement of how any target language builds it
+// (the domain rule; that is `targets/`, workstream 6).
+//
+// See `docs/` for the CFPlugIn importer bundle shape, the indexing obligations, and
+// the host-process constraints.
+
+app-kind "spotlight-importer" {
+    doc "A Spotlight metadata importer: a legacy .mdimporter CFPlugIn bundle the indexing host (mdworker) loads to extract searchable attributes from documents of declared content types. The host owns the entry, run loop, and termination."
+
+    process {
+        entry "host-loaded"
+        run-loop "host-driven"
+        termination "host-controlled"
+    }
+
+    activation "hosted"
+
+    bundle "mdimporter" {
+        info-plist {
+            require "CFBundleIdentifier"
+            require "CFBundleExecutable"
+            require "CFPlugInFactories"
+            require "CFPlugInTypes"
+        }
+    }
+
+    test-obligation "importer-bundle"
+    test-obligation "indexing"
+}

@@ -1,0 +1,30 @@
+// launch-agent — a launchd-managed background agent.
+//
+// A long-running daemon launched and supervised by `launchd`, not by Launch
+// Services: a bare Mach-O executable with no GUI session, no Dock icon, and no
+// Info.plist. It owns a manual `CFRunLoop` / `dispatch_main()` to service events
+// without AppKit, and is stopped by a signal (SIGTERM from launchd at unload). The
+// launchd *job plist* — the LaunchAgents `.plist` that tells launchd how to load
+// the binary — is **app-spec material** (`apps/macos/<app>/`, workstream 7), not
+// part of the kind. This is platform truth — the process model a `launch-agent` IS
+// — with no statement of how any target language builds it (the domain rule; that
+// is `targets/`, workstream 6).
+//
+// See `docs/` for the launchd job model, the lifecycle, and the test obligations.
+
+app-kind "launch-agent" {
+    doc "A launchd-managed background agent: a bare Mach-O executable with no GUI session, driven by a manual CFRunLoop / dispatch_main and stopped by SIGTERM. The launchd job plist is app-spec material, not part of the kind."
+
+    process {
+        entry "c-main"
+        run-loop "cf-run-loop"
+        termination "signal"
+    }
+
+    activation "background"
+
+    bundle "none"
+
+    test-obligation "lifecycle"
+    test-obligation "background-activation"
+}

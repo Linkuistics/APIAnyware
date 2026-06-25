@@ -1,0 +1,42 @@
+// menu-bar-daemon — a bundled AppKit accessory app with no Dock icon.
+//
+// A status-bar app: a `.app` bundle that bootstraps through `NSApplicationMain` and
+// runs the AppKit main loop like a `gui-app`, but presents as an `LSUIElement`
+// *accessory* — no Dock tile, no global menu bar — servicing the user through an
+// `NSStatusItem` in the system menu bar. Quits via `-[NSApplication terminate:]`.
+// This is platform truth — the process model a `menu-bar-daemon` IS — with no
+// statement of how any target language builds it (the domain rule; that is
+// `targets/`, workstream 6).
+//
+// See `docs/` for the status-item model, the LSUIElement accessory policy, and the
+// test obligations in prose.
+
+app-kind "menu-bar-daemon" {
+    doc "A bundled AppKit accessory app (LSUIElement, no Dock icon): NSApplicationMain bootstrap, the AppKit main loop servicing a menu-bar NSStatusItem, and terminate:-driven quit."
+
+    process {
+        entry "ns-application-main"
+        run-loop "ns-application"
+        termination "ns-application-terminate"
+    }
+
+    activation "accessory"
+
+    bundle "app" {
+        package-type "APPL"
+        principal-class-key "NSPrincipalClass"
+        info-plist {
+            require "CFBundleName"
+            require "CFBundleIdentifier"
+            require "CFBundleExecutable"
+            require "CFBundlePackageType"
+            require "CFBundleInfoDictionaryVersion"
+            require "LSMinimumSystemVersion"
+            require "LSUIElement"
+        }
+    }
+
+    test-obligation "lifecycle"
+    test-obligation "accessory-activation"
+    test-obligation "status-item"
+}
