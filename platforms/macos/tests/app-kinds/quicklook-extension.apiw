@@ -1,0 +1,50 @@
+// quicklook-extension — app-kind test obligations (the declaration half).
+//
+// Resolves the two `test-obligation` references the quicklook-extension kind declares
+// (`app-kinds/quicklook-extension/kind.apiw`): `extension-bundle` and `preview`. Each
+// body is a set of projection-free, target-independent `expect`ations of what a built
+// .appex Quick Look preview extension must satisfy. This is platform TRUTH — what must
+// hold — NOT how any target builds the extension (`targets/`, workstream 6) and NOT
+// how the expectations are run (the runner + TestAnyware/AppSpec integration are
+// workstream 9; declare-now / execute-later, ADR-0046 / node-brief D3). The prose
+// source is `app-kinds/quicklook-extension/docs/test-obligations.md`. The `preview`
+// obligation reads a fixture document; the fixture file is populated in workstream 4
+// child 4.
+
+app-kind-tests "quicklook-extension" {
+    doc "The extension-bundle and preview obligations of a .appex Quick Look preview extension the host loads via com.apple.quicklook.preview."
+
+    // Checks the on-disk .appex is a well-formed, loadable app extension.
+    obligation "extension-bundle" {
+        doc "Checks the on-disk .appex is a well-formed, loadable Quick Look preview extension."
+
+        expect "appex-skeleton-present" {
+            doc "The .appex has Contents/Info.plist, Contents/MacOS/<CFBundleExecutable>, and CFBundlePackageType is XPC!."
+        }
+        expect "declares-extension-point" {
+            doc "The NSExtension dictionary declares NSExtensionPointIdentifier com.apple.quicklook.preview and an NSExtensionPrincipalClass."
+        }
+        expect "principal-class-loads" {
+            doc "The principal class resolves and loads when the host instantiates it."
+        }
+        expect "declares-supported-content-types" {
+            doc "The extension declares the content types it supports, so the host routes matching documents to it."
+        }
+    }
+
+    // Drives the extension's actual job against a fixture document.
+    obligation "preview" {
+        doc "Drives the extension's actual job: prepare a preview for a fixture document of a supported content type."
+        fixture "fixtures/sample-documents/sample.txt"
+
+        expect "host-requests-preview" {
+            doc "Given a sample document of a supported content type, the Quick Look host loads the extension and asks it to prepare a preview."
+        }
+        expect "produces-preview-without-error" {
+            doc "The principal class produces a preview without error — a rendered view / preview representation for the document."
+        }
+        expect "preview-reflects-content-and-tears-down" {
+            doc "The preview reflects the document's content, and the host-driven, host-controlled lifecycle completes with the extension torn down cleanly."
+        }
+    }
+}

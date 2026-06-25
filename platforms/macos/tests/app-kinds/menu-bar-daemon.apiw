@@ -1,0 +1,61 @@
+// menu-bar-daemon — app-kind test obligations (the declaration half).
+//
+// Resolves the three `test-obligation` references the menu-bar-daemon kind declares
+// (`app-kinds/menu-bar-daemon/kind.apiw`): `lifecycle`, `accessory-activation`, and
+// `status-item`. Each body is a set of projection-free, target-independent
+// `expect`ations of what a built menu-bar-daemon binding must satisfy. This is
+// platform TRUTH — what must hold — NOT how any target builds the binding
+// (`targets/`, workstream 6) and NOT how the expectations are run (the runner +
+// TestAnyware/AppSpec integration are workstream 9; declare-now / execute-later,
+// ADR-0046 / node-brief D3). The prose source is
+// `app-kinds/menu-bar-daemon/docs/test-obligations.md`.
+
+app-kind-tests "menu-bar-daemon" {
+    doc "The lifecycle, accessory-activation, and status-item obligations of a bundled LSUIElement accessory app servicing a menu-bar NSStatusItem."
+
+    // Drives the entry → run-loop → termination model end-to-end against a built
+    // binding (NSApplicationMain bootstrap → the AppKit main loop → terminate:).
+    obligation "lifecycle" {
+        doc "Drives the menu-bar-daemon entry → run-loop → termination model end-to-end against a built binding."
+
+        expect "reaches-did-finish-launching" {
+            doc "Launching the app reaches applicationDidFinishLaunching: — the AppKit bootstrap completed: shared application, principal class, delegate installed."
+        }
+        expect "services-run-loop-events" {
+            doc "The AppKit main run loop runs and services events — the app is an event-driven accessory, not a straight-line tool."
+        }
+        expect "cooperative-shutdown" {
+            doc "A Quit / terminate: request runs the cooperative shutdown (applicationWillTerminate: observed) and the process exits cleanly."
+        }
+    }
+
+    // Checks the LSUIElement accessory activation policy took effect.
+    obligation "accessory-activation" {
+        doc "Checks the LSUIElement accessory policy took effect — accessory presence, not foreground and not background."
+
+        expect "no-dock-tile-or-menu-bar" {
+            doc "The app shows no Dock tile and does not own the global menu bar — the LSUIElement accessory policy took effect."
+        }
+        expect "does-not-steal-foreground" {
+            doc "Launching the app does not deactivate the user's current foreground app."
+        }
+        expect "has-window-server-session" {
+            doc "The app nonetheless has a live window-server session — it can draw a status item and menus — so it is an accessory, not a background process."
+        }
+    }
+
+    // Checks the kind's defining presence: an NSStatusItem in the system menu bar.
+    obligation "status-item" {
+        doc "Checks the kind's defining presence — an NSStatusItem installed, interactive, and cleaned up at termination."
+
+        expect "installs-status-item" {
+            doc "After launch the app installs an NSStatusItem in the system menu bar — an icon and/or title is visible."
+        }
+        expect "status-item-responds" {
+            doc "The status item responds to interaction: clicking it presents the app's menu."
+        }
+        expect "status-item-removed-on-quit" {
+            doc "The status item is removed at termination, leaving no orphan in the menu bar."
+        }
+    }
+}

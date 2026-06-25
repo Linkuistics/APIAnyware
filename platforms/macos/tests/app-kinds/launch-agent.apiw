@@ -1,0 +1,47 @@
+// launch-agent — app-kind test obligations (the declaration half).
+//
+// Resolves the two `test-obligation` references the launch-agent kind declares
+// (`app-kinds/launch-agent/kind.apiw`): `lifecycle` and `background-activation`. Each
+// body is a set of projection-free, target-independent `expect`ations of what a built
+// launch-agent binary must satisfy under launchd management. This is platform TRUTH —
+// what must hold — NOT how any target builds the binary (`targets/`, workstream 6)
+// and NOT how the expectations are run (the runner + TestAnyware/AppSpec integration
+// are workstream 9; declare-now / execute-later, ADR-0046 / node-brief D3). The
+// launchd *job plist* that drives the agent is app-spec material (workstream 7), not
+// part of this declaration. The prose source is
+// `app-kinds/launch-agent/docs/test-obligations.md`.
+
+app-kind-tests "launch-agent" {
+    doc "The lifecycle and background-activation obligations of a launchd-managed background agent driven by a manual CFRunLoop and stopped by SIGTERM."
+
+    // Drives the entry → run-loop → termination model end-to-end against a built
+    // binary, under launchd management (launchd load → cf-run-loop → SIGTERM).
+    obligation "lifecycle" {
+        doc "Drives the launch-agent entry → run-loop → termination model end-to-end against a built binary, under launchd management."
+
+        expect "launchd-loads-and-enters-main" {
+            doc "launchd loads the job and the agent enters main with the configured ProgramArguments — started by launchd, not by Launch Services."
+        }
+        expect "services-cf-run-loop" {
+            doc "The agent enters and runs its CFRunLoop, servicing the source it was loaded for — without busy-waiting and without an AppKit / window-server connection."
+        }
+        expect "clean-sigterm-shutdown" {
+            doc "On unload launchd sends SIGTERM and the agent's handler stops the run loop, releases resources, and exits cleanly before launchd escalates to SIGKILL."
+        }
+    }
+
+    // Checks the agent has no GUI session — a true background process.
+    obligation "background-activation" {
+        doc "Checks the agent has no GUI session — a true background launchd process, not an accessory."
+
+        expect "no-gui-presence" {
+            doc "The agent shows no Dock tile and owns no menu bar."
+        }
+        expect "no-window-server-connection" {
+            doc "The agent makes no window-server connection — it is a true background process, not an accessory."
+        }
+        expect "runs-in-launchd-context" {
+            doc "The agent runs in the user's launchd agent context, observable via launchctl."
+        }
+    }
+}

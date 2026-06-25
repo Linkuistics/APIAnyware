@@ -1,0 +1,30 @@
+// cli-tool — app-kind test obligations (the declaration half).
+//
+// Resolves the single `test-obligation` reference the cli-tool kind declares
+// (`app-kinds/cli-tool/kind.apiw`): `lifecycle`. Its body is a set of
+// projection-free, target-independent `expect`ations of what a built cli-tool binary
+// must satisfy. This is platform TRUTH — what must hold — NOT how any target builds
+// the binary (`targets/`, workstream 6) and NOT how the expectations are run (the
+// runner + TestAnyware/AppSpec integration are workstream 9; declare-now /
+// execute-later, ADR-0046 / node-brief D3). The prose source is
+// `app-kinds/cli-tool/docs/test-obligations.md`.
+
+app-kind-tests "cli-tool" {
+    doc "The lifecycle obligation of a bare command-line tool: exec into main, run straight-line to completion, exit by returning a status code."
+
+    // Drives the entry → run-loop → termination model end-to-end against a built
+    // binary (the cli-tool process model: exec → no event loop → return from main).
+    obligation "lifecycle" {
+        doc "Drives the cli-tool entry → run-loop → termination model end-to-end against a built binary."
+
+        expect "execs-into-main" {
+            doc "Exec'ing the binary directly enters main with the expected argv — no .app bundle and no Launch Services involved."
+        }
+        expect "runs-to-completion" {
+            doc "The tool runs straight-line to completion — reading any stdin, writing the expected stdout/stderr — without entering or requiring an event loop."
+        }
+        expect "reports-exit-status" {
+            doc "The process returns an exit code — 0 on success, a documented non-zero code on failure — observed by the caller as the tool's machine-readable result."
+        }
+    }
+}

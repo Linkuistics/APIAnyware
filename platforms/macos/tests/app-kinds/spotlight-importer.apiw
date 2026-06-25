@@ -1,0 +1,49 @@
+// spotlight-importer — app-kind test obligations (the declaration half).
+//
+// Resolves the two `test-obligation` references the spotlight-importer kind declares
+// (`app-kinds/spotlight-importer/kind.apiw`): `importer-bundle` and `indexing`. Each
+// body is a set of projection-free, target-independent `expect`ations of what a built
+// .mdimporter CFPlugIn must satisfy. This is platform TRUTH — what must hold — NOT how
+// any target builds the bundle (`targets/`, workstream 6) and NOT how the expectations
+// are run (the runner + TestAnyware/AppSpec integration are workstream 9; declare-now
+// / execute-later, ADR-0046 / node-brief D3). The prose source is
+// `app-kinds/spotlight-importer/docs/indexing-tests.md`. The `indexing` obligation
+// reads a fixture document; the fixture file is populated in workstream 4 child 4.
+
+app-kind-tests "spotlight-importer" {
+    doc "The importer-bundle and indexing obligations of a legacy .mdimporter CFPlugIn the Spotlight host loads to extract searchable attributes."
+
+    // Checks the on-disk .mdimporter is a well-formed, loadable CFPlugIn.
+    obligation "importer-bundle" {
+        doc "Checks the on-disk .mdimporter is a well-formed, loadable CFPlugIn the Spotlight host recognizes."
+
+        expect "bundle-skeleton-present" {
+            doc "The .mdimporter has Contents/Info.plist, Contents/MacOS/<CFBundleExecutable>, and a Resources/ directory."
+        }
+        expect "registers-cfplugin-factory" {
+            doc "The Info.plist registers a CFPlugIn factory (CFPlugInFactories) and the Spotlight importer type (CFPlugInTypes), so the host recognizes the bundle as an importer."
+        }
+        expect "declares-imported-content-types" {
+            doc "The bundle declares the content types (UTIs) it imports, so the host routes matching files to it."
+        }
+        expect "factory-yields-importer-interface" {
+            doc "The bundle loads into a host process and its factory yields the importer interface."
+        }
+    }
+
+    // Drives the importer's actual job against a fixture document.
+    obligation "indexing" {
+        doc "Drives the importer's actual job: extract the expected attributes from a fixture document of a declared content type."
+        fixture "fixtures/spotlight/sample.txt"
+
+        expect "host-invokes-importer-for-file" {
+            doc "Given a sample file of a declared content type, the host loads the importer and invokes it for that file."
+        }
+        expect "populates-metadata-attributes" {
+            doc "The importer returns an attribute dictionary populated with the expected kMDItem… keys (e.g. a title, text content, author) extracted from the document."
+        }
+        expect "extracted-values-match-fixture" {
+            doc "The extracted attribute values match the fixture's known metadata — the importer reads the document's content correctly, not just structurally."
+        }
+    }
+}

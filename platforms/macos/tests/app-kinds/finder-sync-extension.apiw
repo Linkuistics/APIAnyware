@@ -1,0 +1,48 @@
+// finder-sync-extension — app-kind test obligations (the declaration half).
+//
+// Resolves the two `test-obligation` references the finder-sync-extension kind
+// declares (`app-kinds/finder-sync-extension/kind.apiw`): `extension-bundle` and
+// `sync-badging`. Each body is a set of projection-free, target-independent
+// `expect`ations of what a built .appex Finder Sync extension must satisfy. This is
+// platform TRUTH — what must hold — NOT how any target builds the extension
+// (`targets/`, workstream 6) and NOT how the expectations are run (the runner +
+// TestAnyware/AppSpec integration are workstream 9; declare-now / execute-later,
+// ADR-0046 / node-brief D3). The prose source is
+// `app-kinds/finder-sync-extension/docs/test-obligations.md`. The `sync-badging`
+// obligation reads a fixture item in a watched folder; the fixture file is populated
+// in workstream 4 child 4.
+
+app-kind-tests "finder-sync-extension" {
+    doc "The extension-bundle and sync-badging obligations of a .appex Finder Sync extension the Finder loads via com.apple.FinderSync."
+
+    // Checks the on-disk .appex is a well-formed, loadable app extension.
+    obligation "extension-bundle" {
+        doc "Checks the on-disk .appex is a well-formed, loadable Finder Sync extension."
+
+        expect "appex-skeleton-present" {
+            doc "The .appex has Contents/Info.plist, Contents/MacOS/<CFBundleExecutable>, and CFBundlePackageType is XPC!."
+        }
+        expect "declares-extension-point" {
+            doc "The NSExtension dictionary declares NSExtensionPointIdentifier com.apple.FinderSync and an NSExtensionPrincipalClass."
+        }
+        expect "principal-class-is-fifindersync" {
+            doc "The principal class resolves to an FIFinderSync subclass and loads when the Finder instantiates it."
+        }
+    }
+
+    // Drives the extension's actual job against a watched folder.
+    obligation "sync-badging" {
+        doc "Drives the extension's actual job: watch a folder, badge its items, and supply working toolbar / context-menu items."
+        fixture "fixtures/sample-documents/sample.txt"
+
+        expect "registers-watched-folder" {
+            doc "The extension registers a directory as a watched / sync folder (via FIFinderSyncController) and the Finder begins routing that folder's events to it."
+        }
+        expect "badges-displayed-items" {
+            doc "When an item in the watched folder is displayed, the extension sets the expected badge overlay on it."
+        }
+        expect "supplies-and-invokes-menu-items" {
+            doc "The extension supplies its toolbar / context-menu items for a selection, and the host invokes the corresponding action when chosen."
+        }
+    }
+}
