@@ -71,3 +71,23 @@ inputs + prose only.
   Grow `platform-docs` via `leaf-add` on `platform-model-k32`. Only after *that* retires
   does ws4 finish and **ws5** (LLM analysis side-channel) grow next (root-brief
   decomposition).
+
+## Outcome (recorded)
+
+- **Fixture-set scope (done-bar decision).** Authored exactly the two directories with a
+  committed referrer: `fixtures/sample-documents/sample.txt` (quicklook `preview` +
+  finder-sync `sync-badging`) and `fixtures/spotlight/sample.txt` (spotlight `indexing`).
+  **Skipped** the D5 menu's `pasteboard/` and `sample-images/` — **no committed
+  declaration references them** (lazy / constraint 4). Each fixture is a tiny text doc
+  carrying known, assertable content (title/author/body token) so the ws9 runner can
+  assert *extracted values match the fixture*, not merely that *a* value was produced.
+- **Fixture-existence guard added** (the nice-to-have). New standing-guard test
+  `every_fixture_ref_resolves` (in `app_kind_tests_registry.rs`): every committed
+  `fixture` ref resolves to a real file under `platforms/macos/tests/`, with a `>= 3`
+  floor against a silent regression to zero refs. The schema comment that anticipated it
+  is left as-is (it documents the seam).
+- **`tests/README.md` discharged** — TODO removed; prose maps the layout and covers both
+  declaration families + `fixtures/` + the declare-now/execute-later seam.
+- **No new mechanism.** Pure content + prose + one guard test; no schema, crate, grammar,
+  or submodule change. `cargo test -p apianyware-platform-tests` (33 tests), clippy, fmt
+  green; nothing executed; no emit-golden movement.

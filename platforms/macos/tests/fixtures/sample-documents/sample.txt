@@ -1,0 +1,7 @@
+Sample Document — Quick Look & Finder Sync fixture
+
+A minimal text document with known content a preview can reflect and a
+watched-folder item Finder Sync can badge.
+
+The quick brown fox jumps over the lazy dog.
+Assertable token: QUICKLOOK-FIXTURE-0042.

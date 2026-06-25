@@ -33,6 +33,15 @@ fn app_kinds_dir() -> PathBuf {
         .expect("platforms/macos/app-kinds/ resolves")
 }
 
+/// The authored tests root (`platforms/macos/tests/`), the base every obligation's
+/// `fixture` path is relative to.
+fn tests_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests")
+        .canonicalize()
+        .expect("platforms/macos/tests/ resolves")
+}
+
 fn obligations() -> AppKindTestsRegistry {
     AppKindTestsRegistry::load_dir(&obligations_dir())
         .expect("every authored app-kind-tests file loads, validates, and passes semantic checks")
@@ -117,6 +126,47 @@ fn every_obligation_file_resolves_its_kind_refs() {
             tests.kind, tests.kind,
         );
     }
+}
+
+/// The fixture-existence invariant (the `app-kind-tests.kdl-schema` flagged it —
+/// "a conforming guard may check existence once fixtures land"): every `fixture` ref
+/// any obligation declares resolves to a real file under `platforms/macos/tests/`.
+/// Fixtures land in workstream 4 child 4 (`fixtures-readme-k41`); from here on the
+/// declaration↔fixture link is a standing invariant — a committed `fixture` path with
+/// no backing file fails the guard. The runner that *reads* a fixture's content is
+/// workstream 9 (declare-now / execute-later); this only checks the file exists.
+#[test]
+fn every_fixture_ref_resolves() {
+    let reg = obligations();
+    let tests_root = tests_dir();
+
+    let mut checked = 0usize;
+    for tests in reg.all() {
+        for obligation in &tests.obligations {
+            for fixture in &obligation.fixtures {
+                let path = tests_root.join(fixture);
+                assert!(
+                    path.is_file(),
+                    "kind `{}` obligation `{}` references fixture `{}`, but no file exists at `{}` \
+                     (fixture paths are relative to platforms/macos/tests/)",
+                    tests.kind,
+                    obligation.name,
+                    fixture,
+                    path.display(),
+                );
+                checked += 1;
+            }
+        }
+    }
+
+    // The committed corpus references fixtures today (spotlight indexing,
+    // quicklook preview, finder-sync sync-badging); guard against a silent
+    // regression to zero refs that would make this test vacuously pass.
+    assert!(
+        checked >= 3,
+        "expected the committed obligations to reference at least the three fixture-reading \
+         cases, found {checked}",
+    );
 }
 
 /// Every loaded obligation file names a real kind, declares at least one obligation,

@@ -1,0 +1,6 @@
+Title: Field Notes on the Migratory Mongoose
+Author: Ada Lovelace
+Keywords: spotlight, importer, fixture
+
+The migratory mongoose indexes seventeen lighthouses before dawn.
+Assertable token: SPOTLIGHT-FIXTURE-4417.
