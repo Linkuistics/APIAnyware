@@ -58,6 +58,16 @@ of each; any KDL tool in any language can validate against them.
   §25 ABI. Workstream 6 (`policy-adapter-k54`); validated by `apianyware-target-model` (the
   `adapter_spec/` submodule). The §26 `role` + `service` vocabularies are enforced by that validator,
   not the schema (REFACTOR §26 calls them "suggested" extensible lists; cf. `capability.kdl-schema`).
+- **`conformance.kdl-schema`** — the §37 per-platform conformance report's authored **judgment slice**
+  (`targets/<t>/conformance/<platform>.apiw`): the per-app-kind `app-support` call (each rated by the
+  closed `ConformanceStatus` enum, with optional `exemplar` common apps), the `unsupported` features,
+  the `research` items, and the `known-issue`s. The §37 *derived* slice (per-API coverage, common
+  app-implementation status) is computed on demand by the `apianyware-conformance` CLI and has no
+  `.apiw` form. Workstream 6 (`conformance-k55`); validated by `apianyware-target-model` (the
+  `conformance/` submodule). The `app-support` app-kind token is checked against the seven macOS
+  app-kinds by that validator, not the schema (a lockstep vocabulary copy keeps the targets domain off
+  the platforms domain; cf. `capability.kdl-schema`). Identity matches the *target* directory (the
+  file's grandparent) and `platform` the file STEM (platform-in-filename, unlike policy/adapter).
 
 The Rust `apianyware-spec-format` crate is *one conforming validator* of this contract (its
 `validate_apiw` step embeds this file); any KDL tool in any language can validate an `.apiw` file

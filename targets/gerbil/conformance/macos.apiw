@@ -1,0 +1,62 @@
+// The gerbil macOS conformance report — authored JUDGMENT slice only (REFACTOR §37;
+// structural-refactoring grove ws6, conformance-k55). Contract:
+// schemas/spec-format/conformance.kdl-schema.
+//
+// Carries ONLY the §37 judgment a machine cannot derive; the §37 DERIVED slice (per-API
+// coverage + common app-implementation status) is computed by `apianyware-conformance` and
+// never committed (constraint 4).
+//
+// Grounded in: capability.apiw's §36 app-form face, the VM-verified GUI sample apps, the
+// main-thread-bounce model (ADR-0022), and the gcc-15 bottle toolchain pin (ADR-0021).
+conformance "gerbil" {
+    platform "macos"
+    doc "Gerbil Scheme over define-c-lambda on macOS: a self-contained .app target with seven VM-verified GUI sample apps; foreign-thread callbacks bounce to the main thread (ADR-0022)."
+
+    app-support "cli-tool" {
+        status "pass"
+        doc "Gerbil runs headless trivially; no dedicated CLI sample app ships (judgment, not exemplified)."
+    }
+    app-support "gui-app" {
+        status "pass"
+        doc "Self-contained .app (app-form app-bundle = exact-runtime); the seven GUI sample apps below are VM-verified."
+        exemplar "hello-window"
+        exemplar "drawing-canvas"
+        exemplar "mini-browser"
+        exemplar "note-editor"
+        exemplar "pdfkit-viewer"
+        exemplar "scenekit-viewer"
+        exemplar "ui-controls-gallery"
+    }
+    app-support "menu-bar-daemon" {
+        status "partial"
+        doc "Feasible as an LSUIElement .app over the proven bundle path; no dedicated sample app VM-verified."
+    }
+    app-support "launch-agent" {
+        status "partial"
+        doc "A launchd plist over the proven standalone executable; not yet demonstrated end-to-end."
+    }
+    app-support "spotlight-importer" {
+        status "research"
+        doc "Loading the gerbil runtime into an .mdimporter loadable bundle is unestablished (app-form plugin = research; §36 hard case)."
+    }
+    app-support "quicklook-extension" {
+        status "research"
+        doc "Loadable-bundle / app-extension hosting of the runtime is unestablished (app-form plugin = research)."
+    }
+    app-support "finder-sync-extension" {
+        status "research"
+        doc "App-extension hosting plus the App Sandbox are unestablished (app-form sandboxing = research)."
+    }
+
+    unsupported "swift-actor-isolation" {
+        doc "Swift `actor` / global-actor isolation is not represented (the digester emits no actor-isolation signal; KNOWN_UNBINDABLE)."
+    }
+
+    research "app-sandbox" {
+        doc "App Sandbox entitlements have not been exercised for any gerbil app (app-form sandboxing = research)."
+    }
+
+    known-issue "gcc-15-toolchain-pin" {
+        doc "The ADR-0021 bottle toolchain hardcodes gcc-15 for gxc; a build host carrying only gcc-16 needs the /tmp/aw-gcc15-shim symlink, or gxc fails with `gcc-15: command not found`."
+    }
+}

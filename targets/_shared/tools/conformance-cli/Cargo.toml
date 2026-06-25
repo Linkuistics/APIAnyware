@@ -1,0 +1,17 @@
+[package]
+name = "apianyware-conformance"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI: apianyware-conformance — render the REFACTOR §37 conformance report (authored judgment + derived coverage/app-status) and cross-check authored claims against the derived VM-verify reality. The ws6 consumer that wires the platforms api-semantics registry to the targets capability/conformance model (ADR-0051 §5 seam)."
+
+[dependencies]
+apianyware-target-model.workspace = true
+apianyware-platform-tests.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

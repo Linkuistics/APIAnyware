@@ -1428,12 +1428,22 @@ ship (documentation-of-the-existing, grounded in the `sources/` survey).
 The §37 per-target×platform report — **authored *judgment* slice** (`unsupported` features,
 `research` items, `known issues`, the app-kind support call) committed as `.apiw`, plus the
 **derived** slice (`API coverage`, common-app-implementation `status`) computed from the generated
-bindings + the VM-verify reports already under `bindings/<platform>/reports/`. Statuses per §37:
-`pass`/`partial`/`research`/`unsupported`/`failed`/`skipped`. A validator cross-checks authored
-claims against the derived reality. The `binding tests` field *references* ws9 results; ws6 does
-not build the runner (per-target execution hooks are ws6's, the runner is ws9's — the ws4 D3 mirror).
+bindings + the VM-verify reports already under `bindings/<platform>/reports/`. Statuses per §37 are
+the `ConformanceStatus` ladder `pass`/`partial`/`research`/`unsupported`/`failed`/`skipped` (lives in
+`derive.rs` beside `Representability`, re-used by the authored model — the capability/`rung` mirror).
+Derived *coverage* is the representability histogram over the platform's declared weird-API surface
+(reuses the `derive::representability` floor); derived *app status* is `pass` when an
+`app-implementations/<platform>/<app>/` port has VM-verify evidence under `reports/<app>/`, else
+`partial`. The report-generating CLI is **`apianyware-conformance`** (`targets/_shared/tools/
+conformance-cli`; the ws6 consumer wiring the platform api-semantics registry to the targets model,
+ADR-0051 §5 seam) — `--json`/`--check` (CI gate). Its **cross-check** confirms each authored
+`app-support` `exemplar` app's derived status does not contradict the call (an `unsupported`/`failed`
+claim against a VM-verified app, or a `pass` claim against an unverified one). The `binding tests`
+field *references* ws9 results; ws6 does not build the runner (per-target execution hooks are ws6's,
+the runner is ws9's — the ws4 D3 mirror).
 _Avoid_: committing the derived coverage/app-status (recomputable → constraint 4); building the
-test runner here (ws9).
+test runner here (ws9); committing a per-app `status` in the authored slice (it is derived — the
+exemplar grouping is the only app-level judgment).
 
 **target-model crate** _(`targets/_shared/tools/target-model`; D5)_:
 The single shared, **target-independent** crate that parses + focused-validates every target-model

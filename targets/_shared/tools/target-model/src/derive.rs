@@ -1,17 +1,29 @@
-//! The **representability** model (REFACTOR §7.7/§20; node-brief D2, child
-//! `capability-k52`): the unified 7-rung [`Representability`] ladder and the
-//! [`representability`] **floor** that derives a per-API status from an authored
-//! [`CapabilityProfile`] and the platform §30 source-weirdness an API carries.
+//! The **derivation** layer (REFACTOR §7.7/§20/§37): everything the target model
+//! *computes* rather than authors. Two derivations live here, and the §37
+//! [`ConformanceStatus`] vocabulary they share with the authored conformance slice:
 //!
-//! Representability is **derived, never authored** (node-brief D1): committing a
-//! per-API status would duplicate a derivable fact and rot against SDK / binding
-//! drift, so the status is computed on demand and stays uncommitted (constraint 4).
-//! This module is the pure kernel of that computation — a *library*, with the CLI /
-//! report surface deferred to child 5 (conformance). It is also **domain-pure**: the
-//! floor takes the API's weirdness *tags*, not the platform's `ApiSemanticsRegistry`,
-//! so the targets-domain crate never depends on the platforms-domain crate. A consumer
-//! (child 5) loads the platform api-semantics registry, reads an API's weirdness, and
-//! passes the tags here.
+//! - **Per-API representability** (node-brief D2, child `capability-k52`): the unified
+//!   7-rung [`Representability`] ladder and the [`representability`] **floor** that
+//!   derives a per-API status from an authored [`CapabilityProfile`] and the platform
+//!   §30 source-weirdness an API carries, plus the [`representability_histogram`] that
+//!   rolls a whole weird-API surface up into the §37 *coverage* line.
+//! - **Per-app conformance** (node-brief D1, child `conformance-k55`): the
+//!   [`derive_app_statuses`] scan that reads a target's shipped
+//!   `app-implementations/` + VM-verify `reports/` and yields each common app's §37
+//!   [`AppImplStatus`] — the *common app-implementation status* line.
+//!
+//! Both are **derived, never authored** (node-brief D1): committing a per-API status or
+//! a per-app status would duplicate a derivable fact and rot against SDK / binding
+//! drift, so they are computed on demand and stay uncommitted (constraint 4). The
+//! authored *judgment* slice (`conformance/<platform>.apiw`) is cross-checked against
+//! these derivations by [`crate::conformance::crosscheck`].
+//!
+//! This module is **domain-pure**: the representability floor takes the API's weirdness
+//! *tags*, not the platform's `ApiSemanticsRegistry`, and the app scan takes a target's
+//! own filesystem root — so the targets-domain crate never depends on the
+//! platforms-domain crate. The CLI consumer (`apianyware-conformance`, child 5) loads
+//! the platform api-semantics registry, reads each API's weirdness, and passes the tags
+//! here.
 //!
 //! ## The floor
 //!
@@ -27,6 +39,9 @@
 //!   for derives [`Representability::Research`] for that demand — an unestablished
 //!   capability leaves the API's representability unestablished (and `Research` sorts
 //!   lowest, so it dominates the floor; see [`Representability`]).
+
+use std::collections::BTreeMap;
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
@@ -109,6 +124,158 @@ pub fn representability<S: AsRef<str>>(
         })
         .min()
         .unwrap_or(Representability::DEFAULT)
+}
+
+/// The §37 conformance **status** ladder (REFACTOR §37; node-brief D1, child
+/// `conformance-k55`) — the report's status vocabulary, used for both the *authored*
+/// per-app-kind support call (`conformance/<platform>.apiw`) and the *derived* per-app
+/// implementation status ([`AppImplStatus::status`]).
+///
+/// It lives in `derive` alongside [`Representability`] and is re-used by the authored
+/// `conformance` model exactly as `Representability` is re-used by the authored `capability`
+/// model — the derivation layer owns the two status ladders the target model both authors and
+/// derives. A genuinely bounded REFACTOR §37 set, so — like [`Representability`] and the
+/// `SpectrumPoint` / `ServiceStatus` taxonomies — it is a schema `enum`, decoded here; the
+/// serde **lowercase** spelling of a variant IS its `.apiw` token (the single source of truth).
+///
+/// Unlike [`Representability`], the variants carry no meaningful order (a derived `failed` is
+/// not "less representable" than a `pass` — it is a different *kind* of outcome), so this enum
+/// is deliberately **not** `Ord`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ConformanceStatus {
+    /// Fully supported / verified.
+    Pass,
+    /// Partially supported — feasible by a proven mechanism but not fully exercised.
+    Partial,
+    /// Stance unestablished, awaiting investigation.
+    Research,
+    /// Not supported on this target/platform pair.
+    Unsupported,
+    /// Attempted and observed to fail.
+    Failed,
+    /// Deliberately not covered.
+    Skipped,
+}
+
+impl ConformanceStatus {
+    /// The status's `.apiw` / report spelling (`"pass"`, `"partial"`, …) — the serde token.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ConformanceStatus::Pass => "pass",
+            ConformanceStatus::Partial => "partial",
+            ConformanceStatus::Research => "research",
+            ConformanceStatus::Unsupported => "unsupported",
+            ConformanceStatus::Failed => "failed",
+            ConformanceStatus::Skipped => "skipped",
+        }
+    }
+}
+
+/// The DERIVED implementation status of one common sample app for one target (node-brief D1,
+/// child `conformance-k55`) — computed by [`derive_app_statuses`] from the target's shipped
+/// `app-implementations/` + VM-verify `reports/`, never authored.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppImplStatus {
+    /// The common-app directory name (`hello-window`, …).
+    pub app: String,
+    /// Whether `app-implementations/<platform>/<app>/` exists (the target ships a port).
+    pub implemented: bool,
+    /// Whether `bindings/<platform>/reports/<app>/` carries VM-verify evidence (a `report.md`
+    /// or at least one screenshot) — the [[feedback-vm-verify-every-app]] artifact.
+    pub vm_verified: bool,
+    /// The §37 status this evidence derives to: [`ConformanceStatus::Pass`] when implemented
+    /// **and** VM-verified, [`ConformanceStatus::Partial`] when implemented but not yet
+    /// VM-verified.
+    pub status: ConformanceStatus,
+}
+
+/// Derive each common sample app's §37 implementation status for one target, by reading its
+/// shipped `app-implementations/<platform>/` ports and the VM-verify evidence under
+/// `bindings/<platform>/reports/` (node-brief D1).
+///
+/// `target_root` is the target's directory (`targets/<id>`); `platform` selects the macOS
+/// (or future) sub-tree. The canonical app set is the implementation directories (a `README.md`
+/// file and the sbcl `_support/` helper directory are skipped); an app is
+/// [`ConformanceStatus::Pass`] when its `reports/<app>/` directory holds at least one file
+/// (a `report.md` or a screenshot), else [`ConformanceStatus::Partial`]. The result is sorted
+/// by app name. A missing `app-implementations/<platform>/` directory yields an empty vec
+/// (a target not yet homed) rather than an error — the derivation is best-effort over what is
+/// actually on disk, exactly like the representability floor over what weirdness is declared.
+pub fn derive_app_statuses(target_root: &Path, platform: &str) -> Vec<AppImplStatus> {
+    let impl_dir = target_root.join("app-implementations").join(platform);
+    let reports_dir = target_root.join("bindings").join(platform).join("reports");
+
+    let mut statuses: Vec<AppImplStatus> = match std::fs::read_dir(&impl_dir) {
+        Ok(entries) => entries
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir())
+            .filter_map(|e| e.file_name().into_string().ok())
+            .filter(|name| name != "_support")
+            .map(|app| {
+                let vm_verified = dir_has_a_file(&reports_dir.join(&app));
+                let status = if vm_verified {
+                    ConformanceStatus::Pass
+                } else {
+                    ConformanceStatus::Partial
+                };
+                AppImplStatus {
+                    app,
+                    implemented: true,
+                    vm_verified,
+                    status,
+                }
+            })
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+    statuses.sort_by(|a, b| a.app.cmp(&b.app));
+    statuses
+}
+
+/// Whether `dir` exists and contains at least one entry — the VM-verify-evidence test (a
+/// `reports/<app>/` directory with a `report.md` or any screenshot).
+fn dir_has_a_file(dir: &Path) -> bool {
+    std::fs::read_dir(dir)
+        .map(|mut entries| entries.any(|e| e.is_ok()))
+        .unwrap_or(false)
+}
+
+/// Roll a target's whole declared **weird-API surface** up into a §37 *coverage* histogram:
+/// the count of APIs that derive each [`Representability`] rung, against the target's authored
+/// `profile` (child `conformance-k55`).
+///
+/// Each element of `apis` is one API's §30 weirdness tags (the consumer flattens the platform
+/// api-semantics registry into this); the per-API floor is [`representability`]. APIs with
+/// **no** declared weirdness are *not* enumerated here — they derive [`Representability::DEFAULT`]
+/// (`exact-static`) by construction (the trampoline-elision limit), so the histogram is
+/// deliberately a distribution over the *residual* weird surface, the only part a profile ever
+/// rates (ADR-0051). Rungs with a zero count are present in the returned map so the report can
+/// show the full ladder.
+pub fn representability_histogram<S: AsRef<str>>(
+    profile: &CapabilityProfile,
+    apis: &[Vec<S>],
+) -> BTreeMap<Representability, usize> {
+    use Representability::*;
+    // Seed every rung at zero so the report renders the full ladder, then tally.
+    let mut histogram: BTreeMap<Representability, usize> = [
+        Research,
+        NotRepresentable,
+        UnsafeOnly,
+        LossyButDocumented,
+        IdiomaticConventional,
+        ExactRuntime,
+        ExactStatic,
+    ]
+    .into_iter()
+    .map(|rung| (rung, 0))
+    .collect();
+    for weirdness in apis {
+        *histogram
+            .entry(representability(profile, weirdness))
+            .or_insert(0) += 1;
+    }
+    histogram
 }
 
 #[cfg(test)]
@@ -229,5 +396,82 @@ mod tests {
             representability(&profile(), &["may-reenter", "nserror-out-param"]),
             Representability::Research
         );
+    }
+
+    /// The §37 status token of each variant is its lowercase spelling — the `.apiw` /
+    /// report source of truth, round-tripping through serde.
+    #[test]
+    fn conformance_status_tokens_are_lowercase() {
+        use ConformanceStatus::*;
+        for (status, token) in [
+            (Pass, "pass"),
+            (Partial, "partial"),
+            (Research, "research"),
+            (Unsupported, "unsupported"),
+            (Failed, "failed"),
+            (Skipped, "skipped"),
+        ] {
+            assert_eq!(status.as_str(), token);
+            assert_eq!(serde_json::to_value(status).unwrap(), token);
+            let back: ConformanceStatus = serde_json::from_value(token.into()).unwrap();
+            assert_eq!(back, status);
+        }
+    }
+
+    /// The coverage histogram tallies the floor per API and seeds the full ladder at zero, so
+    /// every rung is present even when unhit.
+    #[test]
+    fn histogram_tallies_the_floor_over_the_weird_surface() {
+        let p = profile();
+        // Three APIs: one reassuring-only (exact-static), one `may-reenter`
+        // (idiomatic-conventional here), one `nserror-out-param` (research — unauthored).
+        let apis: Vec<Vec<&str>> = vec![
+            vec!["thread-safe"],
+            vec!["may-reenter"],
+            vec!["nserror-out-param"],
+        ];
+        let h = representability_histogram(&p, &apis);
+        assert_eq!(h.len(), 7, "all seven rungs seeded");
+        assert_eq!(h[&Representability::ExactStatic], 1);
+        assert_eq!(h[&Representability::IdiomaticConventional], 1);
+        assert_eq!(h[&Representability::Research], 1);
+        assert_eq!(h[&Representability::ExactRuntime], 0);
+        assert_eq!(h.values().sum::<usize>(), 3);
+    }
+
+    /// The app-status scan reads the implementation + reports trees: an implemented app with a
+    /// reports directory holding a file is `pass`; an implemented app with no evidence is
+    /// `partial`; `_support` and stray files are skipped; a missing impl tree yields empty.
+    #[test]
+    fn app_status_scan_derives_pass_and_partial() {
+        let root = std::env::temp_dir().join("apianyware-target-model-test-app-status");
+        let _ = std::fs::remove_dir_all(&root);
+        let impls = root.join("app-implementations").join("macos");
+        std::fs::create_dir_all(impls.join("hello-window")).expect("impl dir");
+        std::fs::create_dir_all(impls.join("note-editor")).expect("impl dir");
+        std::fs::create_dir_all(impls.join("_support")).expect("support dir");
+        std::fs::write(impls.join("README.md"), "# apps").expect("readme");
+        // hello-window is VM-verified (a report file present); note-editor is not.
+        let reports = root.join("bindings").join("macos").join("reports");
+        std::fs::create_dir_all(reports.join("hello-window")).expect("reports dir");
+        std::fs::write(reports.join("hello-window").join("report.md"), "ok").expect("report");
+
+        let statuses = derive_app_statuses(&root, "macos");
+        assert_eq!(
+            statuses.iter().map(|s| s.app.as_str()).collect::<Vec<_>>(),
+            vec!["hello-window", "note-editor"],
+            "sorted; _support and README.md skipped"
+        );
+        let hello = &statuses[0];
+        assert!(hello.implemented && hello.vm_verified);
+        assert_eq!(hello.status, ConformanceStatus::Pass);
+        let note = &statuses[1];
+        assert!(note.implemented && !note.vm_verified);
+        assert_eq!(note.status, ConformanceStatus::Partial);
+
+        // A target with no implementation tree derives nothing (not an error).
+        assert!(derive_app_statuses(&root.join("nonexistent"), "macos").is_empty());
+
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

@@ -50,8 +50,15 @@
 //!   direct-call policy — their parser, focused validator, and registry. The §26 role +
 //!   service *vocabularies* are in [`vocab`]. *(Child `policy-adapter-k54`.)*
 //!
-//! Later ws6 children add the `conformance/` submodule (extending `derive` with
-//! conformance-coverage derivation) to **this same crate**.
+//! - [`conformance`] — the §37 **conformance report** (`conformance/<platform>.apiw` +
+//!   derived; child `conformance-k55`): the **hybrid** entity. Its authored *judgment* slice
+//!   (`app-support` call + `unsupported` / `research` / `known issues`) is parsed + validated
+//!   by the three-layer submodule; its *derived* slice (per-API coverage + per-app
+//!   implementation status) is computed by [`derive`]; and [`conformance::crosscheck`]
+//!   reconciles the two. The §37 [`ConformanceStatus`](derive::ConformanceStatus) ladder lives
+//!   in [`derive`] (re-used by the authored model, exactly as [`capability`] re-uses
+//!   [`Representability`](derive::Representability)); the report-generating CLI
+//!   `apianyware-conformance` is the consumer that wires the platform api-semantics registry in.
 //!
 //! Each entity follows the three-layer validation the platform-model crates
 //! established (ADR-0046 §3): **structural** against a language-neutral
@@ -63,6 +70,7 @@
 
 pub mod adapter_spec;
 pub mod capability;
+pub mod conformance;
 pub mod derive;
 pub mod descriptor;
 pub mod error;
@@ -77,7 +85,14 @@ pub use adapter_spec::{
 pub use capability::{
     parse_capability, validate_capability, CapabilityEntry, CapabilityProfile, CapabilityRegistry,
 };
-pub use derive::{representability, Representability};
+pub use conformance::{
+    crosscheck, parse_conformance, validate_conformance, AppSupport, ConformanceRegistry,
+    ConformanceReport, Contradiction, JudgmentItem,
+};
+pub use derive::{
+    derive_app_statuses, representability, representability_histogram, AppImplStatus,
+    ConformanceStatus, Representability,
+};
 pub use descriptor::{
     parse_target, validate_target, RuntimeModel, TargetDescriptor, TargetRegistry,
 };
@@ -91,6 +106,6 @@ pub use policy::{
     SpectrumPoint,
 };
 pub use vocab::{
-    capability_for, is_valid_adapter_role, is_valid_dimension, is_valid_idiom_category,
-    is_valid_runtime_service, Face,
+    capability_for, is_valid_adapter_role, is_valid_app_kind, is_valid_dimension,
+    is_valid_idiom_category, is_valid_runtime_service, Face,
 };

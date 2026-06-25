@@ -1,0 +1,72 @@
+// The racket macOS conformance report — authored JUDGMENT slice only (REFACTOR §37;
+// structural-refactoring grove ws6, conformance-k55). Contract:
+// schemas/spec-format/conformance.kdl-schema.
+//
+// This file carries ONLY the §37 judgment a machine cannot derive: the per-app-kind support
+// call, the unsupported features, the research items, and the known issues. The §37 DERIVED
+// slice — per-API coverage (the representability histogram over the platform's weird-API
+// surface) and the common app-implementation status (over app-implementations/ + the VM-verify
+// reports/) — is computed on demand by `apianyware-conformance` and never committed
+// (constraint 4). That CLI also cross-checks the `app-support` exemplars below against the
+// derived per-app reality.
+//
+// Grounded in: capability.apiw's §36 app-form face (app-bundle/packaging = exact-runtime;
+// plugin/sandboxing = research), the VM-verified GUI sample apps, and ADR-0013/0014.
+conformance "racket" {
+    platform "macos"
+    doc "Racket CS over ffi2 + ffi/unsafe/objc on macOS: a self-contained .app target with seven VM-verified GUI sample apps; plugin/sandbox app-kinds remain research."
+
+    // §37 app-kind support call — grounded in the §36 app-form capability rungs + VM-verify
+    // reality. The `exemplar` apps ground each `pass`/`partial` call in the DERIVED per-app
+    // status (cross-checked by the report CLI).
+    app-support "cli-tool" {
+        status "pass"
+        doc "Racket runs headless trivially; no dedicated CLI sample app ships (judgment, not exemplified)."
+    }
+    app-support "gui-app" {
+        status "pass"
+        doc "Self-contained .app (app-form app-bundle = exact-runtime); the seven GUI sample apps below are VM-verified."
+        exemplar "hello-window"
+        exemplar "drawing-canvas"
+        exemplar "mini-browser"
+        exemplar "note-editor"
+        exemplar "pdfkit-viewer"
+        exemplar "scenekit-viewer"
+        exemplar "ui-controls-gallery"
+    }
+    app-support "menu-bar-daemon" {
+        status "partial"
+        doc "Feasible as an LSUIElement .app over the proven bundle path; no dedicated sample app VM-verified."
+    }
+    app-support "launch-agent" {
+        status "partial"
+        doc "A launchd plist over the proven standalone executable; not yet demonstrated end-to-end."
+    }
+    app-support "spotlight-importer" {
+        status "research"
+        doc "Loading the racket runtime into an .mdimporter loadable bundle is unestablished (app-form plugin = research; §36 hard case)."
+    }
+    app-support "quicklook-extension" {
+        status "research"
+        doc "Loadable-bundle / app-extension hosting of the runtime is unestablished (app-form plugin = research)."
+    }
+    app-support "finder-sync-extension" {
+        status "research"
+        doc "App-extension hosting plus the App Sandbox are unestablished (app-form sandboxing = research)."
+    }
+
+    // §37 unsupported features — a platform meaning racket does not represent on macOS.
+    unsupported "swift-actor-isolation" {
+        doc "Swift `actor` / global-actor isolation is not represented: the digester emits no actor-isolation signal, so these members are KNOWN_UNBINDABLE rather than projected."
+    }
+
+    // §37 research items — an unestablished stance awaiting investigation.
+    research "app-sandbox" {
+        doc "App Sandbox entitlements have not been exercised for any racket app (app-form sandboxing = research)."
+    }
+
+    // §37 known issues — documented limitations short of `unsupported`.
+    known-issue "deterministic-cleanup-is-conventional" {
+        doc "Deterministic release is a call-with-*/dynamic-wind convention (capability deterministic-cleanup = idiomatic-conventional), with GC as the backstop — not an RAII guarantee."
+    }
+}

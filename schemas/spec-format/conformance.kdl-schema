@@ -1,0 +1,198 @@
+// conformance.kdl-schema — the authoritative, language-neutral contract for the authored
+// *judgment slice* of a **conformance report** `.apiw` file (`structural-refactoring` grove,
+// workstream 6; node-brief decision D1, child `conformance-k55`).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring the
+// siblings `policy.kdl-schema` / `adapter-spec.kdl-schema` / `capability.kdl-schema` (the
+// other target-model entities). Any KDL tool in any language can validate or consume a
+// conformance report's authored slice. The Rust `apianyware-target-model` crate is ONE
+// conforming validator of this contract, not its source of truth (ADR-0046 §3).
+//
+// SCOPE — the REFACTOR §37 conformance report is a HYBRID artifact, and this schema covers
+// ONLY its authored *judgment* slice: the §37 `unsupported` features, `research` items,
+// `known issues`, and the per-app-kind `app-support` call — the human (or accepted-LLM)
+// judgment a machine cannot derive. The §37 *derived* slice (per-API coverage, common
+// app-implementation status) is COMPUTED on demand from the generated bindings + the
+// VM-verify reports under `targets/<id>/bindings/<platform>/reports/` and stays uncommitted
+// (constraint 4, no rot) — it has no `.apiw` form and is not described here. A conforming
+// consumer (the `apianyware-conformance` report CLI) derives that slice and cross-checks it
+// against the authored claims below.
+//
+// IDENTITY — each target authors one report per platform at
+// `targets/<id>/conformance/<platform>.apiw`; the `conformance "<id>"` value is the target's
+// stable identity and matches the TARGET directory (`racket`, `chez`, `gerbil`, `sbcl`, the
+// same id its sibling `target.apiw` / `capability.apiw` carry). The PLATFORM lives in the
+// FILENAME here (`conformance/macos.apiw`), unlike policy/adapter's platform DIRECTORY — so
+// the conforming loader checks the id against the file's GRANDPARENT directory and the
+// `platform` value against the file STEM (`macos`).
+//
+// CONTROLLED VOCABULARIES — two kinds, the same split the sibling schemas use:
+//   * `status` is the closed REFACTOR §37 status ladder, expressed here as a schema `enum`
+//     (a genuinely bounded, stable spec taxonomy — like `policy.kdl-schema`'s `spectrum` and
+//     `capability.kdl-schema`'s `rung`, decoded into the `ConformanceStatus` Rust enum).
+//   * the `app-support` APP-KIND token is an OPEN string here: the seven macOS app-kinds are
+//     PLATFORM knowledge (`platforms/macos/app-kinds/`), so — like §30 weirdness and §26
+//     adapter roles — the conforming validator checks membership against a lockstep vocabulary
+//     copy rather than a schema enum (the targets domain does not depend on the platforms
+//     domain; the domain rule). `exemplar` / `unsupported` / `research` / `known-issue` tokens
+//     are free strings the validator only checks for per-scope uniqueness.
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE CARDINALITY in a
+// `value {…}` body (KDL Schema convention). `other-nodes-allowed` / `other-props-allowed`
+// default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware target conformance report — authored judgment slice (.apiw)" lang="en"
+        description "The REFACTOR §37 conformance report's authored judgment slice: the unsupported features, research items, known issues, and per-app-kind support call a target/platform pair declares. The derived slice (API coverage, common app-implementation status) is computed on demand and has no .apiw form. Lives in targets/, never platforms/ (the domain rule)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 6 (target model, conformance-k55)"
+    }
+
+    // Exactly one top-level `conformance "<id>"` node per file. The id is the target's stable
+    // identity and matches its target directory (`targets/<id>/`, e.g. "racket"); the
+    // conforming loader checks this against the file's grandparent directory.
+    node "conformance" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // The platform this report covers (`macos`, …). Required; exactly one; the
+            // conforming loader checks it matches the file STEM (`conformance/macos.apiw`).
+            node "platform" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The §37 per-app-kind support call — the human judgment of which platform
+            // app-kinds this target/platform pair can ship. Zero or more. The positional
+            // value is the app-kind token (the validator checks membership in the seven
+            // macOS app-kinds + per-report uniqueness, NOT a schema enum — the seven kinds
+            // are platform knowledge, kept in lockstep, not frozen into this contract).
+            node "app-support" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    // The §37 support status for this app-kind. Required; exactly one; the
+                    // closed `ConformanceStatus` ladder.
+                    node "status" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                            enum "pass" "partial" "research" "unsupported" "failed" "skipped"
+                        }
+                    }
+                    // Optional one-line elaboration (typically citing the grounding capability
+                    // app-form rung / ADR / §36 hard case).
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                    // The common sample apps that EXEMPLIFY this app-kind's support — the
+                    // judgment grouping that grounds the support call in the DERIVED per-app
+                    // VM-verify reality (the cross-check confirms each named app's derived
+                    // status does not contradict the authored `status`). Zero or more; the
+                    // value is a common-app directory name; the validator checks per-entry
+                    // uniqueness; the report CLI checks each names a real implemented app.
+                    node "exemplar" {
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+
+            // §37 unsupported features — a platform meaning this target/platform pair does
+            // NOT represent. Zero or more; the value is a free feature token (validator
+            // checks per-report uniqueness across `unsupported`).
+            node "unsupported" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+
+            // §37 research items — an unestablished stance awaiting investigation. Zero or
+            // more; free token; per-report uniqueness across `research`.
+            node "research" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+
+            // §37 known issues — a documented defect/limitation that does not rise to
+            // `unsupported`. Zero or more; free token; per-report uniqueness across
+            // `known-issue`.
+            node "known-issue" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

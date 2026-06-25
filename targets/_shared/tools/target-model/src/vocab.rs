@@ -155,6 +155,29 @@ pub const RUNTIME_SERVICES: &[&str] = &[
     "test-instrumentation",
 ];
 
+/// The seven macOS **app-kinds** (REFACTOR §36; `platforms/macos/app-kinds/`) — the
+/// controlled set of process-model categories a conformance report's §37 `app-support` call
+/// rates (`targets/<t>/conformance/<platform>.apiw`; child `conformance-k55`).
+///
+/// A deliberate lockstep copy of the platform app-kind registry slugs (the same discipline
+/// the §30 weirdness keys and §26 [`ADAPTER_ROLES`]/[`RUNTIME_SERVICES`] follow): the
+/// target-model crate (targets domain) does **not** depend on `apianyware-app-kinds`
+/// (platforms domain; the domain rule), so the conformance validator checks membership
+/// against this copy rather than the platform registry. Unlike the §26 "suggested" lists, the
+/// seven app-kinds are a genuinely *closed* platform set — the lockstep copy is chosen over a
+/// schema `enum` only to keep the domain dependency out, and the count is asserted in
+/// lockstep (`app_kinds_are_the_seven_macos_kinds`). Kept in step with
+/// `platforms/macos/app-kinds/`; [`is_valid_app_kind`] is the membership check.
+pub const APP_KINDS: &[&str] = &[
+    "cli-tool",
+    "gui-app",
+    "menu-bar-daemon",
+    "launch-agent",
+    "spotlight-importer",
+    "quicklook-extension",
+    "finder-sync-extension",
+];
+
 /// The two faces of a capability profile (REFACTOR §20 — D2's "two profile faces"):
 /// the per-API *semantic* face that feeds representability, and the *app-form* face
 /// that feeds per-app-kind feasibility. The face fixes which controlled vocabulary a
@@ -207,6 +230,12 @@ pub fn is_valid_adapter_role(role: &str) -> bool {
 /// membership check the adapter-spec validator runs on each `service "<service>"`.
 pub fn is_valid_runtime_service(service: &str) -> bool {
     RUNTIME_SERVICES.contains(&service)
+}
+
+/// Whether `app_kind` is a member of the seven macOS [`APP_KINDS`] — the membership check the
+/// conformance validator runs on each `app-support "<app-kind>"`.
+pub fn is_valid_app_kind(app_kind: &str) -> bool {
+    APP_KINDS.contains(&app_kind)
 }
 
 /// The **semantic** capability dimension a §30 source-weirdness `tag` demands, or
@@ -405,6 +434,22 @@ mod tests {
             );
         }
         assert!(!is_valid_runtime_service("teleport-registry"));
+    }
+
+    /// The macOS app-kind vocabulary is the seven `platforms/macos/app-kinds/` slugs, and a
+    /// token outside it is rejected. (Lockstep guard: the count is asserted so a platform
+    /// app-kind registry change that does not update this copy — or vice versa — trips here.)
+    #[test]
+    fn app_kinds_are_the_seven_macos_kinds() {
+        assert_eq!(
+            APP_KINDS.len(),
+            7,
+            "platforms/macos/app-kinds/ has seven kinds"
+        );
+        for k in ["cli-tool", "gui-app", "spotlight-importer"] {
+            assert!(is_valid_app_kind(k), "`{k}` is a macOS app-kind");
+        }
+        assert!(!is_valid_app_kind("teleport-app"));
     }
 
     /// The canonical map entry from the design (CONTEXT.md / node-brief D2).

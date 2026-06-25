@@ -1,0 +1,66 @@
+// The sbcl macOS conformance report — authored JUDGMENT slice only (REFACTOR §37;
+// structural-refactoring grove ws6, conformance-k55). Contract:
+// schemas/spec-format/conformance.kdl-schema.
+//
+// Carries ONLY the §37 judgment a machine cannot derive; the §37 DERIVED slice (per-API
+// coverage + common app-implementation status) is computed by `apianyware-conformance` and
+// never committed (constraint 4).
+//
+// Grounded in: capability.apiw's §36 app-form face (native-runtime-embedding = research — the
+// dumped image IS the executable), the VM-verified GUI sample apps, the main-thread-bounce
+// model (ADR-0035), and the image-relocation bundle (ADR-0041).
+conformance "sbcl" {
+    platform "macos"
+    doc "SBCL with a CLOS/MOP binding over sb-alien on macOS: a dumped-image .app target (ADR-0041) with seven VM-verified GUI sample apps; foreign-thread callbacks bounce to the main thread (ADR-0035)."
+
+    app-support "cli-tool" {
+        status "pass"
+        doc "SBCL runs headless trivially; no dedicated CLI sample app ships (judgment, not exemplified)."
+    }
+    app-support "gui-app" {
+        status "pass"
+        doc "Dumped-image .app, @executable_path-relocated and signed around (ADR-0041; app-form app-bundle = exact-runtime); the seven GUI sample apps below are VM-verified."
+        exemplar "hello-window"
+        exemplar "drawing-canvas"
+        exemplar "mini-browser"
+        exemplar "note-editor"
+        exemplar "pdfkit-viewer"
+        exemplar "scenekit-viewer"
+        exemplar "ui-controls-gallery"
+    }
+    app-support "menu-bar-daemon" {
+        status "partial"
+        doc "Feasible as an LSUIElement .app over the proven dumped-image bundle; no dedicated sample app VM-verified."
+    }
+    app-support "launch-agent" {
+        status "partial"
+        doc "A launchd plist over the proven dumped-image executable; not yet demonstrated end-to-end."
+    }
+    app-support "spotlight-importer" {
+        status "research"
+        doc "Hosting a dumped SBCL image inside an .mdimporter loadable bundle is unestablished and especially hard (app-form plugin = research, native-runtime-embedding = research; §36 hard case)."
+    }
+    app-support "quicklook-extension" {
+        status "research"
+        doc "Loadable-bundle hosting of a dumped image is unestablished (app-form plugin = research)."
+    }
+    app-support "finder-sync-extension" {
+        status "research"
+        doc "App-extension hosting plus the App Sandbox are unestablished (app-form sandboxing = research)."
+    }
+
+    unsupported "swift-actor-isolation" {
+        doc "Swift `actor` / global-actor isolation is not represented (the digester emits no actor-isolation signal; KNOWN_UNBINDABLE)."
+    }
+
+    research "swift-native-method-coverage" {
+        doc "The receiver-handle Swift-native *method* trampolines shipped for racket/chez/gerbil are not yet ported to sbcl: swift-native-probe (functions / constants / initializers) is VM-verified, but there is no swift-native-method-probe app-implementation."
+    }
+    research "app-sandbox" {
+        doc "App Sandbox entitlements have not been exercised for any sbcl app (app-form sandboxing = research)."
+    }
+
+    known-issue "native-runtime-embedding-unproven" {
+        doc "Embedding the runtime into a foreign host process is unproven: the dumped image IS the executable and libAPIAnywareSbcl is the sole separate native unit (ADR-0038), so host-process embedding (capability native-runtime-embedding = research) has no path yet."
+    }
+}

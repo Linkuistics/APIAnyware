@@ -200,6 +200,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-conformance"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apianyware-platform-tests",
+ "apianyware-target-model",
+ "clap",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "apianyware-conventions"
 version = "0.1.0"
 dependencies = [
