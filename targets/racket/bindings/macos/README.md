@@ -9,17 +9,29 @@ The Racket-facing binding for the macOS platform. Per REFACTOR.md §18 / §42:
 | `lib/`       | the built `libAPIAnywareRacket.dylib` (symlink into the racket adapter package's `.build`) |
 | `tests/`     | Racket-level binding tests                                        |
 | `reports/`   | screenshots / VM-verify artifacts (was `test-results/`)          |
+| `docs/`      | §22 binding mapping docs (`user-guide`, `platform-docs-mapping`, `api-coverage`, `unsafe-escape-hatches`) |
+
+The §18 *target* docs (overview, language characteristics, FFI model, idiom map,
+representability) live one level up at [`../../docs/`](../../docs/); the authored
+target-model `.apiw` entities are under [`../../`](../../) (`target.apiw`,
+`capability.apiw`, `idioms/`, `policies/`, `adapters/`, `conformance/`).
 
 ## Open follow-ups (skeleton relocate — `move-racket-material-k11`)
 
-- **dylib home is `lib/`, not §42's `build/`.** The runtime loads the dylib via a
-  single hardcoded `../lib/` path (`runtime/swift-helpers.rkt`,
-  `runtime/ffi2-dispatch.rkt`), and the bundler copies it to `racket-app/lib/`
-  inside each `.app` with an `@executable_path/.../racket-app/lib/` install name.
-  Moving the in-tree dylib to §42's `build/` would force that one load-path to
-  diverge between the in-tree and in-bundle contexts — a reconciliation that
-  belongs to the **bindings/adapter-model workstream (root brief item 6)**, not a
-  skeleton relocate. Kept at `lib/` here so the move is behaviour-preserving.
-- **`runtime/` may move to `adapters/macos/`.** Racket is the only target with a
-  hand-written top-level runtime; the adapter-model workstream (item 6) decides
-  whether it is binding-level (here) or adapter-level material.
+- **dylib home is `lib/`, not §42's `build/`** *(→ ws6 child 7, bundler reshape)*. The
+  runtime loads the dylib via a single hardcoded `../lib/` path
+  (`runtime/swift-helpers.rkt`, `runtime/ffi2-dispatch.rkt`), and the bundler copies
+  it to `racket-app/lib/` inside each `.app` with an `@executable_path/.../racket-app/lib/`
+  install name. Moving the in-tree dylib to §42's `build/` would force that one
+  load-path to diverge between the in-tree and in-bundle contexts. The target model
+  (ws6) is authored against the dylib *as it is* — the adapter spec
+  ([`../../adapters/macos/spec.apiw`](../../adapters/macos/spec.apiw)) documents the
+  existing `APIAnywareRacket` library, no ABI redesign. The remaining in-tree-vs-bundle
+  load-path reconciliation is a **bundler concern, deferred to ws6 child 7 (bundler
+  reshape + guide resync)**. Kept at `lib/` here so the move stays behaviour-preserving.
+- **`runtime/` stays here (ws6-resolved).** The adapter-model question — is the
+  hand-written runtime binding-level or adapter-level? — is settled by the ws6 target
+  model: the *native adapter* (the Swift `APIAnywareRacket` sources + dylib) is the
+  `adapters/macos/` material the [adapter spec](../../adapters/macos/spec.apiw)
+  describes; the Racket-side `runtime/` (ffi2 seam, object model, bridges' Racket faces)
+  is **binding-level and stays at `bindings/macos/runtime/`**. No move.
