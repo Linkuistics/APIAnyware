@@ -18,12 +18,42 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use apianyware_types::annotation::FrameworkAnnotations;
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
+
+mod annotations;
 
 #[derive(Parser)]
 #[command(name = "apianyware-analyze")]
-#[command(about = "Resolve the macOS API spec: extracted.json + annotations.apiw -> resolved.json")]
+#[command(about = "Resolve the macOS API spec and run annotation side-channel workflows")]
+#[command(
+    long_about = "Resolve extracted.json + annotations.apiw -> resolved.json (the default \
+                  when no subcommand is given), plus the LLM analysis side-channel workflows \
+                  under `annotations` (ADR-0050)."
+)]
 struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
+
+    /// Resolve arguments for the default (no-subcommand) invocation.
+    #[command(flatten)]
+    resolve: ResolveArgs,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Resolve extracted.json + annotations.apiw -> resolved.json. This is the
+    /// default behaviour when no subcommand is given; the explicit `resolve`
+    /// form exists for clarity and discoverability.
+    Resolve(ResolveArgs),
+
+    /// LLM analysis side-channel workflows over the annotations.apiw overlay
+    /// (staleness detection; ADR-0050).
+    Annotations(annotations::AnnotationsArgs),
+}
+
+/// Arguments for the resolve flow (the default / `resolve` subcommand).
+#[derive(Args)]
+struct ResolveArgs {
     /// `api/` root holding the per-family spec triad
     /// (`<api-root>/<Framework>/{extracted.json,annotations.apiw,resolved.json}`).
     #[arg(long, default_value = "platforms/macos/api")]
@@ -41,7 +71,11 @@ struct Cli {
 }
 
 fn main() -> Result<()> {
+    // Diagnostics to stderr so command stdout stays a clean data channel — in
+    // particular `annotations stale --json` must emit parseable JSON, never
+    // interleaved log lines ([[cli-tool-design]]).
     tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
@@ -49,13 +83,21 @@ fn main() -> Result<()> {
         .init();
 
     let cli = Cli::parse();
-    let only = if cli.only.is_empty() {
+    match cli.command {
+        None => run_resolve(&cli.resolve),
+        Some(Command::Resolve(args)) => run_resolve(&args),
+        Some(Command::Annotations(args)) => annotations::run(args),
+    }
+}
+
+/// Drive the resolve flow from its parsed arguments.
+fn run_resolve(args: &ResolveArgs) -> Result<()> {
+    let only = if args.only.is_empty() {
         None
     } else {
-        Some(cli.only.as_slice())
+        Some(args.only.as_slice())
     };
-
-    run_pipeline(&cli.api_root, &cli.pattern_kinds_dir, only)
+    run_pipeline(&args.api_root, &args.pattern_kinds_dir, only)
 }
 
 /// The full in-process resolve. Loads `extracted.json` per family, runs the
@@ -127,8 +169,12 @@ fn run_pipeline(api_root: &Path, pattern_kinds_dir: &Path, only: Option<&[String
 }
 
 /// Load a family's authored overlay (`<api_root>/<Framework>/annotations.apiw`),
-/// or `None` if the family carries no overlay.
-fn load_overlay(api_root: &Path, framework: &str) -> Result<Option<FrameworkAnnotations>> {
+/// or `None` if the family carries no overlay. Shared with the `annotations`
+/// subcommands (e.g. `stale`).
+pub(crate) fn load_overlay(
+    api_root: &Path,
+    framework: &str,
+) -> Result<Option<FrameworkAnnotations>> {
     let path = api_root.join(framework).join("annotations.apiw");
     if !path.exists() {
         return Ok(None);

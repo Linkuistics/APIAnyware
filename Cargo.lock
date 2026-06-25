@@ -108,6 +108,8 @@ dependencies = [
  "apianyware-spec-format",
  "apianyware-types",
  "clap",
+ "serde",
+ "serde_json",
  "tracing",
  "tracing-subscriber",
 ]

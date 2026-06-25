@@ -28,6 +28,7 @@
 //! cannot move (ADR-0050 D4).
 
 pub mod llm;
+pub mod surface;
 pub mod validate;
 
 use std::collections::{BTreeMap, HashMap};

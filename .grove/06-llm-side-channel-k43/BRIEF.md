@@ -53,9 +53,15 @@ retires:
    explicit `unknown`. Lands per-fact `source` + `superseded-by` in `resolved.json`.
    Emit-invisible; goldens green. (Adds `Extraction`/`Unknown` + the `convention:<rule>`
    payload as it produces them.)
-3. **`staleness-regen`** — `apianyware-analyze annotations stale` (orphaned / new-surface /
-   shape-changed set-diff vs `extracted.json`) + the regeneration worklist. Replaces
-   `check-llm-annotation-drift.sh`.
+3. **`staleness-regen`** ✅ *(k46, complete)* — `apianyware-analyze annotations stale` (orphaned /
+   new-surface / shape-changed set-diff vs the **resolved API surface** `resolved.json` — *not*
+   `extracted.json`: the overlay mirrors the inheritance/conformance-flattened, Swift-renamed
+   resolved surface, so pre-resolve `extracted.json` mis-reports ~⅓ as orphaned; k46 finding,
+   user-confirmed) + the regeneration worklist. **Annotatable shape** pinned to the structural
+   predicate (block param or `NSError **` out-param; selector-substring delegate/observer signal
+   excluded as noise) → `apianyware_annotate::surface`. Clap `Subcommand` scaffold landed
+   (`resolve` default + `annotations` group; k47 `audit` adds a variant). Replaces
+   `check-llm-annotation-drift.sh` (retire deferred to #6). ADR-0050 §4 + CONTEXT amended.
 4. **`disagreement-report`** — `apianyware-analyze annotations audit` (reads `superseded-by`
    + agreement/redundancy counts per family). Replaces `audit-llm-redundancy.py`.
 5. **`orchestration-skill`** — rework the `analyze` command/skill + the subagent prompt +
@@ -107,8 +113,12 @@ grows next (root brief decomposition #6).
   is a code comment; no emit crate branches on `source`. → ADR-0050 §3; `CONTEXT.md`
   "Disagreement audit".
 - **D5 — Staleness live (no stored hash); regeneration explicit + in Claude Code.** Set-diff
-  the committed overlay against current `extracted.json`; dispatch subagents per stale family,
-  each writing `.apiw` directly. → ADR-0050 §4; `CONTEXT.md` "Staleness / regeneration".
+  the committed overlay against the current **resolved API surface** (`resolved.json`) — *not*
+  `extracted.json` (k46 correction, user-confirmed: the overlay is authored over the
+  inheritance/conformance-flattened, Swift-renamed resolved surface; pre-resolve `extracted.json`
+  mis-reports ~⅓ of facts as orphaned). `resolved.json` is self-contained, so the check is a pure
+  file read (no resolve pass); dispatch subagents per stale family, each writing `.apiw` directly.
+  → ADR-0050 §4 (amended); `CONTEXT.md` "Staleness / regeneration".
 - **D6 — Retire scaffolding, replace scripts with Rust subcommands, rework canonical docs.**
   The bash/python/external-API artifacts encoded retired paths + a dead provider model → retire;
   the two analysis scripts → typed `apianyware-analyze annotations {stale,audit}` subcommands;

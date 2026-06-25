@@ -68,11 +68,27 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
    is the regression gate for the whole rollout.
 
 4. **Staleness is computed live; regeneration is explicit, in Claude Code.** Staleness =
-   set-diffing a family's committed overlay against the current `extracted.json` (*orphaned* /
-   *new-surface* / *shape-changed*) — **no stored content hash** (artifacts-not-state).
-   Regeneration dispatches Claude-Code subagents for the stale families only; each writes that
-   family's `annotations.apiw` **directly** (the `.llm.json` side-channel is gone). The
-   external-provider flow (`config.example.toml`, `llm-annotate.sh`) is dead.
+   set-diffing a family's committed overlay against the current **resolved API surface**
+   (`resolved.json`) — *orphaned* (a fact's `(receiver, selector)` is gone), *new-surface* (a
+   current method of *annotatable shape* with no fact), *shape-changed* (a fact's targeted
+   `param_index` no longer holds its kind) — with **no stored content hash**
+   (artifacts-not-state). The comparison surface is the **resolved** graph, *not* raw
+   `extracted.json`: the overlay is authored over the inheritance-flattened,
+   protocol-conformance-flattened, Swift-renamed surface (the LLM is dispatched over
+   `all_methods`), so a naive diff against pre-resolve `extracted.json` mis-reports ~⅓ of facts
+   as orphaned (inherited methods keyed under a subclass; `FileManager` vs `NSFileManager`).
+   `resolved.json` is self-contained — its `all_methods` already carry the cross-framework
+   closure — so the check stays a pure file read: **no resolve pass and no dependency loading**
+   inside the command, only the requirement that `resolved.json` be current (the natural
+   post-SDK-bump order: collect → resolve → `annotations stale`). *Annotatable shape* is the
+   **structural** predicate — a **block parameter** or an **`NSError **` out-param** — the two
+   shapes the LLM reliably annotates; the legacy `delegate`/`observer` **selector-substring**
+   signal is excluded (it surfaces accessor getters the LLM declines, ~75% steady-state noise).
+   *(This corrects the design as first written — k46 implementation found "extracted.json" was
+   the wrong surface; the rest of §4 stands.)* Regeneration dispatches Claude-Code subagents for
+   the stale families only; each writes that family's `annotations.apiw` **directly** (the
+   `.llm.json` side-channel is gone). The external-provider flow (`config.example.toml`,
+   `llm-annotate.sh`) is dead.
 
 5. **Tooling: retire the scaffolding, replace analysis scripts with typed Rust subcommands,
    rework the canonical docs.** The bash/python/external-API artifacts encoded retired paths

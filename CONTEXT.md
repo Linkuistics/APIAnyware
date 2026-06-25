@@ -1274,17 +1274,29 @@ loser that merely *agrees* (only disagreements are `superseded-by`); a winning *
 (precedence here only stamps provenance — the winning value already matches today's merge, so
 goldens cannot move).
 
-**Staleness / regeneration** _(replaces `check-llm-annotation-drift.sh`; ws5)_:
+**Staleness / regeneration** _(replaces `check-llm-annotation-drift.sh`; ws5 `staleness-regen-k46`)_:
 Staleness is computed **live** by set-diffing a family's committed overlay against the current
-`extracted.json` — **no stored hash** (artifacts-not-state). Three signals: *orphaned* (overlay
-fact names a `(class, selector)` absent from the current API), *new-surface* (a current method
-with an annotatable shape and no overlay fact), *shape-changed* (a method present in both whose
-parameter shape moved). Regeneration = dispatch Claude-Code subagents for the stale families
-only (annotate runs *once per SDK update*, k26); each subagent writes that family's
-`annotations.apiw` directly.
-_Avoid_: a content-hash cache store (set-diff is cheap, stores nothing); auto-regenerating
-on every pipeline run (regeneration is explicit, post-SDK-bump); the retired `_llm-annotations/`
-+ `analysis/ir/` paths.
+**resolved API surface** (`resolved.json`) — **no stored hash** (artifacts-not-state). The
+comparison surface is the *resolved* graph, **not** raw `extracted.json`: the overlay is
+authored over the inheritance-flattened / protocol-conformance-flattened / Swift-renamed surface
+(the LLM is dispatched over `all_methods`), so a naive diff vs pre-resolve `extracted.json`
+mis-reports ~⅓ of facts as orphaned (k46 found this — a fact under the *subclass* `NSBlockOperation`
+for a method declared on `NSOperation`; `FileManager` vs `NSFileManager`). `resolved.json` is
+self-contained (its `all_methods` carry the cross-framework closure), so the check is a pure file
+read — **no resolve pass, no dep loading** — but `resolved.json` must be current (run resolve
+first). Three signals: *orphaned* (overlay fact names a `(receiver, selector)` absent from the
+current surface), *new-surface* (a current method with an **annotatable shape** and no overlay
+fact), *shape-changed* (an overlay fact's targeted `param_index` no longer holds its kind — block /
+object). **Annotatable shape** = the *structural* predicate, a **block param** or an **`NSError **`
+out-param** (`apianyware_annotate::surface::is_annotatable`) — the shapes the LLM reliably
+annotates; the `delegate`/`observer` **selector substring** is excluded (accessor getters the LLM
+declines, ~75% steady-state noise). Surfaced by `apianyware-analyze annotations stale [--only F,…]
+[--json]` (exit 1 iff any family stale → it gates). Regeneration = dispatch Claude-Code subagents
+for the stale families only (annotate runs *once per SDK update*, k26); each subagent writes that
+family's `annotations.apiw` directly.
+_Avoid_: diffing against `extracted.json` (pre-resolve → false orphans); a content-hash cache
+store (set-diff is cheap, stores nothing); auto-regenerating on every pipeline run (regeneration
+is explicit, post-SDK-bump); the retired `_llm-annotations/` + `analysis/ir/` paths.
 
 ## Example dialogue
 
