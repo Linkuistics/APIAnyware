@@ -54,8 +54,13 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    pattern-**instance** carriage replacing `api_patterns` (k29); the
    `apianyware-pattern-detection` convention datalog (k30); the semantic-vocabulary
    docs (k31). Goldens unmoved throughout. See **Semantic-model outcomes** below.
-4. **platform model** — `platforms/macos/`: extracted/annotations/resolved per API
-   family; app-kinds; platform-level semantic tests.
+4. **platform model** ✅ *(node `platform-model-k32`, complete 2026-06-25)* —
+   `platforms/macos/`: the authored **`platform.apiw`** manifest (k33); the seven
+   **app-kinds** as a distinct authored registry (ADR-0049; k34/k35/k36); the
+   platform-level **semantic-test declarations** (two families + fixtures, declared
+   not executed; k37/k38–k41); and the **platform-model docs** (k42). Built *around*
+   the per-family triad ws2 already relocated; projection-free throughout. Goldens
+   unmoved. See **Platform-model outcomes** below.
 5. **LLM analysis side-channel** — annotations cached / regenerable / diffable /
    reviewable / provenance-tracked / confidence-scored; fact-precedence rules.
 6. **target model** — `targets/<t>/`: capability profiles, idiom catalogues,
@@ -158,6 +163,58 @@ Durable decisions/handoffs later workstreams depend on (the model vocabulary liv
   JSON Schema (extracted/resolved), validation tooling/CI, and the app-kind/AppSpec/
   conformance-report schemas.
 - **ws9:** the semantic model informs the semantic-layer tests (multi-layer test model).
+
+## Platform-model outcomes (promoted from `platform-model-k32` on retirement)
+
+Durable decisions/handoffs later workstreams depend on (the model vocabulary lives in
+`CONTEXT.md` "Platform model" + ADR-0049 + the design running-log D1–D5 in the
+`platform-model-k32` brief; the prose in `platforms/macos/docs/{overview,api-extraction,
+app-kinds,testing-obligations}.md`). The macOS platform is **four authored sub-models**
+under `platforms/macos/`, all **projection-free** (the domain rule — platform states what
+the API *means*, never how a target expresses it):
+
+- **Platform manifest (D1).** A single authored, **policy-only** `platform.apiw` (`sdk`,
+  `deployment-target` floor, framework **include/ignore policy**) — KDL not YAML
+  (ADR-0046). The resolved 153-family roster + cross-family dep-graph stay **derived and
+  uncommitted** (recomputable from `api/`; constraint 4). Crate
+  `platforms/macos/tools/platform-manifest`; schema `schemas/spec-format/platform.kdl-schema`.
+- **App-kinds (D2; ADR-0049).** A **distinct entity** (not a pattern-kind), its own
+  authored `.apiw` registry — seven kinds (`cli-tool`/`gui-app`/`menu-bar-daemon`/
+  `launch-agent`/`spotlight-importer`/`quicklook-extension`/`finder-sync-extension`)
+  stating process/run-loop/termination/activation/bundle truth. Crate
+  `platforms/macos/tools/app-kinds`; flat-enum schema `app-kind.kdl-schema` + focused
+  cross-field validator. **Three orthogonal axes:** app-kind (platform category) vs
+  ws7 app-spec (concrete app that *names* its kind) vs ws3 pattern-kind (API-usage),
+  sharing only the authored-registry mechanism.
+- **Platform-test declarations (D3).** Two families, **distinct entities sharing one
+  mechanism** in crate `platforms/macos/tools/platform-tests`: `tests/api-semantics/
+  <facet>.apiw` (per convention facet — the §30 source-weirdness a `(receiver,selector)`
+  exhibits + expectations) and `tests/app-kinds/<kind>.apiw` (obligation bodies resolving
+  each kind's `test-obligation` refs + fixtures). §30 weirdness is a **facet-conditional
+  controlled vocab** enforced by the focused validator (its own §30 copy — no
+  `semantic/` dep). Fixtures are **lazy + assertable**. Sibling schemas
+  `api-semantics.kdl-schema` + `app-kind-tests.kdl-schema`.
+- **Representability is wholly ws6 (D4).** The §7.7 statuses are per **target×platform**
+  (ws6/§20 capability profiles); `platforms/` carries only the §30 **source-weirdness**
+  vocabulary ws6 *consumes*. **No representability metadata in `platforms/`.**
+
+Seams for the remaining workstreams:
+
+- **ws5 seam:** the LLM analysis side-channel reworks the annotation *workflow* over the
+  per-family `annotations.apiw` overlay; `platforms/macos/docs/annotation-workflow.md`
+  carries a superseded→ws5 banner (its rewrite is ws5's, per the doc-resync TODO).
+- **ws6 seam:** ws6 *consumes* the platform model — projects an **app-kind** to a target
+  build (`.app`/Info.plist/launchd-plist), and reads the §30 **weirdness** to compute a
+  representability status. The model is ws6's input, never the projection spec.
+- **ws7 seam:** an app-spec (`apps/macos/<app>/`) **names** its app-kind (category↔instance).
+- **ws8 seam:** ws4 authored the three `.apiw` KDL-Schemas (`platform`, `app-kind`,
+  `api-semantics`/`app-kind-tests`) + focused in-crate validators; **ws8 owns** the
+  *machine*-JSON schemas (`extracted.json`/`resolved.json`) + validation tooling/CI +
+  the AppSpec/capability-profile/conformance-report schemas. (Mirror of the ws3 D7 seam.)
+- **ws9 seam (D3):** ws4 **declares + schema-validates** the platform tests (never
+  executes); **ws9** owns the multi-layer test model (§33) + the TestAnyware/AppSpec
+  runner (§34) that drives a declaration against a *running* target binding; **ws6** owns
+  per-target execution hooks. The declare-now / execute-later seam (mirror of ws3→ws8).
 
 ## Notes
 
