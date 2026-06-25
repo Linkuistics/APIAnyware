@@ -47,7 +47,7 @@ enum Command {
     Resolve(ResolveArgs),
 
     /// LLM analysis side-channel workflows over the annotations.apiw overlay
-    /// (staleness detection; ADR-0050).
+    /// (staleness detection; disagreement/provenance audit; ADR-0050).
     Annotations(annotations::AnnotationsArgs),
 }
 
