@@ -30,18 +30,21 @@ it does **not** build the precedence mechanism (that's `precedence-audit`, the n
 
 ## Scope (this child only)
 
-- **In:** rename `Heuristic`→`Convention`, `HumanReviewed`→`Manual` (keep `Llm`); update serde
-  token output, the schema `source` enum, and every Rust consumer + test. Tighten the **overlay**
-  schema `source` enum to `{llm, manual}` (drop the never-authored `heuristic`/`human_reviewed`;
-  `convention` is resolved-side only, never in the overlay). Keep doc-comments accurate.
-- **Out (later children):** the `convention:<rule>` payload on `Convention`; the `Extraction`
+- **In:** a strict **1:1 rename** — `Heuristic`→`Convention`, `HumanReviewed`→`Manual` (keep
+  `Llm`); update serde token output (`heuristic`→`convention`, `human_reviewed`→`manual`), the
+  schema `source` enum (3 tokens `convention`/`llm`/`manual`), and every Rust consumer + test.
+  Keep doc-comments accurate.
+- **Out (later children):** **tightening** the overlay schema `source` to `{llm, manual}` — that
+  is the resolved-vs-overlay vocab *split* (D3), built with the resolved side in
+  `precedence-audit` (k45); the `convention:<rule>` payload on `Convention`; the `Extraction`
   and `Unknown` variants; any per-fact `source` carriage in `resolved.json`; the precedence /
   `superseded-by` mechanism; staleness / report subcommands; tooling retirement.
 
 ## Done when
 
 - `AnnotationSource` is `{Convention, Llm, Manual}` (serde `convention`/`llm`/`manual`); the
-  schema overlay `source` enum is `{llm, manual}`; all consumers + tests compile and pass.
+  schema `source` enum is the 1:1-renamed `{convention, llm, manual}`; all consumers + tests
+  compile and pass.
 - `cargo build --workspace` clean; `cargo test` green for the touched crates
   (`apianyware-types`, `apianyware-spec-format`, `apianyware-annotate`, `apianyware-enrich`)
   **and** the emit golden suites (the goldens-as-truth gate — must be **unmoved**).

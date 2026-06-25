@@ -236,7 +236,7 @@ pub fn apply_overrides(annotation: &mut MethodAnnotation, overrides: &[Annotatio
             _ => {}
         }
 
-        annotation.source = AnnotationSource::HumanReviewed;
+        annotation.source = AnnotationSource::Manual;
     }
 }
 
@@ -277,7 +277,7 @@ mod tests {
             vec![],
             None,
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -304,7 +304,7 @@ mod tests {
             vec![],
             None,
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -335,7 +335,7 @@ mod tests {
             }],
             None,
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -364,7 +364,7 @@ mod tests {
             vec![],
             None,
             Some(ErrorPattern::ErrorOutParam),
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -387,7 +387,7 @@ mod tests {
 
     #[test]
     fn test_merge_parameter_ownership_per_param_union() {
-        // Heuristic annotates params 0 and 2; LLM annotates only param 1.
+        // Convention annotates params 0 and 2; LLM annotates only param 1.
         // Without the per-param union, the LLM list clobbers heuristic entries
         // and params 0/2 silently disappear from the merged annotation.
         let heuristic = make_annotation(
@@ -405,7 +405,7 @@ mod tests {
             vec![],
             None,
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -450,7 +450,7 @@ mod tests {
             vec![],
             None,
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -484,12 +484,12 @@ mod tests {
             vec![],
             Some(ThreadingConstraint::MainThreadOnly),
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let overrides = AnnotationOverrides::default();
         let merged = merge_annotations(&heuristic, None, &overrides);
-        assert_eq!(merged.source, AnnotationSource::Heuristic);
+        assert_eq!(merged.source, AnnotationSource::Convention);
         assert_eq!(merged.parameter_ownership.len(), 1);
         assert_eq!(merged.threading, Some(ThreadingConstraint::MainThreadOnly));
     }
@@ -515,7 +515,7 @@ mod tests {
 
         apply_overrides(&mut annotation, &overrides);
         assert_eq!(annotation.threading, Some(ThreadingConstraint::AnyThread));
-        assert_eq!(annotation.source, AnnotationSource::HumanReviewed);
+        assert_eq!(annotation.source, AnnotationSource::Manual);
     }
 
     #[test]
@@ -529,7 +529,7 @@ mod tests {
             }],
             None,
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let overrides = vec![AnnotationOverride {
@@ -545,7 +545,7 @@ mod tests {
             annotation.block_parameters[0].invocation,
             BlockInvocationStyle::Synchronous
         );
-        assert_eq!(annotation.source, AnnotationSource::HumanReviewed);
+        assert_eq!(annotation.source, AnnotationSource::Manual);
     }
 
     #[test]
@@ -559,7 +559,7 @@ mod tests {
             }],
             None,
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -587,7 +587,7 @@ mod tests {
             vec![],
             Some(ThreadingConstraint::MainThreadOnly),
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(
@@ -612,7 +612,7 @@ mod tests {
             vec![],
             None, // heuristic has no opinion
             None,
-            AnnotationSource::Heuristic,
+            AnnotationSource::Convention,
         );
 
         let llm = make_annotation(

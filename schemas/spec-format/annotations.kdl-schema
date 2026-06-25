@@ -115,7 +115,7 @@ document {
                                     type "string"
                                     min 1
                                     max 1
-                                    enum "heuristic" "llm" "human_reviewed"
+                                    enum "convention" "llm" "manual"
                                 }
                             }
                             // Authoring confidence — a coarse enum, never a float. Optional.

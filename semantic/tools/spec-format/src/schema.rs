@@ -598,7 +598,7 @@ framework "Foundation" {
             param-ownership 0 ownership="copy"
             block-param 0 invocation="synchronous"
             threading "any_thread"
-            source "heuristic"
+            source "convention"
         }
         method "writeToURL:error:" is-instance=#true {
             error-pattern "error_out_param"

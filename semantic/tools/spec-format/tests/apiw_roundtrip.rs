@@ -38,7 +38,7 @@ fn rich() -> FrameworkAnnotations {
                     }],
                     threading: Some(ThreadingConstraint::AnyThread),
                     error_pattern: None,
-                    source: AnnotationSource::Heuristic,
+                    source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
                 },

@@ -192,16 +192,18 @@ pub enum ErrorPattern {
     NilOnFailure,
 }
 
-/// Where an annotation came from.
+/// Where an annotation came from (ADR-0046 §4 / ADR-0050 provenance vocabulary).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnnotationSource {
-    /// Derived from naming heuristics alone.
-    Heuristic,
+    /// Derived from a platform convention rule (`apianyware-conventions` datalog).
+    /// The `<rule>` payload + `Extraction`/`Unknown` tiers arrive with the resolved-side
+    /// per-fact carriage (ws5 `precedence-audit`); ws5 `provenance-vocab-k44` only renamed it.
+    Convention,
     /// Derived from LLM analysis of Apple documentation.
     Llm,
-    /// Human-reviewed resolution of a heuristic/LLM disagreement.
-    HumanReviewed,
+    /// Authored/resolved by a human directly (the highest-precedence authored tier).
+    Manual,
 }
 
 /// Override file: human-reviewed resolutions stored separately for merging.
@@ -249,7 +251,7 @@ pub struct AnnotationDisagreement {
 /// Human resolution of a disagreement.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DisagreementResolution {
-    /// Which source to trust: `"heuristic"` or `"llm"`.
+    /// Which source to trust: `"convention"` or `"llm"`.
     pub trust: String,
     /// Reason for the decision.
     pub reason: String,

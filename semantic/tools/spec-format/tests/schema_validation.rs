@@ -53,7 +53,7 @@ fn written_overlay_validates_against_the_schema() {
                 }],
                 threading: Some(ThreadingConstraint::MainThreadOnly),
                 error_pattern: Some(ErrorPattern::NilOnFailure),
-                source: AnnotationSource::HumanReviewed,
+                source: AnnotationSource::Manual,
                 confidence: Some(Confidence::Medium),
                 provenance: Some("AppKit Release Notes".to_string()),
             }],

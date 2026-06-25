@@ -52,7 +52,7 @@ fn provenance_stamp_omitted_when_absent_and_backward_compatible() {
     let legacy = r#"{
         "selector": "init",
         "is_instance": true,
-        "source": "heuristic"
+        "source": "convention"
     }"#;
     let parsed: MethodAnnotation = serde_json::from_str(legacy).unwrap();
     assert_eq!(parsed.confidence, None);
@@ -120,7 +120,7 @@ fn framework_annotations_roundtrip() {
                     }],
                     threading: None,
                     error_pattern: None,
-                    source: AnnotationSource::Heuristic,
+                    source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
                 },
@@ -213,16 +213,16 @@ fn block_invocation_style_serialization() {
 #[test]
 fn annotation_source_serialization() {
     assert_eq!(
-        serde_json::to_string(&AnnotationSource::Heuristic).unwrap(),
-        "\"heuristic\""
+        serde_json::to_string(&AnnotationSource::Convention).unwrap(),
+        "\"convention\""
     );
     assert_eq!(
         serde_json::to_string(&AnnotationSource::Llm).unwrap(),
         "\"llm\""
     );
     assert_eq!(
-        serde_json::to_string(&AnnotationSource::HumanReviewed).unwrap(),
-        "\"human_reviewed\""
+        serde_json::to_string(&AnnotationSource::Manual).unwrap(),
+        "\"manual\""
     );
 }
 
@@ -235,7 +235,7 @@ fn empty_optional_fields_skipped_in_serialization() {
         block_parameters: vec![],
         threading: None,
         error_pattern: None,
-        source: AnnotationSource::Heuristic,
+        source: AnnotationSource::Convention,
         confidence: None,
         provenance: None,
     };

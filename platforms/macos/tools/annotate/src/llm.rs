@@ -1267,7 +1267,7 @@ mod tests {
                     }],
                     threading: None,
                     error_pattern: None,
-                    source: AnnotationSource::Heuristic,
+                    source: AnnotationSource::Convention,
                     confidence: None,
                     provenance: None,
                 }],

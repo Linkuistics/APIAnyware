@@ -78,7 +78,7 @@ impl ConventionFacets {
     /// Assemble the convention `MethodAnnotation` for `method` on `receiver`
     /// (class or protocol name) by looking its `(receiver, selector)` up in the
     /// four facet maps. Byte-identical to the legacy `heuristics.rs` output:
-    /// `source = Heuristic`, no confidence/provenance carried (the
+    /// `source = Convention`, no confidence/provenance carried (the
     /// `convention:<rule>` stamps the facets compute land on-disk only once
     /// ws5's provenance mechanism consumes them).
     fn annotation_for(&self, receiver: &str, method: &Method) -> MethodAnnotation {
@@ -98,7 +98,7 @@ impl ConventionFacets {
                 .unwrap_or_default(),
             threading: self.threading.get(&key).map(|f| f.threading),
             error_pattern: self.error.get(&key).map(|f| f.error_pattern),
-            source: AnnotationSource::Heuristic,
+            source: AnnotationSource::Convention,
             confidence: None,
             provenance: None,
         }
@@ -134,8 +134,8 @@ pub fn annotate_frameworks(
 
     for framework in &frameworks {
         // Load LLM annotations: prefer dedicated llm_dir, fall back to LLM-sourced
-        // entries from the prior annotated checkpoint (so heuristic-only baselines
-        // produce only Heuristic-tagged annotations).
+        // entries from the prior annotated checkpoint (so convention-only baselines
+        // produce only Convention-tagged annotations).
         let llm_annotations = if let Some(dir) = llm_dir {
             match llm::load_llm_annotations(dir, &framework.name) {
                 Ok(ann) => ann,
@@ -299,9 +299,9 @@ fn merge_and_push(
 
 /// Load LLM-sourced annotations from a previously-written annotated checkpoint.
 ///
-/// Filters out entries with `source = Heuristic` so a heuristic-only baseline
+/// Filters out entries with `source = Convention` so a convention-only baseline
 /// rerun does not have its annotations re-tagged as `Llm` by `merge_annotations`.
-/// `Llm` and `HumanReviewed` entries are retained — heuristics re-run fresh on
+/// `Llm` and `Manual` entries are retained — conventions re-run fresh on
 /// every method anyway, so dropping prior heuristic entries is information-
 /// preserving.
 fn load_existing_llm_annotations(
@@ -347,7 +347,7 @@ fn load_existing_llm_annotations(
     }
 }
 
-/// Keep only methods whose `source` is `Llm` or `HumanReviewed`; drop classes
+/// Keep only methods whose `source` is `Llm` or `Manual`; drop classes
 /// that end up with no methods.
 fn retain_llm_sourced(classes: Vec<ClassAnnotations>) -> Vec<ClassAnnotations> {
     classes
@@ -357,7 +357,7 @@ fn retain_llm_sourced(classes: Vec<ClassAnnotations>) -> Vec<ClassAnnotations> {
                 matches!(
                     m.source,
                     apianyware_types::annotation::AnnotationSource::Llm
-                        | apianyware_types::annotation::AnnotationSource::HumanReviewed
+                        | apianyware_types::annotation::AnnotationSource::Manual
                 )
             });
             if class.methods.is_empty() {
@@ -438,13 +438,13 @@ mod tests {
     }
 
     #[test]
-    fn retain_llm_sourced_keeps_llm_and_human_reviewed_drops_heuristic() {
+    fn retain_llm_sourced_keeps_llm_and_manual_drops_convention() {
         let input = vec![class(
             "NSString",
             vec![
-                method("length", AnnotationSource::Heuristic),
+                method("length", AnnotationSource::Convention),
                 method("compare:", AnnotationSource::Llm),
-                method("hash", AnnotationSource::HumanReviewed),
+                method("hash", AnnotationSource::Manual),
             ],
         )];
 
@@ -464,7 +464,7 @@ mod tests {
         let input = vec![
             class(
                 "NSObject",
-                vec![method("description", AnnotationSource::Heuristic)],
+                vec![method("description", AnnotationSource::Convention)],
             ),
             class("NSArray", vec![method("count", AnnotationSource::Llm)]),
         ];
@@ -480,8 +480,8 @@ mod tests {
         let input = vec![class(
             "NSObject",
             vec![
-                method("description", AnnotationSource::Heuristic),
-                method("hash", AnnotationSource::Heuristic),
+                method("description", AnnotationSource::Convention),
+                method("hash", AnnotationSource::Convention),
             ],
         )];
 
@@ -522,10 +522,10 @@ mod tests {
     }
 
     #[test]
-    fn load_existing_llm_annotations_returns_none_when_only_heuristic_entries_present() {
-        // End-to-end check that a heuristic-only checkpoint cannot poison a
-        // heuristic-only baseline rerun by being re-treated as LLM source.
-        let dir = make_temp_dir("heuristic-only");
+    fn load_existing_llm_annotations_returns_none_when_only_convention_entries_present() {
+        // End-to-end check that a convention-only checkpoint cannot poison a
+        // convention-only baseline rerun by being re-treated as LLM source.
+        let dir = make_temp_dir("convention-only");
         write_checkpoint(
             &dir,
             "TestFW",
@@ -533,7 +533,7 @@ mod tests {
                 {
                     "class_name": "TestClass",
                     "methods": [
-                        {"selector": "foo", "is_instance": true, "source": "heuristic"}
+                        {"selector": "foo", "is_instance": true, "source": "convention"}
                     ]
                 }
             ]),
@@ -545,7 +545,7 @@ mod tests {
 
         assert!(
             result.is_none(),
-            "checkpoint with only Heuristic entries must not be re-presented as LLM source"
+            "checkpoint with only Convention entries must not be re-presented as LLM source"
         );
     }
 
@@ -559,7 +559,7 @@ mod tests {
                 {
                     "class_name": "TestClass",
                     "methods": [
-                        {"selector": "heuristicOnly", "is_instance": true, "source": "heuristic"},
+                        {"selector": "heuristicOnly", "is_instance": true, "source": "convention"},
                         {"selector": "fromLlm", "is_instance": true, "source": "llm"}
                     ]
                 }
