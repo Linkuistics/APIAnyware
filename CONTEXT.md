@@ -1298,6 +1298,124 @@ _Avoid_: diffing against `extracted.json` (pre-resolve → false orphans); a con
 store (set-diff is cheap, stores nothing); auto-regenerating on every pipeline run (regeneration
 is explicit, post-SDK-bump); the retired `_llm-annotations/` + `analysis/ir/` paths.
 
+## Target model (refactor workstream 6)
+
+Introduced by the `structural-refactoring` grove, workstream 6 (`target-model-k50`): the
+authored **target-model knowledge layer** under `targets/<t>/` (REFACTOR §17–§27, §37) over
+the four already-built, VM-verified bindings (racket/chez/gerbil/sbcl) — capability profiles,
+idiom catalogues, projection policies, adapter specs, conformance reports, and mapping docs.
+ws6 is the great **consumer**: it projects ws3 pattern-kinds (via `emit/pattern_dispatch`),
+projects ws4 app-kinds to concrete builds, and reads the ws4 §30 source-weirdness + ws5
+per-fact provenance — it *authors none of those*. Its one new surface is **projection +
+representability** (the projection-lives-in-`targets` domain rule). Design settled 2026-06-25
+(running log in the `target-model-k50` node brief).
+
+**Target model**:
+The whole `targets/<t>/` body of target-language expression + proof for one implementation —
+the `target.apiw` descriptor, `capability.apiw` profile, `idioms/`, `policies/<platform>/`,
+`adapters/<platform>/spec.apiw`, `conformance/<platform>.apiw`, the mapping/overview docs, and
+the *already-present* `adapters/` native code + `bindings/` + `app-implementations/` + emit/bundle
+`tools/`. Projection lives **here**, never in `platforms/` (§45.10). The **authored** layer is the
+ws6 deliverable; the binding code itself was built by the four target groves.
+_Avoid_: putting any target/projection statement under `platforms/` or `semantic/` (the domain
+rule — those stay target-independent); treating ws6 as *re-porting* the bindings (it adds the
+authored knowledge layer over them).
+
+**Target descriptor** _(`targets/<t>/target.apiw`; authored; D4)_:
+The §17 per-implementation model — `family` / `dialect` / `implementation` / `ffi-backend` /
+`runtime-model` / `projection-policy` / `adapter-strategy` as authored facets (e.g. sbcl:
+`common-lisp` / `ansi-cl` / `sbcl` / `sb-alien` / `image-dump` / …). `targets/<t>/` **is one
+implementation**; the directory is flat and no `implementations/` subdir is materialized until a
+*second* impl of one language lands (lazy). Family grouping (the CL-family contract) is the
+`family` facet + the `_shared` family doc — **not** a `targets/<family>/<impl>/` directory.
+_Avoid_: `target.yaml` (YAML is dead — ADR-0046); a per-impl subdir for a single impl (§18's
+`implementations/` sketch, not materialized yet); renaming dirs to family/impl.
+
+**Capability profile** _(`targets/<t>/capability.apiw`; authored; platform-INDEPENDENT; D2)_:
+The §20 statement of what an implementation **can express**, as an authored map from a **§20
+capability dimension** (a shared controlled vocabulary in `targets/_shared` —
+`foreign-thread-callbacks`, `struct-by-value`, `deterministic-cleanup`, …) → a **representability
+ladder** rung. Describes the *implementation*, so it is reusable across platforms. Has **two
+faces**: per-API *semantic* capabilities (feed representability) and §36 *app-form* capabilities
+(`packaging`/`app-bundle`/`plugin`/`sandboxing`/`native-runtime-embedding` — feed per-app-kind
+feasibility, not per-API representability).
+_Avoid_: keying the profile on macOS §30 weirdness tags (couples intrinsic capability to one
+platform — rejected); committing a per-API status here (that is *derived* — below).
+
+**Representability ladder** _(the unified §20/§7.7 vocabulary; D2)_:
+One **7-rung** ladder collapsing §20's "levels" and §7.7's "statuses" (the same ladder under two
+names): `exact-static` (≡ fully-represented) > `exact-runtime` (≡ runtime-represented) >
+`idiomatic-conventional` (≡ conventionally-represented) > `lossy-but-documented` (≡
+lossily-represented) > `unsafe-only` > `not-representable` (≡ unsupported) > `research`.
+_Avoid_: maintaining §20 levels and §7.7 statuses as two separate enums with a translation table
+(they always move together — one ladder).
+
+**Representability status** _(DERIVED, uncommitted; per target×platform×API; D1/D2)_:
+The §7.7 per-API rung, **computed not authored**: `status(api, target) =` the worst (lowest) ladder
+rung over `{ profile[needs(w)] : w ∈ platform.weirdness(api) }`, where `needs` is the shared,
+target-independent **`weirdness → capability` map** (`may-reenter → foreign-thread-callbacks`) and
+`platform.weirdness(api)` is the ws4 §30 source-weirdness the api-semantics declarations carry. An
+API with **no** authored weirdness tag defaults to `exact-static`/fully-represented — the
+**trampoline-elision limit** (the directly-reachable ObjC surface is fully represented; only the
+weird / Swift-native residual drops down the ladder). Cheap → computed on demand, stays
+uncommitted (constraint 4).
+_Avoid_: committing the per-API status (derivable → rots against SDK/binding drift); authoring it
+in `platforms/` (the §30 weirdness is platform truth, but the *status* is ws6 — the ws4 D4 line).
+
+**Idiom catalogue + the `pattern_dispatch` seam** _(`targets/<t>/idioms/<category>.apiw`; authored; D3)_:
+The §21 source-concept → target-construct mapping (`bracket → with-macro + unwind-protect`,
+`error-out → condition + multiple-values`, …), authored `.apiw` + generated §21 idiom docs under
+`idioms/docs/`. It is the **authored data** the shared `emit/pattern_dispatch` classifier reads —
+ws6 refactors `classify_pattern` (today a hardcoded Rust `match` with scheme-flavoured names baked
+in, **zero callers**) to consume the per-target catalogue (golden-neutral: every emitter is
+pattern-blind today). **Applying** projection — emitters consuming pattern-instances to emit
+`with-bracket`/`make-foo` wrappers — **moves goldens + needs per-target VM-verify** and is a
+clearly-scoped, golden-INTENTIONAL follow-on, not folded into the authored-layer work.
+_Avoid_: leaving the idiom map Rust-baked (D1 — the catalogue is authored `.apiw`); turning on
+generation this grove (goldens move — deferred); a target-neutral catalogue (each target authors
+its own idioms — the maximize-idiom rule).
+
+**Projection policy** _(`targets/<t>/policies/<platform>/*.apiw`; authored; §23)_:
+The per-platform projection *choices* a target makes — e.g. `safe-adapter` vs `thin-direct`
+(§24's direct-call-vs-adapter spectrum). Projection-bearing → lives in `targets/`, never
+`platforms/`. Authored, since it is a target-policy decision (the racket trampoline-elision
+posture, the sbcl direct-msgSend + sole-native-unit posture).
+_Avoid_: `policies/*.yaml` (YAML dead); any projection statement leaking into `platforms/`.
+
+**Adapter spec** _(`targets/<t>/adapters/<platform>/spec.apiw`; authored; §24–26)_:
+The authored description of the *existing* native adapter library (`adapters/<platform>/sources/`,
+already built) — the §26 adapter **roles** required (`direct_forwarder`, `callback_adapter`,
+`thread_adapter`, …), the §26 runtime services (`object_registry`/`callback_registry`/
+`main_thread_dispatch`/`autorelease_pool_management`/…), and the §26 direct-call policy. The
+*spec* is ws6's authored layer; the adapter *code* was built by the target grove.
+_Avoid_: authoring adapter *code* here (it exists); a §25 ABI redesign (the adapters ship a
+working ABI — the spec documents it).
+
+**Conformance report** _(`targets/<t>/conformance/<platform>.apiw` + derived; §37)_:
+The §37 per-target×platform report — **authored *judgment* slice** (`unsupported` features,
+`research` items, `known issues`, the app-kind support call) committed as `.apiw`, plus the
+**derived** slice (`API coverage`, common-app-implementation `status`) computed from the generated
+bindings + the VM-verify reports already under `bindings/<platform>/reports/`. Statuses per §37:
+`pass`/`partial`/`research`/`unsupported`/`failed`/`skipped`. A validator cross-checks authored
+claims against the derived reality. The `binding tests` field *references* ws9 results; ws6 does
+not build the runner (per-target execution hooks are ws6's, the runner is ws9's — the ws4 D3 mirror).
+_Avoid_: committing the derived coverage/app-status (recomputable → constraint 4); building the
+test runner here (ws9).
+
+**target-model crate** _(`targets/_shared/tools/target-model`; D5)_:
+The single shared, **target-independent** crate that parses + focused-validates every target-model
+`.apiw` entity (submodules `descriptor/` `capability/` `idioms/` `policy/` `adapter_spec/`
+`conformance/` — the descriptor submodule is `descriptor/`, not `target/`, so the stock Rust
+`target/` build-dir gitignore does not swallow its source), holds the shared `vocab.rs` (§20
+capability dimensions + `weirdness → capability`
+map) and `derive.rs` (representability floor + conformance-coverage derivation). One crate because
+the schema is identical across targets; only the authored `.apiw` *data* differs (the ws4
+one-crate/submodules `apianyware-platform-tests` precedent). ws6 authors the `.apiw` **KDL Schemas**
+(`schemas/spec-format/{target,capability,idioms,policy,adapter-spec,conformance}.kdl-schema`) +
+the in-crate validators; **ws8** owns the *machine* JSON Schema + validation tooling/CI.
+_Avoid_: per-target target-model crates (4× duplicated machinery — D5); folding the model into
+`emit` (a rendering crate consumes the model, not owns it); authoring the machine JSON Schema (ws8).
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
