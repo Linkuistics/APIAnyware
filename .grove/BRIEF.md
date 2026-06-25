@@ -61,8 +61,14 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    not executed; k37/k38–k41); and the **platform-model docs** (k42). Built *around*
    the per-family triad ws2 already relocated; projection-free throughout. Goldens
    unmoved. See **Platform-model outcomes** below.
-5. **LLM analysis side-channel** — annotations cached / regenerable / diffable /
-   reviewable / provenance-tracked / confidence-scored; fact-precedence rules.
+5. **LLM analysis side-channel** ✅ *(node `llm-side-channel-k43`, complete 2026-06-25)* —
+   the overlay made provenance-tracked / regenerable / diffable / reviewable as a **lean
+   mechanism over git + the pipeline** (ADR-0050), not a staging subsystem: git is the
+   propose→review→accept boundary; the §4 disagreement/precedence audit stamps per-fact
+   `source` + `superseded-by` into `resolved.json` at resolve time (emit-invisible →
+   golden-neutral; k44 vocab + k45 audit); `apianyware-analyze annotations {stale,audit}`
+   (k46/k47) + the `.apiw`-driven `/analyze` orchestration (k48) replace the retired
+   bash/python scaffolding (k49). See **LLM side-channel outcomes** below.
 6. **target model** — `targets/<t>/`: capability profiles, idiom catalogues,
    policies, adapter specs, bindings, conformance — reshaping the 4 live targets
    (racket/chez/gerbil/sbcl).
@@ -215,6 +221,48 @@ Seams for the remaining workstreams:
   executes); **ws9** owns the multi-layer test model (§33) + the TestAnyware/AppSpec
   runner (§34) that drives a declaration against a *running* target binding; **ws6** owns
   per-target execution hooks. The declare-now / execute-later seam (mirror of ws3→ws8).
+
+## LLM side-channel outcomes (promoted from `llm-side-channel-k43` on retirement)
+
+Durable decisions/handoffs later workstreams depend on (the vocabulary lives in `CONTEXT.md`
+"LLM side-channel workflow" + ADR-0050; the prose in
+`platforms/macos/docs/annotation-{workflow,subagent-prompt}.md` + `.claude/commands/analyze.md`).
+ws5 is a **lean mechanism over git + the pipeline, not a staging subsystem** — the overlay is
+already a git-committed `.apiw` text file, so diff/review/accept come from git:
+
+- **Git is the propose→review→accept boundary.** The §28 tier `accepted-LLM` ≡ a *committed*
+  `source llm` fact — no staging store, `status` flag, or state machine. A subagent writes
+  `source llm` into the working tree; a human accepts by committing the diff.
+- **Two source vocabularies, two homes.** The authored overlay (`annotations.apiw`, committed)
+  carries `source ∈ {llm, manual}`; the resolved graph (`resolved.json`, derived + gitignored)
+  carries the full ladder `{extraction, convention:<rule>, llm, manual, unknown}` after the
+  audit. Per-fact provenance + `superseded-by` live in `resolved.json` **only**, never the
+  overlay. `AnnotationSource` reconciled to this vocab (k44).
+- **The disagreement audit is golden-neutral by construction** (k45). At resolve time, per
+  `(receiver, selector)` fact-slot: gather producers, apply §28 precedence, stamp the winner's
+  `source`, record disagreeing losers as `superseded-by`, leave no-producer slots explicit
+  `unknown`. It stamps *provenance*, not winning values → **emit-invisible → goldens cannot
+  move**. This invariant gated every ws5 child and remains the regression guard for ws6+.
+- **Staleness is live; regeneration is in Claude Code** (k46/k47). `apianyware-analyze
+  annotations stale` set-diffs a family's committed overlay against the current **resolved API
+  surface** (`resolved.json` — *not* `extracted.json`: the overlay mirrors the
+  inheritance/conformance-flattened, Swift-renamed resolved surface) for orphaned / new-surface /
+  shape-changed slots, exiting 1 to gate CI/Make; `annotations audit` reports disagreements +
+  per-tier win distribution (informational, exit 0). Regeneration dispatches subagents per stale
+  family, each writing `.apiw` directly (economic constraint [[llm_annotation_constraint]]).
+- **Tooling home + orchestration** (k48/k49). The mechanism extends
+  `platforms/macos/tools/annotate` + `apianyware-analyze` subcommands (no new crate); annotation
+  is **platform** knowledge (never `semantic/`). The dead bash/python/external-API scaffolding is
+  retired; `Makefile` `lint-annotations` gates on the subcommands; the workflow lives in
+  `.claude/commands/analyze.md` + `platforms/macos/docs/annotation-{workflow,subagent-prompt}.md`.
+
+Seams for the remaining workstreams:
+
+- **ws6 seam:** ws6 *consumes* resolved provenance/confidence (projection / representability);
+  ws5 only **produces** it. Emit stays provenance-blind.
+- **ws8 seam:** ws5 extended the `.apiw` overlay schema (`source` → `{llm, manual}`) + the
+  `resolved.json` Rust serde (full ladder + `superseded-by`); the *machine JSON Schema* for
+  `resolved.json` + validation tooling/CI stay **ws8's** (mirror of the ws2/ws3/ws4 seams).
 
 ## Notes
 
