@@ -1,0 +1,18 @@
+// The gerbil target descriptor (REFACTOR §17; structural-refactoring grove ws6,
+// target-descriptor-k51). Contract: schemas/spec-format/target.kdl-schema.
+// Facet values grounded in CONTEXT.md "Gerbil target toolchain" + "Gerbil native
+// binding mechanism" (ADRs 0017/0020/0021/0022) — dialect omitted (Gerbil's dialect
+// and implementation coincide).
+target "gerbil" {
+    doc "Gerbil Scheme (0.18.x, vendored Gambit) bound through :std/foreign define-c-lambda — a manifest defclass class graph over directly-dispatched ObjC, built to a self-contained static executable."
+    family "scheme"
+    implementation "gerbil"
+    ffi-backend "std-foreign"
+    // Compiled-FFI (ADR-0015): gxc → Gambit → C → native; define-c-lambda open-codes
+    // the call at compile time.
+    runtime-model "compiled-ffi"
+    projection-policy "thin-direct"
+    // The dylib is strictly trampoline-only (the second ObjC home lived in gsc-compiled
+    // Gerbil, not the native unit).
+    adapter-strategy "trampoline-only"
+}

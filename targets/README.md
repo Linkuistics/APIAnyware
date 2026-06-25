@@ -11,6 +11,18 @@ tree; cross-target machinery that belongs to no single target lives under
 
 Per-target `targets/<t>/` trees are formed as material arrives. The per-target
 Rust crates (`emit-<t>`, `bundle-<t>`) landed under `targets/<t>/tools/` in
-`move-target-crates-k7`. TODO: the generated bindings, app-implementations,
-adapters, docs, and reports relocate in `move-target-material-k8`; capability
-profiles, idiom catalogues, and policies are workstream 6 (target model).
+`move-target-crates-k7`; the bindings, app-implementations, adapters, docs, and
+reports relocated in `move-target-material-k8`.
+
+**Target model (workstream 6).** The authored knowledge layer over the four built
+bindings is added by ws6, shared-crate machinery in
+[`_shared/tools/target-model/`](_shared/tools/target-model) over per-target authored
+`.apiw` data (decision D5). Landed so far:
+
+- **Target descriptor** — `targets/<t>/target.apiw` (§17: family / dialect /
+  implementation / FFI backend / runtime model / projection policy / adapter
+  strategy), contract `schemas/spec-format/target.kdl-schema` (`target-descriptor-k51`).
+
+Still owed by later ws6 children: capability profiles + representability,
+idiom catalogues, projection policies, adapter specs, conformance reports, mapping
+docs, and the bundler apps-root/bindings-root reshape.

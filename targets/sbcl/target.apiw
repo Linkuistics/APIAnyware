@@ -1,0 +1,19 @@
+// The sbcl target descriptor (REFACTOR §17; structural-refactoring grove ws6,
+// target-descriptor-k51). Contract: schemas/spec-format/target.kdl-schema.
+// Facet values grounded in CONTEXT.md "SBCL target toolchain" + the MOP/lifetime/
+// bundle/trampoline ADRs (0005/0015/0033/0034/0036/0038/0041).
+target "sbcl" {
+    doc "Steel Bank Common Lisp with a CLOS/MOP binding style — generic-function dispatch over an objc-class metaclass graph, reaching ObjC directly through sb-alien."
+    family "common-lisp"
+    dialect "ansi-cl"
+    implementation "sbcl"
+    ffi-backend "sb-alien"
+    // Compiled-FFI (ADR-0015): sb-alien open-codes one typed alien signature per method
+    // ABI at compile time.
+    runtime-model "compiled-ffi"
+    projection-policy "thin-direct"
+    // libAPIAnywareSbcl is the target's SOLE native compilation unit: it hosts the
+    // Swift-native trampolines AND the main-thread bounce, subclass-IMP synthesis, and
+    // OpaqueHandle/Throws/Async marshalling helpers (ADR-0038).
+    adapter-strategy "sole-native-unit"
+}

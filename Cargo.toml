@@ -19,8 +19,9 @@ members = [
     "platforms/macos/tools/app-kinds",
     "platforms/macos/tools/platform-tests",
     "platforms/macos/tools/collect-cli",
-    # targets/_shared/ domain — shared projection substrate + generate CLI
+    # targets/_shared/ domain — shared projection substrate + target model + generate CLI
     "targets/_shared/tools/emit",
+    "targets/_shared/tools/target-model",
     "targets/_shared/tools/stub-launcher",
     "targets/_shared/tools/generate-cli",
     # targets/<t>/ domain — per-target emitters + bundlers

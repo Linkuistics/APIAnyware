@@ -1,0 +1,19 @@
+// The chez target descriptor (REFACTOR §17; structural-refactoring grove ws6,
+// target-descriptor-k51). Contract: schemas/spec-format/target.kdl-schema.
+// Facet values grounded in CONTEXT.md "Language" (objc-object, target idiom) +
+// the chez lifetime/threading ADRs (0007/0009/0015/0016).
+target "chez" {
+    doc "Chez Scheme bound through foreign-procedure — a class-and-method binding over directly-dispatched ObjC, with guardian-managed lifetimes and a self-contained distribution."
+    family "scheme"
+    // Chez targets max Chez-idiom but is grounded in an R6RS base ((import (chezscheme))).
+    dialect "r6rs"
+    implementation "chez-scheme"
+    ffi-backend "foreign-procedure"
+    // Compiled-FFI (ADR-0015): foreign-procedure open-codes one typed native call
+    // per method ABI at compile time.
+    runtime-model "compiled-ffi"
+    projection-policy "thin-direct"
+    // The native adapter hosts the Swift-native trampolines + the foreign-callable
+    // callback bridges (thread-activation, ADR-0016).
+    adapter-strategy "trampoline-and-bridges"
+}

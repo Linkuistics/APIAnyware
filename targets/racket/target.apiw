@@ -1,0 +1,23 @@
+// The racket target descriptor (REFACTOR §17; structural-refactoring grove ws6,
+// target-descriptor-k51). Contract: schemas/spec-format/target.kdl-schema.
+// Facet values grounded in CONTEXT.md "Racket target toolchain" + "Native binding
+// mechanism" + the complete-API/trampoline-elision model.
+target "racket" {
+    doc "Racket CS (9.2) bound through ffi2 + ffi/unsafe/objc — a class-and-method binding over directly-dispatched ObjC, with a native adapter for the Swift-native residual and callbacks."
+    family "scheme"
+    dialect "racket"
+    implementation "racket-cs"
+    // ffi2 is the C-function layer; ObjC message dispatch stays on ffi/unsafe/objc
+    // (ffi2 has no ObjC layer). The primary backend named here is ffi2.
+    ffi-backend "ffi2"
+    // Interpreted-FFI (ADR-0015): the only target whose FFI call sites are reached
+    // dynamically (ADR-0013 generated typed dispatch), not open-coded at compile time.
+    runtime-model "interpreted-ffi"
+    // Direct ObjC (trampoline-elided); only the Swift-native delta + pointer constants
+    // cross the native adapter.
+    projection-policy "thin-direct"
+    // The APIAnywareRacket dylib hosts the ADR-0013 generated typed dispatch entries,
+    // the Swift-native trampolines, and the DelegateBridge/BlockBridge callback +
+    // marshalling bridges.
+    adapter-strategy "trampoline-and-bridges"
+}

@@ -1,0 +1,165 @@
+// target.kdl-schema — the authoritative, language-neutral contract for an authored
+// **target descriptor** `.apiw` file (`structural-refactoring` grove, workstream 6;
+// node-brief decision D4, child `target-descriptor-k51`).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring the
+// siblings `app-kind.kdl-schema` / `platform.kdl-schema` (workstream 4),
+// `pattern-kinds.kdl-schema` (workstream 3), and `annotations.kdl-schema` (workstream
+// 2). Any KDL tool in any language can validate or consume a target descriptor. The
+// Rust `apianyware-target-model` crate is ONE conforming validator of this contract,
+// not its source of truth (ADR-0046 §3). The MACHINE JSON Schema for any derived
+// report is workstream 8's.
+//
+// SCOPE — the §17 per-IMPLEMENTATION model of one target: its language `family`, its
+// `dialect` (optional), the concrete `implementation`, the `ffi-backend` it reaches
+// the platform through, the `runtime-model` (the ADR-0015 interpreted-vs-compiled FFI
+// execution model), its primary `projection-policy`, and its native `adapter-strategy`.
+// This is the target model's authored knowledge — what a target IS — and is the one
+// place PROJECTION legitimately lives (the domain rule: projection is `targets/`,
+// never `platforms/` or `semantic/`).
+//
+// IDENTITY — each target is one directory `targets/<id>/target.apiw`; the
+// `target "<id>"` value is the target's stable identity and matches its CONTAINING
+// DIRECTORY (the conventional short target name — `racket`, `chez`, `gerbil`, `sbcl`).
+// The conforming loader checks this. `targets/<t>/` is ONE implementation; no
+// `implementations/` subdir is materialized until a second implementation of one
+// language lands (D4, lazy).
+//
+// CONTROLLED VOCABULARY — only `runtime-model` is a closed `enum` set, because it is
+// the one genuinely bounded, load-bearing facet (the distinction ADR-0015 turns on).
+// The other six facets are OPEN token strings: the universe of language families /
+// dialects / implementations / FFI backends / projection postures / adapter strategies
+// grows with every target in REFACTOR §19, so a closed enum would fight each new
+// target. The conforming `apianyware-target-model` validator adds only the non-blank
+// token check the KDL Schema cannot state.
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE CARDINALITY
+// in a `value {…}` body (KDL Schema convention). `other-nodes-allowed` /
+// `other-props-allowed` default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware target descriptor (.apiw)" lang="en"
+        description "The §17 per-implementation model of one target language: its language family, optional dialect, concrete implementation, FFI backend, runtime model (the ADR-0015 interpreted-vs-compiled FFI execution model), primary projection policy, and native adapter strategy. The authored target-model knowledge layer over an already-built binding (REFACTOR §17/§18)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 6 (target model, target-descriptor-k51)"
+    }
+
+    // Exactly one top-level `target "<id>"` node per file. The id is the target's
+    // stable identity and matches its containing directory (`targets/<id>/`, e.g.
+    // "sbcl"); the conforming loader checks this.
+    node "target" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The language FAMILY this implementation belongs to (`scheme`,
+            // `common-lisp`, …) — the grouping axis a family-level interface contract
+            // keys on. Required; exactly one. Open token (REFACTOR §19 grows it).
+            node "family" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The language or DIALECT, when meaningfully distinct from the
+            // implementation (`racket`, `r6rs`, `ansi-cl`). Optional — some targets'
+            // dialect IS their implementation name. At most one. Open token.
+            node "dialect" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The concrete IMPLEMENTATION identity (`racket-cs`, `chez-scheme`,
+            // `gerbil`, `sbcl`) — the per-implementation modelling §17 requires.
+            // Required; exactly one. Open token.
+            node "implementation" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The FFI library/mechanism the binding reaches the platform through
+            // (`ffi2`, `foreign-procedure`, `std-foreign`, `sb-alien`). Required;
+            // exactly one. Open token.
+            node "ffi-backend" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The ADR-0015 FFI EXECUTION model — the one bounded, controlled facet:
+            //   interpreted-ffi — FFI call sites are interpreted at runtime (racket)
+            //   compiled-ffi    — FFI call sites are open-coded to native calls at
+            //                     compile time (chez, gerbil, sbcl)
+            // Required; exactly one.
+            node "runtime-model" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                    enum "interpreted-ffi" "compiled-ffi"
+                }
+            }
+
+            // The primary PROJECTION posture toward the platform (e.g. `thin-direct`:
+            // bind the directly-reachable surface natively, route only the irreducible
+            // residual through the adapter). The per-concern matrix is the workstream-6
+            // child-4 `policies/<platform>/*.apiw`. Required; exactly one. Open token.
+            node "projection-policy" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The native ADAPTER strategy (`trampoline-only`, `trampoline-and-bridges`,
+            // `sole-native-unit`, …). The formal adapter roles/services are the
+            // workstream-6 child-4 `adapters/<platform>/spec.apiw`. Required; exactly
+            // one. Open token.
+            node "adapter-strategy" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+        }
+    }
+}
