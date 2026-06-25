@@ -27,6 +27,7 @@ staging dir was folded in and retired by `pipeline-cutover-k20`; the LLM side-ch
 triad under `api/<family>/` (`extracted.json` / `annotations.apiw` / `resolved.json`,
 ADR-0046) — landed and live as of `pipeline-cutover-k20`.
 
-TODO (workstream 4 — platform model): app-kinds (`app-kinds/`) and platform-level
-semantic tests (`tests/`) are the remaining ws4 children; platform docs (`docs/`)
-follow. The manifest (this directory's `platform.apiw`) is **done**.
+Workstream 4 (platform model) is **complete**: the manifest (`platform.apiw`),
+the app-kinds (`app-kinds/`, ADR-0049), the platform-level semantic tests
+(`tests/`), and the platform docs (`docs/`) all landed. The conceptual entry
+point is [`docs/overview.md`](docs/overview.md) (indexed by [`docs/README.md`](docs/README.md)).

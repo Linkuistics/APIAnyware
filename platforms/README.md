@@ -12,7 +12,8 @@ specs, app-kinds, and platform-level tests. The manifest format is contracted by
 `schemas/spec-format/platform.kdl-schema` and is platform-neutral — a future
 `platforms/linux/platform.apiw` reuses the same shape.
 
-Status: `platforms/macos/` is populated — the per-family spec triad relocated here in
-`move-platforms-k6`, and the `platform.apiw` manifest landed in `platform-manifest-k33`
-(workstream 4 child 1). The remaining workstream-4 children (app-kinds, platform-level
-tests, platform docs) grow `platforms/macos/` further.
+Status: `platforms/macos/` is populated and **workstream 4 (platform model) is
+complete** — the per-family spec triad relocated here in `move-platforms-k6`; the
+`platform.apiw` manifest, the app-kinds (`app-kinds/`), the platform-level semantic
+tests (`tests/`), and the platform docs (`docs/`) all landed across ws4's four
+children. See [`macos/docs/overview.md`](macos/docs/overview.md).

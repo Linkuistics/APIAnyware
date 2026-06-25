@@ -67,3 +67,28 @@ is ws4's fourth and final child (manifest ✓, app-kinds ✓, platform-tests ✓
   root brief, mirroring the Skeleton/Spec-format/Semantic-model outcomes sections), then
   **ws5** (LLM analysis side-channel) grows next via `leaf-add` on the grove root
   (root-brief decomposition #5).
+
+## Decision (recorded) — doc-set scope: one full doc + three thin indexes
+
+Per the lazy / link-don't-duplicate steer (constraint 4), the four D5 docs split:
+
+- **`overview.md` — full new doc.** The conceptual entry point nothing else holds:
+  the platform-as-meaning rule, the platform/semantic + platform/target boundaries
+  (incl. the §30-weirdness-vs-representability line, ws6), the four sub-models, and
+  the platform-neutral shape (§45.8). Mermaid diagrams for the boundary + sub-models.
+- **`api-extraction.md` — thin map/index.** A current 3-stage `collect → analyze →
+  generate` pipeline sketch over the **authoritative** `api/README.md` (the triad
+  table) + `collection.md` (extraction learnings); explicitly flags
+  `annotation-workflow.md` as **superseded → ws5** rather than indexing it as live.
+- **`app-kinds.md` — thin index.** Frames the app-kind/app-spec/pattern-kind
+  three-axis distinction, then points at the authoritative `app-kinds/README.md`
+  (seven-kind table + grammar) + ADR-0049 + per-kind `docs/`. Table not re-authored.
+- **`testing-obligations.md` — thin index.** Frames the two families + the
+  declare-now/execute-later seam + the facet-conditional §30 weirdness vocab, then
+  points at the authoritative `tests/README.md`.
+
+`docs/README.md` discharged as an ordered index mapping all of `docs/` (the four
+model docs + the three pre-existing operational docs). `api/README.md` verified
+**final** — no lingering TODO; left untouched. Also discharged the now-stale ws4
+"remaining children" status lines in `platforms/README.md` + `platforms/macos/README.md`
+(ws4 is complete with this leaf). Pure prose — no crate/schema/grammar change.
