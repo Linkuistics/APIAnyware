@@ -1,4 +1,4 @@
-# platform-tests-k37
+# platform-tests-k37 — brief
 
 **Kind:** work (ws4 child 3 — likely decomposes; see Decomposition)
 
@@ -55,10 +55,10 @@ of four children (manifest ✓, app-kinds ✓, **platform-tests**, then platform
   validator** (`include_str!` the schema, delegate to
   `apianyware_spec_format::validate_against_schema` for structure, add the semantic
   checks the generic schema can't state) + guarded by a **standing `tests/` guard**
-  that loads + validates every committed declaration. Crate home: a new
-  `platforms/macos/tools/<crate>` (crate-home convention, ADR-0043). Whether
-  api-semantics and app-kind-obligation declarations share **one** test-declaration
-  schema or take **two** sibling schemas is a design beat to settle while authoring.
+  that loads + validates every committed declaration. Crate home: the new
+  `platforms/macos/tools/platform-tests` crate (`apianyware-platform-tests`;
+  crate-home convention, ADR-0043), hosting both families as submodules
+  (`src/app_kind_tests/` now, `src/api_semantics/` in child 3).
 - **ws8 seam (mirrors ws3 D7 / ADR-0049):** author only the `.apiw` KDL-Schema(s) +
   the focused in-crate validator; the machine-JSON schema + CI validation tooling
   stay ws8.
@@ -81,20 +81,36 @@ of four children (manifest ✓, app-kinds ✓, **platform-tests**, then platform
 
 ## Decomposition (skeleton-first; children grow lazily)
 
-This leaf is **likely a node** — a schema/validator mechanism plus two declaration
-families plus fixtures is more than one focused session. If so, `leaf-decompose`
-(first child only this session). A natural skeleton-first order, mirroring how
-app-kinds went mechanism-first:
+Decomposed into a node (`leaf-decompose`, this session); children grow lazily as
+earlier ones retire. Skeleton-first order, mirroring how app-kinds went
+mechanism-first:
 
-1. **mechanism** — the test-declaration `.apiw` KDL-Schema(s) + a focused validator
-   crate + a standing guard, with **one exemplar declaration end-to-end** (a strong
-   choice: `app-kinds/gui-app.apiw` resolving `lifecycle` + `bundle-structure`, the
-   richest obligation pair). De-risks the grammar the rest follow.
-2. **app-kind obligations** — the remaining six kinds' `tests/app-kinds/<kind>.apiw`.
-3. **api-semantics** — the four `tests/api-semantics/*.apiw` + the §30 weirdness vocab.
+1. **test-mechanism-k38** *(child 1, this session)* — the app-kind-obligation
+   `.apiw` KDL-Schema + the `apianyware-platform-tests` validator crate + a standing
+   guard, with the exemplar `app-kinds/gui-app.apiw` resolving `lifecycle` +
+   `bundle-structure` end-to-end. De-risks the grammar the rest follow.
+2. **app-kind obligations** — the remaining six kinds' `tests/app-kinds/<kind>.apiw`
+   (pure content + fixture-ref grammar already in the schema from child 1).
+3. **api-semantics** — the four `tests/api-semantics/*.apiw` + the §30 weirdness
+   vocab; adds the **sibling** `api-semantics.kdl-schema` + an `src/api_semantics/`
+   submodule to the same crate.
 4. **fixtures + README** — the raw fixtures and discharge `tests/README.md`.
 
-(Exact child split is the picking session's call — keep it lazy; do only child 1.)
+## Decisions (running log)
+
+### D6 — Two sibling test-declaration schemas, one crate
+
+The two declaration families take **two sibling KDL-Schemas**
+(`app-kind-tests.kdl-schema` now, `api-semantics.kdl-schema` in child 3), not one
+unified envelope. They are *distinct entities sharing only the mechanism* — exactly
+the ADR-0049 distinct-entity-vs-shared-mechanism precedent (app-kind ≠ pattern-kind):
+an app-kind obligation body is process/bundle behaviour, an api-semantic expectation
+is an API-facet property; their bodies have genuinely different shapes. **One crate**
+(`apianyware-platform-tests`) hosts both as **submodules-per-family**
+(`src/app_kind_tests/`, `src/api_semantics/`), so child 3 is purely additive (no
+crate-root file collision) and the "platform test declaration" umbrella stays one
+home. This *applies* ADR-0049 rather than making a new hard-to-reverse decision —
+running-log + this brief suffice, no new ADR.
 
 ## Notes (steers)
 

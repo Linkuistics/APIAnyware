@@ -365,6 +365,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-platform-tests"
+version = "0.1.0"
+dependencies = [
+ "apianyware-app-kinds",
+ "apianyware-spec-format",
+ "kdl",
+ "miette",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "apianyware-resolve"
 version = "0.1.0"
 dependencies = [

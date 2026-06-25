@@ -1,0 +1,18 @@
+[package]
+name = "apianyware-platform-tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The macOS platform test-declaration registry (node-brief D3/D6): the authored, projection-free test-obligation bodies (`tests/app-kinds/<kind>.apiw`) and api-semantics expectations, their `.apiw` (KDL) parsers/loaders, and focused validators against the `app-kind-tests` / `api-semantics` KDL-Schemas. Declaration half only — workstream 9 executes."
+
+[dependencies]
+apianyware-spec-format.workspace = true
+kdl.workspace = true
+miette.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+apianyware-app-kinds.workspace = true
+
+[lints]
+workspace = true

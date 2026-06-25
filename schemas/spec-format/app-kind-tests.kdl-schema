@@ -1,0 +1,125 @@
+// app-kind-tests.kdl-schema — the authoritative, language-neutral contract for an
+// authored macOS **app-kind test-obligation** `.apiw` file
+// (`structural-refactoring` grove, workstream 4; node-brief decision D3/D6,
+// `test-mechanism-k38`).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring
+// the siblings `app-kind.kdl-schema` (the kind it resolves), `platform.kdl-schema`,
+// `pattern-kinds.kdl-schema`, and `annotations.kdl-schema`. Any KDL tool in any
+// language can validate or consume an app-kind-tests file. The Rust
+// `apianyware-platform-tests` crate is ONE conforming validator of this contract,
+// not its source of truth (ADR-0046 §3).
+//
+// SCOPE — the **declaration half** of a macOS app-kind's platform-level test
+// obligations (REFACTOR §14, §33; declare-now / execute-later seam, node-brief D3).
+// A file resolves the `test-obligation` REFERENCES one app-kind declares in its
+// `app-kinds/<kind>/kind.apiw` (ADR-0049 ws9 seam) into obligation BODIES: a set of
+// projection-free, target-independent `expect`ations of what a program of that kind
+// must satisfy, plus the `fixture`s an obligation reads. This is platform TRUTH —
+// what must hold — NOT how it is run (the runner + TestAnyware/AppSpec integration
+// are workstream 9) and NOT how any target binding satisfies it (`targets/`,
+// workstream 6; the domain rule). An app-kind-tests declaration is a DISTINCT entity
+// from an api-semantics declaration (`api-semantics.kdl-schema`, child 3) — they
+// share only this mechanism (node-brief D6, ADR-0049 distinct-entity precedent).
+//
+// IDENTITY — each file is `tests/app-kinds/<kind>.apiw`; the `app-kind-tests
+// "<name>"` value is the resolved kind's identity and matches the file STEM (not a
+// containing directory — these are flat files). The conforming loader checks this,
+// and that the declared obligations EXACTLY resolve the kind's `test-obligation`
+// refs (no orphan body, no unresolved ref).
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE CARDINALITY
+// in a `value {…}` body (KDL Schema convention). `other-nodes-allowed` /
+// `other-props-allowed` default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware macOS app-kind test-obligation definition (.apiw)" lang="en"
+        description "The declaration half of an app-kind's platform-level test obligations: each obligation a kind references, resolved into a set of projection-free, target-independent expectations of what a program of that kind must satisfy, plus the fixtures it reads. Platform truth, schema-validated but not executed (workstream 9 executes; REFACTOR §14/§33; declare-now / execute-later seam)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 4 (platform-tests, test-mechanism-k38)"
+    }
+
+    // Exactly one top-level `app-kind-tests "<name>"` node per file. The name is the
+    // resolved kind's identity and matches the file STEM (`tests/app-kinds/<name>.apiw`,
+    // e.g. "gui-app"); the conforming loader checks this against the app-kind registry.
+    node "app-kind-tests" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Optional human-facing one-line description of this file.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // One obligation BODY per `test-obligation` ref the kind declares. At
+            // least one (a file with no obligations resolves nothing). The obligation
+            // name matches a `test-obligation "<name>"` in `app-kinds/<kind>/kind.apiw`
+            // (the conforming validator cross-resolves; names unique within the file).
+            node "obligation" {
+                min 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    // Optional one-line description of what this obligation drives.
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+
+                    // A raw input this obligation reads, by path RELATIVE to
+                    // `platforms/macos/tests/` (e.g. "fixtures/sample-documents/note.txt").
+                    // Zero or more; the fixtures themselves are populated in workstream
+                    // 4 child 4. A conforming guard may check existence once fixtures land.
+                    node "fixture" {
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+
+                    // A single projection-free, target-independent expectation of what
+                    // must hold — the unit workstream 9 executes against a running
+                    // target binding. At least one per obligation. The first value is a
+                    // stable id (unique within the obligation — the conforming validator
+                    // checks this); the body carries the assertion as prose (`doc`).
+                    node "expect" {
+                        min 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        children {
+                            node "doc" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

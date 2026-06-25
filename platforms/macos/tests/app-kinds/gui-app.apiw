@@ -1,0 +1,49 @@
+// gui-app — app-kind test obligations (the declaration half).
+//
+// Resolves the two `test-obligation` references the gui-app kind declares
+// (`app-kinds/gui-app/kind.apiw`): `lifecycle` and `bundle-structure`. Each
+// obligation body is a set of projection-free, target-independent `expect`ations of
+// what a built gui-app binding must satisfy. This is platform TRUTH — what must hold
+// — NOT how any target builds the binding (`targets/`, workstream 6) and NOT how the
+// expectations are run (the runner + TestAnyware/AppSpec integration are workstream
+// 9; declare-now / execute-later, ADR-0046 / node-brief D3). The prose source is
+// `app-kinds/gui-app/docs/test-obligations.md`.
+
+app-kind-tests "gui-app" {
+    doc "The lifecycle and bundle-structure obligations of a bundled, windowed Cocoa application."
+
+    // Drives the entry → run-loop → termination model end-to-end against a built
+    // binding (the gui-app process model: NSApplicationMain → the AppKit run loop →
+    // terminate:).
+    obligation "lifecycle" {
+        doc "Drives the gui-app entry → run-loop → termination model end-to-end against a built binding."
+
+        expect "reaches-did-finish-launching" {
+            doc "Launching the app reaches applicationDidFinishLaunching: — the bootstrap completed: shared application, principal class, delegate installed."
+        }
+        expect "presents-foreground-session" {
+            doc "The app presents a foreground UI session with a menu bar and a Dock tile — the regular activation policy took effect."
+        }
+        expect "cooperative-shutdown" {
+            doc "A Quit / terminate: request runs the cooperative shutdown (applicationWillTerminate: observed) and the process exits cleanly — not by signal, not by hang."
+        }
+    }
+
+    // Checks the on-disk `.app` is well-formed platform-truth.
+    obligation "bundle-structure" {
+        doc "Checks the on-disk .app bundle is well-formed platform truth."
+
+        expect "bundle-skeleton-present" {
+            doc "The bundle has Contents/Info.plist, Contents/MacOS/<CFBundleExecutable>, and a Resources/ directory."
+        }
+        expect "required-plist-keys-present" {
+            doc "Every required Info.plist key from kind.apiw is present and non-empty, and CFBundlePackageType is APPL."
+        }
+        expect "executable-matches-plist" {
+            doc "CFBundleExecutable names the Mach-O actually present under Contents/MacOS/."
+        }
+        expect "launchable-by-launch-services" {
+            doc "The bundle is launchable by Launch Services — not merely exec'able."
+        }
+    }
+}
