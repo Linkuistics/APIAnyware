@@ -6,6 +6,13 @@ The `platforms/` domain holds per-platform formal API specifications (REFACTOR.m
 §45.10). macOS is the only live platform today; the shape generalizes to
 `platforms/linux/` and `platforms/dotnet/` without redesign (§45.8).
 
-TODO: `platforms/macos/` is populated by workstream 4 (platform model) and the
-relocation leaves `move-platforms-k6` / `move-target-material-k8`. No content this
-leaf (skeleton-only).
+A platform is described by an authored, policy-only **`platform.apiw` manifest** (SDK,
+source-availability floor, framework include/ignore policy) plus its per-family API
+specs, app-kinds, and platform-level tests. The manifest format is contracted by
+`schemas/spec-format/platform.kdl-schema` and is platform-neutral — a future
+`platforms/linux/platform.apiw` reuses the same shape.
+
+Status: `platforms/macos/` is populated — the per-family spec triad relocated here in
+`move-platforms-k6`, and the `platform.apiw` manifest landed in `platform-manifest-k33`
+(workstream 4 child 1). The remaining workstream-4 children (app-kinds, platform-level
+tests, platform docs) grow `platforms/macos/` further.

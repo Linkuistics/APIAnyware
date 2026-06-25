@@ -340,6 +340,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-platform-manifest"
+version = "0.1.0"
+dependencies = [
+ "apianyware-extract-objc",
+ "apianyware-spec-format",
+ "kdl",
+ "miette",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "apianyware-resolve"
 version = "0.1.0"
 dependencies = [

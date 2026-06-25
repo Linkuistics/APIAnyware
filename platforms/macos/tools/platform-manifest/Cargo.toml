@@ -1,0 +1,22 @@
+[package]
+name = "apianyware-platform-manifest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The macOS platform manifest (`platform.apiw`): the authored, policy-only SDK / availability-floor / framework-roster-policy reader and a focused validator against `platform.kdl-schema`"
+
+[dependencies]
+apianyware-spec-format.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+kdl.workspace = true
+miette.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# Test-only: assert the authored `ignore` policy stays in lockstep with the
+# extractor's `IGNORED_FRAMEWORKS` const — the manifest-vs-extractor anti-drift guard.
+apianyware-extract-objc.workspace = true
+
+[lints]
+workspace = true

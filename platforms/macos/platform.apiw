@@ -1,0 +1,47 @@
+// platform.apiw — the macOS source-platform manifest.
+//
+// Authored, POLICY-ONLY (node-brief decision D1). Conforms to
+// `schemas/spec-format/platform.kdl-schema`. It states what the macOS platform
+// *is* — its SDK, its source-availability floor, and the framework roster as an
+// include/ignore policy — and nothing about how any target expresses it (the
+// domain rule: no projection; that is `targets/`, workstream 6).
+//
+// What is NOT here, deliberately (it is DERIVED, never committed — constraint 4):
+//   · the resolved 153-family roster   — recompute from the SDK scan + this policy
+//   · the cross-family dependency graph — recompute from the `api/<F>/` triad
+//   · the concrete SDK version (e.g. 15.4) — discovered at extraction by `xcrun`
+//   · any per-family API facts           — those are the `api/<F>/` spec triad
+platform "macos" {
+    doc "The macOS source platform: what its system-framework APIs mean, projection-free."
+
+    // SDK *name* passed to `xcrun` (the version is discovered at extraction).
+    sdk "macosx"
+
+    // Source-availability floor: the macOS version the swift-api-digester targets
+    // when deciding which symbols are available/deprecated
+    // (`platforms/macos/tools/extract-swift/src/digester.rs` → `arm64-apple-macos14.0`).
+    // Distinct from any target's native build floor (a workstream-6 concern).
+    deployment-target "14.0"
+
+    // The framework roster is DISCOVERED, not enumerated. This block is the
+    // authored policy that shapes discovery; the resolved roster is derived.
+    frameworks {
+        // Scan {SDK}/System/Library/Frameworks for `*.framework`s with an umbrella
+        // header (`extract-objc::sdk::discover_frameworks`), …
+        discover "sdk-umbrella-headers"
+        // … plus the synthetic pseudo-framework overlay for system APIs that live
+        // outside the `.framework` tree (libdispatch, …; the synthetic-framework
+        // pattern under `extract-objc/synthetic-frameworks/`).
+        discover "synthetic-frameworks"
+
+        // The one subframework promoted to a top-level family despite its umbrella
+        // (`extract-objc::extract_declarations::SUBFRAMEWORK_ALLOWLIST`).
+        subframework-allow "ApplicationServices"
+
+        // Excluded from discovery — structurally incompatible with ObjC/C
+        // extraction (mirrors `extract-objc::sdk::IGNORED_FRAMEWORKS`; the
+        // manifest-load test asserts this set stays in lockstep with that const).
+        ignore "DriverKit" reason="C++ headers, not ObjC — libclang parsing fails"
+        ignore "Tk" reason="Tcl/Tk toolkit, not a native macOS framework"
+    }
+}

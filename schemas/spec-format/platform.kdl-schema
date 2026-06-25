@@ -1,0 +1,134 @@
+// platform.kdl-schema — the authoritative, language-neutral contract for an
+// authored macOS **platform manifest** `.apiw` file (`structural-refactoring`
+// grove, workstream 4; node-brief decision D1).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring
+// the sibling `pattern-kinds.kdl-schema` (workstream 3) and `annotations.kdl-schema`
+// (workstream 2). Any KDL tool in any language can validate or consume a platform
+// manifest. The Rust `apianyware-platform-manifest` crate is ONE conforming
+// validator of this contract, not its source of truth (ADR-0046 §3).
+//
+// SCOPE — the authored, **policy-only** manifest that describes the platform
+// *itself*: its SDK, its source-availability floor, and the framework roster as a
+// curated include/ignore POLICY. It must NOT carry the resolved framework roster
+// or the cross-family dependency graph — those are DERIVED from the SDK scan + the
+// per-family `api/<F>/` triad and are never committed (constraint 4). It must NOT
+// carry any per-family API facts (those are the `api/<F>/` triad) and NO
+// projection (no statement about how any target expresses the platform — the
+// domain rule; that is `targets/`, workstream 6).
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE
+// CARDINALITY in a `value {…}` body (KDL Schema convention). `other-nodes-allowed`
+// / `other-props-allowed` default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware macOS platform manifest (.apiw)" lang="en"
+        description "The authored, policy-only manifest for a source platform: its SDK name, the source-availability deployment-target floor, and the framework roster as an include/ignore discovery policy. Projection-free platform truth (REFACTOR §13/§14)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 4 (platform-manifest-k33)"
+    }
+
+    // Exactly one top-level `platform "<name>"` node per file. The name is the
+    // platform's stable identity and matches the containing directory
+    // (`platforms/<name>/`, e.g. "macos"); the conforming loader checks this.
+    node "platform" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The SDK *name* (e.g. "macosx"), as passed to `xcrun`. The concrete
+            // SDK *version* is discovered at extraction time and is DERIVED — it is
+            // not authored here.
+            node "sdk" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The source-availability floor — the macOS version the digester
+            // targets when deciding which symbols are available/deprecated (e.g.
+            // "14.0"). This is platform truth, distinct from any target's native
+            // *build* floor (a `targets/` concern, workstream 6).
+            node "deployment-target" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The framework roster POLICY. The resolved roster is DISCOVERED, not
+            // enumerated — this node states only the authored policy that shapes
+            // discovery.
+            node "frameworks" {
+                min 1
+                max 1
+                children {
+                    // A discovery SOURCE the scanner draws from, in declared order.
+                    // One or more. The controlled set:
+                    //   sdk-umbrella-headers — scan {SDK}/System/Library/Frameworks
+                    //                          for `*.framework`s carrying an
+                    //                          umbrella header
+                    //   synthetic-frameworks — the synthetic pseudo-framework
+                    //                          overlay (libdispatch, …)
+                    node "discover" {
+                        min 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                            enum "sdk-umbrella-headers" "synthetic-frameworks"
+                        }
+                    }
+
+                    // A subframework promoted to a top-level family despite living
+                    // under an umbrella (the extractor's SUBFRAMEWORK_ALLOWLIST).
+                    // Zero or more.
+                    node "subframework-allow" {
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+
+                    // A framework EXCLUDED from discovery because it is
+                    // structurally incompatible with extraction. Zero or more. The
+                    // `reason` is mandatory — an ignore without a stated reason is a
+                    // silent cap (REFACTOR honesty requirement).
+                    node "ignore" {
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        prop "reason" {
+                            type "string"
+                            required #true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
