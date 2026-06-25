@@ -177,3 +177,35 @@ sketch) stay **lazy** — authored only where a family earns prose, never 153× 
 crate-home convention, the domain rule) + confirm boundaries — not a novel model like
 ws3's pattern-kind work (which earned ADR-0048 + a PRD). The running log + glossary
 suffice; the one candidate ADR (app-kind model) is child 2's.
+
+## Platform-tests outcomes (promoted from `platform-tests-k37` on retirement)
+
+The realized **platform test-declaration model** (D3) — the input the final child
+`platform-docs` documents in `testing-obligations.md`. Full prose in
+`platforms/macos/tests/README.md`; vocab in `CONTEXT.md` ("api-semantics declaration").
+
+- **Two declaration families, distinct entities sharing only the mechanism** (D6, the
+  ADR-0049 precedent), both in one crate `apianyware-platform-tests`
+  (`platforms/macos/tools/platform-tests`) as **submodules-per-family**, each contracted
+  by its own sibling KDL-Schema under `schemas/spec-format/`:
+  - **`tests/app-kinds/<kind>.apiw`** (`app-kind-tests.kdl-schema`) — the obligation
+    **bodies** resolving each app-kind's `test-obligation` refs into projection-free
+    `expect`ations + the `fixture`s they read. The standing guard cross-resolves every
+    body against the `apianyware-app-kinds` registry (no orphan body / unresolved ref).
+  - **`tests/api-semantics/<facet>.apiw`** (`api-semantics.kdl-schema`) — per convention
+    facet (ownership/callbacks/threading/errors = file stem), the §30 source-weirdness a
+    `(receiver, selector)` shape exhibits + the expectations a binding must preserve.
+- **§30 weirdness is a facet-conditional controlled vocab** (D7), enforced in the focused
+  validator (`api_semantics::vocab`), **not** the schema (KDL-Schema can't state a
+  conditional enum) — the facet selects the allowed token set; the §30 table is the
+  crate's **own** copy (the platforms domain does not depend on `semantic/`).
+- **Fixtures are lazy + assertable** (`fixtures-readme-k41`): authored only where a
+  committed declaration references them — `fixtures/sample-documents/sample.txt`
+  (quicklook/finder-sync) + `fixtures/spotlight/sample.txt` (spotlight), each a tiny text
+  doc with known title/author/body so the ws9 runner can assert *extracted values match
+  the fixture*. D5's `pasteboard/` + `sample-images/` skipped (no referrer). A standing
+  guard (`every_fixture_ref_resolves`) makes the declaration↔fixture link an invariant.
+- **Declare-now / execute-later seam (D3).** ws4 authors + **schema-validates** (never
+  executes) the declarations; **ws9** owns the multi-layer test model (§33) + the
+  TestAnyware/AppSpec runner (§34) that drives a declaration against a *running* target
+  binding; **ws6** owns per-target execution hooks. Mirror of ws3→ws8.
