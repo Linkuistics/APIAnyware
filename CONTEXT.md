@@ -1103,6 +1103,70 @@ _Avoid_: folding the kind registry into `spec-format` (D8 chose a dedicated crat
 ws3 building the provenance workflow (that is ws5); ws3 authoring the machine JSON
 Schema (that is ws8).
 
+## Platform model (refactor workstream 4)
+
+Introduced by the `structural-refactoring` grove, workstream 4 (`platform-model-k32`):
+the macOS **source-platform** truth under `platforms/macos/` (REFACTOR §13/§14) — the
+platform manifest, app-kinds, and platform-level semantic tests, built *around* the
+per-family API triad ws2 already relocated there. Platform truth is **projection-free**
+(the domain rule): it states what the macOS API *means*, never how a target expresses
+it. Design settled 2026-06-25 (running log in the `platform-model-k32` brief).
+
+**Platform spec**:
+The whole `platforms/<platform>/` body of source truth for one platform — for macOS:
+the `platform.apiw` manifest, the per-family API triad under `api/<Framework>/`, the
+`app-kinds/`, and the `tests/`. States types/operations/ownership/lifetimes/threading/
+errors/callbacks/patterns/app-kinds (REFACTOR §13) and **must not** state projection
+(no "generate Rust Drop"). The shape is platform-neutral — `platforms/linux/` and
+`platforms/dotnet/` reuse it without redesign (§45.8).
+_Avoid_: putting any target/projection statement under `platforms/` (that is `targets/`,
+ws6); "the IR" (the spec is the triad + manifest + app-kinds + tests, not just IR).
+
+**Platform manifest** _(`platforms/macos/platform.apiw`; D1)_:
+The single **authored** policy file describing the platform *itself* — `sdk`,
+`deployment-target` floor, and the framework roster as a curated **include/ignore
+policy** (the ignore-list is an authored decision). KDL (`.apiw`), **not** `platform.yaml`
+— REFACTOR §14's literal name predates ADR-0046's no-YAML retreat (authored overlays are
+`.apiw`, machine files JSON). The **resolved** framework roster and the cross-family
+**dependency graph** are *derived and uncommitted* — recomputable from `api/`, so not
+materialized (constraint 4).
+_Avoid_: `platform.yaml` (YAML is dead — ADR-0046); committing the resolved roster or
+dep-graph (derived); putting per-family facts here (those are the `api/<F>/` triad).
+
+**App-kind** _(`platforms/macos/app-kinds/<kind>/kind.apiw`; D2)_:
+A **kind of macOS application** a target can be asked to build (`cli-tool`, `gui-app`,
+`menu-bar-daemon`, `launch-agent`, `spotlight-importer`, `quicklook-extension`,
+`finder-sync-extension`) — **platform process-model truth**: entry/run-loop/termination
+model, bundle type + required Info.plist keys + `LSUIElement`/extension-point identifiers,
+and test-obligation references. A **distinct entity** with its own authored `.apiw`
+registry, parsed by the new `platforms/macos/tools/app-kinds` crate (crate-home
+convention; *mirrors* the `apianyware-patterns` mechanism, not its entity). **Zero
+projection.** Relationship axis: the app-kind is the platform *category*; a ws7 **app-spec**
+(`apps/macos/<app>/`) *names* its kind (category↔instance); **pattern-kinds** (ws3,
+`semantic/`) are an orthogonal *API-usage* axis sharing only the authored-registry
+mechanism.
+_Avoid_: confusing app-kind (platform category, `platforms/`) with app-spec (one concrete
+app, `apps/`) or with pattern-kind (API-usage shape, `semantic/`); any projection in
+`kind.apiw`; folding app-kinds into the `apianyware-patterns` crate (domain violation —
+platform truth stays in `platforms/`).
+
+**Platform-semantic test / expectation declaration** _(`platforms/macos/tests/`; D3)_:
+An **authored, projection-free, target-independent** statement of what a macOS API
+semantic must hold — `tests/api-semantics/{ownership,callbacks,threading,errors}.apiw`,
+per-app-kind obligations `tests/app-kinds/<kind>.apiw` — plus raw **fixtures**
+(`tests/fixtures/{pasteboard,spotlight,sample-documents,sample-images}/`). ws4 **authors
++ schema-validates** these (goldens-green) but does **not execute** them; the multi-layer
+test *model* (§33), the runner, and TestAnyware/AppSpec *execution* (§34) are **ws9**
+(per-target hooks ws6) — the declare-now / execute-later seam (mirrors ws3→ws8).
+_Avoid_: building a runner under `platforms/` (execution is ws9); target-specific
+expectations (declarations are platform truth — target-independent).
+
+> Representability note (D4): the §7.7 statuses (`fully-`/`conventionally-`/
+> `lossily-represented`, `unsafe-only`, `unsupported`, `research`) are per
+> **target×platform** → **ws6/§20**, *not* ws4. ws4 carries only the §30 **source
+> weirdness** vocabulary (`fork-unsafe`, `may-reenter`, `ownership-unknown`, …) that ws6
+> *consumes* to compute a status. No representability metadata lives in `platforms/`.
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
