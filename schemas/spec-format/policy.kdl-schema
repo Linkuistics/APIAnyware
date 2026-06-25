@@ -1,0 +1,128 @@
+// policy.kdl-schema — the authoritative, language-neutral contract for an authored
+// **projection policy** `.apiw` file (`structural-refactoring` grove, workstream 6;
+// node-brief decision D1, child `policy-adapter-k54`).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring the
+// siblings `idioms.kdl-schema` / `capability.kdl-schema` / `target.kdl-schema` (the other
+// target-model entities). Any KDL tool in any language can validate or consume a projection
+// policy. The Rust `apianyware-target-model` crate is ONE conforming validator of this
+// contract, not its source of truth (ADR-0046 §3).
+//
+// SCOPE — the REFACTOR §23 target projection policy: the per-platform projection *choices* a
+// target makes — "how to map source semantics into target idioms". Each `choice` maps a
+// projection CONCERN (an open source-shape token — `directly-reachable-objc`,
+// `swift-native-async`, `escaping-callback`, …) to a point on the REFACTOR §24
+// direct-call-vs-adapter SPECTRUM. Projection-bearing → lives in `targets/`, never
+// `platforms/` (§45.10, the domain rule). Authored, since the posture is a target-policy
+// decision (the racket trampoline-elision posture, the sbcl direct-msgSend posture).
+//
+// IDENTITY — each target authors one policy per platform at
+// `targets/<id>/policies/<platform>/projection.apiw`; the `projection-policy "<id>"` value is
+// the target's stable identity and matches the TARGET directory (the conventional short name
+// — `racket`, `chez`, `gerbil`, `sbcl`, the same id its sibling `target.apiw` /
+// `capability.apiw` / `idioms/catalogue.apiw` carry). The file lives two levels deeper (under
+// `policies/<platform>/`), so the conforming loader checks the id against the file's
+// GREAT-grandparent and the `platform` value against its parent directory.
+//
+// CONTROLLED VOCABULARY — the `spectrum` value is the closed REFACTOR §24 direct-call ladder,
+// expressed here as a schema `enum` (a genuinely bounded, stable spec taxonomy — a spectrum,
+// not an open list — like `capability.kdl-schema`'s `rung` ladder and `target.kdl-schema`'s
+// `runtime-model`, decoded into the `SpectrumPoint` Rust enum). The `choice` CONCERN token is
+// an OPEN string: there is no fixed §-vocabulary of concerns, so each target authors the
+// concerns its posture distinguishes; the conforming validator only checks per-policy concern
+// uniqueness (so the concern → choice lookup is unambiguous).
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE CARDINALITY in a
+// `value {…}` body (KDL Schema convention). `other-nodes-allowed` / `other-props-allowed`
+// default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware target projection policy (.apiw)" lang="en"
+        description "The REFACTOR §23 per-platform projection policy: how a target maps source semantics into target idioms, as a set of choices mapping a projection concern to a point on the §24 direct-call-vs-adapter spectrum. Projection-bearing target-model knowledge, authored over an already-built binding; lives in targets/, never platforms/ (the domain rule)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 6 (target model, policy-adapter-k54)"
+    }
+
+    // Exactly one top-level `projection-policy "<id>"` node per file. The id is the target's
+    // stable identity and matches its target directory (`targets/<id>/`, e.g. "racket"); the
+    // conforming loader checks this against the file's great-grandparent.
+    node "projection-policy" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // The platform this policy projects toward (`macos`, …). Required; exactly one;
+            // the conforming loader checks it matches the file's parent directory.
+            node "platform" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The headline projection posture, echoing the sibling `target.apiw`
+            // `projection-policy` facet (`thin-direct`, …). Optional, open token.
+            node "posture" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // One projection choice per concern the policy distinguishes. At least one. The
+            // positional value is the open concern token (the validator checks per-policy
+            // uniqueness, NOT a schema enum — there is no fixed concern vocabulary).
+            node "choice" {
+                min 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    // The §24 direct-call-vs-adapter spectrum point this concern maps to.
+                    // Required; exactly one; the closed `SpectrumPoint` taxonomy.
+                    node "spectrum" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                            enum "direct-call" "direct-call-plus-wrapper" "adapter-call" "adapter-call-plus-wrapper" "unsafe-escape-hatch" "unsupported-marker"
+                        }
+                    }
+                    // Optional one-line elaboration (typically citing the grounding
+                    // ADR / CONTEXT fact / native bridge).
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

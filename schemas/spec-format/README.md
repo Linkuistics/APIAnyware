@@ -43,6 +43,21 @@ of each; any KDL tool in any language can validate against them.
   `idioms/` submodule). The §21 `category` vocabulary is enforced by that validator, not the schema
   (cf. `capability.kdl-schema`). Identity (`idiom-catalogue "<id>"`) matches the *target* directory,
   the file's grandparent (the `idioms/docs/` home forces the extra `idioms/` level).
+- **`policy.kdl-schema`** — the §23 per-platform projection policy
+  (`targets/<t>/policies/<platform>/projection.apiw`): the authored `choice`s mapping a projection
+  `concern` (an open token) to a point on the §24 direct-call-vs-adapter `spectrum` (the closed
+  `SpectrumPoint` ladder, a schema `enum`). Projection-bearing → lives in `targets/`, never
+  `platforms/` (the domain rule). Workstream 6 (`policy-adapter-k54`); validated by
+  `apianyware-target-model` (the `policy/` submodule). Identity matches the *target* directory (the
+  file's great-grandparent) and `platform` the parent directory.
+- **`adapter-spec.kdl-schema`** — the §24–§26 per-platform native adapter spec
+  (`targets/<t>/adapters/<platform>/spec.apiw`): the authored description of the target's *existing*
+  adapter dylib — its `output`, the §26 adapter `role`s + runtime `service`s it provides (each
+  service rated by the closed `ServiceStatus` enum), and the §26 `direct-call-policy` (`allow`/`deny`
+  categories). Documents the existing library (built by the target grove), it does not redesign the
+  §25 ABI. Workstream 6 (`policy-adapter-k54`); validated by `apianyware-target-model` (the
+  `adapter_spec/` submodule). The §26 `role` + `service` vocabularies are enforced by that validator,
+  not the schema (REFACTOR §26 calls them "suggested" extensible lists; cf. `capability.kdl-schema`).
 
 The Rust `apianyware-spec-format` crate is *one conforming validator* of this contract (its
 `validate_apiw` step embeds this file); any KDL tool in any language can validate an `.apiw` file

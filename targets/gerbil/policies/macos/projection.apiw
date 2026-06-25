@@ -1,0 +1,30 @@
+// The gerbil macOS projection policy (REFACTOR §23; structural-refactoring grove ws6,
+// policy-adapter-k54). Contract: schemas/spec-format/policy.kdl-schema.
+// Choices grounded in CONTEXT.md "Gerbil target toolchain"/"Gerbil native binding mechanism"
+// (ADRs 0017/0020/0021/0022/0029) + the trampoline-only dylib. Note: gerbil's callback
+// adaptation lives in its gsc ObjC home (native_block.c), NOT the trampoline-only dylib.
+projection-policy "gerbil" {
+    platform "macos"
+    doc "Gerbil's macOS projection: direct ObjC dispatch via define-c-lambda in gsc, a strictly trampoline-only dylib for the Swift-native residual, callbacks in the gsc ObjC home."
+    posture "thin-direct"
+    choice "directly-reachable-objc" {
+        spectrum "direct-call"
+        doc "objc_msgSend dispatch is open-coded by :std/foreign define-c-lambda in gsc-compiled Gerbil (ADR-0017, compiled-FFI) — the dylib is not in that path."
+    }
+    choice "swift-native-async" {
+        spectrum "adapter-call-plus-wrapper"
+        doc "AsyncBridge's completion-callback trampoline (ADR-0029/0030), wrapped by runtime/swift-trampoline.ss; the callback fires on the main thread via the ADR-0022 bounce."
+    }
+    choice "swift-native-throws" {
+        spectrum "adapter-call-plus-wrapper"
+        doc "ThrowsBridge's trailing NSError** out-param, wrapped by runtime/swift-trampoline.ss's aw-swift-call/error."
+    }
+    choice "swift-native-value-return" {
+        spectrum "adapter-call"
+        doc "Non-bridged Swift values cross as OpaqueHandle boxes (ADR-0029); a bound ObjC object is instead handed back raw and wrapped Scheme-side via the ADR-0020 registry, never boxed."
+    }
+    choice "escaping-callback" {
+        spectrum "adapter-call"
+        doc "Blocks/delegates are built by native_block.c in gerbil's gsc ObjC home (ADR-0022 main-thread bounce) — NOT this trampoline-only dylib (the second ObjC home lived in gsc, ADR-0029)."
+    }
+}

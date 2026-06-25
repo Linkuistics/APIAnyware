@@ -1,0 +1,62 @@
+// The racket macOS adapter spec (REFACTOR §24-§26; structural-refactoring grove ws6,
+// policy-adapter-k54). Contract: schemas/spec-format/adapter-spec.kdl-schema.
+// Documentation of the EXISTING APIAnywareRacket dylib (adapters/macos/sources/, built by the
+// racket target grove) — roles/services classified from those sources; no ABI redesign.
+adapter-spec "racket" {
+    platform "macos"
+    doc "The APIAnywareRacket native adapter dylib — Swift-native trampolines + callback/marshalling bridges over directly-dispatched ObjC (ADR-0011 hermetic, aw_racket_ symbols)."
+    output {
+        library "APIAnywareRacket"
+        kind "dynamic-library"
+        symbol-prefix "aw_racket_"
+    }
+    role "callback-adapter" {
+        doc "BlockBridge (ObjC blocks from _cprocedure pointers) + DelegateBridge (dynamic ObjC class + per-instance IMP dispatch) + ObservationBridge (Swift Observation → C)."
+    }
+    role "thread-adapter" {
+        doc "AsyncBridge: the async→completion-callback trampoline, hopping to the main thread (MainActor.run) before the _cprocedure callback (which SIGILLs off-main)."
+    }
+    role "error-adapter" {
+        doc "ThrowsBridge: marshal a thrown Swift Error to a retained NSError* through a trailing out-buffer, mirroring the ObjC dispatch err_write convention."
+    }
+    role "lifetime-adapter" {
+        doc "MemoryManagement (ObjC retain/release) + GCPrevention (root _cprocedure closures against Racket GC) + AutoreleasePool (push/pop)."
+    }
+    role "generic-erasure-adapter" {
+        doc "OpaqueHandle: non-bridged Swift values (structs, payload enums, tuples, existentials, opaque returns) boxed as opaque pointers (one rep, one free)."
+    }
+    role "collection-adapter" {
+        doc "CollectionMarshal: batched list/dict/set ⇄ Foundation marshalling — one native call per collection (Depth-2)."
+    }
+    role "buffer-adapter" {
+        doc "StringConversion (NSString ⇄ UTF-8) + StructMarshal (geometry struct pack/unpack into byte buffers)."
+    }
+    role "reflection-adapter" {
+        doc "ClassLookup: ObjC class + selector lookup (NSClassFromString / sel_registerName)."
+    }
+    role "utility-adapter" {
+        doc "RacketFFI: racket-specific FFI helpers binding the absorbed substrate under the aw_racket_ namespace."
+    }
+    service "callback-registry" {
+        status "required"
+        doc "GCPrevention roots live _cprocedure closures against the Racket GC while ObjC holds them (prevent_gc / allow_gc / gc_count)."
+    }
+    service "main-thread-dispatch" {
+        status "required"
+        doc "AsyncBridge hops via MainActor.run so the callback fires on the main thread under nsapplication-run."
+    }
+    service "autorelease-pool-management" {
+        status "required"
+        doc "AutoreleasePool push/pop via objc_autoreleasePoolPush/Pop."
+    }
+    direct-call-policy {
+        allow "directly-reachable-objc" {
+            doc "objc_msgSend dispatch via ffi/unsafe/objc — trampoline-elided; the adapter is not in the path."
+        }
+        deny "swift-native-async" { doc "needs the AsyncBridge trampoline + main-thread hop." }
+        deny "swift-native-throws" { doc "needs the ThrowsBridge out-param convention." }
+        deny "swift-native-value-return" { doc "needs OpaqueHandle boxing." }
+        deny "escaping-callback" { doc "blocks/delegates need the bridge + GC rooting." }
+        deny "kvo-observation" { doc "needs ObservationBridge." }
+    }
+}

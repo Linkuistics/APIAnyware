@@ -1,0 +1,43 @@
+// The sbcl macOS adapter spec (REFACTOR §24-§26; structural-refactoring grove ws6,
+// policy-adapter-k54). Contract: schemas/spec-format/adapter-spec.kdl-schema.
+// Documentation of the EXISTING libAPIAnywareSbcl dylib (adapters/macos/sources/, built by the
+// sbcl target grove) — the SOLE native compilation unit (ADR-0038): broader than gerbil's
+// because a Lisp compiles neither ObjC nor Swift inline. No ABI redesign.
+adapter-spec "sbcl" {
+    platform "macos"
+    doc "libAPIAnywareSbcl — SBCL's sole native compilation unit (ADR-0038): Swift-native trampolines + the foreign→main bounce + the subclass-IMP installer, over directly-dispatched ObjC (ADR-0011 hermetic, aw_sbcl_ symbols). The MOP object model stays in Lisp."
+    output {
+        library "APIAnywareSbcl"
+        kind "dynamic-library"
+        symbol-prefix "aw_sbcl_"
+    }
+    role "thread-adapter" {
+        doc "AsyncBridge (async→completion trampoline, MainActor.run) + CallbackBounce (the ADR-0035 spine: foreign OS threads must never run Lisp, so every off-main callback bounces to main via dispatch_sync)."
+    }
+    role "callback-adapter" {
+        doc "BlockBridge: a Lisp closure projected as ONE universal ObjC block (token-less), bouncing foreign→main in the block body before any Lisp runs."
+    }
+    role "error-adapter" {
+        doc "ThrowsBridge: marshal a thrown Swift Error to a retained NSError* through a trailing out-buffer; the runtime's signal-cocoa-error serves both this and the direct NSError** path (ADR-0037)."
+    }
+    role "generic-erasure-adapter" {
+        doc "OpaqueHandle: non-bridged Swift values boxed as opaque pointers; a bound ObjC object is instead wrapped to its CLOS class via the ADR-0034 MOP registry, never boxed."
+    }
+    role "reflection-adapter" {
+        doc "SubclassSynth: install a reflective NSInvocation-forwarding IMP on a synthesized ObjC subclass (ADR-0034 §5) — one trampoline, not a per-signature shim — bouncing foreign→main before the Lisp handler."
+    }
+    service "main-thread-dispatch" {
+        status "required"
+        doc "CallbackBounce (uniform dispatch_sync) + AsyncBridge (MainActor.run): the ADR-0035 spine — foreign threads running Lisp under GC pressure crashed 5/5 (ENOTSUP in GC-STOP-THE-WORLD)."
+    }
+    direct-call-policy {
+        allow "directly-reachable-objc" {
+            doc "objc_msgSend dispatch is open-coded as one typed sb-alien signature per method ABI (ADR-0015) — the dylib is not in the path."
+        }
+        deny "swift-native-async" { doc "needs the AsyncBridge trampoline + the main-thread bounce." }
+        deny "swift-native-throws" { doc "needs the ThrowsBridge out-param convention." }
+        deny "swift-native-value-return" { doc "needs OpaqueHandle boxing." }
+        deny "escaping-callback" { doc "blocks need BlockBridge + the foreign→main bounce." }
+        deny "objc-subclass-override" { doc "overridden selectors need the SubclassSynth forwarding IMP + bounce." }
+    }
+}

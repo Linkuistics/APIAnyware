@@ -109,6 +109,52 @@ pub const IDIOM_CATEGORIES: &[&str] = &[
     "unsafe-escape-hatch",
 ];
 
+/// REFACTOR §26 **adapter roles** — the controlled set of roles an authored adapter
+/// spec (`targets/<t>/adapters/<platform>/spec.apiw`; child `policy-adapter-k54`)
+/// classifies each native-adapter function by.
+///
+/// Like the §21 idiom categories and §20 capability dimensions above (and unlike the
+/// closed, code-bound [`Representability`](crate::derive::Representability) /
+/// [`EmitConstruct`](crate::idioms::EmitConstruct) ladders), this is a domain
+/// **vocabulary** the focused validator enforces — REFACTOR §26 calls them "*suggested*
+/// roles", an explicitly extensible list that grows with each platform/target pair, so a
+/// closed schema `enum` would fight every new adapter. Kept in lockstep with REFACTOR.md
+/// §26; [`is_valid_adapter_role`] is the membership check. The spec spells them with
+/// underscores (`callback_adapter`); the `.apiw` token convention is kebab-case (the same
+/// normalization §30 weirdness / §21 categories apply to their spec spellings).
+pub const ADAPTER_ROLES: &[&str] = &[
+    "direct-forwarder",
+    "semantic-adapter",
+    "utility-adapter",
+    "lifetime-adapter",
+    "callback-adapter",
+    "thread-adapter",
+    "error-adapter",
+    "buffer-adapter",
+    "collection-adapter",
+    "generic-erasure-adapter",
+    "reflection-adapter",
+    "test-probe",
+];
+
+/// REFACTOR §26 **runtime services** — the controlled set of services an authored adapter
+/// spec declares its native library provides (`service "<name>" { status … }`), each rated
+/// by a [`ServiceStatus`](crate::adapter_spec::ServiceStatus).
+///
+/// A §26 "*suggested*" extensible list, enforced as a validator vocabulary in lockstep with
+/// REFACTOR.md §26 (the same reasoning as [`ADAPTER_ROLES`]); [`is_valid_runtime_service`]
+/// is the membership check. Kebab-cased from the spec's underscore spelling
+/// (`object_registry` → `object-registry`).
+pub const RUNTIME_SERVICES: &[&str] = &[
+    "object-registry",
+    "callback-registry",
+    "subscription-registry",
+    "main-thread-dispatch",
+    "autorelease-pool-management",
+    "error-registry",
+    "test-instrumentation",
+];
+
 /// The two faces of a capability profile (REFACTOR §20 — D2's "two profile faces"):
 /// the per-API *semantic* face that feeds representability, and the *app-form* face
 /// that feeds per-app-kind feasibility. The face fixes which controlled vocabulary a
@@ -149,6 +195,18 @@ pub fn is_valid_dimension(face: Face, dimension: &str) -> bool {
 /// the membership check the idiom-catalogue validator runs on each `idiom "<category>"`.
 pub fn is_valid_idiom_category(category: &str) -> bool {
     IDIOM_CATEGORIES.contains(&category)
+}
+
+/// Whether `role` is a member of the REFACTOR §26 [`ADAPTER_ROLES`] vocabulary — the
+/// membership check the adapter-spec validator runs on each `role "<role>"`.
+pub fn is_valid_adapter_role(role: &str) -> bool {
+    ADAPTER_ROLES.contains(&role)
+}
+
+/// Whether `service` is a member of the REFACTOR §26 [`RUNTIME_SERVICES`] vocabulary — the
+/// membership check the adapter-spec validator runs on each `service "<service>"`.
+pub fn is_valid_runtime_service(service: &str) -> bool {
+    RUNTIME_SERVICES.contains(&service)
 }
 
 /// The **semantic** capability dimension a §30 source-weirdness `tag` demands, or
@@ -309,6 +367,44 @@ mod tests {
             assert!(is_valid_idiom_category(c), "`{c}` is a §21 category");
         }
         assert!(!is_valid_idiom_category("definitely-not-a-21-category"));
+    }
+
+    /// The §26 adapter-role vocabulary is the 12 REFACTOR §26 roles, and a token outside
+    /// it is rejected. (Lockstep guard: the count is asserted so a §26 revision that edits
+    /// the list without updating REFACTOR — or vice versa — trips here.)
+    #[test]
+    fn adapter_roles_are_the_12_section_26_roles() {
+        assert_eq!(
+            ADAPTER_ROLES.len(),
+            12,
+            "REFACTOR §26 lists 12 adapter roles"
+        );
+        for r in ["direct-forwarder", "callback-adapter", "test-probe"] {
+            assert!(is_valid_adapter_role(r), "`{r}` is a §26 adapter role");
+        }
+        assert!(!is_valid_adapter_role("teleport-adapter"));
+    }
+
+    /// The §26 runtime-service vocabulary is the 7 REFACTOR §26 services, and a token
+    /// outside it is rejected.
+    #[test]
+    fn runtime_services_are_the_7_section_26_services() {
+        assert_eq!(
+            RUNTIME_SERVICES.len(),
+            7,
+            "REFACTOR §26 lists 7 runtime services"
+        );
+        for s in [
+            "object-registry",
+            "main-thread-dispatch",
+            "test-instrumentation",
+        ] {
+            assert!(
+                is_valid_runtime_service(s),
+                "`{s}` is a §26 runtime service"
+            );
+        }
+        assert!(!is_valid_runtime_service("teleport-registry"));
     }
 
     /// The canonical map entry from the design (CONTEXT.md / node-brief D2).

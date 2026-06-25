@@ -1,0 +1,29 @@
+// The chez macOS projection policy (REFACTOR §23; structural-refactoring grove ws6,
+// policy-adapter-k54). Contract: schemas/spec-format/policy.kdl-schema.
+// Choices grounded in CONTEXT.md "Language" + the chez FFI/lifetime/threading ADRs
+// (0007/0009/0015/0016/0027) + the shipped adapter bridges.
+projection-policy "chez" {
+    platform "macos"
+    doc "Chez's macOS projection: direct ObjC dispatch as a typed foreign-procedure per call site, the APIAnywareChez adapter only for the Swift-native residual + callbacks."
+    posture "thin-direct"
+    choice "directly-reachable-objc" {
+        spectrum "direct-call"
+        doc "objc_msgSend dispatch stays in Scheme as a typed foreign-procedure per call site (ADR-0015, compiled-FFI) — the native library is not in that path."
+    }
+    choice "swift-native-async" {
+        spectrum "adapter-call-plus-wrapper"
+        doc "AsyncBridge's completion-callback trampoline (ADR-0030 addendum), wrapped by the seam that fires the callback on the main thread."
+    }
+    choice "swift-native-throws" {
+        spectrum "adapter-call-plus-wrapper"
+        doc "ThrowsBridge's trailing NSError** out-param, wrapped by runtime/swift-trampoline.sls's aw-call/error (allocate cell, check, release +1, raise)."
+    }
+    choice "swift-native-value-return" {
+        spectrum "adapter-call"
+        doc "Non-bridged Swift values cross as OpaqueHandle boxes (ADR-0027 ported to chez)."
+    }
+    choice "escaping-callback" {
+        spectrum "adapter-call"
+        doc "Blocks (BlockBridge) and delegate classes (DelegateBridge) are built natively from foreign-callable pointers; the Scheme side roots the code object via lock-object."
+    }
+}

@@ -1,0 +1,33 @@
+// The sbcl macOS projection policy (REFACTOR §23; structural-refactoring grove ws6,
+// policy-adapter-k54). Contract: schemas/spec-format/policy.kdl-schema.
+// Choices grounded in CONTEXT.md "SBCL target toolchain" + the MOP/lifetime/threading/
+// trampoline ADRs (0015/0033/0034/0035/0037/0038) + libAPIAnywareSbcl (the sole native unit).
+projection-policy "sbcl" {
+    platform "macos"
+    doc "SBCL's macOS projection: direct objc_msgSend via sb-alien, libAPIAnywareSbcl (the sole native unit) for the Swift-native residual + the foreign→main bounce + subclass IMPs."
+    posture "thin-direct"
+    choice "directly-reachable-objc" {
+        spectrum "direct-call"
+        doc "objc_msgSend dispatch is open-coded as one typed sb-alien signature per method ABI (ADR-0015, compiled-FFI) — the dylib is not in that path."
+    }
+    choice "swift-native-async" {
+        spectrum "adapter-call-plus-wrapper"
+        doc "AsyncBridge's completion-callback trampoline (ADR-0038), wrapped so the callback bounces to the main thread (ADR-0035) — foreign threads running Lisp are catastrophic for SBCL under GC."
+    }
+    choice "swift-native-throws" {
+        spectrum "adapter-call-plus-wrapper"
+        doc "ThrowsBridge's trailing NSError** out-param, wrapped by the runtime's aw-with-error-cell / signal-cocoa-error (ADR-0037)."
+    }
+    choice "swift-native-value-return" {
+        spectrum "adapter-call"
+        doc "Non-bridged Swift values cross as OpaqueHandle boxes (ADR-0038); a bound ObjC object is instead handed back raw and wrapped to its CLOS class via the ADR-0034 MOP registry, never boxed."
+    }
+    choice "escaping-callback" {
+        spectrum "adapter-call"
+        doc "A Lisp closure is projected as an ObjC block by BlockBridge (one universal block); the block body bounces foreign→main via CallbackBounce before any Lisp runs (ADR-0035)."
+    }
+    choice "objc-subclass-override" {
+        spectrum "adapter-call"
+        doc "A define-objc-subclass override installs a reflective NSInvocation-forwarding IMP (SubclassSynth, ADR-0034 §5) that bounces foreign→main before dispatching to the Lisp handler."
+    }
+}

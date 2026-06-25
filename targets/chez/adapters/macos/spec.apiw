@@ -1,0 +1,58 @@
+// The chez macOS adapter spec (REFACTOR §24-§26; structural-refactoring grove ws6,
+// policy-adapter-k54). Contract: schemas/spec-format/adapter-spec.kdl-schema.
+// Documentation of the EXISTING APIAnywareChez dylib (adapters/macos/sources/, built by the
+// chez target grove) — roles/services classified from those sources; no ABI redesign.
+adapter-spec "chez" {
+    platform "macos"
+    doc "The APIAnywareChez native adapter dylib — Swift-native trampolines + callback bridges + the absorbed ObjC runtime primitives, over directly-dispatched ObjC (ADR-0011 hermetic, aw_chez_ symbols)."
+    output {
+        library "APIAnywareChez"
+        kind "dynamic-library"
+        symbol-prefix "aw_chez_"
+    }
+    role "callback-adapter" {
+        doc "BlockBridge (ObjC blocks from foreign-callable pointers) + DelegateBridge (dynamic ObjC class + per-instance dispatch)."
+    }
+    role "thread-adapter" {
+        doc "AsyncBridge: the async→completion-callback trampoline, hopping to the main thread (MainActor.run) before the Scheme callback."
+    }
+    role "error-adapter" {
+        doc "ThrowsBridge: marshal a thrown Swift Error to a retained NSError* through a trailing out-buffer."
+    }
+    role "lifetime-adapter" {
+        doc "ChezRuntime (ObjC retain/release + autorelease pool) + GCPrevention (Swift-side block dispose accounting)."
+    }
+    role "generic-erasure-adapter" {
+        doc "OpaqueHandle: non-bridged Swift values boxed as opaque pointers (one rep, one free)."
+    }
+    role "buffer-adapter" {
+        doc "ChezRuntime: NSString ⇄ UTF-8 conversion."
+    }
+    role "reflection-adapter" {
+        doc "ChezRuntime: ObjC class + selector lookup (NSClassFromString / sel_registerName)."
+    }
+    role "utility-adapter" {
+        doc "ChezFFI: chez-specific FFI helpers binding the self-contained native surface under the aw_chez_ namespace."
+    }
+    service "callback-registry" {
+        status "parity"
+        doc "GCPrevention's @_cdecl exports are kept for cross-target parity but the chez runtime uses Scheme-side lock-object instead; the Swift-side BlockBridge drives the registry internally for async dispose accounting."
+    }
+    service "main-thread-dispatch" {
+        status "required"
+        doc "AsyncBridge hops via MainActor.run so the callback fires on the main thread."
+    }
+    service "autorelease-pool-management" {
+        status "required"
+        doc "ChezRuntime autorelease pool push/pop (absorbed from the former APIAnywareCommon)."
+    }
+    direct-call-policy {
+        allow "directly-reachable-objc" {
+            doc "objc_msgSend dispatch stays in Scheme as a typed foreign-procedure per call site (ADR-0015) — the adapter is not in the path."
+        }
+        deny "swift-native-async" { doc "needs the AsyncBridge trampoline + main-thread hop." }
+        deny "swift-native-throws" { doc "needs the ThrowsBridge out-param convention." }
+        deny "swift-native-value-return" { doc "needs OpaqueHandle boxing." }
+        deny "escaping-callback" { doc "blocks/delegates need the bridge + lock-object rooting." }
+    }
+}

@@ -39,8 +39,19 @@
 //!   consumes, their parser, focused validator, and registry. The §21 idiom *categories*
 //!   are a controlled vocab in [`vocab`]. *(Child `idioms-k53`.)*
 //!
-//! Later ws6 children add `policy/`, `adapter_spec/`, and `conformance/` submodules
-//! (extending `derive` with conformance-coverage derivation) to **this same crate**.
+//! - [`policy`] — the §23 per-platform **projection policy**
+//!   (`policies/<platform>/projection.apiw`): the authored choices mapping a projection
+//!   concern to a point on the §24 direct-call-vs-adapter spectrum (the closed
+//!   [`SpectrumPoint`](policy::SpectrumPoint)), their parser, focused validator, and registry.
+//!   *(Child `policy-adapter-k54`.)*
+//! - [`adapter_spec`] — the §24–§26 per-platform **adapter spec**
+//!   (`adapters/<platform>/spec.apiw`): the authored description of the target's *existing*
+//!   native adapter library — its `output`, the §26 roles + services it provides, and the §26
+//!   direct-call policy — their parser, focused validator, and registry. The §26 role +
+//!   service *vocabularies* are in [`vocab`]. *(Child `policy-adapter-k54`.)*
+//!
+//! Later ws6 children add the `conformance/` submodule (extending `derive` with
+//! conformance-coverage derivation) to **this same crate**.
 //!
 //! Each entity follows the three-layer validation the platform-model crates
 //! established (ADR-0046 §3): **structural** against a language-neutral
@@ -50,13 +61,19 @@
 //! directory). The Rust types are *one* conforming implementation of the schema, not
 //! its source of truth; **ws8** owns the *machine* JSON Schema + validation tooling/CI.
 
+pub mod adapter_spec;
 pub mod capability;
 pub mod derive;
 pub mod descriptor;
 pub mod error;
 pub mod idioms;
+pub mod policy;
 pub mod vocab;
 
+pub use adapter_spec::{
+    parse_adapter_spec, validate_adapter_spec, AdapterOutput, AdapterRole, AdapterSpec,
+    AdapterSpecRegistry, DirectCallPolicy, DirectCallRule, RuntimeService, ServiceStatus,
+};
 pub use capability::{
     parse_capability, validate_capability, CapabilityEntry, CapabilityProfile, CapabilityRegistry,
 };
@@ -69,4 +86,11 @@ pub use idioms::{
     parse_idioms, validate_idioms, EmitConstruct, Idiom, IdiomCatalogue, IdiomCatalogueRegistry,
     Projection,
 };
-pub use vocab::{capability_for, is_valid_dimension, is_valid_idiom_category, Face};
+pub use policy::{
+    parse_policy, validate_policy, ProjectionChoice, ProjectionPolicy, ProjectionPolicyRegistry,
+    SpectrumPoint,
+};
+pub use vocab::{
+    capability_for, is_valid_adapter_role, is_valid_dimension, is_valid_idiom_category,
+    is_valid_runtime_service, Face,
+};

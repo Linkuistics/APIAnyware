@@ -1386,21 +1386,43 @@ generation this grove (goldens move — deferred); a target-neutral catalogue (e
 its own idioms — the maximize-idiom rule); putting the `EmitConstruct` taxonomy in `emit` (it is
 authored target-model data — `emit` depends on `target-model`, never the reverse).
 
-**Projection policy** _(`targets/<t>/policies/<platform>/*.apiw`; authored; §23)_:
-The per-platform projection *choices* a target makes — e.g. `safe-adapter` vs `thin-direct`
-(§24's direct-call-vs-adapter spectrum). Projection-bearing → lives in `targets/`, never
-`platforms/`. Authored, since it is a target-policy decision (the racket trampoline-elision
-posture, the sbcl direct-msgSend + sole-native-unit posture).
-_Avoid_: `policies/*.yaml` (YAML dead); any projection statement leaking into `platforms/`.
+**Projection policy** _(`targets/<t>/policies/<platform>/projection.apiw`; authored; §23; child `policy-adapter-k54`)_:
+The per-platform projection *choices* a target makes — "how to map source semantics into target
+idioms". **One file per platform** (`policies/macos/projection.apiw`, the idioms-style one-file
+partition — the `*.apiw` glob stays open for a future second concern, added lazily). Each
+`choice "<concern>"` maps a projection **concern** (an *open* source-shape token —
+`directly-reachable-objc`, `swift-native-async`, `escaping-callback`, … — validator-checked for
+per-policy uniqueness, no fixed §-vocabulary) to a `spectrum` rung on the closed **§24
+direct-call-vs-adapter ladder** (`SpectrumPoint`: `direct-call` > `direct-call-plus-wrapper` >
+`adapter-call` > `adapter-call-plus-wrapper` > `unsafe-escape-hatch` > `unsupported-marker` — a
+schema `enum`, like the rung ladder, not a vocab). An optional `posture` echoes the descriptor
+facet; all four live targets are `thin-direct` (directly-reachable ObjC → `direct-call`, the
+trampoline-elision limit; the Swift-native residual → adapter). Projection-bearing → lives in
+`targets/`, never `platforms/`. Identity: `projection-policy "<id>"` = the target dir (the file's
+**great-grandparent**), `platform` = the parent dir.
+_Avoid_: `policies/*.yaml` (YAML dead); any projection statement leaking into `platforms/`;
+splitting into multiple files before a second policy concern exists (lazy).
 
-**Adapter spec** _(`targets/<t>/adapters/<platform>/spec.apiw`; authored; §24–26)_:
+**Adapter spec** _(`targets/<t>/adapters/<platform>/spec.apiw`; authored; §24–26; child `policy-adapter-k54`)_:
 The authored description of the *existing* native adapter library (`adapters/<platform>/sources/`,
-already built) — the §26 adapter **roles** required (`direct_forwarder`, `callback_adapter`,
-`thread_adapter`, …), the §26 runtime services (`object_registry`/`callback_registry`/
-`main_thread_dispatch`/`autorelease_pool_management`/…), and the §26 direct-call policy. The
-*spec* is ws6's authored layer; the adapter *code* was built by the target grove.
+already built — the spec sits beside the `sources/` it documents). Carries the §24 `output` (the
+dylib `library` name + `kind` + `symbol-prefix` — `APIAnywareRacket`/`aw_racket_`, …), the §26
+adapter **roles** the library provides (`direct-forwarder`/`callback-adapter`/`thread-adapter`/… —
+`ADAPTER_ROLES`, 12 tokens), the §26 runtime **services** it offers (`object-registry`/
+`callback-registry`/`main-thread-dispatch`/`autorelease-pool-management`/… — `RUNTIME_SERVICES`, 7
+tokens), and the §26 **direct-call policy** (`allow`/`deny` API-category lists, validator-checked
+disjoint). Roles + services are **validator vocabularies** kebab-cased from §26's "*suggested*"
+extensible underscore lists (not schema enums — §26 grows per target/platform pair); each service
+is rated by the closed **`ServiceStatus`** enum (`required` / `parity` / `optional` — e.g. chez's
+`callback-registry` is `parity`: exported for cross-target parity, but chez's runtime uses
+Scheme-side `lock-object` instead). Per-target richness reflects the real library: racket carries 9
+roles, gerbil is **trampoline-only** (3 roles — its callback adaptation lives in the gsc ObjC home,
+not this dylib), sbcl carries `reflection-adapter` (SubclassSynth) alone. The *spec* is ws6's
+authored layer; the adapter *code* was built by the target grove. Identity: `adapter-spec "<id>"` =
+the target dir (the file's **great-grandparent**), `platform` = the parent dir.
 _Avoid_: authoring adapter *code* here (it exists); a §25 ABI redesign (the adapters ship a
-working ABI — the spec documents it).
+working ABI — the spec documents it); claiming a role/service the target's dylib does not actually
+ship (documentation-of-the-existing, grounded in the `sources/` survey).
 
 **Conformance report** _(`targets/<t>/conformance/<platform>.apiw` + derived; §37)_:
 The §37 per-target×platform report — **authored *judgment* slice** (`unsupported` features,

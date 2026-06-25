@@ -1,0 +1,231 @@
+// adapter-spec.kdl-schema — the authoritative, language-neutral contract for an authored
+// **adapter spec** `.apiw` file (`structural-refactoring` grove, workstream 6; node-brief
+// decision D1, child `policy-adapter-k54`).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring the
+// siblings `policy.kdl-schema` / `idioms.kdl-schema` / `capability.kdl-schema` /
+// `target.kdl-schema` (the other target-model entities). Any KDL tool in any language can
+// validate or consume an adapter spec. The Rust `apianyware-target-model` crate is ONE
+// conforming validator of this contract, not its source of truth (ADR-0046 §3).
+//
+// SCOPE — the REFACTOR §24–§26 native adapter spec: the authored description of the *existing*
+// native adapter library (`targets/<id>/adapters/<platform>/sources/`, already built by the
+// target grove). It states the library `output` (the dylib/product), the §26 adapter ROLES it
+// provides, the §26 runtime SERVICES it offers (each with a status), and the §26 direct-call
+// POLICY (which API categories may bypass the adapter vs must route through it). The *spec* is
+// ws6's authored layer; the adapter *code* was built by the target grove — this documents the
+// existing library, it does not redesign the §25 ABI.
+//
+// IDENTITY — each target authors one spec per platform at
+// `targets/<id>/adapters/<platform>/spec.apiw`; the `adapter-spec "<id>"` value is the
+// target's stable identity and matches the TARGET directory (the conventional short name —
+// `racket`, `chez`, `gerbil`, `sbcl`, the same id its sibling `target.apiw` carries). The file
+// lives two levels deeper (under `adapters/<platform>/`, beside the `sources/` it describes),
+// so the conforming loader checks the id against the file's GREAT-grandparent and the
+// `platform` value against its parent directory.
+//
+// CONTROLLED VOCABULARY — the `role` and `service` tokens are the REFACTOR §26 roles +
+// services. REFACTOR §26 calls these "*suggested*" extensible lists (they grow with each
+// platform/target pair), so — like the §21 idiom categories and §20 capability dimensions, and
+// UNLIKE the closed `SpectrumPoint` / `rung` ladders — they are NOT schema enums: the
+// conforming `apianyware-target-model` validator enforces membership + uniqueness against its
+// in-lockstep §26 vocabulary. Keep that vocabulary in lockstep with REFACTOR.md §26. The
+// service `status` IS a closed schema `enum` (the `ServiceStatus` taxonomy — required / parity
+// / optional). The direct-call `allow`/`deny` category tokens are open strings (no fixed
+// vocabulary; the validator checks a category is not both allowed and denied).
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE CARDINALITY in a
+// `value {…}` body (KDL Schema convention). `other-nodes-allowed` / `other-props-allowed`
+// default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware native adapter spec (.apiw)" lang="en"
+        description "The REFACTOR §24–§26 adapter spec: the authored description of an existing per-target native adapter library — its output dylib, the §26 adapter roles it provides, the §26 runtime services it offers (each with a status), and the §26 direct-call policy (which API categories may bypass the adapter vs must route through it). Documents the existing library (built by the target grove), it does not redesign the §25 ABI. Target-model knowledge under targets/." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 6 (target model, policy-adapter-k54)"
+    }
+
+    // Exactly one top-level `adapter-spec "<id>"` node per file. The id is the target's stable
+    // identity and matches its target directory (`targets/<id>/`, e.g. "racket"); the
+    // conforming loader checks this against the file's great-grandparent.
+    node "adapter-spec" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // The platform this adapter targets (`macos`, …). Required; exactly one; the
+            // conforming loader checks it matches the file's parent directory.
+            node "platform" {
+                min 1
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The library this adapter compiles to (REFACTOR §24 output). Required; exactly
+            // one.
+            node "output" {
+                min 1
+                max 1
+                children {
+                    // The product/library name (`APIAnywareRacket`, …). Required.
+                    node "library" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                    // The library kind (`dynamic-library`, …). Required; an open token (a
+                    // future target may ship a static library or embed into an executable).
+                    node "kind" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                    // The exported-symbol prefix the runtime resolves against
+                    // (`aw_racket_`, …; ADR-0011 hermetic naming). Optional.
+                    node "symbol-prefix" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+
+            // One node per §26 adapter role the library provides. Zero or more (a
+            // trampoline-only adapter provides few). The positional value is the §26 role
+            // token (the validator checks membership + per-spec uniqueness, NOT a schema
+            // enum).
+            node "role" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    // What the role covers in this library (typically naming the source
+                    // files). Optional one-line note.
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+
+            // One node per §26 runtime service the library offers. Zero or more. The
+            // positional value is the §26 service token (validator-checked vocabulary +
+            // uniqueness).
+            node "service" {
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+                children {
+                    // How the service relates to the target's runtime. Required; exactly one;
+                    // the closed `ServiceStatus` taxonomy. `required` — load-bearing, the
+                    // target's runtime links it; `parity` — exported for cross-target parity
+                    // but this target's runtime does not link it (it satisfies the need
+                    // another way); `optional` — provided, opt-in.
+                    node "status" {
+                        min 1
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                            enum "required" "parity" "optional"
+                        }
+                    }
+                    // What the service does in this library. Optional one-line note.
+                    node "doc" {
+                        max 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                    }
+                }
+            }
+
+            // The §26 direct-call policy: which API categories may be called directly
+            // (bypassing the adapter, when safe and useful) vs must route through it.
+            // Optional; at most one.
+            node "direct-call-policy" {
+                max 1
+                children {
+                    // An API category safe to call directly (the adapter need not mediate
+                    // it). Zero or more. The positional value is an open category token (the
+                    // validator checks a category is not both allowed and denied).
+                    node "allow" {
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        children {
+                            node "doc" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                    // An API category that must route through the adapter. Zero or more.
+                    node "deny" {
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        children {
+                            node "doc" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
