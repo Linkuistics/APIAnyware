@@ -1,0 +1,110 @@
+// The chez capability profile (REFACTOR §20; structural-refactoring grove ws6,
+// capability-k52). Contract: schemas/spec-format/capability.kdl-schema.
+// Platform-INDEPENDENT (describes the chez-scheme implementation); the macOS
+// representability status is DERIVED from this profile + the platform §30 weirdness.
+// Rungs grounded in CONTEXT.md "Language" + the chez lifetime/threading ADRs
+// (0007 guardian, 0016 thread activation).
+capability "chez" {
+    doc "Chez Scheme over foreign-procedure — a GC-managed, complete-API binding whose distinguishing strength is genuine foreign-thread ACTIVATION (ADR-0016), not a main-thread bounce."
+
+    // Per-API semantic capabilities — feed the derived representability status.
+    semantic {
+        dimension "deterministic-cleanup" {
+            rung "idiomatic-conventional"
+            doc "No RAII; deterministic release is a convention (dynamic-wind / with-* brackets), with the guardian as GC backstop (ADR-0007)."
+        }
+        dimension "finalization" {
+            rung "exact-runtime"
+            doc "The Chez guardian gives exact GC-death finalization (O(dead); ADR-0007)."
+        }
+        dimension "ownership" {
+            rung "idiomatic-conventional"
+            doc "The objc-object wrapper models ownership conventionally; no static ownership types."
+        }
+        dimension "borrowing" {
+            rung "lossy-but-documented"
+            doc "Borrowed/interior values (borrowed-until-* tags) are documented conventions, not enforced."
+        }
+        dimension "lifetime-tracking" {
+            rung "lossy-but-documented"
+            doc "Transient lifetimes are documented; nothing is tracked statically."
+        }
+        dimension "callback-support" {
+            rung "exact-runtime"
+            doc "__collect_safe foreign-callable trampolines turn Scheme procedures into ObjC callbacks (ADR-0016)."
+        }
+        dimension "escaping-callbacks" {
+            rung "exact-runtime"
+            doc "Escaping callbacks are guardian-/registry-rooted for their subscription lifetime."
+        }
+        dimension "callback-rooting" {
+            rung "exact-runtime"
+            doc "The callback registry roots procedures against GC while the ObjC side may still invoke them."
+        }
+        dimension "foreign-thread-callbacks" {
+            rung "exact-runtime"
+            doc "Chez ACTIVATES the calling foreign thread (Sactivate_thread) and runs Scheme on it directly (ADR-0016) — exact runtime support, NOT a main-thread bounce (racket/gerbil/sbcl's conventional model)."
+        }
+        dimension "thread-affinity" {
+            rung "idiomatic-conventional"
+            doc "Affinity is upheld by convention (entry-point pools, UI-only main-thread bounce), not typed."
+        }
+        dimension "main-thread-dispatch" {
+            rung "exact-runtime"
+            doc "Main-thread dispatch is an exact runtime mechanism (chez bounces to main only for AppKit UI mutation)."
+        }
+        dimension "typestate" {
+            rung "lossy-but-documented"
+            doc "No static typestate; state preconditions are documented only."
+        }
+        dimension "async-event-integration" {
+            rung "idiomatic-conventional"
+            doc "Run-loop / event integration via conventional patterns; a blocking outbound call must also be __collect_safe (ADR-0016)."
+        }
+        dimension "struct-by-value" {
+            rung "exact-runtime"
+            doc "foreign-procedure open-codes C struct-by-value (NSRect, NSPoint, …) at compile time."
+        }
+        dimension "strings" {
+            rung "exact-runtime"
+            doc "NSString ↔ Scheme string conversion is exact at runtime."
+        }
+        dimension "arrays" {
+            rung "exact-runtime"
+            doc "NSArray ↔ Scheme list/vector conversion is exact at runtime."
+        }
+        dimension "buffers" {
+            rung "idiomatic-conventional"
+            doc "Raw buffer / interior-pointer access is via foreign pointers, used by convention (two-call sizing)."
+        }
+        dimension "platform-errors" {
+            rung "exact-runtime"
+            doc "NSError**/NSException surfaced exactly as Scheme conditions at runtime."
+        }
+    }
+
+    // App-form capabilities (§36) — feed per-app-kind feasibility (child-5 conformance),
+    // not per-API representability. Refined by child-5 against the VM-verify reports.
+    app-form {
+        dimension "packaging" {
+            rung "exact-runtime"
+            doc "Boot files + the chez runtime ship as a self-contained distribution."
+        }
+        dimension "app-bundle" {
+            rung "exact-runtime"
+            doc ".app bundle built and VM-verified."
+        }
+        dimension "plugin" {
+            rung "research"
+            doc "Loadable-bundle hosting not yet established (§36 hard case)."
+        }
+        dimension "sandboxing" {
+            rung "research"
+            doc "App Sandbox entitlements not yet exercised."
+        }
+        dimension "native-runtime-embedding" {
+            rung "idiomatic-conventional"
+            doc "The native adapter + chez boot runtime can be embedded in a host process by convention."
+        }
+    }
+}

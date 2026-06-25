@@ -12,9 +12,9 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use crate::error::{Result, TargetModelError};
 use crate::descriptor::model::TargetDescriptor;
 use crate::descriptor::{apiw, schema};
+use crate::error::{Result, TargetModelError};
 
 /// The fixed file name every target descriptor carries (identity is the parent
 /// directory, not this stem).

@@ -52,7 +52,9 @@ pub enum TargetModelError {
     /// The authored id does not match its containing directory
     /// (e.g. `targets/<id>/target.apiw` whose `target "<name>"` ≠ `<id>`). Raised by
     /// the registry (the path-aware entry).
-    #[error("{entity} id `{name}` does not match its directory `{dir}` (expected `{entity} \"{dir}\"`)")]
+    #[error(
+        "{entity} id `{name}` does not match its directory `{dir}` (expected `{entity} \"{dir}\"`)"
+    )]
     #[diagnostic(code(apianyware::target_model::id_mismatch))]
     IdMismatch {
         /// The entity kind (e.g. `"target"`), for the message.

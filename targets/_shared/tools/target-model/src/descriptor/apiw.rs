@@ -38,8 +38,8 @@ use kdl::{KdlDocument, KdlNode, KdlValue};
 use miette::SourceSpan;
 use serde::de::DeserializeOwned;
 
-use crate::error::{Result, TargetModelError};
 use crate::descriptor::model::{RuntimeModel, TargetDescriptor};
+use crate::error::{Result, TargetModelError};
 
 /// Parse a `target.apiw` (KDL 2.0) document into the typed model and run the
 /// semantic checks.
@@ -116,12 +116,10 @@ impl Ctx<'_> {
                     runtime_model = Some(self.enum_arg::<RuntimeModel>(child, "runtime model")?)
                 }
                 "projection-policy" => {
-                    projection_policy =
-                        Some(self.required_string_arg(child, "projection-policy")?)
+                    projection_policy = Some(self.required_string_arg(child, "projection-policy")?)
                 }
                 "adapter-strategy" => {
-                    adapter_strategy =
-                        Some(self.required_string_arg(child, "adapter-strategy")?)
+                    adapter_strategy = Some(self.required_string_arg(child, "adapter-strategy")?)
                 }
                 other => {
                     return Err(
@@ -134,8 +132,7 @@ impl Ctx<'_> {
         Ok(TargetDescriptor {
             id,
             doc,
-            family: family
-                .ok_or_else(|| self.err(node.span(), "target is missing `family`"))?,
+            family: family.ok_or_else(|| self.err(node.span(), "target is missing `family`"))?,
             dialect,
             implementation: implementation
                 .ok_or_else(|| self.err(node.span(), "target is missing `implementation`"))?,

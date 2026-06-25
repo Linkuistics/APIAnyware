@@ -23,6 +23,17 @@ of each; any KDL tool in any language can validate against them.
   validated by `apianyware-platform-tests` (sibling family of `app-kind-tests`, same crate). The
   facet-conditional §30 `weirdness` vocabulary is enforced by that validator, not the schema (the
   KDL Schema Language cannot state a conditional enum — cf. `pattern-kinds.kdl-schema`).
+- **`target.kdl-schema`** — the §17 per-implementation target descriptor (`targets/<t>/target.apiw`):
+  language `family` / `dialect` / `implementation` / `ffi-backend` / `runtime-model` (the one closed
+  enum) / `projection-policy` / `adapter-strategy`. Workstream 6 (`target-descriptor-k51`); validated
+  by `apianyware-target-model` (the `descriptor/` submodule).
+- **`capability.kdl-schema`** — the §20 per-implementation capability profile
+  (`targets/<t>/capability.apiw`): a map from a capability `dimension` to a representability `rung`
+  (the closed 7-rung ladder, a schema `enum`) across two faces — a `semantic` face that feeds the
+  *derived* §7.7 representability status, and an `app-form` face (§36 feasibility) that feeds
+  per-app-kind support. Workstream 6 (`capability-k52`, ADR-0051); validated by
+  `apianyware-target-model` (the `capability/` submodule). The face-conditional `dimension`
+  vocabulary is enforced by that validator, not the schema (cf. `api-semantics.kdl-schema`).
 
 The Rust `apianyware-spec-format` crate is *one conforming validator* of this contract (its
 `validate_apiw` step embeds this file); any KDL tool in any language can validate an `.apiw` file

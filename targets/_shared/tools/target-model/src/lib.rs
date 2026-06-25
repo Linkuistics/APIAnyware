@@ -20,14 +20,22 @@
 //! - [`descriptor`] — the §17 per-implementation **target descriptor**
 //!   (`target.apiw`): the `family` / `dialect` / `implementation` / `ffi-backend` /
 //!   `runtime-model` / `projection-policy` / `adapter-strategy` facets, their parser,
-//!   focused validator, and the directory registry. *(This child —
-//!   `target-descriptor-k51`. Named `descriptor` rather than `target` because the
-//!   stock Rust `target/` build-dir gitignore would otherwise swallow the source.)*
+//!   focused validator, and the directory registry. *(Child `target-descriptor-k51`.
+//!   Named `descriptor` rather than `target` because the stock Rust `target/`
+//!   build-dir gitignore would otherwise swallow the source.)*
+//! - [`capability`] — the §20 per-implementation **capability profile**
+//!   (`capability.apiw`): the authored `dimension → rung` ratings across the two faces
+//!   (semantic + app-form), their parser, focused validator, and registry. *(Child
+//!   `capability-k52`.)* Backed by two shared crate-level modules:
+//!   - [`vocab`] — the §20 capability dimensions (the two faces' controlled
+//!     vocabularies) + the target-independent `weirdness → capability` map.
+//!   - [`derive`] — the unified 7-rung [`Representability`](derive::Representability)
+//!     ladder + the **representability floor** that derives a per-API status from a
+//!     profile and the platform §30 weirdness an API carries.
 //!
-//! Later ws6 children add `capability/`, `idioms/`, `policy/`, `adapter_spec/`, and
-//! `conformance/` submodules + a shared `vocab` (§20 capability dimensions +
-//! `weirdness → capability` map) and `derive` (representability floor + conformance
-//! coverage) to **this same crate**.
+//! Later ws6 children add `idioms/`, `policy/`, `adapter_spec/`, and `conformance/`
+//! submodules (extending `derive` with conformance-coverage derivation) to **this same
+//! crate**.
 //!
 //! Each entity follows the three-layer validation the platform-model crates
 //! established (ADR-0046 §3): **structural** against a language-neutral
@@ -37,10 +45,18 @@
 //! directory). The Rust types are *one* conforming implementation of the schema, not
 //! its source of truth; **ws8** owns the *machine* JSON Schema + validation tooling/CI.
 
+pub mod capability;
+pub mod derive;
 pub mod descriptor;
 pub mod error;
+pub mod vocab;
 
+pub use capability::{
+    parse_capability, validate_capability, CapabilityEntry, CapabilityProfile, CapabilityRegistry,
+};
+pub use derive::{representability, Representability};
 pub use descriptor::{
     parse_target, validate_target, RuntimeModel, TargetDescriptor, TargetRegistry,
 };
 pub use error::{Result, TargetModelError};
+pub use vocab::{capability_for, is_valid_dimension, Face};

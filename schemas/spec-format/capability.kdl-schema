@@ -1,0 +1,158 @@
+// capability.kdl-schema — the authoritative, language-neutral contract for an authored
+// **capability profile** `.apiw` file (`structural-refactoring` grove, workstream 6;
+// node-brief decision D2, child `capability-k52`).
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), mirroring the
+// siblings `target.kdl-schema` (the other target-model entity), `app-kind.kdl-schema` /
+// `platform.kdl-schema` (workstream 4), `pattern-kinds.kdl-schema` (workstream 3), and
+// `annotations.kdl-schema` (workstream 2). Any KDL tool in any language can validate or
+// consume a capability profile. The Rust `apianyware-target-model` crate is ONE
+// conforming validator of this contract, not its source of truth (ADR-0046 §3). The
+// MACHINE JSON Schema for any DERIVED representability/conformance report is workstream 8's.
+//
+// SCOPE — the REFACTOR §20 statement of what one IMPLEMENTATION can express, as a map
+// from a capability DIMENSION to a representability LADDER rung, across TWO faces:
+//   semantic  — per-API capabilities that feed the DERIVED representability status
+//               (§7.7); the floor over { rung[needs(weirdness)] } an API carries.
+//   app-form  — §36 packaging / bundle / plugin / sandboxing feasibilities that feed
+//               per-app-kind support (conformance), NOT per-API representability.
+// The profile is PLATFORM-INDEPENDENT: it describes the implementation, so it is reusable
+// across platforms. The macOS binding happens in the DERIVATION (which reads the platform
+// §30 weirdness), never here (node-brief D2 — keying a profile on platform weirdness tags
+// was rejected). Representability per API is DERIVED, never authored here (node-brief D1).
+//
+// IDENTITY — each target is one directory `targets/<id>/capability.apiw`; the
+// `capability "<id>"` value is the target's stable identity and matches its CONTAINING
+// DIRECTORY (the conventional short target name — `racket`, `chez`, `gerbil`, `sbcl`),
+// the same id its sibling `target.apiw` carries. The conforming loader checks this.
+//
+// CONTROLLED VOCABULARY — the `rung` value is the closed 7-rung representability ladder,
+// expressed here as a schema `enum` (it is a genuinely bounded, load-bearing taxonomy,
+// like `target.kdl-schema`'s `runtime-model`). The `dimension` token is NOT a schema
+// enum: its allowed set is FACE-CONDITIONAL (a `semantic { … }` body draws on the §20
+// per-API dimensions, an `app-form { … }` body on the §20/§36 app-form dimensions), and
+// the KDL Schema Language cannot state a vocabulary that depends on the enclosing node,
+// so the conforming `apianyware-target-model` validator enforces per-face membership
+// (exactly as `api-semantics.kdl-schema` defers its facet-conditional §30 `weirdness`
+// vocabulary to its validator). Keep that vocabulary in lockstep with REFACTOR.md §20/§36.
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE CARDINALITY in a
+// `value {…}` body (KDL Schema convention). `other-nodes-allowed` / `other-props-allowed`
+// default to #false, so anything not listed is rejected.
+
+document {
+    info {
+        title "APIAnyware target capability profile (.apiw)" lang="en"
+        description "The §20 statement of what one target implementation can express: a map from a capability dimension to a representability ladder rung, across two faces — a per-API semantic face that feeds the derived §7.7 representability status, and an app-form face (§36 packaging/bundle/plugin/sandboxing feasibility) that feeds per-app-kind support. Platform-independent (describes the implementation); the macOS binding happens in the derivation, not here. The authored target-model knowledge layer over an already-built binding (REFACTOR §20)." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 6 (target model, capability-k52)"
+    }
+
+    // Exactly one top-level `capability "<id>"` node per file. The id is the target's
+    // stable identity and matches its containing directory (`targets/<id>/`, e.g.
+    // "sbcl"); the conforming loader checks this.
+    node "capability" {
+        min 1
+        max 1
+        value {
+            type "string"
+            min 1
+            max 1
+        }
+        children {
+            // Human-facing one-line description. Optional.
+            node "doc" {
+                max 1
+                value {
+                    type "string"
+                    min 1
+                    max 1
+                }
+            }
+
+            // The per-API SEMANTIC capability face — feeds the derived representability
+            // status. Required; exactly one. Its `dimension` tokens must be drawn from
+            // the §20 per-API dimensions (the conforming validator enforces this).
+            node "semantic" {
+                min 1
+                max 1
+                children {
+                    node "dimension" {
+                        // One rating per capability dimension this face declares. At
+                        // least one. The positional value is the §20 dimension token
+                        // (face-conditional vocabulary — the validator checks membership
+                        // and per-face uniqueness).
+                        min 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        children {
+                            // The representability ladder rung the implementation reaches
+                            // for this dimension. Required; exactly one; the closed 7-rung
+                            // ladder (best → worst). A schema `enum` (a bounded taxonomy).
+                            node "rung" {
+                                min 1
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                    enum "exact-static" "exact-runtime" "idiomatic-conventional" "lossy-but-documented" "unsafe-only" "not-representable" "research"
+                                }
+                            }
+                            // Optional one-line justification (typically citing the
+                            // grounding ADR / CONTEXT fact).
+                            node "doc" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // The APP-FORM capability face — feeds per-app-kind feasibility (§36), NOT
+            // per-API representability. Required; exactly one. Its `dimension` tokens
+            // must be drawn from the §20/§36 app-form dimensions (validator-enforced).
+            node "app-form" {
+                min 1
+                max 1
+                children {
+                    node "dimension" {
+                        min 1
+                        value {
+                            type "string"
+                            min 1
+                            max 1
+                        }
+                        children {
+                            node "rung" {
+                                min 1
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                    enum "exact-static" "exact-runtime" "idiomatic-conventional" "lossy-but-documented" "unsafe-only" "not-representable" "research"
+                                }
+                            }
+                            node "doc" {
+                                max 1
+                                value {
+                                    type "string"
+                                    min 1
+                                    max 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,111 @@
+// The sbcl capability profile (REFACTOR §20; structural-refactoring grove ws6,
+// capability-k52). Contract: schemas/spec-format/capability.kdl-schema.
+// Platform-INDEPENDENT (describes the SBCL implementation); the macOS representability
+// status is DERIVED from this profile + the platform §30 weirdness. Rungs grounded in
+// CONTEXT.md "SBCL target toolchain" + the MOP/lifetime/bounce/bundle ADRs
+// (0034 object model, 0035 main-thread bounce, 0036 finalize/release-queue,
+// 0037 conditions, 0041 image-dump relocation, 0042 value structs).
+capability "sbcl" {
+    doc "Steel Bank Common Lisp with a CLOS/MOP binding over sb-alien — a GC-managed, complete-API binding whose foreign-thread callbacks BOUNCE to the main thread (ADR-0035), reached empirically, not by inheritance."
+
+    // Per-API semantic capabilities — feed the derived representability status.
+    semantic {
+        dimension "deterministic-cleanup" {
+            rung "idiomatic-conventional"
+            doc "No RAII; deterministic release is a convention (unwind-protect / with-* brackets), with sb-ext:finalize as GC backstop (ADR-0036)."
+        }
+        dimension "finalization" {
+            rung "exact-runtime"
+            doc "sb-ext:finalize gives exact GC-death finalization (O(dead)), enqueued for a main-thread release-queue drain (ADR-0036)."
+        }
+        dimension "ownership" {
+            rung "idiomatic-conventional"
+            doc "The CLOS objc-class metaclass graph models ownership conventionally; no static ownership types."
+        }
+        dimension "borrowing" {
+            rung "lossy-but-documented"
+            doc "Borrowed/interior values (borrowed-until-* tags) are documented conventions, not enforced."
+        }
+        dimension "lifetime-tracking" {
+            rung "lossy-but-documented"
+            doc "Transient lifetimes are documented; nothing is tracked statically."
+        }
+        dimension "callback-support" {
+            rung "exact-runtime"
+            doc "sb-alien callbacks + the libAPIAnywareSbcl native trampolines (delegate/block/subclass IMPs) turn Lisp closures into ObjC callbacks (ADR-0038)."
+        }
+        dimension "escaping-callbacks" {
+            rung "exact-runtime"
+            doc "Escaping callbacks are registry-rooted for their subscription lifetime."
+        }
+        dimension "callback-rooting" {
+            rung "exact-runtime"
+            doc "The callback registry roots closures against GC while the ObjC side may still invoke them."
+        }
+        dimension "foreign-thread-callbacks" {
+            rung "idiomatic-conventional"
+            doc "Foreign-thread callbacks BOUNCE to the main thread (ADR-0035) — a foreign OS thread must never run Lisp (SBCL can't stop-the-world-suspend it), so the native trampoline bounces; a conventional mechanism, NOT chez's thread activation (which is empirically unsafe here). Native sb-threads, by contrast, run real concurrent Lisp."
+        }
+        dimension "thread-affinity" {
+            rung "idiomatic-conventional"
+            doc "Affinity is upheld by convention (entry-point pools, the main-thread rule); native sb-threads need no bounce."
+        }
+        dimension "main-thread-dispatch" {
+            rung "exact-runtime"
+            doc "Main-thread dispatch is an exact runtime mechanism (dispatch_sync value-returning / dispatch_async void in libAPIAnywareSbcl; ADR-0035)."
+        }
+        dimension "typestate" {
+            rung "lossy-but-documented"
+            doc "No static typestate; state preconditions are documented only."
+        }
+        dimension "async-event-integration" {
+            rung "idiomatic-conventional"
+            doc "Run-loop / event integration via conventional patterns (main-thread-bounced handlers + entry-point pool drain)."
+        }
+        dimension "struct-by-value" {
+            rung "exact-runtime"
+            doc "sb-alien open-codes C struct-by-value, projected to a CLOS value-struct surface (ADR-0042)."
+        }
+        dimension "strings" {
+            rung "exact-runtime"
+            doc "NSString ↔ CL string conversion is exact at runtime."
+        }
+        dimension "arrays" {
+            rung "exact-runtime"
+            doc "NSArray ↔ CL sequence conversion is exact at runtime."
+        }
+        dimension "buffers" {
+            rung "idiomatic-conventional"
+            doc "Raw buffer / interior-pointer access is via sb-alien pointers, used by convention (two-call sizing)."
+        }
+        dimension "platform-errors" {
+            rung "exact-runtime"
+            doc "NSError**/NSException surfaced exactly as the ns:objc-error condition hierarchy at runtime (ADR-0037)."
+        }
+    }
+
+    // App-form capabilities (§36) — feed per-app-kind feasibility (child-5 conformance),
+    // not per-API representability. Refined by child-5 against the VM-verify reports.
+    app-form {
+        dimension "packaging" {
+            rung "exact-runtime"
+            doc "A dumped SBCL image, relocated via @executable_path/.. and signed around (ADR-0041)."
+        }
+        dimension "app-bundle" {
+            rung "exact-runtime"
+            doc ".app bundle built and VM-verified."
+        }
+        dimension "plugin" {
+            rung "research"
+            doc "Loadable-bundle hosting from a dumped image is hard and not yet established (§36 hard case)."
+        }
+        dimension "sandboxing" {
+            rung "research"
+            doc "App Sandbox entitlements not yet exercised."
+        }
+        dimension "native-runtime-embedding" {
+            rung "research"
+            doc "Embedding a dumped SBCL image into a host process is unproven (libAPIAnywareSbcl is the sole native unit; the image is the executable)."
+        }
+    }
+}
