@@ -1206,6 +1206,76 @@ never itself a status. _Avoid_: putting `weirdness` in the schema as an `enum`
 > weirdness** vocabulary (`fork-unsafe`, `may-reenter`, `ownership-unknown`, …) that ws6
 > *consumes* to compute a status. No representability metadata lives in `platforms/`.
 
+## LLM side-channel workflow (refactor workstream 5)
+
+Introduced by the `structural-refactoring` grove, workstream 5 (`llm-side-channel-k43`):
+the *operating layer* over the per-family `annotations.apiw` overlay that makes
+LLM-produced semantic facts cached / regenerable / diffable / reviewable /
+provenance-tracked / confidence-scored, and realizes the ADR-0046 §4 fact-precedence /
+disagreement audit. Design settled 2026-06-25 (ADR-0050; running log in the
+`llm-side-channel-k43` node brief). **The overlay is already a git-committed `.apiw` text
+file**, so *diffable* / *reviewable* / *accept* are delivered by git + the KDL format;
+ws5 builds only the genuinely-new layer (the provenance/precedence mechanism + staleness
+detection + reworked orchestration), **not** a bespoke staging/cache subsystem (ADR-0050).
+
+**Side-channel workflow** _(the ws5 deliverable)_:
+The lean mechanism over the committed overlay: (1) the resolve-time **disagreement audit**
+(below), (2) a **staleness** detector + **regeneration** worklist, (3) Claude-Code-subagent
+**orchestration** that authors `.apiw` directly, (4) reworked/retired legacy tooling. Lives
+in the **platforms** domain (annotations are platform knowledge) — extends
+`platforms/macos/tools/annotate` + `apianyware-analyze` subcommands, never `semantic/`.
+_Avoid_: a staging area distinct from the committed overlay; a propose/accept *state machine*
+(git is the accept boundary — below); an external-provider LLM flow (economic constraint —
+annotation runs in Claude Code subagents, [[llm_annotation_constraint]]); re-reshaping the
+side-channel (ws2's `pipeline-cutover-k20` already did the `*.llm.json`→`annotations.apiw` move).
+
+**Authored-overlay source vs resolved source** _(two vocabularies, two homes)_:
+The **overlay** (`annotations.apiw`, committed) carries only **authored** tiers —
+`source ∈ {llm, manual}`. The **resolved graph** (`resolved.json`, derived + gitignored)
+carries the **full ladder** — `source ∈ {extraction, convention:<rule>, llm, manual, unknown}`
+— after the disagreement audit. The `AnnotationSource` Rust enum (ws5 `provenance-vocab-k44`)
+reconciles to this: `Heuristic`→`Convention` (gaining a `<rule>` payload when per-fact
+convention stamps land), `HumanReviewed`→`Manual`, `Llm` unchanged; `Extraction`/`Unknown`
+added by the children that produce them. Per-fact provenance is **emit-invisible** (emit
+projects the *facts*, never their `source`) — the goldens-as-truth safety invariant for the
+whole rollout.
+_Avoid_: the legacy spellings `heuristic`/`human_reviewed` (ADR-0046 §4 vocab is
+`convention`/`manual`); `convention`/`extraction`/`unknown` tokens in the *overlay* (those
+are resolved-side only); a float confidence (enum `high|medium|low`, ws2).
+
+**accepted-LLM** _(≡ a committed `source llm` fact)_:
+The §28 precedence tier above `convention` but below `manual`. There is **no separate
+proposed/accepted on-disk state**: an LLM fact in a *committed* overlay **is** accepted (the
+human accepted it by committing the `git diff`); an unreviewed fact lives only in the working
+tree / a PR branch. Git is the propose→review→accept boundary (ADR-0050).
+_Avoid_: a `status proposed|accepted` flag (git carries it); reading `accepted-LLM` as a
+distinct *source* value (it is just committed `llm`).
+
+**Disagreement audit / `superseded-by`** _(ADR-0046 §4, built by ws5 `precedence-audit`)_:
+The resolve-time merge: per `(receiver, selector)` **fact-slot** (one semantic claim — a
+param's ownership, a method's threading, etc.), gather every producing tier, apply §28
+precedence (`manual > accepted-LLM > convention > extraction > unknown`), **stamp the
+winner's `source`** on the resolved fact, and record each *disagreeing* loser as a
+`superseded-by { source; value }` entry. A fact-slot with no producer stays **explicit
+`unknown`** (never silently defaulted). Lands in `resolved.json` only; emit-invisible →
+goldens unmoved. Surfaced by the `annotations audit` report.
+_Avoid_: writing the audit into the overlay (it is derived → resolved.json); dropping a
+loser that merely *agrees* (only disagreements are `superseded-by`); a winning *value* change
+(precedence here only stamps provenance — the winning value already matches today's merge, so
+goldens cannot move).
+
+**Staleness / regeneration** _(replaces `check-llm-annotation-drift.sh`; ws5)_:
+Staleness is computed **live** by set-diffing a family's committed overlay against the current
+`extracted.json` — **no stored hash** (artifacts-not-state). Three signals: *orphaned* (overlay
+fact names a `(class, selector)` absent from the current API), *new-surface* (a current method
+with an annotatable shape and no overlay fact), *shape-changed* (a method present in both whose
+parameter shape moved). Regeneration = dispatch Claude-Code subagents for the stale families
+only (annotate runs *once per SDK update*, k26); each subagent writes that family's
+`annotations.apiw` directly.
+_Avoid_: a content-hash cache store (set-diff is cheap, stores nothing); auto-regenerating
+on every pipeline run (regeneration is explicit, post-SDK-bump); the retired `_llm-annotations/`
++ `analysis/ir/` paths.
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
