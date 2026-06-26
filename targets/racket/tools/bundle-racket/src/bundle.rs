@@ -8,7 +8,7 @@ use std::process::Command;
 use apianyware_stub_launcher::{codesign_path, create_app_bundle, StubConfig, StubError};
 use plist::Value as PlistValue;
 
-use crate::deps::{absolutize, collect_dependencies};
+use crate::deps::{absolutize, collect_dependencies_in, SourceRoots};
 
 /// Default Racket runtime path baked into stub binaries. Matches the
 /// homebrew install location used everywhere else in the project (sample
@@ -151,28 +151,39 @@ pub enum BundleError {
     InfoPlistRootNotDict(PathBuf),
 }
 
-/// Bundle a sample app at `source_root/apps/<script_name>/<script_name>.rkt`
-/// into `output_dir/<App Name>.app`. Returns the path to the new bundle.
+/// Bundle a sample app into `output_dir/<App Name>.app` from the §18 domain
+/// tree, where app-implementations and the binding package live in separate
+/// roots. Returns the path to the new bundle.
 ///
-/// Convenience wrapper over [`bundle_app_with_entry`] for the APIAnyware
-/// sample-app layout. For a project whose entry isn't at
-/// `apps/<name>/<name>.rkt` (e.g. a root-level `main.rkt`), use
-/// [`bundle_app_with_entry`] directly.
+/// The entry script is `apps_root/<script_name>/<script_name>.rkt`; the
+/// binding package (`runtime/`, `generated/`, `lib/`) lives under
+/// `bindings_root`. The app's relative `(require "../../{generated,runtime}/…")`
+/// lines are honoured via a virtual colocated root ([`SourceRoots::split`]),
+/// and the bundle's `Resources/racket-app/` mirrors that colocated shape
+/// (`apps/<name>/`, `runtime/`, `generated/`, `lib/` as siblings) so the same
+/// requires keep resolving inside the bundle.
+///
+/// For a genuinely colocated project whose entry isn't at
+/// `apps/<name>/<name>.rkt` (e.g. a root-level `main.rkt` with a `bindings/`
+/// symlink), use [`bundle_app_with_entry`] directly.
 pub fn bundle_app(
     spec: &AppSpec,
-    source_root: &Path,
+    apps_root: &Path,
+    bindings_root: &Path,
     output_dir: &Path,
 ) -> Result<PathBuf, BundleError> {
-    let entry = source_root
+    let roots = SourceRoots::split(apps_root, bindings_root)?;
+    let entry = roots
+        .logical_root()
         .join("apps")
         .join(&spec.script_name)
         .join(format!("{}.rkt", spec.script_name));
 
-    if !entry.exists() {
+    if !roots.to_physical(&entry).exists() {
         return Err(BundleError::EntryMissing { entry });
     }
 
-    bundle_app_with_entry(spec, &entry, source_root, output_dir)
+    bundle_app_with_roots(spec, &entry, &roots, output_dir)
 }
 
 /// Bundle an arbitrary Racket entry script into a `.app` at
@@ -212,8 +223,22 @@ pub fn bundle_app_with_entry(
     source_root: &Path,
     output_dir: &Path,
 ) -> Result<PathBuf, BundleError> {
-    let abs_root = absolutize(source_root)
-        .map_err(|e| BundleError::ResolveSourceRoot(source_root.to_path_buf(), e))?;
+    let roots = SourceRoots::single(source_root)?;
+    bundle_app_with_roots(spec, entry, &roots, output_dir)
+}
+
+/// Bundle an arbitrary Racket entry, resolving every source file through
+/// `roots` (single colocated root, or the split apps-root / bindings-root of
+/// the §18 domain tree). The bundle's `Resources/racket-app/` always mirrors
+/// the logical colocated tree, so the resolution model is invisible to the
+/// produced bundle.
+fn bundle_app_with_roots(
+    spec: &AppSpec,
+    entry: &Path,
+    roots: &SourceRoots,
+    output_dir: &Path,
+) -> Result<PathBuf, BundleError> {
+    let abs_root = roots.logical_root().to_path_buf();
     let abs_entry =
         absolutize(entry).map_err(|e| BundleError::ResolveEntry(entry.to_path_buf(), e))?;
 
@@ -224,7 +249,7 @@ pub fn bundle_app_with_entry(
         });
     }
 
-    if !abs_entry.exists() {
+    if !roots.to_physical(&abs_entry).exists() {
         return Err(BundleError::EntryMissing { entry: abs_entry });
     }
 
@@ -243,7 +268,7 @@ pub fn bundle_app_with_entry(
 
     // Discover everything the entry transitively requires before we
     // touch the output directory — fail fast if a require is broken.
-    let dependencies = collect_dependencies(&abs_entry, &abs_root)?;
+    let dependencies = collect_dependencies_in(&abs_entry, roots)?;
 
     let stub_config = StubConfig {
         app_name: spec.app_name.clone(),
@@ -270,13 +295,13 @@ pub fn bundle_app_with_entry(
         .join("Resources")
         .join("racket-app");
 
-    for src in &dependencies {
-        let rel = src
+    for logical in &dependencies {
+        let rel = logical
             .strip_prefix(&abs_root)
             .expect("dependency was validated to be under source root");
         let dst = racket_app.join(rel);
         fs::create_dir_all(dst.parent().expect("dst has parent"))?;
-        fs::copy(src, &dst)?;
+        fs::copy(roots.to_physical(logical), &dst)?;
     }
 
     // Optional Swift helper dylib — referenced by runtime/swift-helpers.rkt
@@ -284,7 +309,7 @@ pub fn bundle_app_with_entry(
     // Copy the lib/ directory if it exists in the source tree; the
     // runtime's exn:fail handler in swift-helpers.rkt makes the bundle
     // work in either mode.
-    let lib_src = abs_root.join("lib");
+    let lib_src = roots.to_physical(&abs_root.join("lib"));
     if lib_src.is_dir() {
         let lib_dst = racket_app.join("lib");
         copy_dir_recursive(&lib_src, &lib_dst)?;

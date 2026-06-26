@@ -17,9 +17,15 @@ use crate::compile::{compile_app, discover_swift_dylib};
 use crate::deps::collect_closure;
 use crate::relocate::{relocate_homebrew_deps, relocate_swift_dylib, FRAMEWORKS_SUBDIR};
 
-/// Build a self-contained `.app` for the gerbil sample app at
-/// `source_root/apps/<script_name>/<script_name>.ss` into
-/// `output_dir/<App Name>.app`. Returns the path to the new bundle.
+/// Build a self-contained `.app` for the gerbil sample app from the §18 domain
+/// tree into `output_dir/<App Name>.app`. Returns the path to the new bundle.
+///
+/// The entry is `apps_root/<script_name>/<script_name>.ss`; the
+/// `gerbil-bindings` package root (the closure's `runtime/` + emitted `<fw>/`
+/// modules) is `bindings_root/generated`. Unlike racket/chez the gerbil bundle
+/// never colocates a source tree — `collect_closure` already takes the entry
+/// and the lib root separately, and the compiled closure goes into a
+/// `GERBIL_PATH` cache under `output_dir`, so the split needs no virtual root.
 ///
 /// The produced `.app` has **no Homebrew dylib dependency**: the
 /// Gerbil/Gambit runtime is statically embedded by `gxc -exe`, and the
@@ -28,14 +34,16 @@ use crate::relocate::{relocate_homebrew_deps, relocate_swift_dylib, FRAMEWORKS_S
 /// dependency only.
 pub fn bundle_app(
     spec: &AppSpec,
-    source_root: &Path,
+    apps_root: &Path,
+    bindings_root: &Path,
     output_dir: &Path,
 ) -> Result<PathBuf, BundleError> {
-    let abs_root = fs::canonicalize(source_root)
-        .map_err(|e| BundleError::ResolveSourceRoot(source_root.to_path_buf(), e))?;
-    let lib_root = abs_root.join("lib");
-    let entry = abs_root
-        .join("apps")
+    let apps_root = fs::canonicalize(apps_root)
+        .map_err(|e| BundleError::ResolveSourceRoot(apps_root.to_path_buf(), e))?;
+    let bindings_root = fs::canonicalize(bindings_root)
+        .map_err(|e| BundleError::ResolveSourceRoot(bindings_root.to_path_buf(), e))?;
+    let lib_root = bindings_root.join("generated");
+    let entry = apps_root
         .join(&spec.script_name)
         .join(format!("{}.ss", spec.script_name));
     if !entry.exists() {
@@ -45,21 +53,13 @@ pub fn bundle_app(
     // 1. Walk the binding-library compile closure (deps-first).
     let closure = collect_closure(&entry, &lib_root)?;
 
-    // Locate the Swift-native trampoline dylib (ADR-0029). After the §18 move
-    // (`move-gerbil-material-k13`) the bundler's source root is `targets/gerbil/`,
-    // so the repo root is two levels above it; [`discover_swift_dylib`] then
-    // descends to the per-target adapter package's `.build`. `None` when no
-    // `swift build` artifact exists (an app with no Swift-native residual still
-    // bundles; one that references the trampolines fails loudly at the gxc link).
-    // TODO(w6, root brief item 6): the bundler still assumes apps/ + lib/ are
-    // direct children of source_root (stitched via the test's gerbil_root()
-    // fixture); teaching it the apps-root / bindings-root split natively will
-    // settle this walk-up depth for good.
-    let workspace_root = abs_root
-        .ancestors()
-        .nth(2)
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| abs_root.clone());
+    // Locate the Swift-native trampoline dylib (ADR-0029). [`discover_swift_dylib`]
+    // descends to the per-target adapter package's `.build` from the repo root,
+    // which is the parent of the `targets/` ancestor of the bindings root. `None`
+    // when no `swift build` artifact exists (an app with no Swift-native residual
+    // still bundles; one that references the trampolines fails loudly at the gxc
+    // link).
+    let workspace_root = workspace_root_above_targets(&bindings_root);
     let swift_dylib = discover_swift_dylib(&workspace_root);
     if let Some(ref d) = swift_dylib {
         tracing::info!(dylib = %d.display(), "linking Swift-native trampoline dylib (ADR-0029)");
@@ -126,6 +126,21 @@ pub fn bundle_app(
     Ok(app_path)
 }
 
+/// The repo root above a `targets/<t>/…` path: the parent of the nearest
+/// `targets` ancestor. Robust to how deep the bindings root sits (it is
+/// `targets/gerbil/bindings/macos`), unlike a fixed `ancestors().nth(N)`.
+/// Falls back to the input if no `targets` ancestor is found.
+fn workspace_root_above_targets(under_targets: &Path) -> PathBuf {
+    let mut p = under_targets;
+    while let Some(parent) = p.parent() {
+        if p.file_name().is_some_and(|n| n == "targets") {
+            return parent.to_path_buf();
+        }
+        p = parent;
+    }
+    under_targets.to_path_buf()
+}
+
 /// Write the bundle's `Info.plist`. The native binary *is* the executable
 /// (no Swift stub), so `CFBundleExecutable` names the `gxc -exe` output.
 fn write_info_plist(path: &Path, spec: &AppSpec) -> Result<(), BundleError> {
@@ -188,11 +203,15 @@ mod tests {
     #[test]
     fn rejects_missing_app() {
         let temp = TempDir::new().unwrap();
-        // A source root with a lib/ dir but no apps/<script>/<script>.ss.
-        fs::create_dir_all(temp.path().join("lib")).unwrap();
+        // An apps root with no <script>/<script>.ss, and a bindings root whose
+        // generated/ package is empty — bundling fails at the entry precheck.
+        let apps_root = temp.path().join("app-implementations");
+        let bindings_root = temp.path().join("bindings");
+        fs::create_dir_all(&apps_root).unwrap();
+        fs::create_dir_all(bindings_root.join("generated")).unwrap();
         let spec = AppSpec::from_script_name("definitely-not-an-app");
         let out = TempDir::new().unwrap();
-        let err = bundle_app(&spec, temp.path(), out.path()).unwrap_err();
+        let err = bundle_app(&spec, &apps_root, &bindings_root, out.path()).unwrap_err();
         assert!(
             matches!(err, BundleError::EntryMissing { .. }),
             "expected EntryMissing, got {err:?}"

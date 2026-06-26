@@ -26,14 +26,27 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    let source_root = workspace.join("generation").join("targets").join("chez");
-    let output_dir = source_root.join("apps").join(&script).join("build");
+    // The §18 domain tree splits the chez material: apps under one root, the
+    // binding package (`apianyware/` + `lib/`) under another.
+    let apps_root = workspace
+        .join("targets")
+        .join("chez")
+        .join("app-implementations")
+        .join("macos");
+    let bindings_root = workspace
+        .join("targets")
+        .join("chez")
+        .join("bindings")
+        .join("macos");
+    let output_dir = apps_root.join(&script).join("build");
 
     let mut spec = AppSpec::from_script_name(&script);
+    // Common, target-independent app specs live at `apps/macos/<app>/docs/spec.md`.
     let spec_path = workspace
-        .join("knowledge")
         .join("apps")
+        .join("macos")
         .join(&script)
+        .join("docs")
         .join("spec.md");
     if let Some(display) = read_display_name_from_spec(&spec_path) {
         spec.bundle_id = format!("com.linkuistics.{}", display.replace(' ', ""));
@@ -44,7 +57,7 @@ fn main() -> ExitCode {
         "building standalone {} (this compiles the whole closure)…",
         spec.app_name
     );
-    match bundle_app(&spec, &source_root, &output_dir) {
+    match bundle_app(&spec, &apps_root, &bindings_root, &output_dir) {
         Ok(path) => {
             println!("{}", path.display());
             eprintln!("built: {} ({})", path.display(), spec.bundle_id);

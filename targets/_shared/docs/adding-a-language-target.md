@@ -1,20 +1,22 @@
 # Adding a New Language Target
 
 Step-by-step guide for adding a language target to APIAnyware. Written
-against the real two-target world (`racket` and `chez`) — follow it and you could
-plausibly stand up a third.
+against the real four-target world (`racket`, `chez`, `gerbil`, `sbcl`) — follow
+it and you could plausibly stand up a fifth.
 
-> **⚠️ Path caveat (`structural-refactoring` in flight):** the *documentation*
-> homes below are current (docs co-locate; no top-level `docs/`). The **crate and
-> per-target on-disk sub-layout** paths in the implementation steps still name the
-> pre-refactor structure (`generation/crates/<crate>`, `targets/<id>/runtime/`,
-> `targets/<id>/apps/<app>/`, `test-results/`). Crates now live under
-> `<domain>/tools/` (e.g. `targets/_shared/tools/emit`, `targets/<id>/tools/emit-<id>`;
-> see the root `Cargo.toml`), and each target unit's internal layout
-> (`bindings/`, `adapters/`, `app-implementations/`, `reports/`) is being reshaped
-> by the target-model workstream. **TODO (workstream 6 / migration-finalize):**
-> re-sync these step paths once the target reshape lands; treat the live
-> `targets/<id>/` units as authoritative for current paths.
+> **Layout (`structural-refactoring` domain tree).** The repository is partitioned
+> by *domain*, not pipeline phase: there is no `generation/` tree. Crates live
+> under `<domain>/tools/` — the **shared** emit substrate at
+> `targets/_shared/tools/emit` (ADR-0044), the generate CLI at
+> `targets/_shared/tools/generate-cli`, and each target's own crates at
+> `targets/<id>/tools/<crate>` (the *crate-home convention*; the authoritative
+> crate→domain map is the root `Cargo.toml` `members`). Each target unit
+> `targets/<id>/` holds its `bindings/<platform>/` (runtime + emitted source +
+> dylib + `reports/`), `adapters/<platform>/` (the native Swift package),
+> `app-implementations/<platform>/<app>/`, the authored target-model `.apiw`
+> entities (`target.apiw`, `capability.apiw`, `idioms/`, `policies/`, `adapters/`,
+> `conformance/`), and `docs/`. The live `targets/<id>/` units are authoritative
+> for current paths; the step paths below are written against this tree.
 
 > **Fundamental design goal (ADR-0010):** the per-target **native (Swift)
 > library is the binding** — purpose-built for one target, it maps the macOS API
@@ -78,17 +80,34 @@ which you *produce* — and treat the ones you produce as deliverables, not note
 | ADR-0004, ADR-0005 | one binding style per target; maximally idiomatic, not a portable subset |
 | ADR-0024, ADR-0045 | docs co-locate with their subject; the central `adr/`/`prd/` carve-out |
 
-**Produce (the per-target docs — co-located in `targets/<id>/docs/`):**
+**Produce (the per-target docs — two co-located doc sets, the shape every live
+target now carries):**
+
+The **§18 target docs** sit at `targets/<id>/docs/` — a map + four deep-dives describing
+what the *target* is. The **§22 binding mapping docs** sit at
+`targets/<id>/bindings/<platform>/docs/` — how this target's *binding* maps the platform
+API. Every doc **points at the target's authored `.apiw` entities** (`target.apiw`,
+`capability.apiw`, `idioms/`, `policies/`, `adapters/`, `conformance/`) and **cites
+`apianyware-conformance`** for derived coverage rather than copying recomputable facts
+(constraint 4: no snapshotted numbers that rot).
 
 | Slot | Contents | Produced during |
 |---|---|---|
 | `README.md` | target overview / index — the entry point to the unit | Step 9 (as the build settles) |
-| `docs/reference.md` | the deep target reference: FFI patterns, dispatch, memory model, runtime quirks, distribution | Steps 3–8, consolidated in Step 9 |
-| `docs/developer-guide.md` | user-facing app-writing guide — **where warranted** (racket has one; chez/gerbil rely on `reference.md`) | Step 9 |
-| `docs/design/` | the per-target design spec(s) raised while building (`YYYY-MM-DD-<id>-design.md`, distribution design, native-binding design) | Step 1 onward |
-| `docs/research/` | per-target spikes and their evidence (dispatch, threading, standalone-distribution probes) | whenever a spike is run |
-| `apps/<app>/learnings.md` | per-app realization notes — what this target had to do to make that app work | Step 7, per app |
-| `test-results/<app>/report.md` | the VM-verification report (+ screenshots) for each app — already co-located | Step 7, per app |
+| `docs/overview.md` | §18 map: what the target is, its idiom posture, links into the deep-dives + the unit layout | Step 9 |
+| `docs/language-characteristics.md` | §18 deep-dive: the language's relevant traits (typing, GC, macros, module system) | Step 9 |
+| `docs/ffi-model.md` | §18 deep-dive: the FFI/embedding mechanism, dispatch, memory model, threading | Steps 3–8, consolidated in Step 9 |
+| `docs/idiom-map.md` | §18 deep-dive — a **thin pointer** to the authoritative `idioms/docs/idiom-map.md` (the catalogue, not a copy) | Step 9 |
+| `docs/representability.md` | §18 deep-dive: how the §20 capability profile × §30 weirdness yields the §7.7 representability floor for this target | Step 9 |
+| `docs/reference.md` | the deep target reference (FFI patterns, dispatch, quirks, distribution) — the worked-example doc | Steps 3–8, consolidated in Step 9 |
+| `docs/developer-guide.md` | user-facing app-writing guide — **where warranted** (racket has one; chez/gerbil/sbcl make the §22 `user-guide.md` their primary user doc) | Step 9 |
+| `docs/design/`, `docs/research/` | the per-target design spec(s) and spikes raised while building | Step 1 onward / per spike |
+| `bindings/<platform>/docs/user-guide.md` | §22: how to use the binding to write an app — the primary user doc for targets without a `developer-guide.md` | Step 9 |
+| `bindings/<platform>/docs/platform-docs-mapping.md` | §22: how the platform's own API docs map onto this binding's surface | Step 9 |
+| `bindings/<platform>/docs/api-coverage.md` | §22: what's covered — **citing `apianyware-conformance`**, not a copied table | Step 9 |
+| `bindings/<platform>/docs/unsafe-escape-hatches.md` | §22: the unsafe/raw seams and when to reach for them | Step 9 |
+| `app-implementations/<platform>/<app>/learnings.md` | per-app realization notes — what this target had to do to make that app work | Step 7, per app |
+| `bindings/<platform>/reports/<app>/report.md` | the VM-verification report (+ screenshots) for each app | Step 7, per app |
 
 ADRs are **the one exception**: target-flavoured decisions still land in the
 central `adr/` log with global numbering (the decision graph crosses target
@@ -97,9 +116,10 @@ ADR-0024. Raise ADRs there as you make them, not under the target unit.
 
 ## Prerequisites
 
-- The shared emitter framework (`generation/crates/emit/`) is available.
-- At least one target is complete as a reference: **racket** (the most complete)
-  and **chez** (the idiomatic-Scheme + self-contained-bundle reference).
+- The shared emitter framework (`targets/_shared/tools/emit/`) is available.
+- At least one target is complete as a reference: **racket** (the most complete),
+  **chez** (the idiomatic-Scheme + self-contained-bundle reference), **gerbil**
+  (compiled-FFI OO Scheme, no Swift dylib), and **sbcl** (CLOS/MOP, dumped image).
 - The target language has a working FFI mechanism for calling C functions and
   the libobjc runtime.
 
@@ -125,9 +145,9 @@ inherits is **ADR-0005** — read it first.
      ADR-0005 (chez: `library` form, `foreign-procedure`/`foreign-callable`,
      ftypes, guardians).
    - **Swift dylib** — `libAPIAnyware{Lang}.dylib`, if needed.
-   - **Emitter crate** — `emit-{id}`.
-   - **Runtime location** — `generation/targets/{id}/runtime/` (or the target's
-     own convention — chez uses `apianyware/runtime/`).
+   - **Emitter crate** — `emit-{id}` (at `targets/{id}/tools/emit-{id}`).
+   - **Runtime location** — `targets/{id}/bindings/<platform>/runtime/` (or the
+     target's own convention — chez uses `bindings/macos/apianyware/runtime/`).
    - **Distribution model** — how a sample app ships (racket: stub-launcher +
      system runtime; chez: self-contained standalone binary, ADR-0009).
 
@@ -141,8 +161,12 @@ inherits is **ADR-0005** — read it first.
 
 ## Step 2: Create the emitter crate
 
+Per the crate-home convention, a target's own crates live under its
+`tools/` (a per-target emitter is target-specific, so it homes in the
+target unit, not `_shared`):
+
 ```text
-generation/crates/emit-{id}/
+targets/{id}/tools/emit-{id}/
   Cargo.toml
   src/
     lib.rs
@@ -179,9 +203,9 @@ tempfile = "3"
 workspace = true
 ```
 
-In the root `Cargo.toml`: add `"generation/crates/emit-{id}"` to `[workspace]
-members` and `apianyware-emit-{id} = { path = "…" }` to
-`[workspace.dependencies]`.
+In the root `Cargo.toml`: add `"targets/{id}/tools/emit-{id}"` to `[workspace]
+members` and `apianyware-emit-{id} = { path = "targets/{id}/tools/emit-{id}" }`
+to `[workspace.dependencies]`.
 
 ### Implement `FfiTypeMapper`
 
@@ -215,10 +239,10 @@ use std::path::Path;
 pub const {LANG}_TARGET_INFO: TargetInfo = TargetInfo {
     id: "{id}",                  // CLI --target value + on-disk dir
     display_name: "{Language}",
-    generated_subdir: "generated", // subdir under targets/{id}/ for framework output.
-                                    // racket uses "generated"; chez uses "apianyware"
-                                    // so Chez's (apianyware <fw> <cls>) library-name
-                                    // resolution finds emitted files.
+    generated_subdir: "generated", // subdir under bindings/<platform>/ for framework
+                                    // output. racket uses "generated"; chez uses
+                                    // "apianyware" so Chez's (apianyware <fw> <cls>)
+                                    // library-name resolution finds emitted files.
 };
 
 pub struct {Lang}Emitter;
@@ -236,8 +260,8 @@ impl TargetEmitter for {Lang}Emitter {
 }
 ```
 
-(The trait and types live in `emit/src/target_emitter.rs`. It was once
-`binding_style.rs`, but the `BindingStyle` enum is gone — ADR-0004.)
+(The trait and types live in `targets/_shared/tools/emit/src/target_emitter.rs`.
+It was once `binding_style.rs`, but the `BindingStyle` enum is gone — ADR-0004.)
 
 ### Key design decisions per language
 
@@ -252,12 +276,12 @@ impl TargetEmitter for {Lang}Emitter {
 - **Error handling** — error-out params → the language's error model (chez:
   `(values result error)`, ADR-0006).
 
-Use `generation/crates/emit-racket/` and `generation/crates/emit-chez/` as
+Use `targets/racket/tools/emit-racket/` and `targets/chez/tools/emit-chez/` as
 reference implementations — they make *different* idiomatic choices on purpose.
 
 ## Step 3: Create the runtime library
 
-Create the target's runtime under `generation/targets/{id}/` (racket:
+Create the target's runtime under `targets/{id}/bindings/<platform>/` (racket:
 `runtime/`; chez: `apianyware/runtime/`). Typical modules:
 
 | Module | Purpose |
@@ -268,19 +292,24 @@ Create the target's runtime under `generation/targets/{id}/` (racket:
 | Dispatch | block / delegate / dynamic-subclass bridging |
 | Type mapping | string/array/dictionary + geometry structs (ftypes/cstructs) |
 
-## Step 4: Create or extend the Swift dylib
+## Step 4: Create the native adapter (Swift dylib)
 
-If the language needs a Swift dylib:
+The native adapter is a **per-target, hermetically-isolated** Swift package
+(ADR-0011 — no shared `APIAnywareCommon` substrate) at
+`targets/{id}/adapters/<platform>/`. If the language needs a Swift dylib:
 
-1. Check if `swift/Sources/APIAnyware{Lang}/` exists.
-2. If not, add a `.library(name: "APIAnyware{Lang}", type: .dynamic, …)` product
-   to `swift/Package.swift` and create the source dir importing `APIAnywareCommon`.
-3. Add language-specific modules (block/delegate bridging, GC prevention).
-4. `swift build && swift test`.
+1. Create `targets/{id}/adapters/<platform>/Package.swift` declaring a
+   `.library(name: "APIAnyware{Lang}", type: .dynamic, …)` product, with sources
+   under `sources/` — standalone, importing no shared substrate (gerbil ships
+   *no* dylib at all, ADR-0017).
+2. Add language-specific modules (block/delegate bridging, GC prevention).
+3. `swift build --product APIAnyware{Lang} && swift test` from the package dir.
+4. Author the adapter's `spec.apiw` (§24–26 roles / runtime services /
+   direct-call policy) beside `Package.swift` — the target-model adapter entity.
 
 ## Step 5: Register with the generation CLI
 
-Emitters are registered in one place — `generation/crates/cli/src/registry.rs`,
+Emitters are registered in one place — `targets/_shared/tools/generate-cli/src/registry.rs`,
 `EmitterRegistry::new()`:
 
 ```rust
@@ -328,17 +357,17 @@ way.
 ## Step 7: Build and VM-verify the sample apps
 
 Implement the standard sample apps (`apps/macos/docs/_index.md`) under
-`generation/targets/{id}/apps/<app>/`. The runtime-feature ladder
+`targets/{id}/app-implementations/<platform>/<app>/`. The runtime-feature ladder
 (`hello-window` → `ui-controls-gallery` → `scenekit-viewer` → `pdfkit-viewer` →
 `mini-browser` → `note-editor` → `drawing-canvas`) is ordered so each app adds one
 runtime piece and a regression localises to the newest one.
 
 **Every app gets a dedicated TestAnyware VM-verification, and CLI smoke never
 satisfies the bar** — a window must actually draw and behave. Record each app's
-result under `generation/targets/{id}/test-results/<app>/report.md` (+
-screenshots) and `generation/targets/{id}/apps/<app>/learnings.md`. See the existing reports under
-`targets/<id>/docs/reference.md` for the format and the no-Chez-VM
-recipe in `targets/chez/docs/reference.md` §9.
+result under `targets/{id}/bindings/<platform>/reports/<app>/report.md` (+
+screenshots) and `targets/{id}/app-implementations/<platform>/<app>/learnings.md`.
+See the existing reports under `targets/<id>/docs/reference.md` for the format and
+the no-Chez-VM recipe in `targets/chez/docs/reference.md` §9.
 
 ## Step 8: Bundling / distribution
 
@@ -370,60 +399,80 @@ the H1 of `apps/macos/<app>/docs/spec.md`.
 
 A target is **not done until its docs exist in the canonical structure**
 (ADR-0024). Some of these docs you have been writing all along — the design spec
-since Step 1, per-app `learnings.md` and `test-results/` reports since Step 7.
+since Step 1, per-app `learnings.md` and VM-verify `reports/` since Step 7.
 This step is where you fill **every** remaining slot of the per-language tier and
 confirm the unit is self-describing. Do not invent a layout; fill the one below.
 
-The canonical per-target doc layout — create each slot that applies:
+The canonical per-target doc layout — two co-located doc sets (§18 target docs at
+`docs/`, §22 binding mapping docs at `bindings/<platform>/docs/`). Create each slot
+that applies:
 
 ```text
-generation/targets/<id>/
+targets/<id>/
   README.md                       # target overview / index: what this target is,
                                   #   how it's built, where the pieces live,
-                                  #   pointers into docs/ and apps/. The entry point.
-  docs/
-    reference.md                  # the deep reference: FFI patterns, naming, dispatch,
-                                  #   memory model, block/delegate bridging, runtime
-                                  #   quirks, a distribution section (§ like chez §9).
-                                  #   This is the doc a future maintainer reads first.
+                                  #   pointers into docs/. The entry point.
+  docs/                           # §18 TARGET docs — a map + four deep-dives
+    overview.md                   # the §18 map: what the target is, idiom posture,
+                                  #   links into the deep-dives + the unit layout
+    language-characteristics.md   # typing, GC, macros, module system — the relevant traits
+    ffi-model.md                  # the FFI/embedding mechanism, dispatch, memory, threading
+    idiom-map.md                  # a THIN pointer to idioms/docs/idiom-map.md (don't copy it)
+    representability.md           # §20 capability × §30 weirdness → the §7.7 floor
+    reference.md                  # the deep reference a future maintainer reads first
+                                  #   (FFI patterns, quirks, a distribution section)
     developer-guide.md            # OPTIONAL — a user-facing "how to write an app in
-                                  #   <lang>" guide. Write one only where it earns its
-                                  #   place (racket has one; chez/gerbil fold this into
-                                  #   reference.md). Don't create an empty stub.
+                                  #   <lang>" guide. racket has one; chez/gerbil/sbcl
+                                  #   make the §22 bindings/.../user-guide.md their
+                                  #   primary user doc. Don't create an empty stub.
     design/
-      YYYY-MM-DD-<id>-design.md   # the design spec(s) from Step 1 onward — the target
-      ...                         #   design, distribution design, native-binding design
+      YYYY-MM-DD-<id>-design.md   # the design spec(s) from Step 1 onward
     research/
-      YYYY-MM-DD-<topic>-spike/   # per-target spikes + their evidence (scripts,
-      ...                         #   transcripts, screenshots, FINDINGS.md)
-  apps/<app>/
+      YYYY-MM-DD-<topic>-spike/   # per-target spikes + their evidence
+  bindings/<platform>/docs/       # §22 BINDING MAPPING docs — every one points at the
+                                  #   authored .apiw entities + cites apianyware-conformance
+    user-guide.md                 # how to use the binding to write an app
+    platform-docs-mapping.md      # how the platform's own API docs map onto this binding
+    api-coverage.md               # coverage — CITING apianyware-conformance, not a copy
+    unsafe-escape-hatches.md      # the unsafe/raw seams and when to reach for them
+  app-implementations/<platform>/<app>/
     README.md                     # per-app overview
     learnings.md                  # what THIS target had to do to make THIS app work
-  test-results/<app>/report.md    # the VM-verification report (+ screenshots)
+  bindings/<platform>/reports/<app>/report.md   # the VM-verification report (+ screenshots)
 ```
 
 For each slot:
 
 1. **`README.md`** — write the target's index: a paragraph on what the target is
    and its idiom posture, the on-disk map (emitter crate, runtime, dylib if any,
-   bundler), and links into `docs/` and `apps/`. Model it on
-   `generation/targets/gerbil/README.md`.
-2. **`docs/reference.md`** — consolidate the target-wide learnings accumulated
+   bundler), and links into `docs/`. Model it on `targets/gerbil/README.md`.
+2. **§18 `docs/` target docs** — the map (`overview.md`) + the four deep-dives
+   (`language-characteristics.md`, `ffi-model.md`, `idiom-map.md`,
+   `representability.md`). `idiom-map.md` is a **thin pointer** to the
+   authoritative `idioms/docs/idiom-map.md`, not a copy. `representability.md`
+   narrates how the §20 capability profile × the platform's §30 weirdness yields
+   the §7.7 floor — citing `apianyware-conformance` for any derived numbers, never
+   snapshotting them (constraint 4). racket/chez/gerbil/sbcl `docs/` are the worked
+   examples.
+3. **`docs/reference.md`** — consolidate the target-wide learnings accumulated
    across Steps 3–8: FFI mechanism, naming, dispatch, memory model, block/delegate
-   bridging, error handling, runtime quirks, and a **distribution** section. This
-   is the worked-example doc the next target's author reads; `racket`, `chez`, and
-   `gerbil`'s `reference.md` are the templates.
-3. **`docs/developer-guide.md`** — only **where warranted**. If app authors need
-   a narrative "how to write an app in this language" beyond the reference, write
-   it (see `targets/racket/docs/developer-guide.md`); otherwise skip it
-   and let `reference.md` carry that weight.
-4. **`docs/design/`** — ensure every design spec you wrote during the build lives
-   here (not in a central `docs/specs/` — none exists; cross-cutting specs
-   co-locate by domain), per Step 1 and ADR-0024.
-5. **`docs/research/`** — move any spike directories you ran into here, with their
-   evidence intact, so the *why* behind a non-obvious choice is recoverable.
-6. **`apps/<app>/learnings.md`** + **`test-results/<app>/report.md`** — one of
-   each per sample app, from Step 7. Confirm all seven exist.
+   bridging, error handling, runtime quirks, and a **distribution** section. The
+   worked-example doc the next target's author reads.
+4. **§22 `bindings/<platform>/docs/` mapping docs** — `user-guide.md`,
+   `platform-docs-mapping.md`, `api-coverage.md`, `unsafe-escape-hatches.md`. Every
+   one **points at the authored `.apiw` entities** and **cites
+   `apianyware-conformance`** for coverage rather than copying recomputable tables.
+   For a target with no `developer-guide.md` (chez/gerbil/sbcl), `user-guide.md` is
+   the **primary user doc** — write it so.
+5. **`docs/developer-guide.md`** — only **where warranted**. If app authors need a
+   narrative "how to write an app in this language" beyond the §22 `user-guide.md`,
+   write it (see `targets/racket/docs/developer-guide.md`); otherwise skip it.
+6. **`docs/design/`** + **`docs/research/`** — ensure every design spec and spike
+   you raised during the build lives here, evidence intact (cross-cutting specs
+   co-locate by domain — there is no central `docs/specs/`), per Step 1 and ADR-0024.
+7. **`app-implementations/<platform>/<app>/learnings.md`** +
+   **`bindings/<platform>/reports/<app>/report.md`** — one of each per sample app,
+   from Step 7. Confirm all seven exist.
 
 ADRs are the **exception** and do **not** go under the target unit — target
 decisions land in the central `adr/` log with global numbering (ADR-0024).
@@ -432,25 +481,29 @@ decisions land in the central `adr/` log with global numbering (ADR-0024).
 
 - Rust tests pass (`cargo test`); any snapshot/golden tests pass.
 - Every sample app passes its TestAnyware VM verification.
-- **Docs exist in the canonical structure (Step 9)** — `README.md`,
-  `docs/reference.md`, `docs/design/`, `docs/research/` (if any spikes), and per
-  app a `learnings.md` + `test-results/.../report.md`. This is part of the
-  target's definition of done, not optional polish (ADR-0024).
+- **Docs exist in the canonical structure (Step 9)** — `README.md`, the §18
+  `docs/` set (`overview` + the four deep-dives, `reference.md`), the §22
+  `bindings/<platform>/docs/` set, `docs/design/`/`docs/research/` (if any spikes),
+  and per app a `learnings.md` + `bindings/<platform>/reports/<app>/report.md`.
+  This is part of the target's definition of done, not optional polish (ADR-0024).
 - `README.md` (the repo-root one) Current Status updated with the target.
 
 ## Reference implementations
 
-- **racket** — `generation/crates/emit-racket/`, `generation/targets/racket/`,
+- **racket** — `targets/racket/tools/emit-racket/`, `targets/racket/`,
   `targets/racket/docs/reference.md`. Stdlib-rich; stub-launcher distribution.
-- **chez** — `generation/crates/emit-chez/`, `generation/targets/chez/`,
+- **chez** — `targets/chez/tools/emit-chez/`, `targets/chez/`,
   `targets/chez/docs/reference.md`. Idiomatic Scheme; self-contained standalone
   distribution (ADR-0009).
-- **gerbil** — `generation/crates/emit-gerbil/`, `generation/targets/gerbil/`,
+- **gerbil** — `targets/gerbil/tools/emit-gerbil/`, `targets/gerbil/`,
   `targets/gerbil/docs/reference.md`. Compiled-FFI OO Scheme (manifest `defclass`
   graph, dual dispatch surface, ADR-0020); ObjC-in-gsc native core, no Swift
   dylib (ADR-0017); self-contained `gxc -exe` distribution.
-- **Shared framework** — `generation/crates/emit/`.
-- **Swift helpers** — `swift/Sources/APIAnyware{Racket,Chez}/` (per-target, no
+- **sbcl** — `targets/sbcl/tools/emit-sbcl/`, `targets/sbcl/`,
+  `targets/sbcl/docs/reference.md`. CLOS/MOP projection; `save-lisp-and-die`
+  dumped-image distribution behind a Swift stub (ADR-0041).
+- **Shared framework** — `targets/_shared/tools/emit/`.
+- **Native adapters** — `targets/<id>/adapters/macos/` (per-target Swift package, no
   shared substrate — ADR-0011; gerbil has none, ADR-0017).
 
 ## Checklist
@@ -458,24 +511,25 @@ decisions land in the central `adr/` log with global numbering (ADR-0024).
 ```text
 Build
 [ ] Design spec written (targets/<id>/docs/design/YYYY-MM-DD-<id>-design.md); ADR-0005 idiom posture understood
-[ ] emit-<id> crate created, compiles, tests pass
+[ ] emit-<id> crate created at targets/<id>/tools/emit-<id>, compiles, tests pass
 [ ] TargetInfo {id, display_name, generated_subdir} + TargetEmitter::emit_framework implemented
-[ ] Runtime library written, loads in the target language
-[ ] Swift dylib builds and FFI verified (if needed)
-[ ] Registered in EmitterRegistry::new() (cli/src/registry.rs); --target <id> works
+[ ] Runtime library written under targets/<id>/bindings/<platform>/, loads in the target language
+[ ] Native adapter (targets/<id>/adapters/<platform>/) builds and FFI verified (if needed)
+[ ] Registered in EmitterRegistry::new() (targets/_shared/tools/generate-cli/src/registry.rs); --target <id> works
 [ ] Snapshot/golden or inline emission tests in place (target's choice)
-[ ] All 7 sample apps built
+[ ] All 7 sample apps built under targets/<id>/app-implementations/<platform>/
 [ ] All 7 sample apps pass TestAnyware VM verification
 [ ] Bundler integration: apps package as .app (stub-launcher or standalone)
 
 Document the target (Step 9 — canonical per-language structure, ADR-0024)
-[ ] generation/targets/<id>/README.md (target overview / index)
+[ ] targets/<id>/README.md (target overview / index)
+[ ] §18 targets/<id>/docs/ set: overview + language-characteristics + ffi-model + idiom-map (thin pointer) + representability
 [ ] targets/<id>/docs/reference.md populated (incl. a distribution section)
-[ ] targets/<id>/docs/developer-guide.md — where warranted (racket has one; else skip)
-[ ] targets/<id>/docs/design/ holds every build-time design spec
-[ ] targets/<id>/docs/research/ holds every spike + its evidence
-[ ] apps/<app>/learnings.md for each of the 7 apps
-[ ] test-results/<app>/report.md for each of the 7 apps
+[ ] §22 targets/<id>/bindings/<platform>/docs/ set: user-guide + platform-docs-mapping + api-coverage (cites apianyware-conformance) + unsafe-escape-hatches
+[ ] targets/<id>/docs/developer-guide.md — where warranted (racket has one; else the §22 user-guide.md is the primary user doc)
+[ ] targets/<id>/docs/design/ holds every build-time design spec; docs/research/ holds every spike + its evidence
+[ ] app-implementations/<platform>/<app>/learnings.md for each of the 7 apps
+[ ] bindings/<platform>/reports/<app>/report.md for each of the 7 apps
 [ ] Target ADRs raised in the central adr/ log (NOT under the target unit)
 [ ] README.md (repo root) Current Status updated
 ```

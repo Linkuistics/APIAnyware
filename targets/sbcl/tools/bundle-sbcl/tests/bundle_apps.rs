@@ -10,10 +10,8 @@
 //! cargo test -p apianyware-bundle-sbcl -- --ignored --nocapture
 //! ```
 
-use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::OnceLock;
 
 use apianyware_bundle_sbcl::{bundle_app, driver_needs_dylib, AppSpec, BundleError};
 
@@ -25,38 +23,21 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// The sbcl app tree the bundler expects: a single `source_root` with an `apps/`
-/// child, from which it reads `apps/<script>/dump.lisp`. The §18 refactor
-/// (`move-sbcl-material-k14`) moved the apps to
-/// `targets/sbcl/app-implementations/macos/`, so we stitch that home back into
-/// the `apps/`-rooted shape the bundler expects with a symlink fixture — the same
-/// directory-symlink case the bundler already canonicalizes through (mirrors
-/// gerbil's `gerbil_root()`; sbcl needs only `apps/`, because each app's own
-/// `dump.lisp` loads the binding tree self-relative via `load-bindings.lisp`).
-///
-/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
-/// the apps-root / bindings-root split natively so this fixture isn't needed.
-fn sbcl_root() -> PathBuf {
-    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
-    FIXTURE
-        .get_or_init(|| {
-            let apps = workspace_root()
-                .join("targets")
-                .join("sbcl")
-                .join("app-implementations")
-                .join("macos");
-            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("sbcl-bundle-fixture");
-            let _ = fs::remove_dir_all(&fixture);
-            fs::create_dir_all(&fixture).expect("create sbcl bundle fixture root");
-            std::os::unix::fs::symlink(&apps, fixture.join("apps"))
-                .unwrap_or_else(|e| panic!("symlink apps -> {apps:?}: {e}"));
-            fixture
-        })
-        .clone()
+/// The app-implementations root: sbcl sample apps live at
+/// `<apps_root>/<script>/dump.lisp` (§18 split, `move-sbcl-material-k14`). The
+/// bundler needs only this root — each app's `dump.lisp` self-resolves the
+/// binding tree via `../_support/load-bindings.lisp`, so no bindings root and no
+/// stitching fixture is required.
+fn apps_root() -> PathBuf {
+    workspace_root()
+        .join("targets")
+        .join("sbcl")
+        .join("app-implementations")
+        .join("macos")
 }
 
 fn driver(script: &str) -> PathBuf {
-    sbcl_root().join("apps").join(script).join("dump.lisp")
+    apps_root().join(script).join("dump.lisp")
 }
 
 fn sbcl_tree_present() -> bool {
@@ -92,7 +73,7 @@ fn rejects_missing_driver() {
     }
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name("definitely-not-an-app");
-    let err = bundle_app(&spec, &sbcl_root(), temp.path(), &workspace_root()).unwrap_err();
+    let err = bundle_app(&spec, &apps_root(), temp.path(), &workspace_root()).unwrap_err();
     assert!(
         matches!(err, BundleError::DumpDriverMissing { .. }),
         "expected DumpDriverMissing, got {err:?}"
@@ -124,11 +105,11 @@ fn builds_and_revives_hello_window_app() {
         eprintln!("SKIPPED: sbcl not found");
         return;
     }
-    let root = sbcl_root();
     let out = tempfile::tempdir().expect("out tempdir");
     let spec = AppSpec::from_script_name("hello-window");
 
-    let app = bundle_app(&spec, &root, out.path(), &workspace_root()).expect("bundle hello-window");
+    let app = bundle_app(&spec, &apps_root(), out.path(), &workspace_root())
+        .expect("bundle hello-window");
 
     // Layout: stub is CFBundleExecutable; image is a Resource; libzstd vendored.
     let stub = app.join("Contents").join("MacOS").join("hello-window");

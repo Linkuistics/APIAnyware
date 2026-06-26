@@ -19,11 +19,12 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
-fn racket_root() -> PathBuf {
+fn bindings_root() -> PathBuf {
     workspace_root()
-        .join("generation")
         .join("targets")
         .join("racket")
+        .join("bindings")
+        .join("macos")
 }
 
 fn swiftc_available() -> bool {
@@ -43,14 +44,14 @@ fn codesign_available() -> bool {
 }
 
 fn racket_source_present() -> bool {
-    racket_root()
+    bindings_root()
         .join("runtime")
         .join("objc-base.rkt")
         .is_file()
 }
 
 fn minimal_project(project_root: &Path, display: &str) -> (PathBuf, AppSpec) {
-    std::os::unix::fs::symlink(racket_root(), project_root.join("bindings"))
+    std::os::unix::fs::symlink(bindings_root(), project_root.join("bindings"))
         .expect("symlink bindings/");
     fs::write(
         project_root.join("main.rkt"),

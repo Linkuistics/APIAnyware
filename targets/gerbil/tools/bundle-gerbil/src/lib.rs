@@ -34,14 +34,14 @@
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");
-//! // NOTE (w6): the bundler still expects apps/ + lib/ as direct children of
-//! // source_root; the §18 split (apps→app-implementations/macos,
-//! // lib→bindings/macos/generated) is stitched via the gerbil_root() symlink
-//! // fixture in tests until the bundler is taught the split natively.
-//! let source_root = Path::new("targets/gerbil");
+//! // The §18 domain tree splits the gerbil material: apps under one root, the
+//! // `gerbil-bindings` package (the closure's `runtime/` + emitted `<fw>/`)
+//! // under `bindings_root/generated`.
+//! let apps_root = Path::new("targets/gerbil/app-implementations/macos");
+//! let bindings_root = Path::new("targets/gerbil/bindings/macos");
 //! let output_dir =
 //!     Path::new("targets/gerbil/app-implementations/macos/hello-window/build");
-//! let app_path = bundle_app(&spec, source_root, output_dir).unwrap();
+//! let app_path = bundle_app(&spec, apps_root, bindings_root, output_dir).unwrap();
 //! println!("built: {}", app_path.display());
 //! ```
 //!

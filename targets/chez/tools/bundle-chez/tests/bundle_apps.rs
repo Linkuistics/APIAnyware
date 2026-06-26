@@ -19,7 +19,6 @@
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::OnceLock;
 
 use apianyware_bundle_chez::{bundle_app, compute_collisions, AppSpec, BundleError, Collisions};
 
@@ -31,48 +30,28 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// The chez binding tree the bundler expects: a single root with `apps/`,
-/// `apianyware/` (the package root — runtime + emitted libraries), and `lib/`
-/// (the mandatory dylib, ADR-0005) as siblings. The dependency walk resolves
-/// `(apianyware ...)` names under `<root>/apianyware/`, reads apps from
-/// `<root>/apps/`, and requires `<root>/lib/libAPIAnywareChez.dylib`.
-///
-/// The §18 refactor (`move-chez-material-k12`) split that tree apart: apps now
-/// live under `targets/chez/app-implementations/macos/`, and the `apianyware/`
-/// package root + dylib under `targets/chez/bindings/macos/`. We stitch the new
-/// homes back into the single-root shape the bundler expects with a symlink
-/// fixture — the same directory-symlink case the bundler already handles. The
-/// emitted `apianyware/<fw>/` libraries are gitignored (absent in a clean
-/// checkout), so the heavy collision-set test behaves identically, now
-/// referencing the new homes.
-///
-/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
-/// the apps-root / bindings-root split natively so this fixture isn't needed.
-fn chez_root() -> PathBuf {
-    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
-    FIXTURE
-        .get_or_init(|| {
-            let target = workspace_root().join("targets").join("chez");
-            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("chez-bundle-fixture");
-            let _ = fs::remove_dir_all(&fixture);
-            fs::create_dir_all(&fixture).expect("create chez bundle fixture root");
-            let mut link = |src: PathBuf, name: &str| {
-                let dst = fixture.join(name);
-                // A dangling link (e.g. the absent built dylib under lib/) is
-                // fine — the bundler's existence check yields the same outcome it
-                // did when the tree was colocated under generation/targets/chez.
-                std::os::unix::fs::symlink(&src, &dst)
-                    .unwrap_or_else(|e| panic!("symlink {dst:?} -> {src:?}: {e}"));
-            };
-            link(target.join("app-implementations").join("macos"), "apps");
-            link(
-                target.join("bindings").join("macos").join("apianyware"),
-                "apianyware",
-            );
-            link(target.join("bindings").join("macos").join("lib"), "lib");
-            fixture
-        })
-        .clone()
+/// The app-implementations root: chez sample apps live at
+/// `<apps_root>/<app>/<app>.sls` (§18 split, `move-chez-material-k12`). The
+/// bundler reads the entry from here and resolves `(import (apianyware …))`
+/// from [`bindings_root`] natively, staging both into one colocated
+/// whole-program-compile tree.
+fn apps_root() -> PathBuf {
+    workspace_root()
+        .join("targets")
+        .join("chez")
+        .join("app-implementations")
+        .join("macos")
+}
+
+/// The binding package root: `apianyware/` (the package root — committed
+/// `runtime/` + emitted `<fw>/` libraries) and `lib/` (the mandatory dylib,
+/// ADR-0005) are its real children (§18 split).
+fn bindings_root() -> PathBuf {
+    workspace_root()
+        .join("targets")
+        .join("chez")
+        .join("bindings")
+        .join("macos")
 }
 
 fn chez_available() -> bool {
@@ -83,12 +62,24 @@ fn chez_available() -> bool {
         .unwrap_or(false)
 }
 
-fn chez_runtime_present() -> bool {
-    chez_root()
+/// True when `apianyware-generate` has been run locally — the emitted
+/// per-framework `apianyware/<fw>/` libraries exist. The hand-written
+/// `apianyware/runtime/` is committed, but the framework modules are gitignored
+/// (`.gitignore`: `apianyware/*` minus `runtime`), so the committed runtime is
+/// no longer a valid proxy for "emit was run". The collision probe expands the
+/// whole AppKit facade closure, so it needs the emitted appkit modules; without
+/// this guard it fails with a library-not-found in any clean checkout. Mirrors
+/// racket's `racket_emit_present()` / gerbil's `gerbil_tree_present()`.
+fn chez_emit_present() -> bool {
+    bindings_root()
         .join("apianyware")
-        .join("runtime")
-        .join("ffi.sls")
+        .join("appkit")
+        .join("nswindow.sls")
         .is_file()
+        && apps_root()
+            .join("hello-window")
+            .join("hello-window.sls")
+            .is_file()
 }
 
 /// The standalone wrapper's collision set for `hello-window` must be
@@ -105,17 +96,15 @@ fn computes_hello_window_collision_set() {
         eprintln!("SKIPPED: chez not available");
         return;
     }
-    if !chez_runtime_present() {
-        eprintln!("SKIPPED: chez runtime tree not present");
+    if !chez_emit_present() {
+        eprintln!("SKIPPED: chez emitted binding tree not present (generate not run locally)");
         return;
     }
-    let root = chez_root();
-    let entry = root
-        .join("apps")
-        .join("hello-window")
-        .join("hello-window.sls");
+    let entry = apps_root().join("hello-window").join("hello-window.sls");
 
-    let collisions = compute_collisions(&entry, &root).expect("collision probe");
+    // The probe sets `(library-directories bindings_root)` and reads the entry
+    // directly — no need to colocate the app under the bindings root.
+    let collisions = compute_collisions(&entry, &bindings_root()).expect("collision probe");
 
     let expected = Collisions::from([
         (
@@ -140,15 +129,18 @@ fn computes_hello_window_collision_set() {
 #[test]
 fn rejects_missing_dylib() {
     let project = tempfile::tempdir().expect("project tempdir");
-    // apps/<script>/<script>.sls exists (passes the EntryMissing check),
-    // but there is no lib/libAPIAnywareChez.dylib.
-    let app_dir = project.path().join("apps").join("main");
+    // The app entry exists under the apps root (passes the EntryMissing
+    // check), but the bindings root has no lib/libAPIAnywareChez.dylib.
+    let apps_root = project.path().join("app-implementations");
+    let bindings_root = project.path().join("bindings");
+    let app_dir = apps_root.join("main");
     fs::create_dir_all(&app_dir).unwrap();
     fs::write(app_dir.join("main.sls"), "(import (chezscheme))\n(main)\n").unwrap();
+    fs::create_dir_all(&bindings_root).unwrap();
 
     let spec = AppSpec::from_script_name("main");
     let out = tempfile::tempdir().expect("out tempdir");
-    let err = bundle_app(&spec, project.path(), out.path()).unwrap_err();
+    let err = bundle_app(&spec, &apps_root, &bindings_root, out.path()).unwrap_err();
     match err {
         BundleError::DylibMissing { .. } => {}
         other => panic!("expected DylibMissing, got {other:?}"),
@@ -160,13 +152,13 @@ fn rejects_missing_dylib() {
     );
 }
 
-/// A script name with no matching `apps/<script>/<script>.sls` entry fails
-/// with `EntryMissing` — the first thing [`bundle_app`] checks.
+/// A script name with no matching `<apps_root>/<script>/<script>.sls` entry
+/// fails with `EntryMissing` — the first thing [`bundle_app`] checks.
 #[test]
 fn rejects_missing_app() {
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name("definitely-not-an-app");
-    let err = bundle_app(&spec, &chez_root(), temp.path()).unwrap_err();
+    let err = bundle_app(&spec, &apps_root(), &bindings_root(), temp.path()).unwrap_err();
     assert!(
         matches!(err, BundleError::EntryMissing { .. }),
         "expected EntryMissing, got {err:?}"

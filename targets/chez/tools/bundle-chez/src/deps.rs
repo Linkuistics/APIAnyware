@@ -42,6 +42,92 @@ use crate::bundle::BundleError;
 /// dev host.
 pub const DEFAULT_CHEZ_BIN: &str = "chez";
 
+/// The source tree(s) the chez bundler stages into one whole-program-compile
+/// tree, resolved in **logical** path space.
+///
+/// The staged `tree/` (and the bundle's import resolution) is always a single
+/// colocated shape — `apps/<app>/`, `apianyware/`, `lib/` as siblings — which
+/// is also where the dep walker's `(import (apianyware …))` resolution and the
+/// collision probe expect the libraries to live. [`SourceRoots`] lets the
+/// bundler honour that shape whether the source is genuinely colocated
+/// ([`single`]) or physically split across the §18 domain tree ([`split`]).
+///
+/// In the split case the **logical root is the bindings root** — `apianyware/`
+/// and `lib/` are already its real children — and the one redirect is
+/// `<logical_root>/apps/…`, which maps to the physically-separate
+/// app-implementations tree.
+///
+/// [`single`]: SourceRoots::single
+/// [`split`]: SourceRoots::split
+#[derive(Debug, Clone)]
+pub struct SourceRoots {
+    logical_root: PathBuf,
+    apps_root: Option<PathBuf>,
+}
+
+impl SourceRoots {
+    /// A single colocated root: `apps/`, `apianyware/`, `lib/` are real
+    /// siblings. Logical and physical paths are identical.
+    pub fn single(root: &Path) -> Result<Self, BundleError> {
+        Ok(Self {
+            logical_root: absolutize(root)
+                .map_err(|e| BundleError::ResolveSourceRoot(root.to_path_buf(), e))?,
+            apps_root: None,
+        })
+    }
+
+    /// The §18 split: app-implementations under `apps_root`, the binding
+    /// package (`apianyware/` + `lib/`) under `bindings_root`. The logical
+    /// root is the bindings root; logical `apps/…` paths redirect to
+    /// `apps_root`.
+    pub fn split(apps_root: &Path, bindings_root: &Path) -> Result<Self, BundleError> {
+        Ok(Self {
+            logical_root: absolutize(bindings_root)
+                .map_err(|e| BundleError::ResolveSourceRoot(bindings_root.to_path_buf(), e))?,
+            apps_root: Some(
+                absolutize(apps_root)
+                    .map_err(|e| BundleError::ResolveSourceRoot(apps_root.to_path_buf(), e))?,
+            ),
+        })
+    }
+
+    /// The logical root the staged tree mirrors (absolute). Doubles as the
+    /// physical registry root the deps walker scans for `(apianyware …)`
+    /// libraries — they are real children of the bindings root.
+    pub(crate) fn logical_root(&self) -> &Path {
+        &self.logical_root
+    }
+
+    /// Map a logical path (under [`logical_root`]) to the physical file on
+    /// disk. Identity for a single root; for a split root, logical `apps/…`
+    /// paths redirect to the apps root.
+    ///
+    /// [`logical_root`]: SourceRoots::logical_root
+    pub(crate) fn to_physical(&self, logical: &Path) -> PathBuf {
+        if let Some(apps_root) = &self.apps_root {
+            if let Ok(rest) = logical.strip_prefix(self.logical_root.join("apps")) {
+                return apps_root.join(rest);
+            }
+        }
+        logical.to_path_buf()
+    }
+
+    /// Map a physical path the deps walker returned back to its logical path
+    /// under the logical root. A file under the apps root becomes
+    /// `<logical_root>/apps/…`; a file already under the logical (bindings)
+    /// root is itself; anything else is outside the bundle.
+    fn to_logical(&self, physical: &Path) -> Option<PathBuf> {
+        if let Some(apps_root) = &self.apps_root {
+            if let Ok(rest) = physical.strip_prefix(apps_root) {
+                return Some(self.logical_root.join("apps").join(rest));
+            }
+        }
+        physical
+            .starts_with(&self.logical_root)
+            .then(|| physical.to_path_buf())
+    }
+}
+
 /// Transitive set of `.sls` files reachable from `entry`, returned as
 /// absolute paths under `source_root`.
 pub fn collect_dependencies(
@@ -73,13 +159,65 @@ pub fn collect_dependencies_with_chez(
         return Err(BundleError::EntryMissing { entry: abs_entry });
     }
 
+    let mut deps = HashSet::new();
+    for path in run_extract_deps(&abs_root, &abs_entry, chez_bin)? {
+        if !path.starts_with(&abs_root) {
+            return Err(BundleError::DepOutsideRoot {
+                target: path,
+                root: abs_root.clone(),
+            });
+        }
+        deps.insert(path);
+    }
+    Ok(deps)
+}
+
+/// Transitive set of `.sls` files reachable from the app entry, returned as
+/// absolute **logical** paths under `roots.logical_root()` — the shape the
+/// staged whole-program-compile tree mirrors.
+///
+/// The deps walker scans the bindings root for `(library (apianyware …))`
+/// declarations and BFS-walks the entry's imports against them; the returned
+/// physical paths (the entry under the apps root, the libraries under the
+/// bindings root) are mapped back into logical space via the split.
+pub fn collect_dependencies_split(
+    entry: &Path,
+    roots: &SourceRoots,
+    chez_bin: &str,
+) -> Result<HashSet<PathBuf>, BundleError> {
+    let abs_entry =
+        absolutize(entry).map_err(|e| BundleError::ResolveEntry(entry.to_path_buf(), e))?;
+    if !abs_entry.exists() {
+        return Err(BundleError::EntryMissing { entry: abs_entry });
+    }
+
+    let mut deps = HashSet::new();
+    for path in run_extract_deps(roots.logical_root(), &abs_entry, chez_bin)? {
+        let logical = roots
+            .to_logical(&path)
+            .ok_or_else(|| BundleError::DepOutsideRoot {
+                target: path.clone(),
+                root: roots.logical_root().to_path_buf(),
+            })?;
+        deps.insert(logical);
+    }
+    Ok(deps)
+}
+
+/// Run `extract-deps.ss` with the given registry root and entry, returning the
+/// raw physical `.sls` paths it prints (one per line).
+fn run_extract_deps(
+    registry_root: &Path,
+    entry: &Path,
+    chez_bin: &str,
+) -> Result<Vec<PathBuf>, BundleError> {
     let script_path = write_script_to_tempfile()?;
 
     let output = Command::new(chez_bin)
         .arg("--script")
         .arg(script_path.path())
-        .arg(&abs_root)
-        .arg(&abs_entry)
+        .arg(registry_root)
+        .arg(entry)
         .output()
         .map_err(|e| BundleError::ChezNotAvailable {
             chez_bin: chez_bin.to_string(),
@@ -96,21 +234,11 @@ pub fn collect_dependencies_with_chez(
         stderr: format!("non-utf8 path in chez stdout: {e}"),
     })?;
 
-    let mut deps = HashSet::new();
-    for line in stdout.lines() {
-        if line.is_empty() {
-            continue;
-        }
-        let path = PathBuf::from(line);
-        if !path.starts_with(&abs_root) {
-            return Err(BundleError::DepOutsideRoot {
-                target: path,
-                root: abs_root.clone(),
-            });
-        }
-        deps.insert(path);
-    }
-    Ok(deps)
+    Ok(stdout
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(PathBuf::from)
+        .collect())
 }
 
 /// The embedded deps walker. Materialized to a tempfile per invocation
@@ -235,6 +363,62 @@ mod tests {
                 "runtime/objc.sls".to_string(),
             ]
         );
+    }
+
+    /// The §18 split: the entry lives under the apps root, the `(apianyware …)`
+    /// libraries under a *separate* bindings root. [`collect_dependencies_split`]
+    /// builds the registry from the bindings root, BFS-walks the entry's
+    /// imports, and maps the physical paths back to logical paths under the
+    /// bindings root — the colocated shape the staged whole-program tree
+    /// mirrors. This is the native replacement for the directory-symlink fixture
+    /// the bundler test used to stitch.
+    #[test]
+    fn collect_split_resolves_across_apps_and_bindings_roots() {
+        if !chez_available() {
+            eprintln!("SKIPPED: chez not available");
+            return;
+        }
+        let dir = TempDir::new().unwrap();
+        let apps = dir.path().join("app-implementations/macos");
+        let bindings = dir.path().join("bindings/macos");
+
+        write(
+            &bindings,
+            "apianyware/runtime/ffi.sls",
+            "(library (apianyware runtime ffi) (export f) (import (chezscheme)) (define (f) 1))",
+        );
+        write(
+            &bindings,
+            "apianyware/appkit/nswindow.sls",
+            "(library (apianyware appkit nswindow) (export w) \
+             (import (chezscheme) (apianyware runtime ffi)) (define (w) (f)))",
+        );
+        let entry = write(
+            &apps,
+            "demo/demo.sls",
+            "(import (apianyware appkit nswindow)) (w)",
+        );
+
+        let roots = SourceRoots::split(&apps, &bindings).unwrap();
+        let deps = collect_dependencies_split(&entry, &roots, DEFAULT_CHEZ_BIN).unwrap();
+
+        // Logical paths under the bindings root — the colocated shape staged
+        // into `tree/`: the entry at `apps/…`, the libraries at `apianyware/…`.
+        assert_eq!(
+            rel_names(&deps, roots.logical_root()),
+            vec![
+                "apianyware/appkit/nswindow.sls".to_string(),
+                "apianyware/runtime/ffi.sls".to_string(),
+                "apps/demo/demo.sls".to_string(),
+            ]
+        );
+        // Every logical dep maps to a real file across the two physical roots.
+        for d in &deps {
+            assert!(
+                roots.to_physical(d).is_file(),
+                "physical file missing for logical {d:?}"
+            );
+        }
     }
 
     #[test]

@@ -42,9 +42,9 @@ relocate (user decision, k12): keep the `apianyware/` package root and the
 `generation/targets/chez/` played before). No literal `generated/` wrapper exists;
 the `apianyware/` namespace tree **is** chez's emitted-package-root.
 
-## Open follow-ups (skeleton relocate — `move-chez-material-k12`)
+## Layout decisions (skeleton relocate — `move-chez-material-k12`; resolved)
 
-- **dylib home is `lib/`, not §42's `build/`** *(→ ws6 child 7, bundler reshape)*.
+- **dylib home is `lib/`, not §42's `build/`** *(resolved — `bundler-reshape-k61`)*.
   `runtime/ffi.sls` loads the dylib by probing `<libdir>/lib/libAPIAnywareChez.dylib`
   for every `(library-directories)` entry — the one mechanism that covers both
   unbundled CLI use and a bundled `.app` (where the stub passes
@@ -52,17 +52,18 @@ the `apianyware/` namespace tree **is** chez's emitted-package-root.
   force that single hardcoded `lib/` load-path to diverge between the in-tree and
   in-bundle contexts. The target model (ws6) is authored against the dylib *as it is* —
   the adapter spec ([`../../adapters/macos/spec.apiw`](../../adapters/macos/spec.apiw))
-  documents the existing `APIAnywareChez` library, no ABI redesign. The remaining
-  in-tree-vs-bundle load-path reconciliation is a **bundler concern, deferred to ws6
-  child 7 (bundler reshape + guide resync)**. Kept at `lib/` here so the move stays
-  behaviour-preserving.
-- **bundler expects a single colocated `source_root`** *(→ ws6 child 7, bundler
-  reshape)*. `bundle-chez` reads `apps/`, `apianyware/`, and `lib/` from one root, but
-  the §18 split puts apps under `app-implementations/macos/` and the package root +
-  dylib here. The `bundle_apps` integration test stitches the homes back with a symlink
-  fixture (the directory-symlink case the bundler already handles). Teaching the bundler
-  the apps-root / bindings-root split natively (so the fixture isn't needed) is the D6
-  bundler residual owned by **ws6 child 7** — a bundler concern, not doc work.
+  documents the existing `APIAnywareChez` library, no ABI redesign. The in-tree-vs-bundle
+  load-path reconciliation was **discharged by `bundler-reshape-k61`**: the bundler reads
+  the dylib from the bindings root's `lib/` and stages it under the boot/`Resources/lib/`,
+  so the `lib/` home holds in both contexts. Kept at `lib/`.
+- **bundler expects a single colocated `source_root`** *(resolved — `bundler-reshape-k61`)*.
+  `bundle-chez` once read `apps/`, `apianyware/`, and `lib/` from one root, but the §18
+  split puts apps under `app-implementations/macos/` and the package root + dylib here.
+  `bundler-reshape-k61` taught the bundler the apps-root / bindings-root split natively
+  (`SourceRoots::split` — logical root = the bindings root, with `apps/` redirecting to
+  the app-implementations tree; the deps walk + whole-program staging resolve across both
+  and the dep set comes back as logical paths the staged `tree/` mirrors). The symlink
+  fixture the `bundle_apps` test once stitched is **gone**.
 - **`generated_subdir = "apianyware"` + the generate-cli output path — resolved
   (`shared-seam-k15`).** The emitter computes `{base}/chez/apianyware`, and pointing a
   fresh `apianyware-generate` run at this home (so emitted `apianyware/<fw>/` lands

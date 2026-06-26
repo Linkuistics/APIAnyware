@@ -49,7 +49,7 @@ use apianyware_stub_launcher::codesign_path;
 use plist::Value as PlistValue;
 
 use crate::bundle::{AppSpec, BundleError};
-use crate::deps::{absolutize, collect_dependencies, DEFAULT_CHEZ_BIN};
+use crate::deps::{collect_dependencies_split, SourceRoots, DEFAULT_CHEZ_BIN};
 
 /// The embedding host, compiled and linked into every standalone binary.
 const EMBED_MAIN_C: &str = include_str!("resources/embed_main.c");
@@ -63,9 +63,14 @@ const PRELUDE_SS: &str = include_str!("resources/prelude.ss");
 /// The per-app collision probe (computes each facade's `except` list).
 const STANDALONE_COLLISIONS_SS: &str = include_str!("../scripts/standalone-collisions.ss");
 
-/// Build a self-contained open-world `.app` for the chez sample app at
-/// `source_root/apps/<script_name>/<script_name>.sls` into
-/// `output_dir/<App Name>.app`. Returns the path to the new bundle.
+/// Build a self-contained open-world `.app` for the chez sample app from the
+/// §18 domain tree into `output_dir/<App Name>.app`. Returns the path to the
+/// new bundle.
+///
+/// The entry is `apps_root/<script_name>/<script_name>.sls`; the binding
+/// package (`apianyware/` + the mandatory `lib/libAPIAnywareChez.dylib`) lives
+/// under `bindings_root`. Both are staged into one whole-program-compile tree
+/// via a virtual colocated root ([`SourceRoots::split`]).
 ///
 /// The produced `.app` has **no runtime dependency on a system Chez**: the
 /// kernel and a whole-program boot are baked into the binary. The host Chez
@@ -73,17 +78,21 @@ const STANDALONE_COLLISIONS_SS: &str = include_str!("../scripts/standalone-colli
 /// discovered from it).
 pub fn bundle_app(
     spec: &AppSpec,
-    source_root: &Path,
+    apps_root: &Path,
+    bindings_root: &Path,
     output_dir: &Path,
 ) -> Result<PathBuf, BundleError> {
-    let abs_root = absolutize(source_root)
-        .map_err(|e| BundleError::ResolveSourceRoot(source_root.to_path_buf(), e))?;
-    let entry = abs_root
+    let roots = SourceRoots::split(apps_root, bindings_root)?;
+    let abs_root = roots.logical_root().to_path_buf();
+    let entry_logical = abs_root
         .join("apps")
         .join(&spec.script_name)
         .join(format!("{}.sls", spec.script_name));
+    let entry = roots.to_physical(&entry_logical);
     if !entry.exists() {
-        return Err(BundleError::EntryMissing { entry });
+        return Err(BundleError::EntryMissing {
+            entry: entry_logical,
+        });
     }
 
     // Mandatory-dylib precheck (ADR-0005): fail before doing any expensive
@@ -104,16 +113,17 @@ pub fn bundle_app(
 
     // 1. Stage the import closure into a private tree so the whole-program
     //    compile can write its .so/.wpo artifacts without dirtying the
-    //    source. The deps walker returns the exact transitive .sls set.
+    //    source. The deps walker returns the exact transitive .sls set as
+    //    logical paths (the colocated shape the staged tree mirrors).
     let tree = build.join("tree");
-    let deps = collect_dependencies(&entry, &abs_root)?;
-    for src in &deps {
-        let rel = src
+    let deps = collect_dependencies_split(&entry, &roots, DEFAULT_CHEZ_BIN)?;
+    for logical in &deps {
+        let rel = logical
             .strip_prefix(&abs_root)
-            .expect("dependency validated under source root");
+            .expect("dependency validated under logical root");
         let dst = tree.join(rel);
         fs::create_dir_all(dst.parent().expect("dep dst has parent"))?;
-        fs::copy(src, &dst)?;
+        fs::copy(roots.to_physical(logical), &dst)?;
     }
     // The dylib lives under the tree too: `compile-imported-libraries`
     // does not load it (load-shared-object is a runtime act), but staging
@@ -129,9 +139,9 @@ pub fn bundle_app(
     //     (scheme-start …). The probe runs against the staged tree so the
     //     facade libraries resolve.
     let tree_entry = tree.join(
-        entry
+        entry_logical
             .strip_prefix(&abs_root)
-            .expect("entry validated under source root"),
+            .expect("entry validated under logical root"),
     );
     let collisions = compute_collisions(&tree_entry, &tree)?;
     let app_source = fs::read_to_string(&entry)?;

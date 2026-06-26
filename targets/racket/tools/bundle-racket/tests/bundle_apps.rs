@@ -12,7 +12,6 @@
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::OnceLock;
 
 use apianyware_bundle_racket::{
     bundle_app, bundle_app_with_entry, read_display_name_from_spec, AppSpec,
@@ -28,54 +27,29 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// The racket binding tree the bundler expects: a single root with `apps/`,
-/// `runtime/`, `generated/`, and `lib/` as siblings. The sample apps'
-/// `(require "../../{generated,runtime}/...")` paths and the bundler's
-/// logical-path copy both depend on that shape.
-///
-/// The §18 refactor (`move-racket-material-k11`) split that tree apart: apps now
-/// live under `targets/racket/app-implementations/macos/`, and the runtime /
-/// generated / dylib under `targets/racket/bindings/macos/`. We stitch the new
-/// homes back into the single-root shape the bundler expects with a symlink
-/// fixture — the same directory-symlink case the bundler already handles for
-/// Modaliser-Racket. `generated/` holds no emitted `.rkt` in a clean checkout
-/// (gitignored), so the three sample-app bundling tests skip-as-pass via
-/// `racket_emit_present()` when emit has not been run locally — they only
-/// resolve `(require "../../generated/appkit/...")` once `apianyware-generate`
-/// has produced it (`migration-finalize-k10`).
-///
-/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
-/// the apps-root / bindings-root split natively so this fixture isn't needed.
-fn racket_root() -> PathBuf {
-    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
-    FIXTURE
-        .get_or_init(|| {
-            let target = workspace_root().join("targets").join("racket");
-            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("racket-bundle-fixture");
-            let _ = fs::remove_dir_all(&fixture);
-            fs::create_dir_all(&fixture).expect("create racket bundle fixture root");
-            let link = |src: PathBuf, name: &str| {
-                let dst = fixture.join(name);
-                // The link targets are directories that always exist; the
-                // emitted `.rkt` files *under* generated/ may be absent (not yet
-                // emitted), which the bundling tests gate on via
-                // `racket_emit_present()` rather than letting the bundler fail.
-                std::os::unix::fs::symlink(&src, &dst)
-                    .unwrap_or_else(|e| panic!("symlink {dst:?} -> {src:?}: {e}"));
-            };
-            link(target.join("app-implementations").join("macos"), "apps");
-            link(
-                target.join("bindings").join("macos").join("runtime"),
-                "runtime",
-            );
-            link(
-                target.join("bindings").join("macos").join("generated"),
-                "generated",
-            );
-            link(target.join("bindings").join("macos").join("lib"), "lib");
-            fixture
-        })
-        .clone()
+/// The app-implementations root: sample apps live at `<apps_root>/<app>/<app>.rkt`
+/// (§18 split, `move-racket-material-k11`). The bundler reads the entry from here
+/// and resolves the binding package from [`bindings_root`] natively.
+fn apps_root() -> PathBuf {
+    workspace_root()
+        .join("targets")
+        .join("racket")
+        .join("app-implementations")
+        .join("macos")
+}
+
+/// The binding package root: `runtime/`, `generated/`, and `lib/` are its real
+/// children (§18 split). The sample apps' `(require "../../{generated,runtime}/…")`
+/// lines resolve here via the bundler's virtual colocated root; the emitted
+/// `generated/` `.rkt` are gitignored, so the bundling tests skip-as-pass via
+/// [`racket_emit_present`] until `apianyware-generate` has produced them
+/// (`migration-finalize-k10`).
+fn bindings_root() -> PathBuf {
+    workspace_root()
+        .join("targets")
+        .join("racket")
+        .join("bindings")
+        .join("macos")
 }
 
 /// The common, target-independent app specs, co-located by `co-locate-docs-k9`
@@ -86,7 +60,7 @@ fn common_app_specs_dir() -> PathBuf {
 }
 
 fn discover_app_scripts() -> Vec<String> {
-    let apps = racket_root().join("apps");
+    let apps = apps_root();
     let mut scripts: Vec<String> = Vec::new();
     let Ok(entries) = fs::read_dir(&apps) else {
         return scripts;
@@ -113,8 +87,7 @@ fn swiftc_available() -> bool {
 }
 
 fn entry_script_present() -> bool {
-    racket_root()
-        .join("apps")
+    apps_root()
         .join(SCRIPT_NAME)
         .join(format!("{SCRIPT_NAME}.rkt"))
         .exists()
@@ -127,11 +100,11 @@ fn entry_script_present() -> bool {
 /// bundling tests that resolve `(require "../../generated/appkit/…")` can only
 /// run once emit has produced them. Without this guard they fail with
 /// `ResolveRequire: generated/… does not exist` in any clean checkout that has
-/// `swiftc` — the same environmental failure noted on `racket_root`. Mirrors
+/// `swiftc` — the same environmental failure noted on `bindings_root`. Mirrors
 /// `gerbil_tree_present()` and the snapshot tests' skip-as-pass discipline for
 /// gitignored, pipeline-produced artifacts.
 fn racket_emit_present() -> bool {
-    racket_root()
+    bindings_root()
         .join("generated")
         .join("appkit")
         .join("nsapplication.rkt")
@@ -155,7 +128,7 @@ fn bundles_hello_window_into_app_directory() {
 
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name(SCRIPT_NAME);
-    let app_path = bundle_app(&spec, &racket_root(), temp.path()).expect("bundle");
+    let app_path = bundle_app(&spec, &apps_root(), &bindings_root(), temp.path()).expect("bundle");
 
     // Bundle skeleton from stub-launcher
     assert!(app_path.ends_with("Hello Window.app"), "{app_path:?}");
@@ -239,10 +212,9 @@ fn bundles_hello_window_into_app_directory() {
 }
 
 #[test]
-fn entry_script_resolves_under_racket_root() {
+fn entry_script_resolves_under_apps_root() {
     // Sanity: the workspace path computation matches what the example uses.
-    let entry = racket_root()
-        .join("apps")
+    let entry = apps_root()
         .join(SCRIPT_NAME)
         .join(format!("{SCRIPT_NAME}.rkt"));
     assert!(
@@ -260,7 +232,7 @@ fn rejects_missing_app() {
     }
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name("definitely-not-an-app");
-    let err = bundle_app(&spec, &racket_root(), temp.path()).unwrap_err();
+    let err = bundle_app(&spec, &apps_root(), &bindings_root(), temp.path()).unwrap_err();
     assert!(
         matches!(
             err,
@@ -284,7 +256,7 @@ fn bundles_root_level_entry_with_symlinked_bindings_subdir() {
         eprintln!("SKIPPED: swiftc not available");
         return;
     }
-    let real_racket = racket_root();
+    let real_racket = bindings_root();
     let required = real_racket.join("runtime").join("objc-base.rkt");
     if !required.is_file() {
         eprintln!("SKIPPED: racket source tree not present");
@@ -368,7 +340,7 @@ fn bundle_lib_copy_excludes_compiled_subdirectory() {
         eprintln!("SKIPPED: swiftc not available");
         return;
     }
-    let real_racket = racket_root();
+    let real_racket = bindings_root();
     if !real_racket.join("runtime").join("objc-base.rkt").is_file() {
         eprintln!("SKIPPED: racket source tree not present");
         return;
@@ -442,7 +414,7 @@ fn bundle_has_no_compiled_directories_anywhere() {
 
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name(SCRIPT_NAME);
-    let app_path = bundle_app(&spec, &racket_root(), temp.path()).expect("bundle");
+    let app_path = bundle_app(&spec, &apps_root(), &bindings_root(), temp.path()).expect("bundle");
 
     let mut stack: Vec<PathBuf> = vec![app_path.clone()];
     while let Some(dir) = stack.pop() {
@@ -478,7 +450,9 @@ fn bundle_dylib_install_name_is_bundle_relative() {
         eprintln!("SKIPPED: hello-window source not present");
         return;
     }
-    let dylib_source = racket_root().join("lib").join("libAPIAnywareRacket.dylib");
+    let dylib_source = bindings_root()
+        .join("lib")
+        .join("libAPIAnywareRacket.dylib");
     if !dylib_source.exists() {
         eprintln!("SKIPPED: libAPIAnywareRacket.dylib not built");
         return;
@@ -486,7 +460,7 @@ fn bundle_dylib_install_name_is_bundle_relative() {
 
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name(SCRIPT_NAME);
-    let app_path = bundle_app(&spec, &racket_root(), temp.path()).expect("bundle");
+    let app_path = bundle_app(&spec, &apps_root(), &bindings_root(), temp.path()).expect("bundle");
 
     let dylib = app_path
         .join("Contents")
@@ -549,7 +523,7 @@ fn bundles_every_sample_app() {
             spec.app_name = display;
         }
 
-        let app_path = bundle_app(&spec, &racket_root(), temp.path())
+        let app_path = bundle_app(&spec, &apps_root(), &bindings_root(), temp.path())
             .unwrap_or_else(|e| panic!("bundle {script}: {e}"));
 
         // Every bundle ships with a CFBundleName-correct Info.plist

@@ -25,22 +25,22 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    // The bundler still expects `apps/<script>/dump.lisp` under one source_root;
-    // the §18 split (apps→app-implementations/macos, move-sbcl-material-k14) isn't
-    // taught to it yet — the bundle_apps.rs `sbcl_root()` symlink fixture stitches
-    // it for the tests. Output lands at the new app home.
-    let source_root = workspace.join("targets").join("sbcl");
-    let output_dir = source_root
+    // The §18 domain tree homes sbcl apps under app-implementations; each app's
+    // dump.lisp self-resolves the binding tree, so no bindings root is needed.
+    let apps_root = workspace
+        .join("targets")
+        .join("sbcl")
         .join("app-implementations")
-        .join("macos")
-        .join(&script)
-        .join("build");
+        .join("macos");
+    let output_dir = apps_root.join(&script).join("build");
 
     let mut spec = AppSpec::from_script_name(&script);
+    // Common, target-independent app specs live at `apps/macos/<app>/docs/spec.md`.
     let spec_path = workspace
-        .join("docs")
         .join("apps")
+        .join("macos")
         .join(&script)
+        .join("docs")
         .join("spec.md");
     if let Some(display) = read_display_name_from_spec(&spec_path) {
         spec.bundle_id = format!("com.linkuistics.{}", display.replace(' ', ""));
@@ -51,7 +51,7 @@ fn main() -> ExitCode {
         "building standalone {} (drives save-lisp-and-die)…",
         spec.app_name
     );
-    match bundle_app(&spec, &source_root, &output_dir, &workspace) {
+    match bundle_app(&spec, &apps_root, &output_dir, &workspace) {
         Ok(path) => {
             println!("{}", path.display());
             eprintln!("built: {} ({})", path.display(), spec.bundle_id);

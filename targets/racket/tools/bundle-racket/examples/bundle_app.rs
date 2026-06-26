@@ -33,26 +33,30 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    // TODO(bindings/adapter-model workstream, root brief item 6): the §18 refactor
-    // (`move-racket-material-k11`) split the racket tree — sample apps now live
-    // under `targets/racket/app-implementations/macos/` while runtime/generated/lib
-    // moved to `targets/racket/bindings/macos/`. The bundler still expects them
-    // colocated under one `source_root` (`source_root/apps/...` + sibling
-    // runtime/generated/lib). Until it learns the apps-root/bindings-root split,
-    // this example cannot bundle from the new tree as-is; see the stitched symlink
-    // fixture in `tests/bundle_apps.rs::racket_root` for the shape it needs.
-    let source_root = workspace
+    // The §18 domain tree splits the racket material in two: sample apps under
+    // `targets/racket/app-implementations/macos/`, the binding package
+    // (runtime / generated / lib) under `targets/racket/bindings/macos/`. The
+    // bundler resolves the apps' `(require "../../{generated,runtime}/…")`
+    // across both natively (`SourceRoots::split`), so no stitching is needed.
+    let apps_root = workspace
         .join("targets")
         .join("racket")
         .join("app-implementations")
         .join("macos");
-    let knowledge_apps = workspace.join("knowledge").join("apps");
+    let bindings_root = workspace
+        .join("targets")
+        .join("racket")
+        .join("bindings")
+        .join("macos");
+    // Common, target-independent app specs live at `apps/macos/<app>/docs/spec.md`
+    // (§15; co-located by `co-locate-docs-k9`).
+    let common_app_specs = workspace.join("apps").join("macos");
 
     let scripts: Vec<String> = if arg == "--all" {
-        match discover_app_scripts(&source_root) {
+        match discover_app_scripts(&apps_root) {
             Ok(s) if !s.is_empty() => s,
             Ok(_) => {
-                eprintln!("no sample apps found under {}/apps", source_root.display());
+                eprintln!("no sample apps found under {}", apps_root.display());
                 return ExitCode::FAILURE;
             }
             Err(e) => {
@@ -66,7 +70,7 @@ fn main() -> ExitCode {
 
     let mut any_failed = false;
     for script in scripts {
-        match bundle_one(&script, &source_root, &knowledge_apps) {
+        match bundle_one(&script, &apps_root, &bindings_root, &common_app_specs) {
             Ok(path) => println!("{}", path.display()),
             Err(e) => {
                 eprintln!("{script}: {e}");
@@ -84,33 +88,33 @@ fn main() -> ExitCode {
 
 fn bundle_one(
     script: &str,
-    source_root: &Path,
-    knowledge_apps: &Path,
+    apps_root: &Path,
+    bindings_root: &Path,
+    common_app_specs: &Path,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let output_dir = source_root.join("apps").join(script).join("build");
+    let output_dir = apps_root.join(script).join("build");
     if output_dir.exists() {
         fs::remove_dir_all(&output_dir)?;
     }
 
     let mut spec = AppSpec::from_script_name(script);
-    let spec_path = knowledge_apps.join(script).join("spec.md");
+    let spec_path = common_app_specs.join(script).join("docs").join("spec.md");
     if let Some(display) = read_display_name_from_spec(&spec_path) {
         spec.bundle_id = format!("com.linkuistics.{}", display.replace(' ', ""));
         spec.app_name = display;
     }
 
-    let app_path = bundle_app(&spec, source_root, &output_dir)?;
+    let app_path = bundle_app(&spec, apps_root, bindings_root, &output_dir)?;
     eprintln!("built: {} ({})", app_path.display(), spec.bundle_id);
     Ok(app_path)
 }
 
-/// List script names by walking `<source_root>/apps/*` for directories
-/// containing a matching `<dir>/<dir>.rkt` entry. Anything else (build
-/// output dirs, README, etc.) is skipped.
-fn discover_app_scripts(source_root: &Path) -> std::io::Result<Vec<String>> {
-    let apps_dir = source_root.join("apps");
+/// List script names by walking `<apps_root>/*` for directories containing a
+/// matching `<dir>/<dir>.rkt` entry. Anything else (build output dirs,
+/// README, etc.) is skipped.
+fn discover_app_scripts(apps_root: &Path) -> std::io::Result<Vec<String>> {
     let mut scripts: Vec<String> = Vec::new();
-    for entry in fs::read_dir(&apps_dir)? {
+    for entry in fs::read_dir(apps_root)? {
         let entry = entry?;
         if !entry.file_type()?.is_dir() {
             continue;

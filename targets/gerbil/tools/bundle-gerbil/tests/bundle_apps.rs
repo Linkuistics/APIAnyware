@@ -13,10 +13,8 @@
 //! That ignored test is the in-crate proof of the node's first two done-bars
 //! (a dylib-clean `.app`); the GUI-draws bar is grove leaf 070/040 (VM).
 
-use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::OnceLock;
 
 use apianyware_bundle_gerbil::{bundle_app, collect_closure, AppSpec, BundleError};
 
@@ -28,64 +26,48 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// The gerbil binding tree the bundler expects: a single root with `apps/` and
-/// `lib/` (the `gerbil-bindings` package root — `runtime/` + emitted `<fw>/`)
-/// as siblings. The closure walk resolves `:gerbil-bindings/…` names under
-/// `<root>/lib/` and reads apps from `<root>/apps/`.
-///
-/// The §18 refactor (`move-gerbil-material-k13`) split that tree apart: apps now
-/// live under `targets/gerbil/app-implementations/macos/`, and the package root
-/// under `targets/gerbil/bindings/macos/generated/`. We stitch the new homes
-/// back into the single-root shape the bundler expects with a symlink fixture —
-/// the same directory-symlink case the bundler already handles (mirrors chez's
-/// `chez_root()`). The emitted `lib/<fw>/` libraries are gitignored (absent in a
-/// clean checkout), so the closure-walk test behaves identically, now
-/// referencing the new homes.
-///
-/// TODO(bindings/adapter-model workstream, root brief item 6): teach the bundler
-/// the apps-root / bindings-root split natively so this fixture isn't needed.
-fn gerbil_root() -> PathBuf {
-    static FIXTURE: OnceLock<PathBuf> = OnceLock::new();
-    FIXTURE
-        .get_or_init(|| {
-            let target = workspace_root().join("targets").join("gerbil");
-            let fixture = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("gerbil-bundle-fixture");
-            let _ = fs::remove_dir_all(&fixture);
-            fs::create_dir_all(&fixture).expect("create gerbil bundle fixture root");
-            let link = |src: PathBuf, name: &str| {
-                let dst = fixture.join(name);
-                std::os::unix::fs::symlink(&src, &dst)
-                    .unwrap_or_else(|e| panic!("symlink {dst:?} -> {src:?}: {e}"));
-            };
-            link(target.join("app-implementations").join("macos"), "apps");
-            link(
-                target.join("bindings").join("macos").join("generated"),
-                "lib",
-            );
-            fixture
-        })
-        .clone()
+/// The app-implementations root: gerbil sample apps live at
+/// `<apps_root>/<app>/<app>.ss` (§18 split, `move-gerbil-material-k13`). The
+/// bundler reads the entry from here and the closure from [`lib_root`] natively
+/// — `collect_closure` already takes the two separately, so no stitching.
+fn apps_root() -> PathBuf {
+    workspace_root()
+        .join("targets")
+        .join("gerbil")
+        .join("app-implementations")
+        .join("macos")
+}
+
+/// The binding package root: the `gerbil-bindings` package (committed
+/// `runtime/` + emitted `<fw>/` modules) lives under its `generated/` child.
+fn bindings_root() -> PathBuf {
+    workspace_root()
+        .join("targets")
+        .join("gerbil")
+        .join("bindings")
+        .join("macos")
+}
+
+/// The `gerbil-bindings` package root the closure walk resolves
+/// `:gerbil-bindings/…` names against (`bindings_root/generated`).
+fn lib_root() -> PathBuf {
+    bindings_root().join("generated")
 }
 
 /// True when `apianyware-generate` has been run locally — the signal this
 /// closure-walk test skips on (it needs the emitted binding tree).
 ///
-/// Gate on an **emitted** framework module (`lib/appkit/nsapplication.ss`), not
-/// the hand-written `lib/runtime/`. `move-gerbil-material-k13` made gerbil's
-/// `runtime/` a *committed* part of the package root (`.gitignore`:
+/// Gate on an **emitted** framework module (`generated/appkit/nsapplication.ss`),
+/// not the hand-written `generated/runtime/`. `move-gerbil-material-k13` made
+/// gerbil's `runtime/` a *committed* part of the package root (`.gitignore`:
 /// `generated/*` minus `runtime`) while the per-framework `appkit/`,
 /// `foundation/`, … libraries stay gitignored emit output. The committed
 /// `runtime/objc.ss` is therefore always present and is no longer a valid proxy
 /// for "emit was run" — gating on it made the test run (and fail with
 /// `ImportNotFound`) against an absent emitted tree in a clean checkout.
 fn gerbil_tree_present() -> bool {
-    gerbil_root()
-        .join("lib")
-        .join("appkit")
-        .join("nsapplication.ss")
-        .is_file()
-        && gerbil_root()
-            .join("apps")
+    lib_root().join("appkit").join("nsapplication.ss").is_file()
+        && apps_root()
             .join("hello-window")
             .join("hello-window.ss")
             .is_file()
@@ -100,12 +82,8 @@ fn computes_hello_window_closure() {
         eprintln!("SKIPPED: gerbil binding tree not present (emit not run locally)");
         return;
     }
-    let root = gerbil_root();
-    let lib = root.join("lib");
-    let entry = root
-        .join("apps")
-        .join("hello-window")
-        .join("hello-window.ss");
+    let lib = lib_root();
+    let entry = apps_root().join("hello-window").join("hello-window.ss");
 
     let closure = collect_closure(&entry, &lib).expect("closure walk");
     let rels: Vec<String> = closure
@@ -190,7 +168,7 @@ fn rejects_missing_app() {
     }
     let temp = tempfile::tempdir().expect("tempdir");
     let spec = AppSpec::from_script_name("definitely-not-an-app");
-    let err = bundle_app(&spec, &gerbil_root(), temp.path()).unwrap_err();
+    let err = bundle_app(&spec, &apps_root(), &bindings_root(), temp.path()).unwrap_err();
     assert!(
         matches!(err, BundleError::EntryMissing { .. }),
         "expected EntryMissing, got {err:?}"
@@ -215,11 +193,11 @@ fn builds_dylib_clean_hello_window_app() {
         eprintln!("SKIPPED: gerbil bottle toolchain not found");
         return;
     }
-    let root = gerbil_root();
     let out = tempfile::tempdir().expect("out tempdir");
     let spec = AppSpec::from_script_name("hello-window");
 
-    let app = bundle_app(&spec, &root, out.path()).expect("bundle hello-window");
+    let app =
+        bundle_app(&spec, &apps_root(), &bindings_root(), out.path()).expect("bundle hello-window");
 
     // Layout.
     let exe = app.join("Contents").join("MacOS").join("hello-window");

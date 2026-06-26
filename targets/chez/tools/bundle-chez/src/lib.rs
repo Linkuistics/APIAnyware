@@ -14,15 +14,14 @@
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");
-//! // The §18 refactor (move-chez-material-k12) split the chez tree: the
-//! // package root (`apianyware/`) + dylib (`lib/`) live under the binding
-//! // root, while apps moved to `app-implementations/macos/`. The bundler
-//! // still expects `apps/`, `apianyware/`, `lib/` colocated under one
-//! // source_root, so callers stitch the split homes (see the bundle_apps
-//! // test fixture; w6 TODO: teach the bundler the split natively).
-//! let source_root = Path::new("targets/chez/bindings/macos");
+//! // The §18 domain tree splits the chez material: apps under one root, the
+//! // package root (`apianyware/`) + dylib (`lib/`) under another. The bundler
+//! // stages both into one whole-program-compile tree natively
+//! // (`SourceRoots::split`) — no stitching by the caller.
+//! let apps_root = Path::new("targets/chez/app-implementations/macos");
+//! let bindings_root = Path::new("targets/chez/bindings/macos");
 //! let output_dir = Path::new("targets/chez/app-implementations/macos/hello-window/build");
-//! let app_path = bundle_app(&spec, source_root, output_dir).unwrap();
+//! let app_path = bundle_app(&spec, apps_root, bindings_root, output_dir).unwrap();
 //! println!("built: {}", app_path.display());
 //! ```
 //!
@@ -60,6 +59,9 @@ mod spec;
 mod standalone;
 
 pub use bundle::{resolve_signing_identity, AppSpec, BundleError, LOCAL_SIGNING_IDENTITY};
-pub use deps::{collect_dependencies, collect_dependencies_with_chez, DEFAULT_CHEZ_BIN};
+pub use deps::{
+    collect_dependencies, collect_dependencies_split, collect_dependencies_with_chez, SourceRoots,
+    DEFAULT_CHEZ_BIN,
+};
 pub use spec::read_display_name_from_spec;
 pub use standalone::{bundle_app, compute_collisions, generate_wrapper, Collisions};

@@ -35,10 +35,13 @@
 //! use std::path::Path;
 //!
 //! let spec = AppSpec::from_script_name("hello-window");
-//! let source_root = Path::new("targets/sbcl");
+//! // The §18 domain tree homes sbcl apps under app-implementations; the
+//! // binding tree is self-resolved by each app's dump.lisp, so no bindings
+//! // root is passed.
+//! let apps_root = Path::new("targets/sbcl/app-implementations/macos");
 //! let output_dir = Path::new("targets/sbcl/app-implementations/macos/hello-window/build");
 //! let workspace_root = Path::new(".");
-//! let app = bundle_app(&spec, source_root, output_dir, workspace_root).unwrap();
+//! let app = bundle_app(&spec, apps_root, output_dir, workspace_root).unwrap();
 //! println!("built: {}", app.display());
 //! ```
 

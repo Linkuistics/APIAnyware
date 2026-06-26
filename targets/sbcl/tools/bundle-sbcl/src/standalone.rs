@@ -31,9 +31,15 @@ use crate::vendor::vendor_dylibs;
 pub const FRAMEWORKS_SUBDIR: &str = "Frameworks";
 
 /// Build a self-contained `.app` for the sbcl sample app at
-/// `source_root/apps/<script_name>/dump.lisp` into `output_dir/<App Name>.app`,
+/// `apps_root/<script_name>/dump.lisp` into `output_dir/<App Name>.app`,
 /// using `workspace_root` to locate the Swift-native dylib. Returns the bundle
 /// path.
+///
+/// `apps_root` is the app-implementations tree (§18 split,
+/// `move-sbcl-material-k14`). Unlike racket/chez/gerbil the sbcl bundler needs
+/// **no** bindings root: each app's `dump.lisp` loads the binding tree
+/// self-relative via `../_support/load-bindings.lisp`, which walks up from its
+/// own on-disk location to the target's `bindings/macos/`.
 ///
 /// The produced `.app` has **no Homebrew or SBCL dependency** on the target: the
 /// SBCL runtime is embedded by `save-lisp-and-die`, libzstd is vendored +
@@ -42,16 +48,13 @@ pub const FRAMEWORKS_SUBDIR: &str = "Frameworks";
 /// OS-resident.
 pub fn bundle_app(
     spec: &AppSpec,
-    source_root: &Path,
+    apps_root: &Path,
     output_dir: &Path,
     workspace_root: &Path,
 ) -> Result<PathBuf, BundleError> {
-    let abs_root = fs::canonicalize(source_root)
-        .map_err(|e| BundleError::ResolveSourceRoot(source_root.to_path_buf(), e))?;
-    let driver = abs_root
-        .join("apps")
-        .join(&spec.script_name)
-        .join("dump.lisp");
+    let abs_apps = fs::canonicalize(apps_root)
+        .map_err(|e| BundleError::ResolveSourceRoot(apps_root.to_path_buf(), e))?;
+    let driver = abs_apps.join(&spec.script_name).join("dump.lisp");
     if !driver.exists() {
         return Err(BundleError::DumpDriverMissing { driver });
     }
@@ -200,11 +203,11 @@ mod tests {
 
     #[test]
     fn rejects_missing_driver() {
-        let temp = TempDir::new().unwrap();
-        fs::create_dir_all(temp.path().join("apps")).unwrap();
+        // apps_root with no <script>/dump.lisp → fail at the driver precheck.
+        let apps_root = TempDir::new().unwrap();
         let spec = AppSpec::from_script_name("definitely-not-an-app");
         let out = TempDir::new().unwrap();
-        let err = bundle_app(&spec, temp.path(), out.path(), temp.path()).unwrap_err();
+        let err = bundle_app(&spec, apps_root.path(), out.path(), apps_root.path()).unwrap_err();
         assert!(
             matches!(err, BundleError::DumpDriverMissing { .. }),
             "expected DumpDriverMissing, got {err:?}"

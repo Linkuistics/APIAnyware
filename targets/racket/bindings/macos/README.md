@@ -16,9 +16,9 @@ representability) live one level up at [`../../docs/`](../../docs/); the authore
 target-model `.apiw` entities are under [`../../`](../../) (`target.apiw`,
 `capability.apiw`, `idioms/`, `policies/`, `adapters/`, `conformance/`).
 
-## Open follow-ups (skeleton relocate — `move-racket-material-k11`)
+## Layout decisions (skeleton relocate — `move-racket-material-k11`; resolved)
 
-- **dylib home is `lib/`, not §42's `build/`** *(→ ws6 child 7, bundler reshape)*. The
+- **dylib home is `lib/`, not §42's `build/`** *(resolved — `bundler-reshape-k61`)*. The
   runtime loads the dylib via a single hardcoded `../lib/` path
   (`runtime/swift-helpers.rkt`, `runtime/ffi2-dispatch.rkt`), and the bundler copies
   it to `racket-app/lib/` inside each `.app` with an `@executable_path/.../racket-app/lib/`
@@ -26,9 +26,11 @@ target-model `.apiw` entities are under [`../../`](../../) (`target.apiw`,
   load-path to diverge between the in-tree and in-bundle contexts. The target model
   (ws6) is authored against the dylib *as it is* — the adapter spec
   ([`../../adapters/macos/spec.apiw`](../../adapters/macos/spec.apiw)) documents the
-  existing `APIAnywareRacket` library, no ABI redesign. The remaining in-tree-vs-bundle
-  load-path reconciliation is a **bundler concern, deferred to ws6 child 7 (bundler
-  reshape + guide resync)**. Kept at `lib/` here so the move stays behaviour-preserving.
+  existing `APIAnywareRacket` library, no ABI redesign. The in-tree-vs-bundle load-path
+  reconciliation was **discharged by `bundler-reshape-k61`**: the bundler reads the dylib
+  from the bindings root's `lib/` (`SourceRoots::split` maps `<bindings>/lib` natively)
+  and copies it to `racket-app/lib/` — the `lib/` home is preserved in both the in-tree
+  and in-bundle contexts, so there is no divergence. Kept at `lib/`.
 - **`runtime/` stays here (ws6-resolved).** The adapter-model question — is the
   hand-written runtime binding-level or adapter-level? — is settled by the ws6 target
   model: the *native adapter* (the Swift `APIAnywareRacket` sources + dylib) is the

@@ -26,22 +26,27 @@ fn main() -> ExitCode {
     });
 
     let workspace = workspace_root();
-    // NOTE (w6): the bundler still expects apps/ + lib/ as direct children of
-    // source_root; the §18 split (apps→app-implementations/macos,
-    // lib→bindings/macos/generated) isn't taught to it yet — see the
-    // gerbil_root() symlink fixture in tests/bundle_apps.rs.
-    let source_root = workspace.join("targets").join("gerbil");
-    let output_dir = source_root
+    // The §18 domain tree splits the gerbil material: apps under one root, the
+    // `gerbil-bindings` package under `bindings_root/generated`.
+    let apps_root = workspace
+        .join("targets")
+        .join("gerbil")
         .join("app-implementations")
-        .join("macos")
-        .join(&script)
-        .join("build");
+        .join("macos");
+    let bindings_root = workspace
+        .join("targets")
+        .join("gerbil")
+        .join("bindings")
+        .join("macos");
+    let output_dir = apps_root.join(&script).join("build");
 
     let mut spec = AppSpec::from_script_name(&script);
+    // Common, target-independent app specs live at `apps/macos/<app>/docs/spec.md`.
     let spec_path = workspace
-        .join("knowledge")
         .join("apps")
+        .join("macos")
         .join(&script)
+        .join("docs")
         .join("spec.md");
     if let Some(display) = read_display_name_from_spec(&spec_path) {
         spec.bundle_id = format!("com.linkuistics.{}", display.replace(' ', ""));
@@ -52,7 +57,7 @@ fn main() -> ExitCode {
         "building standalone {} (this drives gxc end-to-end)…",
         spec.app_name
     );
-    match bundle_app(&spec, &source_root, &output_dir) {
+    match bundle_app(&spec, &apps_root, &bindings_root, &output_dir) {
         Ok(path) => {
             println!("{}", path.display());
             eprintln!("built: {} ({})", path.display(), spec.bundle_id);

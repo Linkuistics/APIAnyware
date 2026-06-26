@@ -32,20 +32,108 @@ use std::path::{Component, Path, PathBuf};
 
 use crate::bundle::BundleError;
 
+/// The source tree(s) the bundle's `racket-app/` mirrors, resolved in
+/// **logical** path space.
+///
+/// The bundle layout is always a single colocated tree —
+/// `racket-app/{apps,runtime,generated,lib}` — and the sample apps' relative
+/// `(require "../../{generated,runtime}/…")` lines are written against that
+/// shape. [`SourceRoots`] is what lets the bundler honour those requires
+/// whether the source is genuinely colocated (Modaliser-style, [`single`]) or
+/// physically split across the §18 domain tree ([`split`]).
+///
+/// In the split case the **logical root is the bindings root** — `runtime/`,
+/// `generated/`, and `lib/` are already its real children, so they need no
+/// redirect. The one redirect is `<logical_root>/apps/…`, which maps to the
+/// physically-separate app-implementations tree. Everything the walker does is
+/// in logical space; [`to_physical`] is consulted only to read or stat a file.
+///
+/// [`single`]: SourceRoots::single
+/// [`split`]: SourceRoots::split
+/// [`to_physical`]: SourceRoots::to_physical
+#[derive(Debug, Clone)]
+pub struct SourceRoots {
+    /// The logical colocated root the bundle's `racket-app/` mirrors.
+    logical_root: PathBuf,
+    /// Physical home of the `apps/` subtree when it is split out from the
+    /// bindings root; `None` for a genuinely colocated single root.
+    apps_root: Option<PathBuf>,
+}
+
+impl SourceRoots {
+    /// A single colocated root (Modaliser-style projects, or any tree whose
+    /// `apps/`, `runtime/`, `generated/`, `lib/` are real siblings). Logical
+    /// and physical paths are identical.
+    pub fn single(root: &Path) -> Result<Self, BundleError> {
+        Ok(Self {
+            logical_root: absolutize(root)
+                .map_err(|e| BundleError::ResolveSourceRoot(root.to_path_buf(), e))?,
+            apps_root: None,
+        })
+    }
+
+    /// The §18 split: app-implementations under `apps_root`, the binding
+    /// package (runtime / generated / lib) under `bindings_root`. The logical
+    /// root is the bindings root; logical `apps/…` paths redirect to
+    /// `apps_root`.
+    pub fn split(apps_root: &Path, bindings_root: &Path) -> Result<Self, BundleError> {
+        Ok(Self {
+            logical_root: absolutize(bindings_root)
+                .map_err(|e| BundleError::ResolveSourceRoot(bindings_root.to_path_buf(), e))?,
+            apps_root: Some(
+                absolutize(apps_root)
+                    .map_err(|e| BundleError::ResolveSourceRoot(apps_root.to_path_buf(), e))?,
+            ),
+        })
+    }
+
+    /// The logical root the bundle layout mirrors (absolute).
+    pub(crate) fn logical_root(&self) -> &Path {
+        &self.logical_root
+    }
+
+    /// Map a logical path (under [`logical_root`]) to the physical file on
+    /// disk. Identity for a single root; for a split root, logical `apps/…`
+    /// paths redirect to the apps root and everything else stays put.
+    ///
+    /// [`logical_root`]: SourceRoots::logical_root
+    pub(crate) fn to_physical(&self, logical: &Path) -> PathBuf {
+        if let Some(apps_root) = &self.apps_root {
+            if let Ok(rest) = logical.strip_prefix(self.logical_root.join("apps")) {
+                return apps_root.join(rest);
+            }
+        }
+        logical.to_path_buf()
+    }
+}
+
 /// Transitive set of `.rkt` files reachable from `entry`, returned as
-/// absolute **logical** paths under `source_root`.
+/// absolute **logical** paths under the source root.
 ///
 /// `source_root` is the directory the generated bundle's `racket-app/`
-/// will mirror — the racket binding tree under `targets/racket/` for the
-/// APIAnyware sample apps, or the project root for a Modaliser-style layout
-/// whose entry lives at `main.rkt`. Any discovered file whose logical path
-/// escapes `source_root` is rejected as a bundle-layout error.
+/// will mirror — the project root for a Modaliser-style layout whose entry
+/// lives at `main.rkt`. Any discovered file whose logical path escapes
+/// `source_root` is rejected as a bundle-layout error. For the §18 split
+/// (apps and bindings in separate trees) use [`collect_dependencies_in`] with
+/// a [`SourceRoots::split`].
 pub fn collect_dependencies(
     entry: &Path,
     source_root: &Path,
 ) -> Result<HashSet<PathBuf>, BundleError> {
-    let abs_root = absolutize(source_root)
-        .map_err(|e| BundleError::ResolveSourceRoot(source_root.to_path_buf(), e))?;
+    collect_dependencies_in(entry, &SourceRoots::single(source_root)?)
+}
+
+/// Transitive set of `.rkt` files reachable from `entry` (a **logical** path
+/// under `roots.logical_root()`), returned as absolute logical paths.
+///
+/// Resolution is in logical space; the walker reads and stats each file
+/// through [`SourceRoots::to_physical`], so a split apps-root / bindings-root
+/// layout walks exactly as a colocated one would.
+pub fn collect_dependencies_in(
+    entry: &Path,
+    roots: &SourceRoots,
+) -> Result<HashSet<PathBuf>, BundleError> {
+    let abs_root = roots.logical_root().to_path_buf();
     let abs_entry =
         absolutize(entry).map_err(|e| BundleError::ResolveEntry(entry.to_path_buf(), e))?;
 
@@ -56,7 +144,7 @@ pub fn collect_dependencies(
         });
     }
 
-    if !abs_entry.exists() {
+    if !roots.to_physical(&abs_entry).exists() {
         return Err(BundleError::EntryMissing { entry: abs_entry });
     }
 
@@ -68,8 +156,9 @@ pub fn collect_dependencies(
             continue;
         }
 
-        let content =
-            fs::read_to_string(&file).map_err(|e| BundleError::ReadSource(file.clone(), e))?;
+        let physical = roots.to_physical(&file);
+        let content = fs::read_to_string(&physical)
+            .map_err(|e| BundleError::ReadSource(physical.clone(), e))?;
         let parent = file.parent().expect("source file has parent");
 
         for raw in scan_rkt_string_literals(&content) {
@@ -83,7 +172,7 @@ pub fn collect_dependencies(
                 });
             }
 
-            if !logical.exists() {
+            if !roots.to_physical(&logical).exists() {
                 return Err(BundleError::ResolveRequire {
                     referrer: file.clone(),
                     target: raw.to_string(),
@@ -309,6 +398,65 @@ mod tests {
 
         let deps = collect_dependencies(&root.join("a.rkt"), root).unwrap();
         assert_eq!(deps.len(), 2);
+    }
+
+    /// The §18 split: the entry lives under the apps root while its
+    /// `(require "../../{generated,runtime}/…")` lines (written against the
+    /// pre-split colocated layout) must resolve into the *separate* bindings
+    /// root. The virtual colocated root ([`SourceRoots::split`]) makes that
+    /// transparent — deps come back as logical paths under the bindings root,
+    /// each mapping to the right physical file. This is the native replacement
+    /// for the directory-symlink fixture the bundler tests used to stitch.
+    #[test]
+    fn collect_in_split_resolves_across_apps_and_bindings_roots() {
+        let dir = TempDir::new().unwrap();
+        let apps = dir.path().join("app-implementations/macos");
+        let bindings = dir.path().join("bindings/macos");
+
+        // Entry with the real sample-app require shape.
+        write(
+            &apps,
+            "hello/hello.rkt",
+            "(require \"../../generated/appkit/nswindow.rkt\"\n\
+             \"../../runtime/objc-base.rkt\")",
+        );
+        // A transitive require inside the bindings tree, traversing up and back
+        // down within the bindings root.
+        write(
+            &bindings,
+            "generated/appkit/nswindow.rkt",
+            "(require \"../../runtime/coerce.rkt\")",
+        );
+        write(&bindings, "runtime/objc-base.rkt", "");
+        write(&bindings, "runtime/coerce.rkt", "");
+
+        let roots = SourceRoots::split(&apps, &bindings).unwrap();
+        let entry = roots.logical_root().join("apps/hello/hello.rkt");
+        let deps = collect_dependencies_in(&entry, &roots).unwrap();
+
+        // Deps are logical paths under the bindings root (= the logical root),
+        // which is exactly the colocated shape the bundle's racket-app/ mirrors.
+        assert_eq!(
+            rel_names(&deps, roots.logical_root()),
+            vec![
+                "apps/hello/hello.rkt".to_string(),
+                "generated/appkit/nswindow.rkt".to_string(),
+                "runtime/coerce.rkt".to_string(),
+                "runtime/objc-base.rkt".to_string(),
+            ]
+        );
+
+        // Every logical dep maps to a real file across the two physical roots.
+        for d in &deps {
+            assert!(
+                roots.to_physical(d).is_file(),
+                "physical file missing for logical {d:?}"
+            );
+        }
+        // The entry's physical home is the apps root, not the bindings root.
+        let entry_phys = roots.to_physical(&entry);
+        assert!(entry_phys.starts_with(&apps), "entry must map to apps root");
+        assert!(entry_phys.is_file());
     }
 
     #[test]
