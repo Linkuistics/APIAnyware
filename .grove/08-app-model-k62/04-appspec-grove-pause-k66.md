@@ -63,6 +63,37 @@ known, so the **post-pause ws7 children can be grown on k66's retirement** —
 
 Commit names `appspec-grove-pause-k66`.
 
+## Hand-off log (2026-06-26 — delivery + initialization done; pause open)
+
+The hand-off (carrier checklist steps 1–3) is **complete**; the AppSpec grove is
+initialized, seeded, and ready to drive. **k66 stays live** — the pause is open until the
+AppSpec grove is *run to completion* (step 4), which is its own self-driving effort.
+
+**Delivered into `~/Development/AppSpec` (branch `appspec-toolkit`, commit `f197b64`):**
+- `.grove/` — root `BRIEF.md` (toolkit workstream charter) + first planning leaf
+  `01-appspec-toolkit-k1.md` (grill + decompose; agenda seeded from PRD §3/§4/§5).
+- `docs/prd/2026-06-26-appspec-toolkit.md` — the durable workstream PRD (vision, v1-substrate
+  reconciliation, skeleton-first decomposition spine, the three cross-grove seeds), reframed
+  AppSpec-native from this repo's `apps/macos/docs/appspec-toolkit-seed.md`.
+- `docs/prd/seed-inputs/{reverse-gen-workflow,hello-window-spec}.md` + `README.md` — the two
+  companion format-inputs, copied byte-identical as frozen reference data (not AppSpec app
+  data — ADR-0052 boundary held).
+- AppSpec `main` left **pristine** (no `.grove/`, no grove state); the bootstrap lives on the
+  `appspec-toolkit` branch so `grove do` takes its clean resume path (branch present, worktree
+  gone → re-attach).
+
+**Confirmed at hand-off:** no live `.grove/` and no `grove-meta` branch on AppSpec `main`
+(the v1 grove was finished + deleted — seed §2 prediction held); `grove-llm inbox-add` does
+not exist (seed §6) — delivery used the durable-PRD route, not an inbox push.
+
+**Resume condition (for the future session that re-picks k66):** check whether the AppSpec
+grove has finished (its `grove do appspec-toolkit` finish cycle ran — branch merged/removed,
+or `pick` there reports no live leaves). If finished, **retire k66** and grow the post-pause
+ws7 children (forward-gen suites + AppSpec-runner VM-verify; `apps/macos/` layout-finalize;
+portfolio index + coverage tie-in — see "Done when"). If not, the pause remains open.
+
+**Next action (human-driven):** `cd ~/Development/AppSpec && grove do appspec-toolkit`.
+
 ## Notes
 
 Reference: `apps/macos/docs/appspec-toolkit-seed.md` (the seed/PRD + the three seeds + the
