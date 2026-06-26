@@ -2,6 +2,8 @@
 
 Sample apps progress from simple to complex. Each exercises specific macOS/binding capabilities. Authoritative portfolio per `apps/macos/docs/2026-04-16-sample-app-portfolio-design.md`.
 
+App specs are produced by reverse-gen from the per-target implementations — see `apps/macos/docs/reverse-gen-workflow.md` (worked exemplar: `hello-window/docs/spec.md`).
+
 | # | App | Key Capabilities |
 |---|-----|-----------------|
 | 1 | hello-window | Window lifecycle, property setters, NSTextField label (smoke test) |
