@@ -36,8 +36,11 @@ is the authoritative portfolio design. Each app currently carries co-located pro
 `test-strategy.md` = TestAnyware validation checklist) from `co-locate-docs-k9`.
 
 > **Status (workstream 7):** the relationship, data boundary, and vocabulary are settled
-> (ADR-0052; `CONTEXT.md` *App model / AppSpec*). Still to come as later ws7 children —
-> reverse-gen each app's spec/PRD from its implementation (human-validated), build the
-> AppSpec grove (where the spec **format** firms), then forward-gen suites + VM-verify.
-> The on-disk file layout here is therefore **format-flexible**, not yet finalized; the
-> bundlers keep reading the display-name from `<app>/docs/spec.md`'s first H1 until then.
+> (ADR-0052; `CONTEXT.md` *App model / AppSpec*). reverse-gen is proven
+> (`hello-window/docs/spec.md`; `docs/reverse-gen-workflow.md`), and the AppSpec toolkit
+> workstream is **seeded** — see `docs/appspec-toolkit-seed.md` (the seed/PRD + the three
+> cross-grove seeds), handed off to the AppSpec grove at this grove's pause point. Still
+> to come as later ws7 children — the AppSpec grove (where the spec **format** firms),
+> then forward-gen suites + VM-verify. The on-disk file layout here is therefore
+> **format-flexible**, not yet finalized; the bundlers keep reading the display-name from
+> `<app>/docs/spec.md`'s first H1 until then.

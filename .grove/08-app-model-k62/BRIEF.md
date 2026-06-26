@@ -100,16 +100,25 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
 
 ## Children (materialized lazily — only the live ones exist on disk)
 
-1. **`appspec-foundation-k63`** *(live, first child)* — the foundation: ADR-0052, the
+1. **`appspec-foundation-k63`** ✅ *(done)* — the foundation: ADR-0052, the
    `CONTEXT.md` glossary reconcile, and the `apps/README.md` + `apps/macos/README.md`
    rewrite defining the boundary/relationship + the generated-spec model. Format-flexible;
    no per-app churn, no bundler change (keep `spec.md`). Skeleton-first.
-2. *(next, add on retirement of k63)* — **reverse-gen exemplar**: LLM-generate
-   hello-window's spec/PRD from its existing impl, human-validated; the worked template.
-3. *(later)* — **build the AppSpec grove**: author the toolkit seed/PRD (D2′ vision),
-   initialize the grove in `~/Development/AppSpec`, deliver the cross-grove seeds.
-4. *(later)* — **pause point**: hand off to / run the AppSpec grove; resume after.
-5. *(post-pause, deferred)* — forward-gen suites + VM-verify; layout finalize; portfolio.
+2. **`reverse-gen-exemplar-k64`** ✅ *(done)* — LLM-generated hello-window's spec/PRD from
+   its four impls, human-validated; the worked template (`hello-window/docs/spec.md` +
+   `apps/macos/docs/reverse-gen-workflow.md`).
+3. **`build-appspec-grove-k65`** ✅ *(done)* — authored the toolkit seed/PRD
+   (`apps/macos/docs/appspec-toolkit-seed.md`, the D2′ vision + reconciliation of AppSpec's
+   dormant-but-working v1 substrate + proposed grove decomposition) and staged the three
+   cross-grove seeds (capability shapes; spec/PRD format; patterns/attack-vectors interface
+   open question). Delivery mechanism resolved: `grove-llm inbox-add` does not exist and no
+   `grove-meta` branch exists → seed homed durably in this repo; actual init/delivery is
+   k66's (the moment a grove exists to receive it). Zero AppSpec-repo edits (boundary held).
+4. **`appspec-grove-pause-k66`** *(live)* — the **pause point**: initialize + seed + run
+   the AppSpec grove from the k65 seed; resume after. Post-pause children grown on its
+   retirement.
+5. *(post-pause, deferred — grown on k66 retirement)* — forward-gen suites + VM-verify;
+   `apps/macos/` layout finalize; portfolio index + coverage tie-in.
 
 ## Decisions (running log)
 
