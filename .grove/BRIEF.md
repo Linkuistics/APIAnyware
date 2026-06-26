@@ -69,9 +69,15 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    golden-neutral; k44 vocab + k45 audit); `apianyware-analyze annotations {stale,audit}`
    (k46/k47) + the `.apiw`-driven `/analyze` orchestration (k48) replace the retired
    bash/python scaffolding (k49). See **LLM side-channel outcomes** below.
-6. **target model** — `targets/<t>/`: capability profiles, idiom catalogues,
-   policies, adapter specs, bindings, conformance — reshaping the 4 live targets
-   (racket/chez/gerbil/sbcl).
+6. **target model** ✅ *(node `target-model-k50`, complete 2026-06-26)* —
+   `targets/<t>/`: the authored target-model layer over the four live targets
+   (racket/chez/gerbil/sbcl) — `target.apiw` descriptors (k51); the §20
+   capability / §7.7 representability model (ADR-0051; k52); idiom catalogues +
+   data-driven `pattern_dispatch` (k53); projection policies + adapter specs
+   (k54); conformance (k55); the per-target §18/§22 doc sets (k56); the bundler
+   apps/bindings-split reshape + new-target-guide resync (k61). All in the shared
+   `targets/_shared/tools/target-model` crate; goldens unmoved throughout. See
+   **Target-model outcomes** below.
 7. **apps** — `apps/macos/` common specs + `targets/<t>/app-implementations/`.
 8. **schemas + validation** — `schemas/`: formal validation of every artifact.
 9. **testing architecture** — the multi-layer test model (§33), TestAnyware /
@@ -263,6 +269,76 @@ Seams for the remaining workstreams:
 - **ws8 seam:** ws5 extended the `.apiw` overlay schema (`source` → `{llm, manual}`) + the
   `resolved.json` Rust serde (full ladder + `superseded-by`); the *machine JSON Schema* for
   `resolved.json` + validation tooling/CI stay **ws8's** (mirror of the ws2/ws3/ws4 seams).
+
+## Target-model outcomes (promoted from `target-model-k50` on retirement)
+
+Durable decisions/handoffs later workstreams depend on (the vocabulary lives in
+`CONTEXT.md` "Target model" + ADR-0051 + the `target-model-k50` brief's running log
+D1–D7; the prose in each target's `docs/{overview,language-characteristics,ffi-model,
+idiom-map,representability}.md` + `bindings/<platform>/docs/*.md`). The target model is the
+**authored layer over the four already-shipped, VM-verified targets** — it reshapes their
+homes + adds the model, it does not re-port them; per-target richness is affordable because
+the LLM makes it so ([[maximize_target_idiom_and_perf]]):
+
+- **Entity split: authored *input*, derived *status* (D1).** The §18 entities classify on the
+  same authored-vs-derived axis ws4 used. **Authored, committed `.apiw`** under `targets/<t>/`:
+  the **target descriptor** (`target.apiw` — §17 family/dialect/implementation/ffi-backend/
+  runtime-model/projection-policy/adapter-strategy as data), the **capability profile**
+  (`capability.apiw`), the **idiom catalogue** (`idioms/*.apiw`), the **projection policy**
+  (`policies/<platform>/*.apiw`), the **adapter spec** (`adapters/<platform>/spec.apiw`), and the
+  authored **judgment** slice of conformance (`conformance/<platform>.apiw`). **Derived,
+  uncommitted** (recomputable → constraint 4): the per-API representability status and the
+  conformance coverage / app-implementation status. **Prose `.md`**: the §18 target docs + §22
+  binding mapping docs.
+- **Capability/representability is a 7-rung ladder, derived as a floor (D2; ADR-0051).** One
+  ladder unifies §20's levels and §7.7's statuses: `exact-static > exact-runtime >
+  idiomatic-conventional > lossy-but-documented > unsafe-only > not-representable > research`.
+  The **capability profile is authored + platform-INDEPENDENT** (keyed on a shared §20
+  capability-dimension vocab in `targets/_shared`); a shared, target-independent
+  **`weirdness → capability` map** bridges platform truth and target capability;
+  `status(api, target)` = the worst rung over `{ profile[needs(w)] : w ∈ platform.weirdness(api) }`,
+  defaulting to `exact-static` for an API with no §30 weirdness (the trampoline-elision limit).
+  A second **app-form** capability face feeds per-app-kind feasibility, not per-API
+  representability.
+- **One shared crate; per-target data (D5).** All target-model machinery is target-independent →
+  **one** crate `targets/_shared/tools/target-model` (submodules `descriptor/`, `capability/`,
+  `idioms/`, `policy/`, `adapter_spec/`, `conformance/` + `vocab.rs` + `derive.rs`); the per-target
+  `.apiw` files are **data** under `targets/<t>/`. Crate-home convention holds (per-target crates
+  at `targets/<t>/tools/<crate>`; the shared emit substrate at `targets/_shared/`, ADR-0044).
+- **Idiom projection: author + data-drive the seam; *applying* projection deferred (D3).** ws6
+  authored the §21 idiom catalogue and refactored `classify_pattern` to **read the per-target
+  catalogue** (`emit/pattern_dispatch`), verified golden-neutral. **Wiring the emitters to
+  consume pattern-instances** (emit `with-bracket`/`make-foo` wrappers) moves goldens in all four
+  targets + needs a per-target VM-verify → a clearly-scoped, **golden-INTENTIONAL** follow-on (a
+  future grove), **not** folded into the authored-layer work. Mirrors ws3–ws5's
+  "author the carriage, defer the consumer."
+- **Per-target doc-set shape (child 6).** Each target carries **§18 target docs** at
+  `targets/<t>/docs/{overview,language-characteristics,ffi-model,idiom-map,representability}.md`
+  (a map + four deep-dives; `idiom-map.md` a thin pointer to the authoritative
+  `idioms/docs/idiom-map.md`) and **§22 binding mapping docs** at
+  `targets/<t>/bindings/<platform>/docs/{user-guide,platform-docs-mapping,api-coverage,
+  unsafe-escape-hatches}.md` — every doc pointing at the target's authored `.apiw` entities and
+  citing `apianyware-conformance` for derived coverage (constraint 4). A target with no
+  `developer-guide.md` (chez/gerbil/sbcl) makes the §22 `user-guide.md` its primary user doc. The
+  new-target guide (`targets/_shared/docs/adding-a-language-target.md`) bakes this in as Step 9.
+
+Seams for the remaining workstreams:
+
+- **ws7 (apps):** the common, target-independent **app-specs** live at `apps/macos/<app>/` (ws7);
+  the per-target **app-implementations** already live at
+  `targets/<t>/app-implementations/<platform>/<app>/` and are **ws6's** (the VM-verified sample
+  apps) — ws6 only homes the conformance *report* over them. The bundlers read apps from the
+  app-implementations root and the binding package from `bindings/<platform>/` natively
+  (`bundler-reshape-k61`).
+- **ws8 (schemas):** ws6 authored the `.apiw` **KDL Schemas** (`schemas/spec-format/{target,
+  capability,idioms,policy,adapter-spec,conformance}.kdl-schema`) + focused in-crate validators;
+  ws8 owns the **machine JSON Schema** for any derived report + validation tooling/CI (standing
+  ws2/3/4/5 seam).
+- **ws9 (testing):** ws9 owns the multi-layer test model + the TestAnyware/AppSpec runner;
+  **per-target execution hooks are ws6's** (declare-now/execute-later). ws6's conformance `binding
+  tests` field *references* test results; it does not build the runner.
+- **Deferred *apply-projection* follow-on (D3):** turning on emitter consumption of
+  pattern-instances is golden-intentional and lives in a **separate future grove**, not ws7/8/9.
 
 ## Notes
 
