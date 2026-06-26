@@ -1459,6 +1459,62 @@ the in-crate validators; **ws8** owns the *machine* JSON Schema + validation too
 _Avoid_: per-target target-model crates (4× duplicated machinery — D5); folding the model into
 `emit` (a rendering crate consumes the model, not owns it); authoring the machine JSON Schema (ws8).
 
+## App model / AppSpec (refactor workstream 7)
+
+The app layer is **not** a grove-native `.apiw` entity — it is **consumed from an
+external sibling project** (ADR-0052, REFACTOR §34). Three layers, three repos:
+**TestAnyware** (the VM-automation substrate) → **AppSpec** (the spec/test toolkit +
+formats; *holds no app data*) → **APIAnyware** (`apps/macos/<app>/` holds the app
+data; `targets/<t>/app-implementations/` holds the implementations).
+
+**AppSpec (the project)** _(the authority — `~/Development/AppSpec`, `Linkuistics/AppSpec`)_:
+The external, LLM-driven **spec/test toolkit**: the scenario language (`#lang app-spec`),
+the harness / Driver / runner, the (reverse- and forward-) generators, the
+`testanyware-sdk`, config + self-tests. *"The single authoritative operational
+specification of an app's behaviour, written once and verified against every
+implementation end-to-end in a live macOS VM."* APIAnyware **consumes/references** it,
+never reinvents it (ADR-0052). Will be *"largely prompts + workflows, not coding of
+tools."* **Three colliding "AppSpec" meanings — disambiguate:** (1) **this external
+project** [the authority — what "AppSpec" means by default]; (2) the older grove briefs'
+loose "the common app-spec entity" use → now read as *"the app's AppSpec data under
+`apps/macos/<app>/`"*; (3) the bundler Rust struct
+`apianyware_bundle_racket::AppSpec` — Info.plist/signing **bundle config**, wholly
+unrelated. _Avoid_: "the AppSpec format is ours"; minting a grove-native `.apiw`
+AppSpec entity (ADR-0052 declined it).
+
+**App** _(AppSpec vocab)_:
+A native UI application whose behaviour an AppSpec specifies, **independent of how it is
+built** (e.g. *hello-window*, *Modaliser*). _Avoid_: conflating an App with a single
+Implementation of it.
+
+**Implementation / impl** _(AppSpec vocab)_:
+A concrete build of an App in some language/runtime — the thing under test, selected
+with `--impl`. In APIAnyware these live at
+`targets/<t>/app-implementations/<platform>/<app>/`. _Avoid_: **"target"** (an
+APIAnyware target — racket/chez/gerbil/sbcl — *produces* impls; an impl is one app
+built by one target), "variant", "build".
+
+**Scenario / Scenario suite** _(AppSpec vocab)_:
+A **scenario** is one verifiable behaviour, impl-agnostic (authored as `#lang app-spec`
+source); a **scenario suite** is an App's set of scenarios, colocated with the App
+(`apps/macos/<app>/scenarios/`). _Avoid_: "test case" / "spec file" (reserve "test" for
+an impl's own unit tests).
+
+**Contract** _(AppSpec vocab)_:
+A conformance requirement every impl must satisfy to be verifiable — the structured log
+format (`logging-contract.md`) and observable state (`observable-state.md`), colocated
+with the App. They double as the **porting guide** for a new impl. _Avoid_: confusing
+with the CL-family *interface contract* (a different, target-side concept).
+
+**Reverse-gen / forward-gen** _(the LLM-driven, human-in-the-loop authoring model; ADR-0052)_:
+**Reverse-gen** = point at an existing app/impl → LLM-generate description/spec/PRD docs
+detailed enough to *reliably replicate* it (human-annotated). **Forward-gen** = LLM
+synthesize test suites that *correlate with* a spec, from best-practice guidelines,
+attack-vectors, and patterns/anti-patterns (human-validated). Git is the
+propose→review→accept boundary — the **ws5 side-channel philosophy** (ADR-0050) applied
+to app specs. The durable human-adjacent artifact is the **spec**, not the hand-written
+suite. _Avoid_: hand-authoring suites (that authors the generator's output by hand).
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
