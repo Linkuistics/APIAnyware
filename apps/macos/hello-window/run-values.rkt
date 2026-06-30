@@ -31,14 +31,19 @@
 ;;   left = (1024-400)/2 = 312  →  close-button-x = 312 + 20 = 332
 ;;   top  = (768 -228)/2 = 270  →  close-button-y = 270 + 14 = 284
 ;;
-;; ── PROVISIONAL — the live-run leaf (04) confirms/refines these in-VM ──
-;; `[NSWindow center]` biases the window slightly above the vertical center, and
-;; the real framebuffer / title-bar height may differ — so 04 measures the live
-;; VM (`testanyware screen size`, then the actual window origin) and refines the
-;; two literals below if needed. This is by design: scenario 03 is a *recording:*
-;; (provisional) scenario — a click that misses the control surfaces as a 04/05
-;; adjudication finding, not a generation defect (ADR-0010 D4, ADR-0011).
+;; ── MEASURED LIVE by 04-live-run (02-provision-install-run-k33), 2026-06-30 ──
+;; The framebuffer is 1920×1080, not the assumed 1024×768 (`testanyware screen
+;; size`). On it, the chez window (mandated fixed 400×232 outer, impl-independent)
+;; opens at AX origin (760, 215) — `[NSWindow center]` biases it ABOVE true centre,
+;; so the 1024×768 formula's vertical guess was wrong; the horizontal guess
+;; (left = (W-400)/2 = 760) was right. The leftmost traffic-light (close button)
+;; reads from `agent snapshot --mode layout`: AXButton "close button" at pos
+;; (768, 223) size 16×16 → centre (776, 231). The four impls share this geometry
+;; (same fixed-size centred window), so the two literals below are the live values
+;; for all of them. Scenario 03 stays a *recording:* (provisional) scenario — a
+;; click that still misses is a 04/05 adjudication finding, not a generation
+;; defect (ADR-0010 D4, ADR-0011).
 
 (run-values
-  (close-button-x 332)
-  (close-button-y 284))
+  (close-button-x 776)
+  (close-button-y 231))
