@@ -22,8 +22,15 @@ the standard application menu. The first gerbil sample app, and the vehicle for 
 ## Build
 
 ```sh
-./build.sh          # → build/hello-window  (run from anywhere)
+./build.sh          # → build/HelloWindow-gerbil.app  (run from anywhere)
 ```
+
+`build.sh` regenerates the gerbil bindings if absent (`apianyware-generate
+--target gerbil`), drives the full `bundle-gerbil` bundle, and post-processes the
+per-impl bundle id (`com.linkuistics.hello-window-gerbil` /
+`HelloWindow-gerbil.app`) for the AppSpec acceptance test (four impls coexist in
+one VM). Needs `gcc-15` on PATH — the gerbil bottle's Gambit config pins it
+(`brew install gcc@15` if the host has moved to a newer gcc).
 
 Then verify in a macOS VM (TestAnyware) — **never run a GUI app from the CLI**
 (leaf 070/040).
