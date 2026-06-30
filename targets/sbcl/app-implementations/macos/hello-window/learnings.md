@@ -69,3 +69,67 @@ silently treated as fully met.
   the live VM run): re-`dlopen` of Foundation/AppKit, `objc_msgSend` re-resolution, and
   FP-trap re-masking all happen via `*init-hooks*` before the toplevel. Load-bearing for
   070 and now demonstrated under AppKit, not just the smoke.
+
+## 2026-06-30 (AppSpec instrument + build, sbcl child `sbcl-instrument-build-k30`)
+
+Instrumented hello-window to the **Hello Window logging contract**
+(`apps/macos/hello-window/docs/logging-contract.md`) and built it for the AppSpec acceptance
+test (`acceptance-test-k21` / `impl-conformance-k23`). Full parity with the racket/chez
+siblings — all three events emitted.
+
+- 🟢 **Structured event log extracted to `events.lisp`** (pure CL, package
+  `apianyware-sbcl-hello-window-events`, nickname `hw-events`) — no AppKit/Foundation/dylib
+  dependency, so it **unit-tests in isolation** (`sbcl --script events.lisp` + assertions; the
+  racket `events.rkt` precedent, not the chez inline). Emits `[lifecycle] startup` (before the
+  run loop), the bare `Hello Window opened.`, and `[lifecycle] shutdown reason=<r>`. `run.lisp`
+  /`dump.lisp` load it before `hello-window.lisp`.
+- 🟢 **`~(~a~)` downcase gotcha (cross-impl correctness).** CL's default `*print-case*` is
+  `:upcase`, so a bare `~a` on the symbol `'menu` emits `reason=MENU` — but the contract (and
+  the racket/chez siblings, whose symbols print lowercase) mandate lowercase
+  `reason ∈ {menu, signal, error}`. `emit-shutdown` uses `~(~a~)` to downcase. Caught by the
+  isolation test before it reached the VM.
+- 🟢 **The terminate delegate forces the dylib — this app is no longer dylib-free.** The
+  `applicationWillTerminate:` callback (→ `reason=menu`, the osascript/Cmd-Q quit path
+  `quit-impl!`/scenario `03` exercise) is an ObjC→Lisp callback, and on SBCL **every** such
+  callback MUST route through `libAPIAnywareSbcl`'s subclass bounce shim — a
+  `define-alien-callable` installed AS an IMP runs Lisp on a foreign thread (the ADR-0035
+  crash; `subclass.lisp` is explicit). So hello-window now loads the dylib for the **subclass
+  shim only** (no block factory, no trampoline residual), via `define-objc-subclass
+  hw-app-delegate (ns:ns-object)` + a `define-objc-method` for the selector, synthesized at
+  **runtime** in `ensure-hw-delegate` (a class synthesized during `save-lisp-and-die` does not
+  survive into the revived image — note-editor's `ensure-note-controller` pattern). **This
+  refines the 060 finding "Pure-ObjC apps need no `libAPIAnywareSbcl` dylib":** pure-ObjC
+  *framework calls* need no residual, but any ObjC→Lisp *callback* (a delegate/target-action)
+  pulls in the dylib regardless. Why a delegate and not an exit hook: `-[NSApplication
+  terminate:]` ends in a C `exit()`, which bypasses `sb-ext:*exit-hooks*`.
+- 🟡 **Expected STYLE-WARNING** "Cannot find type for specializer `HW-APP-DELEGATE`": the
+  `define-objc-method` `defmethod` compiles before the runtime `define-objc-subclass` creates
+  the class. Benign and identical to note-editor; the revive smoke proves the method installs +
+  dispatches.
+- 🟢 **Build converted to the dylib variant** (`build.sh`, was the pure-standalone build):
+  **regenerates the sbcl bindings** (`apianyware-generate --target sbcl`, ~4s — the prior
+  `build.sh` assumed them present, but they are gitignored/absent in a clean checkout; the
+  racket/chez build children already regenerated theirs) + the adapter dylib (`swift build`) if
+  absent, stages the dylib at `/tmp/libAPIAnywareSbcl.dylib` (recorded for revive auto-reopen,
+  ADR-0038 §5), pre-flight → dump → vendor the dylib into `Contents/Frameworks` → revive smoke.
+  **Per-impl bundle id set DIRECTLY in the Info.plist heredoc** (`com.linkuistics.hello-window-sbcl`
+  / `HelloWindow-sbcl.app`) — hello-window's `build.sh` writes Info.plist itself, so it needs
+  **none** of the post-mv PlistBuddy + re-sign dance the racket/chez **cargo** bundlers needed
+  (those derive the id from the spec H1 and seal the bundle signature). The k27 sbcl descriptor
+  needed **no change** (build meets its `#:bundle-id`/`#:binary`).
+- 🟢 **Validated host-side** (instrument + build are host-side; the live run is sibling `04`):
+  events.lisp isolation test (three lines + the runner's exact matchers + env-var path
+  resolution + re-init truncation); construction pre-flight + **revive smoke** (subclass
+  synthesis + dispatcher re-registration in the dumped image, dylib auto-reopened from `/tmp`);
+  and a **host integration test** that fires `ns:application-will-terminate_` directly and
+  confirms all three lines land in events.log. **VM-deferred to child `04`:** the delegate
+  firing on a *real* terminate event and the run-loop event emission (`:run t` needs a
+  WindowServer). The built `.app` is gitignored (reproduced by `build.sh`).
+- 🟡 **VM provisioning change.** This impl no longer "travels alone": the VM must provide
+  `/tmp/libAPIAnywareSbcl.dylib` (one dylib, like note-editor). The `04` live-run child uploads
+  the vendored `Contents/Frameworks/libAPIAnywareSbcl.dylib` to that path.
+
+**For the gerbil sibling (k31):** same per-impl bundle-id reconciliation (the gerbil `build.sh`
+hardcodes `com.linkuistics.hello-window` / `HelloWindow.app`); gerbil also needs its toolchain
+installed (`gerbil-scheme` not on host). A native `--bundle-id` flag on the cargo bundlers
+remains the proper long-term home (an APIAnyware tooling concern, not app data).

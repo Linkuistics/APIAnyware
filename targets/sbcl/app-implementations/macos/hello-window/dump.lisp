@@ -1,40 +1,54 @@
 ;;;; dump.lisp — `save-lisp-and-die` the hello-window standalone executable (060/020).
 ;;;;
-;;;; Produces a single self-contained executable embedding the SBCL runtime, the loaded
-;;;; binding library (runtime + Foundation + AppKit), and the app — the lightest VM
-;;;; artifact: it travels alone (pure ObjC, no libAPIAnywareSbcl dylib; only system
-;;;; frameworks + libobjc, which the VM always has) and needs NO SBCL provisioning in the
-;;;; VM. At revive, `sb-ext:*init-hooks*` runs the mandatory startup re-resolution pass
-;;;; (ADR-0034 §6 / ADR-0038 §5) BEFORE the toplevel — re-`dlopen`ing Foundation+AppKit,
-;;;; re-resolving `objc_msgSend`, re-masking the FP traps — so every baked Class/SEL is
-;;;; live before the first dispatch. This is a dev build script; the `bundle-sbcl` crate
-;;;; (070-distribution) generalizes it, exactly as gerbil's app `build.sh` (`gxc -exe`)
-;;;; preceded `bundle-gerbil`.
+;;;; Produces a self-contained executable embedding the SBCL runtime, the loaded binding
+;;;; library (runtime + Foundation + AppKit, `:load-residual nil` — pure-ObjC calls, no
+;;;; trampoline residual), and the app. It is NOT fully standalone: the AppSpec logging
+;;;; contract's `applicationWillTerminate:` delegate needs libAPIAnywareSbcl's subclass bounce
+;;;; shim, so — like note-editor — the dump loads the dylib from a FIXED path
+;;;; (`/tmp/libAPIAnywareSbcl.dylib`, build.sh stages the copy). ADR-0038 §5: the dylib is NOT
+;;;; embedded — `save-lisp-and-die` keeps it in `*shared-objects*` and the revived image
+;;;; auto-reopens it by that recorded path, so the VM needs only that one dylib at that path.
+;;;; At revive, `sb-ext:*init-hooks*` runs the mandatory startup re-resolution pass (ADR-0034
+;;;; §6 / ADR-0038 §5) BEFORE the toplevel — re-`dlopen`ing Foundation+AppKit + the dylib,
+;;;; re-resolving `objc_msgSend`, re-masking the FP traps, re-registering the subclass
+;;;; forwarding dispatcher — so every baked Class/SEL is live and the delegate works before the
+;;;; first dispatch. `-main` then re-synthesizes the delegate class via `ensure-hw-delegate`.
+;;;; This is a dev build script; the `bundle-sbcl` crate (070-distribution) generalizes it.
 ;;;;
 ;;;; Invoked by build.sh:
 ;;;;   SDKROOT=macosx sbcl --non-interactive --disable-debugger \
-;;;;     --load .../apps/hello-window/dump.lisp -- <output-exe-path>
+;;;;     --load .../apps/hello-window/dump.lisp -- <output-exe-path> <dylib-path>
 
 (in-package #:cl-user)
 
 (defparameter *app-dir*
   (make-pathname :name nil :type nil :defaults (or *load-truename* *load-pathname*)))
 
-;; The output executable path is the first post-`--` argument (build.sh passes it).
+;; Post-`--` args: 1 = output exe path, 2 = dylib path to record for revive (build.sh
+;; passes both; the dylib path defaults to the fixed /tmp stage if omitted).
+(defparameter *post-args* (rest (member "--" sb-ext:*posix-argv* :test #'string=)))
 (defparameter *out-exe*
-  (or (first (rest (member "--" sb-ext:*posix-argv* :test #'string=)))
-      (namestring (merge-pathnames "hello-window" *app-dir*))))
+  (or (first *post-args*) (namestring (merge-pathnames "hello-window" *app-dir*))))
+(defparameter *dylib*
+  (or (second *post-args*) "/tmp/libAPIAnywareSbcl.dylib"))
 
 (load (merge-pathnames "../_support/load-bindings.lisp" *app-dir*))
 
 (in-package #:apianyware-sbcl-impl)
 
+;; Load the dylib from the path we record for revive (ADR-0038 §5 auto-reopen). Needed for
+;; the subclass bounce shim the terminate delegate uses; the subclass dispatcher
+;; self-registers on the first `define-objc-method` (no block-dispatcher init).
+(setf *native-dylib-path* cl-user::*dylib*)
+(aw-load-native-dylib)
+
 (aw-app-load-framework "Foundation" :load-residual nil)
 (aw-app-load-framework "AppKit" :load-residual nil)
 
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "hello-window.lisp" cl-user::*app-dir*))
 
-(format t "~&== dumping ~A ==~%" cl-user::*out-exe*)
+(format t "~&== dumping ~A (dylib recorded: ~A) ==~%" cl-user::*out-exe* cl-user::*dylib*)
 (finish-output)
 
 (sb-ext:save-lisp-and-die cl-user::*out-exe*
