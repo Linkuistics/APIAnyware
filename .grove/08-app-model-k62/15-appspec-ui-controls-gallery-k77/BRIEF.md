@@ -28,8 +28,12 @@ hello-window exemplar.
      (the hello-window k67 stage).
   3. **`instrument-builds-k88`** ✅ *(node; children k89 racket / k90 chez / k91
      gerbil / k92 sbcl, all done 2026-07-02)* — see **Instrument+build outcomes**.
-  4. **`forward-gen-suite-k93`** — forward-gen scenario suite + `run-values.rkt`.
-  5. *(planned)* Tier-2 live-run all four impls → `docs/run-results.md`.
+  4. **`forward-gen-suite-k93`** ✅ *(done 2026-07-02)* — the 11-scenario suite +
+     `run-values.rkt` (two-subagent consensus; L1a–L1d validated; 14/17 §13 lines
+     covered + 3 documented gaps). Coordinate keys are provisional zeros — layouts
+     are impl-varying, so k94 measures per impl before driving interactions.
+  5. **`live-run-k94`** — Tier-2 live-run all four impls → `docs/run-results.md`
+     (closes this node's Done-when).
 
 ## Instrument+build outcomes (promoted from `instrument-builds-k88` on retirement)
 
