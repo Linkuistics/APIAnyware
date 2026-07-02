@@ -23,11 +23,32 @@
 ;; them is what `(import (chezscheme))` rejects at script load with
 ;; "invalid context for definition".
 ;;
+;; Instrumented for the AppSpec scenario runner per the Mini Browser
+;; logging contract (apps/macos/mini-browser/docs/logging-contract.md):
+;; it writes a structured events.log the runner tails — [lifecycle]
+;; startup/shutdown, the bare launch line, and the three [nav]
+;; navigation-state events mirroring the WKNavigationDelegate callbacks
+;; (loads resolve on WebKit's schedule, so completion/failure are not
+;; assertable without a log record; the ◀/▶ enabled flags ride the
+;; `finished` line — the AppSpec AX-snapshot transform drops per-element
+;; enabled flags). Under `launch-via 'open` LaunchServices discards the
+;; app's stdout, so the log file (not stdout) is the runner's read path;
+;; the stdout line is kept too (human-friendly when run unbundled).
+;;
+;; The logging is inlined here rather than extracted to a sibling
+;; `events.sls` for the same reason as the prior instrumented chez apps:
+;; chez resolves `(import …)` by library-name→path against the
+;; whole-program compile tree, so a sibling library would need an
+;; `apps/`-prefixed name. These top-level defines use only (chezscheme)
+;; names, so the standalone bundler resolves them with no new library on
+;; the path.
+;;
 ;; Run unbundled with:
 ;;   chez --libdirs targets/chez/bindings/macos \
 ;;        --script targets/chez/app-implementations/macos/mini-browser/mini-browser.sls
-;; Bundled via `cargo run --example bundle_app -p apianyware-bundle-chez
-;;              -- mini-browser`.
+;; Bundled (the runnable artifact) via build.sh, which wraps
+;;   `cargo run --example bundle_app -p apianyware-bundle-chez
+;;    -- mini-browser`.
 
 (import (chezscheme)
         (apianyware appkit)
@@ -86,12 +107,131 @@
       [(has-uri-scheme? trimmed) trimmed]
       [else (string-append "https://" trimmed)])))
 
+;; --- Structured event log (logging contract) -------------------------------
+;; Single writer: every event is emitted on the main thread — startup and the
+;; launch line before -run; the [nav] events from the four WKNavigationDelegate
+;; callbacks, which WebKit delivers on the main thread; shutdown on the
+;; terminate path — so one port with a post-write flush suffices (no lock).
+
+;; Fixed default the descriptor's #:events-path mirrors, so the runner tails
+;; the same file whether or not #:log-env (MINI_BROWSER_EVENTS_LOG)
+;; propagates through LaunchServices.
+(define mb-default-events-path "/tmp/mini-browser/events.log")
+(define mb-events-port #f)
+
+;; MINI_BROWSER_EVENTS_LOG if set and non-empty, else the fixed default.
+(define (mb-resolve-events-path)
+  (let ([env (getenv "MINI_BROWSER_EVENTS_LOG")])
+    (if (and env (not (string=? env ""))) env mb-default-events-path)))
+
+;; Directory component of `p` (everything before the last '/'), or #f.
+(define (mb-path-parent p)
+  (let loop ([i (- (string-length p) 1)])
+    (cond
+      [(< i 0) #f]
+      [(char=? (string-ref p i) #\/) (substring p 0 i)]
+      [else (loop (- i 1))])))
+
+;; Open + truncate the events.log: (file-options no-fail) creates it if absent
+;; and truncates it if present. Line-buffered so a tail sees each record
+;; promptly. The parent dir is created if missing (guarded against a race).
+(define (mb-events-init!)
+  (let* ([target (mb-resolve-events-path)]
+         [parent (mb-path-parent target)])
+    (when (and parent (not (string=? parent "")) (not (file-directory? parent)))
+      (guard (e [#t (void)]) (mkdir parent)))
+    (set! mb-events-port
+      (open-file-output-port target
+        (file-options no-fail)
+        (buffer-mode line)
+        (make-transcoder (utf-8-codec))))))
+
+(define (mb-emit-line line)
+  (when mb-events-port
+    ;; Swallow only I/O-level failures (out-of-disk, closed-port races on
+    ;; shutdown). A genuine programmer error still surfaces during dev.
+    (guard (e [#t (void)])
+      (put-string mb-events-port line)
+      (put-char mb-events-port #\newline)
+      (flush-output-port mb-events-port))))
+
+;; Contract "Line format": strings are double-quoted with \\ / \" / newline
+;; escaped; numbers/booleans/symbols emit bare.
+(define (mb-quote-string s)
+  (let ([out (open-output-string)])
+    (put-char out #\")
+    (string-for-each
+      (lambda (c)
+        (case c
+          [(#\\) (put-string out "\\\\")]
+          [(#\") (put-string out "\\\"")]
+          [(#\newline) (put-string out "\\n")]
+          [else (put-char out c)]))
+      s)
+    (put-char out #\")
+    (get-output-string out)))
+
+;; Booleans emit as the bare symbols true/false — the contract defines the
+;; bytes; Chez's native #t/#f print form does not conform.
+(define (mb-bool b) (if b "true" "false"))
+
+(define (mb-emit-startup)
+  (mb-emit-line "[lifecycle] startup"))
+(define (mb-emit-launch-line)
+  (mb-emit-line "Mini Browser running. Close window or Ctrl+C to exit."))
+(define (mb-emit-shutdown reason)
+  (mb-emit-line (format "[lifecycle] shutdown reason=~a" reason)))
+
+;; The three [nav] events — the navigation-state transitions of spec §7.
+;; Key order is fixed (url · title · can-go-back · can-go-forward; phase ·
+;; message) so multi-key regex matchers can rely on adjacency. `started` and
+;; `finished` are emitted post-state; `failed` deliberately deviates (emitted
+;; before the modal alert runs — the runner's pre-dismissal cue).
+
+(define (mb-emit-nav-started url)
+  (mb-emit-line (format "[nav] started url=~a" (mb-quote-string url))))
+
+(define (mb-emit-nav-finished url title back? forward?)
+  (mb-emit-line
+    (format "[nav] finished url=~a title=~a can-go-back=~a can-go-forward=~a"
+            (mb-quote-string url) (mb-quote-string title)
+            (mb-bool back?) (mb-bool forward?))))
+
+;; `phase` is the normalized lowercase request/load string (the delegate's
+;; existing phase args), emitted bare; `message` is platform-formatted text.
+(define (mb-emit-nav-failed phase message)
+  (mb-emit-line (format "[nav] failed phase=~a message=~a"
+                        phase (mb-quote-string message))))
+
+(define (mb-close-events!)
+  (when mb-events-port
+    (guard (e [#t (void)])
+      (flush-output-port mb-events-port)
+      (close-output-port mb-events-port)))
+  (set! mb-events-port #f))
+
 (define-entry-point (main)
   ;; ============================================================
   ;; Definitions
   ;; ============================================================
 
   (define app (nsapplication-shared-application))
+
+  ;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+  ;; The osascript graceful quit the runner uses (quit-impl! / the Command-Q
+  ;; scenario) routes through applicationWillTerminate:. Cocoa holds the
+  ;; delegate weakly, so keep `app-delegate` reachable — this define lives for
+  ;; the whole of `main`, which spans the run loop. The callback body is
+  ;; guarded because an unhandled exception in an ObjC callback crashes the
+  ;; app with no Scheme backtrace.
+  (define app-delegate
+    (make-delegate
+      `(("applicationWillTerminate:"
+         ,(lambda (notification)
+            (guard (e [#t (void)])
+              (mb-emit-shutdown 'menu)
+              (mb-close-events!)))
+         (void*) void))))
 
   (define window
     (make-nswindow-init-with-content-rect-style-mask-backing-defer
@@ -154,6 +294,18 @@
           (unless (string=? url-text "")
             (nstextfield-set-string-value! address-field url-text))))))
 
+  ;; --- Event-payload reads (logging contract "Navigation events") ---
+  ;; The web view's URL absoluteString / title at callback time, empty string
+  ;; when nil — the same reads §7.2's chrome refresh performs.
+  (define (current-url-string)
+    (let ([u (wkwebview-url web-view)])
+      (if (zero? (objc-object-ptr u))
+          ""
+          (nsstring->string (nsurl-absolute-string u)))))
+
+  (define (current-title-string)
+    (nsstring->string (wkwebview-title web-view)))
+
   ;; --- Error surfacing ---
   ;; `err` arrives as a raw uptr from the Swift trampoline (delegate args
   ;; are void*, never pre-wrapped). nil is 0; `coerce-arg` inside the
@@ -164,6 +316,12 @@
     (let ([message (if (zero? err)
                        "Unknown error"
                        (nsstring->string (nserror-localized-description err)))])
+      ;; [nav] failed — message computed, emitted BEFORE runModal (the
+      ;; deliberate deviation from the post-state discipline: the blocking
+      ;; modal alert needs a pre-dismissal cue — contract "Navigation events"
+      ;; deviation note). The nil-error boundary still emits (message
+      ;; "Unknown error"); no alert follows.
+      (mb-emit-nav-failed phase message)
       (unless (zero? err)
         (let ([alert (nsalert-alert-with-error err)])
           (unless (zero? (objc-object-ptr alert))
@@ -200,12 +358,23 @@
     (make-delegate
       `(("webView:didStartProvisionalNavigation:"
          ,(lambda (_webview _nav)
-            (set-status! "Loading..."))
+            (set-status! "Loading...")
+            ;; [nav] started — post-state (the loading status line is set);
+            ;; url is the provisional URL at callback time.
+            (mb-emit-nav-started (current-url-string)))
          (void* void*) void)
         ("webView:didFinishNavigation:"
          ,(lambda (_webview _nav)
             (refresh-chrome!)
-            (set-status! "Done"))
+            (set-status! "Done")
+            ;; [nav] finished — after the WHOLE §7.2 chrome-refresh rule has
+            ;; run. The can-go-back/can-go-forward reads are the same history
+            ;; getters the button enablement just used — the log line is the
+            ;; assertable channel for the AppSpec expect-ax #:enabled? gap.
+            (mb-emit-nav-finished (current-url-string)
+                                  (current-title-string)
+                                  (wkwebview-can-go-back web-view)
+                                  (wkwebview-can-go-forward web-view)))
          (void* void*) void)
         ("webView:didFailNavigation:withError:"
          ,(lambda (_webview _nav err)
@@ -246,6 +415,7 @@
   ;; ============================================================
 
   (nsapplication-set-activation-policy! app NSApplicationActivationPolicyRegular)
+  (nsapplication-set-delegate! app (delegate-ptr app-delegate))
   (install-standard-app-menu! app "Mini Browser")
 
   ;; Window
@@ -325,7 +495,27 @@
   (nswindow-make-key-and-order-front window #f)
   (nsapplication-activate-ignoring-other-apps app #t)
 
+  ;; §3.7 launch diagnostic — dual emission (contract "Lifecycle events"):
+  ;; the stdout line stays (human-friendly when run unbundled, literally true
+  ;; to §3); the same BARE line goes to events.log, where the runner can see
+  ;; it (LaunchServices discards stdout under `open`).
+  (mb-emit-launch-line)
   (display "Mini Browser running. Close window or Ctrl+C to exit.\n")
   (nsapplication-run app))
+
+;; --- Structured event log: open + [lifecycle] startup BEFORE (main) --------
+;; The browser builds its window/web-view in `main`'s defines section (R6RS
+;; body: all defines precede every expression), so `startup` cannot be main's
+;; first expression — it lands here instead, before (main) is entered and thus
+;; before window/web-view construction, well before the run loop (or the
+;; runner's `wait-ready` readiness probe times out).
+(mb-events-init!)
+(mb-emit-startup)
+
+;; Test-config compatibility (logging-contract.md): the browser reads no
+;; runtime config, so it honours MINI_BROWSER_TEST_CONFIG by reading the env
+;; var and treating absent/empty (and a missing file) as "no config" — a
+;; deliberate no-op.
+(getenv "MINI_BROWSER_TEST_CONFIG")
 
 (main)
