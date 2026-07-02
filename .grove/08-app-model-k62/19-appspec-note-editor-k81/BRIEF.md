@@ -60,8 +60,24 @@ hello-window, ui-controls-gallery, pdfkit-viewer, scenekit-viewer, mini-browser)
      unobservable; failure `<detail>` diverges (racket exn-message vs path);
      dirty dot unobservable → window AX title is the channel; open-panel file
      cells not in the AX tree → Cmd-Shift-G.
-  2. **`conformance-data-k123`** — the logging contract + observable-state doc.
-  3. **instrument-builds** — per-impl instrumentation + rebuild ×4 (a node).
+  2. **`conformance-data-k123`** ✅ *(done 2026-07-03)* — the logging contract +
+     observable-state doc. Key decisions: event modules `{lifecycle, document,
+     preview}` — six post-state `[document]` events (`new`/`opened`/`saved`/
+     `open-failed`/`save-failed`/`dirty-changed`, fixed `path` `dirty` key order;
+     `saved` in both branches, sheet branch inside the completion handler) +
+     `[preview] rendered placeholder= chars=` at every `loadHTMLString:` hand-off
+     (the scenekit `[scene]` mirror; per-keystroke volume accepted, suites match
+     final lines, never counts); launch-line prefix rule kept (remainder unaligned);
+     failure `<detail>` NOT aligned — the event `path=` key is the normalized
+     channel, visible prefixes contracted only; cancels/no-op-undo/window-close all
+     silent; persistence story = `/tmp/note-editor/{fixtures,work}` + cleanup
+     obligation + Cmd-Shift-G neutralizing panel-remembered dirs; sbcl `build.sh`
+     misalignment (unsuffixed id, missing `CFBundleInfoDictionaryVersion`) verified
+     and seeded to instrument-builds. Provisional AX rows for live-run: save-sheet
+     shape + Go-to-Folder-in-sheet choreography, WKWebView rendered-DOM exposure,
+     editor `AXValue` fold-fidelity, Escape-for-Cancel on the alert.
+  3. **`instrument-builds-k124`** — per-impl instrumentation + rebuild ×4 (expected
+     to decompose on entry, the k115 mirror).
   4. **forward-gen-suite** — the scenario suite + fixtures + run-values.
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`.
 
