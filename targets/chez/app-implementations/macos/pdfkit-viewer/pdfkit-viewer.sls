@@ -15,11 +15,31 @@
 ;; Mixing them is what `(import (chezscheme))` rejects at script load
 ;; with "invalid context for definition".
 ;;
+;; Instrumented for the AppSpec scenario runner per the PDFKit Viewer
+;; logging contract (apps/macos/pdfkit-viewer/docs/logging-contract.md):
+;; it writes a structured events.log the runner tails — [lifecycle]
+;; startup/shutdown, the bare launch line, and the two [document]
+;; state-transition events (opened / page-changed) that make the spec §13
+;; document assertions observable (the nav-button enabled flags are
+;; dropped by the AX-snapshot transform, and the label's OCR can catch a
+;; pre-repaint frame). Under `launch-via 'open` LaunchServices discards
+;; the app's stdout, so the log file (not stdout) is the runner's read
+;; path; the stdout line is kept too (human-friendly when run unbundled).
+;;
+;; The logging is inlined here rather than extracted to a sibling
+;; `events.sls` for the same reason as hello-window / ui-controls-gallery:
+;; chez resolves `(import …)` by library-name→path against the
+;; whole-program compile tree, so a sibling library would need an
+;; `apps/`-prefixed name. These top-level defines use only (chezscheme)
+;; names, so the standalone bundler resolves them with no new library on
+;; the path.
+;;
 ;; Run unbundled with:
 ;;   chez --libdirs targets/chez/bindings/macos \
 ;;        --script targets/chez/app-implementations/macos/pdfkit-viewer/pdfkit-viewer.sls
-;; Bundled via `cargo run --example bundle_app -p apianyware-bundle-chez
-;;              -- pdfkit-viewer`.
+;; Bundled (the runnable artifact) via build.sh, which wraps
+;;   `cargo run --example bundle_app -p apianyware-bundle-chez
+;;    -- pdfkit-viewer`.
 
 (import (chezscheme)
         (apianyware appkit)
@@ -29,6 +49,101 @@
         (apianyware runtime objc)
         (apianyware runtime types)
         (apianyware runtime dispatch))
+
+;; --- Structured event log (logging contract) -------------------------------
+;; Single writer: the Cocoa run loop serialises the main-thread callbacks that
+;; emit — startup/launch before -run, the [document] events from the
+;; open-button action callback and the page-changed notification observer,
+;; shutdown on terminate — so one port with a post-write flush suffices (no
+;; lock needed).
+
+;; Fixed default the descriptor's #:events-path mirrors, so the runner tails
+;; the same file whether or not #:log-env (PDFKIT_VIEWER_EVENTS_LOG)
+;; propagates through LaunchServices.
+(define pv-default-events-path "/tmp/pdfkit-viewer/events.log")
+(define pv-events-port #f)
+
+;; PDFKIT_VIEWER_EVENTS_LOG if set and non-empty, else the fixed default.
+(define (pv-resolve-events-path)
+  (let ([env (getenv "PDFKIT_VIEWER_EVENTS_LOG")])
+    (if (and env (not (string=? env ""))) env pv-default-events-path)))
+
+;; Directory component of `p` (everything before the last '/'), or #f.
+(define (pv-path-parent p)
+  (let loop ([i (- (string-length p) 1)])
+    (cond
+      [(< i 0) #f]
+      [(char=? (string-ref p i) #\/) (substring p 0 i)]
+      [else (loop (- i 1))])))
+
+;; Open + truncate the events.log: (file-options no-fail) creates it if absent
+;; and truncates it if present. Line-buffered so a tail sees each record
+;; promptly. The parent dir is created if missing (guarded against a race).
+(define (pv-events-init!)
+  (let* ([target (pv-resolve-events-path)]
+         [parent (pv-path-parent target)])
+    (when (and parent (not (string=? parent "")) (not (file-directory? parent)))
+      (guard (e [#t (void)]) (mkdir parent)))
+    (set! pv-events-port
+      (open-file-output-port target
+        (file-options no-fail)
+        (buffer-mode line)
+        (make-transcoder (utf-8-codec))))))
+
+(define (pv-emit-line line)
+  (when pv-events-port
+    ;; Swallow only I/O-level failures (out-of-disk, closed-port races on
+    ;; shutdown). A genuine programmer error still surfaces during dev.
+    (guard (e [#t (void)])
+      (put-string pv-events-port line)
+      (put-char pv-events-port #\newline)
+      (flush-output-port pv-events-port))))
+
+;; Contract "Line format": strings are double-quoted with \\ / \" / newline
+;; escaped; numbers/booleans/symbols emit bare.
+(define (pv-quote-string s)
+  (let ([out (open-output-string)])
+    (put-char out #\")
+    (string-for-each
+      (lambda (c)
+        (case c
+          [(#\\) (put-string out "\\\\")]
+          [(#\") (put-string out "\\\"")]
+          [(#\newline) (put-string out "\\n")]
+          [else (put-char out c)]))
+      s)
+    (put-char out #\")
+    (get-output-string out)))
+
+(define (pv-emit-startup)
+  (pv-emit-line "[lifecycle] startup"))
+(define (pv-emit-launch-line)
+  (pv-emit-line "PDFKit Viewer running. Close window or Ctrl+C to exit."))
+(define (pv-emit-shutdown reason)
+  (pv-emit-line (format "[lifecycle] shutdown reason=~a" reason)))
+
+;; The two [document] events — each emitted AFTER the state change it names is
+;; applied (label text + nav-button enabled states already set; contract
+;; "Document events").
+
+;; `file` is the opened URL's LAST PATH COMPONENT (the panel canonicalizes
+;; paths, so the basename is the stable identity); `pages` = pageCount.
+;; Success path only — silent no-ops (cancel / nil URL / failed initWithURL:)
+;; emit nothing.
+(define (pv-emit-document-opened file pages)
+  (pv-emit-line (format "[document] opened file=~a pages=~a" (pv-quote-string file) pages)))
+
+;; `page` is 1-based and always equals the label's n (nil-current-page
+;; fallback ⇒ page=1); `pages` = N. Bare integers.
+(define (pv-emit-page-changed page pages)
+  (pv-emit-line (format "[document] page-changed page=~a pages=~a" page pages)))
+
+(define (pv-close-events!)
+  (when pv-events-port
+    (guard (e [#t (void)])
+      (flush-output-port pv-events-port)
+      (close-output-port pv-events-port)))
+  (set! pv-events-port #f))
 
 ;; NSModalResponseOK is not in the AppKit enums.sls — define locally,
 ;; matching the racket source's identical workaround.
@@ -47,6 +162,22 @@
   ;; ============================================================
 
   (define app (nsapplication-shared-application))
+
+  ;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+  ;; The osascript graceful quit the runner uses (quit-impl! / the Command-Q
+  ;; scenario) routes through applicationWillTerminate:. Cocoa holds the
+  ;; delegate weakly, so keep `app-delegate` reachable — this define lives for
+  ;; the whole of `main`, which spans the run loop. The callback body is
+  ;; guarded because an unhandled exception in an ObjC callback crashes the
+  ;; app with no Scheme backtrace.
+  (define app-delegate
+    (make-delegate
+      `(("applicationWillTerminate:"
+         ,(lambda (notification)
+            (guard (e [#t (void)])
+              (pv-emit-shutdown 'menu)
+              (pv-close-events!)))
+         (void*) void))))
 
   (define window
     (make-nswindow-init-with-content-rect-style-mask-backing-defer
@@ -83,12 +214,17 @@
     (list->nsarray (list (string->nsstring "pdf"))))
 
   ;; --- UI refresh ---
+  ;; Applies the §7.2 refresh rule and returns the state it applied — #f for
+  ;; the empty state, (page . total) (1-based) when a document is loaded — so
+  ;; the [document] log events (logging contract) report exactly what the
+  ;; label shows, including the nil-current-page fallback to page 1.
   (define (refresh-ui!)
     (cond
       [(not current-document)
        (nstextfield-set-string-value! page-label "No PDF loaded")
        (nsbutton-set-enabled! prev-button #f)
-       (nsbutton-set-enabled! next-button #f)]
+       (nsbutton-set-enabled! next-button #f)
+       #f]
       [else
        (let* ([total (pdfdocument-page-count current-document)]
               ;; Transient nil-current-page (e.g. mid-document-swap)
@@ -101,7 +237,8 @@
          (nstextfield-set-string-value! page-label
            (format #f "Page ~a of ~a" (+ index 1) total))
          (nsbutton-set-enabled! prev-button (pdfview-can-go-to-previous-page pdf-view))
-         (nsbutton-set-enabled! next-button (pdfview-can-go-to-next-page pdf-view)))]))
+         (nsbutton-set-enabled! next-button (pdfview-can-go-to-next-page pdf-view))
+         (cons (+ index 1) total))]))
 
   ;; --- Delegate: one record, four selectors ---
   ;;
@@ -118,6 +255,8 @@
               (nsopenpanel-set-can-choose-directories! panel #f)
               (nsopenpanel-set-allows-multiple-selection! panel #f)
               (nsopenpanel-set-allowed-file-types! panel pdf-type-array)
+              ;; Cancel / nil URL / failed initWithURL: are spec-mandated
+              ;; silent no-ops — no event, no error line (logging contract).
               (let ([response (nsopenpanel-run-modal panel)])
                 (when (= response NSModalResponseOK)
                   (let ([url (nsopenpanel-url panel)])
@@ -126,7 +265,21 @@
                         (unless (zero? (objc-object-ptr doc))
                           (set! current-document doc)
                           (pdfview-set-document! pdf-view doc)
-                          (refresh-ui!)))))))))
+                          ;; [document] opened — success path only, POST-state
+                          ;; (store + setDocument: + refresh already applied).
+                          ;; `file` is the URL's last path component (the panel
+                          ;; canonicalizes paths, so the basename is the stable
+                          ;; identity); `pages` = pageCount. The FFI's `string`
+                          ;; return maps a NULL UTF8String to #f, hence the
+                          ;; (or … "") guard.
+                          (let ([state (refresh-ui!)]
+                                [basename
+                                 (let ([name (nsurl-last-path-component url)])
+                                   (if (zero? (objc-object-ptr name))
+                                       ""
+                                       (or (nsstring-utf8-string name) "")))])
+                            (when state
+                              (pv-emit-document-opened basename (cdr state))))))))))))
          (void*) void)
         ;; goToPreviousPage: / goToNextPage: take a `sender` id that
         ;; PDFKit ignores; passing #f → nil is fine. The page-changed
@@ -144,7 +297,12 @@
         ;; correct regardless of how the page was turned.
         ("pageChanged:"
          ,(lambda (_note)
-            (refresh-ui!))
+            ;; [document] page-changed rides the observer, POST-refresh
+            ;; (label + button states already applied — logging contract
+            ;; "Document events").
+            (let ([state (refresh-ui!)])
+              (when state
+                (pv-emit-page-changed (car state) (cdr state)))))
          (void*) void))))
 
   ;; ============================================================
@@ -152,6 +310,7 @@
   ;; ============================================================
 
   (nsapplication-set-activation-policy! app NSApplicationActivationPolicyRegular)
+  (nsapplication-set-delegate! app (delegate-ptr app-delegate))
   (install-standard-app-menu! app "PDFKit Viewer")
 
   ;; Window
@@ -220,7 +379,27 @@
   (nswindow-make-key-and-order-front window #f)
   (nsapplication-activate-ignoring-other-apps app #t)
 
+  ;; Launch diagnostic (spec §3 step 7): the bare line beginning `PDFKit
+  ;; Viewer` the runner's `wait-for-log` matches, dual-emitted to events.log
+  ;; (the runner's read path) and stdout (human-friendly when run unbundled;
+  ;; LaunchServices discards stdout under `open`).
+  (pv-emit-launch-line)
   (display "PDFKit Viewer running. Close window or Ctrl+C to exit.\n")
   (nsapplication-run app))
+
+;; --- Structured event log: open + [lifecycle] startup BEFORE (main) --------
+;; The viewer builds its window/PDF view in `main`'s defines section (R6RS
+;; body: all defines precede every expression), so `startup` cannot be main's
+;; first expression as in hello-window — it lands here instead, before (main)
+;; is entered and thus before window/PDF-view construction, well before the
+;; run loop (or the runner's `wait-ready` readiness probe times out).
+(pv-events-init!)
+(pv-emit-startup)
+
+;; Test-config compatibility (logging-contract.md): the viewer reads no
+;; runtime config, so it honours PDFKIT_VIEWER_TEST_CONFIG by reading the env
+;; var and treating absent/empty (and a missing file) as "no config" — a
+;; deliberate no-op.
+(getenv "PDFKIT_VIEWER_TEST_CONFIG")
 
 (main)
