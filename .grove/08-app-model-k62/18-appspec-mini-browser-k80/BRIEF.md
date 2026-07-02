@@ -71,6 +71,28 @@ All four impls run the forward-gen suite green in a live VM ([[vm_verify_every_a
 CLI smoke never satisfies the done-bar); `docs/run-results.md` records the outcome
 table + per-impl findings. Commits name the child handles.
 
+## file:// probe result (k116, 2026-07-03 — the k114 success-path gate, for forward-gen)
+
+Probed host-side through the racket bindings (a standalone script driving the app's
+exact API path — `loadRequest:` with a `file://` NSURLRequest, never `loadFileURL:`);
+WebKit-side behaviour, expected uniform across impls (the scenekit §7.4 precedent) —
+siblings need not re-probe; live-run confirms per-impl:
+
+- **The success path is OPEN: `loadRequest:` renders local HTML.** `didFinish` fires
+  for a `file://` load, on first and subsequent navigations (the impls are not
+  sandboxed — no WKWebView file-access denial). The k113/k114 file://-gate is passed.
+- **`can-go-back` flips `true` across a file→file hop** — history enablement is
+  assertable via `[nav] finished` on the fixture story exactly as contracted.
+- **On `file://` loads the title MISSES the didFinish-time read on EVERY load** (not
+  just the first — the k113 "title lags didFinish on first loads" sharpens): empty at
+  the callback on both navigations, firming ~1s later (a delayed re-read got the
+  fixture title back). Consequences: (a) `[nav] finished` for fixture navigations
+  carries `title=""` — matchers must not assert a fixture title there; (b) the window
+  title, refreshed only by the didFinish-time read, stays at the `Mini Browser`
+  fallback on fixture pages — window-title tracking is **unassertable offline**; the
+  host network smoke (instant `title="Apple"` at didFinish for `www.apple.com`) shows
+  the lag is load-speed-dependent — instant local loads race WebKit's title parse.
+
 ## Notes
 
 URL entry + load, back/forward navigation (enablement + effect), page-title tracking,

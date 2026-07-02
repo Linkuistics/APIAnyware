@@ -31,7 +31,8 @@
          "../../runtime/type-mapping.rkt"
          "../../runtime/coerce.rkt"
          "../../runtime/delegate.rkt"
-         "../../runtime/app-menu.rkt")
+         "../../runtime/app-menu.rkt"
+         "events.rkt")
 
 ;; --- Constants (not yet extracted by collector) ---
 ;; NSWindowStyleMask
@@ -57,10 +58,53 @@
 ;; NSAlertStyle
 (define NSAlertStyleWarning 1)
 
+;; --- Structured event log (logging contract) ---
+;; Open + truncate the events.log the runner tails, then record [lifecycle]
+;; startup BEFORE window/web-view construction / the AppKit run loop (or
+;; `wait-ready` times out).
+(events-init!)
+(emit-startup)
+
+;; Test-config compatibility (logging-contract.md "Test-config compatibility"):
+;; the browser reads no runtime config, so it honours MINI_BROWSER_TEST_CONFIG
+;; by reading the env var and treating an absent/empty value (and a missing
+;; file) as "no config" — a deliberate no-op.
+(void (getenv "MINI_BROWSER_TEST_CONFIG"))
+
+;; --- Shutdown wiring (signal / error paths) ---
+;; The logging contract requires a [lifecycle] shutdown line on terminate.
+;; The menu/Cmd-Q path goes through applicationWillTerminate: (delegate below);
+;; SIGTERM/SIGINT reach Racket as exn:break → reason=signal, and any other
+;; uncaught exception → reason=error.
+(uncaught-exception-handler
+ (lambda (exn)
+   (with-handlers ([exn:fail? (lambda (_) (void))])
+     (if (exn:break? exn)
+         (emit-shutdown 'signal)
+         (emit-shutdown 'error))
+     (close-events!))
+   (exit (if (exn:break? exn) 130 1))))
+
 ;; --- Application setup ---
 (define app (nsapplication-shared-application))
 (nsapplication-set-activation-policy! app 0) ; Regular
 (install-standard-app-menu! app "Mini Browser")
+
+;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+;; Cocoa holds delegates weakly, so keep a module-scope reference. The body is
+;; wrapped in with-handlers because an unhandled exception in an ObjC callback
+;; crashes the app with no Racket stack trace.
+(define app-delegate
+  (make-delegate
+   "applicationWillTerminate:"
+   (lambda (notification)
+     (with-handlers ([exn:fail?
+                      (lambda (e)
+                        (eprintf "applicationWillTerminate delegate error: ~a\n"
+                                 (exn-message e)))])
+       (emit-shutdown 'menu)
+       (close-events!)))))
+(void (nsapplication-set-delegate! app app-delegate))
 
 ;; --- Window ---
 (define WINDOW-W 800)
@@ -179,6 +223,18 @@
 (define (set-status! text)
   (nstextfield-set-string-value! status-label text))
 
+;; Event-payload reads (logging contract "Navigation events"): the web view's
+;; URL absoluteString / title at callback time, empty string when nil — the
+;; same reads §7.2's chrome refresh performs.
+(define (current-url-string)
+  (define u (wkwebview-url web-view))
+  (if (or (not u) (objc-null? u))
+      ""
+      (nsstring->racket-string (nsurl-absolute-string u))))
+
+(define (current-title-string)
+  (nsstring->racket-string (wkwebview-title web-view)))
+
 ;; --- Navigation delegate ---
 ;; WKNavigationDelegate fires three classes of event during a load:
 ;;   1. didStartProvisionalNavigation: — the request left the app
@@ -189,17 +245,33 @@
 ;; directly), but `#:param-types` still declares them as objects so the
 ;; trampoline wraps the raw cpointers for us.
 (define (handle-start _webview _nav)
-  (set-status! "Loading..."))
+  (set-status! "Loading...")
+  ;; [nav] started — post-state (the loading status line is set); url is the
+  ;; provisional URL at callback time.
+  (emit-nav-started (current-url-string)))
 
 (define (handle-finish _webview _nav)
   (refresh-chrome!)
-  (set-status! "Done"))
+  (set-status! "Done")
+  ;; [nav] finished — after the WHOLE §7.2 chrome-refresh rule has run. The
+  ;; can-go-back/can-go-forward reads are the same history getters the button
+  ;; enablement just used — the log line is the assertable channel for the
+  ;; AppSpec expect-ax #:enabled? gap.
+  (emit-nav-finished (current-url-string)
+                     (current-title-string)
+                     (wkwebview-can-go-back web-view)
+                     (wkwebview-can-go-forward web-view)))
 
 (define (show-error! err phase)
   (define message
     (if (or (not err) (objc-null? err))
         "Unknown error"
         (nsstring->racket-string (nserror-localized-description err))))
+  ;; [nav] failed — message computed, emitted BEFORE runModal (the deliberate
+  ;; deviation from the post-state discipline: the blocking modal alert needs a
+  ;; pre-dismissal cue — contract "Navigation events" deviation note). The
+  ;; nil-error boundary still emits (message "Unknown error"); no alert follows.
+  (emit-nav-failed phase message)
   ;; NSAlert doesn't emit an `init` method in the bindings — use the
   ;; `+alertWithError:` class method, which covers the NSError case
   ;; exactly. Style/text adjustments can still be applied after.
@@ -298,5 +370,9 @@
 (nswindow-make-key-and-order-front window #f)
 (nsapplication-activate-ignoring-other-apps app #t)
 
+;; §3.7 launch diagnostic — dual emission (contract "Lifecycle events"): the
+;; stdout line stays (human-friendly when run unbundled, literally true to §3);
+;; the same BARE line goes to events.log, where the runner can see it.
 (displayln "Mini Browser running. Close window or Ctrl+C to exit.")
+(emit-launch-line)
 (nsapplication-run app)
