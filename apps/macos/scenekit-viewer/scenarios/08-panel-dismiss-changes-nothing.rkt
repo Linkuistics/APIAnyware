@@ -2,7 +2,7 @@
 ;; forward-generated from SceneKit Viewer §13 on 2026-07-03, then human-validated by git review (ADR-0050, ADR-0052).
 
 (scenario "recording: dismissing the panel changes nothing"
-  #:description "When the user closes the colour panel without a further pick after driving the colour to 0/128/255, then nothing changes — no code observes panel closure (§7.4 boundary), so the stored colour survives dismissal: a subsequent geometry swap's geometry-changed line still carries the driven r=0 g=128 b=255. No color-changed is expected on dismissal and its ABSENCE is never asserted (logging contract: silent no-ops emit nothing). The displayed-colour half is pixel-level — a documented gap; this is the behavioural (app-state) half. Provisional (§13 marks the boundary to confirm in-VM): a PASS confirms; a FAILURE is a spec-quality finding, not a suite bug. State-mutating flow: one launch shared by the sequential drive-dismiss-swap steps, each mutation carrying its own-effect read."
+  #:description "When the user closes the colour panel without a further pick after driving the colour to 0/128/255, then nothing changes — no code observes panel closure (§7.4 boundary), so the stored colour survives dismissal: a subsequent geometry swap's geometry-changed line still carries the driven colour's device fold r=0 g=150 b=255 (RECORDED ACTUALS, live-run-k112 — the panel's slider space is not device-RGB; typed 0/128/255 lands as (0,150,255), see scenario 07). No color-changed is expected on dismissal and its ABSENCE is never asserted (logging contract: silent no-ops emit nothing). The displayed-colour half is pixel-level — a documented gap; this is the behavioural (app-state) half. Provisional (§13 marks the boundary to confirm in-VM): a PASS confirms; a FAILURE is a spec-quality finding, not a suite bug. State-mutating flow: one launch shared by the sequential drive-dismiss-swap steps, each mutation carrying its own-effect read."
 
   ;; run: color-button-x/y, panel-sliders-tab-x/y, panel-{red,green,blue}-field-x/y — the typed-colour
   ;; drive (as scenario 07); panel-close-x/y — the panel's own close widget (⌘W is not used: it needs a
@@ -53,8 +53,9 @@
   (chord '(ctrl) 'k)
   (type "255")
   (press 'return)
-  ;; spec: (to confirm in-VM) — Live recolour. (the drive-landed gate: the known colour is stored+applied)
-  (wait-for-log #px"\\[scene\\] color-changed r=0 g=128 b=255")
+  ;; spec: (to confirm in-VM) — Live recolour. (the drive-landed gate: the known colour is stored+applied;
+  ;; recorded actuals — typed 0/128/255 folds to device (0,150,255), see scenario 07)
+  (wait-for-log #px"\\[scene\\] color-changed r=0 g=150 b=255")
 
   ;; spec: (to confirm in-VM) — Boundary — dismissing the panel changes nothing. (dismiss without a pick:
   ;; the panel is key, so its close widget fires first-click. No color-changed is expected from this and
@@ -78,7 +79,7 @@
 
   ;; spec: (to confirm in-VM) — Boundary — dismissing the panel changes nothing. (the assertion: the
   ;; post-dismiss swap still carries the driven colour — had dismissal reset or changed the stored colour,
-  ;; this exact line could not land)
+  ;; this exact line could not land; recorded-actuals fold as the gate above)
   ;; harness: runner/harness-logs.rkt — wait-for-log takes a regexp; match the specific driven-to line,
   ;; never a count.
-  (wait-for-log #px"\\[scene\\] geometry-changed shape=\"Sphere\" r=0 g=128 b=255"))
+  (wait-for-log #px"\\[scene\\] geometry-changed shape=\"Sphere\" r=0 g=150 b=255"))

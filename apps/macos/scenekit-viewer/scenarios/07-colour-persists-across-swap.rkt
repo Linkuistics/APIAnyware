@@ -2,7 +2,7 @@
 ;; forward-generated from SceneKit Viewer §13 on 2026-07-03, then human-validated by git review (ADR-0050, ADR-0052).
 
 (scenario "recording: colour persists across a geometry swap"
-  #:description "When the user drives the colour to an exactly-known value by typing 0/128/255 into the panel's RGB slider fields and then swaps the geometry to Sphere, then the swap re-applies the stored colour to the fresh geometry's material (§7.1/§7.2 — SceneKit gives each new geometry a fresh default material) and the single geometry-changed line carries shape=\"Sphere\" with the driven r=0 g=128 b=255 — the app's load-bearing behaviour (§2), never resetting to white. Provisional (§13 marks the key behaviour to confirm in-VM; the typed drive's exactness is to-confirm — the panel's slider colour space -> device-RGB conversion may shift components, in which case the suite degrades to shape-level matchers and recorded actuals): a PASS confirms the key behaviour AND the exact-drive channel; a FAILURE is a spec-quality / drive-fidelity finding for human review, not a suite bug. State-mutating flow: one launch shared by the sequential drive-then-swap steps (the swap's precondition IS the driven colour), each mutation carrying its own-effect read."
+  #:description "When the user drives the colour to an exactly-known value by typing 0/128/255 into the panel's RGB slider fields and then swaps the geometry to Sphere, then the swap re-applies the stored colour to the fresh geometry's material (§7.1/§7.2 — SceneKit gives each new geometry a fresh default material) and the single geometry-changed line carries shape=\"Sphere\" with the driven colour's device fold r=0 g=150 b=255 — the app's load-bearing behaviour (§2), never resetting to white. RECORDED ACTUALS (live-run-k112, the pre-agreed degrade): the panel's slider colour space is NOT device-RGB — typing 0/128/255 lands as device (0,150,255) after the §7.4 fold (deterministic, two-sample on chez: 07+08 byte-identical tails; the red-field commit also shifts g 255->253, corroborating a colourspace conversion, not a typing artifact). Provisional (§13 marks the key behaviour to confirm in-VM): a PASS confirms the key behaviour AND the typed-drive channel; a FAILURE is a spec-quality / drive-fidelity finding for human review, not a suite bug. State-mutating flow: one launch shared by the sequential drive-then-swap steps (the swap's precondition IS the driven colour), each mutation carrying its own-effect read."
 
   ;; run: color-button-x/y — the colour button; panel-sliders-tab-x/y — the panel toolbar's sliders mode
   ;; tab; panel-{red,green,blue}-field-x/y — the RGB slider text fields (bind from the panel's AX snapshot
@@ -78,11 +78,14 @@
   (press 'return)
 
   ;; spec: (to confirm in-VM) — Live recolour. (the exactly-driven colour is stored and applied — the §7.4
-  ;; success path; this full-triple line lands once all three commits are in. The exact values are the
-  ;; whole point: they make the persistence line below a single-line assertion — logging contract. A
-  ;; colour-space shift at this read is the documented degrade-to-recorded-actuals finding.)
+  ;; success path; this line lands at the GREEN commit: the blue field already reads 255, and a commit
+  ;; that does not change the panel's colour does not re-fire the continuous action — so (0,150,255) is
+  ;; the final driven-to line. RECORDED ACTUALS: typed g=128 folds to device g=150 (slider space ->
+  ;; device-RGB, the documented degrade — the typed values stay 0/128/255, only the matcher carries the
+  ;; fold); the known-value property the persistence assert needs is intact, and a white-reset remains
+  ;; unmatchable.)
   ;; harness: runner/harness-logs.rkt — wait-for-log takes a regexp; brackets escaped, values literal.
-  (wait-for-log #px"\\[scene\\] color-changed r=0 g=128 b=255")
+  (wait-for-log #px"\\[scene\\] color-changed r=0 g=150 b=255")
 
   ;; spec: (to confirm in-VM) — Colour persists across a swap — the key behaviour. (now swap: the colour
   ;; panel has taken key, so per the §13 driver guidance the FIRST click on the app window only
@@ -100,11 +103,12 @@
 
   ;; spec: (to confirm in-VM) — Colour persists across a swap — the key behaviour. (THE assertion: the
   ;; swap's post-state event carries the driven colour folded into the same line — drive a known colour,
-  ;; swap, match the folded values (logging contract). A white-reset regression — the fresh default
-  ;; material without the §7.2 re-apply — would land r=255 g=255 b=255 and fail this match. The earlier
-  ;; color-changed line cannot satisfy this matcher — the event name differs — so the match is
-  ;; discriminating within this scenario's buffer; no earlier geometry-changed line exists (startup applies
-  ;; the initial colour without emitting a scene event — logging contract).)
+  ;; swap, match the folded values (logging contract; the recorded-actuals fold (0,150,255) as the gate
+  ;; above). A white-reset regression — the fresh default material without the §7.2 re-apply — would land
+  ;; r=255 g=255 b=255 and fail this match. The earlier color-changed line cannot satisfy this matcher —
+  ;; the event name differs — so the match is discriminating within this scenario's buffer; no earlier
+  ;; geometry-changed line exists (startup applies the initial colour without emitting a scene event —
+  ;; logging contract).)
   ;; harness: runner/harness-logs.rkt — wait-for-log takes a regexp; match the specific driven-to line,
   ;; never a count.
-  (wait-for-log #px"\\[scene\\] geometry-changed shape=\"Sphere\" r=0 g=128 b=255"))
+  (wait-for-log #px"\\[scene\\] geometry-changed shape=\"Sphere\" r=0 g=150 b=255"))
