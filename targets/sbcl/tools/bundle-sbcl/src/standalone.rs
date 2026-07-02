@@ -156,6 +156,7 @@ fn write_info_plist(path: &Path, spec: &AppSpec) -> Result<(), BundleError> {
     set("CFBundlePackageType", "APPL");
     set("CFBundleVersion", "1.0");
     set("CFBundleShortVersionString", "1.0");
+    set("CFBundleInfoDictionaryVersion", "6.0");
     set("NSPrincipalClass", "NSApplication");
     set("LSMinimumSystemVersion", "13.0");
     dict.insert(
@@ -198,6 +199,10 @@ mod tests {
         assert_eq!(
             d.get("NSPrincipalClass").unwrap().as_string(),
             Some("NSApplication")
+        );
+        assert_eq!(
+            d.get("CFBundleInfoDictionaryVersion").unwrap().as_string(),
+            Some("6.0")
         );
     }
 

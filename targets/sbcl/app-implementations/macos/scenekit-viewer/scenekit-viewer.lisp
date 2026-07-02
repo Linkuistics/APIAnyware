@@ -25,6 +25,21 @@
 ;;;; with the reopened dylib; the app re-synthesizes by calling its `define-objc-subclass`
 ;;;; from `-main` (which is the revived image's toplevel) via `ensure-scene-controller`.
 ;;;;
+;;;; INSTRUMENTED to the k105 logging contract
+;;;; (apps/macos/scenekit-viewer/docs/logging-contract.md, sbcl-instrument-build-k110):
+;;;; events.lisp (the `sv-events` package, loaded first by run.lisp/dump.lisp) writes the
+;;;; structured events.log the AppSpec runner tails — [lifecycle] startup/shutdown, the
+;;;; bare launch line, and the two [scene] state-transition events (geometry-changed /
+;;;; color-changed) that make the spec §13 scene assertions runner-verifiable (the
+;;;; SCNView's rendered contents are pixel-level, invisible to OCR/AX). One cond arms
+;;;; both the applied geometry and the event's `shape` (`make-geometry+title`, the k107
+;;;; single-source shape); the folded r/g/b are the STORED colour as device-RGB ×255,
+;;;; converted at emit time (`current-color-rgb255`). §7.4: a nil panel colour and a
+;;;; failed device-RGB conversion are silent KEEP-PREVIOUS no-ops (this leaf aligned the
+;;;; old stores-raw fallback — the stored colour is now always device-RGB); the stderr
+;;;; guard stays stderr, never events.log. The `applicationWillTerminate:` delegate hook
+;;;; is the instrumentation's one addition (spec §12: no visible-behaviour change).
+;;;;
 ;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like the other ladder apps).
 
 (in-package #:apianyware-sbcl-impl)
@@ -51,17 +66,22 @@
 ;;; Geometry + material helpers (pure functions — no controller dependency).
 ;;; ---------------------------------------------------------------------------
 
-(defun make-geometry (index)
-  "An SCNGeometry for popup INDEX, via the geometry class factories (contract §3.2
-   `(eql (find-class 'ns:…))` class methods). Dimensions are CGFloat (double-float)."
+(defun make-geometry+title (index)
+  "An SCNGeometry for popup INDEX plus its catalogue title, as two values, via the
+   geometry class factories (contract §3.2 `(eql (find-class 'ns:…))` class methods).
+   Dimensions are CGFloat (double-float). One case arms both the applied geometry and
+   the `shape` the [scene] geometry-changed event reports, so event and state cannot
+   diverge (the k107 single-source-of-truth shape). The fall-through arm realizes the
+   §6 out-of-range → cube defensive default (unreachable through the four-item picker)."
   (case index
-    (0 (ns:box-with-width_height_length_chamfer-radius_
-        (find-class 'ns:scn-box) 2.0d0 2.0d0 2.0d0 0.1d0))
-    (1 (ns:sphere-with-radius_ (find-class 'ns:scn-sphere) 1.2d0))
-    (2 (ns:torus-with-ring-radius_pipe-radius_ (find-class 'ns:scn-torus) 1.0d0 0.35d0))
-    (3 (ns:cylinder-with-radius_height_ (find-class 'ns:scn-cylinder) 1.0d0 2.0d0))
-    (t (ns:box-with-width_height_length_chamfer-radius_
-        (find-class 'ns:scn-box) 2.0d0 2.0d0 2.0d0 0.1d0))))
+    (1 (values (ns:sphere-with-radius_ (find-class 'ns:scn-sphere) 1.2d0) "Sphere"))
+    (2 (values (ns:torus-with-ring-radius_pipe-radius_ (find-class 'ns:scn-torus) 1.0d0 0.35d0)
+               "Torus"))
+    (3 (values (ns:cylinder-with-radius_height_ (find-class 'ns:scn-cylinder) 1.0d0 2.0d0)
+               "Cylinder"))
+    (t (values (ns:box-with-width_height_length_chamfer-radius_
+                (find-class 'ns:scn-box) 2.0d0 2.0d0 2.0d0 0.1d0)
+               "Cube"))))
 
 (defun own-color (color)
   "Take +1 ownership of COLOR (a +0 borrow from a `ns:` colour accessor) so it survives
@@ -87,6 +107,26 @@
         (when material
           (let ((prop (ns:diffuse material)))
             (when prop (ns:set-contents_ prop color))))))))
+
+(defun current-color-rgb255 (color)
+  "The stored current COLOR folded to the logging contract's integer components:
+   device-RGB ×255, rounded to nearest (bare integers 0–255). Converts at emit time via
+   colorUsingColorSpace: device-RGB — a §7.4-stored colour is already device-RGB, so
+   only the initial systemRedColor actually converts here (and its numeric components
+   are OS/appearance-dependent; consumers never assume the initial values). Returns
+   (r g b) as a list, or NIL if COLOR is nil or the conversion fails — practically
+   unreachable, and the caller then skips the event rather than emit fabricated
+   components. NIL-safety rides the bindings: aw-wrap maps a NULL id to nil, so a bare
+   `when` IS the objc-null check (the k107 tightening, already idiomatic here)."
+  (when color
+    (handler-case
+        (let ((rgb (ns:color-using-color-space_
+                    color (ns:device-rgb-color-space (find-class 'ns:ns-color-space)))))
+          (when rgb
+            (list (round (* 255 (ns:red-component rgb)))
+                  (round (* 255 (ns:green-component rgb)))
+                  (round (* 255 (ns:blue-component rgb))))))
+      (error () nil))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; The target-action delegate — a real ObjC subclass of NSObject (contract §3.4/§3.5).
@@ -121,8 +161,16 @@
     (define-objc-method (scene-controller "geometryChanged:") (self sender)
       (let ((idx  (ns:index-of-selected-item sender))
             (node (slot-value self 'geometry-node)))
-        (ns:set-geometry_ node (make-geometry idx))
-        (apply-color-to-node node (slot-value self 'current-color))))
+        (multiple-value-bind (geom title) (make-geometry+title idx)
+          (ns:set-geometry_ node geom)
+          (apply-color-to-node node (slot-value self 'current-color))
+          ;; [scene] geometry-changed — POST-state (geometry assigned + §7.2 colour
+          ;; re-apply done), carrying the folded stored colour so the §13 key
+          ;; behaviour (colour persists across a swap) is a single-line assertion.
+          (let ((rgb (current-color-rgb255 (slot-value self 'current-color))))
+            (when rgb
+              (sv-events:emit-geometry-changed
+               title (first rgb) (second rgb) (third rgb)))))))
 
     ;; openColor: — open the shared NSColorPanel, wired to fire colorChanged: continuously.
     (define-objc-method (scene-controller "openColor:") (self sender)
@@ -140,15 +188,43 @@
     (define-objc-method (scene-controller "colorChanged:") (self sender)
       (handler-case
           (let ((raw (ns:color sender)))
+            ;; A nil panel colour and a failed device-RGB conversion are §7.4 silent
+            ;; KEEP-PREVIOUS no-ops: no store, no apply, no event (absence IS the
+            ;; contract; the stderr guard below is the only diagnostic channel — never
+            ;; events.log). k110 aligned this from the old stores-raw `(or rgb raw)`
+            ;; fallback, so the stored colour is ALWAYS device-RGB and the emit-time
+            ;; fold is exact. aw-wrap maps a NULL id to nil, so `when` IS the
+            ;; objc-null check.
             (when raw
               (let ((rgb (ns:color-using-color-space_
                           raw (ns:device-rgb-color-space (find-class 'ns:ns-color-space)))))
-                ;; Own the colour (+1) before storing: it must outlive the material swap
-                ;; in `geometryChanged:` (see `own-color`).
-                (setf (slot-value self 'current-color) (own-color (or rgb raw)))
-                (apply-color-to-node (slot-value self 'geometry-node)
-                                     (slot-value self 'current-color)))))
+                (when rgb
+                  ;; Own the colour (+1) before storing: it must outlive the material
+                  ;; swap in `geometryChanged:` (see `own-color`).
+                  (setf (slot-value self 'current-color) (own-color rgb))
+                  (apply-color-to-node (slot-value self 'geometry-node)
+                                       (slot-value self 'current-color))
+                  ;; [scene] color-changed — success path only, POST store+apply.
+                  ;; current-color is the just-stored device-RGB colour, so the fold
+                  ;; is exact (no conversion drift).
+                  (let ((folded (current-color-rgb255 (slot-value self 'current-color))))
+                    (when folded
+                      (sv-events:emit-color-changed
+                       (first folded) (second folded) (third folded))))))))
         (error (e) (format *error-output* "~&colorChanged: ~A~%" e))))
+
+    ;; `applicationWillTerminate:` is the only hook that fires on the menu/Cmd-Q quit
+    ;; path: -[NSApplication terminate:] ends in a C exit(), which bypasses
+    ;; sb-ext:*exit-hooks*. NSApplication auto-observes the notification for a delegate
+    ;; that responds to this selector (informal conformance suffices). The logging
+    ;; contract's one addition (k110), as in the prior three apps.
+    (define-objc-method (scene-controller "applicationWillTerminate:") (self notification)
+      (declare (ignore self notification))
+      (handler-case
+          (progn (sv-events:emit-shutdown 'menu) (sv-events:close-events!))
+        (error (e)
+          (format *error-output* "applicationWillTerminate: callback error: ~A~%" e)
+          (finish-output *error-output*))))
 
     (setf *scene-controller-ready* t)))
 
@@ -167,6 +243,20 @@
   (let ((app (ns:shared-application (find-class 'ns:ns-application))))
     (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
     (install-app-menu app "SceneKit Viewer")
+
+    ;; --- Structured event log: open + [lifecycle] startup BEFORE construction ---
+    ;; `startup` must land before the app blocks in (ns:run app) or the runner's
+    ;; `wait-ready` readiness probe times out; the contract wants it ahead of
+    ;; window/scene construction. Gated on the real run — the build-time smoke needs
+    ;; no log file (the emitters no-op on a nil port). Test-config compatibility: the
+    ;; viewer reads no runtime config, so it honours SCENEKIT_VIEWER_TEST_CONFIG by
+    ;; reading the env var and treating absent/empty as "no config" — a deliberate
+    ;; no-op.
+    (when run
+      (sv-events:events-init!)
+      (sv-events:emit-startup)
+      (sb-ext:posix-getenv "SCENEKIT_VIEWER_TEST_CONFIG"))
+
     (aw-with-rect (frame 0 0 640 480)
       (let* ((window (make-instance 'ns:ns-window
                        :init-with-content-rect frame
@@ -195,8 +285,10 @@
           (let* ((scene (ns:scene (find-class 'ns:scn-scene)))
                  (root  (progn (ns:set-scene_ scn-view scene)
                                (ns:root-node scene)))
+                 ;; make-geometry+title's secondary value (the title) is discarded
+                 ;; here — CL argument positions take the primary value only.
                  (geometry-node (ns:node-with-geometry_ (find-class 'ns:scn-node)
-                                                        (make-geometry 0)))
+                                                        (make-geometry+title 0)))
                  ;; Own the initial colour (+1) too — same material-swap survival concern.
                  (current-color (own-color (ns:system-red-color (find-class 'ns:ns-color)))))
             (ns:add-child-node_ root geometry-node)
@@ -213,6 +305,13 @@
             (let ((controller (make-instance 'scene-controller
                                 :geometry-node geometry-node
                                 :current-color current-color)))
+
+              ;; App delegate for the terminate hook (logging contract; k110). Installed
+              ;; unconditionally so the pre-flight / revive smoke exercises set-delegate.
+              ;; The controller instance is pinned in *subclass-instances* (a STRONG
+              ;; table — subclass.lisp), so Cocoa's weak delegate reference and the
+              ;; controls' weak target references never reap it.
+              (ns:set-delegate_ app controller)
 
               ;; --- Toolbar: geometry popup + Colour button in a horizontal stack ---
               (let ((picker (aw-with-rect (pframe 0 0 150 26)
@@ -244,7 +343,13 @@
                   ;; Keep the controller alive for the process (target/action does not
                   ;; retain; the synthesized-instance back-ref already retains it, but
                   ;; bind it so the compiler does not flag it unused).
+                  ;; Launch diagnostic (spec §3 step 6): the bare line beginning
+                  ;; `SceneKit Viewer` the runner's `wait-for-log` matches in
+                  ;; events.log, plus the human-friendly stdout line (kept for
+                  ;; unbundled runs; LaunchServices discards stdout under `open`) —
+                  ;; dual emission.
                   (when run
+                    (sv-events:emit-launch-line)
                     (format t "~&SceneKit Viewer opened. Quit with Cmd-Q.~%")
                     (finish-output)
                     (ns:run app))

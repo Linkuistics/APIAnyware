@@ -21,25 +21,43 @@ Every SceneKit/AppKit call is plain ObjC (`:load-residual nil`); the app loads
 `libAPIAnywareSbcl` **only** for the `aw_sbcl_subclass_*` bounce shim — like
 swift-native-probe loads it, but for the subclass machinery rather than trampoline residual.
 
+## AppSpec instrumentation (sbcl-instrument-build-k110)
+
+Instrumented to the logging contract
+(`apps/macos/scenekit-viewer/docs/logging-contract.md`): `events.lisp` (pure CL, the
+`sv-events` package, loaded first by run.lisp/dump.lisp) writes the structured
+`/tmp/scenekit-viewer/events.log` (`SCENEKIT_VIEWER_EVENTS_LOG` overrides) the AppSpec
+runner tails — `[lifecycle] startup`/`shutdown`, the bare launch line, and the two
+`[scene]` events (`geometry-changed shape="…" r=… g=… b=…` / `color-changed r=… g=… b=…`),
+each post-state: one `case` arms both the applied geometry and the event's `shape`
+(`make-geometry+title`), and the folded r/g/b are the stored colour as device-RGB ×255
+converted at emit time (`current-color-rgb255`). §7.4 was aligned stores-raw →
+**keep-previous** here (the stored colour is always device-RGB; conversion failure is a
+silent no-op). The `scene-controller` gains the `applicationWillTerminate:` delegate
+hook (fourth forwarded selector). Impl descriptor: `scenekit-viewer-impl.rkt`.
+
 ## Build
 
 ```sh
-# prerequisites: generated bindings fresh (incl. SceneKit) + the dylib built
-SDKROOT=macosx cargo run -p apianyware-generate -- --target sbcl
-SDKROOT=macosx swift build --package-path swift --product APIAnywareSbcl
-# then:
 targets/sbcl/app-implementations/macos/scenekit-viewer/build.sh
 ```
 
-Produces `build/SceneKitViewer.app` (a standalone `save-lisp-and-die :executable t` dump).
-`build.sh` stages the dylib at `/tmp/libAPIAnywareSbcl.dylib` (the revive auto-reopen path,
-ADR-0038 §5), runs the host construction **pre-flight** + a **revive smoke** (the dump+revive
-**with** the dylib + subclass re-synthesis + dispatcher re-registration) before the bundle.
+Produces `build/SceneKitViewer-sbcl.app` (`CFBundleIdentifier
+com.linkuistics.scenekit-viewer-sbcl`) via the production bundler
+(`apianyware-bundle-sbcl`, ADR-0041): the app's `dump.lisp`
+(`save-lisp-and-die :executable t`) behind the Swift stub, with **libzstd** and
+**libAPIAnywareSbcl** vendored into `Contents/Frameworks/` — the bundle travels alone
+(no `/tmp` staging; the k110 rebuild retired this app's original 060-era staged wrap).
+build.sh regenerates the sbcl bindings if SceneKit is absent from the local tree (keyed
+on `generated/scenekit/scnview.lisp`) and relinks the dylib in lockstep, then runs the
+host construction **pre-flight** + a **revive smoke** through the stub (subclass
+re-synthesis + dispatcher re-registration + vendored-dylib reopen).
 
 ## VM-verify (never run GUI apps from the CLI — use TestAnyware)
 
-Provision the VM with `/opt/homebrew/opt/zstd/lib/libzstd.1.dylib` (SBCL core-compression
-dep) and `/tmp/libAPIAnywareSbcl.dylib` (the subclass bounce shim) — no SBCL install needed
-(the image is embedded). Upload the bundle, `xattr -dr com.apple.quarantine`, `open -n`. The
+Upload the bundle (it travels alone), `xattr -dr com.apple.quarantine`, `open -n`. The
 key behaviour to verify is **colour persistence across a geometry swap** (the recoloured
-material survives `setGeometry:`). See `test-results/scenekit-viewer/report.md`.
+material survives `setGeometry:` — and the `[scene] geometry-changed` event carries the
+folded colour, so it is also a single-line log assertion). Tier-2 live-run belongs to
+the appspec-scenekit-viewer live-run leaf. See `test-results/scenekit-viewer/report.md`
+for the original 060 VM report.

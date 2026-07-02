@@ -77,3 +77,48 @@ Runtime integration smoke suite green with the change.
 - macos-tahoe golden gotchas (per [[reference-testanyware-cli]]): disable
   `EnableStandardClickToShowDesktop`; wipe `Saved Application State` for a clean
   windowed launch (the system restores the shared `Colors` panel + any full-screen Space).
+
+## AppSpec instrumentation (sbcl-instrument-build-k110)
+
+Instrumented to the k105 logging contract and rebuilt with the production bundler —
+the last of the four scenekit-viewer instrument+build children (k107/k108/k109 the
+racket/chez/gerbil precedents). Emitter verified 22/22 in isolation (`sbcl --script`
+loads `events.lisp` alone — pure CL — and drives every emitter against the contract
+matchers: exact lines, prefix rule, quoting escapes, truncate-on-init, nil-port no-op,
+env fallback).
+
+- **§7.4 aligned stores-raw → keep-previous (the k104 seed).** The old `colorChanged:`
+  stored `(or rgb raw)` — on a failed device-RGB conversion it stored the *unconverted*
+  panel colour. Now conversion failure (and a nil panel colour) is a silent no-op: no
+  store, no apply, no event, so the **stored colour is always device-RGB** and the
+  emit-time fold is exact. The stderr guard stays stderr (never events.log). aw-wrap's
+  NULL→nil mapping means a bare `when` IS the objc-null check on both boundaries.
+- **The k107 app shape carried as CL multiple values.** `make-geometry+title` returns
+  `(values geom title)` from one `case` (event ≡ applied state by construction); at the
+  one call site that only needs the geometry, CL's discard-extra-values semantics make
+  it a drop-in (`(ns:node-with-geometry_ … (make-geometry+title 0))`) — no let-values
+  dance (racket) and no generics shadow to dodge (gerbil's cons-pair workaround).
+- **The fold reads the controller slot, not module state.** Unlike racket (module-level
+  `current-color`), the sbcl stored colour lives in the `scene-controller` slot, so
+  `current-color-rgb255` takes the colour as an argument; callers pass
+  `(slot-value self 'current-color)`. The +0 conversion result inside the fold is read
+  immediately (components → integers) within the callback's autorelease scope — no
+  ownership dance needed; only the *stored* colour needs `own-color` (+1).
+- **Bundler-pattern rebuild (k101).** Retired this app's original 060-era hand-rolled
+  wrap (`/tmp/libAPIAnywareSbcl.dylib` staging, unsuffixed bundle id, hand-written
+  Info.plist): build.sh now drives `apianyware-bundle-sbcl` + the post-mv PlistBuddy
+  id + re-sign dance → `build/SceneKitViewer-sbcl.app`
+  (`com.linkuistics.scenekit-viewer-sbcl`), libzstd + libAPIAnywareSbcl vendored, the
+  bundle travels alone. The kind-required `CFBundleInfoDictionaryVersion` (the other
+  k104 seed) was added to the **bundler's** `write_info_plist` (`"6.0"`, matching the
+  racket bundler) rather than patched per-app — every sbcl bundle gets it on rebuild.
+- **Dylib currency by the k109 argument, sbcl-flavoured:** `apianyware-generate
+  --target sbcl` after the k107 corpus step left bindings + `Trampolines.swift`
+  byte-identical (git-clean; trampolines stay 170 — SceneKit adds zero residual
+  entries), and the mandated `swift build --product APIAnywareSbcl` relink was a 0.4s
+  incremental no-op — both layers agree the committed dylib is current.
+- Revive smoke green through the stub: dump+revive + subclass re-synthesis +
+  dispatcher re-registration + vendored-dylib reopen, now with the instrumentation
+  loaded (`events.lisp` precedes `scenekit-viewer.lisp` in run.lisp/dump.lisp; the
+  emitters no-op on the nil port in both smokes — `events-init!` is gated on the real
+  run).

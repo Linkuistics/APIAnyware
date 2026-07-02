@@ -38,6 +38,8 @@
 (aw-app-load-framework "AppKit" :load-residual nil)
 (aw-app-load-framework "SceneKit" :load-residual nil)
 
+;; events.lisp first (pure CL — the sv-events package scenekit-viewer.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "scenekit-viewer.lisp" cl-user::*app-dir*))
 
 (let ((smoke (sb-ext:posix-getenv "AW_SCENEKIT_SMOKE")))
