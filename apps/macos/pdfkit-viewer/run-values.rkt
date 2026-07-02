@@ -16,18 +16,15 @@
 ;; the runner discovers every .rkt there as a `#lang app-spec` scenario, so a
 ;; config file there would be mis-loaded (runner/dispatch.rkt).
 ;;
-;; ── PROVISIONAL (forward-gen-suite-k102, 2026-07-02) — NOT yet measured ──
-;; Coordinates are estimates from the spec's fixed geometry (§4/§5: 720x540
-;; content, centred, min-size floor; toolbar strip at content (12, 500,
-;; 696, 32); [NSWindow center]'s above-true-centre vertical bias as measured
-;; on hello-window) projected onto the 1920x1080 testanyware-golden-
-;; macos-tahoe framebuffer, with control widths estimated from intrinsic
-;; stack sizing. The live-run stage MUST re-measure every coordinate from
-;; `agent snapshot --mode layout` (AX centre, framebuffer px) with a
-;; two-launch determinism diff before binding values — the k77/k94 per-impl
-;; geometry practice — keeping sibling per-impl run-values-<impl>.rkt files
-;; only where impl layouts genuinely diverge (chez+gerbil shared one table
-;; in the gallery; racket/sbcl carried their own).
+;; ── MEASURED LIVE (live-run-k103, 2026-07-02) ──
+;; Coordinates measured per impl from `agent snapshot --mode layout` (AX
+;; position+size → element centre, framebuffer px) against the live
+;; 1920x1080 testanyware-golden-macos-tahoe VM, after a two-launch
+;; determinism diff per impl (all four byte-identical across relaunches —
+;; the k77/k94 geometry practice). chez + gerbil + sbcl are PIXEL-IDENTICAL
+;; (same 26px-high toolbar controls) and share this default table; racket
+;; alone diverges (tighter 22px control metrics — the gallery pattern) and
+;; carries the sibling run-values-racket.rkt.
 ;;
 ;; The fixture: fixtures/fixture.pdf (3 pages, "PAGE n" markers — regenerate
 ;; with fixtures/make-fixture.swift). The run stage uploads it to the
@@ -37,24 +34,24 @@
 ;; panel canonicalizes /tmp → /private/tmp; basename is the stable identity).
 
 (run-values
-  ;; scenarios/04,05,06,07 — the Open… button centre (toolbar strip, first
-  ;; arranged subview; strip centre-line fb y ≈ 180)
-  (open-button-x 648)
-  (open-button-y 180)
-  ;; scenarios/03,06 — the ◀ previous-page button centre
-  (prev-button-x 709)
-  (prev-button-y 180)
-  ;; scenarios/03,06 — the ▶ next-page button centre
-  (next-button-x 751)
-  (next-button-y 180)
-  ;; scenario/07 — a point inside the PDF document area (the focus click;
-  ;; §5.2 region below the toolbar — the window-content centre)
+  ;; scenarios/04,05,06,07 — the Open… button centre (measured: pos (611,169)
+  ;; size 70x26)
+  (open-button-x 646)
+  (open-button-y 182)
+  ;; scenarios/03,06 — the ◀ previous-page button centre (pos (687,169) 37x26)
+  (prev-button-x 706)
+  (prev-button-y 182)
+  ;; scenarios/03,06 — the ▶ next-page button centre (pos (730,169) 37x26)
+  (next-button-x 748)
+  (next-button-y 182)
+  ;; scenario/07 — a point inside the PDF document area (the focus click):
+  ;; the AXScrollArea centre (pos (600,210) size 720x492)
   (doc-area-x 960)
-  (doc-area-y 446)
+  (doc-area-y 456)
   ;; scenario/09 — the window close control (leftmost traffic-light) centre
-  ;; (window-frame origin + (16, 16), the hello-window-measured offset)
+  ;; (pos (608,138) size 16x16)
   (close-button-x 616)
-  (close-button-y 144)
+  (close-button-y 146)
   ;; scenarios/05,06,07 — the in-VM absolute path the run stage uploads
   ;; fixtures/fixture.pdf to (same parent dir the impls already create for
   ;; events.log; typed into the panel's go-to-folder sheet)

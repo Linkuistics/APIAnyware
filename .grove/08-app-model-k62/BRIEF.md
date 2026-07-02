@@ -124,10 +124,11 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    findings first (`sbcl-vendor-libzstd-k75` ✅, `racket-self-contained-bundle-k76` ✅), then
    one AppSpec-cycle leaf per remaining app (k77–k83: ui-controls-gallery ✅ *(node
    `appspec-ui-controls-gallery-k77`, complete 2026-07-02 — see **ui-controls-gallery
-   outcomes** below)*, pdfkit-viewer, scenekit-viewer, mini-browser, note-editor,
-   drawing-canvas, swift-native-probe — each live-VM-verified, each expected to decompose
-   on entry), then `apps-layout-finalize-k84` and `portfolio-coverage-tie-in-k85` (which
-   closes this node's Done-when).
+   outcomes** below)*, pdfkit-viewer ✅ *(node `appspec-pdfkit-viewer-k78`, complete
+   2026-07-02 — see **pdfkit-viewer outcomes** below)*, scenekit-viewer, mini-browser,
+   note-editor, drawing-canvas, swift-native-probe — each live-VM-verified, each expected
+   to decompose on entry), then `apps-layout-finalize-k84` and
+   `portfolio-coverage-tie-in-k85` (which closes this node's Done-when).
 
 ## ui-controls-gallery outcomes (promoted from `appspec-ui-controls-gallery-k77` on retirement)
 
@@ -162,6 +163,47 @@ the durable findings the six remaining apps (k78–k83) should apply. Full recor
 - **Observation:** all four runtimes ignore SIGTERM under `nsapplication-run` (`pkill` needs
   `-9`); the contract's menu-quit path works everywhere — signal-path shutdown stays
   unexercised, as k88 recorded.
+
+## pdfkit-viewer outcomes (promoted from `appspec-pdfkit-viewer-k78` on retirement)
+
+Third app through the toolkit (after hello-window and ui-controls-gallery), first with a
+document fixture + out-of-process panel drive. Full record:
+`apps/macos/pdfkit-viewer/docs/run-results.md` (k103). Durable findings for the remaining
+apps (k79–k83):
+
+- **Final outcome: no impl defect.** Behavioural surface green on all four impls; every red
+  adjudicates to one of two classes: (a) the cross-impl §13 **spec finding** (07) — PDFView
+  continuous-mode key navigation is scroll-based: Right/PageDown/End are no-ops through the
+  VNC key path, Down line-scrolls ~24px, **Space scrolls one viewport** and is the working
+  "navigation the view itself handles" (Space×3 crossed the boundary, `page-changed` fired,
+  label tracked — §7.1/§7.3 observer behaviour TRUE, the spec's arrow-key realization wrong;
+  feed to reverse-gen on regeneration); (b) the **OCR small-text run-mechanism class** —
+  racket 01 (its compact 22px metrics + centred bold title garble deterministically;
+  menu-bar name has no space so the title bar is racket's only OCR source) and gerbil/sbcl
+  06 (label read garbles under the runner while the identical read passes in 05). Signature:
+  sparse dumps, menu-bar icons OCR'd as text ("Q"/"8"), ◀/▶ glyphs merging into text lines
+  ("(Page lot 3"). Adjudicate OCR-class reds by artifact review (screenshots + events +
+  AX), never by patching the suite; proper fix is TestAnyware-side (or region-scoped OCR /
+  AX-preferred realizations in forward-gen). Joins the k94 delayed-truncate residual (which
+  also recurred: racket 03 red-then-green-solo) as a standing run-mechanism residual.
+- **The keyboard-driven fixture rule works everywhere:** Cmd-Shift-G → absolute path →
+  Return ×2 drives the out-of-process panel reliably on all four impls; `opened`
+  exact-matches basename + pages. **`page-changed page=1` precedes `opened`** in every
+  impl's open flow — the contract's "never assume ordering vs `opened`" rule is load-bearing
+  in practice.
+- **Geometry:** all four impls deterministic on the two-launch diff (no gallery-style
+  ambiguous-layout defect); **chez+gerbil+sbcl pixel-identical** sharing `run-values.rkt`,
+  racket alone diverging (`run-values-racket.rkt`, 22px vs 26px control metrics) — note the
+  share-set differs from the gallery's (there sbcl diverged too).
+- **The k96 enabled-flag gap is runner-side only:** TestAnyware's `agent snapshot --mode
+  layout` carries per-element `enabled` (◀/▶ flags verified at empty state and both
+  boundaries, all impls); the seeded `expect-ax #:enabled?` AppSpec backlog item remains the
+  closer.
+- **k96 provisional AX rows all firm** (02 green ×4): Open… U+2026 in AXTitle, ◀/▶
+  glyph-as-AXTitle, label value→AXTitle fold, empty PDFView = AXScrollArea.
+- **Tahoe VM gotcha:** the "See what's new in macOS Tahoe" notification banner appears on
+  fresh clones mid-run, OCR-pollutes full-screen dumps, and survives `killall
+  NotificationCenter` — dismiss by hover + close-X click (did not change any verdict here).
 
 ## Decisions (running log)
 
