@@ -21,6 +21,23 @@
 ;;;     `sender` to a bound instance, and the delegate object is passed straight
 ;;;     to `nscontrol-set-target!` (no chez `delegate-ptr` accessor).
 ;;;
+;;; Instrumented for the AppSpec scenario runner per the UI Controls Gallery
+;;; logging contract (apps/macos/ui-controls-gallery/docs/logging-contract.md):
+;;; it writes a structured events.log the runner tails — [lifecycle]
+;;; startup/shutdown, the bare launch line, and the four [controls]
+;;; state-change events (radio/checkbox/slider/stepper) that make the spec §13
+;;; interaction assertions observable (the runner's expect-ax has no
+;;; value/state read). Under `launch-via 'open` LaunchServices discards the
+;;; app's stdout, so the log file (not stdout) is the runner's read path; the
+;;; stdout line is kept too (human-friendly when run unbundled, §3.6).
+;;;
+;;; The logging is inlined here rather than split to a sibling events.ss for
+;;; the same reason as hello-window: the bundler's closure walk (deps.rs)
+;;; follows only `:gerbil-bindings/…` references, and these defines use only
+;;; Gambit primitives (open-output-file, getenv, create-directory,
+;;; force-output), so they ride the statically-linked prelude with no new
+;;; import.
+;;;
 ;;; Build via build.sh (bottle toolchain); bundle via bundle-gerbil.
 (import :gerbil-bindings/runtime/objc
         :gerbil-bindings/runtime/cocoa
@@ -45,8 +62,108 @@
         :gerbil-bindings/appkit/nscolor
         :gerbil-bindings/appkit/nsimage
         :gerbil-bindings/appkit/enums
-        :gerbil-bindings/foundation/nsdate)
+        :gerbil-bindings/foundation/nsdate
+        :gerbil-bindings/foundation/nsstring)
 (export main)
+
+;; --- Structured event log (logging contract) -------------------------------
+;; Single writer: the Cocoa run loop serialises the main-thread callbacks that
+;; emit — startup/launch before -run, the [controls] events from action
+;; callbacks, shutdown on terminate — so one port with a post-write
+;; force-output suffices (no lock needed).
+
+;; Fixed default the descriptor's #:events-path mirrors, so the runner tails
+;; the same file whether or not #:log-env (UI_CONTROLS_GALLERY_EVENTS_LOG)
+;; propagates through LaunchServices.
+(define ucg-default-events-path "/tmp/ui-controls-gallery/events.log")
+(define ucg-events-port #f)
+
+;; UI_CONTROLS_GALLERY_EVENTS_LOG if set and non-empty, else the fixed default.
+(define (ucg-resolve-events-path)
+  (let ((env (getenv "UI_CONTROLS_GALLERY_EVENTS_LOG" #f)))
+    (if (and env (not (string=? env ""))) env ucg-default-events-path)))
+
+;; Directory component of `p` (everything before the last '/'), or #f.
+(define (ucg-path-parent p)
+  (let loop ((i (- (string-length p) 1)))
+    (cond
+      ((< i 0) #f)
+      ((char=? (string-ref p i) #\/) (substring p 0 i))
+      (else (loop (- i 1))))))
+
+;; Open + truncate the events.log: (create: 'maybe truncate: #t) creates it if
+;; absent and truncates it if present. The parent dir is created if missing
+;; (guarded against a race). Records are flushed per-line in ucg-emit-line, so
+;; a tail sees each promptly.
+(define (ucg-events-init!)
+  (let* ((target (ucg-resolve-events-path))
+         (parent (ucg-path-parent target)))
+    (when (and parent (not (string=? parent "")) (not (file-exists? parent)))
+      (with-exception-catcher (lambda (e) #f) (lambda () (create-directory parent))))
+    (set! ucg-events-port
+      (open-output-file (list path: target truncate: #t create: 'maybe)))))
+
+(define (ucg-emit-line line)
+  (when ucg-events-port
+    ;; Swallow only I/O-level failures (out-of-disk, closed-port races on
+    ;; shutdown). A genuine programmer error still surfaces during dev.
+    (with-exception-catcher
+      (lambda (e) #f)
+      (lambda ()
+        (display line ucg-events-port)
+        (newline ucg-events-port)
+        (force-output ucg-events-port)))))
+
+;; Contract "Line format": strings are double-quoted with \\ / \" / newline
+;; escaped; numbers/booleans/symbols emit bare.
+(define (ucg-quote-string s)
+  (let ((out (open-output-string)))
+    (write-char #\" out)
+    (let loop ((i 0))
+      (when (< i (string-length s))
+        (let ((c (string-ref s i)))
+          (cond
+            ((char=? c #\\) (display "\\\\" out))
+            ((char=? c #\") (display "\\\"" out))
+            ((char=? c #\newline) (display "\\n" out))
+            (else (write-char c out))))
+        (loop (+ i 1))))
+    (write-char #\" out)
+    (get-output-string out)))
+
+(define (ucg-emit-startup)
+  (ucg-emit-line "[lifecycle] startup"))
+(define (ucg-emit-opened)
+  (ucg-emit-line "UI Controls Gallery running. Close window or Ctrl+C to exit."))
+(define (ucg-emit-shutdown reason)
+  (ucg-emit-line (string-append "[lifecycle] shutdown reason=" (symbol->string reason))))
+
+;; The four [controls] events — each emitted from its control's action
+;; callback AFTER the state change it names is applied.
+(define (ucg-emit-radio-selected title)
+  (ucg-emit-line (string-append "[controls] radio-selected option=" (ucg-quote-string title))))
+
+(define (ucg-emit-checkbox-changed on?)
+  (ucg-emit-line (string-append "[controls] checkbox-changed state=" (if on? "on" "off"))))
+
+;; Slider carries a double; the contract formats values as integers so the
+;; clamped ends are exactly 0/100.
+(define (ucg-emit-slider-changed value)
+  (ucg-emit-line (string-append "[controls] slider-changed value="
+                                (number->string (inexact->exact (round value))))))
+
+;; Stepper values (0–10 step 1) are integral already.
+(define (ucg-emit-stepper-changed value)
+  (ucg-emit-line (string-append "[controls] stepper-changed value=" (number->string value))))
+
+(define (ucg-close-events!)
+  (when ucg-events-port
+    (with-exception-catcher (lambda (e) #f)
+      (lambda ()
+        (force-output ucg-events-port)
+        (close-output-port ucg-events-port))))
+  (set! ucg-events-port #f))
+;; --- End structured event log ----------------------------------------------
 
 (define-entry-point (main)
   ;; ============================================================
@@ -81,6 +198,23 @@
   ;; --- Application + window ---
   (def app (nsapplication-shared-application))
 
+  ;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+  ;; The osascript graceful quit the runner uses (quit-impl! / the Command-Q
+  ;; scenario) routes through applicationWillTerminate:. make-delegate pins
+  ;; the synthesized instance in *delegate-roots* for the process (AppKit
+  ;; holds the delegate weakly); this def keeps it lexically reachable too.
+  ;; The body is guarded because an unhandled exception in an ObjC callback
+  ;; would crash the app with no Scheme backtrace.
+  (def app-delegate
+    (make-delegate
+      (list (list "applicationWillTerminate:"
+                  (lambda (notification)
+                    (with-exception-catcher (lambda (e) #f)
+                      (lambda ()
+                        (ucg-emit-shutdown 'menu)
+                        (ucg-close-events!))))
+                  (list 'object) 'void))))
+
   (def window
     (make-nswindow-init-with-content-rect-style-mask-backing-defer
       (make-rect 0. 0. 500. 600.)
@@ -105,6 +239,16 @@
   (def push-button (make-nsbutton))
   (def checkbox (make-nsbutton))
 
+  ;; Checkbox target-action (logging contract): AppKit toggles a switch
+  ;; button's state before the action fires, so the sender's state IS the
+  ;; post-toggle state — `on` iff NSControlStateValueOn (1).
+  (def checkbox-target
+    (make-delegate
+      (list (list "checkboxChanged:"
+                  (lambda (sender)
+                    (ucg-emit-checkbox-changed (= (nsbutton-state sender) 1)))
+                  (list 'object) 'void))))
+
   (def radio-container (make-nsview-init-with-frame (make-rect 0. 0. 460. 24.)))
   (def radio-a (make-nsbutton))
   (def radio-b (make-nsbutton))
@@ -119,7 +263,12 @@
                     (nscontrol-set-int-value! radio-a 0)
                     (nscontrol-set-int-value! radio-b 0)
                     (nscontrol-set-int-value! radio-c 0)
-                    (nscontrol-set-int-value! sender 1))
+                    (nscontrol-set-int-value! sender 1)
+                    ;; Logging contract: radio-selected names the group's sole
+                    ;; selection, emitted AFTER the exclusion above is applied.
+                    ;; (Gambit's char-string return maps a NULL UTF8String to #f.)
+                    (ucg-emit-radio-selected
+                      (or (nsstring-utf8-string (nsbutton-title sender)) "")))
                   (list 'object) 'void))))
 
   ;; --- Sliders ---
@@ -134,7 +283,9 @@
                         slider-value-label
                         (string->nsstring
                           (string-append "Value: "
-                                         (number->string (inexact->exact (round val))))))))
+                                         (number->string (inexact->exact (round val))))))
+                      ;; Logging contract: post-state, double → nearest int.
+                      (ucg-emit-slider-changed val)))
                   (list 'object) 'void))))
 
   ;; --- Popup & combo ---
@@ -159,7 +310,9 @@
                       (nscontrol-set-string-value!
                         stepper-value-label
                         (string->nsstring
-                          (string-append "Value: " (number->string val))))))
+                          (string-append "Value: " (number->string val))))
+                      ;; Logging contract: post-state, integral value.
+                      (ucg-emit-stepper-changed val)))
                   (list 'object) 'void))))
 
   ;; --- Color & image ---
@@ -171,6 +324,7 @@
   ;; ============================================================
 
   (nsapplication-set-activation-policy! app NSApplicationActivationPolicyRegular)
+  (nsapplication-set-delegate! app app-delegate)
   (install-standard-app-menu! app "UI Controls Gallery")
 
   ;; Window
@@ -209,6 +363,8 @@
   (nsview-set-frame! checkbox (make-rect 0. 0. 200. 24.))
   (nsbutton-set-button-type! checkbox NSButtonTypeSwitch)
   (nsbutton-set-title! checkbox (string->nsstring "Enable Feature"))
+  (nscontrol-set-target! checkbox checkbox-target)
+  (nscontrol-set-action! checkbox "checkboxChanged:")
   (nsstackview-add-arranged-subview! stack-view checkbox)
 
   (nsview-set-frame! radio-a (make-rect 0. 0. 100. 24.))
@@ -324,7 +480,27 @@
   (nswindow-make-key-and-order-front window #f)
   (nsapplication-activate-ignoring-other-apps app #t)
 
+  ;; Launch diagnostic (spec §3.6): the bare line containing `Controls
+  ;; Gallery` the runner's `wait-for-log` matches, dual-emitted to events.log
+  ;; (the runner's read path) and stdout (human-friendly when run unbundled;
+  ;; LaunchServices discards stdout under `open`).
+  (ucg-emit-opened)
   (displayln "UI Controls Gallery running. Close window or Ctrl+C to exit.")
   (nsapplication-run app))
+
+;; --- Structured event log: open + [lifecycle] startup BEFORE (main) --------
+;; The gallery builds its controls in main's *defines* section (the def
+;; initializers evaluate before main's first expression), so `startup` cannot
+;; be main's first expression as in hello-window — it lands here instead,
+;; before (main) is entered and thus before gallery construction, well before
+;; the run loop (or the runner's `wait-ready` readiness probe times out).
+(ucg-events-init!)
+(ucg-emit-startup)
+
+;; Test-config compatibility (logging-contract.md): the gallery reads no
+;; runtime config, so it honours UI_CONTROLS_GALLERY_TEST_CONFIG by reading
+;; the env var and treating absent/empty (and a missing file) as "no config"
+;; — a deliberate no-op.
+(getenv "UI_CONTROLS_GALLERY_TEST_CONFIG" #f)
 
 (main)
