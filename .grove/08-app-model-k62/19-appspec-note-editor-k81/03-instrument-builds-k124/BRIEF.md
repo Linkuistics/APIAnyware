@@ -27,10 +27,20 @@ children materialized lazily, grow the next as each retires)
    interaction — typing/panels/alert) — per-impl bar is code-audit against the
    checklist + the lifecycle/preview smoke; live-run exercises the rest.
    `NoteEditor-racket.app` 92M, `com.linkuistics.note-editor-racket`.
-2. `chez-instrument-build-k126` — mirror via the chez house style (the k117
-   twin).
-3. *(grown lazily)* gerbil, then sbcl — sbcl additionally delivers the k123
-   `build.sh` seeds (suffixed bundle-id + `CFBundleInfoDictionaryVersion`).
+2. `chez-instrument-build-k126` ✅ *(done 2026-07-03)* — the k125 pattern held
+   1:1 via the mini-browser k117 house style (inline `ne-` emitter; terminate-
+   hook app delegate; startup + test-config no-op top-level before `(main)` —
+   the R6RS body rule lands `startup` before window construction for free).
+   No corpus step confirmed again: Trampolines git-clean + dylib newer, 175
+   `@_cdecl` entries. `NoteEditor-chez.app` 5.7M,
+   `com.linkuistics.note-editor-chez`; CLI smoke green (exact launch sequence,
+   AppleScript quit → `shutdown reason=menu`, no stray events); `[document]`
+   events witnessed by code audit (not host-reachable).
+3. `gerbil-instrument-build-k127` — mirror via the gerbil house style (the
+   k118 twin); webkit-importer `(except-in … string-length)` + gcc-15-shim
+   gotchas in the leaf.
+4. *(grown lazily)* sbcl — additionally delivers the k123 `build.sh` seeds
+   (suffixed bundle-id + `CFBundleInfoDictionaryVersion`).
 
 ## Goal
 
