@@ -30,9 +30,13 @@ through the toolkit (after hello-window and ui-controls-gallery).
 - **Decomposed on entry (2026-07-02)** — per-stage children, materialized lazily
   (grow the next as each retires; stages may merge where they genuinely fit one
   session):
-  1. **`reverse-gen-k95`** — the projection-free spec from the four impls
-     (replaces the precursor `docs/spec.md`), via the AppSpec reverse-gen workflow.
-  2. **conformance-data** — `logging-contract.md` + `observable-state.md`.
+  1. **`reverse-gen-k95`** ✅ *(done 2026-07-02)* — the projection-free spec from the
+     four impls (replaced the precursor `docs/spec.md`), via the AppSpec reverse-gen
+     workflow. Key handoff: **no impl ships a document** — the open panel is the only
+     source; the suite provisions an N ≥ 3-page fixture and drives the out-of-process
+     panel by keyboard (Cmd-Shift-G → path → Return ×2). AX enabled flags are the
+     reliable nav-state signal (screenshots can catch pre-repaint frames).
+  2. **`conformance-data-k96`** — `logging-contract.md` + `observable-state.md`.
   3. **instrument-builds** — per-impl events emitter + `.app` build (likely a node,
      one child per impl, as k88 was).
   4. **forward-gen-suite** — the scenario suite + `run-values.rkt` (+ the PDF fixture).
