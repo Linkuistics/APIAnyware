@@ -36,11 +36,22 @@ children materialized lazily, grow the next as each retires)
    `com.linkuistics.note-editor-chez`; CLI smoke green (exact launch sequence,
    AppleScript quit → `shutdown reason=menu`, no stray events); `[document]`
    events witnessed by code audit (not host-reachable).
-3. `gerbil-instrument-build-k127` — mirror via the gerbil house style (the
-   k118 twin); webkit-importer `(except-in … string-length)` + gcc-15-shim
-   gotchas in the leaf.
-4. *(grown lazily)* sbcl — additionally delivers the k123 `build.sh` seeds
-   (suffixed bundle-id + `CFBundleInfoDictionaryVersion`).
+3. `gerbil-instrument-build-k127` ✅ *(done 2026-07-03)* — the k125/k126
+   pattern held 1:1 via the gerbil house style (mini-browser k118 twin:
+   inline `ne-` emitter riding the statically-linked prelude; terminate-hook
+   delegate; startup + test-config no-op top-level before `(main)`). **The
+   `string-length` shadow fired as predicted**: the regenerated wkwebview.ss
+   exports the flattened `stringLength` generic, so the import takes
+   `(except-in … string-length)` (the pre-k116 source would no longer run
+   unfixed). No corpus step confirmed (third time): Trampolines git-clean +
+   dylib newer, 175 `@_cdecl` entries; gcc-15 resolves on PATH (Homebrew
+   symlink → gcc-16), the shim never needed. `NoteEditor-gerbil.app` 64M,
+   `com.linkuistics.note-editor-gerbil`; CLI smoke green (exact launch
+   sequence, AppleScript quit → `shutdown reason=menu`, no stray events);
+   `[document]` events witnessed by code audit (not host-reachable).
+4. `sbcl-instrument-build-k128` — mirror via the sbcl house style (the k119
+   twin); additionally delivers the k123 `build.sh` seeds (suffixed bundle-id
+   + `CFBundleInfoDictionaryVersion`); sbcl's own launch-line remainder.
 
 ## Goal
 
