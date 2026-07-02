@@ -21,7 +21,17 @@ k97 split; children materialized lazily, grow the next as each retires)
    host-side via an `nm -gU` bundled-vs-fresh symbol diff); build.sh prereqs key
    on the target's scenekit binding artifact but check the dylib by existence
    only.
-2. `chez-instrument-build-k108` — the k99 pattern (emitter inline in the `.sls`).
+2. `chez-instrument-build-k108` ✅ — the k99 pattern (emitter inline in the `.sls`,
+   `sv-` prefixed; startup + test-config no-op top-level before `(main)`), the k107
+   app-level shape carried over intact (`make-geometry+title` values-pair,
+   `current-color-rgb255` emit-time fold — chez already zero-ptr-checked both §7.4
+   boundaries). Ran its own `apianyware-generate --target chez` (85 SceneKit files;
+   trampolines stay 170) + `APIAnywareChez` relink before bundling; `nm -gU`
+   bundled-vs-fresh identical (410 exports — the chez standalone bundle carries the
+   dylib at `Contents/Resources/lib/`). Emitter 22/22 in isolation;
+   `SceneKitViewer-chez.app` 5.2 MB, id `com.linkuistics.scenekit-viewer-chez`.
+3. `gerbil-instrument-build-k109` — the k100 pattern; expect the gxc recompile
+   (gcc-15 shim) + its own generate/relink.
 
 ## Goal
 
