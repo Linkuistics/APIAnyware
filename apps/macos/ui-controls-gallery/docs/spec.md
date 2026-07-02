@@ -71,8 +71,11 @@ A single top-level window created through the designated initializer
   size — is implementation-varying and not asserted by this spec.
 - **Backing store:** *Buffered* (`NSBackingStoreBuffered` = 2). **Defer:** *false*.
 - **Content size:** a fixed launch size large enough to present the whole roster; the
-  realized size is implementation-varying (e.g. 500 × 600). The intent is *the gallery is
-  visible and uncramped*, not any particular pixel size.
+  realized size is implementation-varying (e.g. 500 × 920 single-column, 820 × 532
+  two-column). The intent is *the gallery is visible and uncramped*, not any particular
+  pixel size. (The earlier 500 × 600 example was corrected by the live-run stage: a
+  600px viewport over the realized ~900px single-column roster launched bottom-scrolled,
+  hiding the upper sections — a spec-§4 violation in all three stack-layout impls.)
 - **Title rule:** the window title **contains the substring `Controls`** and names the
   gallery (e.g. `UI Controls Gallery`); the full realized title is implementation-varying.
 - **Position:** recentered via the window's standard `center` behaviour before display.

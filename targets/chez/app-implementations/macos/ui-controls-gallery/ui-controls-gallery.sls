@@ -181,9 +181,12 @@
               (ucg-close-events!)))
          (void*) void))))
 
+  ;; Content height must exceed the 900px stack document (spec §4: the launch
+  ;; size presents the whole roster): a smaller viewport starts bottom-scrolled
+  ;; (the non-flipped document anchors at its origin), hiding the upper sections.
   (define window
     (make-nswindow-init-with-content-rect-style-mask-backing-defer
-      (make-nsrect 0 0 500 600)
+      (make-nsrect 0 0 500 920)
       (bitwise-ior NSWindowStyleMaskTitled
                    NSWindowStyleMaskClosable
                    NSWindowStyleMaskMiniaturizable
@@ -221,8 +224,14 @@
               (= (nsbutton-state (borrow-objc-object sender)) 1)))
          (void*) void))))
 
+  ;; Radio container must be a stack view, not a plain NSView: the outer
+  ;; stack turns off the container's autoresizing translation when arranging
+  ;; it, and a plain NSView has no intrinsic size, so its ambiguous height
+  ;; resolved differently per launch, shifting every row below it
+  ;; nondeterministically. A nested stack view derives its intrinsic size
+  ;; from the radios (orientation/spacing set alongside the outer stack's).
   (define radio-container
-    (make-nsview-init-with-frame (make-nsrect 0 0 460 24)))
+    (make-nsstackview-init-with-frame (make-nsrect 0 0 460 24)))
   (define radio-a (make-nsbutton-init-with-frame (make-nsrect 0 0 100 24)))
   (define radio-b (make-nsbutton-init-with-frame (make-nsrect 105 0 100 24)))
   (define radio-c (make-nsbutton-init-with-frame (make-nsrect 210 0 100 24)))
@@ -338,18 +347,21 @@
   (nsbutton-set-action! checkbox "checkboxChanged:")
   (nsstackview-add-arranged-subview! stack-view checkbox)
 
+  (nsstackview-set-orientation! radio-container NSUserInterfaceLayoutOrientationHorizontal)
+  (nsstackview-set-spacing! radio-container 5.0)
+
   (nsbutton-set-button-type! radio-a NSButtonTypeRadio)
   (nsbutton-set-title! radio-a "Option A")
   (nsbutton-set-int-value! radio-a 1)
-  (nsview-add-subview! radio-container radio-a)
+  (nsstackview-add-arranged-subview! radio-container radio-a)
 
   (nsbutton-set-button-type! radio-b NSButtonTypeRadio)
   (nsbutton-set-title! radio-b "Option B")
-  (nsview-add-subview! radio-container radio-b)
+  (nsstackview-add-arranged-subview! radio-container radio-b)
 
   (nsbutton-set-button-type! radio-c NSButtonTypeRadio)
   (nsbutton-set-title! radio-c "Option C")
-  (nsview-add-subview! radio-container radio-c)
+  (nsstackview-add-arranged-subview! radio-container radio-c)
 
   (for-each
     (lambda (btn)

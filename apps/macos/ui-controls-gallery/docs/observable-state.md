@@ -46,9 +46,9 @@ hello-window found `gv-ax-snapshot` gaps, e.g. missing `AXMenuItemCmdChar`):
 | slider | `AXSlider` | no | firm |
 | pop-up button | `AXPopUpButton` | no | firm |
 | combo box | `AXComboBox` | no | firm |
-| date picker | `AXDateField` (or a composite group per element) | no | **to confirm in-VM** |
+| date picker | `AXDateTimeArea` (a composite area with an embedded `AXIncrementor`) | no | firm — **corrected in-VM** (live-run-k94: `AXDateField` never appears; all four impls surface `AXDateTimeArea`, so scenarios/03's provisional `AXDateField` assert fails by design and stays a recorded finding until forward-gen regenerates) |
 | progress bar | `AXProgressIndicator` | no | firm |
-| spinner | `AXBusyIndicator` (spinning style) or `AXProgressIndicator` | no | **to confirm in-VM** |
+| spinner | `AXBusyIndicator` | no | firm — **confirmed in-VM** (live-run-k94: all four impls; the `AXProgressIndicator` fallback never needed) |
 | stepper | `AXIncrementor` | no | firm |
 | color well | `AXColorWell` | no | firm |
 | image view | `AXImage` | no | firm |

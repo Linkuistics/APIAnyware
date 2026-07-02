@@ -121,11 +121,47 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    (conformance data; instrument+build ×4; forward-gen suite; Tier-2 live runs — all four
    impls 3/3), firming the spec format as the hello-window shape.
 5. **Post-pause children** *(grown on k66 retirement, 2026-07-02)* — build-portability
-   findings first (`sbcl-vendor-libzstd-k75`, `racket-self-contained-bundle-k76`), then
-   one AppSpec-cycle leaf per remaining app (k77–k83: ui-controls-gallery, pdfkit-viewer,
-   scenekit-viewer, mini-browser, note-editor, drawing-canvas, swift-native-probe — each
-   live-VM-verified, each expected to decompose on entry), then `apps-layout-finalize-k84`
-   and `portfolio-coverage-tie-in-k85` (which closes this node's Done-when).
+   findings first (`sbcl-vendor-libzstd-k75` ✅, `racket-self-contained-bundle-k76` ✅), then
+   one AppSpec-cycle leaf per remaining app (k77–k83: ui-controls-gallery ✅ *(node
+   `appspec-ui-controls-gallery-k77`, complete 2026-07-02 — see **ui-controls-gallery
+   outcomes** below)*, pdfkit-viewer, scenekit-viewer, mini-browser, note-editor,
+   drawing-canvas, swift-native-probe — each live-VM-verified, each expected to decompose
+   on entry), then `apps-layout-finalize-k84` and `portfolio-coverage-tie-in-k85` (which
+   closes this node's Done-when).
+
+## ui-controls-gallery outcomes (promoted from `appspec-ui-controls-gallery-k77` on retirement)
+
+Second app through the toolkit (after hello-window), first with a rich control surface —
+the durable findings the six remaining apps (k78–k83) should apply. Full record:
+`apps/macos/ui-controls-gallery/docs/run-results.md` (k94).
+
+- **Final outcome:** all four impls green on every runnable scenario (10/11 each); the one
+  standing red (scenario 03) is a `recording:` role-mapping finding by design — **date picker
+  surfaces as `AXDateTimeArea` on Tahoe, not `AXDateField`** (spinner `AXBusyIndicator`
+  confirmed); the observable-state role table is corrected, the scenario stays red until a
+  forward-gen regeneration folds the firm roles into the hard cluster.
+- **Per-impl geometry practice** (coordinate-driven suites): measure per impl from `agent
+  snapshot --mode layout` (AX centre, framebuffer px); run a **two-launch determinism diff
+  before binding values**; keep per-impl `run-values-<impl>.rkt` files when layouts diverge
+  (chez+gerbil were pixel-identical and share the default; racket/sbcl carry their own);
+  never click within ~10px of a resizable window's border (the resize-handle band swallows
+  clicks — bind slider ends at the track's *effective* start/end, knob half-width in).
+- **Two impl-defect classes only Tier-2 catches** (source review + CLI smoke were blind to
+  both): (a) *launch presentation* — a scroll viewport smaller than its non-flipped document
+  launches bottom-scrolled, hiding half the roster (spec-§4 violation in all three stack
+  impls; fixed by sizing the window content past the document); (b) *ambiguous layout* —
+  a plain `NSView` arranged in an `NSStackView` has no intrinsic size and resolves
+  nondeterministically per launch (±97px row shifts); **nested containers arranged in a
+  stack must themselves be stack views** (or otherwise carry an intrinsic size).
+- **The runner is now full-suite-reliable**: the k75 per-scenario workaround is obsolete —
+  AppSpec `46fec5b` (deadline-guarded `gv-exec/poll` content polls absorb the exec-channel
+  close stall) + `f2b8b76` (per-scenario tailer epoch reset; byte-identical relaunch content
+  starved `wait-for-log`). Residual: the scenario *after* a failure inherits artifact-capture
+  channel pressure and can hit a delayed-`truncate` empty-log red with the app provably up —
+  adjudicate by solo re-run (workflow §3); proper fix is TestAnyware-side.
+- **Observation:** all four runtimes ignore SIGTERM under `nsapplication-run` (`pkill` needs
+  `-9`); the contract's menu-quit path works everywhere — signal-path shutdown stays
+  unexercised, as k88 recorded.
 
 ## Decisions (running log)
 
