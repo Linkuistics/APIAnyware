@@ -1,6 +1,4 @@
-# appspec-ui-controls-gallery-k77
-
-**Kind:** work
+# appspec-ui-controls-gallery-k77 — brief
 
 ## Goal
 
@@ -21,11 +19,17 @@ hello-window exemplar.
   Data homes **here** (ADR-0052; AppSpec ADR-0013): spec/contracts/scenarios under
   `apps/macos/ui-controls-gallery/`, impl instrumentation under
   `targets/<t>/app-implementations/macos/ui-controls-gallery/`.
-- **Expected to decompose on entry** — hello-window took 8 leaves. `leaf-decompose`
-  into per-stage children (reverse-gen; per-target instrument+build; forward-gen
-  suite; live-run) and do only the first child that session. The per-target
-  instrumentation patterns now exist for all four targets (k68–k71), so stages may
-  merge where they genuinely fit one session.
+- **Decomposed on entry (2026-07-02)** — per-stage children, materialized lazily
+  (grow the next as each retires; stages may merge where they genuinely fit one
+  session, since the per-target instrumentation patterns already exist from k68–k71):
+  1. **`reverse-gen-k86`** — the projection-free spec from the four impls
+     (replaces the precursor `docs/spec.md`), via the AppSpec reverse-gen workflow.
+  2. *(planned)* conformance data — `logging-contract.md` + `observable-state.md`
+     (the hello-window k67 stage).
+  3. *(planned)* per-target instrument+build — may fit fewer than four leaves now
+     the patterns exist.
+  4. *(planned)* forward-gen scenario suite + `run-values.rkt`.
+  5. *(planned)* Tier-2 live-run all four impls → `docs/run-results.md`.
 
 ## Done when
 
