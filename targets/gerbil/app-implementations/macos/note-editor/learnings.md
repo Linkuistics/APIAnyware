@@ -1,5 +1,41 @@
 # note-editor x gerbil
 
+**2026-07-03 (AppSpec instrumentation, `gerbil-instrument-build-k127` — ✅ CLI smoke green):**
+- Instrumented to the k123 logging contract via the gerbil house style (the
+  mini-browser k118 twin): inline `ne-` emitter (Gambit primitives only — rides the
+  statically-linked prelude, no new import), `applicationWillTerminate:` terminate-hook
+  app delegate, `startup` + `NOTE_EDITOR_TEST_CONFIG` no-op at top level before
+  `(main)` (the def-initializers-evaluate-first rule lands `startup` before
+  window/split-view construction). The k125/k126 emission-point pattern held 1:1:
+  single 6-event `ne-emit-document` (fixed key order `path`·`dirty`, `(or path "")`),
+  `ne-emit-preview-rendered` with `placeholder?` hoisted in `render-preview!`
+  (event + body choice share it; `chars` = `string-length` of the Markdown consumed —
+  Gambit strings hold scalar values); `dirty-changed` inside the flip arm after the
+  title refresh, before the re-render; `opened`/`saved` at rule end (the shared
+  `write-current-file!` puts the sheet-branch `saved` inside the `make-objc-block`
+  completion handler by construction); failure events after the status set with the
+  attempted path; `new` with literal `""`/`#f`.
+- **The `string-length` generics-shadow gotcha landed as predicted:** the k116 WebKit
+  corpus flattens `stringLength` onto WKWebView, so the regenerated `wkwebview.ss` now
+  exports a `string-length` generic (verified in the binding's export list) that would
+  shadow the Gambit builtin this module calls throughout (renderer, helpers, emitter).
+  `(except-in :gerbil-bindings/webkit/wkwebview string-length)` — loss-free, the app
+  never sends stringLength. The pre-instrumentation source (VM-verified 2026-06-10,
+  before k116) imported wkwebview bare and would no longer run correctly unfixed.
+- **No corpus step** (third impl in a row): adapter tree git-clean, `Trampolines.swift`
+  175 `@_cdecl` entries incl. WebKit, dylib newer than the source → the k115 relink
+  stands, nothing regenerated. gcc-15 resolves on PATH (Homebrew symlink → gcc-16), so
+  the ADR-0021 bottle gotcha never fired.
+- Build via the new self-contained `build.sh` (mini-browser k118 recipe: bundle default
+  id → rename → PlistBuddy set `com.linkuistics.note-editor-gerbil` → re-sign):
+  `NoteEditor-gerbil.app` 64M, codesign strict OK. Timings warm: generics 37 shards
+  126s, closure 30 modules (-O) 103s, exe link 269s.
+- CLI smoke green: exact launch sequence `[lifecycle] startup` → `[preview] rendered
+  placeholder=true chars=0` → bare launch line; AppleScript quit → `[lifecycle]
+  shutdown reason=menu`, clean exit, no stray events. The `[document]` events are not
+  host-reachable (typing/panels/alert need UI) — witnessed by code audit against the
+  contract checklist; live-run exercises them.
+
 **2026-06-09 → 2026-06-10 (standalone, grove leaf `100/070` — ✅ PASS, leaf retired):**
 - ✅ Built and **fully VM-verified** on the final fixed build in a no-Gerbil VM. The
   core features were verified 2026-06-09; the two held-over checks (New-clear

@@ -17,6 +17,23 @@
 ;;; (undo/redo), NSAlert confirmations, NSOpenPanel (runModal), an
 ;;; NSTextDidChangeNotification observer, and hand-rolled Markdown→HTML + file I/O.
 ;;;
+;;; Instrumented for the AppSpec scenario runner per the Note Editor logging
+;;; contract (apps/macos/note-editor/docs/logging-contract.md): it writes a
+;;; structured events.log the runner tails — [lifecycle] startup/shutdown, the
+;;; bare launch line, the six [document] document-state events (the save sheet
+;;; resolves on its own schedule, so save completion is not assertable without
+;;; a log record), and the [preview] rendered hand-off event (render completion
+;;; is entirely unobservable, §5.4). Under `launch-via 'open` LaunchServices
+;;; discards the app's stdout, so the log file (not stdout) is the runner's
+;;; read path; the stdout line is kept too (human-friendly when run unbundled).
+;;;
+;;; The logging is inlined here rather than split to a sibling events.ss for
+;;; the same reason as the prior instrumented gerbil apps: the bundler's
+;;; closure walk (deps.rs) follows only `:gerbil-bindings/…` references, and
+;;; these defines use only Gambit primitives (open-output-file, getenv,
+;;; create-directory, force-output), so they ride the statically-linked
+;;; prelude with no new import.
+;;;
 ;;; Gerbil idiom notes:
 ;;;   - Editing methods live on the NSText superclass: `nstext-string`,
 ;;;     `nstext-set-string!`, `nstext-set-font!`, `nstext-set-horizontally-resizable!`;
@@ -51,7 +68,15 @@
         :gerbil-bindings/foundation/nsundomanager
         :gerbil-bindings/foundation/nsnotificationcenter
         :gerbil-bindings/foundation/nsmutablearray
-        :gerbil-bindings/webkit/wkwebview
+        ;; except string-length: the k116 WebKit corpus flattens a `stringLength`
+        ;; selector onto WKWebView (conformed-protocol member), so wkwebview.ss
+        ;; re-exports a `string-length` GENERIC that shadows the Gambit builtin —
+        ;; generic dispatch then fails on plain Scheme strings (the same shadow
+        ;; class as the `values` coerce gotcha; this module calls the builtin
+        ;; throughout the Markdown renderer, the string/path helpers, and the
+        ;; event-log helpers). The app never sends stringLength to the web view,
+        ;; so excluding it is loss-free.
+        (except-in :gerbil-bindings/webkit/wkwebview string-length)
         :gerbil-bindings/webkit/wkwebviewconfiguration)
 (export main)
 
@@ -248,12 +273,142 @@
 (def (write-string->file str path)
   (call-with-output-file path (lambda (port) (display str port))))
 
+;; --- Structured event log (logging contract) -------------------------------
+;; Single writer: every event is emitted on the main thread — startup, the
+;; initial render, and the launch line before -run; the [document]/[preview]
+;; events from the five action handlers, the text-change notification
+;; observer, and the save sheet's completion handler (all delivered by AppKit
+;; on the main thread; the ADR-0022 trampoline calls the Gerbil body directly
+;; there); shutdown on the terminate path — so one port with a post-write
+;; force-output suffices (no lock needed).
+
+;; Fixed default the descriptor's #:events-path mirrors, so the runner tails
+;; the same file whether or not #:log-env (NOTE_EDITOR_EVENTS_LOG)
+;; propagates through LaunchServices.
+(define ne-default-events-path "/tmp/note-editor/events.log")
+(define ne-events-port #f)
+
+;; NOTE_EDITOR_EVENTS_LOG if set and non-empty, else the fixed default.
+(define (ne-resolve-events-path)
+  (let ((env (getenv "NOTE_EDITOR_EVENTS_LOG" #f)))
+    (if (and env (not (string=? env ""))) env ne-default-events-path)))
+
+;; Directory component of `p` (everything before the last '/'), or #f.
+(define (ne-path-parent p)
+  (let loop ((i (- (string-length p) 1)))
+    (cond
+      ((< i 0) #f)
+      ((char=? (string-ref p i) #\/) (substring p 0 i))
+      (else (loop (- i 1))))))
+
+;; Open + truncate the events.log: (create: 'maybe truncate: #t) creates it if
+;; absent and truncates it if present. The parent dir is created if missing
+;; (guarded against a race). Records are flushed per-line in ne-emit-line, so
+;; a tail sees each promptly.
+(define (ne-events-init!)
+  (let* ((target (ne-resolve-events-path))
+         (parent (ne-path-parent target)))
+    (when (and parent (not (string=? parent "")) (not (file-exists? parent)))
+      (with-exception-catcher (lambda (e) #f) (lambda () (create-directory parent))))
+    (set! ne-events-port
+      (open-output-file (list path: target truncate: #t create: 'maybe)))))
+
+(define (ne-emit-line line)
+  (when ne-events-port
+    ;; Swallow only I/O-level failures (out-of-disk, closed-port races on
+    ;; shutdown). A genuine programmer error still surfaces during dev.
+    (with-exception-catcher
+      (lambda (e) #f)
+      (lambda ()
+        (display line ne-events-port)
+        (newline ne-events-port)
+        (force-output ne-events-port)))))
+
+;; Contract "Line format": strings are double-quoted with \\ / \" / newline
+;; escaped; numbers/booleans/symbols emit bare.
+(define (ne-quote-string s)
+  (let ((out (open-output-string)))
+    (write-char #\" out)
+    (let loop ((i 0))
+      (when (< i (string-length s))
+        (let ((c (string-ref s i)))
+          (cond
+            ((char=? c #\\) (display "\\\\" out))
+            ((char=? c #\") (display "\\\"" out))
+            ((char=? c #\newline) (display "\\n" out))
+            (else (write-char c out))))
+        (loop (+ i 1))))
+    (write-char #\" out)
+    (get-output-string out)))
+
+;; Booleans emit as the bare symbols true/false — the contract defines the
+;; bytes; the native #t/#f print form does not conform.
+(define (ne-bool b) (if b "true" "false"))
+
+(define (ne-emit-startup)
+  (ne-emit-line "[lifecycle] startup"))
+(define (ne-emit-launch-line)
+  (ne-emit-line "Note Editor running. Close window or Ctrl+C to exit."))
+(define (ne-emit-shutdown reason)
+  (ne-emit-line (string-append "[lifecycle] shutdown reason=" (symbol->string reason))))
+
+;; The six [document] events, one emitter (contract "Document events"): the
+;; caller passes the event name plus the two payload values. On the state
+;; events (new/opened/saved/dirty-changed) `path` is the POST-state current
+;; path (#f when unset — emitted as ""); on the failure events (open-failed/
+;; save-failed) it is the ATTEMPTED file's absolute path (the model is
+;; unchanged by rule §8.5.6/7). `dirty` is the post-state flag in both cases.
+;; Fixed key order path · dirty (multi-key regex matchers rely on adjacency).
+(define (ne-emit-document event path dirty)
+  (ne-emit-line (string-append "[document] " (symbol->string event)
+                               " path=" (ne-quote-string (or path ""))
+                               " dirty=" (ne-bool dirty))))
+
+;; The one [preview] event (contract "Preview events"): emitted immediately
+;; after every loadHTMLString: hand-off — it witnesses the hand-off, not the
+;; pixels (render completion is unobservable, §5.4). `placeholder` = whether
+;; the §7.1 placeholder body was rendered; `chars` = the Unicode scalar count
+;; of the Markdown source the render consumed (0 for the empty document; a
+;; Gambit string holds scalar values, so string-length counts them directly).
+;; Fixed key order placeholder · chars.
+(define (ne-emit-preview-rendered placeholder? chars)
+  (ne-emit-line (string-append "[preview] rendered placeholder=" (ne-bool placeholder?)
+                               " chars=" (number->string chars))))
+
+(define (ne-close-events!)
+  (when ne-events-port
+    (with-exception-catcher (lambda (e) #f)
+      (lambda ()
+        (force-output ne-events-port)
+        (close-output-port ne-events-port))))
+  (set! ne-events-port #f))
+;; --- End structured event log ----------------------------------------------
+
 ;; ============================================================
 ;; Application
 ;; ============================================================
 (define-entry-point (main)
   ;; --- Definitions ---
   (def app (nsapplication-shared-application))
+
+  ;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+  ;; The osascript graceful quit the runner uses (quit-impl! / the Command-Q
+  ;; scenario) routes through applicationWillTerminate:. §3.10: no
+  ;; unsaved-changes guard on the terminate path — the hook logs and lets
+  ;; termination proceed. make-delegate pins the synthesized instance in
+  ;; *delegate-roots* for the process (AppKit holds the delegate weakly);
+  ;; this def keeps it lexically reachable too. The body is guarded because
+  ;; an unhandled exception in an ObjC callback would crash the app with no
+  ;; Scheme backtrace.
+  (def app-delegate
+    (make-delegate
+      (list (list "applicationWillTerminate:"
+                  (lambda (notification)
+                    (with-exception-catcher (lambda (e) #f)
+                      (lambda ()
+                        (ne-emit-shutdown 'menu)
+                        (ne-close-events!))))
+                  (list 'object) 'void))))
 
   (def window
     (make-nswindow-init-with-content-rect-style-mask-backing-defer
@@ -307,33 +462,60 @@
   ;; Editor text + preview
   (def (current-editor-text) (ns->str (nstext-string text-view)))
   (def (render-preview! markdown-text)
-    (let (body (if (string=? (trim-both markdown-text) "")
-                 PREVIEW-PLACEHOLDER
-                 (render-markdown markdown-text)))
+    (let* ((placeholder? (string=? (trim-both markdown-text) ""))
+           (body (if placeholder?
+                   PREVIEW-PLACEHOLDER
+                   (render-markdown markdown-text))))
       (wkwebview-load-html-string-base-url web-view
         (string->nsstring (string-append PREVIEW-TEMPLATE-HEAD body PREVIEW-TEMPLATE-FOOT))
-        #f)))
+        #f)
+      ;; [preview] rendered — immediately after the loadHTMLString: hand-off
+      ;; (contract "Preview events": the event witnesses the hand-off, not
+      ;; the pixels). chars = scalar count of the Markdown source consumed.
+      (ne-emit-preview-rendered placeholder? (string-length markdown-text))))
   (def (refresh-preview!) (render-preview! (current-editor-text)))
 
   ;; File operations
   (def (load-file! path)
     (with-catch
-      (lambda (e) (set-status! (string-append "Open failed: " path)) #f)
+      (lambda (e)
+        (set-status! (string-append "Open failed: " path))
+        ;; [document] open-failed — the ATTEMPTED path (model unchanged by
+        ;; rule §8.5.6), after the status line is set.
+        (ne-emit-document 'open-failed path dirty?)
+        #f)
       (lambda ()
         (let (text (read-file->string path))
           (nstext-set-string! text-view (string->nsstring text))
           (set! current-path path) (set! dirty? #f)
           (refresh-title!) (refresh-preview!)
-          (set-status! (string-append "Opened " path)) #t))))
+          (set-status! (string-append "Opened " path))
+          ;; [document] opened — post-state at the end of the §8.3 rule (the
+          ;; mid-rule refresh-preview! already emitted its rendered line).
+          (ne-emit-document 'opened current-path dirty?)
+          #t))))
 
   (def (write-current-file! path)
     (with-catch
-      (lambda (e) (set-status! (string-append "Save failed: " path)) #f)
+      (lambda (e)
+        (set-status! (string-append "Save failed: " path))
+        ;; [document] save-failed — the ATTEMPTED path, dirty flag unchanged
+        ;; by rule (§8.5.7), after the status line is set.
+        (ne-emit-document 'save-failed path dirty?)
+        #f)
       (lambda ()
         (write-string->file (current-editor-text) path)
         (set! current-path path) (set! dirty? #f)
         (refresh-title!)
-        (set-status! (string-append "Saved " path)) #t)))
+        (set-status! (string-append "Saved " path))
+        ;; [document] saved — post-state at the end of the §8.4 write+state
+        ;; rule. Reached from BOTH branches: the direct save (do-save! with a
+        ;; current path) and the sheet branch (prompt-save!'s completion
+        ;; handler calls here), so the sheet-branch emission is inside the
+        ;; completion handler by construction (the contract's async re-entry
+        ;; witness). No render accompanies a save (§7 excludes it).
+        (ne-emit-document 'saved current-path dirty?)
+        #t)))
 
   ;; Unsaved-changes confirmation
   (def (confirm-discard? message)
@@ -393,7 +575,12 @@
       (nstext-set-string! text-view (string->nsstring ""))
       (set! current-path #f) (set! dirty? #f)
       (refresh-title!) (refresh-preview!)
-      (set-status! "New document")))
+      (set-status! "New document")
+      ;; [document] new — post-state at the end of the §8.2 rule (always
+      ;; path="" dirty=false; the mid-rule refresh emitted rendered
+      ;; placeholder=true chars=0). The cancelled alert path never reaches
+      ;; here (silent no-op).
+      (ne-emit-document 'new "" #f)))
 
   ;; Undo / Redo via NSTextView's undo manager (on NSResponder)
   (def (do-undo!)
@@ -419,12 +606,21 @@
       (list
         (list "textDidChange:"
               (lambda (note)
-                (unless dirty? (set! dirty? #t) (refresh-title!))
+                (unless dirty?
+                  (set! dirty? #t)
+                  (refresh-title!)
+                  ;; [document] dirty-changed — the §6.2 clean→dirty FLIP only
+                  ;; (never per-keystroke), after the title refresh; path is the
+                  ;; post-state current path. Emitting before refresh-preview!
+                  ;; keeps the contract's first-keystroke order
+                  ;; dirty-changed → rendered.
+                  (ne-emit-document 'dirty-changed current-path #t))
                 (refresh-preview!))
               (list 'object) 'void))))
 
   ;; --- Expressions ---
   (nsapplication-set-activation-policy! app NSApplicationActivationPolicyRegular)
+  (nsapplication-set-delegate! app app-delegate)
   (install-standard-app-menu! app "Note Editor")
 
   (nswindow-center! window)
@@ -500,7 +696,28 @@
   (nswindow-make-key-and-order-front window #f)
   (nsapplication-activate-ignoring-other-apps app #t)
 
+  ;; §3 step 8 launch diagnostic — dual emission (contract "Lifecycle
+  ;; events"): the stdout line stays (human-friendly when run unbundled,
+  ;; literally true to §3); the same BARE line goes to events.log, where the
+  ;; runner can see it (LaunchServices discards stdout under `open`).
+  (ne-emit-launch-line)
   (displayln "Note Editor running. Close window or Ctrl+C to exit.")
   (nsapplication-run app))
+
+;; --- Structured event log: open + [lifecycle] startup BEFORE (main) --------
+;; The editor builds its window/split-view in main's *defines* section (the
+;; def initializers evaluate before main's first expression), so `startup`
+;; cannot be main's first expression as in hello-window — it lands here
+;; instead, before (main) is entered and thus before window/split-view
+;; construction, well before the run loop (or the runner's `wait-ready`
+;; readiness probe times out).
+(ne-events-init!)
+(ne-emit-startup)
+
+;; Test-config compatibility (logging-contract.md): the editor reads no
+;; runtime config, so it honours NOTE_EDITOR_TEST_CONFIG by reading the env
+;; var and treating absent/empty (and a missing file) as "no config" — a
+;; deliberate no-op.
+(getenv "NOTE_EDITOR_TEST_CONFIG" #f)
 
 (main)
