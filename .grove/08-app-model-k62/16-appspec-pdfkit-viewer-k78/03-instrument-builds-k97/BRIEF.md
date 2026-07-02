@@ -16,10 +16,17 @@ k88 split; children materialized lazily, grow the next as each retires)
    `swift build --product APIAnywareChez` relink before bundling (the local binding
    tree predated the k98 PDFKit collection) — gerbil/sbcl should expect the twin;
    build.sh prereq now keys on the target's pdfkit binding artifact, not appkit.
-3. `gerbil-instrument-build-k100` — gallery k91 pattern; gcc-15 shim if the binding
-   rebuilds; never a bare `values` in generated bindings.
-4. *(planned)* sbcl — gallery k92 pattern (`events.lisp` exists as template; dump.lisp
-   build).
+3. `gerbil-instrument-build-k100` ✅ — gallery k91 pattern (emitter inline in the
+   `.ss`; startup top-level before `(main)`; refresh-ui! returns applied state, the
+   k98 shape). The k99 twin held: bindings regenerated (`--target gerbil`, PDFKit
+   trampolines → 170 entries) + `swift build --product APIAnywareGerbil` relink;
+   build.sh prereq keys on `pdfkit/pdfview.ss`. No gcc-15 shim needed (real gcc-15
+   on PATH); no bare-`values` issue surfaced in the regenerated bindings.
+4. `sbcl-instrument-build-k101` — gallery k92 pattern (`events.lisp` template;
+   adapt the existing pre-instrumentation build.sh/dump.lisp); expect the same
+   regenerate+relink twin (`--target sbcl`, `--product APIAnywareSbcl`). Last
+   child: its retirement empties this node — cascade check, then the k78
+   forward-gen-suite stage follows.
 
 ## Goal
 
