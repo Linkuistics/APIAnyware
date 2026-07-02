@@ -34,9 +34,17 @@ through the toolkit (after hello-window, ui-controls-gallery, pdfkit-viewer).
 - **Decomposed on entry (2026-07-02)** — per-stage children mirroring
   `appspec-pdfkit-viewer-k78`, materialized lazily (grow the next as each retires;
   stages may merge where they genuinely fit one session):
-  1. **`reverse-gen-k104`** — the projection-free spec from the four impls
-     (replacing the precursor `docs/spec.md`), via the AppSpec reverse-gen workflow.
-  2. **conformance-data** — `logging-contract.md` + `observable-state.md`.
+  1. **`reverse-gen-k104`** ✅ *(done 2026-07-02)* — the projection-free spec from
+     the four impls (replaced the precursor `docs/spec.md`), via the AppSpec
+     reverse-gen workflow. Key handoff: **rendered-scene content (shape identity,
+     colour, spin, orbit) is pixel-level — the closed verb set has no drag or
+     pixel-diff verb** — so the key behaviours (swap applied, colour persists across
+     swap) need contract log events to be assertable at all; the runnable AX/OCR
+     surface is window title, popup value, `Colo…` button, `Colors` panel presence,
+     launch-line prefix, quit. No fixtures needed. Seeded to instrument stage: sbcl
+     Info.plist missing kind-required `CFBundleInfoDictionaryVersion`; the §7.4
+     conversion-failure divergence (majority keep-previous, sbcl stores-raw).
+  2. **`conformance-data-k105`** — `logging-contract.md` + `observable-state.md`.
   3. **instrument-builds** — per-impl events emitter + `.app` build (likely a node,
      one child per impl).
   4. **forward-gen-suite** — the scenario suite + `run-values.rkt`.
