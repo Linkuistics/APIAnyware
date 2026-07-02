@@ -27,13 +27,17 @@ retires)
    will NOT hold (the trampoline source really changes). CLI smoke on the host
    reaches `[nav] finished` (host network) — expect `started`→`finished` for
    the `www.apple.com` home load, `title="Apple"` at didFinish.
-2. `chez-instrument-build-k117` — the k108 pattern (emitter inlined in the
-   `.sls`; own `apianyware-generate --target chez` + `APIAnywareChez` relink
-   before bundling — the trampoline residual really grows, see child-1
-   handoff).
-3. `gerbil-instrument-build` — the k109 pattern (emitter inlined in the `.ss`,
-   Gambit primitives only; own generate; dylib current-by-construction when
-   `Trampolines.swift` regenerates git-clean).
+2. `chez-instrument-build-k117` ✅ *(done 2026-07-03)* — the k108 pattern held
+   1:1 (inline `mb-` emitter; startup + test-config no-op top-level before
+   `(main)`; terminate hook; k116 emission points). The k116 trampoline
+   prediction confirmed: regenerate `--target chez` produced exactly 174
+   entries; `swift build --product APIAnywareChez` relink, then bundle.
+   CLI smoke green end-to-end (startup → launch line → `[nav] started` →
+   `finished url="https://www.apple.com/" title="Apple"` → `shutdown
+   reason=menu`). No new sibling handoffs — the pattern held cleanly.
+3. `gerbil-instrument-build-k118` — the k109 pattern (emitter inlined in the
+   `.ss`, Gambit primitives only; own generate; the git-clean dylib shortcut
+   will NOT hold — see child-1 handoff; gcc-15 shim if gxc breaks).
 4. `sbcl-instrument-build` — the k101/k110 pattern; owns the k114 `build.sh`
    seeds (bundle id `com.linkuistics.mini-browser-sbcl` +
    `CFBundleInfoDictionaryVersion`). Closes the node.
