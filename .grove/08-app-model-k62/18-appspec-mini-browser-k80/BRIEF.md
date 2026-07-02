@@ -49,10 +49,18 @@ the scenario suite, Tier-2 live-run all four impls. Fifth app through the toolki
      launch-line prefixes diverge (`running.` vs sbcl `opened.`); loading-text and
      failure-phase spellings diverge; title lags didFinish on first loads; AX
      caveats (address-field AX value empty → OCR; ◀/▶ via AX `enabled` flag).
-  2. **`conformance-data-k114`** — `logging-contract.md` + `observable-state.md`
-     (+ the `[nav]` contract-event vocabulary and the fixture/offline story).
-  3. **instrument-builds** — all four impls instrumented + rebuilt (expected node,
-     one child per impl).
+  2. **`conformance-data-k114`** ✅ *(done 2026-07-03)* — both contracts authored.
+     Key handoffs: the `[nav]` vocabulary (started/finished/failed; finished carries
+     url/title/can-go-back/can-go-forward in fixed key order, booleans bare
+     `true`/`false` — the operative history-enablement channel, the k96 `expect-ax
+     #:enabled?` gap re-verified still open; failed carries normalized lowercase
+     `phase` + `message`, emitted **pre-runModal** as the dismissal cue); launch-line
+     prefix rule, **no visible-behaviour alignment** anywhere; fixture story = two
+     local HTML pages driven via `file://` typed into the address field, the whole
+     success path **file://-gated** (probe seeded to instrument-builds); sbcl
+     `build.sh` bundle-id/plist alignment flagged (k104 mirror).
+  3. **`instrument-builds-k115`** — all four impls instrumented + rebuilt (expected
+     to decompose on entry, one child per impl); carries the `file://` host probe.
   4. **forward-gen-suite** — the scenario suite + fixture page + `run-values.rkt`.
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`
      (closes this node's Done-when).
