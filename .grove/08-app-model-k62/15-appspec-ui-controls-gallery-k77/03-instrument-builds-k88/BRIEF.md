@@ -5,10 +5,12 @@ hello-window k68–k71 split; children materialized lazily, grow the next as eac
 
 ## Children
 
-1. `racket-instrument-build-k89` — the reference pattern (emits attach to existing
+1. `racket-instrument-build-k89` ✅ — the reference pattern (emits attach to existing
    handlers; checkbox action added).
-2. *(planned)* chez — mirror racket; hello-window chez pattern (events inline in `.sls`).
-3. *(planned)* gerbil — mirror racket; gcc-15 shim if the binding rebuilds.
+2. `chez-instrument-build-k90` ✅ — mirrors racket; hello-window chez pattern (emitter
+   inline in the `.sls`; startup at top level before `(main)` — R6RS body semantics put
+   main's constructor defines ahead of its first expression).
+3. `gerbil-instrument-build-k91` — mirror racket/chez; gcc-15 shim if the binding rebuilds.
 4. *(planned)* sbcl — the most new wiring: real shared radio action + new
    checkbox/slider/stepper target-actions; `events.lisp` template exists.
 
