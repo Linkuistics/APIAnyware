@@ -26,3 +26,26 @@
   buttons. URL normalisation hand-rolled (no regex). [[project_gerbil_grove]]
 - Cosmetic: window title lags (`wkwebview-title` "" at `didFinishNavigation:` time —
   WebKit title KVO lags the finish callback; matches racket/chez).
+
+**2026-07-03 (instrument+build, grove leaf `gerbil-instrument-build-k118`):**
+- 🟢 Instrumented to the Mini Browser logging contract (k114) in the k109 inline-
+  emitter pattern (Gambit primitives only, `mb-` prefix) and rebuilt standalone as
+  `build/MiniBrowser-gerbil.app` (`com.linkuistics.mini-browser-gerbil`, build.sh
+  post-processes the bundler default). CLI smoke green end-to-end: startup → launch
+  line → `[nav] started url="https://example.com/"` → `finished` (fixed key order,
+  bare booleans; `title=""` — the contract's first-load title lag, see the KVO note
+  above) → AppleScript quit → `shutdown reason=menu`.
+- **Second generics-shadow instance (the `only-in` pattern again, sharper):** the
+  k116 full-WebKit corpus flattens a `stringLength` selector onto WKWebView
+  (leaf-120 conformed-protocol flattening), so `webkit/wkwebview.ss` re-exports a
+  **`string-length` generic** that shadows the Gambit builtin in any importer —
+  `:std/generic` dispatch then fails at runtime on plain Scheme strings
+  (`generic dispatch failure` in `trim-ws`, killing the app at startup). Fix:
+  `(except-in :gerbil-bindings/webkit/wkwebview string-length)`. Same class as the
+  emitter-side `values` coerce shadow (gerbil-k41): never rely on a bare builtin
+  name where generated gerbil generics are in scope; audit each generated import's
+  export list against the builtins the app calls.
+- WebKit grows the gerbil trampoline residual 170 → 174 (+4 `WebKit.WebPage`
+  entries) — regenerate emits the new `Trampolines.swift` (untracked) and the
+  adapter MUST be relinked (`swift build --product APIAnywareGerbil`) before
+  bundling, since gerbil *links* the dylib at `gxc -exe` (the k116 handoff held).
