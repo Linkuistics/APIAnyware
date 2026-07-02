@@ -94,6 +94,41 @@ portfolio index + coverage tie-in — see "Done when"). If not, the pause remain
 
 **Next action (human-driven):** `cd ~/Development/AppSpec && grove do appspec-toolkit`.
 
+## Resume log (2026-07-02 — pause closed; k66 retired)
+
+**The AppSpec toolkit grove ran to completion** — the resume condition holds on every
+check: `~/Development/AppSpec` is back on `main` only, `.grove/` deleted ("Finish
+appspec-toolkit grove: delete .grove/ task tree", `6c999cc`), the `appspec-toolkit`
+branch merged + removed. The toolkit's settled shape: three capabilities at
+`capabilities/{reverse-gen,forward-gen,run}/`, each with `workflow.md` (+ `prompt.md` /
+`validation.md` for the two generators); the final leaves adjudicated the cross-impl
+acceptance verdict and authored run's `workflow.md`.
+
+**What landed here during the pause** (cross-grove records k67–k74, per ADR-0013 /
+ADR-0052 — AppSpec drives, APIAnyware homes the data): hello-window went end-to-end —
+conformance data (k67), per-target instrument+build ×4 (k68–k71), the forward-gen
+suite (k72), and Tier-2 live runs with **all four impls 3/3** (k73 chez/sbcl/gerbil;
+k74 racket). The "formal spec" format is thereby firmed as the hello-window shape:
+`docs/{spec,logging-contract,observable-state,run-results}.md` + `scenarios/*.rkt` +
+`run-values.rkt`.
+
+**Post-pause children grown on this retirement** (the Done-when list + the two
+carried-back run findings, externalized not absorbed):
+
+- `sbcl-vendor-libzstd-k75` + `racket-self-contained-bundle-k76` — the k73/k74 build
+  findings (sequenced first: every later live run pays the provisioning cost they remove).
+- `appspec-{ui-controls-gallery,pdfkit-viewer,scenekit-viewer,mini-browser,note-editor,
+  drawing-canvas,swift-native-probe}-k77..k83` — one AppSpec-cycle leaf per remaining
+  app, each carrying the live-VM done-bar ([[vm_verify_every_app]]); each expected to
+  `leaf-decompose` on entry (hello-window took 8 leaves).
+- `apps-layout-finalize-k84` (incl. `test-strategy.md` disposition, bundler
+  display-name decision, the k74-licensed `(to confirm in-VM)` marker drop) and
+  `portfolio-coverage-tie-in-k85` (closes the node k62 Done-when).
+
+Housekeeping: the run-harness's cwd-relative `spec/artifacts/` dump (untracked debris
+from the pause-period live runs; `runner/lifecycle.rkt` writes it under the invoking
+cwd) is now gitignored — the durable record is each app's `docs/run-results.md`.
+
 ## Notes
 
 Reference: `apps/macos/docs/appspec-toolkit-seed.md` (the seed/PRD + the three seeds + the

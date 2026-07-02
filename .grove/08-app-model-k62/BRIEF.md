@@ -114,11 +114,18 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    open question). Delivery mechanism resolved: `grove-llm inbox-add` does not exist and no
    `grove-meta` branch exists → seed homed durably in this repo; actual init/delivery is
    k66's (the moment a grove exists to receive it). Zero AppSpec-repo edits (boundary held).
-4. **`appspec-grove-pause-k66`** *(live)* — the **pause point**: initialize + seed + run
-   the AppSpec grove from the k65 seed; resume after. Post-pause children grown on its
-   retirement.
-5. *(post-pause, deferred — grown on k66 retirement)* — forward-gen suites + VM-verify;
-   `apps/macos/` layout finalize; portfolio index + coverage tie-in.
+4. **`appspec-grove-pause-k66`** ✅ *(done 2026-07-02)* — the **pause point**: the AppSpec
+   toolkit grove was initialized, seeded, and **ran to completion** (three capabilities,
+   `capabilities/{reverse-gen,forward-gen,run}/workflow.md`; repo back on pristine `main`).
+   During the pause, hello-window went end-to-end via cross-grove records k67–k74
+   (conformance data; instrument+build ×4; forward-gen suite; Tier-2 live runs — all four
+   impls 3/3), firming the spec format as the hello-window shape.
+5. **Post-pause children** *(grown on k66 retirement, 2026-07-02)* — build-portability
+   findings first (`sbcl-vendor-libzstd-k75`, `racket-self-contained-bundle-k76`), then
+   one AppSpec-cycle leaf per remaining app (k77–k83: ui-controls-gallery, pdfkit-viewer,
+   scenekit-viewer, mini-browser, note-editor, drawing-canvas, swift-native-probe — each
+   live-VM-verified, each expected to decompose on entry), then `apps-layout-finalize-k84`
+   and `portfolio-coverage-tie-in-k85` (which closes this node's Done-when).
 
 ## Decisions (running log)
 
