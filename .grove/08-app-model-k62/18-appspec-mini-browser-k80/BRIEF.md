@@ -93,8 +93,14 @@ the scenario suite, Tier-2 live-run all four impls. Fifth app through the toolki
      OCR-gated where deterministic); window-title OCR dropped (menu bar makes it
      non-discriminating); §12 negatives limited to `AXProgressIndicator` (Stop/Home
      titles would be invented — reported as unrealizable instead).
-  5. **`live-run-k121`** — Tier-2 live-run all four impls → `docs/run-results.md`
-     (grown 2026-07-03; closes this node's Done-when).
+  5. **`live-run-k121`** ✅ *(done 2026-07-03)* — Tier-2 live-run all four impls →
+     `docs/run-results.md` (closes this node's Done-when). No impl defect: racket 9/13,
+     chez/gerbil/sbcl 10/13, every red a run-mechanism class (k103 OCR small-text;
+     the NEW racket-only type→click driver race, solo-confirmed deterministic), every
+     obscured fact proven via a second channel; the mandated Command-Q invariant and
+     all three `recording:` confirmations green on all four impls. NOTE: the VM golden
+     now has LIVE NETWORK — the offline reality was manufactured in-guest (IPv4/IPv6
+     reject routes + pf + WebKit cache wipe; recipe in run-results.md).
 
 ## Done when
 

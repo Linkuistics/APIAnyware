@@ -16,24 +16,19 @@
 ;; the runner discovers every .rkt there as a `#lang app-spec` scenario, so a
 ;; config file there would be mis-loaded (runner/dispatch.rkt).
 ;;
-;; ── PROVISIONAL (forward-gen-suite-k120, 2026-07-03) — NOT yet measured ──
-;; Coordinates are estimates from the spec's fixed geometry (§4/§5: 800x600
-;; content, centred, titled+resizable; toolbar stack at content
-;; (12, 556, 776, 32), baseline-aligned, 8pt spacing; [NSWindow center]'s
-;; above-true-centre vertical bias ≈ 0.25·(screenH − windowH), as measured
-;; on hello-window/pdfkit/scenekit) projected onto the 1920x1080
-;; testanyware-golden-macos-tahoe framebuffer: window frame ≈ origin
-;; (560, 115), 800x628 (28px title bar + 600 content); toolbar control
-;; centre-line ≈ fb y 171; control widths estimated from intrinsic stack
-;; sizing (◀/▶ ≈ 37px, Reload ≈ 70px, Go ≈ 40px at the 26px control metric —
-;; the address field takes the remaining stack width). The live-run stage
-;; MUST re-measure EVERY coordinate from `agent snapshot --mode layout` (AX
-;; centre, framebuffer px) with a two-launch determinism diff per impl
-;; before binding values — the k77/k94 geometry practice — keeping sibling
-;; per-impl run-values-<impl>.rkt files only where impl layouts genuinely
-;; diverge (pdfkit: chez+gerbil+sbcl shared one table, racket alone
-;; diverged; scenekit's share-set differed — measure, never assume; racket's
-;; compact 22px control metrics are the standing precedent).
+;; ── LIVE-MEASURED (live-run-k121, 2026-07-03) ──
+;; Every coordinate below is the AX element centre (framebuffer px) from
+;; `agent snapshot --window "Mini Browser" --json` against the live
+;; 1920x1080 testanyware-golden-macos-tahoe VM, each impl passing a
+;; two-launch determinism diff (byte-identical control geometry across
+;; launches). This table is the shared chez+gerbil+sbcl set — those three
+;; impls are PIXEL-IDENTICAL (window (560,115) 800x632, 26px control
+;; metrics, toolbar centre-line fb y 171); racket alone diverges (its
+;; compact 22px control metrics — window (560,116) 800x628, centre-line
+;; y 167) and carries the sibling run-values-racket.rkt. The k120
+;; provisional estimates all landed within their control bounds (closest:
+;; close-button exact; farthest: Reload 6px off-centre) — the spec-derived
+;; projection method is validated for this window shape.
 ;;
 ;; The fixtures: fixtures/page-one.html + page-two.html (distinct <title>s
 ;; 'Fixture Page One'/'Fixture Page Two'; 72px ALL-CAPS body markers
@@ -46,23 +41,25 @@
 
 (run-values
   ;; scenarios/03–11,13 — the address field centre (triple-click target; the
-  ;; field spans the toolbar gap between Reload and Go)
-  (address-field-x 1020)
-  (address-field-y 171)
-  ;; scenarios/06,10 — the ◀ back button centre (leftmost toolbar control)
+  ;; field spans the toolbar gap between Reload and Go: x 731–1299)
+  (address-field-x 1015)
+  (address-field-y 170)
+  ;; scenarios/06,10 — the ◀ back button centre (leftmost toolbar control;
+  ;; AX (571,158) 37x26)
   (back-button-x 590)
   (back-button-y 171)
-  ;; scenarios/06,10 — the ▶ forward button centre
-  (forward-button-x 636)
+  ;; scenarios/06,10 — the ▶ forward button centre (AX (614,158) 37x26)
+  (forward-button-x 632)
   (forward-button-y 171)
-  ;; scenario/11 — the Reload button centre
-  (reload-button-x 697)
+  ;; scenario/11 — the Reload button centre (AX (657,158) 68x26)
+  (reload-button-x 691)
   (reload-button-y 171)
-  ;; scenario/09 — the Go button centre (rightmost toolbar control)
-  (go-button-x 1328)
+  ;; scenario/09 — the Go button centre (rightmost toolbar control;
+  ;; AX (1305,158) 44x26)
+  (go-button-x 1327)
   (go-button-y 171)
   ;; scenario/13 — the window close control (leftmost traffic-light) centre
-  ;; (frame origin + (16,16), the hello-window/scenekit measurement shape)
+  ;; (AX (568,123) 16x16)
   (close-button-x 576)
   (close-button-y 131)
   ;; scenarios/07–11 — the file:// URLs typed into the address field; the
