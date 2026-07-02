@@ -39,9 +39,18 @@ the scenario suite, Tier-2 live-run all four impls. Fifth app through the toolki
 - **Decomposed on entry (2026-07-03)** — per-stage children mirroring
   `appspec-scenekit-viewer-k79`, materialized lazily (grow the next as each retires;
   stages may merge where they genuinely fit one session):
-  1. **`reverse-gen-k113`** — the projection-free spec from the four impls
-     (replacing the precursor `docs/spec.md`), via the AppSpec reverse-gen workflow.
-  2. **conformance-data** — `logging-contract.md` + `observable-state.md`.
+  1. **`reverse-gen-k113`** ✅ *(done 2026-07-03)* — the projection-free spec from
+     the four impls (replaced the precursor `docs/spec.md`), via the AppSpec
+     reverse-gen workflow. Key handoffs: per-impl **home-URL hole** (racket/chez
+     `www.apple.com`, gerbil/sbcl `example.com`); **no-network launch reality** —
+     the initial load fails → the §7.3 modal NSAlert is the expected launch-time
+     observable, and `file://` renderability is an open in-VM gap gating the
+     offline success path; exemplar split network-independent vs network-required;
+     launch-line prefixes diverge (`running.` vs sbcl `opened.`); loading-text and
+     failure-phase spellings diverge; title lags didFinish on first loads; AX
+     caveats (address-field AX value empty → OCR; ◀/▶ via AX `enabled` flag).
+  2. **`conformance-data-k114`** — `logging-contract.md` + `observable-state.md`
+     (+ the `[nav]` contract-event vocabulary and the fixture/offline story).
   3. **instrument-builds** — all four impls instrumented + rebuilt (expected node,
      one child per impl).
   4. **forward-gen-suite** — the scenario suite + fixture page + `run-values.rkt`.
