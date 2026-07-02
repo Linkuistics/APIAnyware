@@ -1,4 +1,7 @@
-//! Bundle one or all racket sample apps into `.app` directories.
+//! Bundle one or all racket sample apps into **self-contained** `.app`
+//! directories (`raco exe` + `raco distribute`; no Racket runtime, `ffi2-lib`
+//! package, or first-launch compilation needed on the target machine —
+//! `racket-self-contained-bundle-k76`).
 //!
 //! Usage (from workspace root):
 //!
@@ -15,13 +18,14 @@
 //! `UI Controls Gallery`, not `Ui Controls Gallery`), falling back to a
 //! kebab→title conversion. The bundle id is derived from the display
 //! name (`com.linkuistics.<NoSpaceTitle>`). The runtime path defaults to
-//! `/opt/homebrew/bin/racket`.
+//! `/opt/homebrew/bin/racket` — the *build host's* racket, used to run
+//! `raco exe`/`raco distribute`; the produced bundle does not exec it.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use apianyware_bundle_racket::{bundle_app, read_display_name_from_spec, AppSpec};
+use apianyware_bundle_racket::{bundle_app_self_contained, read_display_name_from_spec, AppSpec};
 
 fn main() -> ExitCode {
     let arg = std::env::args().nth(1).unwrap_or_else(|| {
@@ -104,7 +108,7 @@ fn bundle_one(
         spec.app_name = display;
     }
 
-    let app_path = bundle_app(&spec, apps_root, bindings_root, &output_dir)?;
+    let app_path = bundle_app_self_contained(&spec, apps_root, bindings_root, &output_dir)?;
     eprintln!("built: {} ({})", app_path.display(), spec.bundle_id);
     Ok(app_path)
 }

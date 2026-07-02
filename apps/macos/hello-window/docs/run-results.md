@@ -56,7 +56,9 @@ async-settle `(wait …)` was needed — every `expect-running-app` resolved sin
   (`apianyware-bundle-sbcl`, ADR-0041 — stub launcher + `DYLD_FALLBACK_LIBRARY_PATH` + vendored
   `libzstd.1.dylib`/`libAPIAnywareSbcl.dylib`), which also retired the `/tmp/libAPIAnywareSbcl.dylib`
   VM staging.
-- **racket is not self-contained — it needs a Racket runtime (provisioned; ran 3/3, k34, 2026-06-30).**
+- **racket is not self-contained — RESOLVED 2026-07-02 (`racket-self-contained-bundle-k76`; see
+  the racket re-run section below).** Original finding: it needs a Racket runtime (provisioned;
+  ran 3/3, k34, 2026-06-30).
   The `.app` ships **uncompiled `.rkt` source** (`Contents/Resources/racket-app/`) that its Swift
   launcher runs via `/opt/homebrew/bin/racket`; a vanilla VM has no Racket (`Hello Window: exec failed:
   No such file or directory`). `targets/racket/.../build.sh` already flags this (racket "depends on the
@@ -76,6 +78,7 @@ async-settle `(wait …)` was needed — every `expect-running-app` resolved sin
     or bundle the `ffi2` collection + ship precompiled `.zo` — so the bundle travels without a host
     Racket (the analogue of the sbcl libzstd-vendoring candidate). k28 chose the shared-runtime build
     deliberately, so this is an APIAnyware build decision for when it resumes, not made by k34.
+    **Taken up and resolved by k76 (below).**
 - **chez / gerbil** are genuinely self-contained dumps (chez has no Homebrew deps; gerbil vendors
   `libssl.3`/`libcrypto.3` under `Contents/Frameworks/` via `@executable_path`).
 
@@ -112,3 +115,30 @@ window fails the scenario. Scenario 02 passes solo after the channel idles. Succ
 (e.g. a per-poll deadline / retry inside `wait-ready`) or the TestAnyware exec channel, not to any
 impl. The k73 full-suite 3/3 rows (gerbil, racket) are unaffected; chez/sbcl were per-scenario
 there too.
+
+## Re-run — racket self-contained bundle (2026-07-02, `racket-self-contained-bundle-k76`)
+
+The racket impl was rebuilt with the production bundler's new **self-contained mode**
+(`apianyware-bundle-racket::bundle_app_self_contained`): `raco exe` embeds the app's full module
+graph (generated bindings + runtime + the `ffi2` collection from the build host's `ffi2-lib`
+package) into one executable; `raco distribute` makes it machine-portable and carries
+`libAPIAnywareRacket.dylib` via the runtime's new `define-runtime-path` references
+(swift-helpers.rkt / ffi2-dispatch.rkt — the old resolved-module-path lookup baked build-machine
+paths and could never survive `raco exe`); a relocatable Swift stub `execv`s
+`Contents/Resources/racket-dist/bin/hello-window`. The k68/k28 shared-runtime choice is revisited
+and reversed for sample apps with the k73/k74 live-run cost evidence in hand (975 MB runtime +
+760 K user-scope package + ~14 s first-launch compile, all per-VM).
+
+The suite was re-run in a **vanilla VM** (fresh `testanyware-golden-macos-tahoe` clone, 1920×1080)
+with **nothing staged** — verified absent before install: `/opt/homebrew/bin/racket` and
+`~/Library/Racket`. Upload: 17 MB gzipped (was ~306 MB runtime + package); pre-flight `open` put
+`[lifecycle] startup` in events.log well inside the 10 s `wait-ready` window (no `raco make`
+provisioning step).
+
+| impl | 01 steady-state | 02 Command-Q terminates | 03 close-button `recording:` | notes |
+|---|---|---|---|---|
+| **racket** | PASS | PASS | PASS | fully self-contained; zero VM provisioning; 82 MB `.app` |
+
+Scenarios were graded per-scenario invocation (the k73/k75 mode; sanctioned by run `workflow.md`
+§3) with idle gaps between invocations to sidestep the exec-channel close-stall documented above.
+All four impls are now genuinely self-contained: chez/gerbil (dumps), sbcl (k75), racket (this).

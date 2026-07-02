@@ -138,6 +138,19 @@ pub enum BundleError {
     #[error("entry script {0} has no file extension — stub launcher needs a resource type")]
     EntryHasNoExtension(PathBuf),
 
+    #[error("could not run `{raco}` (is Racket installed at the spec's runtime_path?): {source}")]
+    RacoNotAvailable {
+        raco: PathBuf,
+        source: std::io::Error,
+    },
+
+    #[error("{step} failed (exit {status:?}):\n{stderr}")]
+    RacoStep {
+        step: &'static str,
+        status: Option<i32>,
+        stderr: String,
+    },
+
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
 
@@ -355,7 +368,7 @@ fn derive_script_resource_dir(abs_entry: &Path, abs_root: &Path) -> String {
     }
 }
 
-fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+pub(crate) fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     fs::create_dir_all(dst)?;
     for entry in fs::read_dir(src)? {
         let entry = entry?;

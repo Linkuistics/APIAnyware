@@ -9,8 +9,9 @@ emitter, 18-file runtime, C-API emission, snapshot + runtime-load harnesses,
 ## 0. Toolchain (Racket 9.2 + ffi2)
 
 The target is pinned to **Racket 9.2**, reached at `/opt/homebrew/bin/racket`
-(the path baked into `bundle-racket`'s `DEFAULT_RACKET_PATH`, used by sample-app
-bundles, the runtime-load harness, and these docs). On the dev host that path is
+(the path baked into `bundle-racket`'s `DEFAULT_RACKET_PATH` — the build host's
+racket/raco for the self-contained mode, the exec target for shared-runtime
+bundles — and used by the runtime-load harness and these docs). On the dev host that path is
 a symlink into a full `/Applications/Racket v9.2/` distribution; 9.2 is a
 pre-release/snapshot build (the public mirror tops out at 9.1), so it is **not
 downloadable** — provision a fresh machine by copying the host distribution, not
@@ -707,33 +708,33 @@ until the pipeline is re-run, so: regenerate before testing emitter changes,
 and when triaging a "bug" in generated output, check whether the source already
 carries a fix that has not been regenerated.
 
-**VM-verification (TestAnyware), racket recipe.** racket sample apps are
-stub-launcher bundles that exec the *system* Racket (unlike chez's self-contained
-binaries), so the VM must have Racket 9.2 + ffi2 provisioned. The TestAnyware
-golden ships neither, and 9.2 is not downloadable (§0). Working recipe (verified
-2026-06-02, TestAnyware 1.2.0, golden `macos-tahoe`/26.3):
+**VM-verification (TestAnyware), racket recipe.** Since
+`racket-self-contained-bundle-k76` (2026-07-02) sample-app bundles are
+**self-contained** (`raco exe` + `raco distribute`, §9) — the VM needs **no**
+Racket install, no `ffi2-lib` package, and no first-launch compilation. The
+recipe is just:
 1. `vmid=$(testanyware vm start --platform macos)`; `export TESTANYWARE_VM_ID=$vmid`.
 2. Disable the tahoe desktop-reveal focus-steal once:
    `testanyware exec "defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false; killall WindowManager"`.
-3. Provision Racket: tar the host distribution **excluding `doc`, `share/doc`,
-   and the GUI `*.app`s** (≈223 MB gzip vs 977 MB full) and restore it to the
-   **identical path** `/Applications/Racket v9.2/` in the VM so baked-in absolute
-   paths resolve with zero relocation. TestAnyware 1.2.0 `upload` has **no** 4 MB
-   chunk limit (the old `split -b 4m` recipe is obsolete) — single-shot the
-   tarball. Symlink `/opt/homebrew/bin/{racket,raco}` → the distribution (the
-   bundle's `DEFAULT_RACKET_PATH`). Then `raco pkg install --auto --scope user
-   ffi2-lib` (fetches from GitHub; VM has network).
-4. Build bundles on the host (`cargo run --example bundle_app -p
+3. Build bundles on the host (`cargo run --example bundle_app -p
    apianyware-bundle-racket -- --all`), `tar`/`upload`/extract each `.app`,
    `xattr -dr com.apple.quarantine`, then `open -n --stderr <log> --stdout <log>
-   "<App>.app"`. **First launch compiles the bundle's `.rkt` graph** (no `.zo`
-   shipped) — allow ~25–35 s before a window appears.
-5. The `testanyware exec` channel times out at **30 s** — keep per-call `sleep`s
+   "<App>.app"` (hello-window: ~17 MB gzipped, startup well inside the AppSpec
+   run-harness 10 s `wait-ready` window).
+4. The `testanyware exec` channel times out at **30 s** — keep per-call `sleep`s
    under that; poll the window with `testanyware agent windows` and capture with
    `testanyware screenshot`. `input key` modifiers use `--modifiers cmd,shift`
    (not `cmd+a`). If a window is reported `[focused]` but absent from a
    screenshot, the desktop-reveal stole focus — re-apply step 2 and
    `testanyware agent window-move --window <name> --x .. --y ..` to raise it.
+
+*(Historical — the shared-runtime provisioning this replaces, needed only when
+running a `bundle_app` shared-runtime bundle: tar the host Racket distribution
+excluding `doc`/`share/doc`/`*.app` (≈223 MB gzip vs 977 MB) → restore to the
+identical `/Applications/Racket v9.2/` path → symlink
+`/opt/homebrew/bin/{racket,raco}` → `raco pkg install --auto --scope user
+ffi2-lib` → `raco make` the bundle to dodge the ~14–35 s first-launch
+compilation. Verified 2026-06-02 and again by the k74 AppSpec run.)*
 
 ## 9. Sample apps & bundling
 
@@ -749,13 +750,25 @@ polish.
 - **`apianyware-stub-launcher`** (language-agnostic) — generates the
   Swift stub binary, the `Info.plist`, and the `.app` skeleton.
 - **`apianyware-bundle-racket`** (this language) — does a require-tree
-  BFS from the entry script to discover dependencies, copies the discovered
-  files into `Resources/racket-app/<rel>` mirroring the source tree so relative
-  requires resolve at runtime, and copies the optional
-  `lib/libAPIAnywareRacket.dylib`. Only files actually reachable from the entry
-  script's static requires enter the bundle.
+  BFS from the entry script to discover dependencies, then bundles in one of
+  two modes:
+  - **Self-contained** (`bundle_app_self_contained` — the sample-app default
+    since `racket-self-contained-bundle-k76`): stages the colocated tree, runs
+    `raco exe` (embeds the full module graph incl. the `ffi2` collection) +
+    `raco distribute` (machine-portable, carries `libAPIAnywareRacket.dylib`
+    via the runtime's `define-runtime-path` references) into
+    `Resources/racket-dist/`, behind a relocatable Swift stub that `execv`s
+    `racket-dist/bin/<script>`. No Racket install, `ffi2-lib` package, or
+    first-launch compilation on the target machine.
+  - **Shared-runtime** (`bundle_app` / `bundle_app_with_entry` — kept for
+    colocated dev projects like Modaliser): copies the discovered `.rkt`
+    files into `Resources/racket-app/<rel>` mirroring the source tree so
+    relative requires resolve at runtime, plus the optional
+    `lib/libAPIAnywareRacket.dylib`; the stub execs the *system* racket
+    (`DEFAULT_RACKET_PATH`). Only files actually reachable from the entry
+    script's static requires enter the bundle.
 
-**`bundle_app` CLI.** Build a bundle with
+**`bundle_app` CLI.** Build a self-contained bundle with
 `cargo run --example bundle_app -p apianyware-bundle-racket -- <script>`
 (or `-- --all`). Built bundles land at `apps/<name>/build/<App Name>.app`
 (gitignored). The display name is read from the H1 of

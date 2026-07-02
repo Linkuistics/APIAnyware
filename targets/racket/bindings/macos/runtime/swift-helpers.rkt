@@ -11,8 +11,9 @@
 ;;   (require "swift-helpers.rkt")
 ;;   (swift:autorelease-push) ...
 
-(require ffi/unsafe
-         racket/path)
+(require (for-syntax racket/base)
+         ffi/unsafe
+         racket/runtime-path)
 
 (provide ;; The libAPIAnywareRacket handle — re-exported so the generated
          ;; Swift-native trampoline bindings (swift-trampoline.rkt / ADR-0027)
@@ -61,12 +62,13 @@
 
 ;; --- Dylib loading ---
 
-;; Locate the dylib relative to this source file: ../lib/libAPIAnywareRacket
-(define this-dir
-  (let* ([vr (#%variable-reference)]
-         [mp (variable-reference->resolved-module-path vr)]
-         [path (resolved-module-path-name mp)])
-    (if (path? path) (path-only path) (current-directory))))
+;; Locate the dylib relative to this source file: ../lib/libAPIAnywareRacket.dylib.
+;; `define-runtime-path` (not a resolved-module-path hack) so `raco exe` records
+;; the reference and `raco distribute` carries the dylib into a self-contained
+;; distribution (apianyware-bundle-racket's self-contained mode); in script /
+;; source-bundle mode it resolves relative to this module as before.
+(define-runtime-path anyware-lib-path
+  (build-path 'up "lib" "libAPIAnywareRacket.dylib"))
 
 ;; The dylib is mandatory (ADR-0010). A load failure here is fatal: the runtime
 ;; cannot function without the native binding, so surface a clear error at module
@@ -82,9 +84,9 @@
                   "pure-Racket fallback.\nBuild it with `swift build` and ensure "
                   "lib/libAPIAnywareRacket.dylib resolves to it.\nUnderlying "
                   "error: ~a")
-                 (build-path this-dir 'up "lib")
+                 anyware-lib-path
                  (exn-message e)))])
-    (ffi-lib (build-path this-dir 'up "lib" "libAPIAnywareRacket"))))
+    (ffi-lib anyware-lib-path)))
 
 ;; Helper: bind an aw_racket_* C function from the dylib. A missing symbol is a
 ;; hard error (stale/mismatched dylib) — no failure thunk, so the module fails

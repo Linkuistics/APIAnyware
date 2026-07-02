@@ -18,7 +18,8 @@
 ;; Design: targets/racket/docs/design/2026-05-31-racket-native-binding-design.md §2;
 ;; adr/0013-generated-typed-native-dispatch.md.
 
-(require racket/path
+(require (for-syntax racket/base)
+         racket/runtime-path
          "ffi2-seam.rkt") ; ffi2 (incl. ffi2-lib, define-ffi2-definer, ->) + the
                           ; ptr_t<->cpointer bridge, with `->` collision resolved.
 
@@ -28,15 +29,16 @@
          define-aw-msg)
 
 ;; Locate libAPIAnywareRacket relative to this module: ../lib/ (mirrors
-;; swift-helpers.rkt's `anyware-lib`). ffi2-lib wants a path string.
-(define this-dir
-  (let* ([vr (#%variable-reference)]
-         [mp (variable-reference->resolved-module-path vr)]
-         [path (resolved-module-path-name mp)])
-    (if (path? path) (path-only path) (current-directory))))
+;; swift-helpers.rkt's `anyware-lib-path`). `define-runtime-path` (not a
+;; resolved-module-path hack) so `raco exe` records the reference and
+;; `raco distribute` carries the dylib into a self-contained distribution
+;; (apianyware-bundle-racket's self-contained mode). ffi2-lib wants a
+;; path string.
+(define-runtime-path _aw-dispatch-lib-path
+  (build-path 'up "lib" "libAPIAnywareRacket.dylib"))
 
 (define _aw-dispatch-lib
-  (ffi2-lib (path->string (build-path this-dir 'up "lib" "libAPIAnywareRacket.dylib"))))
+  (ffi2-lib (path->string _aw-dispatch-lib-path)))
 
 ;; `(define-aw-msg aw_racket_msg_<code> (-> ptr_t ptr_t <args…> <ret>))` binds one
 ;; generated dispatch entry. The Racket identifier equals the C symbol; the two
