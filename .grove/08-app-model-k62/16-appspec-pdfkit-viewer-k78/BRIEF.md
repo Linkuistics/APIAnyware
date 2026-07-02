@@ -36,9 +36,17 @@ through the toolkit (after hello-window and ui-controls-gallery).
      source; the suite provisions an N ≥ 3-page fixture and drives the out-of-process
      panel by keyboard (Cmd-Shift-G → path → Return ×2). AX enabled flags are the
      reliable nav-state signal (screenshots can catch pre-repaint frames).
-  2. **`conformance-data-k96`** — `logging-contract.md` + `observable-state.md`.
-  3. **instrument-builds** — per-impl events emitter + `.app` build (likely a node,
-     one child per impl, as k88 was).
+  2. **`conformance-data-k96`** ✅ *(done 2026-07-02)* — `logging-contract.md` +
+     `observable-state.md` at `apps/macos/pdfkit-viewer/docs/`. Event vocabulary:
+     lifecycle triad + `[document] opened file="…" pages=N` / `page-changed page=n
+     pages=N` (post-state; silent no-ops emit nothing; consumers never count
+     page-changed events or assume ordering vs `opened`). Key finding: the
+     nav-enabled-flag read is **runner-side only** (TestAnyware's snapshot carries
+     per-element `enabled`; the AppSpec SDK transform + `expect-ax` drop it) — a
+     small `expect-ax #:enabled?` addition to seed to the AppSpec backlog; until
+     then the label + `[document]` events proxy the four flag assertions.
+  3. **`instrument-builds-k97`** — per-impl events emitter + `.app` build (likely a
+     node, one child per impl, as k88 was).
   4. **forward-gen-suite** — the scenario suite + `run-values.rkt` (+ the PDF fixture).
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`
      (closes this node's Done-when).
