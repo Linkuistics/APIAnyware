@@ -125,10 +125,11 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    one AppSpec-cycle leaf per remaining app (k77–k83: ui-controls-gallery ✅ *(node
    `appspec-ui-controls-gallery-k77`, complete 2026-07-02 — see **ui-controls-gallery
    outcomes** below)*, pdfkit-viewer ✅ *(node `appspec-pdfkit-viewer-k78`, complete
-   2026-07-02 — see **pdfkit-viewer outcomes** below)*, scenekit-viewer, mini-browser,
-   note-editor, drawing-canvas, swift-native-probe — each live-VM-verified, each expected
-   to decompose on entry), then `apps-layout-finalize-k84` and
-   `portfolio-coverage-tie-in-k85` (which closes this node's Done-when).
+   2026-07-02 — see **pdfkit-viewer outcomes** below)*, scenekit-viewer ✅ *(node
+   `appspec-scenekit-viewer-k79`, complete 2026-07-03 — see **scenekit-viewer outcomes**
+   below)*, mini-browser, note-editor, drawing-canvas, swift-native-probe — each
+   live-VM-verified, each expected to decompose on entry), then `apps-layout-finalize-k84`
+   and `portfolio-coverage-tie-in-k85` (which closes this node's Done-when).
 
 ## ui-controls-gallery outcomes (promoted from `appspec-ui-controls-gallery-k77` on retirement)
 
@@ -204,6 +205,49 @@ apps (k79–k83):
 - **Tahoe VM gotcha:** the "See what's new in macOS Tahoe" notification banner appears on
   fresh clones mid-run, OCR-pollutes full-screen dumps, and survives `killall
   NotificationCenter` — dismiss by hover + close-X click (did not change any verdict here).
+
+## scenekit-viewer outcomes (promoted from `appspec-scenekit-viewer-k79` on retirement)
+
+Fourth app through the toolkit, first with GPU/3D content (viewport unobservable to the
+verbs — the `[scene]` events carry the state assertions) and an in-process shared panel.
+Full record: `apps/macos/scenekit-viewer/docs/run-results.md` (k112). Durable findings for
+the remaining apps (k80–k83):
+
+- **Final outcome: no impl defect.** racket/chez 9/10, gerbil/sbcl 8/10; the one standing
+  red (07, byte-identical on all four impls) is the **§13 driver-guidance spec finding by
+  design**: after the colour panel takes key, the first app-window click **DELIVERS** to the
+  popup — `acceptsFirstMouse` is control-dependent (buttons need the two-click dance, a
+  pop-up fires on the activating click) — so the two-click realization opened the menu then
+  re-selected Cube. Stays red until a forward-gen regeneration folds the single-click
+  choreography in (gallery-03/pdfkit-07 precedent); the key behaviour (colour persists
+  across a swap) is proven per impl by 08, which adds a dismissal to the same flow.
+- **Runner fix the run forced (AppSpec `611f73c`, the hello-window §6.6 precedent):** a
+  scenario that *ends with an open pop-up menu* (03 asserts the open menu) starves every
+  later scenario's setup — the graceful AppleScript quit can never deliver to an app inside
+  menu tracking, and the next `open` (no `-n`) just re-activates the stale instance →
+  wait-ready cascade. `quit-impl!` now escalates: graceful quit → poll for exit →
+  `pkill -9 -f <binary>`. Menu-opening scenarios are now safe to sequence.
+- **The panel's slider space is not device-RGB (pre-agreed degrade applied):** typing
+  0/128/255 into the RGB fields lands as **device `(0,150,255)`** after the §7.4 fold —
+  byte-identical across all four impls (AppKit-side conversion, uniform per-runtime).
+  Suites asserting exactly-driven colours must bind **recorded actuals**, and note a
+  no-change field commit does not re-fire the panel's action. **NSColorPanel provisioning:**
+  fresh per-app defaults open the sliders pane in Grayscale kind (no `Blue` label) — seed
+  the RGB kind per impl at provisioning (remembered per-app, survives relaunch); all panels
+  open at default frame (0,605) 250×397.
+- **New OCR-case shape of the k103 class:** the engine cases camel-cap small text —
+  `SceneKit`→`Scenekit`/`Scenekir` at `conf=1.00` on a crisp frame — failing case-sensitive
+  `expect-ocr` (gerbil/sbcl red; chez wobbled; racket green). Adjudicate via the AX-exact
+  channel; forward-gen may prefer AX-exact over whole-screen OCR where both assert the
+  same fact.
+- **Geometry:** chez+gerbil pixel-identical (shared default); sbcl toolbar 4px lower +
+  wider `Colour…`; racket's compact 22px metrics **reach inside the shared NSColorPanel's
+  picker pane** (fields ~9px higher, wheel pane drops the Opacity row) — per-app control
+  metrics affect system-panel *content*, only the panel chrome is constant. Popup menu item
+  positions measured from the OPEN menu (find-text works well); rows ~28px (racket ~24px).
+- **Visual bar met on all four** (spin frames, swap visuals, single-click wheel recolour,
+  drag orbit); wheel single-click delivery works everywhere — the no-drag-verb degrade was
+  never needed.
 
 ## Decisions (running log)
 
