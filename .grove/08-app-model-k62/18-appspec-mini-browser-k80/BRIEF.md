@@ -59,9 +59,24 @@ the scenario suite, Tier-2 live-run all four impls. Fifth app through the toolki
      local HTML pages driven via `file://` typed into the address field, the whole
      success path **file://-gated** (probe seeded to instrument-builds); sbcl
      `build.sh` bundle-id/plist alignment flagged (k104 mirror).
-  3. **`instrument-builds-k115`** — all four impls instrumented + rebuilt (expected
-     to decompose on entry, one child per impl); carries the `file://` host probe.
-  4. **forward-gen-suite** — the scenario suite + fixture page + `run-values.rkt`.
+  3. **`instrument-builds-k115`** ✅ *(node, all four children done 2026-07-03:
+     k116 racket / k117 chez / k118 gerbil / k119 sbcl)* — all four impls
+     instrumented to the k114 contracts + rebuilt, each CLI-smoke green
+     (startup → launch line → `[nav]` events → `shutdown reason=menu`); carried
+     the `file://` host probe (results promoted to this brief, below). Durable
+     handoffs for stages 4–5: **descriptors** at
+     `targets/<t>/app-implementations/macos/mini-browser/mini-browser-impl.rkt`
+     (`com.linkuistics.mini-browser-<impl>` at `/Applications/MiniBrowser-<impl>.app`,
+     events/test-config under `/tmp/mini-browser/`); the k116 WebKit-corpus
+     trampoline growth (170→174, +4 `WebKit.WebPage`) confirmed on all three
+     compiled targets — any future regen must relink each adapter via
+     `swift build --product`; **gerbil-only**: the WebKit corpus flattens
+     `stringLength` onto WKWebView → `wkwebview.ss` re-exports a `string-length`
+     generic shadowing the Gambit builtin — importers need
+     `(except-in :gerbil-bindings/webkit/wkwebview string-length)` (recorded in
+     the impl learnings + memory; does not affect racket/chez/sbcl).
+  4. **`forward-gen-suite-k120`** — the scenario suite + fixture pages +
+     `run-values.rkt` (grown 2026-07-03).
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`
      (closes this node's Done-when).
 

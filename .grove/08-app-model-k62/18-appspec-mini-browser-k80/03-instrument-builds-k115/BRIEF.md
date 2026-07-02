@@ -50,9 +50,20 @@ retires)
    :gerbil-bindings/webkit/wkwebview string-length)` (the `values`-coerce
    shadow class; recorded in the impl learnings.md + memory). Does not affect
    sbcl (package-qualified `ns:` names cannot shadow CL builtins).
-4. `sbcl-instrument-build-k119` — the k101/k110 pattern (sibling `events.lisp`);
-   owns the k114 `build.sh` seeds (bundle id `com.linkuistics.mini-browser-sbcl`
-   + `CFBundleInfoDictionaryVersion`). Closes the node.
+4. `sbcl-instrument-build-k119` ✅ *(done 2026-07-03)* — the k101/k110 pattern held
+   1:1 (sibling `events.lisp` / `mb-events` package; startup + test-config no-op
+   gated on the real run; terminate hook as the ninth forwarded selector, informal
+   conformance; k116 emission points). The k114 `build.sh` seeds delivered by
+   rewriting to the production-bundler pattern (retiring the 060-era /tmp-staged
+   wrap): `CFBundleIdentifier com.linkuistics.mini-browser-sbcl` via PlistBuddy +
+   `CFBundleInfoDictionaryVersion 6.0` via the bundler plist; `MiniBrowser-sbcl.app`.
+   The k116 trampoline prediction confirmed a third time: regenerate `--target sbcl`
+   produced exactly 174 entries (+4 `WebKit.WebPage` methods, the k118 delta);
+   `swift build --product APIAnywareSbcl` relink before the dump (the dumped image
+   re-opens the dylib via `*shared-objects*`). CLI smoke green end-to-end (startup →
+   launch line → `[nav] started` → `finished url="https://example.com/"` `title=""`
+   first-load lag → `shutdown reason=menu`). No new sibling handoffs — closes the
+   node.
 
 ## Goal
 
