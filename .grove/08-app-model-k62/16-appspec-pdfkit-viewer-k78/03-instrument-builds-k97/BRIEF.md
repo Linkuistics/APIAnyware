@@ -10,10 +10,14 @@ k88 split; children materialized lazily, grow the next as each retires)
    siblings mirror: `refresh-ui!` returns the applied state so the `[document]`
    events ≡ the §7.2 label by construction; launch line renamed `emit-launch-line`
    (this app has a real `opened` event).
-2. `chez-instrument-build-k99` — gallery k90 pattern (emitter inline in the `.sls`;
-   startup at top level before `(main)`).
-3. *(planned)* gerbil — gallery k91 pattern; gcc-15 shim if the binding rebuilds;
-   never a bare `values` in generated bindings.
+2. `chez-instrument-build-k99` ✅ — gallery k90 pattern (emitter inline in the `.sls`;
+   startup at top level before `(main)`; refresh-ui! returns applied state, the k98
+   shape). Sibling handoff: the chez bindings needed regeneration + a
+   `swift build --product APIAnywareChez` relink before bundling (the local binding
+   tree predated the k98 PDFKit collection) — gerbil/sbcl should expect the twin;
+   build.sh prereq now keys on the target's pdfkit binding artifact, not appkit.
+3. `gerbil-instrument-build-k100` — gallery k91 pattern; gcc-15 shim if the binding
+   rebuilds; never a bare `values` in generated bindings.
 4. *(planned)* sbcl — gallery k92 pattern (`events.lisp` exists as template; dump.lisp
    build).
 
