@@ -26,32 +26,40 @@ Every PDFKit/AppKit call is plain ObjC (`:load-residual nil`) except PDFKit
 (`:load-residual t`, for its `constants.lisp`); the app loads `libAPIAnywareSbcl` **only** for
 the `aw_sbcl_subclass_*` bounce shim (as scenekit-viewer), not trampoline residual.
 
+## AppSpec instrumentation (sbcl-instrument-build-k101)
+
+Instrumented to the logging contract
+(`apps/macos/pdfkit-viewer/docs/logging-contract.md`): `events.lisp` (pure CL, the
+`pv-events` package, loaded first by run.lisp/dump.lisp) writes the structured
+`/tmp/pdfkit-viewer/events.log` (`PDFKIT_VIEWER_EVENTS_LOG` overrides) the AppSpec
+runner tails — `[lifecycle] startup`/`shutdown`, the bare launch line, and the two
+`[document]` events (`opened` / `page-changed`), each post-state via `refresh-pdf-ui`'s
+returned `(page . total)`. The `pdf-controller` gains the `applicationWillTerminate:`
+delegate hook (fifth forwarded selector). Impl descriptor: `pdfkit-viewer-impl.rkt`.
+
 ## Build
 
 ```sh
-# prerequisites: PDFKit generated (resolve→annotate→enrich --only PDFKit, then --target sbcl)
-# + the dylib built
-SDKROOT=macosx cargo run -p apianyware-analyze -- resolve  --only PDFKit
-SDKROOT=macosx cargo run -p apianyware-analyze -- annotate --only PDFKit --llm-dir analysis/ir/llm-annotations
-SDKROOT=macosx cargo run -p apianyware-analyze -- enrich   --only PDFKit
-SDKROOT=macosx cargo run -p apianyware-generate -- --target sbcl
-SDKROOT=macosx swift build --package-path swift --product APIAnywareSbcl
-# then:
 targets/sbcl/app-implementations/macos/pdfkit-viewer/build.sh
 ```
 
-Produces `build/PDFKitViewer.app` (a standalone `save-lisp-and-die :executable t` dump).
-`build.sh` stages the dylib at `/tmp/libAPIAnywareSbcl.dylib` (the revive auto-reopen path,
-ADR-0038 §5), runs the host construction **pre-flight** + a **revive smoke** (dump+revive
-**with** the dylib + subclass re-synthesis + dispatcher re-registration + **constant
-re-resolution**) before the bundle.
+Produces `build/PDFKitViewer-sbcl.app` (`CFBundleIdentifier
+com.linkuistics.pdfkit-viewer-sbcl`) via the production bundler
+(`apianyware-bundle-sbcl`, ADR-0041): the app's `dump.lisp`
+(`save-lisp-and-die :executable t`) behind the Swift stub, with **libzstd** and
+**libAPIAnywareSbcl** vendored into `Contents/Frameworks/` — the bundle travels alone
+(no `/tmp` staging; `sbcl-vendor-libzstd-k75`). build.sh regenerates the sbcl bindings
+if PDFKit is absent from the local tree (keyed on `generated/pdfkit/pdfview.lisp`) and
+relinks the dylib in lockstep, then runs the host construction **pre-flight** + a
+**revive smoke** through the stub (subclass re-synthesis + dispatcher re-registration +
+**constant re-resolution**).
 
 ## VM-verify (never run GUI apps from the CLI — use TestAnyware)
 
-Provision the VM with `/opt/homebrew/opt/zstd/lib/libzstd.1.dylib` (via `sudo` — the golden
-has no Homebrew), `/tmp/libAPIAnywareSbcl.dylib`, and a sample `.pdf`. Upload the bundle,
-`xattr -dr com.apple.quarantine`, `open -n`. Drive the (out-of-process) NSOpenPanel by
-keyboard: Cmd-Shift-G → type the path → Return → Return. The key behaviour to verify is the
-"Page n of N" label tracking **every** page change (it flows through the
-`PDFViewPageChangedNotification` observer) with correct ◀/▶ boundary enable/disable. See
-`test-results/pdfkit-viewer/report.md`.
+Upload the bundle (it travels alone), `xattr -dr com.apple.quarantine`, `open -n`, plus
+a sample `.pdf`. Drive the (out-of-process) NSOpenPanel by keyboard: Cmd-Shift-G → type
+the path → Return → Return. The key behaviour to verify is the "Page n of N" label
+tracking **every** page change (it flows through the `PDFViewPageChangedNotification`
+observer) with correct ◀/▶ boundary enable/disable — and, instrumented, the matching
+`[document]` events in `/tmp/pdfkit-viewer/events.log`. The Tier-2 live-run leaf drives
+the full scenario suite.

@@ -1,5 +1,11 @@
 # pdfkit-viewer — learnings (sbcl target, 060 ladder, the 5th app)
 
+> **Instrumented + rebundled for the AppSpec suite** (sbcl-instrument-build-k101; contract:
+> `apps/macos/pdfkit-viewer/docs/logging-contract.md`) — see "AppSpec instrumentation"
+> below. The hand-rolled `.app` wrap this doc's build notes describe is retired: build.sh
+> now drives the production bundler (`apianyware-bundle-sbcl`, ADR-0041) and the bundle
+> travels alone (no /tmp dylib staging — `sbcl-vendor-libzstd-k75`).
+
 A minimal PDF viewer: modal `NSOpenPanel` → `PDFDocument` → `PDFView`, ◀/▶ page nav, and a
 "Page n of N" label kept in sync by a `PDFViewPageChangedNotification` observer. First sbcl
 app to use **PDFKit**, a **modal open panel**, and an **`NSNotificationCenter` observer**;
@@ -64,6 +70,42 @@ notification name is correct).
 - **PDFKit is pure ObjC** — adding it regenerated `Trampolines.swift` byte-identically (zero
   Swift-native residual), so the existing dylib served unchanged; frameworks load
   `:load-residual nil` EXCEPT PDFKit (`:load-residual t`, for its `constants.lisp`).
+
+## AppSpec instrumentation (sbcl-instrument-build-k101)
+
+Fourth and last impl through the k96 contracts (racket k98 the reference; chez k99 /
+gerbil k100 the scheme siblings). What mattered on sbcl:
+
+- **Separate `events.lisp`, the k92 gallery pattern.** Pure CL (only `sb-ext:posix-getenv`
+  beyond ANSI), package `apianyware-sbcl-pdfkit-viewer-events` nickname `pv-events`,
+  loaded by run.lisp/dump.lisp before the app. Verified in isolation under a bare
+  `sbcl --script` against every contract matcher (startup / launch-line prefix / opened /
+  page-changed incl. boundary / quoting / lowercase shutdown reason) — no AppKit, no
+  dylib. The launch emitter is `emit-launch-line` (not the gallery's `emit-opened`):
+  this app has a real `[document] opened` event (the k98 rename).
+- **`refresh-pdf-ui` returns the applied state** (nil empty / `(page . total)` loaded — the
+  k98 shape), so `opened` and `page-changed` mirror the §7.2 label by construction,
+  including the nil-current-page → page 1 fallback. Both emits are post-refresh;
+  cancel / nil URL / failed `initWithURL:` stay silent (no event, no error line).
+- **`file` basename is one generic call**: `(ns:last-path-component url)` →
+  `nsstring->string` — both null-safe (aw-wrap / nsstring->string map NULL → nil), with an
+  `(or … "")` fallback mirroring gerbil's guard.
+- **The terminate hook rides the existing controller.** `pdf-controller` gains
+  `applicationWillTerminate:` (guarded, emit `shutdown reason=menu` + close) and is
+  installed as the app delegate — a fifth selector through the same main-bounced
+  forwarding dispatcher; no second subclass needed. NSApplication auto-observes the
+  notification for a delegate responding to the selector.
+- **The k99/k100 regenerate+relink twin held**: this worktree's binding tree had no
+  PDFKit (`generated/{appkit,foundation}` only) — `apianyware-generate --target sbcl`
+  emitted it (29 classes, 34 files) and rewrote `Trampolines.swift` (170 entries,
+  **unchanged by PDFKit** — pure ObjC, zero Swift-native residual, reconfirming the
+  2026-06 finding), then `swift build --product APIAnywareSbcl` relinked. build.sh's
+  prereq keys on `generated/pdfkit/pdfview.lisp`, not an appkit artifact.
+- **Bundler flow proven for this app**: pre-flight → `bundle_app -p
+  apianyware-bundle-sbcl -- pdfkit-viewer` → mv "PDFKit Viewer.app" →
+  `PDFKitViewer-sbcl.app` + PlistBuddy `com.linkuistics.pdfkit-viewer-sbcl` + re-sign →
+  revive smoke through the stub (constant re-resolution + vendored-dylib reopen included)
+  — all green on the host; live launch is the Tier-2 live-run leaf's bar.
 
 ## VM-driving lessons (TestAnyware, building on scenekit-viewer's)
 

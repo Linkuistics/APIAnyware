@@ -43,6 +43,8 @@
 (aw-app-load-framework "AppKit" :load-residual nil)
 (aw-app-load-framework "PDFKit" :load-residual t)
 
+;; events.lisp first (pure CL — the pv-events package pdfkit-viewer.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "pdfkit-viewer.lisp" cl-user::*app-dir*))
 
 (let ((smoke (sb-ext:posix-getenv "AW_PDFKIT_SMOKE")))

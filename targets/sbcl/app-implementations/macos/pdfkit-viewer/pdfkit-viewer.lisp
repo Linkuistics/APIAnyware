@@ -37,6 +37,17 @@
 ;;;; image (the runtime re-registers the forwarding dispatcher + re-resolves constants at
 ;;;; startup). defclass/defmethod re-evaluation is idempotent.
 ;;;;
+;;;; INSTRUMENTED to the k96 logging contract
+;;;; (apps/macos/pdfkit-viewer/docs/logging-contract.md, sbcl-instrument-build-k101):
+;;;; events.lisp (the `pv-events` package, loaded first by run.lisp/dump.lisp) writes the
+;;;; structured events.log the AppSpec runner tails — [lifecycle] startup/shutdown, the
+;;;; bare launch line, and the two [document] state-transition events (opened /
+;;;; page-changed) that make the spec §13 document assertions runnable. `refresh-pdf-ui`
+;;;; returns the state it applied (the k98 shape), so both [document] events mirror the
+;;;; §7.2 label by construction. The `applicationWillTerminate:` delegate hook is the
+;;;; instrumentation's one addition; cancel / nil URL / failed initWithURL: stay silent
+;;;; no-ops (no event, no error line — spec §12).
+;;;;
 ;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like the other ladder apps).
 
 (in-package #:apianyware-sbcl-impl)
@@ -73,7 +84,10 @@
   "Reconcile the page label + ◀/▶ enabled state with the PDFView. With no document:
    \"No PDF loaded\", both buttons off. With one: \"Page n of N\" (1-based) and the
    buttons reflect `canGoTo{Previous,Next}Page`. Driven by `pageChanged:` on every page
-   turn, so it tracks buttons, arrow keys, and scrolls identically."
+   turn, so it tracks buttons, arrow keys, and scrolls identically.
+   Returns the state it applied — NIL for the empty state, (page . total) (1-based) when
+   a document is loaded — so the [document] log events (logging contract) report exactly
+   what the label shows, including the nil-current-page fallback to page 1."
   (let ((doc      (slot-value controller 'document))
         (pdf-view (slot-value controller 'pdf-view))
         (prev     (slot-value controller 'prev-button))
@@ -83,7 +97,8 @@
         (progn
           (ns:set-string-value_ label @"No PDF loaded")
           (ns:set-enabled_ prev nil)
-          (ns:set-enabled_ next nil))
+          (ns:set-enabled_ next nil)
+          nil)
         (let* ((total   (ns:page-count doc))
                ;; nil current-page (transient, mid-swap) collapses to index 0.
                (current (ns:current-page pdf-view))
@@ -92,7 +107,8 @@
             (aw-wrap (aw-make-nsstring
                       (format nil "Page ~D of ~D" (1+ index) total)) t))
           (ns:set-enabled_ prev (ns:can-go-to-previous-page pdf-view))
-          (ns:set-enabled_ next (ns:can-go-to-next-page pdf-view))))))
+          (ns:set-enabled_ next (ns:can-go-to-next-page pdf-view))
+          (cons (1+ index) total)))))
 
 ;;; ---------------------------------------------------------------------------
 ;;; The delegate — a real ObjC subclass of NSObject (contract §3.4/§3.5), holding the
@@ -107,8 +123,15 @@
    image starts nil again (the symbol survives the dump, a fresh `defvar` value does
    not) and re-defines.")
 
+(defun pdf-callback-error (selector e)
+  "Report a guarded callback failure: an unhandled error inside an ObjC callback crashes
+   the app with no Lisp backtrace, so the instrumentation hook traps + logs to stderr."
+  (format *error-output* "~A callback error: ~A~%" selector e)
+  (finish-output *error-output*))
+
 (defun ensure-pdf-controller ()
-  "Define the `pdf-controller` ObjC subclass + its four target-action / observer methods.
+  "Define the `pdf-controller` ObjC subclass + its four target-action / observer methods
+   and the `applicationWillTerminate:` delegate hook (the logging contract's addition).
    Called from `-main` so it runs in whatever process actually shows the UI (host
    pre-flight or revived dump). Idempotent within a process via `*pdf-controller-ready*`."
   (unless *pdf-controller-ready*
@@ -133,6 +156,8 @@
         ;; setAllowedFileTypes: / runModal / URL are inherited from NSSavePanel; plain
         ;; CLOS inheritance dispatch reaches them on the open-panel instance.
         (ns:set-allowed-file-types_ panel (slot-value self 'pdf-types))
+        ;; Cancel / nil URL / failed initWithURL: are spec-mandated silent no-ops —
+        ;; no event, no error line (logging contract).
         (when (= (ns:run-modal panel) +ns-modal-response-ok+)
           (let ((url (ns:url panel)))
             (when url
@@ -140,7 +165,17 @@
                 (when doc
                   (setf (slot-value self 'document) doc)
                   (ns:set-document_ (slot-value self 'pdf-view) doc)
-                  (refresh-pdf-ui self))))))))
+                  ;; [document] opened — success path only, POST-state (store +
+                  ;; setDocument: + refresh already applied). `file` is the URL's last
+                  ;; path component (the panel canonicalizes paths, so the basename is
+                  ;; the stable identity); `pages` = pageCount. Nil-guarded: aw-wrap /
+                  ;; nsstring->string map a NULL id to nil, hence the (or … "") fallback.
+                  (let ((state (refresh-pdf-ui self))
+                        (basename
+                          (let ((name (ns:last-path-component url)))
+                            (or (and name (nsstring->string (aw-ptr name))) ""))))
+                    (when state
+                      (pv-events:emit-document-opened basename (cdr state)))))))))))
 
     ;; goPrev:/goNext: — the sender id PDFKit ignores (nil -> nil). The resulting page
     ;; change fires PDFViewPageChangedNotification, which refreshes the UI via pageChanged:.
@@ -153,9 +188,23 @@
 
     ;; pageChanged: — fires on EVERY page change (buttons, arrows, scroll). One observer
     ;; keeps the label + buttons correct however the page was turned.
+    ;; [document] page-changed rides the observer, POST-refresh (label + button states
+    ;; already applied — logging contract "Document events").
     (define-objc-method (pdf-controller "pageChanged:") (self note)
       (declare (ignore note))
-      (refresh-pdf-ui self))
+      (let ((state (refresh-pdf-ui self)))
+        (when state
+          (pv-events:emit-page-changed (car state) (cdr state)))))
+
+    ;; `applicationWillTerminate:` is the only hook that fires on the menu/Cmd-Q quit
+    ;; path: -[NSApplication terminate:] ends in a C exit(), which bypasses
+    ;; sb-ext:*exit-hooks*. NSApplication auto-observes the notification for a delegate
+    ;; that responds to this selector (informal conformance suffices).
+    (define-objc-method (pdf-controller "applicationWillTerminate:") (self notification)
+      (declare (ignore self notification))
+      (handler-case
+          (progn (pv-events:emit-shutdown 'menu) (pv-events:close-events!))
+        (error (e) (pdf-callback-error "applicationWillTerminate:" e))))
 
     (setf *pdf-controller-ready* t)))
 
@@ -176,6 +225,19 @@
   (let ((app (ns:shared-application (find-class 'ns:ns-application))))
     (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
     (install-app-menu app "PDFKit Viewer")
+
+    ;; --- Structured event log: open + [lifecycle] startup BEFORE construction ---
+    ;; `startup` must land before the app blocks in (ns:run app) or the runner's
+    ;; `wait-ready` readiness probe times out; the contract wants it ahead of
+    ;; window/PDF-view construction. Gated on the real run — the build-time smoke needs
+    ;; no log file (the emitters no-op on a nil port). Test-config compatibility: the
+    ;; viewer reads no runtime config, so it honours PDFKIT_VIEWER_TEST_CONFIG by reading
+    ;; the env var and treating absent/empty as "no config" — a deliberate no-op.
+    (when run
+      (pv-events:events-init!)
+      (pv-events:emit-startup)
+      (sb-ext:posix-getenv "PDFKIT_VIEWER_TEST_CONFIG"))
+
     (aw-with-rect (frame 0 0 720 540)
       (let* ((window (make-instance 'ns:ns-window
                        :init-with-content-rect frame
@@ -230,6 +292,13 @@
                                 :page-label page-label
                                 :pdf-types pdf-types)))
 
+              ;; App delegate for the terminate hook (logging contract; k101). Installed
+              ;; unconditionally so the pre-flight / revive smoke exercises set-delegate.
+              ;; The controller instance is pinned in *subclass-instances* (a STRONG
+              ;; table — subclass.lisp), so Cocoa's weak delegate reference and the
+              ;; controls' weak target references never reap it.
+              (ns:set-delegate_ app controller)
+
               ;; --- Toolbar: horizontal stack pinned to the top edge, grows with width ---
               (let ((stack (make-instance 'ns:ns-stack-view)))
                 (aw-with-rect (sframe 12 500 696 32) (ns:set-frame_ stack sframe))
@@ -268,7 +337,12 @@
                 ;; --- Show + run ---
                 (ns:make-key-and-order-front_ window nil)
                 (ns:activate-ignoring-other-apps_ app t)
+                ;; Launch diagnostic (spec §3 step 7): the bare line beginning `PDFKit
+                ;; Viewer` the runner's `wait-for-log` matches in events.log, plus the
+                ;; human-friendly stdout line (kept for unbundled runs; LaunchServices
+                ;; discards stdout under `open`) — dual emission.
                 (when run
+                  (pv-events:emit-launch-line)
                   (format t "~&PDFKit Viewer opened. Open a .pdf, navigate with ◀/▶. Quit with Cmd-Q.~%")
                   (finish-output)
                   (ns:run app))

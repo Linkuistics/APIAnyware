@@ -1,13 +1,15 @@
-;;;; dump.lisp — `save-lisp-and-die` the pdfkit-viewer standalone executable (060).
+;;;; dump.lisp — `save-lisp-and-die` the pdfkit-viewer standalone executable.
 ;;;;
 ;;;; Like scenekit-viewer this dumps WITH libAPIAnywareSbcl (ADR-0038 §5: the dylib is
 ;;;; NOT embedded — `save-lisp-and-die` keeps it in `*shared-objects*`, so the revived
-;;;; image auto-reopens it by the path it was loaded from). We load it from a FIXED path
-;;;; — `/tmp/libAPIAnywareSbcl.dylib` (build.sh stages the copy) — so the VM needs only
-;;;; that one dylib at that path. Here the dylib is needed for the SUBCLASS bounce shim
-;;;; (the `pdf-controller` delegate), not the trampoline residual; Foundation/AppKit load
-;;;; `:load-residual nil`, but PDFKit loads `:load-residual t` for its `constants.lisp`
-;;;; (`PDFViewPageChangedNotification`).
+;;;; image auto-reopens it by the recorded namestring). The bundler (`bundle-sbcl`,
+;;;; ADR-0041) drives this file with
+;;;; `AW_NATIVE_DYLIB_RECORD_AS=@executable_path/../Frameworks/...` set, so the recorded
+;;;; namestring points at the VENDORED copy inside the .app and the bundle travels alone
+;;;; (sbcl-vendor-libzstd-k75 retired the /tmp staging). Here the dylib is needed for the
+;;;; SUBCLASS bounce shim (the `pdf-controller` delegate), not the trampoline residual;
+;;;; Foundation/AppKit load `:load-residual nil`, but PDFKit loads `:load-residual t` for
+;;;; its `constants.lisp` (`PDFViewPageChangedNotification`).
 ;;;;
 ;;;; At revive, `sb-ext:*init-hooks*` runs the mandatory startup re-resolution pass BEFORE
 ;;;; the toplevel: re-dlopen frameworks, re-resolve objc_msgSend, re-mask FP traps,
@@ -17,9 +19,10 @@
 ;;;; its value form is re-run). `-main` then re-synthesizes the delegate via
 ;;;; `ensure-pdf-controller` and registers the observer with the live constant.
 ;;;;
-;;;; Invoked by build.sh:
-;;;;   SDKROOT=macosx sbcl --non-interactive --disable-debugger \
-;;;;     --load .../apps/pdfkit-viewer/dump.lisp -- <output-exe-path> <dylib-path>
+;;;; Invoked by the bundler (via build.sh step [2/3]):
+;;;;   [AW_NATIVE_DYLIB_RECORD_AS=@executable_path/../Frameworks/libAPIAnywareSbcl.dylib]
+;;;;   SDKROOT=… sbcl --non-interactive --disable-debugger \
+;;;;     --load .../pdfkit-viewer/dump.lisp -- <output-exe-path> <dylib-path>
 
 (in-package #:cl-user)
 
@@ -44,6 +47,8 @@
 (aw-app-load-framework "AppKit" :load-residual nil)
 (aw-app-load-framework "PDFKit" :load-residual t)
 
+;; events.lisp first (pure CL — the pv-events package pdfkit-viewer.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "pdfkit-viewer.lisp" cl-user::*app-dir*))
 
 (format t "~&== dumping ~A (dylib recorded: ~A) ==~%" cl-user::*out-exe* cl-user::*dylib*)
