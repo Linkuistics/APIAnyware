@@ -46,9 +46,21 @@ hello-window, ui-controls-gallery, pdfkit-viewer, scenekit-viewer, mini-browser)
 - **Decomposed on entry (2026-07-03)** — per-stage children mirroring
   `appspec-mini-browser-k80`, materialized lazily (grow the next as each retires;
   stages may merge where they genuinely fit one session):
-  1. **`reverse-gen-k122`** — the projection-free spec from the four impls
-     (replacing the precursor `docs/spec.md`), via the AppSpec reverse-gen workflow.
-  2. **conformance-data** — the logging contract + observable-state doc.
+  1. **`reverse-gen-k122`** ✅ *(done 2026-07-03)* — the projection-free spec from
+     the four impls (replaced the precursor `docs/spec.md`), validated with zero
+     witness discrepancies. Key handoffs: complexity corrected 6/7 → **3/7**;
+     precursor over-claims cut (close-to-quit, in-template JS renderer, links,
+     Cmd-Z shortcuts — **no Edit menu exists**, buttons are the only undo surface);
+     standing common-mode facts — the unsaved guard covers **New/Open only**
+     (quit/close silently discard, an explicit spec boundary), the text-change
+     observer is never unregistered; file I/O is deliberately **target-native**
+     (abstract read/write rule, no Cocoa call); launch-line prefixes diverge
+     (`running.` ×3 vs sbcl `opened.`); **NO per-operation log lines exist** —
+     status label is the sole message surface, preview render completion
+     unobservable; failure `<detail>` diverges (racket exn-message vs path);
+     dirty dot unobservable → window AX title is the channel; open-panel file
+     cells not in the AX tree → Cmd-Shift-G.
+  2. **`conformance-data-k123`** — the logging contract + observable-state doc.
   3. **instrument-builds** — per-impl instrumentation + rebuild ×4 (a node).
   4. **forward-gen-suite** — the scenario suite + fixtures + run-values.
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`.
