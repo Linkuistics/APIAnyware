@@ -11,6 +11,13 @@
 ;; SCNActionable, setAutoenablesDefaultLighting: on SCNSceneRenderer)
 ;; now generated as proper bindings by the protocol-inherited-methods fix.
 ;;
+;; Instrumented to the AppSpec logging contract (racket-instrument-build-k107,
+;; apps/macos/scenekit-viewer/docs/logging-contract.md): it writes a structured
+;; events.log the runner tails — [lifecycle] startup/shutdown, the bare launch
+;; line, and the two [scene] state-transition events (geometry-changed /
+;; color-changed) that make the spec §13 scene assertions runner-verifiable
+;; (the SCNView's rendered contents are pixel-level, invisible to OCR/AX).
+;;
 ;; Run with: racket scenekit-viewer.rkt
 
 (require "../../generated/appkit/nsapplication.rkt"
@@ -37,7 +44,8 @@
          "../../runtime/type-mapping.rkt"
          "../../runtime/coerce.rkt"
          "../../runtime/delegate.rkt"
-         "../../runtime/app-menu.rkt")
+         "../../runtime/app-menu.rkt"
+         "events.rkt")
 
 ;; --- Constants (not yet extracted by collector) ---
 ;; NSWindowStyleMask
@@ -58,10 +66,53 @@
 ;; NSLayoutAttribute
 (define NSLayoutAttributeFirstBaseline 12)
 
+;; --- Structured event log (logging contract) ---
+;; Open + truncate the events.log the runner tails, then record [lifecycle]
+;; startup BEFORE window/scene construction / the AppKit run loop (or
+;; `wait-ready` times out).
+(events-init!)
+(emit-startup)
+
+;; Test-config compatibility (logging-contract.md "Test-config compatibility"):
+;; the viewer reads no runtime config, so it honours SCENEKIT_VIEWER_TEST_CONFIG
+;; by reading the env var and treating an absent/empty value (and a missing
+;; file) as "no config" — a deliberate no-op.
+(void (getenv "SCENEKIT_VIEWER_TEST_CONFIG"))
+
+;; --- Shutdown wiring (signal / error paths) ---
+;; The logging contract requires a [lifecycle] shutdown line on terminate.
+;; The menu/Cmd-Q path goes through applicationWillTerminate: (delegate below);
+;; SIGTERM/SIGINT reach Racket as exn:break → reason=signal, and any other
+;; uncaught exception → reason=error.
+(uncaught-exception-handler
+ (lambda (exn)
+   (with-handlers ([exn:fail? (lambda (_) (void))])
+     (if (exn:break? exn)
+         (emit-shutdown 'signal)
+         (emit-shutdown 'error))
+     (close-events!))
+   (exit (if (exn:break? exn) 130 1))))
+
 ;; --- Application setup ---
 (define app (nsapplication-shared-application))
 (nsapplication-set-activation-policy! app 0)
 (install-standard-app-menu! app "SceneKit Viewer")
+
+;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+;; Cocoa holds delegates weakly, so keep a module-scope reference. The body is
+;; wrapped in with-handlers because an unhandled exception in an ObjC callback
+;; crashes the app with no Racket stack trace.
+(define app-delegate
+  (make-delegate
+   "applicationWillTerminate:"
+   (lambda (notification)
+     (with-handlers ([exn:fail?
+                      (lambda (e)
+                        (eprintf "applicationWillTerminate delegate error: ~a\n"
+                                 (exn-message e)))])
+       (emit-shutdown 'menu)
+       (close-events!)))))
+(void (nsapplication-set-delegate! app app-delegate))
 
 ;; --- Window ---
 (define window
@@ -123,15 +174,22 @@
 (scnview-set-scene! scn-view scene)
 (define root-node (scnscene-root-node scene))
 
-(define (make-geometry index)
+;; index → (values geometry catalogue-title). One cond arms both the applied
+;; geometry and the `shape` the [scene] geometry-changed event reports, so
+;; event and state cannot diverge (the k98 single-source-of-truth shape). The
+;; else arm realizes the §6 out-of-range → cube defensive default (unreachable
+;; through the four-item picker).
+(define (make-geometry+title index)
   (cond
-    [(= index 0) (scnbox-box-with-width-height-length-chamfer-radius 2.0 2.0 2.0 0.1)]
-    [(= index 1) (scnsphere-sphere-with-radius 1.2)]
-    [(= index 2) (scntorus-torus-with-ring-radius-pipe-radius 1.0 0.35)]
-    [(= index 3) (scncylinder-cylinder-with-radius-height 1.0 2.0)]
-    [else (scnbox-box-with-width-height-length-chamfer-radius 2.0 2.0 2.0 0.1)]))
+    [(= index 0) (values (scnbox-box-with-width-height-length-chamfer-radius 2.0 2.0 2.0 0.1) "Cube")]
+    [(= index 1) (values (scnsphere-sphere-with-radius 1.2) "Sphere")]
+    [(= index 2) (values (scntorus-torus-with-ring-radius-pipe-radius 1.0 0.35) "Torus")]
+    [(= index 3) (values (scncylinder-cylinder-with-radius-height 1.0 2.0) "Cylinder")]
+    [else (values (scnbox-box-with-width-height-length-chamfer-radius 2.0 2.0 2.0 0.1) "Cube")]))
 
-(define geometry-node (scnnode-node-with-geometry (make-geometry 0)))
+(define geometry-node
+  (scnnode-node-with-geometry
+   (let-values ([(geom _title) (make-geometry+title 0)]) geom)))
 (scnnode-add-child-node! root-node geometry-node)
 
 ;; --- Material color state ---
@@ -141,6 +199,24 @@
 ;; firstMaterial for every geometry — if we didn't re-apply, every swap
 ;; would reset the color to white.
 (define current-color (nscolor-system-red-color))
+
+;; The stored colour folded to the logging contract's integer components:
+;; device-RGB ×255, rounded to nearest (bare integers 0–255). Converts at emit
+;; time via colorUsingColorSpace: device-RGB — a §7.4-stored colour is already
+;; device-RGB, so only the initial systemRedColor actually converts here (and
+;; its numeric components are OS/appearance-dependent; consumers never assume
+;; the initial values). Returns (list r g b), or #f if the conversion fails —
+;; practically unreachable, and the caller then skips the event rather than
+;; emit fabricated components.
+(define (current-color-rgb255)
+  (with-handlers ([exn:fail? (lambda (_) #f)])
+    (define rgb (nscolor-color-using-color-space
+                 current-color (nscolorspace-device-rgb-color-space)))
+    (and rgb (not (objc-null? rgb))
+         (map (lambda (c) (inexact->exact (round (* 255 c))))
+              (list (nscolor-red-component rgb)
+                    (nscolor-green-component rgb)
+                    (nscolor-blue-component rgb))))))
 
 (define (apply-current-color!)
   (define geom (scnnode-geometry geometry-node))
@@ -178,8 +254,15 @@
    "geometryChanged:"
    (lambda (_sender)
      (define idx (nspopupbutton-index-of-selected-item geometry-picker))
-     (scnnode-set-geometry! geometry-node (make-geometry idx))
-     (apply-current-color!))
+     (define-values (geom title) (make-geometry+title idx))
+     (scnnode-set-geometry! geometry-node geom)
+     (apply-current-color!)
+     ;; [scene] geometry-changed — POST-state (geometry assigned + §7.2 colour
+     ;; re-apply done), carrying the folded stored colour so the §13 key
+     ;; behaviour (colour persists across a swap) is a single-line assertion.
+     (let ([rgb (current-color-rgb255)])
+       (when rgb
+         (emit-geometry-changed title (car rgb) (cadr rgb) (caddr rgb)))))
    "openColor:"
    (lambda (_sender)
      (define panel (nscolorpanel-shared-color-panel))
@@ -199,12 +282,21 @@
                       (lambda (e)
                         (eprintf "colorChanged: ~a\n" (exn-message e)))])
        (define raw (nscolorpanel-color sender))
-       (when raw
+       ;; Nil panel colour / failed device-RGB conversion are §7.4 silent
+       ;; no-ops: keep-previous, no event (the stderr guard above is the only
+       ;; diagnostic channel — never events.log).
+       (when (and raw (not (objc-null? raw)))
          (define rgb (nscolor-color-using-color-space
                       raw (nscolorspace-device-rgb-color-space)))
-         (when rgb
+         (when (and rgb (not (objc-null? rgb)))
            (set! current-color rgb)
-           (apply-current-color!)))))))
+           (apply-current-color!)
+           ;; [scene] color-changed — success path only, POST store+apply.
+           ;; current-color is the just-stored device-RGB colour, so the fold
+           ;; is exact (no conversion drift).
+           (let ([folded (current-color-rgb255)])
+             (when folded
+               (emit-color-changed (car folded) (cadr folded) (caddr folded))))))))))
 
 (nspopupbutton-set-target! geometry-picker toolbar-target)
 (nspopupbutton-set-action! geometry-picker "geometryChanged:")
@@ -215,5 +307,9 @@
 (nswindow-make-key-and-order-front window #f)
 (nsapplication-activate-ignoring-other-apps app #t)
 
+;; Launch diagnostic (spec §3 step 6): the bare line beginning `SceneKit Viewer`
+;; the runner's `wait-for-log` matches, dual-emitted to stdout (human-friendly
+;; when run unbundled) and events.log (the runner's read path).
+(emit-launch-line)
 (displayln "SceneKit Viewer running. Close window or Ctrl+C to exit.")
 (nsapplication-run app)

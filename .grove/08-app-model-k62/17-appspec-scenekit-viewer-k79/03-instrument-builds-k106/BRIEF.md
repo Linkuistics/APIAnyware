@@ -1,13 +1,34 @@
-# instrument-builds-k106
+# instrument-builds-k106 — brief
 
-**Kind:** work
+**Kind:** node (decomposed 2026-07-03 — one instrument+build child per impl, the
+k97 split; children materialized lazily, grow the next as each retires)
+
+## Children
+
+1. `racket-instrument-build-k107` ✅ — the reference pattern (events.rkt + wiring +
+   self-contained build.sh + descriptor; pdfkit k98 template). Did the SceneKit
+   corpus step (collect + deps-together `--only Foundation,AppKit,SceneKit`) the
+   siblings inherit. App-level shape the siblings mirror: `make-geometry+title`
+   arms geometry and the event's `shape` from one cond (event ≡ applied state);
+   one emit-time `current-color-rgb255` device-RGB ×255 fold; §7.4 nil checks
+   tightened to objc-null on both raw panel colour and conversion result.
+   **Sibling handoff (the k99 twin, sharpened):** SceneKit adds ZERO trampolines
+   but GROWS the generated typed dispatch (new ABI shapes — three-float
+   `rotateByX:y:z:duration:` et al.), so each sibling still needs its own
+   `apianyware-generate --target <t>` + adapter relink (`swift build --product
+   APIAnyware<T>`) **before** bundling — a trampoline-count-unchanged log line
+   does not mean the dylib is current (k107 caught the stale-dylib class
+   host-side via an `nm -gU` bundled-vs-fresh symbol diff); build.sh prereqs key
+   on the target's scenekit binding artifact but check the dylib by existence
+   only.
+2. `chez-instrument-build-k108` — the k99 pattern (emitter inline in the `.sls`).
 
 ## Goal
 
 Instrument all four scenekit-viewer impls
 (`targets/{racket,chez,gerbil,sbcl}/app-implementations/macos/scenekit-viewer/`) to the
 k105 conformance contracts and build each to a `.app` — the hello-window k68–k71 /
-ui-controls-gallery k88 / pdfkit-viewer k97 stage. **Likely a node** (one
+ui-controls-gallery k88 / pdfkit-viewer k97 stage. Decomposed as a node (one
 instrument+build child per impl — the k97 split); `leaf-decompose` on entry, first
 child (racket, the reference pattern) this session.
 
