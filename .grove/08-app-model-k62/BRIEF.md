@@ -127,9 +127,11 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    outcomes** below)*, pdfkit-viewer ✅ *(node `appspec-pdfkit-viewer-k78`, complete
    2026-07-02 — see **pdfkit-viewer outcomes** below)*, scenekit-viewer ✅ *(node
    `appspec-scenekit-viewer-k79`, complete 2026-07-03 — see **scenekit-viewer outcomes**
-   below)*, mini-browser, note-editor, drawing-canvas, swift-native-probe — each
-   live-VM-verified, each expected to decompose on entry), then `apps-layout-finalize-k84`
-   and `portfolio-coverage-tie-in-k85` (which closes this node's Done-when).
+   below)*, mini-browser ✅ *(node `appspec-mini-browser-k80`, complete 2026-07-03 — see
+   **mini-browser outcomes** below)*, note-editor, drawing-canvas, swift-native-probe —
+   each live-VM-verified, each expected to decompose on entry), then
+   `apps-layout-finalize-k84` and `portfolio-coverage-tie-in-k85` (which closes this
+   node's Done-when).
 
 ## ui-controls-gallery outcomes (promoted from `appspec-ui-controls-gallery-k77` on retirement)
 
@@ -248,6 +250,52 @@ the remaining apps (k80–k83):
 - **Visual bar met on all four** (spin frames, swap visuals, single-click wheel recolour,
   drag orbit); wheel single-click delivery works everywhere — the no-drag-verb degrade was
   never needed.
+
+## mini-browser outcomes (promoted from `appspec-mini-browser-k80` on retirement)
+
+Fifth app through the toolkit, first with WKWebView content, an async-navigation log
+channel (`[nav]`), and a manufactured-offline launch reality. Full record:
+`apps/macos/mini-browser/docs/run-results.md` (k121). Durable findings for the remaining
+apps (k81–k83):
+
+- **Final outcome: no impl defect.** racket 9/13, chez/gerbil/sbcl 10/13; every red is a
+  run-mechanism class, every obscured fact proven via a second channel; the mandated
+  Command-Q invariant and all three `recording:` confirmations green on all four impls
+  (NSURL rejects space-bearing input with the status suffix **normalized** — §6.2 right,
+  observable-state "typed" wrong, the k120 ambiguity resolved; WKWebView-rendered 72px
+  fixture text IS OCR-observable; close-button keep-running — fifth app to confirm).
+- **The VM golden now has LIVE NETWORK** — the k74-era "no VM network" assumption is
+  stale (the first probe launch loaded apple.com). Offline is manufactured in-guest,
+  keeping the 192.168.64.0/24 control subnet alive: IPv4 `route add -net {0,128}.0.0.0/1
+  127.0.0.1 -reject` + IPv6 `::/1`+`8000::/1` twins (fast EHOSTUNREACH; without the v6
+  pair, happy-eyeballs hangs to timeout), pf as belt-and-braces (pf `return`/`return-rst`
+  silently DROPS on Tahoe — too slow alone), plus a WebKit cache wipe per bundle-id.
+  DNS still resolves via the NAT gateway → the offline failure is uniformly
+  `[nav] failed phase=request message="Could not connect to the server."` on all four.
+- **NEW run-mechanism class — the type→click driver race** (racket 09, solo-confirmed
+  deterministic): a mouse click immediately after `type` overtakes the VNC keyboard
+  queue (~36 of 48 chars delivered before Go fired; the impl correctly navigated to the
+  truncated field). Return-submits are immune (same keyboard channel); only racket's
+  slower per-keystroke dispatch exposes it. Guidance for k81–k83 suites: **settle after
+  `type` before any button click**; proper fix is TestAnyware-side (serialize mouse
+  behind pending keyboard).
+- **The k103 OCR small-text class hit hard and layout-dependently** (02/04/06 red on all
+  four impls; 01 on racket): the shared-layout impls garble `request failed:` →
+  `reguest talled:`; racket instead drops the colon (`request failed.`), garbles the URL
+  (`httos://www.annle.com`) yet reads `Invalid URL` cleanly. Every deterministic status
+  string asserted via the AX value→AXTitle fold passed everywhere (03/07/09/11) —
+  forward-gen should keep preferring AX-exact; 11-pt OCR reads stay adjudicate-by-artifact.
+- **Geometry:** chez+gerbil+sbcl pixel-identical sharing `run-values.rkt` (the pdfkit
+  share-set), racket alone on the compact-22px sibling; all four two-launch
+  deterministic; the k120 spec-derived provisional coordinates ALL landed within their
+  control bounds — the projection method (window frame + [NSWindow center] bias +
+  intrinsic stack sizing) is validated for provisional authoring.
+- **Platform rows firmed ×4:** launch-failure `phase=request`; the failure alert's AX
+  shape (`dialog` titled `alert`, message = the event's message text, OK `[focused]` —
+  bare Return dismisses); ◀/▶ `enabled=false` at empty state in raw layout snapshots
+  (the k96 channel); the address field's AX value IS readable in raw snapshots
+  (sharpens k113's "empty under the driver" caveat); post-failure WKWebView surfaces as
+  an empty `scroll-area` (no `AXWebArea` at the steady state).
 
 ## Decisions (running log)
 
