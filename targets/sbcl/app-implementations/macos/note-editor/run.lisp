@@ -56,6 +56,8 @@
 (aw-app-load-framework "AppKit" :load-residual t)
 (aw-app-load-framework "WebKit" :load-residual nil)
 
+;; events.lisp first (pure CL — the ne-events package note-editor.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "note-editor.lisp" cl-user::*app-dir*))
 
 (let ((smoke (sb-ext:posix-getenv "AW_NOTE_SMOKE")))

@@ -52,6 +52,17 @@
 ;;;; block dispatcher, and re-resolves the AppKit constant surface). defclass/defmethod
 ;;;; re-evaluation is idempotent.
 ;;;;
+;;;; k128 instrumentation (apps/macos/note-editor/docs/logging-contract.md): events.lisp
+;;;; (the `ne-events` package, loaded first by run.lisp/dump.lisp) writes the structured
+;;;; events.log the AppSpec runner tails — [lifecycle] startup/shutdown, the bare launch
+;;;; line, the six [document] state events (post-state at rule end; the sheet-branch
+;;;; `saved` lands inside the completion handler because the shared write routine emits
+;;;; at its end), and [preview] rendered after every loadHTMLString: hand-off. The
+;;;; `applicationWillTerminate:` delegate hook is the contract's one structural addition;
+;;;; no visible behaviour changed (contract rule — launch-line wording, the
+;;;; `Opened `/`Open failed: `/`Saved `/`Save failed: ` status spellings stay as
+;;;; realized).
+;;;;
 ;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like the other ladder apps).
 
 (in-package #:apianyware-sbcl-impl)
@@ -310,13 +321,19 @@
 
 (defun render-preview (controller markdown-text)
   "Render MARKDOWN-TEXT (or the placeholder, if blank) into the WKWebView via
-   loadHTMLString:baseURL: (nil base URL)."
-  (let ((body (if (string= (trim-both markdown-text) "")
-                  +preview-placeholder+
-                  (render-markdown markdown-text))))
+   loadHTMLString:baseURL: (nil base URL). Emits `[preview] rendered` immediately after
+   the hand-off (logging contract): PLACEHOLDER? is the same test that chose the body,
+   hoisted so the event and the body choice cannot disagree; `chars` counts the Unicode
+   scalars of the Markdown consumed (an SBCL string is a code-point sequence, so
+   `length` is that count — the source, never the HTML)."
+  (let* ((placeholder? (string= (trim-both markdown-text) ""))
+         (body (if placeholder?
+                   +preview-placeholder+
+                   (render-markdown markdown-text))))
     (ns:load-html-string_base-url_ (slot-value controller 'web-view)
       (nsstr (concatenate 'string +preview-template-head+ body +preview-template-foot+))
-      nil)))
+      nil)
+    (ne-events:emit-preview-rendered placeholder? (length markdown-text))))
 
 (defun refresh-preview (controller)
   (render-preview controller (current-editor-text controller)))
@@ -330,8 +347,14 @@
         (refresh-title controller)
         (refresh-preview controller)
         (set-status controller (concatenate 'string "Opened " path))
+        ;; §8.3 post-state at rule end (every state channel already reflects it).
+        (ne-events:emit-document "opened" path nil)
         t)
-    (error () (set-status controller (concatenate 'string "Open failed: " path)) nil)))
+    (error ()
+      (set-status controller (concatenate 'string "Open failed: " path))
+      ;; §8.5.6 failure: ATTEMPTED path + the unchanged flag, after the status set.
+      (ne-events:emit-document "open-failed" path (slot-value controller 'dirty))
+      nil)))
 
 (defun write-current-file (controller path)
   (handler-case
@@ -341,8 +364,18 @@
               (slot-value controller 'dirty) nil)
         (refresh-title controller)
         (set-status controller (concatenate 'string "Saved " path))
+        ;; §8.4 post-state at the end of the SHARED write routine — so the sheet
+        ;; branch's `saved` lands inside the completion handler by construction
+        ;; (prompt-save's block body calls here) and the direct branch needs no
+        ;; second emission site.
+        (ne-events:emit-document "saved" path nil)
         t)
-    (error () (set-status controller (concatenate 'string "Save failed: " path)) nil)))
+    (error ()
+      (set-status controller (concatenate 'string "Save failed: " path))
+      ;; §8.5.7 failure: ATTEMPTED path + the unchanged (dirty) flag, after the
+      ;; status set.
+      (ne-events:emit-document "save-failed" path (slot-value controller 'dirty))
+      nil)))
 
 ;;; Unsaved-changes confirmation (NSAlert).
 (defun confirm-discard? (controller message)
@@ -402,7 +435,9 @@
           (slot-value controller 'dirty) nil)
     (refresh-title controller)
     (refresh-preview controller)
-    (set-status controller "New document")))
+    (set-status controller "New document")
+    ;; §8.2 post-state at rule end; `new` always carries the literal unset pair.
+    (ne-events:emit-document "new" "" nil)))
 
 ;;; Undo / Redo via the NSTextView's undo manager (on NSResponder).
 (defun do-undo (controller)
@@ -456,8 +491,26 @@
       (declare (ignore note))
       (unless (slot-value self 'dirty)
         (setf (slot-value self 'dirty) t)
-        (refresh-title self))
+        (refresh-title self)
+        ;; §6.2 clean→dirty FLIP only (never per-keystroke), after the title refresh,
+        ;; BEFORE the re-render — first-keystroke order `dirty-changed` → `rendered`.
+        (ne-events:emit-document "dirty-changed"
+                                 (slot-value self 'current-path) t))
       (refresh-preview self))
+
+    ;; `applicationWillTerminate:` is the only hook that fires on the menu/Cmd-Q quit
+    ;; path: -[NSApplication terminate:] ends in a C exit(), which bypasses
+    ;; sb-ext:*exit-hooks*. NSApplication auto-observes the notification for a delegate
+    ;; that responds to this selector (informal conformance suffices). §3.10: no unsaved
+    ;; guard on this path — `shutdown` fires on quit-with-unsaved-edits too. The logging
+    ;; contract's one structural addition (k128), as in the prior five apps.
+    (define-objc-method (note-controller "applicationWillTerminate:") (self notification)
+      (declare (ignore self notification))
+      (handler-case
+          (progn (ne-events:emit-shutdown 'menu) (ne-events:close-events!))
+        (error (e)
+          (format *error-output* "applicationWillTerminate: callback error: ~A~%" e)
+          (finish-output *error-output*))))
 
     (setf *note-controller-ready* t)))
 
@@ -479,6 +532,21 @@
   (let ((app (ns:shared-application (find-class 'ns:ns-application))))
     (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
     (install-app-menu app "Note Editor")
+
+    ;; --- Structured event log: open + [lifecycle] startup BEFORE construction ---
+    ;; `startup` must land before the app blocks in (ns:run app) or the runner's
+    ;; `wait-ready` readiness probe times out; the contract wants it ahead of
+    ;; window/split-view construction (so the §3 step 5 initial render's `rendered`
+    ;; follows it — the deterministic launch sequence). Gated on the real run — the
+    ;; build-time smoke needs no log file (the emitters no-op on a nil port).
+    ;; Test-config compatibility: the editor reads no runtime config, so it honours
+    ;; NOTE_EDITOR_TEST_CONFIG by reading the env var and treating absent/empty as
+    ;; "no config" — a deliberate no-op.
+    (when run
+      (ne-events:events-init!)
+      (ne-events:emit-startup)
+      (sb-ext:posix-getenv "NOTE_EDITOR_TEST_CONFIG"))
+
     (aw-with-rect (frame 0 0 +window-w+ +window-h+)
       (let* ((window (make-instance 'ns:ns-window
                        :init-with-content-rect frame
@@ -578,7 +646,15 @@
                               :status-label status-label
                               :window window)))
 
-            ;; Initial empty preview (placeholder).
+            ;; App delegate for the terminate hook (logging contract; k128). Installed
+            ;; unconditionally so the pre-flight / revive smoke exercises set-delegate.
+            ;; The controller instance is pinned in *subclass-instances* (a STRONG
+            ;; table — subclass.lisp), so Cocoa's weak delegate reference and the
+            ;; controls' weak target references never reap it.
+            (ns:set-delegate_ app controller)
+
+            ;; Initial empty preview (placeholder) — emits the §3 step 5
+            ;; `rendered placeholder=true chars=0` when the log is open.
             (render-preview controller "")
 
             ;; --- Text-change observer wiring (source filter = the text view). The name is
@@ -610,7 +686,12 @@
             ;; --- Show + run ---
             (ns:make-key-and-order-front_ window nil)
             (ns:activate-ignoring-other-apps_ app t)
+            ;; Launch diagnostic (spec §3 step 8): the bare line beginning
+            ;; `Note Editor` the runner's `wait-for-log` matches in events.log,
+            ;; plus the human-friendly stdout line (kept for unbundled runs;
+            ;; LaunchServices discards stdout under `open`) — dual emission.
             (when run
+              (ne-events:emit-launch-line)
               (format t "~&Note Editor opened. Type Markdown on the left; preview renders on the right. Quit with Cmd-Q.~%")
               (finish-output)
               (ns:run app))

@@ -118,4 +118,49 @@ back-ref, not weak) made the capstone's allocation profile a non-event.
 - **Provisioning = the two dylibs, no network.** Standalone exe + `/tmp/libAPIAnywareSbcl.dylib`
   + the zstd core-compression dylib (`/opt/homebrew/opt/zstd/lib/libzstd.1.dylib`, placed
   via `sudo` — the golden has no Homebrew). The preview is local `loadHTMLString`, so
-  unlike mini-browser this app needs **no network**.
+  unlike mini-browser this app needs **no network**. *(Superseded by the k128 rebuild
+  below: the bundled .app now travels alone — no `/tmp` staging, no Homebrew zstd.)*
+
+## k128 instrumentation + rebuild (AppSpec logging contract)
+
+The `sbcl-instrument-build-k128` leaf (contract:
+`apps/macos/note-editor/docs/logging-contract.md`); the k125/k126/k127 reference
+pattern held 1:1 a **fourth** time via this target's mini-browser (k119) house style —
+`events.lisp` (pure CL, `ne-events` nickname, loaded first by run.lisp/dump.lisp), the
+single 6-event `emit-document` + `emit-preview-rendered` emitters, the
+`applicationWillTerminate:` delegate hook (informal conformance;
+`ns:set-delegate_ app controller`), and startup + test-config no-op gated `when run`
+ahead of window construction.
+
+- **No corpus step, fourth confirmation:** `Trampolines.swift` git-clean + the adapter
+  dylib rebuilt after it (05:30:14 → 05:30:49) ⇒ the k115 relink stands; 175 `@_cdecl`
+  entries incl. WebKit. Nothing regenerated.
+- **The two k123 `build.sh` seeds landed by moving to the production bundler**
+  (`apianyware-bundle-sbcl`, ADR-0041 — the k119 mirror), retiring this app's original
+  060-era hand-rolled `/tmp`-staged wrap: the bundler's plist carries the kind-required
+  `CFBundleInfoDictionaryVersion` (6.0), and the post-mv PlistBuddy + re-sign dance sets
+  `CFBundleIdentifier com.linkuistics.note-editor-sbcl` on `NoteEditor-sbcl.app` (92M,
+  travels alone — stub launcher + vendored `libzstd.1.dylib` +
+  `libAPIAnywareSbcl.dylib`, needed here for BOTH the subclass shim and the block
+  factory). Revive smoke through the stub exercises the block-dispatcher
+  re-registration + the `aw-block` liveness gate in the dumped image.
+- **Emitter unit smoke in isolation** (`sbcl --script` + the emitters): byte-exact
+  contract lines — fixed key orders `path`·`dirty` / `placeholder`·`chars`, bare
+  `true`/`false`, nil path folds to `""` inside `emit-document` (call sites pass the
+  slot through unfixed), `\\`/`\"` escaping, lowercase `reason=menu` (the `~(~a~)`
+  downcase — CL's `:upcase` print-case would emit `MENU`).
+- **Host CLI smoke green, exact sequence:** `open` → `[lifecycle] startup` →
+  `[preview] rendered placeholder=true chars=0` → the bare `Note Editor opened. …`
+  launch line (sbcl's own remainder, dual-emitted); AppleScript quit →
+  `[lifecycle] shutdown reason=menu`; no stray events; process exited. The six
+  `[document]` events are **not host-reachable** (typing/panels/alert) — witnessed by
+  code audit against the checklist; the live-run stage exercises them.
+- **Emission-point notes:** `render-preview` hoists `placeholder?` so the event and the
+  body choice share one test, and `chars` = `length` of the Markdown consumed (an SBCL
+  string is a code-point sequence, so `length` IS the Unicode-scalar count — no
+  grapheme/UTF-16 trap); emitting `saved` at the end of the **shared**
+  `write-current-file` puts the sheet-branch event inside the completion handler by
+  construction (single-writer holds: the block bounce is a main-thread pass-through,
+  ADR-0035/0036); `dirty-changed` sits inside the `textDidChange:` flip arm after
+  `refresh-title`, before `refresh-preview` — first-keystroke order
+  `dirty-changed` → `rendered` for free.

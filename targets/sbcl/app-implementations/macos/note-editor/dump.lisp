@@ -1,10 +1,13 @@
-;;;; dump.lisp — `save-lisp-and-die` the note-editor standalone executable (060).
+;;;; dump.lisp — `save-lisp-and-die` the note-editor standalone executable.
 ;;;;
 ;;;; Like mini-browser/pdfkit-viewer this dumps WITH libAPIAnywareSbcl (ADR-0038 §5: the
 ;;;; dylib is NOT embedded — `save-lisp-and-die` keeps it in `*shared-objects*`, so the
-;;;; revived image auto-reopens it by the path it was loaded from). We load it from a FIXED
-;;;; path — `/tmp/libAPIAnywareSbcl.dylib` (build.sh stages the copy) — so the VM needs only
-;;;; that one dylib at that path. Here the dylib is needed for BOTH the SUBCLASS bounce shim
+;;;; revived image auto-reopens it by the recorded namestring). The bundler (`bundle-sbcl`,
+;;;; ADR-0041) drives this file with
+;;;; `AW_NATIVE_DYLIB_RECORD_AS=@executable_path/../Frameworks/...` set, so the recorded
+;;;; namestring points at the VENDORED copy inside the .app and the bundle travels alone
+;;;; (the k128 rebuild retired this app's original /tmp staging, as the k119 mini-browser
+;;;; rebuild did for its). Here the dylib is needed for BOTH the SUBCLASS bounce shim
 ;;;; (the `note-controller`: target-actions + the NSTextDidChangeNotification observer) AND
 ;;;; the `aw_sbcl_make_block` block factory (the Save completion handler).
 ;;;;
@@ -47,6 +50,8 @@
 (aw-app-load-framework "AppKit" :load-residual t)
 (aw-app-load-framework "WebKit" :load-residual nil)
 
+;; events.lisp first (pure CL — the ne-events package note-editor.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "note-editor.lisp" cl-user::*app-dir*))
 
 (format t "~&== dumping ~A (dylib recorded: ~A) ==~%" cl-user::*out-exe* cl-user::*dylib*)

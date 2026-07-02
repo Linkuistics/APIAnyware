@@ -49,11 +49,11 @@ those slots with `slot-value`, not per-class accessors (they compile before the 
 ```sh
 # Dev pre-flight (host construction smoke, no run loop):
 SDKROOT=macosx AW_NOTE_SMOKE=1 sbcl --non-interactive --disable-debugger \
-  --load apps/note-editor/run.lisp
+  --load targets/sbcl/app-implementations/macos/note-editor/run.lisp
 
-# Build the standalone .app (pre-flight → dump → revive smoke):
-apps/note-editor/build.sh
-# → apps/note-editor/build/NoteEditor.app  (save-lisp-and-die :executable t, ~90 MB)
+# Build the standalone .app (pre-flight → bundle via apianyware-bundle-sbcl → revive smoke):
+targets/sbcl/app-implementations/macos/note-editor/build.sh
+# → build/NoteEditor-sbcl.app  (com.linkuistics.note-editor-sbcl; travels alone)
 ```
 
 The dylib (`libAPIAnywareSbcl`) is loaded for BOTH the `aw_sbcl_subclass_*` bounce shim
@@ -67,7 +67,10 @@ Framework loads: Foundation `:load-residual nil`, AppKit `:load-residual t` (for
 
 ## VM provisioning (TestAnyware)
 
-The standalone exe embeds the SBCL core; the VM needs `/tmp/libAPIAnywareSbcl.dylib`
-(the recorded dylib path) + the zstd core-compression dylib at
-`/opt/homebrew/opt/zstd/lib/libzstd.1.dylib`. **No network** (the preview is local
-`loadHTMLString`). See `test-results/note-editor/report.md`.
+The k128 rebuild moved this app to the production bundler (ADR-0041): the .app
+**travels alone** — the Swift stub launcher sets
+`DYLD_FALLBACK_LIBRARY_PATH=<bundle>/Contents/Frameworks`, and both non-system
+dylibs (`libzstd.1.dylib`, `libAPIAnywareSbcl.dylib`) are vendored inside. No `/tmp`
+staging, no Homebrew on the VM. **No network** (the preview is local
+`loadHTMLString`). The AppSpec runner consumes `note-editor-impl.rkt`
+(`/Applications/NoteEditor-sbcl.app`, events at `/tmp/note-editor/events.log`).
