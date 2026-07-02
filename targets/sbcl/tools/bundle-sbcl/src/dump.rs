@@ -38,9 +38,8 @@ pub const DYLIB_RECORD_AS: &str = "@executable_path/../Frameworks/libAPIAnywareS
 /// Does the app's `dump.lisp` load `libAPIAnywareSbcl`? A static check of the
 /// driver source: an app that calls `aw-load-native-dylib` needs the dylib
 /// `dlopen`ed (Swift-native residual, or the block/subclass bounce shim) and so
-/// gets the dylib vendored + the namestring relocation. A pure-ObjC app
-/// (hello-window) never calls it — `otool -L` then shows only system libs +
-/// libzstd.
+/// gets the dylib vendored + the namestring relocation. A fully pure-ObjC app
+/// never calls it — `otool -L` then shows only system libs + libzstd.
 pub fn driver_needs_dylib(driver: &Path) -> bool {
     std::fs::read_to_string(driver)
         .map(|s| s.contains("(aw-load-native-dylib"))

@@ -60,7 +60,7 @@ pub fn bundle_app(
     }
 
     // Residual apps (Swift-native trampolines, or block/subclass bounce shim)
-    // load libAPIAnywareSbcl; pure-ObjC apps (hello-window) do not.
+    // load libAPIAnywareSbcl; a fully pure-ObjC app does not.
     let needs_dylib = driver_needs_dylib(&driver);
     let swift_dylib = if needs_dylib {
         Some(ensure_swift_dylib(workspace_root)?)

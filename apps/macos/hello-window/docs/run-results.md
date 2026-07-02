@@ -48,11 +48,14 @@ async-settle `(wait …)` was needed — every `expect-running-app` resolved sin
 
 ## Build / runtime findings (per impl)
 
-- **sbcl is not a fully self-contained dump.** `Contents/MacOS/hello-window` links Homebrew
+- **sbcl is not a fully self-contained dump — RESOLVED 2026-07-02 (`sbcl-vendor-libzstd-k75`; see
+  the re-run section below).** The k30 dev-wrapped `.app` linked Homebrew
   `/opt/homebrew/opt/zstd/lib/libzstd.1.dylib` (SBCL core zstd compression) by absolute path —
-  absent in a vanilla VM (`dyld: Library not loaded … libzstd.1.dylib`, abort). The run staged the
-  host dylib at that path in the VM. **Candidate build improvement:** vendor `libzstd.1.dylib` into
-  the `.app` (the build vendors only `libAPIAnywareSbcl.dylib` today) so the bundle travels alone.
+  absent in a vanilla VM (`dyld: Library not loaded … libzstd.1.dylib`, abort); this run staged the
+  host dylib at that path in the VM. Fix: `build.sh` converged onto the production bundler
+  (`apianyware-bundle-sbcl`, ADR-0041 — stub launcher + `DYLD_FALLBACK_LIBRARY_PATH` + vendored
+  `libzstd.1.dylib`/`libAPIAnywareSbcl.dylib`), which also retired the `/tmp/libAPIAnywareSbcl.dylib`
+  VM staging.
 - **racket is not self-contained — it needs a Racket runtime (provisioned; ran 3/3, k34, 2026-06-30).**
   The `.app` ships **uncompiled `.rkt` source** (`Contents/Resources/racket-app/`) that its Swift
   launcher runs via `/opt/homebrew/bin/racket`; a vanilla VM has no Racket (`Hello Window: exec failed:
@@ -78,3 +81,34 @@ async-settle `(wait …)` was needed — every `expect-running-app` resolved sin
 
 The toolkit fixes the run forced (the `running-app?` predicate, the `quit-impl!` `is running` guard,
 and the `cat`-based log tailer) are AppSpec-side; see `validation.md` §6.6.
+
+## Re-run — sbcl self-contained bundle (2026-07-02, `sbcl-vendor-libzstd-k75`)
+
+The sbcl impl was rebuilt with `build.sh` converged onto the production bundler
+(`apianyware-bundle-sbcl`): Swift stub CFBundleExecutable (`DYLD_FALLBACK_LIBRARY_PATH` →
+`Contents/Frameworks/`, `execv`s the image at `Contents/Resources/`), `libzstd.1.dylib` +
+`libAPIAnywareSbcl.dylib` vendored, dylib namestring recorded `@executable_path/../Frameworks/…`
+at dump. The suite was re-run in a **vanilla VM** (fresh `testanyware-golden-macos-tahoe` clone,
+1920×1080) with **nothing staged** — verified absent: `/opt/homebrew/opt/zstd/…` and
+`/tmp/libAPIAnywareSbcl.dylib`.
+
+| impl | 01 steady-state | 02 Command-Q terminates | 03 close-button `recording:` | notes |
+|---|---|---|---|---|
+| **sbcl** | PASS | PASS | PASS | fully self-contained; zero VM provisioning; startup emitted ~400 ms after `open` |
+
+Scenarios were graded per-scenario invocation (the k73 chez/sbcl mode; sanctioned by run
+`workflow.md` §3): 01 passed twice, 02 twice, 03 twice across the session's invocations.
+
+**Run-mechanism finding (AppSpec/TestAnyware-side, carried for a future toolkit session):** in a
+single-invocation full-suite run the 01→02 transition reproducibly failed `wait-ready` (`did not
+emit [lifecycle] startup within 10s`) — **with the app provably up**: the failure artifact's
+`events.log.tail` contains `[lifecycle] startup` + `Hello Window opened.` and the AX snapshot shows
+the window rendered. In-VM measurement of the exact setup sequence (quit → settle → truncate →
+`open`) puts the startup line at **~400 ms** — the app is not slow; the *observation path* stalls:
+a `testanyware exec` session issued after recent `open`/`osascript` activity can deliver its output
+but hang its close until the CLI's 30 s cap, and one such stalled poll inside `wait-ready`'s 10 s
+window fails the scenario. Scenario 02 passes solo after the channel idles. Successor to the k33
+`wc -c`→`cat` tailer finding (`validation.md` §6.6); the fix belongs to the AppSpec runner
+(e.g. a per-poll deadline / retry inside `wait-ready`) or the TestAnyware exec channel, not to any
+impl. The k73 full-suite 3/3 rows (gerbil, racket) are unaffected; chez/sbcl were per-scenario
+there too.

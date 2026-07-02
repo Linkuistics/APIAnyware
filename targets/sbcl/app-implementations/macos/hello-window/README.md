@@ -20,7 +20,7 @@ the harness loads the dylib for that one facility (like `note-editor`).
 | `events.lisp` | structured event log (`hw-events`) the AppSpec runner tails; pure CL, isolation-testable |
 | `run.lisp` | dev host runner; `AW_HELLO_SMOKE=1` = construction pre-flight (no run loop) |
 | `dump.lisp` | `save-lisp-and-die :executable t` → standalone exe; `AW_HELLO_SMOKE` revive smoke |
-| `build.sh` | full build: regen bindings + dylib → stage → pre-flight → dump → wrap in `HelloWindow-sbcl.app` |
+| `build.sh` | full build: regen bindings + dylib → pre-flight → `bundle-sbcl` (dump + stub + vendor + sign) → per-impl id → revive smoke |
 | `learnings.md` | findings (the `@`-reader gap, exact-class init registry, AppSpec instrument, 070 dist notes) |
 
 ## Build
@@ -33,22 +33,24 @@ targets/sbcl/app-implementations/macos/hello-window/build.sh
 The pipeline:
 
 0. **prereqs** — regenerate the sbcl bindings (`apianyware-generate --target sbcl`) + the
-   adapter dylib (`swift build` → `libAPIAnywareSbcl`) if absent, then stage the dylib at
-   the fixed `/tmp/libAPIAnywareSbcl.dylib` the dumped image records for revive auto-reopen;
+   adapter dylib (`swift build` → `libAPIAnywareSbcl`) if absent;
 1. **host construction pre-flight** — load dylib + bindings (Foundation + AppKit,
    `:load-residual nil`) and build the whole UI + synthesize the terminate delegate
    *without* the run loop, so a marshalling/subclass break fails the build before the dump;
-2. **dump** — `save-lisp-and-die :executable t` embeds the SBCL runtime + the binding
-   library + the app into one executable (the dylib stays in `*shared-objects*`,
-   auto-reopened from `/tmp` at revive — ADR-0038 §5). At revive, `sb-ext:*init-hooks*`
-   runs the startup re-resolution pass (re-`dlopen`, re-resolve `objc_msgSend`, re-mask FP
-   traps, re-register the subclass dispatcher) before the toplevel;
-3. **wrap** — into `HelloWindow-sbcl.app` (Info.plist, `com.linkuistics.hello-window-sbcl`
-   — the per-impl id so the four impls coexist in one acceptance-test VM) with the dylib
-   vendored into `Contents/Frameworks`, so it launches with `open -n` in a WindowServer session.
-
-The production packaging (the `bundle-sbcl` crate) is 070-distribution's job; this dev
-`build.sh` is its precursor, as gerbil's app `build.sh` preceded `bundle-gerbil`.
+2. **bundle** — the production bundler (`cargo run --example bundle_app -p
+   apianyware-bundle-sbcl`, ADR-0041): dumps the image to `Contents/Resources/`
+   (`save-lisp-and-die :executable t` embeds the SBCL runtime + binding library + app; the
+   dylib stays in `*shared-objects*`, recorded as `@executable_path/../Frameworks/…` via
+   `AW_NATIVE_DYLIB_RECORD_AS` — ADR-0038 §5), compiles the Swift **stub** launcher
+   (CFBundleExecutable — sets `DYLD_FALLBACK_LIBRARY_PATH=<bundle>/Contents/Frameworks`,
+   `execv`s the image), vendors `libzstd.1.dylib` + `libAPIAnywareSbcl.dylib` into
+   `Contents/Frameworks/`, and signs the bundle. At revive, `sb-ext:*init-hooks*` runs the
+   startup re-resolution pass (re-`dlopen`, re-resolve `objc_msgSend`, re-mask FP traps,
+   re-register the subclass dispatcher) before the toplevel;
+3. **per-impl id** — rename to `HelloWindow-sbcl.app` + PlistBuddy the id to
+   `com.linkuistics.hello-window-sbcl` (the four impls coexist in one acceptance-test VM)
+   + re-sign, then a **revive smoke through the stub** proves the whole launch chain on
+   the host.
 
 ## Dev run (interactive, needs a GUI session)
 
@@ -58,7 +60,8 @@ SDKROOT=macosx sbcl --script targets/sbcl/app-implementations/macos/hello-window
 
 ## Distribution note
 
-The dumped exe links Homebrew's `libzstd` (SBCL core-compression dep) at an absolute
-`/opt/homebrew/...` path; a target without Homebrew must provide that one dylib (post-dump
-relocation is impossible — see `learnings.md`). Verified via TestAnyware: see
-`../../test-results/hello-window/report.md`.
+The `.app` is **fully self-contained** (`sbcl-vendor-libzstd-k75`): the dumped image's
+absolute Homebrew `libzstd` load command is uneditable post-dump, but the vendored copy in
+`Contents/Frameworks/` resolves via the stub's `DYLD_FALLBACK_LIBRARY_PATH`, and
+`libAPIAnywareSbcl` reopens exe-relative — a vanilla VM needs **nothing** staged. Verified
+via TestAnyware against the AppSpec suite: see `apps/macos/hello-window/docs/run-results.md`.

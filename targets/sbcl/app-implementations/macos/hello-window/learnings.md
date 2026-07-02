@@ -133,3 +133,37 @@ siblings — all three events emitted.
 hardcodes `com.linkuistics.hello-window` / `HelloWindow.app`); gerbil also needs its toolchain
 installed (`gerbil-scheme` not on host). A native `--bundle-id` flag on the cargo bundlers
 remains the proper long-term home (an APIAnyware tooling concern, not app data).
+
+## 2026-07-02 (self-contained bundle, `sbcl-vendor-libzstd-k75`)
+
+The k73 live run found the k30 dev-wrapped `.app` aborting in a vanilla VM (`dyld: Library
+not loaded … libzstd.1.dylib`) and had to stage the host dylib. Fixed by **converging
+`build.sh` onto the production bundler** (`apianyware-bundle-sbcl`, ADR-0041) — the
+mechanism already existed there; the dev build had simply bypassed it.
+
+- 🟢 **`build.sh` now bundles via `cargo run --example bundle_app -p apianyware-bundle-sbcl`**
+  (then the same post-mv PlistBuddy + re-sign dance as racket/chez for the per-impl id —
+  the Info.plist-heredoc shortcut above is retired with the hand-rolled wrap). The bundler
+  dumps the image to `Contents/Resources/`, compiles the Swift **stub** (CFBundleExecutable)
+  that sets `DYLD_FALLBACK_LIBRARY_PATH=<bundle>/Contents/Frameworks` and `execv`s the image,
+  and vendors **both** non-system dylibs: `libzstd.1.dylib` (resolved by leaf name via the
+  fallback when the absolute Homebrew path is absent — the load command itself is uneditable
+  post-dump) and `libAPIAnywareSbcl.dylib` (recorded as
+  `@executable_path/../Frameworks/…` via `AW_NATIVE_DYLIB_RECORD_AS` at dump, reopened
+  exe-relative at revive).
+- 🟢 **No VM provisioning at all.** The 🟡 "VM must provide `/tmp/libAPIAnywareSbcl.dylib`"
+  note above is obsolete: the dump no longer records the `/tmp` stage (the bundler passes its
+  discovered build path + the record-as namestring), so the `.app` travels alone. Verified
+  in a vanilla VM with **neither** Homebrew zstd **nor** the `/tmp` dylib present: launch,
+  all three AppSpec scenarios pass, startup emitted ~400 ms after `open`.
+- 🟢 **The revive smoke now runs through the stub** (`Contents/MacOS/hello-window`), so the
+  host smoke exercises the full VM launch chain: stub exec → fallback env → init-hooks
+  re-resolution → vendored-dylib reopen → delegate re-synthesis.
+- 🟡 **Run-mechanism finding (AppSpec/TestAnyware-side, not this impl):** in back-to-back
+  scenario runs the runner's `wait-ready` can miss a startup line that provably lands
+  (failure artifact shows the app up with `[lifecycle] startup` in the log) — a
+  `testanyware exec` session that follows recent `open`/`osascript` activity can stall its
+  close until the CLI's 30 s cap, eating the 10 s ready window. Scenario 02 fails on the
+  01→02 transition but passes solo after idle. Recorded in
+  `apps/macos/hello-window/docs/run-results.md`; the fix belongs to the AppSpec runner /
+  TestAnyware exec channel (successor to the k33 `wc -c`→`cat` tailer fix), not to any impl.
