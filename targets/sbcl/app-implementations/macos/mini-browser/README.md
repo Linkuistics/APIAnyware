@@ -30,34 +30,57 @@ Every WebKit/AppKit/Foundation call is plain ObjC (`:load-residual nil`); the ap
 `libAPIAnywareSbcl` **only** for the `aw_sbcl_subclass_*` bounce shim (as scenekit/pdfkit),
 not trampoline residual. No framework constant is needed, so no startup-constant pass here.
 
+## AppSpec instrumentation (sbcl-instrument-build-k119)
+
+Instrumented to the logging contract
+(`apps/macos/mini-browser/docs/logging-contract.md`): `events.lisp` (pure CL, the
+`mb-events` package, loaded first by run.lisp/dump.lisp) writes the structured
+`/tmp/mini-browser/events.log` (`MINI_BROWSER_EVENTS_LOG` overrides) the AppSpec runner
+tails — `[lifecycle] startup`/`shutdown`, the bare launch line, and the three `[nav]`
+events mirroring the four `WKNavigationDelegate` callbacks: `started url="…"` post-state
+(loading status set), `finished url="…" title="…" can-go-back=… can-go-forward=…` after
+the **whole** §7.2 chrome refresh (reading the same history getters the button
+enablement used; booleans as bare `true`/`false`; `title=""` on instant loads — the
+first-load title lag), and `failed phase=<request|load> message="…"` at rule entry —
+message computed, **before** `runModal` (the runner's dismissal cue; the status line's
+capitalized `Load failed:` stays as realized, only the log key is normalized lowercase).
+The `browser-controller` gains the `applicationWillTerminate:` delegate hook (ninth
+forwarded selector — informal conformance; the formal `:protocols` list stays
+WKNavigationDelegate-only) and is installed as the app delegate. Impl descriptor:
+`mini-browser-impl.rkt`.
+
 ## Build
 
 ```sh
-# prerequisites: WebKit generated (resolve→annotate→enrich --only WebKit, then --target sbcl)
-# + the dylib built
-SDKROOT=macosx cargo run -p apianyware-analyze -- resolve  --only WebKit
-SDKROOT=macosx cargo run -p apianyware-analyze -- annotate --only WebKit --llm-dir analysis/ir/llm-annotations
-SDKROOT=macosx cargo run -p apianyware-analyze -- enrich   --only WebKit
-SDKROOT=macosx cargo run -p apianyware-generate -- --target sbcl
-SDKROOT=macosx swift build --package-path swift --product APIAnywareSbcl
-# then:
 targets/sbcl/app-implementations/macos/mini-browser/build.sh
 ```
 
-Produces `build/MiniBrowser.app` (a standalone `save-lisp-and-die :executable t` dump).
-`build.sh` stages the dylib at `/tmp/libAPIAnywareSbcl.dylib` (the revive auto-reopen path,
-ADR-0038 §5), runs the host construction **pre-flight** + a **revive smoke** (dump+revive
-**with** the dylib + subclass re-synthesis + **protocol re-conformance** + dispatcher
-re-registration) before the bundle.
+Produces `build/MiniBrowser-sbcl.app` (`CFBundleIdentifier
+com.linkuistics.mini-browser-sbcl`) via the production bundler
+(`apianyware-bundle-sbcl`, ADR-0041): the app's `dump.lisp`
+(`save-lisp-and-die :executable t`) behind the Swift stub, with **libzstd** and
+**libAPIAnywareSbcl** vendored into `Contents/Frameworks/` — the bundle travels alone
+(no `/tmp` staging; the k119 rebuild retired this app's original 060-era staged wrap).
+build.sh regenerates the sbcl bindings if WebKit is absent from the local tree (keyed on
+`generated/webkit/wkwebview.lisp`) and relinks the dylib in lockstep — NB the k116
+WebKit corpus **grew the trampoline residual 170 → 174** (+4 `WebKit.WebPage` methods),
+so a pre-k116 tree needs the regen + `swift build --product APIAnywareSbcl` relink even
+though wkwebview.lisp exists — then runs the host construction **pre-flight** + a
+**revive smoke** through the stub (subclass re-synthesis + **protocol re-conformance** +
+dispatcher re-registration + vendored-dylib reopen).
 
 ## VM-verify (never run GUI apps from the CLI — use TestAnyware)
 
-Provision the VM with `/opt/homebrew/opt/zstd/lib/libzstd.1.dylib` (via `sudo` — the golden
-has no Homebrew), `/tmp/libAPIAnywareSbcl.dylib`, and a **network connection** (the app loads
-`https://example.com`; no sample file). Upload the bundle, `xattr -dr com.apple.quarantine`,
-`open -n`. Drive the address field by **triple-click** (select-all) → type → Return (the
-NSTextField Cmd-A does not take reliably over VNC). The key behaviour to verify is the status
-line tracking the **async** navigation to "Done", the address bar resolving to the canonical
-URL (both via the `WKNavigationDelegate` callbacks), `https://` prepended to a bare host, and
-◀/▶ bidirectional history with correct enable/disable. See
-`test-results/mini-browser/report.md`.
+Upload the bundle (it travels alone), `xattr -dr com.apple.quarantine`, `open -n`. The
+VM has **no network** (k74 provisioning), so the launch-time `https://example.com` load
+fails: the §7.3 modal NSAlert is the expected launch observable, and the scenario suite
+drives all success-path navigation against **local `file://` fixture pages** (the k116
+probe: `loadRequest:` renders local HTML; `[nav] finished` carries `title=""` on every
+file:// load — the didFinish-time title read misses on instant loads). Drive the address
+field by **triple-click** (select-all) → type → Return (the NSTextField Cmd-A does not
+take reliably over VNC). The key behaviour to verify is the status line tracking the
+**async** navigation, `https://` prepended to a bare host (witnessed by `[nav] started`
+even offline), and ◀/▶ bidirectional history — enablement asserted via the `[nav]
+finished` booleans (the AX `enabled` flag is dropped by the snapshot transform). Tier-2
+live-run belongs to the appspec-mini-browser live-run leaf. See
+`test-results/mini-browser/report.md` for the original 060 VM report.

@@ -1,13 +1,16 @@
-;;;; dump.lisp — `save-lisp-and-die` the mini-browser standalone executable (060).
+;;;; dump.lisp — `save-lisp-and-die` the mini-browser standalone executable.
 ;;;;
 ;;;; Like scenekit-viewer/pdfkit-viewer this dumps WITH libAPIAnywareSbcl (ADR-0038 §5: the
 ;;;; dylib is NOT embedded — `save-lisp-and-die` keeps it in `*shared-objects*`, so the
-;;;; revived image auto-reopens it by the path it was loaded from). We load it from a FIXED
-;;;; path — `/tmp/libAPIAnywareSbcl.dylib` (build.sh stages the copy) — so the VM needs only
-;;;; that one dylib at that path. Here the dylib is needed for the SUBCLASS bounce shim (the
-;;;; `browser-controller` delegate); every framework loads `:load-residual nil` (the app
-;;;; uses no framework constants/functions, and the WKNavigationDelegate ABI is read live
-;;;; off the protocol).
+;;;; revived image auto-reopens it by the recorded namestring). The bundler (`bundle-sbcl`,
+;;;; ADR-0041) drives this file with
+;;;; `AW_NATIVE_DYLIB_RECORD_AS=@executable_path/../Frameworks/...` set, so the recorded
+;;;; namestring points at the VENDORED copy inside the .app and the bundle travels alone
+;;;; (the k119 rebuild retired this app's original /tmp staging, as
+;;;; sbcl-vendor-libzstd-k75 did for the ladder). Here the dylib is needed for the
+;;;; SUBCLASS bounce shim (the `browser-controller` delegate); every framework loads
+;;;; `:load-residual nil` (the app uses no framework constants/functions, and the
+;;;; WKNavigationDelegate ABI is read live off the protocol).
 ;;;;
 ;;;; At revive, `sb-ext:*init-hooks*` runs the mandatory startup re-resolution pass BEFORE
 ;;;; the toplevel: re-dlopen frameworks (re-registering WebKit's protocol metadata),
@@ -16,9 +19,10 @@
 ;;;; `ensure-browser-controller` — re-declaring WKNavigationDelegate conformance on the
 ;;;; freshly minted class pair — and wires the nav delegate.
 ;;;;
-;;;; Invoked by build.sh:
-;;;;   SDKROOT=macosx sbcl --non-interactive --disable-debugger \
-;;;;     --load .../apps/mini-browser/dump.lisp -- <output-exe-path> <dylib-path>
+;;;; Invoked by the bundler (via build.sh step [2/3]):
+;;;;   [AW_NATIVE_DYLIB_RECORD_AS=@executable_path/../Frameworks/libAPIAnywareSbcl.dylib]
+;;;;   SDKROOT=… sbcl --non-interactive --disable-debugger \
+;;;;     --load .../mini-browser/dump.lisp -- <output-exe-path> <dylib-path>
 
 (in-package #:cl-user)
 
@@ -43,6 +47,8 @@
 (aw-app-load-framework "AppKit" :load-residual nil)
 (aw-app-load-framework "WebKit" :load-residual nil)
 
+;; events.lisp first (pure CL — the mb-events package mini-browser.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "mini-browser.lisp" cl-user::*app-dir*))
 
 (format t "~&== dumping ~A (dylib recorded: ~A) ==~%" cl-user::*out-exe* cl-user::*dylib*)

@@ -45,6 +45,8 @@
 (aw-app-load-framework "AppKit" :load-residual nil)
 (aw-app-load-framework "WebKit" :load-residual nil)
 
+;; events.lisp first (pure CL — the mb-events package mini-browser.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "mini-browser.lisp" cl-user::*app-dir*))
 
 (let ((smoke (sb-ext:posix-getenv "AW_BROWSER_SMOKE")))

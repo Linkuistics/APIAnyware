@@ -40,6 +40,15 @@
 ;;;; revived image (the runtime re-registers the forwarding dispatcher + re-conforms the
 ;;;; protocol at startup). defclass/defmethod re-evaluation is idempotent.
 ;;;;
+;;;; k119 instrumentation (apps/macos/mini-browser/docs/logging-contract.md): events.lisp
+;;;; (the `mb-events` package, loaded first by run.lisp/dump.lisp) writes the structured
+;;;; events.log the AppSpec runner tails — [lifecycle] startup/shutdown, the bare launch
+;;;; line, and the three [nav] events mirroring the four WKNavigationDelegate callbacks
+;;;; (`started` post-state, `finished` after the whole §7.2 refresh, `failed` pre-modal).
+;;;; The `applicationWillTerminate:` delegate hook is the contract's one structural
+;;;; addition; no visible behaviour changed (contract rule — launch-line wording, the
+;;;; `Loading…`/`Load failed:` spellings, and the example.com home URL stay as realized).
+;;;;
 ;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like the other ladder apps).
 
 (in-package #:apianyware-sbcl-impl)
@@ -76,6 +85,16 @@
    nil (a wrap of a null id) -> \"\". `nsstring->string` takes the id SAP, so unwrap with
    `aw-ptr`."
   (if obj (nsstring->string (aw-ptr obj)) ""))
+
+;;; --- Contract read helpers (logging-contract.md "Navigation events"): the web view's
+;;; URL absoluteString / title AT CALLBACK TIME, empty string when nil — the same reads
+;;; the §7.2 chrome refresh makes (the k116 reference shape). ---
+(defun current-url-string (web)
+  (let ((u (ns:url web)))
+    (if u (ns->str (ns:absolute-string u)) "")))
+
+(defun current-title-string (web)
+  (ns->str (ns:title web)))
 
 ;;; --- URL normalisation (hand-rolled scanners; no regex — matches the scheme targets). ---
 (defun trim-ws (s)
@@ -144,8 +163,13 @@
 
 (defun show-error (controller err phase)
   "Surface a WKNavigationDelegate error: a modal NSAlert built from the NSError, plus a
-   status line. ERR arrives wrapped (the `@` arg of the failed-navigation selector)."
+   status line. ERR arrives wrapped (the `@` arg of the failed-navigation selector).
+   Emits `[nav] failed` at rule entry — message computed, BEFORE the blocking modal
+   (the contract's deliberate pre-state deviation: the event is the runner's dismissal
+   cue). PHASE arrives in the status line's realized capitalization (`Request`/`Load`);
+   the log key is the normalized lowercase form."
   (let ((message (if err (ns->str (ns:localized-description err)) "Unknown error")))
+    (mb-events:emit-nav-failed (string-downcase phase) message)
     (when err
       (let ((alert (ns:alert-with-error_ (find-class 'ns:ns-alert) err)))
         (when alert
@@ -221,12 +245,23 @@
     (define-objc-method (browser-controller "webView:didStartProvisionalNavigation:")
         (self webview navigation)
       (declare (ignore webview navigation))
-      (set-status self "Loading…"))
+      (set-status self "Loading…")
+      ;; §7.1 post-state: loading status set; url = the provisional URL read (witnesses
+      ;; the https:// prepend even when the load then fails offline).
+      (mb-events:emit-nav-started (current-url-string (slot-value self 'web-view))))
     (define-objc-method (browser-controller "webView:didFinishNavigation:")
         (self webview navigation)
       (declare (ignore webview navigation))
       (refresh-chrome self)
-      (set-status self "Done"))
+      (set-status self "Done")
+      ;; §7.2 post-state: after the WHOLE refresh (buttons, title, address, status),
+      ;; reading the same history getters the button enablement just used — the log
+      ;; value and the AX enabled flag are one fact on two channels.
+      (let ((web (slot-value self 'web-view)))
+        (mb-events:emit-nav-finished (current-url-string web)
+                                     (current-title-string web)
+                                     (ns:can-go-back web)
+                                     (ns:can-go-forward web))))
     (define-objc-method (browser-controller "webView:didFailNavigation:withError:")
         (self webview navigation error)
       (declare (ignore webview navigation))
@@ -235,6 +270,20 @@
         (self webview navigation error)
       (declare (ignore webview navigation))
       (show-error self error "Request"))
+
+    ;; `applicationWillTerminate:` is the only hook that fires on the menu/Cmd-Q quit
+    ;; path: -[NSApplication terminate:] ends in a C exit(), which bypasses
+    ;; sb-ext:*exit-hooks*. NSApplication auto-observes the notification for a delegate
+    ;; that responds to this selector (informal conformance suffices — the controller's
+    ;; formal :protocols list stays WKNavigationDelegate-only). The logging contract's
+    ;; one addition (k119), as in the prior four apps.
+    (define-objc-method (browser-controller "applicationWillTerminate:") (self notification)
+      (declare (ignore self notification))
+      (handler-case
+          (progn (mb-events:emit-shutdown 'menu) (mb-events:close-events!))
+        (error (e)
+          (format *error-output* "applicationWillTerminate: callback error: ~A~%" e)
+          (finish-output *error-output*))))
 
     (setf *browser-controller-ready* t)))
 
@@ -255,6 +304,20 @@
   (let ((app (ns:shared-application (find-class 'ns:ns-application))))
     (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
     (install-app-menu app "Mini Browser")
+
+    ;; --- Structured event log: open + [lifecycle] startup BEFORE construction ---
+    ;; `startup` must land before the app blocks in (ns:run app) or the runner's
+    ;; `wait-ready` readiness probe times out; the contract wants it ahead of
+    ;; window/web-view construction. Gated on the real run — the build-time smoke needs
+    ;; no log file (the emitters no-op on a nil port). Test-config compatibility: the
+    ;; browser reads no runtime config, so it honours MINI_BROWSER_TEST_CONFIG by
+    ;; reading the env var and treating absent/empty as "no config" — a deliberate
+    ;; no-op.
+    (when run
+      (mb-events:events-init!)
+      (mb-events:emit-startup)
+      (sb-ext:posix-getenv "MINI_BROWSER_TEST_CONFIG"))
+
     (aw-with-rect (frame 0 0 +window-w+ +window-h+)
       (let* ((window (make-instance 'ns:ns-window
                        :init-with-content-rect frame
@@ -332,6 +395,13 @@
                               :status-label status-label
                               :window window)))
 
+            ;; App delegate for the terminate hook (logging contract; k119). Installed
+            ;; unconditionally so the pre-flight / revive smoke exercises set-delegate.
+            ;; The controller instance is pinned in *subclass-instances* (a STRONG
+            ;; table — subclass.lisp), so Cocoa's weak delegate reference and the
+            ;; controls' weak target references never reap it.
+            (ns:set-delegate_ app controller)
+
             ;; --- Toolbar: horizontal stack pinned to the top edge, grows with width ---
             (let ((stack (make-instance 'ns:ns-stack-view)))
               (aw-with-rect (tframe +margin+ toolbar-y
@@ -368,7 +438,12 @@
               ;; --- Show + run ---
               (ns:make-key-and-order-front_ window nil)
               (ns:activate-ignoring-other-apps_ app t)
+              ;; Launch diagnostic (spec §3 step 7): the bare line beginning
+              ;; `Mini Browser` the runner's `wait-for-log` matches in events.log,
+              ;; plus the human-friendly stdout line (kept for unbundled runs;
+              ;; LaunchServices discards stdout under `open`) — dual emission.
               (when run
+                (mb-events:emit-launch-line)
                 (format t "~&Mini Browser opened. Type a URL + Return, navigate with ◀/▶/Reload. Quit with Cmd-Q.~%")
                 (finish-output)
                 (ns:run app))
