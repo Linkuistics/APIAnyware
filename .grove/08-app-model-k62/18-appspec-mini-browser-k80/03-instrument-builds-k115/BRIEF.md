@@ -35,12 +35,24 @@ retires)
    CLI smoke green end-to-end (startup → launch line → `[nav] started` →
    `finished url="https://www.apple.com/" title="Apple"` → `shutdown
    reason=menu`). No new sibling handoffs — the pattern held cleanly.
-3. `gerbil-instrument-build-k118` — the k109 pattern (emitter inlined in the
-   `.ss`, Gambit primitives only; own generate; the git-clean dylib shortcut
-   will NOT hold — see child-1 handoff; gcc-15 shim if gxc breaks).
-4. `sbcl-instrument-build` — the k101/k110 pattern; owns the k114 `build.sh`
-   seeds (bundle id `com.linkuistics.mini-browser-sbcl` +
-   `CFBundleInfoDictionaryVersion`). Closes the node.
+3. `gerbil-instrument-build-k118` ✅ *(done 2026-07-03)* — the k109 pattern held
+   (inline `mb-` emitter; startup + test-config no-op top-level before `(main)`;
+   terminate hook; k116 emission points). The k116 trampoline prediction
+   confirmed again: regenerate `--target gerbil` produced exactly 174 entries
+   (+4 `WebKit.WebPage`); `swift build --product APIAnywareGerbil` relink
+   (gerbil *links* the dylib at `gxc -exe`), then bundle. CLI smoke green
+   end-to-end (startup → launch line → `[nav] started` → `finished
+   url="https://example.com/"` `title=""` first-load lag → `shutdown
+   reason=menu`). **New sibling-relevant finding (gerbil-only):** the WebKit
+   corpus flattens `stringLength` onto WKWebView, so `wkwebview.ss` re-exports
+   a `string-length` GENERIC shadowing the Gambit builtin — runtime dispatch
+   failure in any importer; fixed app-side with `(except-in
+   :gerbil-bindings/webkit/wkwebview string-length)` (the `values`-coerce
+   shadow class; recorded in the impl learnings.md + memory). Does not affect
+   sbcl (package-qualified `ns:` names cannot shadow CL builtins).
+4. `sbcl-instrument-build-k119` — the k101/k110 pattern (sibling `events.lisp`);
+   owns the k114 `build.sh` seeds (bundle id `com.linkuistics.mini-browser-sbcl`
+   + `CFBundleInfoDictionaryVersion`). Closes the node.
 
 ## Goal
 
