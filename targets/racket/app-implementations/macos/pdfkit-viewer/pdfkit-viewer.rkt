@@ -9,6 +9,12 @@
 ;; PDFPage), NSNotificationCenter observer registration, NSOpenPanel file
 ;; filter via list->nsarray, and a notification-driven UI refresh loop.
 ;;
+;; Instrumented to the AppSpec logging contract (racket-instrument-build-k98,
+;; apps/macos/pdfkit-viewer/docs/logging-contract.md): it writes a structured
+;; events.log the runner tails — [lifecycle] startup/shutdown, the bare launch
+;; line, and the two [document] state-transition events (opened / page-changed)
+;; that make the spec §13 document assertions runner-verifiable.
+;;
 ;; Run with: racket pdfkit-viewer.rkt
 
 (require "../../generated/appkit/nsapplication.rkt"
@@ -20,6 +26,7 @@
          "../../generated/appkit/nsstackview.rkt"
          "../../generated/appkit/nsopenpanel.rkt"
          "../../generated/foundation/nsurl.rkt"
+         "../../generated/foundation/nsstring.rkt"
          "../../generated/foundation/nsnotificationcenter.rkt"
          "../../generated/pdfkit/pdfview.rkt"
          "../../generated/pdfkit/pdfdocument.rkt"
@@ -29,7 +36,8 @@
          "../../runtime/type-mapping.rkt"
          "../../runtime/coerce.rkt"
          "../../runtime/delegate.rkt"
-         "../../runtime/app-menu.rkt")
+         "../../runtime/app-menu.rkt"
+         "events.rkt")
 
 ;; --- Constants (not yet extracted by collector) ---
 ;; NSWindowStyleMask
@@ -56,10 +64,53 @@
 ;; PDFDisplayMode
 (define kPDFDisplaySinglePageContinuous 1)
 
+;; --- Structured event log (logging contract) ---
+;; Open + truncate the events.log the runner tails, then record [lifecycle]
+;; startup BEFORE window/PDF-view construction / the AppKit run loop (or
+;; `wait-ready` times out).
+(events-init!)
+(emit-startup)
+
+;; Test-config compatibility (logging-contract.md "Test-config compatibility"):
+;; the viewer reads no runtime config, so it honours the PDFKIT_VIEWER_TEST_CONFIG
+;; contract by reading the env var and treating an absent/empty value (and a
+;; missing file) as "no config" — a deliberate no-op.
+(void (getenv "PDFKIT_VIEWER_TEST_CONFIG"))
+
+;; --- Shutdown wiring (signal / error paths) ---
+;; The logging contract requires a [lifecycle] shutdown line on terminate.
+;; The menu/Cmd-Q path goes through applicationWillTerminate: (delegate below);
+;; SIGTERM/SIGINT reach Racket as exn:break → reason=signal, and any other
+;; uncaught exception → reason=error.
+(uncaught-exception-handler
+ (lambda (exn)
+   (with-handlers ([exn:fail? (lambda (_) (void))])
+     (if (exn:break? exn)
+         (emit-shutdown 'signal)
+         (emit-shutdown 'error))
+     (close-events!))
+   (exit (if (exn:break? exn) 130 1))))
+
 ;; --- Application setup ---
 (define app (nsapplication-shared-application))
 (nsapplication-set-activation-policy! app 0) ; Regular
 (install-standard-app-menu! app "PDFKit Viewer")
+
+;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+;; Cocoa holds delegates weakly, so keep a module-scope reference. The body is
+;; wrapped in with-handlers because an unhandled exception in an ObjC callback
+;; crashes the app with no Racket stack trace.
+(define app-delegate
+  (make-delegate
+   "applicationWillTerminate:"
+   (lambda (notification)
+     (with-handlers ([exn:fail?
+                      (lambda (e)
+                        (eprintf "applicationWillTerminate delegate error: ~a\n"
+                                 (exn-message e)))])
+       (emit-shutdown 'menu)
+       (close-events!)))))
+(void (nsapplication-set-delegate! app app-delegate))
 
 ;; --- Window ---
 (define window
@@ -137,12 +188,17 @@
 ;; contract gap.
 (define current-document #f)
 
+;; Applies the §7.2 refresh rule and returns the state it applied — #f for the
+;; empty state, (cons page total) (1-based) when a document is loaded — so the
+;; [document] log events (logging contract) report exactly what the label
+;; shows, including the nil-current-page fallback to page 1.
 (define (refresh-ui!)
   (cond
     [(not current-document)
      (nstextfield-set-string-value! page-label "No PDF loaded")
      (nsbutton-set-enabled! prev-button #f)
-     (nsbutton-set-enabled! next-button #f)]
+     (nsbutton-set-enabled! next-button #f)
+     #f]
     [else
      (define total (pdfdocument-page-count current-document))
      ;; `pdfview-current-page` has a generated return contract of
@@ -158,9 +214,10 @@
      (nstextfield-set-string-value! page-label
        (format "Page ~a of ~a" (+ index 1) total))
      (nsbutton-set-enabled! prev-button (pdfview-can-go-to-previous-page pdf-view))
-     (nsbutton-set-enabled! next-button (pdfview-can-go-to-next-page pdf-view))]))
+     (nsbutton-set-enabled! next-button (pdfview-can-go-to-next-page pdf-view))
+     (cons (+ index 1) total)]))
 
-(refresh-ui!)
+(void (refresh-ui!))
 
 ;; --- Notification observer ---
 ;; PDFViewPageChangedNotification fires on every page change — button
@@ -176,7 +233,11 @@
    #:param-types  (hash "pageChanged:" '(object))
    "pageChanged:"
    (lambda (_note)
-     (refresh-ui!))))
+     ;; [document] page-changed rides the observer, POST-refresh (label +
+     ;; button states already applied — logging contract "Document events").
+     (define state (refresh-ui!))
+     (when state
+       (emit-page-changed (car state) (cdr state))))))
 
 (nsnotificationcenter-add-observer-selector-name-object!
   (nsnotificationcenter-default-center)
@@ -204,6 +265,8 @@
      (nsopenpanel-set-allows-multiple-selection! panel #f)
      (nsopenpanel-set-allowed-file-types! panel pdf-type-array)
      (define response (nsopenpanel-run-modal panel))
+     ;; Cancel / nil URL / failed initWithURL: are spec-mandated silent
+     ;; no-ops — no event, no error line (logging contract).
      (when (= response NSModalResponseOK)
        (define url (nsopenpanel-url panel))
        (when (and url (not (objc-null? url)))
@@ -211,7 +274,17 @@
          (when (and doc (not (objc-null? doc)))
            (set! current-document doc)
            (pdfview-set-document! pdf-view doc)
-           (refresh-ui!)))))))
+           ;; [document] opened — success path only, POST-state (store +
+           ;; setDocument: + refresh already applied). `file` is the URL's
+           ;; last path component (the panel canonicalizes paths, so the
+           ;; basename is the stable identity); `pages` = pageCount.
+           (define state (refresh-ui!))
+           (define basename
+             (let ([name (nsurl-last-path-component url)])
+               (or (and name (not (objc-null? name)) (nsstring-utf8-string name))
+                   "")))
+           (when state
+             (emit-document-opened basename (cdr state)))))))))
 
 (nsbutton-set-target! open-button open-target)
 (nsbutton-set-action! open-button "openDocument:")
@@ -244,5 +317,9 @@
 (nswindow-make-key-and-order-front window #f)
 (nsapplication-activate-ignoring-other-apps app #t)
 
+;; Launch diagnostic (spec §3 step 7): the bare line beginning `PDFKit Viewer`
+;; the runner's `wait-for-log` matches, dual-emitted to stdout (human-friendly
+;; when run unbundled) and events.log (the runner's read path).
+(emit-launch-line)
 (displayln "PDFKit Viewer running. Close window or Ctrl+C to exit.")
 (nsapplication-run app)

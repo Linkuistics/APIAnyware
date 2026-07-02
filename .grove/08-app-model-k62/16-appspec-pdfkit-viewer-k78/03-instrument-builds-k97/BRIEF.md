@@ -1,14 +1,25 @@
-# instrument-builds-k97
+# instrument-builds-k97 — brief
 
-**Kind:** work
+**Kind:** node (decomposed 2026-07-02 — one instrument+build child per impl, the
+k88 split; children materialized lazily, grow the next as each retires)
+
+## Children
+
+1. `racket-instrument-build-k98` — the reference pattern (events.rkt + wiring +
+   self-contained build.sh + descriptor; gallery k89 is the worked template).
+2. *(planned)* chez — gallery k90 pattern (emitter inline in the `.sls`; startup at
+   top level before `(main)`).
+3. *(planned)* gerbil — gallery k91 pattern; gcc-15 shim if the binding rebuilds;
+   never a bare `values` in generated bindings.
+4. *(planned)* sbcl — gallery k92 pattern (`events.lisp` exists as template; dump.lisp
+   build).
 
 ## Goal
 
 Instrument all four pdfkit-viewer impls
 (`targets/{racket,chez,gerbil,sbcl}/app-implementations/macos/pdfkit-viewer/`) to the
 k96 conformance contracts and build each to a `.app` — the hello-window k68–k71 /
-ui-controls-gallery k88 stage. **Likely a node** (one child per impl, as k88 was) —
-decompose on entry if the four impls don't fit one session.
+ui-controls-gallery k88 stage.
 
 ## Context
 
@@ -32,6 +43,14 @@ decompose on entry if the four impls don't fit one session.
 - Build notes: `swift build --product` not `--target` where a dylib relink is
   involved; gerbil needs the gcc-15 shim (`/tmp/aw-gcc15-shim`); bundle ids
   `com.linkuistics.pdfkit-viewer-<impl>`.
+- **PDFKit corpus (k98 finding):** PDFKit was absent from the local partial corpus
+  (Foundation+AppKit only) — k98 collected it (`SDKROOT=macosx apianyware-collect
+  --only PDFKit`) and resolved deps-together (`apianyware-analyze --only
+  Foundation,AppKit,PDFKit`); `extracted.json`/`resolved.json` are now local, goldens
+  unmoved. The chez/gerbil/sbcl children still need their **own** target's
+  `apianyware-generate --target <t>` + adapter dylib relink (`swift build --product
+  APIAnyware<T>`) — the trampoline set grows with the third family — but **not**
+  re-collection/re-resolution.
 
 ## Done when
 
