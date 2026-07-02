@@ -22,9 +22,25 @@
 ;;;; on NSControl and resolve onto every control subclass by CLOS inheritance — the same
 ;;;; mechanism hello-window's label used for `ns:set-string-value_`.
 ;;;;
-;;;; PURE ObjC — no Swift-native residual — so, like hello-window, the run/build harness
-;;;; loads bindings with `:load-residual nil` and the artifact needs NO libAPIAnywareSbcl
-;;;; dylib (VM provisioning is libzstd only).
+;;;; Every AppKit/Foundation call is PURE ObjC — no Swift-native residual — so the
+;;;; run/build harness loads bindings with `:load-residual nil`. It is NOT, however,
+;;;; dylib-free (k92): the AppSpec logging contract's callbacks — the terminate delegate
+;;;; and the four [controls] target-actions — are ObjC→Lisp entries, which on SBCL MUST
+;;;; route through libAPIAnywareSbcl's subclass bounce shim (a `define-alien-callable`
+;;;; installed AS an IMP runs Lisp on a foreign thread — the ADR-0035 crash). The harness
+;;;; loads the dylib for the subclass machinery only (no block factory, no trampoline
+;;;; residual), exactly the hello-window shape.
+;;;;
+;;;; Instrumented for the AppSpec scenario runner per the k87 logging contract
+;;;; (apps/macos/ui-controls-gallery/docs/logging-contract.md): it writes the structured
+;;;; events.log the runner tails — `[lifecycle] startup` before construction, the bare
+;;;; `Controls Gallery opened. …` launch diagnostic, the four `[controls]` state-change
+;;;; events from the gallery-controller's action callbacks (each emitted AFTER the state
+;;;; change it names), and `[lifecycle] shutdown reason=menu` from the terminate delegate.
+;;;; Wiring the shared radio action is itself what forms the platform sibling-exclusion
+;;;; group (same superview + same action — the contract blesses this realization);
+;;;; instrumentation adds no UI and changes no visible behaviour (the checkbox still
+;;;; launches ON — a spec §6 hole the contract tolerates; scenarios assert the flip).
 ;;;;
 ;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like hello-window). The two
 ;;;; not-yet-portable touchpoints (the impl-package home giving bare `make-instance`, and
@@ -50,6 +66,73 @@
     (ns:add-item_ main-menu app-item)
     (ns:set-submenu_for-item_ main-menu app-submenu app-item)
     (ns:set-main-menu_ app main-menu)))
+
+;;; ---------------------------------------------------------------------------
+;;; The gallery controller — the logging contract's callback target: one ObjC subclass
+;;; instance serving both as the app delegate (terminate → shutdown event) and as the
+;;; target of the four instrumented controls' actions. Synthesized at RUNTIME (not load)
+;;; so it registers in the process that shows the UI — a class synthesized during
+;;; `save-lisp-and-die` does NOT survive into the revived image (fresh ObjC runtime).
+;;; Mirrors hello-window's `ensure-hw-delegate` / note-editor's `ensure-note-controller`.
+;;; ---------------------------------------------------------------------------
+(defvar *gallery-controller-ready* nil
+  "nil until `ensure-gallery-controller` has synthesized the controller class in THIS
+   process. A revived image starts nil again and re-synthesizes.")
+
+(defun gallery-callback-error (selector e)
+  "Report a guarded action-callback failure: an unhandled error inside an ObjC callback
+   crashes the app with no Lisp backtrace, so every handler traps + logs to stderr."
+  (format *error-output* "~A callback error: ~A~%" selector e)
+  (finish-output *error-output*))
+
+(defun ensure-gallery-controller ()
+  "Define the `gallery-controller` ObjC subclass: the four [controls] action selectors +
+   the `applicationWillTerminate:` delegate hook. Idempotent within a process via
+   `*gallery-controller-ready*`. The dylib's subclass dispatcher self-registers on the
+   first `define-objc-method` (via `aw-install-override`)."
+  (unless *gallery-controller-ready*
+    (define-objc-subclass gallery-controller (ns:ns-object))   ; no slots — callback target
+
+    ;; Radio: the shared action is what forms the platform sibling-exclusion group (same
+    ;; superview + same action); its job here is the radio-selected emit naming the
+    ;; sender's title — the group's sole selection after AppKit applies the exclusion.
+    (define-objc-method (gallery-controller "selectRadio:") (self sender)
+      (declare (ignore self))
+      (handler-case
+          (ucg-events:emit-radio-selected (nsstring->string (aw-ptr (ns:title sender))))
+        (error (e) (gallery-callback-error "selectRadio:" e))))
+
+    ;; Checkbox: NSButton toggles its state BEFORE invoking the action, so reading the
+    ;; sender's state here is the contract's post-toggle read (on iff now checked).
+    (define-objc-method (gallery-controller "checkboxChanged:") (self sender)
+      (declare (ignore self))
+      (handler-case
+          (ucg-events:emit-checkbox-changed (= (ns:state sender) 1))
+        (error (e) (gallery-callback-error "checkboxChanged:" e))))
+
+    (define-objc-method (gallery-controller "sliderChanged:") (self sender)
+      (declare (ignore self))
+      (handler-case
+          (ucg-events:emit-slider-changed (ns:double-value sender))
+        (error (e) (gallery-callback-error "sliderChanged:" e))))
+
+    (define-objc-method (gallery-controller "stepperChanged:") (self sender)
+      (declare (ignore self))
+      (handler-case
+          (ucg-events:emit-stepper-changed (ns:double-value sender))
+        (error (e) (gallery-callback-error "stepperChanged:" e))))
+
+    ;; `applicationWillTerminate:` is the only hook that fires on the menu/Cmd-Q quit
+    ;; path: -[NSApplication terminate:] ends in a C exit(), which bypasses
+    ;; sb-ext:*exit-hooks*. NSApplication auto-observes the notification for a delegate
+    ;; that responds to this selector (informal conformance suffices).
+    (define-objc-method (gallery-controller "applicationWillTerminate:") (self notification)
+      (declare (ignore self notification))
+      (handler-case
+          (progn (ucg-events:emit-shutdown 'menu) (ucg-events:close-events!))
+        (error (e) (gallery-callback-error "applicationWillTerminate:" e))))
+
+    (setf *gallery-controller-ready* t)))
 
 ;;; ---------------------------------------------------------------------------
 ;;; Layout helpers. AppKit's content view is NOT flipped (origin bottom-left), so a
@@ -239,11 +322,27 @@
 
    RUN nil is the host construction PRE-FLIGHT (060/040): it performs every FFI crossing
    the app does — all 16+ control constructors, their setters, the typed window/menu
-   inits — then returns WITHOUT blocking on `-run`, so a bare `sbcl --load` validates
-   marshalling before the VM round-trip. The dumped image's toplevel calls RUN t."
+   inits, AND the controller subclass synthesis + set-delegate + target-action wiring
+   (the logging-contract hooks) — then returns WITHOUT blocking on `-run`, so a bare
+   `sbcl --load` validates marshalling (and, in the revived image, the subclass
+   re-synthesis) before the VM round-trip. The dumped image's toplevel calls RUN t."
+  (ensure-gallery-controller)
   (let ((app (ns:shared-application (find-class 'ns:ns-application))))
     (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
     (install-app-menu app "Controls Gallery")
+
+    ;; --- Structured event log: open + [lifecycle] startup BEFORE construction ---
+    ;; `startup` must land before the app blocks in (ns:run app) or the runner's
+    ;; `wait-ready` readiness probe times out; the contract wants it ahead of gallery
+    ;; construction. Gated on the real run — the build-time smoke needs no log file
+    ;; (the emitters no-op on a nil port). Test-config compatibility: the gallery reads
+    ;; no runtime config, so it honours UI_CONTROLS_GALLERY_TEST_CONFIG by reading the
+    ;; env var and treating absent/empty as "no config" — a deliberate no-op.
+    (when run
+      (ucg-events:events-init!)
+      (ucg-events:emit-startup)
+      (sb-ext:posix-getenv "UI_CONTROLS_GALLERY_TEST_CONFIG"))
+
     (aw-with-rect (frame 0 0 820 500)
       (let* ((window (make-instance 'ns:ns-window
                        :init-with-content-rect frame
@@ -256,9 +355,36 @@
              (h 500)
              (sec (gallery-color 'ns:secondary-label-color))
              (lt 18) (rt 18)
-             (spinner (mk-spinner)))
+             ;; The four instrumented controls (+ the spinner, which needs a post-add
+             ;; start-animation) are bound so the controller wiring below can reach them;
+             ;; the rest stay anonymous in their rows.
+             (spinner (mk-spinner))
+             (checkbox (mk-checkbox))
+             (radio-a (mk-radio @"Option A" t))
+             (radio-b (mk-radio @"Option B" nil))
+             (slider (mk-slider))
+             (stepper (mk-stepper))
+             ;; The controller instance is pinned in *subclass-instances* (a STRONG
+             ;; table — subclass.lisp), so Cocoa's weak delegate reference and the
+             ;; controls' weak target references never reap it.
+             (controller (make-instance 'gallery-controller)))
         (ns:set-title_ window @"AppKit Controls - SBCL")
         (ns:center window)
+
+        ;; --- Contract hooks: delegate + target-action wiring (k92) ---
+        ;; Installed unconditionally so the pre-flight / revive smoke exercises the
+        ;; subclass bounce shim, set-delegate, and every set-target/set-action crossing.
+        ;; The shared radio action forms the platform sibling-exclusion group.
+        (ns:set-delegate_ app controller)
+        (dolist (radio (list radio-a radio-b))
+          (ns:set-target_ radio controller)
+          (ns:set-action_ radio "selectRadio:"))
+        (ns:set-target_ checkbox controller)
+        (ns:set-action_ checkbox "checkboxChanged:")
+        (ns:set-target_ slider controller)
+        (ns:set-action_ slider "sliderChanged:")
+        (ns:set-target_ stepper controller)
+        (ns:set-action_ stepper "stepperChanged:")
         (flet ((lhdr (text) (setf lt (g-header content h 20 350 lt text)))
                (rhdr (text) (setf rt (g-header content h 430 350 rt text)))
                (lrow (cap ctrl cw ch) (setf lt (g-row content h 20 120 150 lt cap ctrl cw ch sec)))
@@ -266,19 +392,21 @@
           ;; ===== Left column =====
           (lhdr "Buttons & Toggles")
           (lrow "Push button" (mk-push-button) 130 30)
-          (lrow "Checkbox"    (mk-checkbox)     170 22)
-          ;; Radio pair on one row (two controls, advance the cursor once).
+          (lrow "Checkbox"    checkbox         170 22)
+          ;; Radio pair on one row (two controls, advance the cursor once). Sharing the
+          ;; content superview + the controller's selectRadio: action makes AppKit group
+          ;; them (mutual exclusion).
           (let* ((row-h 22) (ct (+ lt (floor (- row-h 20) 2))))
             (gallery-label content h "Radio group" 20 (+ lt 2) 120 18
                            :align ns:ns-text-alignment-right :color sec)
-            (g-place content h (mk-radio @"Option A" t)   150 ct 96 20)
-            (g-place content h (mk-radio @"Option B" nil) 250 ct 96 20)
+            (g-place content h radio-a 150 ct 96 20)
+            (g-place content h radio-b 250 ct 96 20)
             (setf lt (+ lt row-h 14)))
           (lrow "Switch"      (mk-switch)       40  24)
           (lrow "Segmented"   (mk-segmented)    230 24)
           (lhdr "Value Selectors")
-          (lrow "Slider"      (mk-slider)       210 24)
-          (lrow "Stepper"     (mk-stepper)      20  28)
+          (lrow "Slider"      slider            210 24)
+          (lrow "Stepper"     stepper           20  28)
           (lrow "Rating"      (mk-level)        120 20)
           (lrow "Progress"    (mk-progress-bar) 210 16)
           (lrow "Spinner"     spinner           28  28)
@@ -297,7 +425,11 @@
         (ns:make-key-and-order-front_ window nil)
         (ns:activate-ignoring-other-apps_ app t)
         (ns:start-animation_ spinner nil)      ; the spinner is now in the view tree
+        ;; Launch diagnostic (spec §3.6): the bare line the runner's `wait-for-log`
+        ;; matches in events.log, plus the human-friendly stdout line (kept for
+        ;; unbundled runs; LaunchServices discards stdout under `open`).
         (when run
+          (ucg-events:emit-opened)
           (format t "~&Controls Gallery opened. Quit with Cmd-Q.~%")
           (finish-output)
           (ns:run app))))))

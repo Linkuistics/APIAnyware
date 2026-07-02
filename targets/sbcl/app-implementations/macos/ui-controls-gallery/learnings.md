@@ -53,18 +53,62 @@ the moment to add the walk + its own tests, not before.
   the superview retains it on `addSubview:`. Contrast the alloc/init path, which is +1 and
   wraps with `t`. Both are correct and both appear in this app.
 - **Radio grouping is automatic** for sibling `+radioButtonWithTitle:target:action:`
-  buttons that share an action — here both use the empty action `""` (the same cached
-  `SEL`), so clicking one deselects the other (verified: A=1/B=0, and the click test).
+  buttons that share an action. Pre-instrumentation both used the empty action `""` (the
+  same cached `SEL`) and still grouped; since k92 they share the controller's real
+  `selectRadio:` action (see the instrumentation section), which is the documented AppKit
+  contract for the exclusion group — either way, clicking one deselects the other.
 - **`+[NSImage imageWithSystemSymbolName:accessibilityDescription:]` + `setContentTintColor:`**
   renders and tints an SF Symbol with no asset bundle — a zero-dependency way to show a
   real image in a sample app (used for the star). `setImageScaling:` with
   `ns:ns-image-scale-proportionally-up-or-down` sizes it to the image view.
 
+## AppSpec instrumentation (sbcl-instrument-build-k92)
+
+Instrumented to the k87 logging contract
+(`apps/macos/ui-controls-gallery/docs/logging-contract.md`); the biggest delta of the four
+impls — the app previously had **no** target-action wiring at all (constructor `nil`/`""`
+slots). Findings:
+
+- **Callbacks end the app's dylib-free status.** The app's Cocoa *calls* are still pure
+  ObjC (`:load-residual nil`), but the contract's callbacks — the terminate delegate + the
+  four `[controls]` target-actions — are ObjC→Lisp entries, which on SBCL must route
+  through `libAPIAnywareSbcl`'s subclass bounce shim (ADR-0035). Same shape as
+  hello-window: the dylib is loaded for the subclass machinery only, and the bundler
+  auto-detects the need by scanning `dump.lisp` for `(aw-load-native-dylib`, then vendors
+  the dylib + relocates its recorded namestring (`AW_NATIVE_DYLIB_RECORD_AS`).
+- **One controller class covers delegate + all four actions.** A single slotless
+  `gallery-controller` (`define-objc-subclass`) is both the app delegate
+  (`applicationWillTerminate:` → `[lifecycle] shutdown reason=menu`) and the target of the
+  four instrumented controls — the note-editor controller pattern, synthesized at runtime
+  via `ensure-gallery-controller` so a revived image re-registers it. The instance is
+  pinned in `*subclass-instances*`, so Cocoa's weak delegate/target references never
+  reap it.
+- **The action sender arrives as a live CLOS instance.** The forwarding dispatcher
+  marshals `@` args through `aw-wrap`, so handlers call `(ns:title sender)` /
+  `(ns:state sender)` / `(ns:double-value sender)` directly — no raw-pointer handling.
+  The radio emit reads the title via `(nsstring->string (aw-ptr (ns:title sender)))`.
+- **NSButton toggles state BEFORE invoking its action**, so `(ns:state sender)` inside
+  `checkboxChanged:` is the contract's post-toggle read. Likewise AppKit applies the
+  radio-group exclusion before the shared action runs, so the sender's title *is* the
+  group's sole selection.
+- **Wiring the real shared radio action is what forms the exclusion group** (same
+  superview + same action) — instrumentation and conformant radio behaviour come from the
+  same one change; no explicit sibling-clearing needed (the contract blesses either
+  realization).
+- **The events emitter is pure CL** (`events.lisp`, `ucg-events` nickname, hello-window's
+  shape + the four `[controls]` emitters) and was verified in isolation under
+  `sbcl --script` against the contract's exact expected lines (quoting/escaping, integer
+  slider/stepper values, lowercase `reason`).
+- **Checkbox initial state left ON** — a spec §6 hole the contract tolerates; scenarios
+  assert the flip, and instrumentation must not change visible behaviour.
+
 ## Carried-forward (unchanged from earlier apps)
 
-- Pure ObjC → `:load-residual nil`, no `libAPIAnywareSbcl` dylib; VM provisioning is
-  libzstd only (hello-window's 070-distribution findings still hold — absolute libzstd
-  path, no post-dump Mach-O surgery, ad-hoc signature left intact).
+- `:load-residual nil` still holds (no Swift-native *trampoline* residual) — but the
+  "no `libAPIAnywareSbcl` dylib" claim is retired by the instrumentation (see above);
+  hello-window's 070-distribution findings still hold (no post-dump Mach-O surgery,
+  ad-hoc image signature left intact), with libzstd now *vendored* by the bundler
+  (sbcl-vendor-libzstd-k75) rather than absolute-path-linked.
 - App package `apianyware-sbcl-impl`; the not-yet-portable touchpoints (impl-package home,
   `aw-with-rect` geometry primitive) are the same contract-surface follow-ups
   hello-window recorded — they do not affect the portable `ns:`-named Cocoa calls.
