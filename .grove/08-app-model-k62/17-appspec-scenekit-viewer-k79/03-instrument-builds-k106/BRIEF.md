@@ -30,8 +30,23 @@ k97 split; children materialized lazily, grow the next as each retires)
    bundled-vs-fresh identical (410 exports — the chez standalone bundle carries the
    dylib at `Contents/Resources/lib/`). Emitter 22/22 in isolation;
    `SceneKitViewer-chez.app` 5.2 MB, id `com.linkuistics.scenekit-viewer-chez`.
-3. `gerbil-instrument-build-k109` — the k100 pattern; expect the gxc recompile
-   (gcc-15 shim) + its own generate/relink.
+3. `gerbil-instrument-build-k109` ✅ — the k100 pattern (emitter inlined in the
+   `.ss`, `sv-` prefixed, Gambit primitives only; startup + test-config no-op
+   top-level before `(main)`), the k107 app-level shape carried as a **cons
+   pair** (`make-geometry+title` → `(geom . title)` — not `values`, dodging the
+   generics shadow; `wrap`→#f truthiness IS the §7.4 nil check). Ran its own
+   `apianyware-generate --target gerbil` (86 SceneKit files; trampolines stay
+   170, `Trampolines.swift` regenerated **byte-identical/git-clean → the
+   existing dylib is current by construction** — the gerbil dylib is strictly
+   trampoline-only, SceneKit's dispatch growth lives in the gxc-compiled
+   c-lambdas, so no `nm` diff needed where git proves source identity — the
+   bundled copy was nm-verified identical anyway, 376 exports). Emitter
+   21/21 in isolation under gxi. `SceneKitViewer-gerbil.app` 54 MB, id
+   `com.linkuistics.scenekit-viewer-gerbil`. No gcc-15 shim needed (host has a
+   durable `/opt/homebrew/bin/gcc-15 → gcc-16` symlink).
+4. `sbcl-instrument-build-k110` — the k101 pattern; owns the two k104 seeds
+   (bundle id + `CFBundleInfoDictionaryVersion`; §7.4 stores-raw →
+   keep-previous). Closes the node.
 
 ## Goal
 

@@ -1,5 +1,57 @@
 # scenekit-viewer x gerbil
 
+**2026-07-03 (AppSpec instrument + build, leaf k109):**
+- 🟢 Instrumented to the k105 logging contract
+  (`apps/macos/scenekit-viewer/docs/logging-contract.md`): emitter inlined in
+  the `.ss` (the k91/k100 rationale — the bundler's closure walk follows only
+  `:gerbil-bindings/…` references, and the emitter uses only Gambit
+  primitives, so it rides the statically-linked prelude), with the two
+  `[scene]` state-transition events (`geometry-changed` / `color-changed`) +
+  the contract's string quoting. `[lifecycle] startup` + `sv-events-init!` are
+  top-level expressions *before* `(main)` (the viewer builds its window/scene
+  in main's defines section), and the launch line is dual-emitted before
+  `nsapplication-run`. New `applicationWillTerminate:` delegate →
+  `reason=menu`.
+- **App-level shape mirrors the racket/chez siblings (k107/k108), with two
+  gerbil twists**: `make-geometry+title` single-sources the applied geometry
+  and the event's `shape` from one cond — but returns a **cons pair**
+  `(geom . title)`, not chez's `(values …)` (a bare `values` in gerbil app
+  code risks the wholesale-generics shadow, and the pair is the gerbil
+  pdfkit `refresh-ui!` precedent); and the §7.4 keep-previous boundaries need
+  no explicit pointer checks — `wrap`→#f makes the pre-existing
+  `(when raw …)`/`(when rgb …)` truthiness *be* the nil guards (chez checks
+  `(zero? (objc-object-ptr …))`). `current-color-rgb255` folds the stored
+  colour to device-RGB ×255 integers at emit time; only the initial
+  `systemRedColor` actually converts (consumers never assume its values).
+- **The k107 sibling handoff resolved cheaper than expected for gerbil**: ran
+  `apianyware-generate --target gerbil` (86 SceneKit files, 66 classes;
+  trampoline set stays 170 — SceneKit adds zero gerbil trampolines) and the
+  regenerated `Generated/Trampolines.swift` came back **byte-identical
+  (git-clean)** — so the existing `libAPIAnywareGerbil.dylib` is current *by
+  construction* (built from provably identical source), no relink or `nm -gU`
+  diff needed. The k107 stale-dylib class is racket-shaped: racket's native
+  lib carries the generated typed dispatch, which grows with SceneKit's new
+  ABI shapes; gerbil's dylib is strictly trampoline-only and the dispatch
+  growth lands in the gxc-compiled `define-c-lambda`s instead. `git status`
+  on the generated Swift is the cheap currency oracle where it's clean.
+- 🟢 Emitter verified in isolation against the contract matchers (block
+  extracted verbatim from the `.ss` via the section markers, driven under
+  plain gxi: 21 assertions — startup-first ordering, launch-line
+  `SceneKit Viewer` prefix + bare/unbracketed, both `[scene]` matcher lines
+  exact for all four catalogue titles, quoting edges `\\`/`\"`/newline, env +
+  fixed-default path resolution with parent-dir creation,
+  truncate-on-startup, emit-after-close no-op). Built standalone via new
+  `build.sh` (k100 recipe): `SceneKitViewer-gerbil.app` (54 MB; generics 33
+  shards 99.1s + facade 10.4s + closure 28 modules 77.9s + exe link 224.6s on
+  the cold regenerated cache),
+  `CFBundleIdentifier=com.linkuistics.scenekit-viewer-gerbil`,
+  `codesign --verify --strict` OK; SceneKit framework-linked,
+  `libAPIAnywareGerbil.dylib` vendored into `Contents/Frameworks/` beside the
+  openssl pair — `nm -gU` bundled-vs-fresh identical (376 exports).
+  Descriptor `scenekit-viewer-impl.rkt` authored. No gcc-15 shim needed — the
+  host carries a durable `/opt/homebrew/bin/gcc-15 → gcc-16` symlink. Live
+  launch is the Tier-2 live-run leaf's bar (VM).
+
 **2026-06-09 (standalone, grove leaf `100/050`):**
 - 🟢 Ported and VM-verified as a self-contained `.app` (dylib-clean, SceneKit-linked,
   static Gambit runtime). In a **no-Gerbil VM**: a lit, spinning 3D geometry renders;
