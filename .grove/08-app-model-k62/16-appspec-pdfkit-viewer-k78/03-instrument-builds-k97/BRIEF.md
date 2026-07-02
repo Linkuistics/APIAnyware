@@ -5,10 +5,13 @@ k88 split; children materialized lazily, grow the next as each retires)
 
 ## Children
 
-1. `racket-instrument-build-k98` — the reference pattern (events.rkt + wiring +
-   self-contained build.sh + descriptor; gallery k89 is the worked template).
-2. *(planned)* chez — gallery k90 pattern (emitter inline in the `.sls`; startup at
-   top level before `(main)`).
+1. `racket-instrument-build-k98` ✅ — the reference pattern (events.rkt + wiring +
+   self-contained build.sh + descriptor; gallery k89 template). App-level shape the
+   siblings mirror: `refresh-ui!` returns the applied state so the `[document]`
+   events ≡ the §7.2 label by construction; launch line renamed `emit-launch-line`
+   (this app has a real `opened` event).
+2. `chez-instrument-build-k99` — gallery k90 pattern (emitter inline in the `.sls`;
+   startup at top level before `(main)`).
 3. *(planned)* gerbil — gallery k91 pattern; gcc-15 shim if the binding rebuilds;
    never a bare `values` in generated bindings.
 4. *(planned)* sbcl — gallery k92 pattern (`events.lisp` exists as template; dump.lisp
