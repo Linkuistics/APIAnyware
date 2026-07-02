@@ -6,7 +6,20 @@
 ;; Exercises: NSScrollView, NSStackView, target-action on slider/stepper,
 ;;            diverse property types, enum constants, container views.
 ;;
-;; Run with: racket ui-controls-gallery.rkt
+;; Instrumented for the AppSpec scenario runner per the UI Controls Gallery
+;; logging contract (apps/macos/ui-controls-gallery/docs/logging-contract.md):
+;; it writes a structured events.log the runner tails — [lifecycle]
+;; startup/shutdown, the bare launch line, and the four [controls]
+;; state-change events (radio/checkbox/slider/stepper) that make the spec §13
+;; interaction assertions observable (the runner's expect-ax has no
+;; value/state read). Under `launch-via 'open` stdout is discarded by
+;; LaunchServices, so the log file (not stdout) is the runner's read path; the
+;; stdout displayln is kept too (human-friendly when run unbundled, §3.6).
+;;
+;; Run with: racket ui-controls-gallery.rkt — but note the
+;;   ../../{generated,runtime} requires resolve only via the bundler's
+;;   SourceRoots::split, so the built .app (apianyware-bundle-racket) is the
+;;   runnable artifact, not this file.
 
 (require "../../generated/appkit/nsapplication.rkt"
          "../../generated/appkit/nswindow.rkt"
@@ -28,10 +41,12 @@
          "../../generated/appkit/nscolor.rkt"
          "../../generated/appkit/nsfont.rkt"
          "../../generated/foundation/nsdate.rkt"
+         "../../generated/foundation/nsstring.rkt"
          "../../runtime/objc-base.rkt"
          "../../runtime/type-mapping.rkt"
          "../../runtime/delegate.rkt"
-         "../../runtime/app-menu.rkt")
+         "../../runtime/app-menu.rkt"
+         "events.rkt")
 
 ;; --- Constants (not yet extracted by collector) ---
 
@@ -66,6 +81,33 @@
 (define NSViewWidthSizable  2)
 (define NSViewHeightSizable 16)
 
+;; --- Structured event log (logging contract) ---
+;; Open + truncate the events.log the runner tails, then record [lifecycle]
+;; startup BEFORE gallery construction / the AppKit run loop (or `wait-ready`
+;; times out).
+(events-init!)
+(emit-startup)
+
+;; Test-config compatibility (logging-contract.md "Test-config compatibility"):
+;; the gallery reads no runtime config, so it honours the
+;; UI_CONTROLS_GALLERY_TEST_CONFIG contract by reading the env var and treating
+;; an absent/empty value (and a missing file) as "no config" — a deliberate no-op.
+(void (getenv "UI_CONTROLS_GALLERY_TEST_CONFIG"))
+
+;; --- Shutdown wiring (signal / error paths) ---
+;; The logging contract requires a [lifecycle] shutdown line on terminate.
+;; The menu/Cmd-Q path goes through applicationWillTerminate: (delegate below);
+;; SIGTERM/SIGINT reach Racket as exn:break → reason=signal, and any other
+;; uncaught exception → reason=error.
+(uncaught-exception-handler
+ (lambda (exn)
+   (with-handlers ([exn:fail? (lambda (_) (void))])
+     (if (exn:break? exn)
+         (emit-shutdown 'signal)
+         (emit-shutdown 'error))
+     (close-events!))
+   (exit (if (exn:break? exn) 130 1))))
+
 ;; --- Application setup ---
 (define app (nsapplication-shared-application))
 (nsapplication-set-activation-policy! app 0) ; NSApplicationActivationPolicyRegular
@@ -74,6 +116,22 @@
 ;; in the menu bar comes from CFBundleName when launched as a .app
 ;; bundle (see `apianyware-bundle-racket`).
 (install-standard-app-menu! app "UI Controls Gallery")
+
+;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+;; Cocoa holds delegates weakly, so keep a module-scope reference. The body is
+;; wrapped in with-handlers because an unhandled exception in an ObjC callback
+;; crashes the app with no Racket stack trace.
+(define app-delegate
+  (make-delegate
+   "applicationWillTerminate:"
+   (lambda (notification)
+     (with-handlers ([exn:fail?
+                      (lambda (e)
+                        (eprintf "applicationWillTerminate delegate error: ~a\n"
+                                 (exn-message e)))])
+       (emit-shutdown 'menu)
+       (close-events!)))))
+(void (nsapplication-set-delegate! app app-delegate))
 
 ;; --- Window (500x600, centered, resizable) ---
 (define window
@@ -166,6 +224,19 @@
 (nsbutton-set-title! checkbox "Enable Feature")
 (nsstackview-add-arranged-subview! stack-view checkbox)
 
+;; Checkbox target-action (logging contract): AppKit toggles a switch button's
+;; state before the action fires, so the sender's state IS the post-toggle
+;; state — `on` iff NSControlStateValueOn (1).
+(define checkbox-target
+  (make-delegate
+   #:return-types (hash "checkboxChanged:" 'void)
+   #:param-types  (hash "checkboxChanged:" '(object))
+   "checkboxChanged:" (lambda (sender)
+                        (emit-checkbox-changed (= (nsbutton-state sender) 1)))))
+
+(nsbutton-set-target! checkbox checkbox-target)
+(nsbutton-set-action! checkbox "checkboxChanged:")
+
 ;; Radio buttons (container view for horizontal layout)
 (define radio-container
   (make-nsview-init-with-frame (make-nsrect 0 0 460 24)))
@@ -198,7 +269,11 @@
                     (nsbutton-set-int-value! radio-c 0)
                     ;; sender is auto-wrapped by #:param-types as borrow-objc-object,
                     ;; satisfying the wrapper's objc-object? contract.
-                    (nsbutton-set-int-value! sender 1))))
+                    (nsbutton-set-int-value! sender 1)
+                    ;; Logging contract: radio-selected names the group's sole
+                    ;; selection, emitted AFTER the exclusion above is applied.
+                    (emit-radio-selected
+                     (or (nsstring-utf8-string (nsbutton-title sender)) "")))))
 
 (for ([btn (list radio-a radio-b radio-c)])
   (nsbutton-set-target! btn radio-target)
@@ -231,7 +306,9 @@
                       (let ([val (nsslider-double-value sender)])
                         (nstextfield-set-string-value!
                          slider-value-label
-                         (format "Value: ~a" (inexact->exact (round val))))))))
+                         (format "Value: ~a" (inexact->exact (round val))))
+                        ;; Logging contract: post-state, double → nearest int.
+                        (emit-slider-changed val)))))
 
 (nsslider-set-target! slider slider-target)
 (nsslider-set-action! slider "sliderChanged:")
@@ -317,7 +394,9 @@
                        (let ([val (nsstepper-int-value sender)])
                          (nstextfield-set-string-value!
                           stepper-value-label
-                          (format "Value: ~a" val))))))
+                          (format "Value: ~a" val))
+                         ;; Logging contract: post-state, integral value.
+                         (emit-stepper-changed val)))))
 
 (nsstepper-set-target! stepper stepper-target)
 (nsstepper-set-action! stepper "stepperChanged:")
@@ -354,5 +433,9 @@
 (nswindow-make-key-and-order-front window #f)
 (nsapplication-activate-ignoring-other-apps app #t)
 
+;; Launch diagnostic (spec §3.6): the bare line containing `Controls Gallery`
+;; the runner's `wait-for-log` matches, dual-emitted to stdout (human-friendly
+;; when run unbundled) and events.log (the runner's read path).
+(emit-opened)
 (displayln "UI Controls Gallery running. Close window or Ctrl+C to exit.")
 (nsapplication-run app)

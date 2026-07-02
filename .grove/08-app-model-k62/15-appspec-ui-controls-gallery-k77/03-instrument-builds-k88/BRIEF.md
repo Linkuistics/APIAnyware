@@ -1,6 +1,16 @@
-# instrument-builds-k88
+# instrument-builds-k88 — brief
 
-**Kind:** work
+**Kind:** node (decomposed 2026-07-02 — one instrument+build child per impl, the
+hello-window k68–k71 split; children materialized lazily, grow the next as each retires)
+
+## Children
+
+1. `racket-instrument-build-k89` — the reference pattern (emits attach to existing
+   handlers; checkbox action added).
+2. *(planned)* chez — mirror racket; hello-window chez pattern (events inline in `.sls`).
+3. *(planned)* gerbil — mirror racket; gcc-15 shim if the binding rebuilds.
+4. *(planned)* sbcl — the most new wiring: real shared radio action + new
+   checkbox/slider/stepper target-actions; `events.lisp` template exists.
 
 ## Goal
 
