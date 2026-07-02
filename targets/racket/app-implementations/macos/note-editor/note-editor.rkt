@@ -46,7 +46,8 @@
          "../../runtime/type-mapping.rkt"
          "../../runtime/coerce.rkt"
          "../../runtime/delegate.rkt"
-         "../../runtime/app-menu.rkt")
+         "../../runtime/app-menu.rkt"
+         "events.rkt")
 
 ;; --- Constants not yet extracted by the collector ---
 ;; NSWindowStyleMask
@@ -76,10 +77,54 @@
 ;; NSAlertStyle
 (define NSAlertStyleWarning 1)
 
+;; --- Structured event log (logging contract) ---
+;; Open + truncate the events.log the runner tails, then record [lifecycle]
+;; startup BEFORE window/split-view construction / the AppKit run loop (or
+;; `wait-ready` times out).
+(events-init!)
+(emit-startup)
+
+;; Test-config compatibility (logging-contract.md "Test-config compatibility"):
+;; the editor reads no runtime config, so it honours NOTE_EDITOR_TEST_CONFIG
+;; by reading the env var and treating an absent/empty value (and a missing
+;; file) as "no config" — a deliberate no-op.
+(void (getenv "NOTE_EDITOR_TEST_CONFIG"))
+
+;; --- Shutdown wiring (signal / error paths) ---
+;; The logging contract requires a [lifecycle] shutdown line on terminate.
+;; The menu/Cmd-Q path goes through applicationWillTerminate: (delegate below);
+;; SIGTERM/SIGINT reach Racket as exn:break → reason=signal, and any other
+;; uncaught exception → reason=error.
+(uncaught-exception-handler
+ (lambda (exn)
+   (with-handlers ([exn:fail? (lambda (_) (void))])
+     (if (exn:break? exn)
+         (emit-shutdown 'signal)
+         (emit-shutdown 'error))
+     (close-events!))
+   (exit (if (exn:break? exn) 130 1))))
+
 ;; --- Application setup ---
 (define app (nsapplication-shared-application))
 (nsapplication-set-activation-policy! app 0) ; Regular
 (install-standard-app-menu! app "Note Editor")
+
+;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+;; Cocoa holds delegates weakly, so keep a module-scope reference. The body is
+;; wrapped in with-handlers because an unhandled exception in an ObjC callback
+;; crashes the app with no Racket stack trace. §3.10: no unsaved-changes guard
+;; on the terminate path — the hook logs and lets termination proceed.
+(define app-delegate
+  (make-delegate
+   "applicationWillTerminate:"
+   (lambda (notification)
+     (with-handlers ([exn:fail?
+                      (lambda (e)
+                        (eprintf "applicationWillTerminate delegate error: ~a\n"
+                                 (exn-message e)))])
+       (emit-shutdown 'menu)
+       (close-events!)))))
+(void (nsapplication-set-delegate! app app-delegate))
 
 ;; --- Window ---
 (define WINDOW-W 900)
@@ -106,6 +151,15 @@
 ;; last save. dirty? tracks unsaved edits.
 (define current-path #f)
 (define dirty? #f)
+
+;; Event-payload path normalization (logging contract "Document events"):
+;; the `path` key is a string — the current/attempted absolute path, or the
+;; empty string when unset. current-path is a string in practice (both panels
+;; yield `(->string (nsurl-path url))`); handle a path object defensively.
+(define (path-string p)
+  (cond [(not p) ""]
+        [(path? p) (path->string p)]
+        [else p]))
 
 (define (display-name-for-path path)
   (cond [(not path) "Untitled"]
@@ -303,13 +357,19 @@
   "<p class=\"placeholder\">Start typing Markdown on the left…</p>")
 
 (define (render-preview! markdown-text)
+  (define placeholder? (string=? (string-trim markdown-text) ""))
   (define body
-    (if (string=? (string-trim markdown-text) "")
+    (if placeholder?
         PREVIEW-PLACEHOLDER
         (render-markdown markdown-text)))
   (define html
     (string-append PREVIEW-TEMPLATE-HEAD body PREVIEW-TEMPLATE-FOOT))
-  (wkwebview-load-html-string-base-url web-view html #f))
+  (wkwebview-load-html-string-base-url web-view html #f)
+  ;; [preview] rendered — immediately after the loadHTMLString: hand-off
+  ;; (contract "Preview events": the event witnesses the hand-off, not the
+  ;; pixels). chars = Unicode scalar count of the Markdown source consumed
+  ;; (racket string-length counts scalar values).
+  (emit-preview-rendered placeholder? (string-length markdown-text)))
 
 (define (current-editor-text)
   (->string (nstextview-string text-view)))
@@ -332,7 +392,12 @@
    (lambda (_note)
      (unless dirty?
        (set! dirty? #t)
-       (refresh-title!))
+       (refresh-title!)
+       ;; [document] dirty-changed — the §6.2 clean→dirty FLIP only (never
+       ;; per-keystroke), after the title refresh; path is the post-state
+       ;; current path. Emitting before refresh-preview! keeps the contract's
+       ;; first-keystroke order dirty-changed → rendered.
+       (emit-document 'dirty-changed (path-string current-path) #t))
      (refresh-preview!))))
 
 (nsnotificationcenter-add-observer-selector-name-object!
@@ -352,6 +417,10 @@
 (define (load-file! path)
   (with-handlers ([exn:fail? (lambda (e)
                                (set-status! (format "Open failed: ~a" (exn-message e)))
+                               ;; [document] open-failed — the ATTEMPTED path
+                               ;; (model unchanged by rule §8.5.6), after the
+                               ;; status line is set.
+                               (emit-document 'open-failed (path-string path) dirty?)
                                #f)])
     (define text (file->string path))
     (nstextview-set-string! text-view text)
@@ -360,17 +429,31 @@
     (refresh-title!)
     (refresh-preview!)
     (set-status! (format "Opened ~a" path))
+    ;; [document] opened — post-state at the end of the §8.3 rule (the
+    ;; mid-rule refresh-preview! already emitted its rendered line).
+    (emit-document 'opened (path-string current-path) dirty?)
     #t))
 
 (define (write-current-file! path)
   (with-handlers ([exn:fail? (lambda (e)
                                (set-status! (format "Save failed: ~a" (exn-message e)))
+                               ;; [document] save-failed — the ATTEMPTED path,
+                               ;; dirty flag unchanged by rule (§8.5.7), after
+                               ;; the status line is set.
+                               (emit-document 'save-failed (path-string path) dirty?)
                                #f)])
     (display-to-file (current-editor-text) path #:exists 'replace)
     (set! current-path path)
     (set! dirty? #f)
     (refresh-title!)
     (set-status! (format "Saved ~a" path))
+    ;; [document] saved — post-state at the end of the §8.4 write+state rule.
+    ;; Reached from BOTH branches: the direct save (do-save! with a current
+    ;; path) and the sheet branch (prompt-save!'s completion handler calls
+    ;; here), so the sheet-branch emission is inside the completion handler
+    ;; by construction (the contract's async re-entry witness). No render
+    ;; accompanies a save (§7 excludes it).
+    (emit-document 'saved (path-string current-path) dirty?)
     #t))
 
 ;; --- Unsaved-changes confirmation ---
@@ -450,7 +533,12 @@
     (set! dirty? #f)
     (refresh-title!)
     (refresh-preview!)
-    (set-status! "New document")))
+    (set-status! "New document")
+    ;; [document] new — post-state at the end of the §8.2 rule (always
+    ;; path="" dirty=false; the mid-rule refresh emitted rendered
+    ;; placeholder=true chars=0). The cancelled alert path never reaches
+    ;; here (silent no-op).
+    (emit-document 'new "" #f)))
 
 ;; --- Undo / Redo via NSTextView's undo manager ---
 (define (text-view-undo-manager)
@@ -517,5 +605,9 @@
 (nswindow-make-key-and-order-front window #f)
 (nsapplication-activate-ignoring-other-apps app #t)
 
+;; §3 step 8 launch diagnostic — dual emission (contract "Lifecycle events"):
+;; the stdout line stays (human-friendly when run unbundled, literally true to
+;; §3); the same BARE line goes to events.log, where the runner can see it.
 (displayln "Note Editor running. Close window or Ctrl+C to exit.")
+(emit-launch-line)
 (nsapplication-run app)

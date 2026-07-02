@@ -1,7 +1,36 @@
-# instrument-builds-k124
+# instrument-builds-k124 — brief
 
-**Kind:** work (expected to decompose on entry — one instrument+build child per impl,
-the k106/k115 split; racket first as the reference pattern, siblings mirror it)
+**Kind:** node (decomposed on entry 2026-07-03 — one instrument+build child per impl,
+the k106/k115 split; racket first as the reference pattern, siblings mirror it;
+children materialized lazily, grow the next as each retires)
+
+## Children
+
+1. `racket-instrument-build-k125` ✅ *(done 2026-07-03)* — the reference pattern
+   (events.rkt + wiring + descriptor + self-contained build.sh; the mini-browser
+   k116 twin). The no-corpus-step expectation held: Trampolines.swift git-clean
+   with the adapter dylib rebuilt after it ⇒ k115 relink current, nothing
+   regenerated (175 `@_cdecl` entries incl. WebKit — the brief's "174" was a
+   different counting convention; source-clean + fresh-dylib is the operative
+   verify). App-level shape the siblings mirror: single 6-event `emit-document`
+   (fixed key order `path`·`dirty`, `(or path "")` for unset) +
+   `emit-preview-rendered` (`placeholder`·`chars`); hoist `placeholder?` in the
+   render helper (event + body choice share it; `chars` = `string-length` of the
+   Markdown consumed); `dirty-changed` inside the flip arm after the title
+   refresh, **before** the re-render; `opened`/`saved` at rule end — emitting at
+   the end of the shared write routine puts the sheet-branch `saved` inside the
+   completion handler by construction; failure events in the handlers after the
+   status set with the attempted path; `new` with literal `""`/`false`.
+   CLI smoke green: exact launch sequence `startup` → `rendered placeholder=true
+   chars=0` → bare launch line; AppleScript quit → `shutdown reason=menu`; no
+   stray events. **The `[document]` events are not host-reachable** (all need UI
+   interaction — typing/panels/alert) — per-impl bar is code-audit against the
+   checklist + the lifecycle/preview smoke; live-run exercises the rest.
+   `NoteEditor-racket.app` 92M, `com.linkuistics.note-editor-racket`.
+2. `chez-instrument-build-k126` — mirror via the chez house style (the k117
+   twin).
+3. *(grown lazily)* gerbil, then sbcl — sbcl additionally delivers the k123
+   `build.sh` seeds (suffixed bundle-id + `CFBundleInfoDictionaryVersion`).
 
 ## Goal
 
