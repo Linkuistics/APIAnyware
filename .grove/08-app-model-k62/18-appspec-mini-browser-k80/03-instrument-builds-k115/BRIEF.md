@@ -27,9 +27,10 @@ retires)
    will NOT hold (the trampoline source really changes). CLI smoke on the host
    reaches `[nav] finished` (host network) — expect `started`→`finished` for
    the `www.apple.com` home load, `title="Apple"` at didFinish.
-2. `chez-instrument-build` — the k108 pattern (emitter inlined in the `.sls`;
-   own `apianyware-generate --target chez` + `APIAnywareChez` relink before
-   bundling).
+2. `chez-instrument-build-k117` — the k108 pattern (emitter inlined in the
+   `.sls`; own `apianyware-generate --target chez` + `APIAnywareChez` relink
+   before bundling — the trampoline residual really grows, see child-1
+   handoff).
 3. `gerbil-instrument-build` — the k109 pattern (emitter inlined in the `.ss`,
    Gambit primitives only; own generate; dylib current-by-construction when
    `Trampolines.swift` regenerates git-clean).
