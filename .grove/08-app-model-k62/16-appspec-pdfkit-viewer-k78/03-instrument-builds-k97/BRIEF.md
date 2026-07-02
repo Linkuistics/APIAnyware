@@ -22,11 +22,16 @@ k88 split; children materialized lazily, grow the next as each retires)
    trampolines → 170 entries) + `swift build --product APIAnywareGerbil` relink;
    build.sh prereq keys on `pdfkit/pdfview.ss`. No gcc-15 shim needed (real gcc-15
    on PATH); no bare-`values` issue surfaced in the regenerated bindings.
-4. `sbcl-instrument-build-k101` — gallery k92 pattern (`events.lisp` template;
-   adapt the existing pre-instrumentation build.sh/dump.lisp); expect the same
-   regenerate+relink twin (`--target sbcl`, `--product APIAnywareSbcl`). Last
-   child: its retirement empties this node — cascade check, then the k78
-   forward-gen-suite stage follows.
+4. `sbcl-instrument-build-k101` ✅ — gallery k92 pattern (separate `events.lisp`,
+   `pv-events`, verified in isolation under `sbcl --script`; launch emitter named
+   `emit-launch-line`, the k98 rename). The k99/k100 twin held (local tree had no
+   PDFKit; regen + `--product APIAnywareSbcl` relink; prereq keys on
+   `generated/pdfkit/pdfview.lisp`) — with one refinement: PDFKit adds ZERO
+   Swift-native residual (pure ObjC; Trampolines.swift stays 170 entries — the
+   relink is lockstep hygiene, not growth). Hand-rolled /tmp-staged wrap retired
+   for the production bundler (ADR-0041). Last child: node complete — outcomes
+   promoted to the k78 brief ("instrument-builds outcomes"); the k78
+   forward-gen-suite stage grown as `forward-gen-suite-k102`.
 
 ## Goal
 

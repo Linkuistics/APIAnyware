@@ -45,11 +45,37 @@ through the toolkit (after hello-window and ui-controls-gallery).
      per-element `enabled`; the AppSpec SDK transform + `expect-ax` drop it) — a
      small `expect-ax #:enabled?` addition to seed to the AppSpec backlog; until
      then the label + `[document]` events proxy the four flag assertions.
-  3. **`instrument-builds-k97`** — per-impl events emitter + `.app` build (likely a
-     node, one child per impl, as k88 was).
-  4. **forward-gen-suite** — the scenario suite + `run-values.rkt` (+ the PDF fixture).
+  3. **`instrument-builds-k97`** ✅ *(node, one child per impl k98–k101; complete
+     2026-07-02 — see **instrument-builds outcomes** below)* — per-impl events emitter +
+     `.app` build.
+  4. **`forward-gen-suite-k102`** — the scenario suite + `run-values.rkt` (+ the PDF
+     fixture).
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`
      (closes this node's Done-when).
+
+## instrument-builds outcomes (promoted from `instrument-builds-k97` on completion)
+
+All four impls emit the k96 contract events (each emitter verified in isolation against
+the contract matchers) and build to self-contained bundles. What the forward-gen +
+live-run stages rely on:
+
+- **Per-impl artifacts:** `build/PDFKitViewer-<impl>.app` with `CFBundleIdentifier
+  com.linkuistics.pdfkit-viewer-<impl>`, built by
+  `targets/<t>/app-implementations/macos/pdfkit-viewer/build.sh`; descriptor at
+  `targets/<t>/app-implementations/macos/pdfkit-viewer/pdfkit-viewer-impl.rkt`
+  (`#:binary /Applications/PDFKitViewer-<impl>.app`).
+- **The k98 app shape holds in all four:** `refresh-ui!` returns the applied state, so
+  the `[document]` events equal the §7.2 label by construction (incl. the
+  nil-current-page → page 1 fallback); `opened` fires on the open success path only
+  (basename, nil-guarded); silent no-ops emit nothing; the launch line is dual-emitted
+  and **begins** `PDFKit Viewer` but differs per impl after the prefix — suites match
+  the prefix, never the full text.
+- **Bindings note (settled):** PDFKit needed per-target regeneration everywhere the
+  local tree predated the k98 collection (chez/gerbil/sbcl) + an adapter-dylib relink
+  (`swift build --product`, never `--target`); PDFKit itself is pure ObjC — zero
+  Swift-native trampoline residual in gerbil and sbcl alike.
+- **All four runtimes ignore SIGTERM under the run loop** (the k94 observation stands) —
+  only the menu-quit path (`shutdown reason=menu`) is exercisable.
 
 ## Done when
 
