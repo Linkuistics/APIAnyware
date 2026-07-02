@@ -44,9 +44,20 @@ through the toolkit (after hello-window, ui-controls-gallery, pdfkit-viewer).
      launch-line prefix, quit. No fixtures needed. Seeded to instrument stage: sbcl
      Info.plist missing kind-required `CFBundleInfoDictionaryVersion`; the §7.4
      conversion-failure divergence (majority keep-previous, sbcl stores-raw).
-  2. **`conformance-data-k105`** — `logging-contract.md` + `observable-state.md`.
-  3. **instrument-builds** — per-impl events emitter + `.app` build (likely a node,
-     one child per impl).
+  2. **`conformance-data-k105`** ✅ — `logging-contract.md` + `observable-state.md`.
+  3. **`instrument-builds-k106`** ✅ *(node, one child per impl — k107/k108/k109/k110;
+     done 2026-07-03)* — all four impls instrumented to the k105 contracts +
+     emitter-verified in isolation, built to
+     `build/SceneKitViewer-<impl>.app` / `com.linkuistics.scenekit-viewer-<impl>`
+     (descriptors at
+     `targets/<t>/app-implementations/macos/scenekit-viewer/scenekit-viewer-impl.rkt`).
+     Handoffs to stages 4/5: the §7.4 divergence is CLOSED (sbcl aligned to
+     keep-previous — the stored colour is always device-RGB in every impl); the sbcl
+     launch line stays `SceneKit Viewer opened. Quit with Cmd-Q.` (prefix-conformant,
+     wording differs from the other three by design — suites must match the prefix /
+     the specific driven-to lines only); each impl's `[scene]` events carry the
+     emit-time device-RGB ×255 fold from one single-source geometry+title arm, so
+     event ≡ applied state by construction.
   4. **forward-gen-suite** — the scenario suite + `run-values.rkt`.
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`
      (closes this node's Done-when).
