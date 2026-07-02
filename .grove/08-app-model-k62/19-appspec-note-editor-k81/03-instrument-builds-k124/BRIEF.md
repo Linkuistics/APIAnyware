@@ -49,9 +49,21 @@ children materialized lazily, grow the next as each retires)
    `com.linkuistics.note-editor-gerbil`; CLI smoke green (exact launch
    sequence, AppleScript quit → `shutdown reason=menu`, no stray events);
    `[document]` events witnessed by code audit (not host-reachable).
-4. `sbcl-instrument-build-k128` — mirror via the sbcl house style (the k119
-   twin); additionally delivers the k123 `build.sh` seeds (suffixed bundle-id
-   + `CFBundleInfoDictionaryVersion`); sbcl's own launch-line remainder.
+4. `sbcl-instrument-build-k128` ✅ *(done 2026-07-03)* — the k125–k127 pattern
+   held 1:1 a **fourth** time via the sbcl house style (mini-browser k119 twin:
+   separate pure-CL events.lisp / `ne-events` nickname; terminate-hook delegate
+   via `set-delegate_`; startup + test-config no-op gated `when run` before
+   construction; single-writer holds — the sheet completion's block bounce is a
+   main-thread pass-through, ADR-0035/0036). **Delivered the k123 `build.sh`
+   seeds by moving to the production bundler** (ADR-0041, the k119 mirror; the
+   060-era /tmp-staged wrap retired): `CFBundleIdentifier
+   com.linkuistics.note-editor-sbcl` + `CFBundleInfoDictionaryVersion` (6.0);
+   `NoteEditor-sbcl.app` 92M **travels alone** (stub launcher + vendored
+   libzstd/libAPIAnywareSbcl — the VM needs nothing staged). No corpus step
+   confirmed (fourth time): Trampolines git-clean + dylib newer, 175 `@_cdecl`
+   entries. CLI smoke green (exact launch sequence, sbcl's own launch-line
+   remainder, AppleScript quit → `shutdown reason=menu`, no stray events);
+   `[document]` events witnessed by code audit (not host-reachable).
 
 ## Goal
 

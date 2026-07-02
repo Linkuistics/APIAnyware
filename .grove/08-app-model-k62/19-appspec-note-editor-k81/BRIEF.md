@@ -76,9 +76,20 @@ hello-window, ui-controls-gallery, pdfkit-viewer, scenekit-viewer, mini-browser)
      and seeded to instrument-builds. Provisional AX rows for live-run: save-sheet
      shape + Go-to-Folder-in-sheet choreography, WKWebView rendered-DOM exposure,
      editor `AXValue` fold-fidelity, Escape-for-Cancel on the alert.
-  3. **`instrument-builds-k124`** — per-impl instrumentation + rebuild ×4 (expected
-     to decompose on entry, the k115 mirror).
-  4. **forward-gen-suite** — the scenario suite + fixtures + run-values.
+  3. **`instrument-builds-k124`** ✅ *(node, closed 2026-07-03 — k125/k126/k127/k128
+     all green)* — per-impl instrumentation + rebuild ×4 (decomposed on entry, the
+     k115 mirror). Handoffs for the next stages: all four impls emit the full k123
+     contract vocabulary (CLI-smoked: exact launch sequence + `shutdown reason=menu`;
+     `[document]` events code-audited — live-run exercises them); descriptors at
+     `targets/<t>/app-implementations/macos/note-editor/note-editor-impl.rkt`
+     (`com.linkuistics.note-editor-<impl>` at `/Applications/NoteEditor-<impl>.app`,
+     env `NOTE_EDITOR_{EVENTS_LOG,TEST_CONFIG}`, defaults under `/tmp/note-editor/`);
+     no corpus step was needed ×4 (the k115 relinks stand, 175 `@_cdecl` entries);
+     the gerbil `string-length` shadow fired as predicted (`(except-in …)` applied);
+     **sbcl moved to the production bundler** — travels alone (no /tmp staging), the
+     two k123 plist seeds delivered; launch-line remainders diverge by design
+     (`running.` ×3 vs sbcl `opened.`) — suites match the `Note Editor` prefix only.
+  4. **`forward-gen-suite-k129`** — the scenario suite + fixtures + run-values.
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`.
 
 ## Done when
