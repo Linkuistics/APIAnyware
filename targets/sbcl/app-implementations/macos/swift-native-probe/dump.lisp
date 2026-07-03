@@ -39,6 +39,8 @@
 (aw-app-load-framework "CoreGraphics" :load-residual t)
 (aw-app-load-framework "AppKit" :load-residual t)
 
+;; events.lisp first (pure CL — the snp-events package swift-native-probe.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "swift-native-probe.lisp" cl-user::*app-dir*))
 
 (format t "~&== dumping ~A (dylib recorded: ~A) ==~%" cl-user::*out-exe* cl-user::*dylib*)

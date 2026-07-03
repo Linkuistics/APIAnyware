@@ -114,44 +114,115 @@
     (ns:set-submenu_for-item_ main-menu app-submenu app-item)
     (ns:set-main-menu_ app main-menu)))
 
+;;; --- Terminate delegate (logging contract: [lifecycle] shutdown reason=menu) ---------
+;;; `applicationWillTerminate:` is the only hook that fires on the menu/Cmd-Q quit path:
+;;; -[NSApplication terminate:] ends in a C exit(), which bypasses sb-ext:*exit-hooks*, so an
+;;; AppKit-level delegate callback is the reliable shutdown signal. The subclass is synthesized
+;;; at RUNTIME (not load) so it registers in the process that shows the UI — a class synthesized
+;;; during `save-lisp-and-die` does NOT survive into the revived image (fresh ObjC runtime).
+;;; `*snp-delegate-ready*` stays nil through the dump (dump.lisp never calls -main) and
+;;; re-synthesizes at revive. The hello-window `ensure-hw-delegate` / drawing-canvas k137
+;;; pattern; the dylib's subclass bounce shim (already loaded for the trampoline residual)
+;;; self-registers on this first `define-objc-method`.
+(defvar *snp-delegate-ready* nil
+  "nil until `ensure-snp-delegate` has synthesized the delegate class in THIS process. A
+   revived image starts nil again and re-synthesizes.")
+
+(defun ensure-snp-delegate ()
+  "Define the `snp-app-delegate` ObjC subclass + its `applicationWillTerminate:` method.
+   Idempotent within a process via `*snp-delegate-ready*`."
+  (unless *snp-delegate-ready*
+    (define-objc-subclass snp-app-delegate (ns:ns-object))   ; no slots — pure callback target
+    (define-objc-method (snp-app-delegate "applicationWillTerminate:") (self notification)
+      (declare (ignore self notification))
+      (handler-case
+          (progn (snp-events:emit-shutdown 'menu) (snp-events:close-events!))
+        (error (e)
+          (format *error-output* "applicationWillTerminate delegate error: ~A~%" e)
+          (finish-output *error-output*))))
+    (setf *snp-delegate-ready* t)))
+
+;;; NSIntegerMax on the LP64 platform (2^63 - 1) — the known-good expected NSNotFound equals.
+(defparameter +ns-integer-max+ (1- (expt 2 63)))
+
 (defun swift-native-probe-main (&key (run t))
   "Build the probe UI and, unless RUN is nil, enter the AppKit run loop.
 
    RUN nil is the host construction PRE-FLIGHT: it calls EVERY Swift-native trampoline the
    app shows (plus the generated value-opaque RETURN binding `ns:lgamma` and the free fn
-   `ns:pow`, as extra generated-path checks) and builds the whole UI, then returns WITHOUT
-   blocking on `-run` — so a bare `sbcl --load` validates the residual marshalling + the
-   window construction before the VM round-trip. The dumped image's toplevel calls RUN t."
-  ;; --- Compute every Swift-native result NOW (before any UI) so a binding failure surfaces
-  ;;     loudly rather than as a blank row. ---
-  (let* ((fn-result    (ns:hypot 3.0d0 4.0d0))                       ; shape 1: free function
-         (const-result ns:ns-not-found)                              ; shape 2: constant
-         (num          (ns:make-ns-number-integer-literal 42))       ; shape 3: class-owner init
-         (num-result   (probe-nsnumber-int-value num))
-         (scanner      (probe-make-scanner))                        ; shape 4: class-owner method
-         (scan-result  (ns:scan-up-to-string scanner ":"))
-         (iset-result  (probe-indexset-roundtrip)))                  ; shape 5: value-opaque box
-    ;; Extra generated-path sanity (not GUI rows): the generated value-opaque RETURN binding
-    ;; (lgamma -> box, freed) and a second free fn (pow) load + call.
-    (let ((lgamma-box (ns:lgamma 5.0d0)))
-      (aw-box-free lgamma-box))
-    (ns:pow 2.0d0 10.0d0)
+   `ns:pow`, as extra generated-path checks), EMITS the full k141 logging contract to the
+   events.log (so a bare `sbcl --load` CLI-smokes the [probe] vocabulary), and builds the
+   whole UI, then returns WITHOUT blocking on `-run` — validating the residual marshalling +
+   the window construction before the VM round-trip. The dumped image's toplevel calls RUN t.
+   Emission is NOT gated on RUN (unlike hello-window) precisely so the CLI-smoke sees the log;
+   only the run loop + its stdout 'opened' echo are RUN-gated."
+  (ensure-snp-delegate)
+  ;; --- Application setup ---
+  (let ((app (ns:shared-application (find-class 'ns:ns-application))))
+    (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
+    (install-app-menu app "Swift Native Probe")
 
-    (format t "~&Swift-native results (all via libAPIAnywareSbcl trampolines):~%")
-    (format t "  1 function  hypot(3,4)             = ~A~%" fn-result)
-    (format t "  2 constant  NSNotFound             = ~D~%" const-result)
-    (format t "  3 init      NSNumber(42).intValue  = ~D~%" num-result)
-    (format t "  4 method    Scanner.scanUpToString = ~S~%" scan-result)
-    (format t "  5 value-box ~A~%" iset-result)
-    (finish-output)
+    ;; --- Structured event log: open + [lifecycle] startup BEFORE probing ---
+    ;; `startup` must precede everything downstream (the runner's `wait-ready` readiness
+    ;; probe). Test-config compatibility (logging-contract.md): the probe reads no runtime
+    ;; config, so it honours SWIFT_NATIVE_PROBE_TEST_CONFIG by reading the env var and
+    ;; treating absent/empty as "no config" — a deliberate no-op.
+    (snp-events:events-init!)
+    (snp-events:emit-startup)
+    (sb-ext:posix-getenv "SWIFT_NATIVE_PROBE_TEST_CONFIG")
 
-    ;; --- Application setup ---
-    (let ((app (ns:shared-application (find-class 'ns:ns-application))))
-      (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
-      (install-app-menu app "Swift Native Probe")
+    ;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+    ;; Installed unconditionally so the pre-flight / revive smoke exercises the subclass bounce
+    ;; shim + set-delegate. Pinned in *subclass-instances* (a STRONG table), so Cocoa's weak
+    ;; delegate reference never reaps it.
+    (ns:set-delegate_ app (make-instance 'snp-app-delegate))
 
-      ;; --- Window (640x300, centred) ---
-      (aw-with-rect (frame 0 0 640 300)
+    ;; --- Probe each shape NOW (before any UI) so a binding failure surfaces loudly rather
+    ;;     than as a blank row; each result is checked vs its known-good expected and emitted
+    ;;     as a [probe] result, then the coverage summary. Do NOT abort on a failed probe —
+    ;;     the window stays diagnostic (a failed row is visible on screen). ---
+    (let* ((fn-result    (ns:hypot 3.0d0 4.0d0))                     ; shape 1: free function
+           (const-result ns:ns-not-found)                            ; shape 2: constant
+           (num          (ns:make-ns-number-integer-literal 42))     ; shape 3: class-owner init
+           (num-result   (probe-nsnumber-int-value num))
+           (scanner      (probe-make-scanner))                       ; shape 4: class-owner method
+           (scan-result  (ns:scan-up-to-string scanner ":")))
+      (multiple-value-bind (iset-str iset-ok) (probe-indexset-roundtrip)  ; shape 5: value box
+        ;; Extra generated-path sanity (not GUI rows, not probe events): the generated
+        ;; value-opaque RETURN binding (lgamma -> box, freed) and a second free fn (pow).
+        (let ((lgamma-box (ns:lgamma 5.0d0)))
+          (aw-box-free lgamma-box))
+        (ns:pow 2.0d0 10.0d0)
+
+        ;; --- Per-shape ok-checks (contract "Known-good expecteds") ---
+        (let ((ok-fn     (= fn-result 5.0d0))
+              (ok-const  (= const-result +ns-integer-max+))
+              (ok-init   (= num-result 42))
+              (ok-method (and (stringp scan-result) (string= scan-result "APIAnyware"))))
+          (snp-events:emit-probe-result
+           'function  "CoreGraphics.hypot"        ok-fn     (format nil "~a" fn-result))
+          (snp-events:emit-probe-result
+           'constant  "Foundation.NSNotFound"     ok-const  (format nil "~d" const-result))
+          (snp-events:emit-probe-result
+           'init      "NSNumber.integerLiteral"   ok-init   (format nil "~d" num-result))
+          (snp-events:emit-probe-result
+           'method    "NSScanner.scanUpToString"  ok-method (format nil "~s" scan-result))
+          (snp-events:emit-probe-result
+           'value-box "Foundation.IndexSet.roundtrip" iset-ok (format nil "~s" iset-str))
+          (let* ((oks (list ok-fn ok-const ok-init ok-method iset-ok))
+                 (ok-count (count-if #'identity oks)))
+            (snp-events:emit-probe-complete 5 ok-count (= ok-count 5))))
+
+        (format t "~&Swift-native results (all via libAPIAnywareSbcl trampolines):~%")
+        (format t "  1 function  hypot(3,4)             = ~A~%" fn-result)
+        (format t "  2 constant  NSNotFound             = ~D~%" const-result)
+        (format t "  3 init      NSNumber(42).intValue  = ~D~%" num-result)
+        (format t "  4 method    Scanner.scanUpToString = ~S~%" scan-result)
+        (format t "  5 value-box ~A~%" iset-str)
+        (finish-output)
+
+        ;; --- Window (640x300, centred) ---
+        (aw-with-rect (frame 0 0 640 300)
         (let* ((window (make-instance 'ns:ns-window
                          :init-with-content-rect frame
                          :style-mask (logior ns:ns-window-style-mask-titled
@@ -193,7 +264,7 @@
               (row 120 "4  class-owner method  Scanner"      (format nil "→ ~S" scan-result)))
             ;; --- Shape 5 spans the full width (longer round-trip text) ---
             (lbl "5  value-opaque box  IndexSet" 30 88 360 22 14 ns:ns-text-alignment-left)
-            (lbl (format nil "→ ~A" iset-result) 48 66 572 22 13 ns:ns-text-alignment-left blue)
+            (lbl (format nil "→ ~A" iset-str) 48 66 572 22 13 ns:ns-text-alignment-left blue)
             ;; --- Footer ---
             (lbl "Each symbol is Swift-native (objc_exposed: false) — no C symbol exists;"
                  20 36 600 18 11 ns:ns-text-alignment-center gray)
@@ -203,7 +274,12 @@
           ;; --- Show + run ---
           (ns:make-key-and-order-front_ window nil)
           (ns:activate-ignoring-other-apps_ app t)
+          ;; Launch diagnostic: the bare line the runner's `wait-for-log` matches in
+          ;; events.log — emitted unconditionally so the CLI-smoke (:run nil) sees it — plus
+          ;; the human-friendly stdout line (RUN-gated; kept for unbundled runs, since
+          ;; LaunchServices discards stdout under `open`). Dual emission.
+          (snp-events:emit-launch-line)
           (when run
             (format t "~&Swift-Native Probe opened. Quit with Cmd-Q.~%")
             (finish-output)
-            (ns:run app)))))))
+            (ns:run app))))))))
