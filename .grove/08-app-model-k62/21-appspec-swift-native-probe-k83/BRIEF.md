@@ -66,14 +66,55 @@ as each retires; a child may decompose further on entry (the standing pattern).
    (`docs/logging-contract.md`: lifecycle triad + per-shape probe events + all-pass
    summary) + observable-state (`docs/observable-state.md`). No impl churn, no bundler
    change (keep `spec.md`). Skeleton-first. **[this session]**
-2. **`instrument-builds-k<next>`** — instrument all four impls to the k141 contract
-   (per-shape correctness check + `[probe]` events + events-log + lifecycle triad),
-   rebuild ×4, CLI-smoke. May decompose per-impl on entry (the k133/k124 mirror) —
-   though the shared-layout three make one pass plausible. **[grown next]**
-3. **`forward-gen-live-run-k<next>`** — the ~3-scenario forward-gen suite
-   (steady-state/all-probes-pass · command-q-terminates · close-keeps-running) +
-   run-values, then Tier-2 live-run all four impls → `docs/run-results.md`. **[grown last;
-   closes this node's Done-when]**
+2. **`instrument-builds-k142`** ✅ *(node, complete 2026-07-04 — decomposed per-impl on
+   entry; see **instrument-builds outcomes** below)* — instrumented all four impls to the
+   k141 contract (per-shape correctness check + `[probe]` events + events-log + lifecycle
+   triad), rebuilt ×4, CLI-smoked. Decomposed per-impl (`sbcl-impl-k143`, `racket-impl-k144`,
+   `chez-impl-k145`, `gerbil-impl-k146`) because CreateML was absent from this worktree's
+   corpus/bindings/dylibs for the Scheme trio (a false "no corpus regen" premise) → each
+   needed a targeted per-target CreateML bring-in.
+3. **`forward-gen-live-run-k147`** *(grown 2026-07-04 on `gerbil-impl-k146` retirement)* —
+   the ~3-scenario forward-gen suite (steady-state/all-probes-pass · command-q-terminates ·
+   close-keeps-running) + run-values, then Tier-2 live-run all four impls →
+   `docs/run-results.md`. **[live; closes this node's Done-when]**
+
+## instrument-builds outcomes (promoted from `instrument-builds-k142` on retirement)
+
+All four impls emit the full k141 contract, each CLI-smoke-green + built to a suffixed-id
+`.app`. The durable handoffs `forward-gen-live-run-k147` consumes:
+
+- **Emission is byte-identical across the shared-layout three (racket/chez/gerbil)** modulo
+  the non-deterministic `timestampSeed` value line — the coverage-proof structure is
+  universal; only the live seed differs. So the forward-gen suite binds **one target-agnostic
+  assertion set** (`[probe] complete …all-ok=#t` + the bare `Swift-Native Probe opened.`
+  launch line, both byte-identical ×4; `timestampSeed` matched structurally, never by value).
+  **sbcl is a different app** (5-shape, 640×300, different heading/footer wording) — its
+  `all-ok=#t` + launch line + exact title `Swift-Native API Coverage` still hold; per-shape
+  rows + window size are per-target realizations.
+- **Emitter shape:** racket uses a separate `events.rkt` module; chez/gerbil emit **inline**
+  (`snp-` helpers, the drawing-canvas house style) built from bare host primitives so they
+  ride the statically-linked prelude; sbcl uses an `events` package. Structural
+  `timestampSeed` ok-check is `(integer?+exact?)` (Schemes) — never value-equality.
+- **Descriptors** at `targets/<t>/app-implementations/macos/swift-native-probe/swift-native-probe-impl.rkt`
+  (`com.linkuistics.swift-native-probe-<impl>` at `/Applications/SwiftNativeProbe-<impl>.app`;
+  events under `/tmp/swift-native-probe/`; `#:launch-via 'open`). **New `build.sh` authored
+  for each of the four** (none existed); each self-heals the per-target CreateML bring-in
+  (generate `--target <t>` + `swift build --product` relink, reusing the shared corpus racket
+  k144 brought into `platforms/macos/api/CreateML/`; collect/analyze only if the corpus is
+  also absent — targeted, additive, **goldens unmoved**).
+- **Four bundle sizes:** racket 67M (raco distribute), chez 4.9M (whole-program compile),
+  gerbil 56M (`gxc -exe` whole-closure), sbcl 92M (save-lisp-and-die).
+- **gerbil-only smoke artifact (does NOT reach the live VM):** under `AW_PROBE_SMOKE` the
+  gerbil bundle emits the probe/complete/launch block **doubled** (module top-level `(main)`
+  + the `gxc -exe` entry's exported-main call, both returning without a run loop). In the
+  real VM GUI run main#1 blocks in `nsapplication-run` and the process `exit()`s on
+  terminate → the events.log is single + clean.
+- **Menu-bar title divergence:** gerbil's menu bar reads `Swift Native Probe` (no hyphen) vs
+  the others' `Swift-Native Probe` — a menu-bar fact, not an events.log one. Prefer AX window
+  title / log channels over a cross-impl menu-bar OCR assertion.
+- **shutdown reason=menu delegate wired ×4 but unexercised by CLI-smoke** (exits before the
+  run loop) — scenario 02 (Command-Q) is its first real exercise (all four ignore SIGTERM
+  under `nsapplication-run`; the menu-quit path is the working one).
 
 ## Done when (node complete)
 
