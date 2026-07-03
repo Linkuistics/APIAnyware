@@ -5,7 +5,7 @@
 ## Goal
 
 Instrument all four swift-native-probe impls to the k141 logging contract, rebuild each,
-and CLI-smoke that the contract vocabulary emits correctly — so `forward-gen-live-run-k144`
+and CLI-smoke that the contract vocabulary emits correctly — so `forward-gen-live-run`
 (grown last) has runner-verifiable impls. The per-impl builds mirror hello-window k68–k71
 and drawing-canvas k133–k137.
 
@@ -49,12 +49,14 @@ it), so goldens-as-truth holds.
    (ADR-0041; per-impl suffixed id + re-sign + `CFBundleInfoDictionaryVersion` — the k132
    plist-alignment the parent flagged), rebuild, CLI-smoke (host + revive). Proves the
    k141 contract end-to-end. **[this session — skeleton-first]**
-2. **trio: racket / chez / gerbil** *(grown on k143 retirement; right-size then — one
-   CreateML-trio leaf sharing the corpus bring-in, or three per-impl leaves; the corpus is
-   gitignored + persists in this worktree, so a first trio-child brings CreateML in and the
-   rest inherit it)*. Each: the 2-shape probe instrumentation (events module for racket per
-   the drawing-canvas pattern, inline for chez/gerbil), descriptor, **new `build.sh`** (none
-   exists), CreateML pipeline bring-in + relink, rebuild, CLI-smoke.
+2. **`racket-impl-k144`** *(grown 2026-07-04)* — the trio's reference template + the shared
+   CreateML corpus bring-in (its brief carries the **CONFIRM-FIRST gate** on the "no corpus
+   regen" contradiction). 2-shape probe instrumentation (`events.rkt` per the drawing-canvas
+   pattern), descriptor, **new `build.sh`** (none exists), CreateML pipeline bring-in + relink,
+   rebuild, CLI-smoke. **[next]**
+3. **chez / gerbil** *(grown on `racket-impl-k144` retirement — they inherit the gitignored
+   CreateML corpus, re-run only generate + `swift build` for their target; events emitted
+   **inline** per drawing-canvas's chez/gerbil)*.
 
 ## Shared contract context (from `spec-and-contracts-k141` — applies to every child)
 
@@ -87,7 +89,7 @@ it), so goldens-as-truth holds.
 - **Never run the GUI from the CLI** ([[use_testanyware]]); CLI-smoke means driving the
   build's headless/pre-flight path (sbcl's `AW_PROBE_SMOKE` `:run nil`; the Scheme impls emit
   to the log then can be killed) to confirm the log lines — the live GUI verify is
-  `forward-gen-live-run-k144`'s ([[vm_verify_every_app]]).
+  `forward-gen-live-run`'s ([[vm_verify_every_app]]).
 - Data homes **here** (ADR-0052): instrumentation under
   `targets/<t>/app-implementations/macos/swift-native-probe/`; no AppSpec-repo edits.
 
@@ -98,7 +100,7 @@ it), so goldens-as-truth holds.
   Probe opened.` → `[lifecycle] shutdown reason=menu` on a menu-quit.
 - Four descriptors authored; four bundles rebuilt (relink the dylib per
   [[swift_build_product_vs_target]] so smokes don't hit a stale dylib).
-- Handoffs for `forward-gen-live-run-k144` recorded on each child's retirement (bundle sizes,
+- Handoffs for `forward-gen-live-run` recorded on each child's retirement (bundle sizes,
   any per-impl launch-line divergence, events-log path, whether the shared-layout three are
   byte-identical in emission).
 - Commits name the per-impl child handles (`sbcl-impl-k143`, …).
