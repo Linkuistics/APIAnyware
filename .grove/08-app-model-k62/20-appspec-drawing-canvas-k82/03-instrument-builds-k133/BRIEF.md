@@ -36,11 +36,25 @@ children materialized lazily, grow the next as each retires)
    isolation run byte-exact (incl. the k112 fold + `width=11`).
    `DrawingCanvas-chez.app` 5.1M standalone,
    `com.linkuistics.drawing-canvas-chez`.
-3. `gerbil-instrument-build-k136` — mirror k134/k135 via the gerbil house style
-   (inline emitter on Gambit primitives; terminate-hook delegate; top-level
-   startup/test-config); per-target generate + relink (`--product
-   APIAnywareGerbil`); watch the k127 generics-shadow class on the regenerated
-   CG modules.
+3. `gerbil-instrument-build-k136` ✅ *(done 2026-07-03)* — the k134/k135 mirror
+   via the gerbil house style (inline `dc-` emitter on Gambit primitives, no
+   quote-string; terminate-hook delegate; top-level startup + test-config
+   before `(main)`). Per-target generate + relink done: gerbil trampolines
+   **175 → 221** (`grep -c @_cdecl`, the racket/chez twin; 92 CG symbols in
+   the dylib), relinked before bundling; goldens unmoved. **No k127
+   generics-shadow** in the regenerated CG modules (all ten CG symbols the app
+   imports present; no `except-in` needed). No deviation from the reference
+   pattern; freeze semantics fall out of the stroke-vector data model as in
+   racket/chez (`mouseUp:` captures `(car (reverse strokes))` before
+   `end-stroke!`). CLI smoke green (startup → launch line; AppleScript quit →
+   `shutdown reason=menu`; no strays); emitter isolation byte-exact (incl. the
+   k112 fold + `width=11`). `DrawingCanvas-gerbil.app` 58M standalone,
+   `com.linkuistics.drawing-canvas-gerbil`.
+4. `sbcl-instrument-build-k137` — mirror k134/k135/k136 via the sbcl house
+   style (separate pure-CL `events.lisp`, the note-editor k128 twin);
+   per-target generate + relink (`--product APIAnywareSbcl`); build.sh moves
+   to the production bundler with the suffixed id + `CFBundleInfoDictionaryVersion`
+   (ADR-0041, the k128/k119 mirror). Last impl — retiring it retires this node.
 
 ## Corpus finding (2026-07-03, on decompose — revises the parent-brief expectation)
 
