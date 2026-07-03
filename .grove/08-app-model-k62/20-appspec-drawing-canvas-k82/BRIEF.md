@@ -48,11 +48,34 @@ ui-controls-gallery, pdfkit-viewer, scenekit-viewer, mini-browser, note-editor).
 - **Decomposed on entry (2026-07-03)** — per-stage children mirroring
   `appspec-note-editor-k81`, materialized lazily (grow the next as each retires;
   stages may merge where they genuinely fit one session):
-  1. **`reverse-gen-k131`** — the projection-free spec from the four impls
-     (replacing the precursor `docs/spec.md`).
-  2. **conformance-data** — logging contract + observable-state doc.
-  3. **instrument-builds** — per-impl instrumentation + rebuild ×4.
-  4. **forward-gen-suite** — the scenario suite + fixtures + run-values.
+  1. **`reverse-gen-k131`** ✅ *(done 2026-07-03)* — the projection-free spec from
+     the four impls (`docs/spec.md` replaced in place).
+  2. **`conformance-data-k132`** ✅ *(done 2026-07-03)* — the logging contract +
+     observable-state doc (`docs/{logging-contract,observable-state}.md`): modules
+     `{lifecycle, canvas}`; five post-state `[canvas]` events with the frozen-tuple
+     stroke semantics; the sbcl `build.sh` misalignment (unsuffixed id, missing
+     `CFBundleInfoDictionaryVersion`) verified and seeded to instrument-builds.
+  3. **`instrument-builds-k133`** ✅ *(node, closed 2026-07-03 — k134/k135/k136/k137
+     all green)* — per-impl instrumentation + rebuild ×4 (decomposed on entry, the
+     k124 mirror). Handoffs for the next stages: all four impls emit the full k132
+     contract vocabulary (CLI-smoked: exact launch sequence + `shutdown reason=menu`;
+     `[canvas]` events code-audited + emitter-isolation-verified byte-exact incl. the
+     k112 fold `r=0 g=150 b=255` and the `width=11` rounding — not host-reachable,
+     live-run exercises them); descriptors at
+     `targets/<t>/app-implementations/macos/drawing-canvas/drawing-canvas-impl.rkt`
+     (`com.linkuistics.drawing-canvas-<impl>` at `/Applications/DrawingCanvas-<impl>.app`,
+     env `DRAWING_CANVAS_{EVENTS_LOG,TEST_CONFIG}`, defaults under `/tmp/drawing-canvas/`);
+     **the k133 corpus step is done for all four targets** — CoreGraphics collected +
+     deps-together resolved once (k134), then per-target regenerate + relink
+     (trampolines **175 → 221** by `grep -c @_cdecl` in racket/chez/gerbil/sbcl; no
+     gerbil generics-shadow in the CG modules); goldens unmoved throughout; **sbcl
+     moved to the production bundler** (ADR-0041) — travels alone (no /tmp staging),
+     both k132 plist seeds delivered; all four impls round once at emit with
+     round-half-to-even (byte-comparable integer keys across impls); launch-line
+     remainders diverge by design (`running.` ×3 vs sbcl `opened.`) — suites match
+     the `Drawing Canvas` prefix only. Bundles: racket 86M, chez 5.1M, gerbil 58M,
+     sbcl 83M.
+  4. **`forward-gen-suite-k138`** — the scenario suite + run-values.
   5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`.
 
 ## Done when
