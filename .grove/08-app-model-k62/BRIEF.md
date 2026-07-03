@@ -129,7 +129,8 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    `appspec-scenekit-viewer-k79`, complete 2026-07-03 — see **scenekit-viewer outcomes**
    below)*, mini-browser ✅ *(node `appspec-mini-browser-k80`, complete 2026-07-03 — see
    **mini-browser outcomes** below)*, note-editor ✅ *(node `appspec-note-editor-k81`,
-   complete 2026-07-03 — see **note-editor outcomes** below)*, drawing-canvas,
+   complete 2026-07-03 — see **note-editor outcomes** below)*, drawing-canvas ✅ *(node
+   `appspec-drawing-canvas-k82`, complete 2026-07-03 — see **drawing-canvas outcomes** below)*,
    swift-native-probe — each live-VM-verified, each expected to decompose on entry), then
    `apps-layout-finalize-k84` and `portfolio-coverage-tie-in-k85` (which closes this
    node's Done-when).
@@ -345,6 +346,50 @@ apps (k82–k83):
   the only content channels; the status label's value→AXTitle fold is the one reliable AX
   text read inside the content area. Window AX title tracks the dirty state exactly (the
   §6.1 channel of record).
+
+## drawing-canvas outcomes (promoted from `appspec-drawing-canvas-k82` on retirement)
+
+Seventh app through the toolkit, first whose primary content surface is a **custom `NSView`** (strokes
+are framebuffer pixels — OCR-meaningless *and* AX-invisible), so the `[canvas]` logging contract carries
+every state assertion, coordinate-driven mouse gestures drive it, and screenshots carry the visual bar.
+Full record: `apps/macos/drawing-canvas/docs/run-results.md` (k139 + the k140 closure). Durable findings
+for swift-native-probe-k83 (and future custom-view apps):
+
+- **Final outcome: 17/17 ×4, no impl defect.** k139 landed 16/17 ×4 (sole red 03, a snapshot-scope
+  finding); **`canvas-ax-scope-k140` closed it to a genuine 17/17** — the first app in the portfolio to
+  chase the literal all-green rather than leave an adjudicated recording-red (the gallery-03 / pdfkit-07 /
+  scenekit-07 / note-editor-11 precedents each stayed red-until-a-future-regen; drawing-canvas regenerated
+  its scenario in-grove).
+- **TWO run-forced AppSpec fixes, both toolkit-side** (app data stays downstream; the mechanism is
+  AppSpec's — ADR-0012), both acutely relevant to any custom-view app:
+  - **`gv-click` settle-move (AppSpec `89fb98a`, k139).** `testanyware input click X Y` moves the cursor
+    AND presses in one call; on a custom `NSView` tracking `mouseDragged:` the move-coincident-with-press
+    synthesises a spurious drag → a bare click paints a **two-point** stroke (`points=2`), defeating the
+    §7.2 motionless-click dot (`points=1`). Fix: settle the cursor **onto** the target before the press
+    (retaining the k130 ≥100px re-sync pre-move). A button still fires on down+up.
+  - **`#:scope 'app-content` on `expect-ax`/`expect-no-ax` (AppSpec `cb178f8`, k140) — the reusable
+    closer for "no content AX on a custom-view surface".** A whole-snapshot `(expect-no-ax #:role
+    'AXStaticText)` trips on chrome the view never produced: the app window's own **title-bar
+    `AXStaticText`** (text == the window's `AXTitle`) and desktop **Notification Center** widgets (which
+    are `windowType: standard`, so only an `appName` filter excludes them). The opt-in `#:scope
+    'app-content` walks only the app-under-test's standard-window content, dropping the title chrome +
+    foreign windows; the app-under-test is identified snapshot-intrinsically (the `appName` owning the
+    Menu Bar — the frontmost app always does) so no per-app plumbing is needed. Default `#:scope
+    'anywhere` is byte-unchanged. swift-native-probe inherits both.
+- **`drag-from-to` proved in live use** (the portfolio's first) — the held-button canvas drag paints a
+  multi-point stroke (`points` 2–3, driver-cadence, never bound exactly); the §2 **freeze proof**
+  (width/colour captured at mouse-down, unchanged on record when a later stroke uses a new tool) is
+  witnessed **from the log alone** (07/10).
+- **The device-RGB fold confirmed (the k112 rule):** typing 0/128/255 into the NSColorPanel RGB fields
+  lands, after the `deviceRGBColorSpace` fold, as device **`r=0 g=150 b=255`** — byte-identical ×4
+  (AppKit-side, uniform per runtime). Bind **recorded actuals**; a no-change field commit does not re-fire
+  the panel action; seed the panel's **RGB Sliders** kind per impl at provisioning (fresh defaults open
+  Grayscale; persists across the runner's `open -n` relaunches).
+- **Geometry:** chez+gerbil+sbcl pixel-identical on the app window (window (640,145) 640×512, 26px
+  metrics) sharing `run-values.rkt` (the pdfkit/mini-browser/note-editor share-set); racket alone on the
+  compact 22px sibling `run-values-racket.rkt`. The shared **NSColorPanel splits THREE ways** (per-app
+  frame origin + racket's compact metrics reaching inside the picker pane). Slider max = track-end −
+  knob-half (k94). Two-launch determinism green on every impl (no ambiguous-layout defect).
 
 ## Decisions (running log)
 
