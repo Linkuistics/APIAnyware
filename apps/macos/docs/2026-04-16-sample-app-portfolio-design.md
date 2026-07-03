@@ -1,5 +1,16 @@
 # Sample App Portfolio Design
 
+> **Status (as of `portfolio-coverage-tie-in-k85`, 2026-07-04):** this is the *original*
+> portfolio design rationale (why these apps), kept as a dated record. It is **superseded for
+> current status** by [`_index.md`](_index.md) (the live catalogue) and `apianyware-conformance`
+> (derived per-target status). Since this was written, the whole portfolio shipped and is
+> VM-verified on all four targets: **PDFKit Viewer is no longer blocked** (the Quartz/PDFKit
+> collection was fixed; it is a full portfolio app), a **Swift-Native Probe** was added (the
+> Swift-native trampoline coverage proof), and each app now carries a first-class AppSpec
+> (`spec.md` + contracts + a `#lang app-spec` scenario suite) rather than the prose specs assumed
+> below. The "Retirement plan" and "Pipeline prerequisite" sections are historical. Read this doc
+> for the *design reasoning*; read `_index.md` for what the portfolio *is* today.
+
 Redesign of the Racket sample app portfolio to maximize API coverage and
 novel pattern exercise, informed by Modaliser-Racket's real-world coverage
 and the availability of LLM-assisted replication + TestAnyware for

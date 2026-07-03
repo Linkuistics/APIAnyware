@@ -66,12 +66,17 @@ moving that file is its own scoped change; until then `spec.md` stays the bundle
 
 ## Catalogue
 
-`docs/_index.md` is the app catalogue; `docs/2026-04-16-sample-app-portfolio-design.md`
-is the authoritative portfolio design. App specs are produced by reverse-gen from the
-per-target implementations — see `docs/reverse-gen-workflow.md` (worked exemplar:
-`hello-window/docs/spec.md`). The external **AppSpec toolkit** that generalizes
-reverse-/forward-gen is seeded in `docs/appspec-toolkit-seed.md`.
+`docs/_index.md` is the current app catalogue (the eight-app portfolio, pattern-kind coverage,
+the settled roster edges, and the coverage tie-in); `docs/2026-04-16-sample-app-portfolio-design.md`
+is the original design rationale (a dated record, superseded for status by the index). App specs
+are produced by reverse-gen from the per-target implementations — see
+`docs/reverse-gen-workflow.md` (worked exemplar: `hello-window/docs/spec.md`). The external
+**AppSpec toolkit** that generalizes reverse-/forward-gen is seeded in
+`docs/appspec-toolkit-seed.md`.
 
 The eight apps — hello-window, ui-controls-gallery, pdfkit-viewer, scenekit-viewer,
 mini-browser, note-editor, drawing-canvas, swift-native-probe — each carry a complete,
-live-VM-verified suite (see each app's `docs/run-results.md`).
+live-VM-verified suite (see each app's `docs/run-results.md`). **Per-target implementation +
+VM-verify status is derived, not hand-maintained:** run `apianyware-conformance` (ws6), which
+scans each target's `app-implementations/macos/` ports and their `bindings/macos/reports/`
+evidence and cross-checks the authored conformance judgment against that derived reality.
