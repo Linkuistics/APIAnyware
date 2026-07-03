@@ -1,7 +1,28 @@
-# instrument-builds-k133
+# instrument-builds-k133 — brief
 
-**Kind:** work *(expected to decompose on entry — one instrument+build child per impl,
-the k106/k115/k124 split; racket first as the reference pattern, siblings mirror it)*
+**Kind:** node (decomposed on entry 2026-07-03 — one instrument+build child per impl,
+the k106/k115/k124 split; racket first as the reference pattern, siblings mirror it;
+children materialized lazily, grow the next as each retires)
+
+## Children
+
+1. `racket-instrument-build-k134` — the reference pattern (events.rkt + wiring +
+   descriptor + self-contained build.sh; the note-editor k125 twin) **plus the
+   CoreGraphics corpus step the siblings inherit** (see the corpus finding below).
+
+## Corpus finding (2026-07-03, on decompose — revises the parent-brief expectation)
+
+The parent brief's "no corpus step" expectation held for the **trampoline layer only**
+(verified: `Trampolines.swift` git-clean, adapter dylib newer, 175 `@_cdecl` entries —
+the k124 state). But **CoreGraphics is absent from the local partial corpus**
+(Foundation+AppKit+PDFKit+SceneKit+WebKit): `platforms/macos/api/CoreGraphics/` does
+not exist and no target's generated tree has a `coregraphics/` dir — drawing-canvas is
+the first app since the refactor to need its direct CG C calls
+(`CGContextMoveToPoint` …). So this node **owns a scenekit-k106-style corpus step**
+(the k98/k107 twin): `SDKROOT=macosx apianyware-collect --only CoreGraphics` once
+(the standing xcrun workaround), then deps-together `apianyware-analyze --only
+Foundation,AppKit,CoreGraphics`, then per-target regenerate + relink-verify in each
+child. Goldens must not move.
 
 ## Goal
 

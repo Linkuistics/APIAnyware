@@ -15,7 +15,8 @@
 ;;
 ;; Run with: racket drawing-canvas.rkt
 
-(require ffi/unsafe
+(require racket/list
+         ffi/unsafe
          ;; ffi/unsafe/objc supplies sel_registerName, needed only for the
          ;; alloc/init dance on the dynamic class. _SEL and objc-get-class
          ;; collide with dynamic-class.rkt; except-in prefers the
@@ -47,7 +48,8 @@
          "../../runtime/delegate.rkt"
          "../../runtime/app-menu.rkt"
          "../../runtime/nsevent-helpers.rkt"
-         "../../runtime/objc-subclass.rkt")
+         "../../runtime/objc-subclass.rkt"
+         "events.rkt")
 
 ;; --- Constants (not yet extracted by collector) ---
 ;; NSWindowStyleMask
@@ -67,10 +69,53 @@
 (define kCGLineCapRound  1)
 (define kCGLineJoinRound 1)
 
+;; --- Structured event log (logging contract) ---
+;; Open + truncate the events.log the runner tails, then record [lifecycle]
+;; startup BEFORE window/canvas construction / the AppKit run loop (or
+;; `wait-ready` times out).
+(events-init!)
+(emit-startup)
+
+;; Test-config compatibility (logging-contract.md "Test-config compatibility"):
+;; the canvas reads no runtime config, so it honours DRAWING_CANVAS_TEST_CONFIG
+;; by reading the env var and treating an absent/empty value (and a missing
+;; file) as "no config" — a deliberate no-op.
+(void (getenv "DRAWING_CANVAS_TEST_CONFIG"))
+
+;; --- Shutdown wiring (signal / error paths) ---
+;; The logging contract requires a [lifecycle] shutdown line on terminate.
+;; The menu/Cmd-Q path goes through applicationWillTerminate: (delegate below);
+;; SIGTERM/SIGINT reach Racket as exn:break → reason=signal, and any other
+;; uncaught exception → reason=error.
+(uncaught-exception-handler
+ (lambda (exn)
+   (with-handlers ([exn:fail? (lambda (_) (void))])
+     (if (exn:break? exn)
+         (emit-shutdown 'signal)
+         (emit-shutdown 'error))
+     (close-events!))
+   (exit (if (exn:break? exn) 130 1))))
+
 ;; --- Application setup ---
 (define app (nsapplication-shared-application))
 (nsapplication-set-activation-policy! app 0)
 (install-standard-app-menu! app "Drawing Canvas")
+
+;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+;; Cocoa holds delegates weakly, so keep a module-scope reference. The body is
+;; wrapped in with-handlers because an unhandled exception in an ObjC callback
+;; crashes the app with no Racket stack trace.
+(define app-delegate
+  (make-delegate
+   "applicationWillTerminate:"
+   (lambda (notification)
+     (with-handlers ([exn:fail?
+                      (lambda (e)
+                        (eprintf "applicationWillTerminate delegate error: ~a\n"
+                                 (exn-message e)))])
+       (emit-shutdown 'menu)
+       (close-events!)))))
+(void (nsapplication-set-delegate! app app-delegate))
 
 ;; --- Mutable drawing state ---
 ;;
@@ -194,7 +239,13 @@
                                   (eprintf "mouseDown: error: ~a\n" (exn-message e)))])
        (define pt (event->view-point self event))
        (start-stroke! (NSPoint-x pt) (NSPoint-y pt))
-       (nsview-set-needs-display! (borrow-objc-object self) #t)))]
+       (nsview-set-needs-display! (borrow-objc-object self) #t)
+       ;; [canvas] stroke-begun — end of the §7.2 mouse-down rule, post-state.
+       ;; Format the STROKE'S OWN frozen colour+width (the vector captured
+       ;; them at seed time), never the current-* tool state at emit time.
+       (define stroke (last strokes))
+       (emit-stroke-begun (vector-ref stroke 0) (vector-ref stroke 1)
+                          (vector-ref stroke 2) (vector-ref stroke 3))))]
   [(mouseDragged:)
    (lambda (self event)
      (with-handlers ([exn:fail? (lambda (e)
@@ -206,8 +257,22 @@
    (lambda (self event)
      (with-handlers ([exn:fail? (lambda (e)
                                   (eprintf "mouseUp: error: ~a\n" (exn-message e)))])
+       ;; Capture the in-progress stroke before the flags clear; its vector
+       ;; (frozen colour/width + final point list) stays in `strokes`. A
+       ;; mouseUp with no stroke in progress (AppKit routes the up to the
+       ;; mouseDown view, so this should not occur) emits nothing — the
+       ;; stroke events fire only for gestures that reached the canvas.
+       (define stroke (and drawing? (pair? strokes) (last strokes)))
        (end-stroke!)
-       (nsview-set-needs-display! (borrow-objc-object self) #t)))])
+       (nsview-set-needs-display! (borrow-objc-object self) #t)
+       ;; [canvas] stroke-committed — end of the §7.2 mouse-up rule,
+       ;; post-state. Same frozen tuple as its stroke-begun; points = the
+       ;; stored count (down point + drag points; the release is never
+       ;; appended).
+       (when stroke
+         (emit-stroke-committed (vector-ref stroke 0) (vector-ref stroke 1)
+                                (vector-ref stroke 2) (vector-ref stroke 3)
+                                (length (vector-ref stroke 4))))))])
 
 ;; Allocate + init a DrawingCanvasView instance. Uses raw objc_msgSend
 ;; because the class is dynamic (no generated wrapper). initWithFrame:
@@ -317,11 +382,21 @@
      (nscolorpanel-make-key-and-order-front panel #f))
    "widthChanged:"
    (lambda (_sender)
-     (set! current-width (nsslider-double-value width-slider)))
+     (set! current-width (nsslider-double-value width-slider))
+     ;; [canvas] width-changed — post-store (§8.2). Continuous slider: many
+     ;; lines per drag is contract-conformant (never count events).
+     (emit-width-changed current-width))
    "clearCanvas:"
    (lambda (_sender)
+     ;; count = strokes removed (an in-progress stroke is in `strokes`, so a
+     ;; mid-gesture Clear counts it); captured before the collection empties.
+     (define count (length strokes))
      (clear-strokes!)
-     (nsview-set-needs-display! canvas #t))
+     (nsview-set-needs-display! canvas #t)
+     ;; [canvas] cleared — end of the §8.3 Clear rule, post-state; ALWAYS
+     ;; emitted, count=0 on an already-empty canvas (the stroke-set
+     ;; cardinality channel).
+     (emit-cleared count))
    "colorChanged:"
    (lambda (sender)
      ;; sender is NSColorPanel. `color` is an NSColor in the panel's
@@ -339,7 +414,12 @@
          (when rgb
            (set! current-r (nscolor-red-component rgb))
            (set! current-g (nscolor-green-component rgb))
-           (set! current-b (nscolor-blue-component rgb))))))))
+           (set! current-b (nscolor-blue-component rgb))
+           ;; [canvas] color-changed — success path only, post-store (§8.1
+           ;; step 4). The silent no-ops above (nil panel colour, failed
+           ;; device-RGB conversion) emit nothing; the stderr guard in the
+           ;; surrounding with-handlers stays off events.log.
+           (emit-color-changed current-r current-g current-b)))))))
 
 (nsbutton-set-target! color-button toolbar-target)
 (nsbutton-set-action! color-button "openColor:")
@@ -352,5 +432,9 @@
 (nswindow-make-key-and-order-front window #f)
 (nsapplication-activate-ignoring-other-apps app #t)
 
+;; §3 step 6 launch diagnostic — dual emission (logging contract): keep the
+;; human-friendly stdout line AND write the same line bare to events.log
+;; (LaunchServices discards stdout under `open`).
 (displayln "Drawing Canvas running. Close window or Ctrl+C to exit.")
+(emit-launch-line)
 (nsapplication-run app)
