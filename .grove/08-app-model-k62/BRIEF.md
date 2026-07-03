@@ -131,7 +131,9 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    **mini-browser outcomes** below)*, note-editor ✅ *(node `appspec-note-editor-k81`,
    complete 2026-07-03 — see **note-editor outcomes** below)*, drawing-canvas ✅ *(node
    `appspec-drawing-canvas-k82`, complete 2026-07-03 — see **drawing-canvas outcomes** below)*,
-   swift-native-probe — each live-VM-verified, each expected to decompose on entry), then
+   swift-native-probe ✅ *(node `appspec-swift-native-probe-k83`, complete 2026-07-04 — the
+   eighth and **last** app; see **swift-native-probe outcomes** below)* — each live-VM-verified,
+   each decomposed on entry), then
    `apps-layout-finalize-k84` and `portfolio-coverage-tie-in-k85` (which closes this
    node's Done-when).
 
@@ -390,6 +392,47 @@ for swift-native-probe-k83 (and future custom-view apps):
   compact 22px sibling `run-values-racket.rkt`. The shared **NSColorPanel splits THREE ways** (per-app
   frame origin + racket's compact metrics reaching inside the picker pane). Slider max = track-end −
   knob-half (k94). Two-launch determinism green on every impl (no ambiguous-layout defect).
+
+## swift-native-probe outcomes (promoted from `appspec-swift-native-probe-k83` on retirement)
+
+**Eighth and LAST app through the toolkit** — a **static coverage-proof window** (no
+coordinate-driven controls, strokes, panels, or fixtures; the proof lives in the LOG), so the
+smallest suite in the portfolio (3 scenarios). Full record:
+`apps/macos/swift-native-probe/docs/run-results.md` (k147). The node was lean-decomposed
+(`spec-and-contracts-k141` + `instrument-builds-k142` node + `forward-gen-live-run-k147`), the
+k142 per-impl CreateML bring-in being the surprise (the "no corpus regen" premise was false for
+the Scheme trio). Durable findings for `apps-layout-finalize-k84` + `portfolio-coverage-tie-in-k85`:
+
+- **Final: 3/3 ×4, genuine all-green, no standing red** — the **second app** (after drawing-canvas)
+  to chase the literal all-green rather than leave an adjudicated recording/OCR red, via two honest
+  run-forced changes (below). The coverage proof (`[probe] complete … all-ok=#t`, the app's whole
+  purpose) and the mandated Command-Q invariant held on all four throughout.
+- **The log is the coverage channel, not the window** (the load-bearing right-sizing decision).
+  `[probe] complete … all-ok=#t` is the single **target-agnostic** assertion (count=2 racket/chez/
+  gerbil, count=5 sbcl — sbcl is a *different* 5-shape app); the launch line `Swift-Native Probe
+  opened.` is **byte-identical ×4**. The window carries only structural assertions — and the exact
+  title `Swift-Native API Coverage` is the one **projection-free** window fact, assertable via **both**
+  OCR-exact **and** `expect-ax #:role 'AXWindow #:title` (a strengthening hello-window's per-impl title
+  could not afford).
+- **Heading OCR needs the reliable substring `trampolines`, never `Swift-native APIs`** — whole-screen
+  OCR garbles the small-font capital-I ("APIs"→"APls", the k103 class); the heading has **no
+  projection-free AX channel** (`expect-ax #:title` is exact-only, the full heading is per-impl), so an
+  OCR-reliable projection-free substring is the channel of record (the node brief pre-sanctioned it; the
+  scenekit "prefer the reliable read for the same fact" rule).
+- **Two targets shipped a hardcoded app-menu-name typo** — gerbil `swift-native-probe.ss:226` + sbcl
+  `swift-native-probe.lisp:163` passed `"Swift Native Probe"` (no hyphen) to the menu-install, diverging
+  from the display name; racket/chez were correct. **Fixed in-grove (space→hyphen) + rebuilt** rather
+  than folded into the suite ([[sample_apps_perfect]] + the drawing-canvas k140 chase-green precedent);
+  the mandated Command-Q invariant is independent of the menu *title* and always held. **k85 must check
+  `swift-native-method-probe` for the same pattern** (and settle its own-spec question).
+- **Geometry splits by window SIZE (title-bar chrome), not content metrics:** chez+gerbil pixel-identical
+  (560×272, close (696,221)); racket 560×268 **shares** that coordinate (lands in-button — the "measured,
+  not assumed" pattern); sbcl 640×332 owns (656,206) in `run-values-sbcl.rkt`. A different split axis than
+  the content-driven suites (where racket alone diverged).
+- **Self-contained ×4, zero VM runtime provisioning**; **no AppSpec toolkit fix was forced** (the static
+  window needs no new driver behaviour — the first richer-than-hello app to force none), so the
+  exec-channel-stall / delayed-truncate residuals did not bite the 3-scenario suite (per-impl single
+  invocation; racket solo — its embedded runtime boots slower).
 
 ## Decisions (running log)
 
