@@ -128,8 +128,9 @@ the `app-model-k62` workstream; children materialize lazily (do **not** pre-spaw
    2026-07-02 — see **pdfkit-viewer outcomes** below)*, scenekit-viewer ✅ *(node
    `appspec-scenekit-viewer-k79`, complete 2026-07-03 — see **scenekit-viewer outcomes**
    below)*, mini-browser ✅ *(node `appspec-mini-browser-k80`, complete 2026-07-03 — see
-   **mini-browser outcomes** below)*, note-editor, drawing-canvas, swift-native-probe —
-   each live-VM-verified, each expected to decompose on entry), then
+   **mini-browser outcomes** below)*, note-editor ✅ *(node `appspec-note-editor-k81`,
+   complete 2026-07-03 — see **note-editor outcomes** below)*, drawing-canvas,
+   swift-native-probe — each live-VM-verified, each expected to decompose on entry), then
    `apps-layout-finalize-k84` and `portfolio-coverage-tie-in-k85` (which closes this
    node's Done-when).
 
@@ -296,6 +297,54 @@ apps (k81–k83):
   (the k96 channel); the address field's AX value IS readable in raw snapshots
   (sharpens k113's "empty under the driver" caveat); post-failure WKWebView surfaces as
   an empty `scroll-area` (no `AXWebArea` at the steady state).
+
+## note-editor outcomes (promoted from `appspec-note-editor-k81` on retirement)
+
+Sixth app through the toolkit, first with state-mutating persistence (save/open panels,
+on-disk assertions, between-scenario cleanup obligations). Full record:
+`apps/macos/note-editor/docs/run-results.md` (k130). Durable findings for the remaining
+apps (k82–k83):
+
+- **Final outcome: no impl defect.** racket 19/21, chez/gerbil/sbcl 18/21; every red is the
+  k103 OCR run-mechanism class, every fact behind a red proven via a second channel (in-suite
+  AX for the status label; per-impl manual drives for the alert's Discard/Cancel semantics).
+  The mandated Command-Q invariant and all eight `recording:` confirmations green ×4 — the
+  §9 undo coupling firmed (a typed burst coalesces to ONE undo group; text-mutating undo
+  rides the typing notification path), both failure paths (mode-000 read, SIP write) proven
+  drivable through the panels, quit-unsaved confirmed silent (§3.10).
+- **NEW run-mechanism class, fixed in-run (AppSpec `b2c6ffa`) — the capture-then-parked-click
+  swallow:** a click at the pointer's parked position sent right after a VNC framebuffer
+  capture (every `wait-for-ocr` poll) is delivered but its FOCUS effect is swallowed — a
+  first click into an NSTextView never takes first responder and the following keystrokes
+  land on the old responder (a typed space PRESSES the launch-focused toolbar button:
+  phantom `new` events). ≥100px real motion between capture and click re-syncs; a 2px nudge
+  does not. `gv-click` now pre-moves 100px off-target before every click — k82/k83 suites
+  inherit the fix; the proper fix remains TestAnyware-side.
+- **OCR wrapped-line class (extends k103):** OCR drops the SECOND line of a wrapped alert
+  message (`start a new note?` unreadable at conf-any on all four impls) — gate alerts on
+  their first line + an AX discriminator, never on the wrapped tail. The 11-pt status-label
+  OCR corroboration is layout-dependent (invisible at 26px metrics, legible on racket's
+  22px) — AX-exact stays the channel of record.
+- **Geometry:** chez+gerbil+sbcl pixel-identical sharing `run-values.rkt`, racket alone on
+  the compact-22px sibling (the pdfkit/mini-browser share-set — sbcl did NOT diverge as in
+  scenekit: measure, never assume). **NSAlert geometry is layout-independent** (byte-identical
+  over the 22px and 26px window layouts — one shared `alert-cancel`), measured from the OPEN
+  alert; note Cancel is *focused* while Discard (added first) is *default* — Return fires
+  Discard. The k120 spec-derived projection landed all k129 provisional coordinates in-bounds
+  (third window shape validated); its alert projection was 61px off — panels/alerts always
+  measure live.
+- **Persistence-story practice (first state-mutating app):** the between-scenario guest
+  cleanup obligation (`rm -rf work/`) realized as chunked runner invocations around the
+  save-driving scenarios — the workflow's harness-convenience split, no runner change needed.
+  Panels canonicalize `/tmp` → `/private/tmp` (basename-only event matchers are load-bearing);
+  **Cmd-Shift-G works INSIDE the save sheet** (the k103 rule extends beyond the open panel);
+  **Escape cancels the sheet**; the sheet is an `AXSheet` whose children are NOT exposed —
+  the prefilled-name OCR cue is genuinely the only sheet-up gate (and reads at conf 1.00).
+- **Content-area AX invisibility:** the split group's children (NSTextView editor, WKWebView
+  preview) are unexposed in agent snapshots on all four impls — contract log events + OCR are
+  the only content channels; the status label's value→AXTitle fold is the one reliable AX
+  text read inside the content area. Window AX title tracks the dirty state exactly (the
+  §6.1 channel of record).
 
 ## Decisions (running log)
 
