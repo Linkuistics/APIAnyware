@@ -618,6 +618,39 @@ realization notes). So ws7's reconciliation is a *mapping*, not a re-split:
 human expected-behaviour; app-universal `learnings.md` → kept. Per-target notes need
 no move.
 
+### Finalize decisions (`apps-layout-finalize-k84`, 2026-07-04)
+
+The layout-finalize leaf settled the residual ws7 TODOs against the firmed AppSpec shape
+(hello-window k64–k74; the eight-app portfolio k77–k83):
+
+- **Canonical per-app shape** (all eight conform): `docs/{spec,logging-contract,
+  observable-state,run-results}.md` + `scenarios/*.rkt` (`#lang app-spec`) +
+  `run-values.rkt`. Optional, present only when earned: app-universal `learnings.md`,
+  per-impl `run-values-<impl>.rkt`, `fixtures/`. Documented in `apps/macos/README.md`.
+- **`test-strategy.md` retired** (all 3 — hello-window/ui-controls-gallery/mini-browser).
+  The pre-AppSpec TestAnyware checklist is superseded by the executable scenario suite
+  (behaviour) + `observable-state.md` (observable facts) + `run-results.md` (human
+  expected-behaviour) — the k62 Q4 mapping. Refs repointed (CONTEXT.md doc-layout line,
+  `reverse-gen-workflow.md` precursor list, the four per-target impl READMEs).
+- **`learnings.md` kept-but-optional.** The brief's firmed shape lists it and does not
+  flag it for retirement, but the mature practice (k77–k83) folded app-universal findings
+  into `run-results.md`. Resolution: retire the two **empty stubs** (ui-controls-gallery,
+  mini-browser — constraint-4 debris); keep hello-window's (real content, canonical
+  exemplar; its one datum is also in `spec.md §3.8` — no information loss); document as
+  optional.
+- **Bundler read: keep `spec.md` H1** (the zero-churn decision, D5-consistent). `spec.md`
+  is the firmed reverse-gen'd description home; every app has a correct display-name H1;
+  all four bundlers stay green with no code change.
+- **hello-window `(to confirm in-VM)` markers dropped** consistently across
+  `scenarios/03-close-button-keeps-running.rkt`, `spec.md §3.8/§10`, and
+  `observable-state.md` — the close-button "keeps running" expectation was confirmed on
+  all four impls (k73/k74; fifth-app cross-check k80). ADR-0010 D4 licenses the drop; the
+  `run-results.md` record keeps the evidence trail.
+- **Residual for k85 / grove-finish:** the 19 per-target `app-implementations/*/README.md`
+  are broadly stale (pre-refactor `generation/…` paths, unsubstituted `{{PROJECT}}`
+  templates); only the retired-file references were repointed here (scope: `apps/macos/`
+  layout). A ws6-domain README refresh is a separate concern.
+
 ## Notes
 
 - Reference: `REFACTOR.md` §15 (common app specs), §7.8 (behavioural exemplar), §45.11

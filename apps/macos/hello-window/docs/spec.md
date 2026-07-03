@@ -57,8 +57,8 @@ lifecycle is fully deterministic and identical on every launch:
    the `gui-app` app-kind does not require it. On stock AppKit, closing the window
    therefore hides it but leaves the process running. The precursor prose's "closing the
    window terminates the app" is **not** a property of these implementations; an
-   implementation that wants close-to-quit must opt in explicitly. *(This is the one
-   lifecycle claim a future live-VM scenario suite should confirm — see §10.)*
+   implementation that wants close-to-quit must opt in explicitly. *(Confirmed in-VM on
+   all four implementations — the close-button scenario passes on every impl; see §10.)*
 
 No application delegate logic, timers, or background work is involved.
 
@@ -257,8 +257,7 @@ these — this section is the enumeration, **not** scenario code).
 - **No interactive editing.** Clicking the label and typing produces no caret and no
   text change (it is non-editable/non-selectable). → `click-at` label, `type "x"`,
   `expect-ocr "Hello, macOS!"` unchanged
-- **(To confirm in-VM) Close-button behaviour.** Activating the window's close control
-  hides the window; per §3.8 the process is expected to **keep running** (these impls do
-  not opt into close-to-quit). A scenario should record the *actual* observed behaviour
-  rather than assume termination. → `click-at` close button, then check
-  `expect-running-app`.
+- **Close-button behaviour (confirmed in-VM ×4).** Activating the window's close control
+  hides the window; per §3.8 the process **keeps running** (these impls do not opt into
+  close-to-quit) — verified on all four implementations. → `click-at` close button, then
+  `expect-running-app` true.

@@ -27,9 +27,11 @@ to app specs.
    `targets/<t>/app-implementations/macos/<app>/`. Read *every* one: the spec captures
    only what is true of **all** of them; anything that differs across impls is either a
    projection detail to drop or a fact to express as a **rule** (see below). Also read
-   the precursor prose under `apps/macos/<app>/docs/` (`spec.md`, `learnings.md`,
-   `test-strategy.md`) — these are hand-authored precursors the generated spec upgrades,
-   and may contain *over-claims to correct* (see the hello-window lesson).
+   any precursor prose under `apps/macos/<app>/docs/` (`spec.md`, and the optional
+   app-universal `learnings.md` where present) — these are precursors the generated spec
+   upgrades, and may contain *over-claims to correct* (see the hello-window lesson). The
+   pre-AppSpec `test-strategy.md` checklists are retired (`apps-layout-finalize-k84`);
+   their behavioural residue lives in the scenario suite + `observable-state.md`.
 2. **Generate (subagent).** Dispatch a subagent with the reverse-gen prompt (shape
    below) and the input paths. It returns the complete spec markdown **plus modeling
    notes** for the reviewer — it does not write files.

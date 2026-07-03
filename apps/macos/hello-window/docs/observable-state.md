@@ -41,10 +41,10 @@ than hard-asserting before the verb exists (the forward-gen "mutant-D" failure):
 - **Window centred** → `expect-ax #:position` (gap 2). The impl calls `center`; the assertion is deferred.
 - **Command-Q key-equivalent** → `expect-ax #:key` (gap 2; may reach upstream into TestAnyware if
   `gv-ax-snapshot` lacks `AXMenuItemCmdChar`).
-- **Close-button behaviour** (`recording` scenario `02`) → `click-at` close button + `expect-running-app`.
-  Provisional: these impls do **not** opt into close-to-quit (spec §3.8), so the window hides and the
-  process is expected to **keep running**; the run records the actual behaviour (a failure is a
-  spec-quality finding, not a suite bug — ADR-0010 D4).
+- **Close-button behaviour** (`recording` scenario `03`) → `click-at` close button + `expect-running-app` true.
+  These impls do **not** opt into close-to-quit (spec §3.8), so the window hides and the process
+  **keeps running** — confirmed in-VM on all four implementations. A failure would now be a regression
+  / spec-quality finding, not a suite bug (ADR-0010 D4).
 
 ## Build obligation summary (per impl)
 

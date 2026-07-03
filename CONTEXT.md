@@ -824,9 +824,12 @@ local `docs/`, and the root `README.md` is a map only (§11). `README.md` and
 - per-target docs → `targets/<target>/docs/` (`reference.md`,
   `developer-guide.md`, `design/`, `research/`), ADR-0011 hermetic isolation
   extended to docs; per-app `learnings.md` + `report.md` stay in the target unit.
-- common app docs → `apps/<platform>/<app>/docs/` (`spec.md`, `test-strategy.md`,
-  target-independent `learnings.md`); portfolio index + design at
-  `apps/<platform>/docs/`.
+- common app docs → `apps/<platform>/<app>/docs/` (`spec.md` + the
+  `logging-contract.md`/`observable-state.md` contracts + `run-results.md`; optional
+  app-universal `learnings.md`), with the `#lang app-spec` suite in `<app>/scenarios/`
+  and per-app `run-values*.rkt` alongside; portfolio index + design at
+  `apps/<platform>/docs/`. (Pre-AppSpec `test-strategy.md` checklists retired,
+  `apps-layout-finalize-k84`.)
 - schema docs → `schemas/docs/`.
 _Avoid_: a "main tier" / single top-level `docs/` (dissolved by the
 `structural-refactoring` grove); treating `docs/` as a place at all.
