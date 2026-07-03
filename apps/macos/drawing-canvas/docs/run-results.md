@@ -9,6 +9,17 @@ primary content surface is a **custom `NSView`** (strokes are framebuffer pixels
 and AX-invisible), so the `[canvas]` log events carry every state assertion and screenshot
 artifacts carry the visual bar.
 
+> **Update — `canvas-ax-scope-k140` (2026-07-03): the sole k139 red is closed → 17/17 ×4.**
+> Scenario 03's whole-snapshot `expect-no-ax` red was a snapshot-scope finding, not an impl defect
+> (diagnosis unchanged, below). k140 gave AppSpec's `expect-ax`/`expect-no-ax` an opt-in **`#:scope
+> 'app-content`** (toolkit commit AppSpec `cb178f8`) that walks only the app-under-test's window
+> content — dropping the window's own title-bar `AXStaticText` (text == the window's AXTitle) and
+> foreign windows (Notification Center) — and regenerated scenario 03 to use it. Re-verified in a
+> fresh Tahoe VM against the same four k133 bundles: **03 PASS on all four impls** via the real
+> AppSpec runner, plus a 01+02 regression spot-check (chez) confirming the additive scope left the
+> default `'anywhere` path intact. The table/tally below are updated to the **final 17/17 ×4** state;
+> the original k139 adjudication is retained (marked resolved) for legibility.
+
 ## Run environment
 
 - **Date:** 2026-07-03.
@@ -42,7 +53,7 @@ artifacts carry the visual bar.
 |---|---|---|---|---|
 | 01 launch steady-state cluster (hard) | PASS | PASS | PASS | PASS |
 | 02 slider initial-value AXTitle fold `recording:` | PASS (confirms) | PASS (confirms) | PASS (confirms) | PASS (confirms) |
-| 03 canvas exposes no content AX `recording:` | **FAIL → scope-class**¹ | **FAIL → scope-class**¹ | **FAIL → scope-class**¹ | **FAIL → scope-class**¹ |
+| 03 canvas exposes no content AX `recording:` | PASS (scoped)¹ | PASS (scoped)¹ | PASS (scoped)¹ | PASS (scoped)¹ |
 | 04 Clear on empty canvas no-op (hard) | PASS | PASS | PASS | PASS |
 | 05 bare click paints a dot `recording:` | PASS (confirms)² | PASS (confirms)² | PASS (confirms)² | PASS (confirms)² |
 | 06 held-button drag paints a stroke `recording:` | PASS (confirms) | PASS (confirms) | PASS (confirms) | PASS (confirms) |
@@ -58,12 +69,14 @@ artifacts carry the visual bar.
 | 16 Command-Q terminates (hard, mandated) | PASS | PASS | PASS | PASS |
 | 17 close-button keeps running `recording:` | PASS (confirms) | PASS (confirms) | PASS (confirms) | PASS (confirms) |
 
-**Tallies: racket 16/17, chez 16/17, gerbil 16/17, sbcl 16/17.** **No impl defect.** The one
-standing red (03) is byte-identical on all four impls and adjudicates to a **snapshot-scope
-run-mechanism finding**, not a defect; the mandated Command-Q invariant (16) and **all eleven
-`recording:` confirmations** are green on all four impls.
+**Tallies (final, after k140): racket 17/17, chez 17/17, gerbil 17/17, sbcl 17/17.** **No impl
+defect.** At k139 the sole red was 03 (16/17 ×4), a byte-identical **snapshot-scope run-mechanism
+finding** closed by `canvas-ax-scope-k140` (banner above; the scoped negative re-verified green ×4);
+the mandated Command-Q invariant (16) and **all eleven `recording:` confirmations** are green on all
+four impls.
 
-¹ The whole-snapshot `expect-no-ax` trips on the window's title-bar chrome — adjudicated below.
+¹ At k139 the whole-snapshot `expect-no-ax` tripped on the window's title-bar chrome (diagnosed
+below); k140 scoped the negative to app-window content (`#:scope 'app-content`), re-verified PASS ×4.
 ² Green **after** the gv-click settle-move fix this run forced; the first (discarded) chez attempt
   failed 05 to a driver-injected coincident drag point (`points=2`) — adjudicated below.
 
@@ -92,7 +105,7 @@ canvas-gesture app — the analogue of note-editor's capture-then-parked-click s
 mini-browser's type→click race; the proper long-term fix (a driver-level "click without a coincident
 move") remains TestAnyware-side.
 
-### 03 (all four) — the whole-snapshot `expect-no-ax AXStaticText` trips on window chrome, not canvas
+### 03 (all four) — the whole-snapshot `expect-no-ax AXStaticText` trips on window chrome, not canvas  — RESOLVED by k140
 
 `expect-no-ax #:role 'AXStaticText` walks the **whole-system** `agent snapshot` and finds
 platform chrome the canvas never produces: at steady state (panel closed) the tripping node is the
@@ -111,6 +124,26 @@ window's content region below the toolbar, or assert the canvas region specifica
 (its absence *is* the fact). **Not a suite bug, not an impl defect, not an acceptance blocker** (the
 gallery-03 / pdfkit-07 / scenekit-07 / note-editor-11 stays-red-until-regen precedent). The suite is
 never patched from the run loop.
+
+**Closure (`canvas-ax-scope-k140`, 2026-07-03 — the user chose to chase the literal 17/17 rather
+than leave 03 adjudicated).** The finding is a *scope* gap in the negative verb, so the fix is a
+**scoping mechanism**, not a suite patch or an impl change. AppSpec `expect-ax`/`expect-no-ax` gained
+an opt-in **`#:scope`** (default `'anywhere` = the unchanged whole-snapshot walk; `'app-content`
+narrows to the app-under-test's standard window content, dropping the title-bar `AXStaticText` whose
+text equals the window's own `AXTitle` and all foreign windows). The app-under-test is identified
+snapshot-intrinsically — the `appName` owning the Menu Bar, which the frontmost app always does — so
+no per-app plumbing is needed; the transform now preserves each window's `appName`/`windowType`/
+`focused` to feed it (AppSpec commit `cb178f8`, hermetic tests + full suite 17/17). Scenario 03 was
+regenerated to `(expect-no-ax #:role 'AXStaticText #:scope 'app-content)` — a forward-gen refinement,
+committed downstream, never a run-loop patch. **Re-verified in a fresh Tahoe VM against the same four
+k133 bundles: 03 PASS on racket, chez, gerbil, sbcl** (the real AppSpec runner, per-scenario launch/
+teardown); a 01+02 spot-check on chez confirmed the additive scope left the default path intact. The
+proof is honest, not a hidden red: on the live chez tree the whole-snapshot walk still finds the
+title chrome `"Drawing Canvas"` (the k139 red reproduced) while the scoped walk finds nothing yet
+still sees the real toolbar `Clear` button — the canvas region genuinely has zero content AX. The
+underlying spec fact (canvas exposes no content elements) was already confirmed at k139; k140 makes
+the *assertion* discriminating. Reusable closer for the "no content AX on a custom-view surface"
+shape (swift-native-probe and future apps inherit it).
 
 ## Recording confirmations (signal recorded; no spec edited as a side effect)
 
