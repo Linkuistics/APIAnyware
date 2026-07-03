@@ -24,9 +24,23 @@ children materialized lazily, grow the next as each retires)
    reason=menu`; no stray events. `[canvas]` not host-reachable — checklist
    code-audit + emitter isolation run (contract example lines byte-exact).
    `DrawingCanvas-racket.app` 86M, `com.linkuistics.drawing-canvas-racket`.
-2. `chez-instrument-build-k135` — mirror k134 via the chez house style (inline
-   `dc-` emitter; terminate-hook delegate; startup + test-config no-op top-level
-   before `(main)`); per-target generate + relink (`--product APIAnywareChez`).
+2. `chez-instrument-build-k135` ✅ *(done 2026-07-03)* — the k134 mirror via the
+   chez house style (inline `dc-` emitter, no quote-string; terminate-hook
+   delegate; startup + test-config no-op top-level before `(main)`). Per-target
+   generate + relink done: chez trampolines **175 → 221** (`grep -c @_cdecl`,
+   the exact racket twin), relinked before bundling; goldens unmoved. No
+   deviation from the reference pattern; freeze semantics fall out of the
+   stroke-vector data model as in racket (`mouseUp:` captures
+   `(car (reverse strokes))` before `end-stroke!`). CLI smoke green (startup →
+   launch line; AppleScript quit → `shutdown reason=menu`; no strays); emitter
+   isolation run byte-exact (incl. the k112 fold + `width=11`).
+   `DrawingCanvas-chez.app` 5.1M standalone,
+   `com.linkuistics.drawing-canvas-chez`.
+3. `gerbil-instrument-build-k136` — mirror k134/k135 via the gerbil house style
+   (inline emitter on Gambit primitives; terminate-hook delegate; top-level
+   startup/test-config); per-target generate + relink (`--product
+   APIAnywareGerbil`); watch the k127 generics-shadow class on the regenerated
+   CG modules.
 
 ## Corpus finding (2026-07-03, on decompose — revises the parent-brief expectation)
 
