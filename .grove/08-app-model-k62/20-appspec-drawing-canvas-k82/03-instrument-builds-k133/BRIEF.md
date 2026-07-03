@@ -6,9 +6,27 @@ children materialized lazily, grow the next as each retires)
 
 ## Children
 
-1. `racket-instrument-build-k134` — the reference pattern (events.rkt + wiring +
-   descriptor + self-contained build.sh; the note-editor k125 twin) **plus the
-   CoreGraphics corpus step the siblings inherit** (see the corpus finding below).
+1. `racket-instrument-build-k134` ✅ *(done 2026-07-03)* — the reference pattern
+   (events.rkt + wiring + descriptor + self-contained build.sh; the note-editor
+   k125 twin) **plus the CoreGraphics corpus step the siblings inherit** (collect
+   + deps-together resolve done once; per-target generate + relink remains per
+   child — CG GROWS the trampoline table, racket 175 → 221 by `grep -c @_cdecl`,
+   and the Generated Swift sources are *gitignored* so "git-clean" is vacuous;
+   regenerate + relink before bundling is the operative verify, the k107 order
+   rule). App-level shape the siblings mirror: emitter with no quote-string (no
+   string values in this app); the five `[canvas]` sites — stroke events read the
+   **stroke's own frozen** tuple (capture the in-progress stroke before the flags
+   clear, emit after, post-state), `committed` adds the stored point count;
+   `width-changed`/`cleared`/`color-changed` post-store in the three toolbar
+   handlers (`cleared` count captured pre-clear, always emitted; `color-changed`
+   success-path only, stderr guard off events.log); rounding once at emit.
+   CLI smoke green: `startup` → bare launch line; AppleScript quit → `shutdown
+   reason=menu`; no stray events. `[canvas]` not host-reachable — checklist
+   code-audit + emitter isolation run (contract example lines byte-exact).
+   `DrawingCanvas-racket.app` 86M, `com.linkuistics.drawing-canvas-racket`.
+2. `chez-instrument-build-k135` — mirror k134 via the chez house style (inline
+   `dc-` emitter; terminate-hook delegate; startup + test-config no-op top-level
+   before `(main)`); per-target generate + relink (`--product APIAnywareChez`).
 
 ## Corpus finding (2026-07-03, on decompose — revises the parent-brief expectation)
 
