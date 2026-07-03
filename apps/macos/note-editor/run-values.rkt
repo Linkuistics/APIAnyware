@@ -16,25 +16,22 @@
 ;; scenarios/ — the runner discovers every .rkt there as a scenario
 ;; (runner/dispatch.rkt).
 ;;
-;; ── PROVISIONAL (forward-gen-suite-k129, 2026-07-03) ──
-;; Every coordinate below is SPEC-DERIVED, not yet live-measured — the
-;; k120 projection method (window frame + [NSWindow center] bias +
-;; stack-arrangement sizing, validated within control bounds by the
-;; mini-browser live-run k121): spec §4 fixes a 900x600 content rect,
-;; centred on the 1920x1080 VM screen with the mini-browser-measured
-;; 32px title bar and y-top 115 → window (510,115) 900x632, content-top
-;; fb y 147; §5.1 fixes the toolbar stack (12,556,876,32) with 8px
-;; spacing and rounded 26px-metric buttons (widths estimated at
-;; 32 + 6/char from the k121-measured Reload/Go); §5.2/§5.3 put the
-;; editor pane at content x 12–450. fb_x = 510 + cx;
-;; fb_y = 147 + (600 − cy). The live-run stage re-measures every value
-;; from `agent snapshot --mode layout` per impl (two-launch determinism
-;; diff first) and adds per-impl `run-values-<impl>.rkt` siblings where
-;; layouts diverge (precedent: racket alone on the compact-22px metrics
-;; in both pdfkit and mini-browser — expect the same split, but measure).
-;; The ALERT coordinates are the weakest projection (NSAlert centres on
-;; screen, size platform-styled): measure them from the OPEN alert at
-;; live-run (the scenekit open-menu precedent).
+;; ── LIVE-MEASURED (live-run-k130, 2026-07-03) ──
+;; Coordinates below are AX element centres (framebuffer px) measured
+;; from `agent snapshot --window "Untitled — Note Editor" --mode layout`
+;; on the 1920x1080 VM, two-launch determinism diff green on every impl.
+;; chez + gerbil + sbcl are PIXEL-IDENTICAL (window (510,115) 900x632,
+;; 26px control metrics, toolbar centre-line fb y 171) and share this
+;; table; racket alone diverges on its compact 22px metrics (window
+;; 900x628, centre-line y 166) — pass run-values-racket.rkt for the
+;; racket impl (the pdfkit/mini-browser share-set precedent). The ALERT
+;; coordinates were measured from the OPEN alert (the scenekit open-menu
+;; precedent) and are LAYOUT-INDEPENDENT: the screen-centred NSAlert has
+;; byte-identical geometry over the racket and chez window layouts
+;; (dialog titled "alert", 260x234 body, Cancel [focused] left of the
+;; rightmost Discard). The k129 spec-derived provisional values all
+;; landed inside their control bounds (worst: Redo, 10px off-centre);
+;; the k120 projection method holds for this window shape too.
 ;;
 ;; ── The persistence story (run-stage obligations; observable-state.md) ──
 ;; Before the runs, the run stage must prepare the guest:
@@ -66,24 +63,26 @@
   ;; content (231,300) → fb (741,447)
   (editor-click-x 741)
   (editor-click-y 447)
-  ;; toolbar buttons, centre-line fb y 175 (stack top strip, 26px
-  ;; controls); x from the §5.1 arrangement order New·Open…·Save…·Undo·Redo
-  (new-button-x 547)
-  (new-button-y 175)
-  (open-button-x 611)
-  (open-button-y 175)
-  (save-button-x 681)
-  (save-button-y 175)
-  (undo-button-x 748)
-  (undo-button-y 175)
-  (redo-button-x 812)
-  (redo-button-y 175)
-  ;; scenarios/10,12 — the §8.1 alert's Cancel button centre. WEAKEST
-  ;; projection (screen-centred NSAlert, two side-by-side bottom buttons,
-  ;; Discard rightmost/default, Cancel to its left) — MEASURE AT LIVE-RUN
-  ;; from the open alert before trusting.
-  (alert-cancel-x 905)
-  (alert-cancel-y 480)
+  ;; toolbar buttons, centre-line fb y 171 (stack top strip, 26px
+  ;; controls); §5.1 arrangement order New·Open…·Save…·Undo·Redo —
+  ;; measured centres: New (521,158) 53x26, Open… (580,158) 70x26,
+  ;; Save… (656,158) 66x26, Undo (728,158) 59x26, Redo (793,158) 58x26
+  (new-button-x 548)
+  (new-button-y 171)
+  (open-button-x 615)
+  (open-button-y 171)
+  (save-button-x 689)
+  (save-button-y 171)
+  (undo-button-x 758)
+  (undo-button-y 171)
+  (redo-button-x 822)
+  (redo-button-y 171)
+  ;; scenarios/10,12 — the §8.1 alert's Cancel button centre, measured
+  ;; from the OPEN alert: Cancel (845,404) 112x30 [focused], Discard
+  ;; (963,404) 112x30 rightmost. Screen-centred and layout-independent
+  ;; (identical over racket's and chez's window layouts).
+  (alert-cancel-x 901)
+  (alert-cancel-y 419)
   ;; scenario/21 — the window close control (leftmost traffic-light)
   ;; centre: window x-origin 510 + the k121-measured 8px inset,
   ;; AX (518,123) 16x16 → centre
