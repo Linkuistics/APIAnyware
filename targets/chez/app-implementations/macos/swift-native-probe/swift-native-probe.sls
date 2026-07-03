@@ -16,7 +16,18 @@
 ;; the existing aw-string-result — no native string bridge (the racket↔chez
 ;; divergence the 060 brief flags).
 ;;
-;; Mirrors generation/targets/racket/apps/swift-native-probe/swift-native-probe.rkt
+;; AppSpec instrumentation (chez-impl-k145): the k141 logging contract
+;; (apps/macos/swift-native-probe/docs/logging-contract.md). Beyond the shown
+;; values, each of the two shapes is checked against a known-good expected and
+;; emitted as a [probe] result to the events.log the runner tails, plus a
+;; [probe] complete all-ok summary (scenario 01's target-agnostic coverage
+;; assertion) and the lifecycle triad. Events emit INLINE (the drawing-canvas
+;; chez house style, k135); the racket sibling (racket-impl-k144) uses a separate
+;; events.rkt. Under `launch-via 'open` LaunchServices discards stdout, so
+;; events.log — not stdout — is the runner's read path; the stdout echo below is
+;; kept for humans running the app unbundled.
+;;
+;; Mirrors targets/racket/app-implementations/macos/swift-native-probe/swift-native-probe.rkt
 ;; one control at a time.
 ;;
 ;; Run unbundled with:
@@ -31,22 +42,170 @@
         (apianyware runtime cocoa)
         (apianyware runtime objc)
         (apianyware runtime types)
+        (apianyware runtime dispatch)       ; make-delegate / delegate-ptr (terminate hook)
         ;; The Swift-native residual — trampolined through libAPIAnywareChez:
         (apianyware createml functions)    ; timestampSeed (free function)
         (apianyware createml constants))   ; MLCreateErrorDomain (constant)
 
+;; ============================================================
+;; Structured event log (logging contract)
+;; ============================================================
+;; The k141 logging contract (apps/macos/swift-native-probe/docs/
+;; logging-contract.md): the hello-window lifecycle triad plus the [probe]
+;; events that carry THIS app's coverage proof — one [probe] result per probed
+;; shape (each an explicit ok-check vs a known-good expected) and a [probe]
+;; complete summary whose all-ok=#t is the single target-agnostic coverage
+;; assertion scenario 01 consumes:
+;;   [lifecycle] startup                                        — readiness probe (`wait-ready`)
+;;   [probe] result shape=<s> name="<sym>" ok=<#t|#f> value=<v> — once per probed shape
+;;   [probe] complete count=<n> ok=<n> all-ok=<#t|#f>           — the coverage assertion (01)
+;;   Swift-Native Probe opened.                                 — window key+front; BARE line
+;;   [lifecycle] shutdown reason=<r>                            — terminate; reason ∈ {menu,signal,error}
+;;
+;; Events emit INLINE (no separate module), the drawing-canvas chez house style
+;; (chez-instrument-build-k135). Unlike drawing-canvas (whose events carry only
+;; bare integers) this app's [probe] events carry STRING values — `name` always,
+;; and the constant shape's value ("com.apple.CreateML") — so this section keeps
+;; a `snp-quote-string` helper: chez `format`'s ~s produces the contract's
+;; re-readable double-quoted form (escaping "/\/newline), matching racket's ~s.
+;;
+;; Single writer: the probe computes on the main thread before the run loop, and
+;; the only later writes are the launch line and the shutdown line (also main
+;; thread) — one port with a post-write flush suffices, no lock.
+
+;; Fixed default the descriptor's #:events-path mirrors, so the runner tails the
+;; same file whether or not #:log-env (SWIFT_NATIVE_PROBE_EVENTS_LOG) propagates
+;; through LaunchServices.
+(define snp-default-events-path "/tmp/swift-native-probe/events.log")
+(define snp-events-port #f)
+
+;; SWIFT_NATIVE_PROBE_EVENTS_LOG if set and non-empty, else the fixed default.
+(define (snp-resolve-events-path)
+  (let ([env (getenv "SWIFT_NATIVE_PROBE_EVENTS_LOG")])
+    (if (and env (not (string=? env ""))) env snp-default-events-path)))
+
+;; Directory component of `p` (everything before the last '/'), or #f.
+(define (snp-path-parent p)
+  (let loop ([i (- (string-length p) 1)])
+    (cond
+      [(< i 0) #f]
+      [(char=? (string-ref p i) #\/) (substring p 0 i)]
+      [else (loop (- i 1))])))
+
+;; Open + truncate the events.log: (file-options no-fail) creates it if absent
+;; and truncates it if present. Line-buffered so a tail sees each record
+;; promptly. The parent dir is created if missing (guarded against a race).
+(define (snp-events-init!)
+  (let* ([target (snp-resolve-events-path)]
+         [parent (snp-path-parent target)])
+    (when (and parent (not (string=? parent "")) (not (file-directory? parent)))
+      (guard (e [#t (void)]) (mkdir parent)))
+    (set! snp-events-port
+      (open-file-output-port target
+        (file-options no-fail)
+        (buffer-mode line)
+        (make-transcoder (utf-8-codec))))))
+
+(define (snp-emit-line line)
+  (when snp-events-port
+    ;; Swallow only I/O-level failures (out-of-disk, closed-port races on
+    ;; shutdown). A genuine programmer error still surfaces during dev.
+    (guard (e [#t (void)])
+      (put-string snp-events-port line)
+      (put-char snp-events-port #\newline)
+      (flush-output-port snp-events-port))))
+
+;; Scheme-style boolean literal for the contract's ok/all-ok alphabet.
+(define (snp-bool->hash b) (if b "#t" "#f"))
+
+;; Re-readable double-quoted form (the contract's string-value alphabet): chez
+;; `format`'s ~s escapes "/\/newline. Used for `name` (always) and any string
+;; `value`.
+(define (snp-quote-string s) (format "~s" s))
+
+(define (snp-emit-startup)
+  (snp-emit-line "[lifecycle] startup"))
+
+;; The §step-6 launch diagnostic — the bare (unbracketed) line the runner's
+;; `wait-for-log` matches; dual-emitted (the stdout print stays in `main` for
+;; unbundled runs). Identical wording across all four impls (the contract's
+;; stable launch line).
+(define (snp-emit-launch-line)
+  (snp-emit-line "Swift-Native Probe opened."))
+
+(define (snp-emit-shutdown reason)
+  (snp-emit-line (format "[lifecycle] shutdown reason=~a" reason)))
+
+;; One coverage-set shape's result. SHAPE a bare symbol (function/constant/…),
+;; NAME the probed symbol (emitted double-quoted), OK a boolean (#t/#f),
+;; VALUE-REPR the ALREADY-rendered value string — the caller renders numbers
+;; bare and strings quoted (only the call site knows each shape's live type),
+;; per the contract's value semantics.
+(define (snp-emit-probe-result shape name ok value-repr)
+  (snp-emit-line (format "[probe] result shape=~a name=~a ok=~a value=~a"
+                         shape (snp-quote-string name) (snp-bool->hash ok) value-repr)))
+
+;; The coverage summary scenario 01 asserts. ALL-OK must be #t iff OK = COUNT.
+(define (snp-emit-probe-complete count ok all-ok)
+  (snp-emit-line (format "[probe] complete count=~a ok=~a all-ok=~a"
+                         count ok (snp-bool->hash all-ok))))
+
+(define (snp-close-events!)
+  (when snp-events-port
+    (guard (e [#t (void)])
+      (flush-output-port snp-events-port)
+      (close-output-port snp-events-port)))
+  (set! snp-events-port #f))
+
+;; ============================================================
+;; Application
+;; ============================================================
+
 (define-entry-point (main)
-  ;; --- Call the Swift-native residual NOW (before any UI) so a failure to bind
-  ;;     the trampolines surfaces loudly rather than as an empty window. ---
-  (let ([seed-value (timestampSeed)]            ; Swift-native Int via trampoline
-        [error-domain MLCreateErrorDomain])     ; Swift-native String constant
+  ;; --- Probe each shape NOW (before any UI) so a binding failure surfaces
+  ;;     loudly rather than as an empty window; each result is checked vs its
+  ;;     known-good expected and emitted as a [probe] result, then the coverage
+  ;;     summary (contract emission order: probe before UI). Do NOT abort on a
+  ;;     failed probe — the window stays diagnostic. ---
+  (let ([seed-value (timestampSeed)]            ; shape 1: Swift-native Int via trampoline
+        [error-domain MLCreateErrorDomain])     ; shape 2: Swift-native String constant
+
+    ;; Per-shape ok-checks (contract "Known-good expecteds"):
+    ;;   - timestampSeed is time-derived, never value-equality: the check is
+    ;;     STRUCTURAL (an exact integer was returned — the binding produced a
+    ;;     well-typed result). NB chez has no `exact-integer?`, so integer?+exact?.
+    ;;   - MLCreateErrorDomain is the fixed domain string.
+    (let* ([ok-fn    (and (integer? seed-value) (exact? seed-value))]
+           [ok-const (and (string? error-domain)
+                          (string=? error-domain "com.apple.CreateML"))]
+           [ok-count (+ (if ok-fn 1 0) (if ok-const 1 0))])
+      (snp-emit-probe-result 'function "CreateML.timestampSeed"       ok-fn    (number->string seed-value))
+      (snp-emit-probe-result 'constant "CreateML.MLCreateErrorDomain" ok-const (snp-quote-string error-domain))
+      (snp-emit-probe-complete 2 ok-count (= ok-count 2)))
+
+    ;; Human-friendly stdout echo (kept for unbundled runs; not the contract).
     (printf "Swift-native CreateML.timestampSeed() = ~a\n" seed-value)
     (printf "Swift-native MLCreateErrorDomain = ~a\n" error-domain)
 
     ;; --- Application setup ---
-    (let ([app (nsapplication-shared-application)])
+    ;; The app delegate's applicationWillTerminate: is the [lifecycle] shutdown
+    ;; reason=menu hook the runner's graceful quit (quit-impl! / the Command-Q
+    ;; scenario) routes through. Cocoa holds the delegate weakly, so `app-delegate`
+    ;; must stay reachable — this let* spans the run loop below. The callback body
+    ;; is guarded because an unhandled exception in an ObjC callback crashes the
+    ;; app with no Scheme backtrace.
+    (let* ([app (nsapplication-shared-application)]
+           [app-delegate
+            (make-delegate
+              `(("applicationWillTerminate:"
+                 ,(lambda (notification)
+                    (guard (e [#t (void)])
+                      (snp-emit-shutdown 'menu)
+                      (snp-close-events!)))
+                 (void*) void)))])
       (nsapplication-set-activation-policy! app NSApplicationActivationPolicyRegular)
       (install-standard-app-menu! app "Swift-Native Probe")
+      (nsapplication-set-delegate! app (delegate-ptr app-delegate))
 
       ;; --- Create window (560x240, centred) ---
       (let* ([window (make-nswindow-init-with-content-rect-style-mask-backing-defer
@@ -102,7 +261,34 @@
         (nswindow-make-key-and-order-front window #f)
         (nsapplication-activate-ignoring-other-apps app #t)
 
+        ;; §step-6 launch diagnostic — dual emission (logging contract): keep the
+        ;; human-friendly stdout line AND write the same bare line to events.log
+        ;; (LaunchServices discards stdout under `open`). Emitted UNCONDITIONALLY
+        ;; so the headless smoke below sees it.
         (display "Swift-Native Probe opened. Close the window or press Ctrl+C to exit.\n")
-        (nsapplication-run app)))))
+        (snp-emit-launch-line)
+
+        ;; AW_PROBE_SMOKE is the host construction pre-flight: the whole probe +
+        ;; full k141 contract has now been emitted and the window built +
+        ;; ordered-front, so exit WITHOUT the run loop — the window is never
+        ;; serviced/composited (no event loop) so no GUI grabs the host. This
+        ;; CLI-smokes the [probe] vocabulary before the VM round-trip; the live
+        ;; GUI verify is forward-gen-live-run's ([[use_testanyware]] — never run
+        ;; the GUI from the CLI).
+        (unless (getenv "AW_PROBE_SMOKE")
+          (nsapplication-run app))))))
+
+;; --- Structured event log: open + [lifecycle] startup BEFORE (main) --------
+;; startup must land before the AppKit run loop (or the runner's `wait-ready`
+;; readiness probe times out). The probe computes and emits its [probe] results
+;; inside `main` before building the UI (contract emission order).
+(snp-events-init!)
+(snp-emit-startup)
+
+;; Test-config compatibility (logging-contract.md): the probe reads no runtime
+;; config — its coverage set is fixed — so it honours SWIFT_NATIVE_PROBE_TEST_CONFIG
+;; by reading the env var and treating absent/empty (and a missing file) as "no
+;; config" — a deliberate no-op.
+(getenv "SWIFT_NATIVE_PROBE_TEST_CONFIG")
 
 (main)
