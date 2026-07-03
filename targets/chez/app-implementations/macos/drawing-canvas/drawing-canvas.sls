@@ -6,6 +6,13 @@
 ;; `main` and is read from inside the ObjC callbacks. Mirrors
 ;; generation/targets/racket/apps/drawing-canvas/drawing-canvas.rkt.
 ;;
+;; Instrumented to the AppSpec logging contract
+;; (apps/macos/drawing-canvas/docs/logging-contract.md, k132): it writes a
+;; structured events.log the runner tails — [lifecycle] startup/shutdown, the
+;; bare launch line, and the five [canvas] stroke/tool events (inline `dc-`
+;; emitter below, the note-editor k126 house style;
+;; chez-instrument-build-k135).
+;;
 ;; This is the first — and only — chez app with a **dynamic NSView
 ;; subclass**, so it is where `make-dynamic-subclass` (runtime/dispatch.sls)
 ;; gets exercised under live AppKit dispatch: AppKit calls *into* Scheme for
@@ -53,6 +60,126 @@
         (apianyware runtime types)
         (apianyware runtime dispatch))
 
+;; ============================================================
+;; Structured event log (logging contract)
+;; ============================================================
+;; The k132 logging contract (apps/macos/drawing-canvas/docs/
+;; logging-contract.md): the three hello-window lifecycle events plus the
+;; five [canvas] state transitions the spec §14 assertions ride — the canvas
+;; is a custom NSView whose strokes are framebuffer pixels, OCR-meaningless
+;; and AX-invisible (spec §12), so without log events stroke lifecycle and
+;; tool state are not assertable at all. No event in this app carries a
+;; string value, so the quote-string helper is omitted — every value is a
+;; bare integer or symbol per the contract's line format.
+;;
+;; Single writer: every event is emitted on the main thread — startup and
+;; the launch line before -run; the [canvas] events from the canvas
+;; subclass's mouse overrides (AppKit event dispatch), the slider and Clear
+;; action handlers, and the colour panel's continuous colorChanged: action
+;; (the shared NSColorPanel is in-process; the Cocoa run loop serialises its
+;; sends); shutdown on the terminate path — so one port with a post-write
+;; flush suffices (no lock).
+
+;; Fixed default the descriptor's #:events-path mirrors, so the runner tails
+;; the same file whether or not #:log-env (DRAWING_CANVAS_EVENTS_LOG)
+;; propagates through LaunchServices.
+(define dc-default-events-path "/tmp/drawing-canvas/events.log")
+(define dc-events-port #f)
+
+;; DRAWING_CANVAS_EVENTS_LOG if set and non-empty, else the fixed default.
+(define (dc-resolve-events-path)
+  (let ([env (getenv "DRAWING_CANVAS_EVENTS_LOG")])
+    (if (and env (not (string=? env ""))) env dc-default-events-path)))
+
+;; Directory component of `p` (everything before the last '/'), or #f.
+(define (dc-path-parent p)
+  (let loop ([i (- (string-length p) 1)])
+    (cond
+      [(< i 0) #f]
+      [(char=? (string-ref p i) #\/) (substring p 0 i)]
+      [else (loop (- i 1))])))
+
+;; Open + truncate the events.log: (file-options no-fail) creates it if
+;; absent and truncates it if present. Line-buffered so a tail sees each
+;; record promptly. The parent dir is created if missing (guarded against a
+;; race).
+(define (dc-events-init!)
+  (let* ([target (dc-resolve-events-path)]
+         [parent (dc-path-parent target)])
+    (when (and parent (not (string=? parent "")) (not (file-directory? parent)))
+      (guard (e [#t (void)]) (mkdir parent)))
+    (set! dc-events-port
+      (open-file-output-port target
+        (file-options no-fail)
+        (buffer-mode line)
+        (make-transcoder (utf-8-codec))))))
+
+(define (dc-emit-line line)
+  (when dc-events-port
+    ;; Swallow only I/O-level failures (out-of-disk, closed-port races on
+    ;; shutdown). A genuine programmer error still surfaces during dev.
+    (guard (e [#t (void)])
+      (put-string dc-events-port line)
+      (put-char dc-events-port #\newline)
+      (flush-output-port dc-events-port))))
+
+;; Stored double -> bare integer, rounded to nearest (the ONE rounding
+;; site): r/g/b are the stored device-RGB components x 255, width the stored
+;; width (contract "Canvas events"). Rounding once here means every event
+;; formatting the same stored double agrees — the freeze proof rides that
+;; agreement.
+(define (dc-component->255 c) (exact (round (* c 255.0))))
+(define (dc-width->int w)     (exact (round w)))
+
+(define (dc-emit-startup)
+  (dc-emit-line "[lifecycle] startup"))
+(define (dc-emit-launch-line)
+  (dc-emit-line "Drawing Canvas running. Close window or Ctrl+C to exit."))
+(define (dc-emit-shutdown reason)
+  (dc-emit-line (format "[lifecycle] shutdown reason=~a" reason)))
+
+;; The two stroke events (contract "Canvas events"): the caller passes the
+;; STROKE'S OWN frozen components/width (captured into the stroke vector at
+;; its mouse-down — read from the stroke, never from the current-* tool
+;; state), plus the stored point count on commit (down point + drag points;
+;; the release is not appended). Fixed key order r · g · b · width (· points).
+(define (dc-emit-stroke-begun r g b width)
+  (dc-emit-line (format "[canvas] stroke-begun r=~a g=~a b=~a width=~a"
+                        (dc-component->255 r) (dc-component->255 g)
+                        (dc-component->255 b) (dc-width->int width))))
+
+(define (dc-emit-stroke-committed r g b width points)
+  (dc-emit-line (format "[canvas] stroke-committed r=~a g=~a b=~a width=~a points=~a"
+                        (dc-component->255 r) (dc-component->255 g)
+                        (dc-component->255 b) (dc-width->int width) points)))
+
+;; Success-path only (§8.1 step 4): emitted after the device-RGB components
+;; are stored; the silent no-ops (nil panel colour, failed conversion) emit
+;; nothing.
+(define (dc-emit-color-changed r g b)
+  (dc-emit-line (format "[canvas] color-changed r=~a g=~a b=~a"
+                        (dc-component->255 r) (dc-component->255 g)
+                        (dc-component->255 b))))
+
+(define (dc-emit-width-changed width)
+  (dc-emit-line (format "[canvas] width-changed width=~a" (dc-width->int width))))
+
+;; Always emitted, including on an already-empty canvas (count=0) — the
+;; positive channel for stroke-set cardinality.
+(define (dc-emit-cleared count)
+  (dc-emit-line (format "[canvas] cleared count=~a" count)))
+
+(define (dc-close-events!)
+  (when dc-events-port
+    (guard (e [#t (void)])
+      (flush-output-port dc-events-port)
+      (close-output-port dc-events-port)))
+  (set! dc-events-port #f))
+
+;; ============================================================
+;; Application
+;; ============================================================
+
 (define-entry-point (main)
 
   ;; ============================================================
@@ -69,6 +196,22 @@
     (foreign-procedure "objc_msgSend" (void* void* (& NSRect)) void*))
 
   (define app (nsapplication-shared-application))
+
+  ;; --- App delegate (terminate hook → [lifecycle] shutdown reason=menu) ---
+  ;; The osascript graceful quit the runner uses (quit-impl! / the Command-Q
+  ;; scenario) routes through applicationWillTerminate:. Cocoa holds the
+  ;; delegate weakly, so keep `app-delegate` reachable — this define lives
+  ;; for the whole of `main`, which spans the run loop. The callback body is
+  ;; guarded because an unhandled exception in an ObjC callback crashes the
+  ;; app with no Scheme backtrace.
+  (define app-delegate
+    (make-delegate
+      `(("applicationWillTerminate:"
+         ,(lambda (notification)
+            (guard (e [#t (void)])
+              (dc-emit-shutdown 'menu)
+              (dc-close-events!)))
+         (void*) void))))
 
   ;; --- Window geometry ---
   (define window-width  640)
@@ -200,7 +343,15 @@
               (lambda (self _cmd event)
                 (let ([pt (event->view-point self event)])
                   (start-stroke! (nspoint-x pt) (nspoint-y pt))
-                  (nsview-set-needs-display! self #t)))
+                  (nsview-set-needs-display! self #t)
+                  ;; [canvas] stroke-begun — end of the §7.2 mouse-down
+                  ;; rule, post-state. Format the STROKE'S OWN frozen
+                  ;; colour+width (the vector captured them at seed time),
+                  ;; never the current-* tool state at emit time.
+                  (let ([stroke (car (reverse strokes))])
+                    (dc-emit-stroke-begun
+                      (vector-ref stroke 0) (vector-ref stroke 1)
+                      (vector-ref stroke 2) (vector-ref stroke 3)))))
               (list 'void*) 'void "v@:@")
         (list "mouseDragged:"
               (lambda (self _cmd event)
@@ -210,8 +361,25 @@
               (list 'void*) 'void "v@:@")
         (list "mouseUp:"
               (lambda (self _cmd event)
-                (end-stroke!)
-                (nsview-set-needs-display! self #t))
+                ;; Capture the in-progress stroke before the flags clear;
+                ;; its vector (frozen colour/width + final point list) stays
+                ;; in `strokes`. A mouseUp with no stroke in progress
+                ;; (AppKit routes the up to the mouseDown view, so this
+                ;; should not occur) emits nothing — the stroke events fire
+                ;; only for gestures that reached the canvas.
+                (let ([stroke (and drawing? (pair? strokes)
+                                   (car (reverse strokes)))])
+                  (end-stroke!)
+                  (nsview-set-needs-display! self #t)
+                  ;; [canvas] stroke-committed — end of the §7.2 mouse-up
+                  ;; rule, post-state. Same frozen tuple as its
+                  ;; stroke-begun; points = the stored count (down point +
+                  ;; drag points; the release is never appended).
+                  (when stroke
+                    (dc-emit-stroke-committed
+                      (vector-ref stroke 0) (vector-ref stroke 1)
+                      (vector-ref stroke 2) (vector-ref stroke 3)
+                      (length (vector-ref stroke 4))))))
               (list 'void*) 'void "v@:@"))))
 
   ;; Allocate + init a DrawingCanvasView instance. alloc/init yields a
@@ -279,12 +447,24 @@
          (void*) void)
         ("widthChanged:"
          ,(lambda (sender)
-            (set! current-width (nsslider-double-value width-slider)))
+            (set! current-width (nsslider-double-value width-slider))
+            ;; [canvas] width-changed — post-store (§8.2). Continuous
+            ;; slider: many lines per drag is contract-conformant (never
+            ;; count events).
+            (dc-emit-width-changed current-width))
          (void*) void)
         ("clearCanvas:"
          ,(lambda (sender)
-            (clear-strokes!)
-            (nsview-set-needs-display! canvas #t))
+            ;; count = strokes removed (an in-progress stroke is in
+            ;; `strokes`, so a mid-gesture Clear counts it); captured before
+            ;; the collection empties.
+            (let ([count (length strokes)])
+              (clear-strokes!)
+              (nsview-set-needs-display! canvas #t)
+              ;; [canvas] cleared — end of the §8.3 Clear rule, post-state;
+              ;; ALWAYS emitted, count=0 on an already-empty canvas (the
+              ;; stroke-set cardinality channel).
+              (dc-emit-cleared count)))
          (void*) void)
         ("colorChanged:"
          ,(lambda (sender)
@@ -306,7 +486,14 @@
                     (unless (zero? (objc-object-ptr rgb))
                       (set! current-r (nscolor-red-component rgb))
                       (set! current-g (nscolor-green-component rgb))
-                      (set! current-b (nscolor-blue-component rgb))))))))
+                      (set! current-b (nscolor-blue-component rgb))
+                      ;; [canvas] color-changed — success path only,
+                      ;; post-store (§8.1 step 4). The silent no-ops above
+                      ;; (nil panel colour, failed device-RGB conversion)
+                      ;; emit nothing; the stderr diagnostic in the
+                      ;; surrounding `guard` stays off events.log.
+                      (dc-emit-color-changed
+                        current-r current-g current-b)))))))
          (void*) void))))
 
   ;; ============================================================
@@ -315,6 +502,7 @@
 
   (nsapplication-set-activation-policy! app NSApplicationActivationPolicyRegular)
   (install-standard-app-menu! app "Drawing Canvas")
+  (nsapplication-set-delegate! app (delegate-ptr app-delegate))
 
   (nswindow-set-title! window "Drawing Canvas")
   (nswindow-center! window)
@@ -361,7 +549,27 @@
   (nswindow-make-key-and-order-front window #f)
   (nsapplication-activate-ignoring-other-apps app #t)
 
+  ;; §3 step 6 launch diagnostic — dual emission (contract "Lifecycle
+  ;; events"): the stdout line stays (human-friendly when run unbundled,
+  ;; literally true to §3); the same BARE line goes to events.log, where the
+  ;; runner can see it (LaunchServices discards stdout under `open`).
+  (dc-emit-launch-line)
   (display "Drawing Canvas running. Close window or Ctrl+C to exit.\n")
   (nsapplication-run app))
+
+;; --- Structured event log: open + [lifecycle] startup BEFORE (main) --------
+;; The app builds its window/canvas in `main`'s defines section (R6RS body:
+;; all defines precede every expression), so `startup` cannot be main's first
+;; expression — it lands here instead, before (main) is entered and thus
+;; before window/canvas construction, well before the run loop (or the
+;; runner's `wait-ready` readiness probe times out).
+(dc-events-init!)
+(dc-emit-startup)
+
+;; Test-config compatibility (logging-contract.md): the canvas reads no
+;; runtime config, so it honours DRAWING_CANVAS_TEST_CONFIG by reading the
+;; env var and treating absent/empty (and a missing file) as "no config" — a
+;; deliberate no-op.
+(getenv "DRAWING_CANVAS_TEST_CONFIG")
 
 (main)
