@@ -1,12 +1,16 @@
-;;;; dump.lisp — `save-lisp-and-die` the drawing-canvas standalone executable (060).
+;;;; dump.lisp — `save-lisp-and-die` the drawing-canvas standalone executable.
 ;;;;
 ;;;; Like mini-browser/note-editor this dumps WITH libAPIAnywareSbcl (ADR-0038 §5: the dylib
 ;;;; is NOT embedded — `save-lisp-and-die` keeps it in `*shared-objects*`, so the revived
-;;;; image auto-reopens it by the path it was loaded from). We load it from a FIXED path —
-;;;; `/tmp/libAPIAnywareSbcl.dylib` (build.sh stages the copy) — so the VM needs only that one
-;;;; dylib at that path. Here the dylib is needed ONLY for the SUBCLASS bounce shim BOTH
-;;;; subclasses use (`canvas-view`: drawRect:/mouse events; `canvas-controller`: target-actions).
-;;;; No block bridge → no `aw-init-block-dispatcher`.
+;;;; image auto-reopens it by the recorded namestring). The bundler (`bundle-sbcl`,
+;;;; ADR-0041) drives this file with
+;;;; `AW_NATIVE_DYLIB_RECORD_AS=@executable_path/../Frameworks/...` set, so the recorded
+;;;; namestring points at the VENDORED copy inside the .app and the bundle travels alone
+;;;; (the k137 rebuild retired this app's original 060-era /tmp staging, as the k128
+;;;; note-editor rebuild did for its). Here the dylib is needed ONLY for the SUBCLASS
+;;;; bounce shim BOTH subclasses use (`canvas-view`: drawRect:/mouse events;
+;;;; `canvas-controller`: target-actions + the terminate delegate). No block bridge → no
+;;;; `aw-init-block-dispatcher`.
 ;;;;
 ;;;; Framework loads mirror run.lisp: Foundation `:load-residual nil`, AppKit
 ;;;; `:load-residual nil`, CoreGraphics `:load-residual t` (for the `ns:cg-*` stroke functions).
@@ -43,6 +47,8 @@
 (aw-app-load-framework "AppKit" :load-residual nil)
 (aw-app-load-framework "CoreGraphics" :load-residual t)
 
+;; events.lisp first (pure CL — the dc-events package drawing-canvas.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "drawing-canvas.lisp" cl-user::*app-dir*))
 
 (format t "~&== dumping ~A (dylib recorded: ~A) ==~%" cl-user::*out-exe* cl-user::*dylib*)

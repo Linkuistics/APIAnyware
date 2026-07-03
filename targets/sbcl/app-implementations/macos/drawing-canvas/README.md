@@ -55,11 +55,11 @@ later changes never retroactively alter it.
 ```sh
 # Dev pre-flight (host construction smoke, no run loop):
 SDKROOT=macosx AW_CANVAS_SMOKE=1 sbcl --non-interactive --disable-debugger \
-  --load apps/drawing-canvas/run.lisp
+  --load targets/sbcl/app-implementations/macos/drawing-canvas/run.lisp
 
-# Build the standalone .app (pre-flight → dump → revive smoke):
-apps/drawing-canvas/build.sh
-# → apps/drawing-canvas/build/DrawingCanvas.app  (save-lisp-and-die :executable t, ~81 MB)
+# Build the standalone .app (pre-flight → bundle via apianyware-bundle-sbcl → revive smoke):
+targets/sbcl/app-implementations/macos/drawing-canvas/build.sh
+# → build/DrawingCanvas-sbcl.app  (com.linkuistics.drawing-canvas-sbcl; travels alone)
 ```
 
 The dylib (`libAPIAnywareSbcl`) is loaded ONLY for the `aw_sbcl_subclass_*` bounce shim BOTH
@@ -73,8 +73,11 @@ use is in the always-loaded `enums.lisp`), **CoreGraphics `:load-residual t`** (
 
 ## VM provisioning (TestAnyware)
 
-The standalone exe embeds the SBCL core; the VM needs `/tmp/libAPIAnywareSbcl.dylib` (the
-recorded dylib path) + the zstd core-compression dylib at
-`/opt/homebrew/opt/zstd/lib/libzstd.1.dylib`. **No network** (all rendering is local
-CoreGraphics). Draw with `input drag` (a bare `input move` releases the VNC button mask → no
-`mouseDragged:`). See `test-results/drawing-canvas/report.md`.
+The k137 rebuild moved this app to the production bundler (ADR-0041): the .app
+**travels alone** — the Swift stub launcher sets
+`DYLD_FALLBACK_LIBRARY_PATH=<bundle>/Contents/Frameworks`, and both non-system
+dylibs (`libzstd.1.dylib`, `libAPIAnywareSbcl.dylib`) are vendored inside. No `/tmp`
+staging, no Homebrew on the VM. **No network** (all rendering is local CoreGraphics).
+Draw with `input drag` (a bare `input move` releases the VNC button mask → no
+`mouseDragged:`). The AppSpec runner consumes `drawing-canvas-impl.rkt`
+(`/Applications/DrawingCanvas-sbcl.app`, events at `/tmp/drawing-canvas/events.log`).

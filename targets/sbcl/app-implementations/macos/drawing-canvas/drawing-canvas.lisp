@@ -60,6 +60,14 @@
 ;;;; (the startup re-resolution pass re-registers the forwarding dispatcher with the reopened
 ;;;; dylib). defclass/defmethod re-evaluation is idempotent.
 ;;;;
+;;;; INSTRUMENTED to the k132 logging contract
+;;;; (apps/macos/drawing-canvas/docs/logging-contract.md; child k137): events.lisp
+;;;; (the `dc-events` package, loaded first by run.lisp/dump.lisp) writes the structured
+;;;; events.log the AppSpec runner tails — [lifecycle] startup/shutdown + the launch line,
+;;;; and the five [canvas] events from the mouse overrides + action handlers. The stroke
+;;;; events format the STROKE'S OWN frozen colour/width (read from the stroke record,
+;;;; never the current-* tool slots — the §7.2 capture-at-mouse-down freeze proof).
+;;;;
 ;;;; Package: `apianyware-sbcl-impl` (the dev-harness home, like the other ladder apps).
 
 (in-package #:apianyware-sbcl-impl)
@@ -197,7 +205,12 @@
     (define-objc-method (canvas-view "mouseDown:") (self event)
       (multiple-value-bind (x y) (event->view-point self event)
         (start-stroke self x y)
-        (ns:set-needs-display_ self t)))
+        (ns:set-needs-display_ self t)
+        ;; §7.2 mouse-down rule end: the stroke's FROZEN colour+width, read from
+        ;; the just-seeded stroke record (never the current-* tool slots).
+        (let ((s (first (slot-value self 'strokes))))
+          (dc-events:emit-stroke-begun (stroke-r s) (stroke-g s) (stroke-b s)
+                                       (stroke-width s)))))
 
     (define-objc-method (canvas-view "mouseDragged:") (self event)
       (multiple-value-bind (x y) (event->view-point self event)
@@ -206,8 +219,19 @@
 
     (define-objc-method (canvas-view "mouseUp:") (self event)
       (declare (ignore event))
-      (end-stroke self)
-      (ns:set-needs-display_ self t))
+      ;; Capture the in-progress stroke BEFORE `end-stroke` clears the flag (the
+      ;; k134 freeze rule). A mouseUp with no stroke in progress (defensive —
+      ;; AppKit delivers the up to the mouseDown view, so this should not occur)
+      ;; emits nothing: the stroke events fire only for gestures that reached
+      ;; the canvas.
+      (let ((s (and (slot-value self 'drawing)
+                    (first (slot-value self 'strokes)))))
+        (end-stroke self)
+        (ns:set-needs-display_ self t)
+        (when s
+          (dc-events:emit-stroke-committed (stroke-r s) (stroke-g s) (stroke-b s)
+                                           (stroke-width s)
+                                           (length (stroke-points s))))))
 
     ;; --- canvas-controller: a real ObjC subclass of NSObject carrying the four
     ;; toolbar/colour-panel target-actions; holds the live canvas + width-slider refs. ---
@@ -237,18 +261,47 @@
               (let ((canvas (slot-value self 'canvas)))
                 (setf (slot-value canvas 'current-r) (ns:red-component rgb)
                       (slot-value canvas 'current-g) (ns:green-component rgb)
-                      (slot-value canvas 'current-b) (ns:blue-component rgb))))))))
+                      (slot-value canvas 'current-b) (ns:blue-component rgb))
+                ;; §8.1 step 4 success path, post-store; the silent no-ops (nil
+                ;; panel colour, failed conversion) emit nothing. The panel is
+                ;; continuous — many lines per drag is contract-conformant.
+                (dc-events:emit-color-changed (slot-value canvas 'current-r)
+                                              (slot-value canvas 'current-g)
+                                              (slot-value canvas 'current-b))))))))
 
     (define-objc-method (canvas-controller "widthChanged:") (self sender)
       (declare (ignore sender))
-      (setf (slot-value (slot-value self 'canvas) 'current-width)
-            (ns:double-value (slot-value self 'width-slider))))
+      (let ((canvas (slot-value self 'canvas)))
+        (setf (slot-value canvas 'current-width)
+              (ns:double-value (slot-value self 'width-slider)))
+        ;; §8.2 post-store; the slider is wired continuous — many lines per
+        ;; drag is contract-conformant (never count events).
+        (dc-events:emit-width-changed (slot-value canvas 'current-width))))
 
     (define-objc-method (canvas-controller "clearCanvas:") (self sender)
       (declare (ignore sender))
-      (let ((canvas (slot-value self 'canvas)))
+      (let* ((canvas (slot-value self 'canvas))
+             ;; §8.3: strokes removed, captured PRE-clear; always emitted at
+             ;; rule end, count=0 on an already-empty canvas (the stroke-set
+             ;; cardinality channel).
+             (count (length (slot-value canvas 'strokes))))
         (clear-strokes canvas)
-        (ns:set-needs-display_ canvas t)))
+        (ns:set-needs-display_ canvas t)
+        (dc-events:emit-cleared count)))
+
+    ;; `applicationWillTerminate:` is the only hook that fires on the menu/Cmd-Q
+    ;; quit path: -[NSApplication terminate:] ends in a C exit(), which bypasses
+    ;; sb-ext:*exit-hooks*. NSApplication auto-observes the notification for a
+    ;; delegate that responds to this selector (informal conformance suffices).
+    ;; The logging contract's one structural addition (k137), as in the prior
+    ;; six apps.
+    (define-objc-method (canvas-controller "applicationWillTerminate:") (self notification)
+      (declare (ignore self notification))
+      (handler-case
+          (progn (dc-events:emit-shutdown 'menu) (dc-events:close-events!))
+        (error (e)
+          (format *error-output* "applicationWillTerminate: callback error: ~A~%" e)
+          (finish-output *error-output*))))
 
     (setf *canvas-classes-ready* t)))
 
@@ -268,6 +321,20 @@
   (let ((app (ns:shared-application (find-class 'ns:ns-application))))
     (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
     (install-app-menu app "Drawing Canvas")
+
+    ;; --- Structured event log: open + [lifecycle] startup BEFORE construction ---
+    ;; `startup` must land before the app blocks in (ns:run app) or the runner's
+    ;; `wait-ready` readiness probe times out; the contract wants it ahead of
+    ;; window/canvas construction. Gated on the real run — the build-time smoke
+    ;; needs no log file (the emitters no-op on a nil port).
+    ;; Test-config compatibility: the canvas reads no runtime config, so it
+    ;; honours DRAWING_CANVAS_TEST_CONFIG by reading the env var and treating
+    ;; absent/empty as "no config" — a deliberate no-op.
+    (when run
+      (dc-events:events-init!)
+      (dc-events:emit-startup)
+      (sb-ext:posix-getenv "DRAWING_CANVAS_TEST_CONFIG"))
+
     (aw-with-rect (frame 0 0 +window-w+ +window-h+)
       (let* ((window (make-instance 'ns:ns-window
                        :init-with-content-rect frame
@@ -326,6 +393,14 @@
         (let ((controller (make-instance 'canvas-controller
                             :canvas canvas :width-slider width-slider)))
 
+          ;; App delegate for the terminate hook (logging contract; k137).
+          ;; Installed unconditionally so the pre-flight / revive smoke
+          ;; exercises set-delegate. The controller instance is pinned in
+          ;; *subclass-instances* (a STRONG table — subclass.lisp), so Cocoa's
+          ;; weak delegate reference and the controls' weak target references
+          ;; never reap it.
+          (ns:set-delegate_ app controller)
+
           ;; --- Target-action wiring (after the controller exists). ---
           (ns:set-target_ color-button controller) (ns:set-action_ color-button "openColor:")
           (ns:set-target_ width-slider controller) (ns:set-action_ width-slider "widthChanged:")
@@ -341,7 +416,12 @@
           ;; --- Show + run. ---
           (ns:make-key-and-order-front_ window nil)
           (ns:activate-ignoring-other-apps_ app t)
+          ;; Launch diagnostic (spec §3 step 6): the bare line beginning
+          ;; `Drawing Canvas` the runner's `wait-for-log` matches in events.log,
+          ;; plus the human-friendly stdout line (kept for unbundled runs;
+          ;; LaunchServices discards stdout under `open`) — dual emission.
           (when run
+            (dc-events:emit-launch-line)
             (format t "~&Drawing Canvas opened. Drag to draw; Color… changes the stroke colour, ~
                        the slider its width, Clear empties the canvas. Quit with Cmd-Q.~%")
             (finish-output)

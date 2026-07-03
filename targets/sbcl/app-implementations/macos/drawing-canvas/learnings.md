@@ -1,5 +1,43 @@
 # drawing-canvas x sbcl
 
+**2026-07-03 (grove `structural-refactoring`, child `sbcl-instrument-build-k137` —
+instrumented to the k132 logging contract + production bundle):**
+
+- 🟢 Instrumented to `apps/macos/drawing-canvas/docs/logging-contract.md` — the k134/k135/
+  k136 mirror via the sbcl house style (the note-editor k128 twin): a separate pure-CL
+  `events.lisp` (`dc-events` package, loaded first by run.lisp/dump.lisp; no quote-string —
+  no string values in this app's vocabulary), startup + test-config no-op in `-main` before
+  window construction, launch-line dual emission, `applicationWillTerminate:` terminate
+  delegate on `canvas-controller` (+ `set-delegate_` installed unconditionally). The five
+  `[canvas]` sites follow the reference pattern exactly: the stroke events read the
+  **stroke's own frozen** tuple from the `stroke` defstruct (mouseUp captures
+  `(first strokes)` gated on the `drawing` flag BEFORE `end-stroke` clears it),
+  `committed` adds `(length (stroke-points s))`; `width-changed`/`cleared`/`color-changed`
+  post-store in the three action handlers (`cleared` count captured pre-clear, always
+  emitted; `color-changed` success-path only — sbcl carries no stderr guard, no alignment
+  needed). Rounding once at emit (CL `round` = round-half-to-even, the racket/chez/gerbil
+  twin). No deviation from the reference pattern.
+- **Per-target generate + relink done** (the k133-node corpus step, per-child leg): sbcl
+  trampolines **175 → 221** (`grep -c @_cdecl`; the log's summary says 220 — the k125
+  off-by-one counting note applies), `coregraphics/` bindings dir new (13 files incl. the
+  `ns:cg-*` `functions.lisp` this app's aliens live in); relinked
+  `swift build --product APIAnywareSbcl` before bundling; goldens unmoved.
+- **`build.sh` moved to the production bundler** (ADR-0041, the k128/k119 mirror), retiring
+  the 060-era /tmp-staged wrap: bundle → rename → `com.linkuistics.drawing-canvas-sbcl` +
+  the kind-required `CFBundleInfoDictionaryVersion` (6.0 via the bundler's plist) →
+  re-sign; prereq keys on `generated/coregraphics/functions.lisp` (this app's distinctive
+  corpus artifact). The dump now records the `@executable_path/../Frameworks/` namestring
+  (AW_NATIVE_DYLIB_RECORD_AS) — the .app travels alone (83M; libzstd + libAPIAnywareSbcl
+  vendored). Descriptor `drawing-canvas-impl.rkt` authored. Revive smoke green (stub →
+  image → vendored-dylib reopen + both subclass re-syntheses + CG framework re-load).
+- CLI smoke green: exact launch sequence `[lifecycle] startup` → bare launch line;
+  AppleScript quit → `shutdown reason=menu`; no stray events; clean process exit. The
+  `[canvas]` events are not host-reachable (every one needs a UI gesture) — witnessed by
+  code-audit against the contract checklist + the emitter isolation run (events.lisp loaded
+  directly under host sbcl, all contract example lines byte-exact, incl. the k112 device
+  fold → `color-changed r=0 g=150 b=255` and the fractional `width=11` rounding); live-run
+  exercises them for real.
+
 **2026-06-23 (grove `add-sbcl-clos-target`, leaf `drawing-canvas-k34` — 060 ladder app 9, the
 final app):**
 

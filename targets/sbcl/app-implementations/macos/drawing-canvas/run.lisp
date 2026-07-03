@@ -53,6 +53,8 @@
 (aw-app-load-framework "AppKit" :load-residual nil)
 (aw-app-load-framework "CoreGraphics" :load-residual t)
 
+;; events.lisp first (pure CL — the dc-events package drawing-canvas.lisp references).
+(load (merge-pathnames "events.lisp" cl-user::*app-dir*))
 (load (merge-pathnames "drawing-canvas.lisp" cl-user::*app-dir*))
 
 (let ((smoke (sb-ext:posix-getenv "AW_CANVAS_SMOKE")))
