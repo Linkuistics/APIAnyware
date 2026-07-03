@@ -15,49 +15,44 @@
 ;; scenarios/ — the runner discovers every .rkt there as a scenario
 ;; (runner/dispatch.rkt).
 ;;
-;; ── PROVISIONAL (forward-gen-suite-k138, 2026-07-03) ──
-;; NOT yet live-measured. Values are the k120 spec-derived projection over
-;; the live-measured geometry of the SAME window shape: the app's window is
-;; 640x480-content, centred, traffic-light-identical to scenekit-viewer's,
-;; whose live-run-k112 measurements on the 1920x1080 VM anchor everything
-;; here — window frame (640,145) 640x512 on the 26px-metrics impls (content
-;; top-left fb (640,177)), the shared NSColorPanel at its default frame
-;; with the k112-measured pane coordinates carried over verbatim. The
-;; live-run stage MUST re-measure per impl from `agent snapshot --mode
-;; layout` (two-launch determinism diff first), split per-impl siblings
-;; only where layouts diverge (measure the share-set, never assume it —
-;; racket's compact 22px metrics WILL diverge: scenekit measured its window
-;; at (640,146) 640x508 and its panel RGB fields ~9px higher at
-;; (207,724/771/818)), and re-tune slider-track-max-* until the driven
-;; `width-changed` value IS the asserted maximum 20 (the coordinate is the
-;; free variable, the asserted value the rule — the k94 end-click practice).
+;; ── LIVE-MEASURED (live-run-k139, 2026-07-03) ──
+;; This file serves the THREE 26px-metrics impls — chez + gerbil + sbcl,
+;; pixel-identical on the app window (window (640,145) 640x512; the
+;; pdfkit/mini-browser/note-editor share-set — racket alone diverges onto
+;; run-values-racket.rkt, its compact 22px window (640,146) 640x508).
+;; Two-launch determinism diff green on all three (no ambiguous-layout
+;; defect). Toolbar-control and canvas coordinates land identically on all
+;; three. The shared NSColorPanel is subtler: chez/gerbil remember frame
+;; (0,605), sbcl (0,610), so sbcl's RGB fields sit ~5px lower (739/786/833
+;; vs 734/781/828) — but the 5px offset is absorbed by the 24px-tall fields,
+;; so the chez/gerbil values below land INSIDE sbcl's fields too (verified),
+;; and sbcl shares this file (measured, not assumed). racket's fields sit
+;; ~5px higher again (729/776/823) — its sibling carries those.
 ;;
-;; NSColorPanel provisioning (the k112 rule): seed each impl's panel to the
-;; RGB Sliders KIND at provisioning (fresh per-app defaults open Grayscale —
-;; the scenarios' 'Blue' gate would time out); remembered per-app, survives
-;; relaunch; re-seed after any VM re-clone. All four impls' panels open at
-;; the default frame (0,605) 250x397 (bottom-left).
-;;
-;; No fixtures, no work/ directory, no between-scenario cleanup: all app
-;; state is in-process and dies with the relaunch (observable-state.md).
+;; NSColorPanel provisioning (the k112 rule): each impl's panel was seeded
+;; to the RGB Sliders KIND at provisioning and clean-quit (Cmd-Q) so the
+;; kind persists across the runner's per-scenario `open -n` relaunches —
+;; verified persisting on racket. Fresh per-app defaults open the sliders
+;; pane in Grayscale; re-seed after any VM re-clone. Note (k139 finding):
+;; the panel's 'Blue' slider label OCRs as "Rluc" (conf 0.50, the k103
+;; small-text class) — the 09/10/11 `wait-for-ocr "Blue"` gate cannot pass;
+;; adjudicated in run-results.md, the key behaviour proven by manual drive.
 
 (run-values
-  ;; scenarios/04,08,12,13,14,15 — the Clear button centre (content frame
-  ;; (552,448,76,28) right-anchored → fb, launch width)
+  ;; scenarios/04,08,12,13,14,15 — the Clear button centre (measured live)
   (clear-button-x 1230)
   (clear-button-y 195)
-  ;; scenarios/09,10,11 — the Color… button centre (content frame
-  ;; (12,448,96,28) → fb)
+  ;; scenarios/09,10,11 — the Color… button centre (measured live)
   (color-button-x 700)
   (color-button-y 195)
   ;; scenarios/07,12 — the width slider track's effective RIGHT end, knob
-  ;; half-width in (k94): slider frame (120,450,200,24) → fb track x
-  ;; 760..960; the click must drive the slider to its MAXIMUM (20)
-  (slider-track-max-x 944)
+  ;; half-width in (k94): slider frame (759,182,202,26) → track x 759..961;
+  ;; x=948 (= 961 − knob-half) drives the slider to its MAXIMUM (20) —
+  ;; live-tuned until `width-changed width=20` fired (chez).
+  (slider-track-max-x 948)
   (slider-track-max-y 195)
   ;; scenarios/05,07,08,10,11,14,15 — a canvas point well inside the drawing
-  ;; surface (canvas fb region x 640..1280, y 213..657; respect the ~10px
-  ;; resize-border band)
+  ;; surface (canvas fb region x 640..1280, y 213..657; ~10px resize band)
   (canvas-point-x 960)
   (canvas-point-y 430)
   ;; scenarios/07,08,10 — a second, visibly distinct canvas point
@@ -71,30 +66,30 @@
   ;; inside the canvas, below the toolbar band)
   (canvas-drag-to-x 1140)
   (canvas-drag-to-y 400)
-  ;; scenarios/10,11 — a title-bar point clear of the traffic lights: the
-  ;; re-key click after the colour panel has taken key (no canvas
-  ;; mouse-down, no control side-effect — observable-state driver guidance;
-  ;; title bar fb y 145..177)
+  ;; scenarios/10,11 — a title-bar point clear of the traffic lights AND the
+  ;; window title (title text spans fb x 722..830 on the 26px impls); the
+  ;; re-key click after the colour panel has taken key (no canvas mouse-down,
+  ;; no control side-effect); title bar fb y 145..177.
   (window-titlebar-x 980)
   (window-titlebar-y 161)
-  ;; scenarios/10,11 — the shared NSColorPanel (k112-measured, carried over:
-  ;; default frame shared by all four impls; pane interior is per-impl —
-  ;; racket's fields sit ~9px higher, split at live-run):
-  ;; the panel toolbar's sliders mode tab (AXButton 'Color Sliders')
+  ;; scenarios/10,11 — the shared NSColorPanel (chez/gerbil at frame (0,605)):
+  ;; the panel toolbar's Color Sliders tab (measured live)
   (panel-sliders-tab-x 81)
   (panel-sliders-tab-y 646)
   ;; the RGB sliders pane's three value fields (right-aligned, typed into
-  ;; after a ctrl-a/ctrl-k clear — never OCR-read, k112)
+  ;; after a ctrl-a/ctrl-k clear — never OCR-read, k112). chez/gerbil actuals;
+  ;; land inside sbcl's (739/786/833) fields too.
   (panel-red-field-x 207)
-  (panel-red-field-y 733)
+  (panel-red-field-y 734)
   (panel-green-field-x 207)
-  (panel-green-field-y 780)
+  (panel-green-field-y 781)
   (panel-blue-field-x 207)
-  (panel-blue-field-y 827)
-  ;; scenario/11 — the colour panel's own close widget
-  (panel-close-x 13)
-  (panel-close-y 618)
+  (panel-blue-field-y 828)
+  ;; scenario/11 — the colour panel's own close widget (tiny 9x5; chez/gerbil
+  ;; panel origin (0,605))
+  (panel-close-x 14)
+  (panel-close-y 619)
   ;; scenario/17 — the app window's close control (leftmost traffic-light;
-  ;; scenekit-measured same-shape anchor)
+  ;; measured live)
   (close-button-x 656)
   (close-button-y 161))
