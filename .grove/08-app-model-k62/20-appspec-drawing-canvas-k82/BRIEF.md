@@ -75,8 +75,19 @@ ui-controls-gallery, pdfkit-viewer, scenekit-viewer, mini-browser, note-editor).
      remainders diverge by design (`running.` ×3 vs sbcl `opened.`) — suites match
      the `Drawing Canvas` prefix only. Bundles: racket 86M, chez 5.1M, gerbil 58M,
      sbcl 83M.
-  4. **`forward-gen-suite-k138`** — the scenario suite + run-values.
-  5. **live-run** — Tier-2 live-run all four impls → `docs/run-results.md`.
+  4. **`forward-gen-suite-k138`** ✅ *(done 2026-07-03)* — the 17-scenario suite +
+     run-values.
+  5. **`live-run-k139`** ✅ *(done 2026-07-03)* — Tier-2 live-run all four impls →
+     `docs/run-results.md`: **16/17 ×4, no impl defect**; sole red (03) adjudicated as a
+     snapshot-scope run-mechanism finding (the whole-snapshot `expect-no-ax AXStaticText`
+     trips on the window's own title-bar chrome; the canvas is genuinely AX-absent). Run
+     forced an AppSpec `gv-click` fix (settle-move onto the target so `input click` injects
+     no coincident `mouseDragged:` on a custom NSView → bare click `points=1`; committed
+     AppSpec `89fb98a`). The device fold `r=0 g=150 b=255`, the freeze proof, and `drag-from-to`
+     (first live use) all verified.
+  6. **`canvas-ax-scope-k140`** — close the 03 finding to a genuine **17/17**: scope the
+     AppSpec `expect-no-ax` negative to the app-window content (excluding window chrome),
+     regenerate scenario 03, re-verify ×4 (user chose to chase the literal 17/17, 2026-07-03).
 
 ## Done when
 
