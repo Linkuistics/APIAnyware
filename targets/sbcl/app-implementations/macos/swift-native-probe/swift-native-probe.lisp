@@ -160,7 +160,7 @@
   ;; --- Application setup ---
   (let ((app (ns:shared-application (find-class 'ns:ns-application))))
     (ns:set-activation-policy_ app ns:ns-application-activation-policy-regular)
-    (install-app-menu app "Swift Native Probe")
+    (install-app-menu app "Swift-Native Probe")
 
     ;; --- Structured event log: open + [lifecycle] startup BEFORE probing ---
     ;; `startup` must precede everything downstream (the runner's `wait-ready` readiness

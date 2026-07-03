@@ -223,7 +223,7 @@
                                 (snp-close-events!))))
                           (list 'object) 'void)))))
       (nsapplication-set-activation-policy! app NSApplicationActivationPolicyRegular)
-      (install-standard-app-menu! app "Swift Native Probe")
+      (install-standard-app-menu! app "Swift-Native Probe")
       (nsapplication-set-delegate! app app-delegate)
 
       ;; --- Window (560x240, centred) ---
