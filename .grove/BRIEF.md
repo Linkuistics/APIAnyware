@@ -88,9 +88,14 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    `#lang app-spec` suite, **each live-VM-verified ×4** (87 scenarios total). Finalized the
    canonical per-app layout (k84) and the portfolio index + conformance/coverage tie-in (k85). No
    machine manifest (D3); structural facts stay prose. See **App-model outcomes** below.
-8. **schemas + validation** — `schemas/`: formal validation of every artifact. *(node
-   `schema-validation-k149`, in progress — machine IR un-retreated to KDL (ADR-0046 §5, in place);
-   four build leaves grown k152–k155.)*
+8. **schemas + validation** ✅ *(node `schema-validation-k149`, complete 2026-07-04)* — `schemas/`:
+   formal validation of every artifact. Machine IR **un-retreated to KDL** (ADR-0046 §5, amended in
+   place — the k17 no-go reversed on a fresh non-preserving-codec spike; D1/D3/D7); the
+   machine-JSON-Schema seam every prior workstream deferred here **dissolved** → **one schema
+   language + one engine** over all thirteen schemas (k153); the **one validation mechanism**
+   `apianyware-validate` at `schemas/tools/validate/` + `make validate` (k154, D5/D6); the
+   `schemas/docs/` validation-model prose (k155). The **ADR policy** steer (D9) landed here and
+   became decomposition #10. See **Schemas + validation outcomes** below.
 9. **testing architecture** — the multi-layer test model (§33), TestAnyware /
    AppSpec integration (§34).
 10. **ADR consolidation** *(added 2026-07-04, user steer — see ADR policy below)* — compress the ADR
@@ -423,6 +428,57 @@ Seams for the remaining workstreams:
   runner** (§34) that drives a suite against a running impl is the **external AppSpec project's**,
   already built + run to completion during the k66 pause — so ws9 integrates/references it rather
   than building it (the ws4/ws6 declare-now/execute-later mirror, but with the executor external).
+
+## Schemas + validation outcomes (promoted from `schema-validation-k149` on retirement)
+
+Durable decisions/handoffs the remaining workstreams depend on (the vocabulary lives in
+`CONTEXT.md` "Validation (refactor workstream 8)" + **ADR-0046 §5** + the node running log D1–D10;
+the prose in `schemas/docs/validation-model.md` + `schemas/README.md` + `schemas/spec-format/README.md`).
+ws8 delivered the missing validation *layer* over the already-authored artifacts — it did **not**
+re-author the twelve `.apiw` schemas ws2–ws6 own:
+
+- **The machine IR un-retreated to KDL (D1/D3/D7; ADR-0046 §5, amended in place).** The ws8 spike
+  (`machine-format-spike-k150`) measured the path k17 never tested — a **non-format-preserving** JiK
+  codec over `serde_json::Value` — at ~2.4–3.2× typed `serde_json` (k17's ~84× tax was
+  format-preservation, not KDL). User GO (D3). `extracted.json`/`resolved.json` → **`extracted.kdl`/
+  `resolved.kdl`**; codec homes in `semantic/tools/spec-format`; **golden-neutral at the emit layer**
+  (generator reads the same typed `Framework`; only on-disk encoding changed — held across k152).
+  Codec depth = **Value-bridge** (D4); a native-serde JiK format (~1.3–1.5×) is a documented deferred
+  trigger, built only if the generate-loop delta is ever felt.
+- **One schema language, one engine — the machine-JSON-Schema seam dissolved (k153).** The moment the
+  machine IR became KDL, "formal validation of every artifact" collapsed to **one** language (KDL
+  Schema) + the **generic engine that already existed** (`apianyware_spec_format::validate_against_schema`).
+  All thirteen `schemas/spec-format/*.kdl-schema` (twelve authored + `machine-ir.kdl-schema`) share it.
+  **No JSON Schema anywhere.** The "ws8 owns the machine JSON Schema" seam ws2–ws6 each deferred here is
+  therefore **retired, not fulfilled**. The machine schema is an **open** content model (additive-tolerant;
+  pins spine/identity/scalars/`checkpoint` enum); the KDL Schema Language's lack of `$ref`/recursion sets
+  its altitude (accept-any below the declaration entities).
+- **One validation mechanism: `apianyware-validate` (D5/D6; k154).** A **lean tree-walking driver** at
+  the new crate **`schemas/tools/validate/`** (`schemas/` is now an active **tool home** — D6; the generic
+  *engine* stays in `semantic/tools/spec-format`, a semantic-domain concern). It dispatches every authored
+  `.apiw` to its producing crate's validator and reports per-class; **coverage-as-a-guard** (an `.apiw`
+  matching no rule is a failure) makes the "validate *every* artifact" promise self-enforcing. Wired to
+  **`make validate`**. **Authored by default; machine IR opt-in `--machine`** (D10 — the format-preserving
+  parse is ~2 s/MB → minutes-scale, so it must not run on every `make validate`; a `Value`-based fast-path
+  engine is a deferred trigger). **CI deferred — none exists** (D5; net-new infra, out of ws8's lean scope).
+  Three complementary layers: umbrella · per-crate registry guards (`cargo test`) · `lint-annotations` drift gate.
+- **Derived reports stay on-demand (D8).** ws8 schemas the machine **IR** but **not** ad-hoc derived
+  reports (conformance coverage, capability/representability) — they stay derived/uncommitted/un-schema'd
+  (constraint 4; ws6/ws7 point at the report). Only conformance's *authored judgment slice* has a schema.
+  **Reopen trigger:** IF a real machine consumer of a report materializes.
+- **ADR policy: current-state, in-place, no supersession chains (D9).** The user's mid-session steer;
+  already promoted to the **ADR policy** section above and externalized as decomposition **#10**. First
+  applied here: the machine-format decision folded **into ADR-0046 in place** (not a superseding ADR-0053).
+
+Seams for the remaining workstreams:
+
+- **ws9 (testing):** ws8 owns **artifact validity** (is the KDL well-formed against its schema?); ws9 owns
+  the **multi-layer test model** (§33) + TestAnyware/AppSpec integration (§34) — **does the binding
+  behave?**. Orthogonal axes (a schema-valid artifact can still describe a broken binding). The AppSpec
+  runner (§34) is the **external** AppSpec project's, already built (ws7 D1/ADR-0052) — ws9 integrates it.
+- **#10 (ADR consolidation):** D9's policy is now standing (ws9 raises current-state/in-place ADRs, never
+  new chains); the corpus-wide compression of ADRs 0001–0052 is **#10**, after ws9. A residual pre-existing
+  ADR-0046 k26 provenance "Update" section is flagged for that step.
 
 ## Notes
 
