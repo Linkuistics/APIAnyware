@@ -96,8 +96,12 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    `apianyware-validate` at `schemas/tools/validate/` + `make validate` (k154, D5/D6); the
    `schemas/docs/` validation-model prose (k155). The **ADR policy** steer (D9) landed here and
    became decomposition #10. See **Schemas + validation outcomes** below.
-9. **testing architecture** — the multi-layer test model (§33), TestAnyware /
-   AppSpec integration (§34).
+9. **testing architecture** ✅ *(node `testing-architecture-k156`, complete 2026-07-04)* — the
+   multi-layer test model (§33) + TestAnyware/AppSpec integration (§34) delivered as a **documented
+   federation**, not new test machinery (ADR-0053), homed in a new top-level **`testing/`** (the
+   behaviour-axis twin of `schemas/`): `test-model.md` (§33 twelve-layer map → existing homes + honest
+   gaps + §34 seam) + `README.md` (k157); the parked TestAnyware docs promoted + de-staled into
+   `testing/` (k158). Docs-only; golden-neutral throughout. See **Testing-architecture outcomes** below.
 10. **ADR consolidation** *(added 2026-07-04, user steer — see ADR policy below)* — compress the ADR
    corpus (0001–0052+) into a **minimum coherent set** of **current-state, in-place** ADRs: fold out
    every supersession chain and "Update — …" history section (e.g. ADR-0046's k26 provenance Update;
@@ -479,6 +483,48 @@ Seams for the remaining workstreams:
 - **#10 (ADR consolidation):** D9's policy is now standing (ws9 raises current-state/in-place ADRs, never
   new chains); the corpus-wide compression of ADRs 0001–0052 is **#10**, after ws9. A residual pre-existing
   ADR-0046 k26 provenance "Update" section is flagged for that step.
+
+## Testing-architecture outcomes (promoted from `testing-architecture-k156` on retirement)
+
+Durable decisions/handoffs #10 + grove-finish depend on (the vocabulary lives in `CONTEXT.md`
+"Test model (workstream 9)" + **ADR-0053** + the `testing-architecture-k156` running log D1–D5; the
+prose in `testing/{test-model.md,README.md,testanyware-workflow.md,strategies/}`). ws9 was **not** an
+entity- or machinery-authoring workstream — like ws7 (homed external AppSpec) and ws8 (thin validation
+layer), it **documents + homes** the test layers that already exist:
+
+- **A documented federation, not a runner (D1; ADR-0053).** 9–10 of REFACTOR §33's twelve test layers
+  already have real, verified homes scattered across the five source domains (spec-validity → ws8
+  `apianyware-validate`; extraction → emit goldens ×4 + `extract-*/tests`; annotation → ws5
+  `annotations {stale,audit}`; conformance → ws6 `apianyware-conformance`; sample-app/GUI → the
+  **external** AppSpec suites; adapter-ABI → `adapters/*/tests`; packaging → `bundle-*/tests`). So ws9
+  authored the **model** — `testing/test-model.md` maps each layer to its home, marks the honest gaps,
+  names the external seam — and built **no runner and no crate**. Golden-neutral by construction (only
+  Markdown). Rejected: a unified test-execution engine (net-new machinery contradicting three standing
+  seams — runner-external, hooks-are-ws6, declare-now/execute-later).
+- **Home: top-level `testing/` (D2).** The behaviour-axis twin of `schemas/` —
+  `schemas/docs/validation-model.md` answers "is it well-formed?", `testing/test-model.md` answers
+  "does it behave?". Doc-only (no `tools/`), consistent with the repo's non-domain top-level dirs
+  (`adr/`, `prd/`, `process/`, `schemas/docs`); satisfies §45.13 ("obvious home for … tests"). Homes the
+  promoted+de-staled TestAnyware methodology docs (`testanyware-workflow.md` + `strategies/`).
+- **§34 seam is pure reference (D3).** The three-layer boundary **TestAnyware** (VM substrate) →
+  **AppSpec** (external toolkit + `#lang app-spec`, holds no app data) → **APIAnyware** (`apps/macos/`
+  data) is already settled (ADR-0052). `test-model.md` **describes** it and points at the external
+  runner; it mints **no** test manifest, cross-layer index, or conformance tie-in (ws6 already derives
+  per-app status). Reopen trigger: a machine consumer of a cross-layer test index materializes — none does.
+- **Honest gaps stated as gaps (D4; §43).** Layer-6 api-semantics execution = **declared-not-executed**
+  (ws4 declarations are schema-valid + honored-by-construction via goldens + incidentally exercised by
+  AppSpec VM-verify, but no per-obligation runtime runner); layer-11 performance = **gap**; layer-12
+  leak/lifetime/threading stress = **gap** (indirect coverage only). Each carries a reopen trigger. Same
+  "build when the need is felt" class as ws8's on-demand reports.
+
+Seam for the remaining step:
+
+- **#10 (ADR consolidation):** **ADR-0053** was raised **current-state / in-place** per the D9 policy (a
+  *new* decision recording federation-over-machinery + external-executor + top-level-home, **not** a
+  supersession chain) — so it needs no rework in #10. #10 remains the corpus-wide compression of
+  ADRs 0001–0052 (flagged residues: ADR-0046 §k26 provenance "Update"; ADR-0024's migration-narrative
+  "Consequences"), gated on the design now being final, dovetailing with grove-finish's "promote ADRs
+  that outlive the grove" step.
 
 ## Notes
 
