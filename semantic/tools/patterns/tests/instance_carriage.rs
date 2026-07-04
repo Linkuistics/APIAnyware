@@ -1,5 +1,5 @@
 //! The end-to-end **instance carriage** (ADR-0048, workstream-3 child 2 done-bar):
-//! hand-authored pattern-instances ride a `Framework` through the `resolved.json`
+//! hand-authored pattern-instances ride a `Framework` through the `resolved.kdl`
 //! JSON shape and validate against the authored kind registry, and the DP3 home
 //! rule resolves a cross-framework instance deterministically.
 //!
@@ -107,7 +107,7 @@ fn instances_ride_a_framework_through_resolved_json_and_validate() {
     assert_eq!(bracket.home, "CoreGraphics");
     assert_eq!(parent_child.home, "AppKit");
 
-    // Carry the instances on a Framework and round-trip the resolved.json shape.
+    // Carry the instances on a Framework and round-trip the resolved.kdl shape.
     let fw_json = serde_json::json!({
         "name": "CoreGraphics",
         "checkpoint": "resolved",
@@ -136,13 +136,13 @@ fn instances_ride_a_framework_through_resolved_json_and_validate() {
 #[test]
 fn an_empty_framework_carries_no_patterns() {
     // The real corpus today: no producer runs, so `patterns` is absent/empty and
-    // the field is skipped from resolved.json (serde skip_serializing_if).
+    // the field is skipped from resolved.kdl (serde skip_serializing_if).
     let fw: Framework = serde_json::from_value(serde_json::json!({"name": "Foundation"}))
         .expect("framework without patterns deserializes");
     assert!(fw.patterns.is_empty());
     let json = serde_json::to_string(&fw).unwrap();
     assert!(
         !json.contains("\"patterns\""),
-        "an empty patterns list is omitted from resolved.json"
+        "an empty patterns list is omitted from resolved.kdl"
     );
 }

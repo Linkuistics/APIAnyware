@@ -2,26 +2,28 @@
 
 One directory per macOS API family (REFACTOR.md §14), named conventionally
 (`CoreFoundation`, `Foundation`, `AppKit`, … — §41 keeps conventional API-family
-names rather than kebab-case). Each family holds the **spec triad** (ADR-0046, as
-amended by the k17 machine-KDL no-go):
+names rather than kebab-case). Each family holds the **spec triad** (ADR-0046):
 
 | File | Producer | Tracked? | Role |
 |------|----------|----------|------|
-| `extracted.json` | `apianyware-collect` | gitignored | mechanical extraction facts (the datalog fact base) — JSON |
+| `extracted.kdl` | `apianyware-collect` | gitignored | mechanical extraction facts (the datalog fact base) — KDL |
 | `annotations.apiw` | manual + accepted-LLM | **committed** | the one authored semantic overlay — KDL (`.apiw`) |
-| `resolved.json` | `apianyware-analyze` | gitignored | the deterministic merged graph; the generator input — JSON |
+| `resolved.kdl` | `apianyware-analyze` | gitignored | the deterministic merged graph; the generator input — KDL |
 
-The machine artifacts are JSON (the k17 spike measured the only production-grade
-KDL-2.0 library at ~80–100× slower to parse than `serde_json` on the real multi-MB
-IR, so ADR-0046 §5's JSON retreat was invoked); only the authored overlay is KDL,
-where the authoring eval backs it. The machine files are **regenerable** from the
-SDK + the overlay and so are gitignored; only `annotations.apiw` is versioned
+The whole spec stack is **KDL** (ADR-0046 §5). The machine artifacts use a
+hand-written non-preserving **JSON-in-KDL (JiK) codec** over `serde_json::Value`
+(~1.2–3.2× `serde_json`); the authored overlay uses the format-preserving `kdl`
+document model, where diagnostics and layout matter and the authoring eval backs
+it. (That document model is ~84× on the multi-MB IR — the k17 measurement — so the
+"regenerate aggressively" machine loop deliberately routes through the fast codec,
+not the `kdl` crate.) The machine files are **regenerable** from the SDK + the
+overlay and so are gitignored; only `annotations.apiw` is versioned
 (regenerating it from scratch costs millions of tokens — see [ADR-0046](../../../adr/0046-spec-interchange-format-kdl-everywhere.md)).
 
-The pipeline (`pipeline-cutover-k20`): `collect → extracted.json`; `analyze` runs
+The pipeline (`pipeline-cutover-k20`): `collect → extracted.kdl`; `analyze` runs
 the in-process passes (`linked` datalog cross-reference → annotate-merge → enrich)
-folding in `annotations.apiw` by §28 precedence and writes `resolved.json`;
-`generate` consumes `resolved.json`. The four phase-shaped checkpoints under the
+folding in `annotations.apiw` by §28 precedence and writes `resolved.kdl`;
+`generate` consumes `resolved.kdl`. The four phase-shaped checkpoints under the
 former `collection/ir/` + `analysis/ir/` are retired; the intermediate stages are
 in-process, not on disk.
 

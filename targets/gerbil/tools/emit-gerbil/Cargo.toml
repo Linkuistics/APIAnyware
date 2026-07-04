@@ -11,7 +11,7 @@ apianyware-emit.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
-serde_json.workspace = true
+apianyware-spec-format.workspace = true
 
 [lints]
 workspace = true

@@ -1,9 +1,9 @@
 //! `apianyware-analyze annotations audit` — the resolve-time disagreement /
 //! precedence report (ADR-0050 §3 / ws5 `disagreement-report-k47`).
 //!
-//! A **pure read** over each family's `resolved.json` `fact_provenance` carriage
+//! A **pure read** over each family's `resolved.kdl` `fact_provenance` carriage
 //! (landed by `precedence-audit-k45`): no resolve pass, no overlay re-derivation
-//! beyond loading `resolved.json`. Per family it reports, from the per-fact-slot
+//! beyond loading `resolved.kdl`. Per family it reports, from the per-fact-slot
 //! [`MethodFactProvenance`]:
 //! - **disagreements** — every fact-slot whose winner superseded ≥1 *disagreeing*
 //!   lower tier (`superseded_by` non-empty): the winning `{source, value}` plus
@@ -14,7 +14,7 @@
 //! Redundancy is reported the only way the carriage faithfully supports it
 //! (`disagreement-report-k47`, user-confirmed pin). k45's audit records only
 //! *disagreeing* losers — when a lower tier **agrees** with the winner it is
-//! redundant and dropped (ADR-0050 §3). So `resolved.json` cannot distinguish
+//! redundant and dropped (ADR-0050 §3). So `resolved.kdl` cannot distinguish
 //! "LLM won, convention agreed (redundant)" from "LLM won, convention silent":
 //! both are an `llm`-won slot with an empty `superseded_by`. The audit therefore
 //! reports the two carriage-derivable signals and is explicit about the gap:
@@ -51,7 +51,7 @@ EXAMPLES:
   apianyware-analyze annotations audit --only Foundation --json
 
 PRECONDITION:
-  Reads each family's resolved.json fact_provenance carriage (written by the
+  Reads each family's resolved.kdl fact_provenance carriage (written by the
   resolve-time precedence audit). Regenerate it first with a plain
   `apianyware-analyze` (resolve) run after an SDK bump / annotation change.
 
@@ -64,7 +64,7 @@ EXIT CODES:
 #[command(after_help = EXAMPLES)]
 pub struct AuditArgs {
     /// `api/` root holding the per-family spec triad
-    /// (`<api-root>/<Framework>/{extracted.json,annotations.apiw,resolved.json}`).
+    /// (`<api-root>/<Framework>/{extracted.kdl,annotations.apiw,resolved.kdl}`).
     #[arg(long, default_value = "platforms/macos/api")]
     pub api_root: PathBuf,
 
@@ -340,7 +340,7 @@ fn sort_disagreements(disagreements: &mut [Disagreement]) {
     });
 }
 
-/// Run the `audit` command: load each family's `resolved.json`, audit its
+/// Run the `audit` command: load each family's `resolved.kdl`, audit its
 /// `fact_provenance`, and print the report. Always `Ok(())` — informational.
 pub fn run(args: &AuditArgs) -> Result<()> {
     let only = if args.only.is_empty() {
@@ -351,12 +351,12 @@ pub fn run(args: &AuditArgs) -> Result<()> {
 
     let resolved = apianyware_datalog::loading::load_all_family_artifacts(
         &args.api_root,
-        "resolved.json",
+        "resolved.kdl",
         only,
     )?;
     if resolved.is_empty() {
         anyhow::bail!(
-            "no resolved.json found under {} — run `apianyware-analyze` (resolve) first to \
+            "no resolved.kdl found under {} — run `apianyware-analyze` (resolve) first to \
              generate the resolved surface",
             args.api_root.display()
         );
@@ -377,7 +377,7 @@ pub fn run(args: &AuditArgs) -> Result<()> {
 /// `uncontested_llm` is not a true LLM-vs-convention redundancy count.
 const REDUNDANCY_NOTE: &str = "uncontested_llm conflates LLM-original facts with LLM facts that \
     reproduce convention: the resolve-time audit drops agreeing lower tiers (ADR-0050 §3), so \
-    true LLM-vs-convention redundancy is not derivable from resolved.json. convention_won is the \
+    true LLM-vs-convention redundancy is not derivable from resolved.kdl. convention_won is the \
     carriage-faithful 'convention sufficed' signal.";
 
 /// Stable JSON report. Lists every family with producing slots; `wins` and

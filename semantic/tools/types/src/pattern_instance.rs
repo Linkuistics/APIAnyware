@@ -5,7 +5,7 @@
 //! kind's roles to concrete [`Participant`]s and carries the ADR-0046 §4
 //! provenance stamp ([`InstanceSource`] / [`Confidence`] / `provenance`). An
 //! instance is *platform knowledge*, so it rides in the platform spec triad
-//! (`platforms/macos/api/<F>/resolved.json`, the [`crate::ir::Framework::patterns`]
+//! (`platforms/macos/api/<F>/resolved.kdl`, the [`crate::ir::Framework::patterns`]
 //! list), not in `semantic/` — the kind is the reusable definition, the instance
 //! is the binding (D1). This module is the **carriage** only: the typed model +
 //! the two determinism rules (DP3 home, DP4 identity). Validation against the
@@ -31,7 +31,7 @@ pub struct PatternInstance {
     /// the `apianyware-patterns` registry.
     pub kind: String,
 
-    /// The deterministic home framework (DP3): the framework whose `resolved.json`
+    /// The deterministic home framework (DP3): the framework whose `resolved.kdl`
     /// owns this instance, even when its roles span frameworks. See
     /// [`PatternInstance::home_framework`].
     pub home: String,

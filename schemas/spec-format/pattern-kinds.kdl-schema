@@ -11,8 +11,8 @@
 // SCOPE — the authored pattern-*kind* definitions ONLY (the reusable, framework-
 // and target-independent vocabulary under `semantic/pattern-kinds/`). Pattern
 // *instances* (a kind's roles bound to a concrete framework's participants) are
-// platform knowledge carried in the machine `resolved.json` triad (ADR-0048 D1)
-// and get a JSON Schema in workstream 8 — NOT this contract.
+// platform knowledge carried in the machine `resolved.kdl` triad (ADR-0048 D1)
+// and get a machine KDL-Schema in workstream 8 — NOT this contract.
 //
 // CONTROLLED VOCABULARY — a `law` is NON-VACUOUS: its `token` values are drawn
 // from REFACTOR §30's enumerated weirdness sets, partitioned by the law's

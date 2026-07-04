@@ -1,5 +1,5 @@
 //! CLI for the analysis pipeline: the in-process *resolve* flow that produces a
-//! family's `resolved.json` from its `extracted.json` + `annotations.apiw`.
+//! family's `resolved.kdl` from its `extracted.kdl` + `annotations.apiw`.
 //!
 //! Usage:
 //!   apianyware-analyze                       # resolve all families
@@ -7,12 +7,12 @@
 //!
 //! The four phase-shaped, gitignored on-disk checkpoints (collected → resolved →
 //! annotated → enriched) collapsed to the per-family spec triad (ADR-0046,
-//! `pipeline-cutover-k20`): the machine `extracted.json` (written by collect) and
-//! `resolved.json` (written here) bracket the one authored overlay
+//! `pipeline-cutover-k20`): the machine `extracted.kdl` (written by collect) and
+//! `resolved.kdl` (written here) bracket the one authored overlay
 //! `annotations.apiw`. The datalog cross-reference pass — formerly the on-disk
-//! `resolved` stage, whose name collided with the final `resolved.json` — is
+//! `resolved` stage, whose name collided with the final `resolved.kdl` — is
 //! renamed **`linked`**, and it, the annotate merge, and the enrichment pass all
-//! run **in-process**, so only `extracted.json` and `resolved.json` touch disk.
+//! run **in-process**, so only `extracted.kdl` and `resolved.kdl` touch disk.
 
 use std::path::{Path, PathBuf};
 
@@ -26,7 +26,7 @@ mod annotations;
 #[command(name = "apianyware-analyze")]
 #[command(about = "Resolve the macOS API spec and run annotation side-channel workflows")]
 #[command(
-    long_about = "Resolve extracted.json + annotations.apiw -> resolved.json (the default \
+    long_about = "Resolve extracted.kdl + annotations.apiw -> resolved.kdl (the default \
                   when no subcommand is given), plus the LLM analysis side-channel workflows \
                   under `annotations` (ADR-0050)."
 )]
@@ -41,7 +41,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Resolve extracted.json + annotations.apiw -> resolved.json. This is the
+    /// Resolve extracted.kdl + annotations.apiw -> resolved.kdl. This is the
     /// default behaviour when no subcommand is given; the explicit `resolve`
     /// form exists for clarity and discoverability.
     Resolve(ResolveArgs),
@@ -55,7 +55,7 @@ enum Command {
 #[derive(Args)]
 struct ResolveArgs {
     /// `api/` root holding the per-family spec triad
-    /// (`<api-root>/<Framework>/{extracted.json,annotations.apiw,resolved.json}`).
+    /// (`<api-root>/<Framework>/{extracted.kdl,annotations.apiw,resolved.kdl}`).
     #[arg(long, default_value = "platforms/macos/api")]
     api_root: PathBuf,
 
@@ -100,18 +100,18 @@ fn run_resolve(args: &ResolveArgs) -> Result<()> {
     run_pipeline(&args.api_root, &args.pattern_kinds_dir, only)
 }
 
-/// The full in-process resolve. Loads `extracted.json` per family, runs the
+/// The full in-process resolve. Loads `extracted.kdl` per family, runs the
 /// datalog `linked` pass (pass 1: inheritance resolution, effective methods,
 /// ownership families), merges the authored `annotations.apiw` overlay applying
 /// §28 precedence (`manual > accepted-LLM > convention > extraction`), runs the
 /// enrichment pass (pass 2: annotation-derived relations + verification), and
-/// writes `resolved.json` per family — the generator input.
+/// writes `resolved.kdl` per family — the generator input.
 fn run_pipeline(api_root: &Path, pattern_kinds_dir: &Path, only: Option<&[String]>) -> Result<()> {
     let extracted =
-        apianyware_datalog::loading::load_all_family_artifacts(api_root, "extracted.json", only)?;
+        apianyware_datalog::loading::load_all_family_artifacts(api_root, "extracted.kdl", only)?;
     if extracted.is_empty() {
         anyhow::bail!(
-            "no extracted.json found under {} (run `apianyware-collect` first)",
+            "no extracted.kdl found under {} (run `apianyware-collect` first)",
             api_root.display()
         );
     }
@@ -151,7 +151,7 @@ fn run_pipeline(api_root: &Path, pattern_kinds_dir: &Path, only: Option<&[String
     let resolved = apianyware_enrich::enrich_loaded_frameworks(&annotated)?;
 
     for fw in &resolved {
-        let path = api_root.join(&fw.name).join("resolved.json");
+        let path = api_root.join(&fw.name).join("resolved.kdl");
         apianyware_spec_format::machine::write_framework(fw, &path)
             .with_context(|| format!("failed to write {}", path.display()))?;
         let annotation_count: usize = fw.class_annotations.iter().map(|c| c.methods.len()).sum();
@@ -160,7 +160,7 @@ fn run_pipeline(api_root: &Path, pattern_kinds_dir: &Path, only: Option<&[String
             classes = fw.classes.len(),
             method_annotations = annotation_count,
             output = %path.display(),
-            "wrote resolved.json"
+            "wrote resolved.kdl"
         );
     }
 

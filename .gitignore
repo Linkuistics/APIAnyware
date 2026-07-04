@@ -3,9 +3,14 @@ target/
 *.swp
 .DS_Store
 
-# Machine IR of the per-family spec triad (ADR-0046): large JSON files,
-# regenerable from the SDK + the authored overlay. The authored `annotations.apiw`
-# is committed; `extracted.json` (collect) and `resolved.json` (analyze) are not.
+# Machine IR of the per-family spec triad (ADR-0046): large KDL files (machine
+# JiK codec, §5), regenerable from the SDK + the authored overlay. The authored
+# `annotations.apiw` is committed; `extracted.kdl` (collect) and `resolved.kdl`
+# (analyze) are not.
+platforms/macos/api/*/extracted.kdl
+platforms/macos/api/*/resolved.kdl
+# Legacy pre-KDL machine IR (ignored so a stale local `.json` from before the ws8
+# flip is never accidentally committed during the transition).
 platforms/macos/api/*/extracted.json
 platforms/macos/api/*/resolved.json
 

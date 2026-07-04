@@ -880,7 +880,7 @@ _Avoid_: putting any target-projection or platform-specific extraction detail he
 The *source platform truth* domain — per-platform formal API specs, kept
 **projection-free** (§7.1/§45.10). `platforms/macos/` is the only live platform;
 `linux/` and `dotnet/` slot in without redesign. A family's spec is the three-stage
-**spec triad** `extracted.json` → `annotations.apiw` → `resolved.json` under `api/<family>/`
+**spec triad** `extracted.kdl` → `annotations.apiw` → `resolved.kdl` under `api/<family>/`
 (§14; machine `.json` + authored `.apiw` KDL per ADR-0046 as amended by the k17 retreat — see
 *Spec format*).
 _Avoid_: "platform" meaning the generation destination (that is a *target*); any
@@ -935,9 +935,9 @@ rejected).
 Introduced by the `structural-refactoring` grove, workstream 2 (`spec-format-k16`),
 replacing the JSON enriched IR. Settled 2026-06-24: ADR-0046 (format), ADR-0047 (conventions),
 PRD `prd/2026-06-24-spec-format-data-model.md`. **Implemented** by `pipeline-cutover-k20`: the
-live pipeline reads/writes the per-family triad (collect→`extracted.json`; analyze runs the
-in-process `linked`→annotate→enrich passes folding in `annotations.apiw`→`resolved.json`;
-generate consumes `resolved.json`). Remaining child leaf: `conventions-datalog-k21` (retire
+live pipeline reads/writes the per-family triad (collect→`extracted.kdl`; analyze runs the
+in-process `linked`→annotate→enrich passes folding in `annotations.apiw`→`resolved.kdl`;
+generate consumes `resolved.kdl`). Remaining child leaf: `conventions-datalog-k21` (retire
 imperative `heuristics.rs` for ascent rules, ADR-0047).
 
 **Spec triad**:
@@ -989,20 +989,20 @@ validator step; ws8 owns the machine schema + the umbrella).
 **`linked` (datalog stage)** _(rename, replacing the colliding "resolved" stage)_:
 The in-process datalog cross-reference stage (cross-class/protocol linking + convention rules),
 formerly confusingly also called *"resolved"* (`analysis/ir/resolved`). Renamed `linked` so the
-word **resolved** carries exactly one meaning: `resolved.json`, the final merged generator input.
+word **resolved** carries exactly one meaning: `resolved.kdl`, the final merged generator input.
 _Avoid_: "resolved" for the datalog linking stage (the collision ADR-0046 retires).
 
 **Convention rule (datalog)**:
 A "platform convention rule" (§28's precedence tier) expressed as a declarative compile-time
-`ascent` datalog rule over `extracted.json`, replacing the imperative `annotate/heuristics.rs`
+`ascent` datalog rule over `extracted.kdl`, replacing the imperative `annotate/heuristics.rs`
 (ADR-0047). Same engine as resolution/ownership inference. Its derived facts land in
-`resolved.json` stamped `source="convention:<rule>"` — datalog's derivation trace **is** the
+`resolved.kdl` stamped `source="convention:<rule>"` — datalog's derivation trace **is** the
 provenance.
 _Avoid_: "heuristic classifier" (the retired imperative form); a runtime-loaded rule DSL
 (compile-time ascent — runtime is a deferred enhancement).
 
 **Provenance stamp / precedence / confidence** _(carried in-format; workflow is ws5)_:
-The data model's record of *where a fact came from and who won*. Every `resolved.json` fact has a
+The data model's record of *where a fact came from and who won*. Every `resolved.kdl` fact has a
 `source ∈ {extraction, convention:<rule>, llm, manual}`; authored facts add `confidence`
 (enum **`high|medium|low`**, not a float) + `provenance` (doc URL/rationale). Precedence
 (`manual > accepted-LLM > convention > extraction > unknown`, §28) is applied in resolve — the
@@ -1042,7 +1042,7 @@ typed edges too).
 A **concrete occurrence** of a pattern-kind in a specific framework — it binds the
 kind's roles to concrete **participants** and carries the ADR-0046 §4 provenance stamp
 (`source`/`confidence`/`provenance`). An instance is **platform knowledge**, so it
-lives in the **platform spec triad** (`platforms/macos/api/<Framework>/resolved.json`),
+lives in the **platform spec triad** (`platforms/macos/api/<Framework>/resolved.kdl`),
 *not* in `semantic/` (decision D1 — the two-level kind/instance split that keeps
 `semantic/` projection-AND-platform-independent). Produced by three precedence tiers —
 **convention** (datalog detection, D3), **llm**, **manual** — resolved by the ws2
@@ -1244,7 +1244,7 @@ side-channel (ws2's `pipeline-cutover-k20` already did the `*.llm.json`→`annot
 
 **Authored-overlay source vs resolved source** _(two vocabularies, two homes)_:
 The **overlay** (`annotations.apiw`, committed) carries only **authored** tiers —
-`source ∈ {llm, manual}`. The **resolved graph** (`resolved.json`, derived + gitignored)
+`source ∈ {llm, manual}`. The **resolved graph** (`resolved.kdl`, derived + gitignored)
 carries the **full ladder** — `source ∈ {extraction, convention:<rule>, llm, manual, unknown}`
 — after the disagreement audit. The `AnnotationSource` Rust enum (ws5 `provenance-vocab-k44`)
 reconciles to this: `Heuristic`→`Convention` (gaining a `<rule>` payload when per-fact
@@ -1270,7 +1270,7 @@ param's ownership, a method's threading, etc.), gather every producing tier, app
 precedence (`manual > accepted-LLM > convention > extraction > unknown`), **stamp the
 winner's `source`** on the resolved fact, and record each *disagreeing* loser as a
 `superseded-by { source; value }` entry. A fact-slot with no producer stays **explicit
-`unknown`** (never silently defaulted). Lands in `resolved.json` only; emit-invisible →
+`unknown`** (never silently defaulted). Lands in `resolved.kdl` only; emit-invisible →
 goldens unmoved. Surfaced by the `annotations audit` report (ws5 `disagreement-report`).
 **Realized carriage** (`apianyware_types::annotation`): a resolved-only
 `MethodAnnotation.fact_provenance: Option<MethodFactProvenance>` — one `SlotProvenance
@@ -1282,21 +1282,21 @@ record is retired in its favour. Two realized nuances: (i) a **fact-less method*
 method-level `source = Unknown` (not a silent `Convention`); (ii) blocks stay **all-or-nothing**
 (a non-empty overlay block list replaces convention's wholesale — golden-neutral), so a convention
 block on a param the overlay omits is dropped with **no** `superseded-by` slot (no winning fact to attach to).
-_Avoid_: writing the audit into the overlay (it is derived → resolved.json); dropping a
+_Avoid_: writing the audit into the overlay (it is derived → resolved.kdl); dropping a
 loser that merely *agrees* (only disagreements are `superseded-by`); a winning *value* change
 (precedence here only stamps provenance — the winning value already matches today's merge, so
 goldens cannot move).
 
 **Staleness / regeneration** _(replaces `check-llm-annotation-drift.sh`; ws5 `staleness-regen-k46`)_:
 Staleness is computed **live** by set-diffing a family's committed overlay against the current
-**resolved API surface** (`resolved.json`) — **no stored hash** (artifacts-not-state). The
-comparison surface is the *resolved* graph, **not** raw `extracted.json`: the overlay is
+**resolved API surface** (`resolved.kdl`) — **no stored hash** (artifacts-not-state). The
+comparison surface is the *resolved* graph, **not** raw `extracted.kdl`: the overlay is
 authored over the inheritance-flattened / protocol-conformance-flattened / Swift-renamed surface
-(the LLM is dispatched over `all_methods`), so a naive diff vs pre-resolve `extracted.json`
+(the LLM is dispatched over `all_methods`), so a naive diff vs pre-resolve `extracted.kdl`
 mis-reports ~⅓ of facts as orphaned (k46 found this — a fact under the *subclass* `NSBlockOperation`
-for a method declared on `NSOperation`; `FileManager` vs `NSFileManager`). `resolved.json` is
+for a method declared on `NSOperation`; `FileManager` vs `NSFileManager`). `resolved.kdl` is
 self-contained (its `all_methods` carry the cross-framework closure), so the check is a pure file
-read — **no resolve pass, no dep loading** — but `resolved.json` must be current (run resolve
+read — **no resolve pass, no dep loading** — but `resolved.kdl` must be current (run resolve
 first). Three signals: *orphaned* (overlay fact names a `(receiver, selector)` absent from the
 current surface), *new-surface* (a current method with an **annotatable shape** and no overlay
 fact), *shape-changed* (an overlay fact's targeted `param_index` no longer holds its kind — block /
@@ -1307,7 +1307,7 @@ declines, ~75% steady-state noise). Surfaced by `apianyware-analyze annotations 
 [--json]` (exit 1 iff any family stale → it gates). Regeneration = dispatch Claude-Code subagents
 for the stale families only (annotate runs *once per SDK update*, k26); each subagent writes that
 family's `annotations.apiw` directly.
-_Avoid_: diffing against `extracted.json` (pre-resolve → false orphans); a content-hash cache
+_Avoid_: diffing against `extracted.kdl` (pre-resolve → false orphans); a content-hash cache
 store (set-diff is cheap, stores nothing); auto-regenerating on every pipeline run (regeneration
 is explicit, post-SDK-bump); the retired `_llm-annotations/` + `analysis/ir/` paths.
 

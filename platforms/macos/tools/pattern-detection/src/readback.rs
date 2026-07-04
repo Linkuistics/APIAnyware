@@ -37,7 +37,7 @@ pub fn assemble(
     instances.extend(delegates(prog, fw, registry, &mut dropped));
     instances.extend(brackets(prog, fw, registry, &mut dropped));
 
-    // Stable, content-id order for resolved.json determinism; dedup defensively
+    // Stable, content-id order for resolved.kdl determinism; dedup defensively
     // (distinct detectors cannot collide — different kinds — but identical
     // `(kind, roles)` would, and that is a true duplicate to fold).
     instances.sort_by(|a, b| a.id.cmp(&b.id));

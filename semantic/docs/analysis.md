@@ -3,8 +3,8 @@
 > **⚠️ Path note (`pipeline-cutover-k20`, ADR-0046).** The four checkpoints
 > (`collection/ir/collected`, `analysis/ir/{resolved,annotated,enriched}`) and the
 > `_llm-annotations/*.llm.json` side-channel below are **retired**. The pipeline now
-> uses the per-family spec triad `platforms/macos/api/<Framework>/{extracted.json,
-> annotations.apiw,resolved.json}`; the `linked` (datalog cross-ref) / annotate /
+> uses the per-family spec triad `platforms/macos/api/<Framework>/{extracted.kdl,
+> annotations.apiw,resolved.kdl}`; the `linked` (datalog cross-ref) / annotate /
 > enrich passes run in-process. The *gotchas* (stale-checkpoint discipline, enrichment
 > filtering) still hold; the *paths/commands/LLM-workflow* describe the old shape and
 > are resynced under ws4/ws5. Some pre-skeleton crate paths (`collection/crates/…`,

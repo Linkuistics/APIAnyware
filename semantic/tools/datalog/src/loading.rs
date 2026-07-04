@@ -1,7 +1,11 @@
-//! Framework JSON checkpoint loading utilities.
+//! Framework checkpoint loading utilities.
 //!
-//! Reads `{Framework}.json` checkpoint files from a directory and
-//! deserializes them into [`Framework`] values.
+//! Reads per-family machine-IR artifacts (`extracted.kdl` / `resolved.kdl`,
+//! ADR-0046) and legacy flat `{Framework}.json` checkpoints, deserializing them
+//! into [`Framework`] values. The on-disk **encoding is chosen by extension**:
+//! `.kdl` goes through the machine JiK codec ([`apianyware_spec_format::machine`]),
+//! `.json` through `serde_json` — the value model is identical, only the bytes
+//! differ.
 
 use std::path::{Path, PathBuf};
 
@@ -32,19 +36,26 @@ pub fn discover_framework_files(directory: &Path) -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-/// Load a single framework from a JSON checkpoint file.
+/// Load a single framework from a checkpoint file, decoding by extension.
+///
+/// A `.kdl` file is the machine IR (`extracted.kdl` / `resolved.kdl`) and is
+/// decoded through the JiK codec; anything else is treated as JSON (the legacy
+/// flat `{Framework}.json` layout). Both paths yield the same [`Framework`].
 pub fn load_framework_from_file(path: &Path) -> Result<Framework> {
-    let json = std::fs::read_to_string(path)
+    let text = std::fs::read_to_string(path)
         .with_context(|| format!("failed to read: {}", path.display()))?;
-    let framework: Framework = serde_json::from_str(&json)
-        .with_context(|| format!("failed to parse: {}", path.display()))?;
-    Ok(framework)
+    if path.extension().is_some_and(|ext| ext == "kdl") {
+        apianyware_spec_format::machine::framework_from_kdl(&text)
+            .with_context(|| format!("failed to parse KDL: {}", path.display()))
+    } else {
+        serde_json::from_str(&text).with_context(|| format!("failed to parse: {}", path.display()))
+    }
 }
 
 /// Discover per-family artifact files under an `api/` root.
 ///
 /// The per-family spec layout (ADR-0046) is `<api_root>/<Framework>/<filename>`
-/// — e.g. `platforms/macos/api/Foundation/resolved.json`. Returns the path to
+/// — e.g. `platforms/macos/api/Foundation/resolved.kdl`. Returns the path to
 /// each family's `filename` artifact that exists, sorted by family name. Plain
 /// files and the leading-`_` staging dirs (e.g. a transitional `_llm-annotations`)
 /// are skipped — only real `<Family>/` directories are families.
@@ -68,8 +79,8 @@ pub fn discover_family_artifacts(api_root: &Path, filename: &str) -> Result<Vec<
     Ok(files)
 }
 
-/// Load every per-family artifact named `filename` (`"extracted.json"` or
-/// `"resolved.json"`) under an `api/` root, sorted by family name. If `only` is
+/// Load every per-family artifact named `filename` (`"extracted.kdl"` or
+/// `"resolved.kdl"`) under an `api/` root, sorted by family name. If `only` is
 /// provided, only frameworks whose names match the list are loaded.
 pub fn load_all_family_artifacts(
     api_root: &Path,

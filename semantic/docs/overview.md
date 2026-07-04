@@ -46,7 +46,7 @@ flowchart LR
     K["pattern-kind<br/>bracket.apiw<br/><i>roles + laws</i>"]
   end
   subgraph plat["platforms/macos/api/&lt;F&gt;/ — macOS knowledge"]
-    I["pattern-instance<br/>(in resolved.json)<br/><i>roles → CGPath ops</i><br/>source · confidence · provenance"]
+    I["pattern-instance<br/>(in resolved.kdl)<br/><i>roles → CGPath ops</i><br/>source · confidence · provenance"]
   end
   subgraph tgt["targets/&lt;t&gt;/ — per-target (ws6)"]
     P["projection<br/><i>dynamic-wind / with-* / Drop</i>"]
@@ -62,7 +62,7 @@ flowchart LR
   participants — CGPath's bracket is `acquire = CGPathCreateMutable`,
   `release = CGPathRelease`. It carries a provenance stamp
   (`source`/`confidence`/`provenance`) and lives in the **platform spec triad**
-  (`platforms/macos/api/<Framework>/resolved.json`), because a binding to a
+  (`platforms/macos/api/<Framework>/resolved.kdl`), because a binding to a
   concrete API is macOS knowledge, not universal vocabulary.
 - The **projection** — how that bracket becomes a Scheme `dynamic-wind`, a Lisp
   `with-*` macro, a Rust `Drop` — is a *target* concern (ws6), never part of the
@@ -101,11 +101,11 @@ ADR-0043 — Rust co-locates with the domain it serves):
 | Kind registry + `.apiw` parse + §30 vocabularies + validator | `semantic/tools/patterns` (`apianyware-patterns`) |
 | Pattern-kind `.apiw` KDL Schema (source of truth) | `schemas/spec-format/pattern-kinds.kdl-schema` |
 | Convention-tier instance detection (datalog) | `platforms/macos/tools/pattern-detection` |
-| Instance carriage (the `resolved.json` fields) | `semantic/tools/types` + `semantic/tools/resolve` |
+| Instance carriage (the `resolved.kdl` fields) | `semantic/tools/types` + `semantic/tools/resolve` |
 
 The schema is the language-neutral source of truth (ADR-0046 §3); the Rust types
-are one conforming implementation. ws8 owns the *machine* JSON Schema for
-`extracted.json`/`resolved.json` and the validation tooling; ws3 authored only
+are one conforming implementation. ws8 owns the *machine* KDL-Schema for
+`extracted.kdl`/`resolved.kdl` and the validation tooling; ws3 authored only
 the pattern-kind `.apiw` KDL Schema plus a focused in-crate validator, mirroring
 how ws2 authored `annotations.kdl-schema`.
 

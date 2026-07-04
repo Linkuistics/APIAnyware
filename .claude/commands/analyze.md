@@ -17,12 +17,12 @@ families need a subagent. The canonical reference is
 
 ## Precondition
 
-`resolved.json` must be current (the staleness check reads it). After an SDK bump
+`resolved.kdl` must be current (the staleness check reads it). After an SDK bump
 or extraction change, run collect + resolve first:
 
 ```bash
-cargo run -p apianyware-collect          # refresh extracted.json (optionally --only <F>)
-cargo run -p apianyware-analyze          # resolve → resolved.json (the comparison surface)
+cargo run -p apianyware-collect          # refresh extracted.kdl (optionally --only <F>)
+cargo run -p apianyware-analyze          # resolve → resolved.kdl (the comparison surface)
 ```
 
 ## Process
@@ -41,7 +41,7 @@ cargo run -p apianyware-analyze          # resolve → resolved.json (the compar
    each subagent the prompt at
    [`platforms/macos/docs/annotation-subagent-prompt.md`](../../platforms/macos/docs/annotation-subagent-prompt.md)
    with `{FRAMEWORK}` substituted, and hand it that family's stale slots. Each
-   subagent reads `platforms/macos/api/<Framework>/resolved.json` + Apple
+   subagent reads `platforms/macos/api/<Framework>/resolved.kdl` + Apple
    headers/docs, classifies the four fact kinds (block invocation, parameter
    ownership, threading, error pattern) over the **structural annotatable shape**
    (a block param or an `NSError **` out-param — the `delegate`/`observer`
@@ -87,10 +87,10 @@ cargo run -p apianyware-analyze          # resolve → resolved.json (the compar
 ## Notes
 
 - **No staging store, no propose/accept flag** — the working tree holds proposals,
-  a commit is acceptance. `extracted.json` / `resolved.json` are gitignored; only
+  a commit is acceptance. `extracted.kdl` / `resolved.kdl` are gitignored; only
   `annotations.apiw` is committed.
 - **Two source vocabularies:** the overlay carries `{llm, manual}`; the full
   ladder (`extraction` / `convention:<rule>` / `llm` / `manual` / `unknown`, with
-  `superseded-by` losers) lives only in the derived `resolved.json` provenance.
+  `superseded-by` losers) lives only in the derived `resolved.kdl` provenance.
 - **Provenance is emit-invisible** — the audit stamps `source`, never the winning
   value, so regenerating annotations cannot move the emit goldens.

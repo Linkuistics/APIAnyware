@@ -30,5 +30,5 @@ The vocabulary is defined in `CONTEXT.md → "Semantic model"`; the design is
 
 A pattern **instance** (a kind bound to a concrete framework) is *platform*
 knowledge and lives in the platform triad
-(`platforms/macos/api/<Framework>/resolved.json`), not here — the kind/instance
+(`platforms/macos/api/<Framework>/resolved.kdl`), not here — the kind/instance
 split that keeps this domain projection- and platform-independent.

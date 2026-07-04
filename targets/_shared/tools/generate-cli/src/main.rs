@@ -23,7 +23,7 @@ struct Cli {
     target: Vec<String>,
 
     /// `api/` root holding the per-family resolved IR
-    /// (`<input-dir>/<Framework>/resolved.json`, ADR-0046 spec triad).
+    /// (`<input-dir>/<Framework>/resolved.kdl`, ADR-0046 spec triad).
     #[arg(long, default_value = "platforms/macos/api")]
     input_dir: PathBuf,
 

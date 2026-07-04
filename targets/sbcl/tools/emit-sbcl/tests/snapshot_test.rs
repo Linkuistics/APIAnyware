@@ -83,22 +83,23 @@ fn testkit_snapshot_matches_golden() {
         .unwrap();
 }
 
-/// Load one enriched IR framework from the analysis pipeline output, or `None` if
-/// it is not present locally (the IR is gitignored). Read directly so the test
-/// needs no datalog dependency (gerbil's pattern).
+/// Load one enriched IR framework from the per-family spec triad, or `None` if it
+/// is not present locally (the IR is gitignored). Reads via the machine codec —
+/// the only dependency is `spec-format` (the codec home), not datalog.
 fn load_enriched_framework(name: &str) -> Option<Framework> {
-    let enriched_dir = crate_root()
+    let api_root = crate_root()
         .parent() // emit-sbcl → tools
         .and_then(|p| p.parent()) // tools → sbcl
         .and_then(|p| p.parent()) // sbcl → targets
         .and_then(|p| p.parent()) // targets → project root
-        .map(|p| p.join("analysis").join("ir").join("enriched"))?;
-    let framework_path = enriched_dir.join(format!("{name}.json"));
+        .map(|p| p.join("platforms").join("macos").join("api"))?;
+    // The per-family spec triad (ADR-0046): `<api>/<Framework>/resolved.kdl`, KDL
+    // via the JiK codec (§5) — decode through the codec, not serde_json.
+    let framework_path = api_root.join(name).join("resolved.kdl");
     if !framework_path.exists() {
         return None;
     }
-    let json = std::fs::read_to_string(&framework_path).ok()?;
-    serde_json::from_str(&json).ok()
+    apianyware_spec_format::machine::read_framework(&framework_path).ok()
 }
 
 #[test]

@@ -29,7 +29,7 @@ an *ordering*). For the model behind these — what roles, laws, and ordering me
 >
 > The **canonical macOS examples** from v1.0 survive below as *illustrations* of
 > what a kind's instances look like — they are example instances, which formally
-> live in `platforms/macos/api/<Framework>/resolved.json`, shown here only to
+> live in `platforms/macos/api/<Framework>/resolved.kdl`, shown here only to
 > make each kind concrete.
 
 ## The roster
@@ -307,7 +307,7 @@ to the collection.
 
 A *kind* above is universal; a concrete *instance* (CGPath's `bracket`,
 `NSView`'s `parent-child`) is detected or authored into
-`platforms/macos/api/<Framework>/resolved.json` by one of three provenance tiers,
+`platforms/macos/api/<Framework>/resolved.kdl` by one of three provenance tiers,
 resolved `manual > llm > convention > extraction`:
 
 - **convention** — `ascent` datalog over the extracted facts

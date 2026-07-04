@@ -54,7 +54,7 @@ fn main() -> ExitCode {
         let json = std::fs::read_to_string(&path).expect("read .llm.json");
 
         // The API family is the overlay's own `framework` field (authoritative —
-        // it is what the pipeline keys `extracted.json` by); the file name is a
+        // it is what the pipeline keys `extracted.kdl` by); the file name is a
         // convenience that should agree.
         let parsed: FrameworkAnnotations =
             serde_json::from_str(&json).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()));

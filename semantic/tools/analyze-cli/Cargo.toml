@@ -3,7 +3,7 @@ name = "apianyware-analyze"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "CLI: apianyware-analyze — in-process resolve (extracted.json + annotations.apiw -> resolved.json)"
+description = "CLI: apianyware-analyze — in-process resolve (extracted.kdl + annotations.apiw -> resolved.kdl)"
 
 [dependencies]
 apianyware-types.workspace = true

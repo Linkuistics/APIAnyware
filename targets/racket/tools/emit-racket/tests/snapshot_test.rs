@@ -140,7 +140,7 @@ fn snapshot_racket_testkit() {
 }
 
 /// Load a real resolved IR framework from the per-family spec triad
-/// (`platforms/macos/api/<Framework>/resolved.json`, ADR-0046).
+/// (`platforms/macos/api/<Framework>/resolved.kdl`, ADR-0046).
 fn load_enriched_framework(name: &str) -> Option<apianyware_types::ir::Framework> {
     let api_root = crate_root()
         .parent() // emit-racket → tools
@@ -149,13 +149,13 @@ fn load_enriched_framework(name: &str) -> Option<apianyware_types::ir::Framework
         .and_then(|p| p.parent()) // targets → project root
         .map(|p| p.join("platforms").join("macos").join("api"))?;
 
-    let framework_path = api_root.join(name).join("resolved.json");
+    let framework_path = api_root.join(name).join("resolved.kdl");
     if !framework_path.exists() {
         return None;
     }
 
-    let json = std::fs::read_to_string(&framework_path).ok()?;
-    serde_json::from_str(&json).ok()
+    // The machine IR is KDL (ADR-0046 §5) — decode via the JiK codec, not serde_json.
+    apianyware_spec_format::machine::read_framework(&framework_path).ok()
 }
 
 #[test]

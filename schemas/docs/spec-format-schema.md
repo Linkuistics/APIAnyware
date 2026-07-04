@@ -9,12 +9,13 @@ overlay, *why* it is language-neutral, and *how* a non-Rust tool consumes it.
 | Schema | Validates | Authored by |
 |--------|-----------|-------------|
 | [`../spec-format/annotations.kdl-schema`](../spec-format/annotations.kdl-schema) | the authored `annotations.apiw` overlay | **ws2** (here) |
-| *(JSON Schema, TBD)* | machine `extracted.json` / `resolved.json` | **ws8** |
+| *(machine KDL-Schema, TBD)* | machine `extracted.kdl` / `resolved.kdl` | **ws8** |
 | *(TBD)* | app-kinds, common AppSpecs, target capability profiles, conformance reports | **ws8** |
 
-The spec triad is `extracted.json` → `annotations.apiw` → `resolved.json` per API family
-(`platforms/macos/api/<Framework>/`). Only the **authored** overlay is KDL; the machine artifacts
-are JSON (ADR-0046's k17 retreat), so they get a **JSON Schema**, owned by ws8 — not here.
+The spec triad is `extracted.kdl` → `annotations.apiw` → `resolved.kdl` per API family
+(`platforms/macos/api/<Framework>/`). The **whole** triad is KDL (ADR-0046 §5); the machine
+artifacts get a **machine KDL-Schema** — reusing the generic KDL-Schema engine, one schema
+language — owned by ws8, not here.
 
 ## Language-neutral by design (ADR-0046 §3)
 
@@ -35,8 +36,8 @@ Go, …) can:
    definitions with occurrence/cardinality bounds, scalar `type`s, and `enum` value sets).
 
 The enum value spellings (`copy`, `async_copied`, `main_thread_only`, `llm`, `high`, …) are the
-serde `snake_case` tokens shared with the machine JSON, so an `.apiw` value's spelling always
-matches its `extracted.json` / `resolved.json` spelling.
+serde `snake_case` tokens shared with the machine IR, so an `.apiw` value's spelling always
+matches its `extracted.kdl` / `resolved.kdl` spelling.
 
 ## The validator step (and the KDL-2.0 tooling gap)
 
@@ -60,7 +61,7 @@ fixtures (`tests/fixtures/{valid,invalid}.apiw`), the output of the k18 writer (
 
 ## ws8 boundary (recorded here)
 
-ws8 owns: the **validation tooling/CI**; the **JSON Schema** for the machine `extracted.json` /
-`resolved.json`; and the schemas for the **other** artifacts (app-kinds, common AppSpecs, target
-capability profiles, conformance reports). ws2 owns only the `.apiw` schema above and the
-`validate_apiw` step.
+ws8 owns: the **validation tooling/CI**; the **machine KDL-Schema** for the machine
+`extracted.kdl` / `resolved.kdl` (reusing the generic engine); and the schemas for the **other**
+artifacts (app-kinds, common AppSpecs, target capability profiles, conformance reports). ws2 owns
+only the `.apiw` schema above and the `validate_apiw` step.

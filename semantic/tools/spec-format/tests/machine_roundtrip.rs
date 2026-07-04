@@ -1,7 +1,9 @@
-//! The machine interchange seam round-trips a `Framework` through JSON on disk.
+//! The machine interchange seam round-trips a `Framework` through KDL on disk.
 //!
-//! `extracted.json` / `resolved.json` stay JSON (ADR-0046 §5, k17 retreat); this
-//! pins that the crate's read/write seam preserves the IR structurally.
+//! `extracted.kdl` / `resolved.kdl` are KDL 2.0 via the JiK codec (ADR-0046 §5);
+//! this pins that the crate's read/write seam preserves the IR structurally and
+//! that what it writes is spec-valid KDL an independent parser accepts. The
+//! codec's exhaustive Value-level round-trip guard lives in `src/jik.rs`.
 
 use std::path::PathBuf;
 
@@ -38,9 +40,9 @@ const FRAMEWORK_JSON: &str = r#"{
 }"#;
 
 #[test]
-fn framework_round_trips_through_the_json_seam() {
+fn framework_round_trips_through_the_kdl_seam() {
     let original: Framework = serde_json::from_str(FRAMEWORK_JSON).unwrap();
-    let path = scratch("machine").join("extracted.json");
+    let path = scratch("machine").join("extracted.kdl");
 
     machine::write_framework(&original, &path).unwrap();
     let reread = machine::read_framework(&path).unwrap();
@@ -59,15 +61,18 @@ fn framework_round_trips_through_the_json_seam() {
 }
 
 #[test]
-fn written_machine_json_is_pretty_and_newline_terminated() {
-    // Goldens-as-truth review reads these files by hand, so the writer emits
-    // indented JSON with a trailing newline (matches the existing checkpoints).
+fn written_machine_kdl_is_spec_valid_and_newline_terminated() {
+    // The on-disk artifact must be spec-valid KDL 2.0 (the official `kdl` crate
+    // accepts it — the machine codec deliberately does not route through that
+    // crate, so this is an independent cross-check) and newline-terminated so
+    // goldens-as-truth review reads clean diffs.
     let original: Framework = serde_json::from_str(FRAMEWORK_JSON).unwrap();
-    let path = scratch("machine-pretty").join("resolved.json");
+    let path = scratch("machine-valid").join("resolved.kdl");
 
     machine::write_framework(&original, &path).unwrap();
     let text = std::fs::read_to_string(&path).unwrap();
 
-    assert!(text.contains("\n  "), "expected indented (pretty) JSON");
     assert!(text.ends_with('\n'), "expected a trailing newline");
+    kdl::KdlDocument::parse(&text)
+        .unwrap_or_else(|e| panic!("emitted machine IR is not spec-valid KDL 2.0: {e:?}"));
 }

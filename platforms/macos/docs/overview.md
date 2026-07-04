@@ -64,7 +64,7 @@ The same rule keeps `semantic/` and `platforms/` apart. A **pattern-kind** (a
 `bracket`, an `observer`, a `parent-child` ownership edge) is universal and
 framework-independent, so it lives in `semantic/`. Its **instance** — CGPath's
 particular bracket, NSView's subview ownership — is *macOS knowledge*, so it lives
-here, carried inside the per-family `resolved.json` (workstream 3's D1). Universal
+here, carried inside the per-family `resolved.kdl` (workstream 3's D1). Universal
 definition in `semantic/`, concrete macOS binding in `platforms/macos/`.
 
 ## The four sub-models
@@ -92,10 +92,10 @@ flowchart TD
    [`../README.md`](../README.md).
 
 2. **The per-family API specs** — one directory per API family under
-   [`api/`](../api/), each holding the three-stage **spec triad** (`extracted.json`
-   → `annotations.apiw` → `resolved.json`, ADR-0046). This is the bulk of platform
+   [`api/`](../api/), each holding the three-stage **spec triad** (`extracted.kdl`
+   → `annotations.apiw` → `resolved.kdl`, ADR-0046). This is the bulk of platform
    truth, and where ws3's **pattern-instances** are carried (inside
-   `resolved.json`). [`api-extraction.md`](api-extraction.md) covers how the triad
+   `resolved.kdl`). [`api-extraction.md`](api-extraction.md) covers how the triad
    is produced; [`api/README.md`](../api/README.md) is the authoritative reference
    for the three files.
 

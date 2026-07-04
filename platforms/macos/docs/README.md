@@ -13,7 +13,7 @@ Read in order:
    the four sub-models (manifest, `api/`, `app-kinds/`, `tests/`), and the
    platform-neutral shape that absorbs a second platform.
 2. **[`api-extraction.md`](api-extraction.md)** — how a family's spec triad
-   (`extracted.json` / `annotations.apiw` / `resolved.json`, ADR-0046) is produced
+   (`extracted.kdl` / `annotations.apiw` / `resolved.kdl`, ADR-0046) is produced
    by the `collect → analyze → generate` pipeline. A map over the authoritative
    `../api/README.md` + `collection.md`.
 3. **[`app-kinds.md`](app-kinds.md)** — the seven kinds of macOS application a

@@ -3,12 +3,12 @@
 //!
 //! Staleness is computed **live** by set-diffing a family's committed
 //! `annotations.apiw` overlay against the current **resolved API surface**
-//! (`resolved.json`) — no stored content hash (artifacts-not-state). The
-//! comparison surface is the *resolved* graph, not raw `extracted.json`: the
+//! (`resolved.kdl`) — no stored content hash (artifacts-not-state). The
+//! comparison surface is the *resolved* graph, not raw `extracted.kdl`: the
 //! overlay is authored over the inheritance-flattened, protocol-conformance-
 //! flattened, Swift-renamed surface, so a naive diff against pre-resolve
-//! `extracted.json` mis-reports ~⅓ of facts as orphaned (inherited methods keyed
-//! under a subclass, `FileManager` vs `NSFileManager`, …). `resolved.json` is
+//! `extracted.kdl` mis-reports ~⅓ of facts as orphaned (inherited methods keyed
+//! under a subclass, `FileManager` vs `NSFileManager`, …). `resolved.kdl` is
 //! self-contained — its `all_methods` already carry the cross-framework closure
 //! — so this is a pure file read, no resolve pass and no dependency loading.
 //!
@@ -44,7 +44,7 @@ EXAMPLES:
   apianyware-analyze annotations stale --only Foundation --json
 
 PRECONDITION:
-  Reads each family's resolved.json. Regenerate it first with a plain
+  Reads each family's resolved.kdl. Regenerate it first with a plain
   `apianyware-analyze` (resolve) run after an SDK bump / extraction change.
 
 EXIT CODES:
@@ -57,7 +57,7 @@ EXIT CODES:
 #[command(after_help = EXAMPLES)]
 pub struct StaleArgs {
     /// `api/` root holding the per-family spec triad
-    /// (`<api-root>/<Framework>/{extracted.json,annotations.apiw,resolved.json}`).
+    /// (`<api-root>/<Framework>/{extracted.kdl,annotations.apiw,resolved.kdl}`).
     #[arg(long, default_value = "platforms/macos/api")]
     pub api_root: PathBuf,
 
@@ -314,7 +314,7 @@ fn sort_slots(slots: &mut [Slot]) {
     });
 }
 
-/// Run the `stale` command: load each family's `resolved.json` surface + its
+/// Run the `stale` command: load each family's `resolved.kdl` surface + its
 /// committed overlay, compute staleness, print the report, and return whether
 /// **any** family is stale (the caller maps `true` → exit 1).
 pub fn run(args: &StaleArgs) -> Result<bool> {
@@ -326,12 +326,12 @@ pub fn run(args: &StaleArgs) -> Result<bool> {
 
     let resolved = apianyware_datalog::loading::load_all_family_artifacts(
         &args.api_root,
-        "resolved.json",
+        "resolved.kdl",
         only,
     )?;
     if resolved.is_empty() {
         anyhow::bail!(
-            "no resolved.json found under {} — run `apianyware-analyze` (resolve) first to \
+            "no resolved.kdl found under {} — run `apianyware-analyze` (resolve) first to \
              generate the resolved surface",
             args.api_root.display()
         );
@@ -607,7 +607,7 @@ mod tests {
         // The overlay keys `setCompletionBlock:` under the *subclass*
         // NSBlockOperation; the resolved surface carries it in the subclass's
         // `all_methods` (inheritance-flattened). It must NOT be orphaned —
-        // this is the exact case naive extracted.json diffing gets wrong.
+        // this is the exact case naive extracted.kdl diffing gets wrong.
         let mut subclass = class("NSBlockOperation", None, vec![]);
         subclass.all_methods = vec![ir_method("setCompletionBlock:", vec![block_param("block")])];
         let fw = framework("TestFW", vec![subclass]);

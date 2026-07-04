@@ -4,7 +4,7 @@
 //! populating `ancestors`, `all_methods`, `all_properties`, and per-method
 //! `returns_retained` and `satisfies_protocol` fields. This is pass 1 — the
 //! `linked` stage (ADR-0046 rename; formerly the on-disk `resolved` checkpoint,
-//! whose name collided with the final `resolved.json`). It runs in-process; the
+//! whose name collided with the final `resolved.kdl`). It runs in-process; the
 //! disk writer below remains available for ad-hoc dumps.
 
 use std::collections::{HashMap, HashSet};

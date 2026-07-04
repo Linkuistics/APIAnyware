@@ -24,7 +24,7 @@ landed here in `move-platforms-k6`, alongside the LLM-annotation operational scr
 authored overlay `api/<family>/annotations.apiw` (the flat `api/_llm-annotations/`
 staging dir was folded in and retired by `pipeline-cutover-k20`; the LLM side-channel
 *workflow* over the overlay is workstream 5). The per-family API specs are the spec
-triad under `api/<family>/` (`extracted.json` / `annotations.apiw` / `resolved.json`,
+triad under `api/<family>/` (`extracted.kdl` / `annotations.apiw` / `resolved.kdl`,
 ADR-0046) — landed and live as of `pipeline-cutover-k20`.
 
 Workstream 4 (platform model) is **complete**: the manifest (`platform.apiw`),

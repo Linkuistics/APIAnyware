@@ -61,7 +61,7 @@ Structural relationships (§31): `parent-child`, `callback-destroy-notifier`,
 
 A pattern-**instance** (a kind's roles bound to a concrete framework's
 participants, provenance-stamped) is *platform* knowledge carried in the machine
-triad (`platforms/macos/api/<F>/resolved.json`), **not** here (ADR-0048 D1). Its
+triad (`platforms/macos/api/<F>/resolved.kdl`), **not** here (ADR-0048 D1). Its
 carriage extends `semantic/tools/types` + `resolve`; the convention-tier datalog
 detection lives in
 [`platforms/macos/tools/pattern-detection`](../../platforms/macos/tools/pattern-detection).

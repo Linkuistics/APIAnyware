@@ -42,7 +42,7 @@ committed semantic overlay `platforms/macos/api/{FRAMEWORK}/annotations.apiw`.
    Swift-renamed (this is the surface the overlay is keyed against):
 
    ```
-   platforms/macos/api/{FRAMEWORK}/resolved.json
+   platforms/macos/api/{FRAMEWORK}/resolved.kdl
    ```
 
    Each class's `all_methods` carries the cross-framework closure; key a fact

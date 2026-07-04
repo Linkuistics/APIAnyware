@@ -109,7 +109,7 @@ pub struct MethodAnnotation {
     /// (ADR-0050 §3). Populated *only* at resolve time, after the convention
     /// and authored-overlay tiers are reconciled per fact-slot; `None` in the
     /// authored `annotations.apiw` overlay (ADR-0050 D3 — per-fact provenance
-    /// lives in `resolved.json`, never the overlay). Emit-invisible: the audit
+    /// lives in `resolved.kdl`, never the overlay). Emit-invisible: the audit
     /// stamps *provenance*, never a winning value, so this field cannot move a
     /// golden.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -270,7 +270,7 @@ pub enum ErrorPattern {
 /// ADR-0050 D3 provenance vocabulary).
 ///
 /// Two homes (ADR-0050 D3): the authored `annotations.apiw` overlay carries only
-/// `{Llm, Manual}`; the derived `resolved.json` carries the full ladder after the
+/// `{Llm, Manual}`; the derived `resolved.kdl` carries the full ladder after the
 /// precedence audit. As a *method-level* tag (`MethodAnnotation::source`) the
 /// variant is the coarsest producing tier; the `convention:<rule>` rule payload
 /// rides per fact-slot on [`SlotProvenance::rules`], not on this enum, so the one

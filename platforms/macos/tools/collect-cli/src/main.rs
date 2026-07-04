@@ -35,7 +35,7 @@ struct Cli {
     only: Vec<String>,
 
     /// `api/` root: the extracted IR is written per family to
-    /// `<output-dir>/<Framework>/extracted.json` (ADR-0046 spec triad).
+    /// `<output-dir>/<Framework>/extracted.kdl` (ADR-0046 spec triad).
     #[arg(long, default_value = "platforms/macos/api")]
     output_dir: PathBuf,
 
@@ -181,7 +181,7 @@ fn main() -> Result<()> {
                     }
                 }
 
-                write_framework_json(&ir, &cli.output_dir)?;
+                write_framework_kdl(&ir, &cli.output_dir)?;
                 success_count += 1;
             }
             Err(e) => {
@@ -202,7 +202,7 @@ fn main() -> Result<()> {
 
         match extract_swift_framework(swift_module, &sdk.path, &sdk.version) {
             Ok(ir) => {
-                write_framework_json(&ir, &cli.output_dir)?;
+                write_framework_kdl(&ir, &cli.output_dir)?;
                 success_count += 1;
             }
             Err(e) => {
@@ -229,15 +229,15 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn write_framework_json(
+fn write_framework_kdl(
     ir: &apianyware_types::ir::Framework,
     output_dir: &std::path::Path,
 ) -> Result<()> {
-    // Per-family spec triad (ADR-0046): `<api_root>/<Framework>/extracted.json`.
+    // Per-family spec triad (ADR-0046): `<api_root>/<Framework>/extracted.kdl`.
     let family_dir = output_dir.join(&ir.name);
     fs::create_dir_all(&family_dir)
         .with_context(|| format!("failed to create {}", family_dir.display()))?;
-    let output_path = family_dir.join("extracted.json");
+    let output_path = family_dir.join("extracted.kdl");
     apianyware_spec_format::machine::write_framework(ir, &output_path)
         .with_context(|| format!("failed to write {}", output_path.display()))?;
     tracing::info!(

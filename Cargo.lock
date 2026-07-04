@@ -226,6 +226,7 @@ name = "apianyware-datalog"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "apianyware-spec-format",
  "apianyware-types",
  "ascent",
  "serde",
@@ -250,8 +251,8 @@ name = "apianyware-emit-chez"
 version = "0.1.0"
 dependencies = [
  "apianyware-emit",
+ "apianyware-spec-format",
  "apianyware-types",
- "serde_json",
  "tempfile",
 ]
 
@@ -260,8 +261,8 @@ name = "apianyware-emit-gerbil"
 version = "0.1.0"
 dependencies = [
  "apianyware-emit",
+ "apianyware-spec-format",
  "apianyware-types",
- "serde_json",
  "tempfile",
 ]
 
@@ -270,6 +271,7 @@ name = "apianyware-emit-racket"
 version = "0.1.0"
 dependencies = [
  "apianyware-emit",
+ "apianyware-spec-format",
  "apianyware-types",
  "serde_json",
  "tempfile",
@@ -280,8 +282,8 @@ name = "apianyware-emit-sbcl"
 version = "0.1.0"
 dependencies = [
  "apianyware-emit",
+ "apianyware-spec-format",
  "apianyware-types",
- "serde_json",
  "tempfile",
 ]
 
@@ -334,9 +336,9 @@ dependencies = [
  "apianyware-emit-gerbil",
  "apianyware-emit-racket",
  "apianyware-emit-sbcl",
+ "apianyware-spec-format",
  "apianyware-types",
  "clap",
- "serde_json",
  "tempfile",
  "tracing",
  "tracing-subscriber",

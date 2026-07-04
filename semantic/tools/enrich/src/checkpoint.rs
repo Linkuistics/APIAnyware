@@ -290,10 +290,10 @@ fn filter_results_for_framework(
 
 /// Write a `resolved` framework checkpoint to `{output_dir}/{framework.name}.json`.
 ///
-/// The enrichment pass (pass 2) produces the final merged graph — `resolved.json`
+/// The enrichment pass (pass 2) produces the final merged graph — `resolved.kdl`
 /// in the spec triad (ADR-0046; ≈ the retired `enriched` checkpoint). This disk
 /// writer remains available for ad-hoc dumps; the live pipeline writes the
-/// per-family `resolved.json` from `apianyware-analyze`.
+/// per-family `resolved.kdl` from `apianyware-analyze`.
 pub fn write_resolved_checkpoint(framework: &Framework, output_dir: &Path) -> Result<()> {
     let path = output_dir.join(format!("{}.json", framework.name));
     let json = serde_json::to_string_pretty(framework)
@@ -308,7 +308,7 @@ pub fn write_resolved_checkpoint(framework: &Framework, output_dir: &Path) -> Re
 }
 
 /// Build the `resolved` framework from annotated IR + Datalog results — the final
-/// merged graph and generator input (the spec triad's `resolved.json`).
+/// merged graph and generator input (the spec triad's `resolved.kdl`).
 ///
 /// Clones the annotated framework and populates enrichment-phase fields:
 /// - `checkpoint` → `"resolved"`

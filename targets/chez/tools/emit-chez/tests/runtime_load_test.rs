@@ -48,20 +48,19 @@ fn target_root() -> PathBuf {
         .join("macos")
 }
 
-/// Load Foundation from whichever per-family IR is present — the `resolved.json`
-/// if available, else `extracted.json` (the trampoline classification only needs
+/// Load Foundation from whichever per-family IR is present — the `resolved.kdl`
+/// if available, else `extracted.kdl` (the trampoline classification only needs
 /// extraction-level facts: `objc_exposed`, `swift_fn`, `methods`). Both live in
 /// the spec triad under `platforms/macos/api/Foundation/` (ADR-0046).
 fn load_foundation() -> Option<Framework> {
     let candidates = [
-        project_root().join("platforms/macos/api/Foundation/resolved.json"),
-        project_root().join("platforms/macos/api/Foundation/extracted.json"),
+        project_root().join("platforms/macos/api/Foundation/resolved.kdl"),
+        project_root().join("platforms/macos/api/Foundation/extracted.kdl"),
     ];
+    // The machine IR is KDL (ADR-0046 §5) — decode via the JiK codec, not serde_json.
     for path in candidates {
-        if let Ok(json) = std::fs::read_to_string(&path) {
-            if let Ok(fw) = serde_json::from_str::<Framework>(&json) {
-                return Some(fw);
-            }
+        if let Ok(fw) = apianyware_spec_format::machine::read_framework(&path) {
+            return Some(fw);
         }
     }
     None

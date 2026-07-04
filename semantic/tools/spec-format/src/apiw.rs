@@ -29,7 +29,7 @@
 //!
 //! Enum string values (`copy`, `synchronous`, `error_out_param`, `llm`, `high`,
 //! …) are the *serde* `snake_case` vocabulary — the single source of truth — so
-//! a value's `.apiw` spelling always matches its `extracted.json`/`resolved.json`
+//! a value's `.apiw` spelling always matches its `extracted.kdl`/`resolved.kdl`
 //! spelling. The writer force-quotes any string that spells a KDL keyword
 //! (`null`/`true`/`false`/`nan`/`inf`/`-inf`), working around the `kdl` crate's
 //! round-trip-safety gap (k17 spike).

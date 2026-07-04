@@ -37,7 +37,7 @@ cd "$WS"
 # (constant) — are Swift-native (objc_exposed: false, no C symbol), so they need
 # generated/createml/ AND the @_cdecl trampolines in libAPIAnywareRacket. Unlike the
 # other racket apps, CreateML is NOT in the base corpus of this worktree (only its
-# annotations.apiw; no resolved.json, zero CreateML trampolines in the dylib). Bring
+# annotations.apiw; no resolved.kdl, zero CreateML trampolines in the dylib). Bring
 # it in TARGETED + ADDITIVE: no existing emit golden covers CreateML, so goldens-as-
 # truth holds (verified k144). Self-heals a clean worktree; keyed on the emitted
 # binding. NB this is a per-framework bring-in, NOT the 153-framework mass regen the

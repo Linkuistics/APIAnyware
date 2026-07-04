@@ -6,14 +6,15 @@
 // `apianyware-spec-format` crate is ONE conforming validator of this contract,
 // not its source of truth (ADR-0046 §3 / running-log F).
 //
-// SCOPE — the authored `.apiw` overlay ONLY. The machine `extracted.json` /
-// `resolved.json` artifacts are JSON (ADR-0046 k17 retreat) and get a JSON
-// Schema in workstream 8 (ws8), which also owns the app-kind / AppSpec /
-// capability-profile / conformance-report schemas and the validation tooling/CI.
+// SCOPE — the authored `.apiw` overlay ONLY. The machine `extracted.kdl` /
+// `resolved.kdl` artifacts are KDL too (ADR-0046 §5) and get a machine KDL-Schema
+// in workstream 8 (ws8) — reusing the generic engine, one schema language — which
+// also owns the app-kind / AppSpec / capability-profile / conformance-report
+// schemas and the validation tooling/CI.
 //
 // VOCABULARY — enum value spellings are the serde `snake_case` tokens shared with
-// the machine JSON (ADR-0046 §4); a value's `.apiw` spelling always matches its
-// `extracted.json` / `resolved.json` spelling. Keep these enum lists in lockstep
+// the machine IR (ADR-0046 §4); a value's `.apiw` spelling always matches its
+// `extracted.kdl` / `resolved.kdl` spelling. Keep these enum lists in lockstep
 // with `apianyware-types::annotation`.
 //
 // `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE

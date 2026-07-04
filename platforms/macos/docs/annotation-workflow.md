@@ -17,26 +17,26 @@ Each framework family has three artifacts under
 
 | Artifact | Produced by | Committed? | Role |
 |---|---|---|---|
-| `extracted.json` | `apianyware-collect` | no (gitignored) | mechanical extraction facts — the Datalog fact base |
+| `extracted.kdl` | `apianyware-collect` | no (gitignored) | mechanical extraction facts — the Datalog fact base |
 | `annotations.apiw` | the LLM side-channel (this doc) | **yes** | the one authored semantic overlay — manual + accepted-LLM facts, KDL |
-| `resolved.json` | `apianyware-analyze` (resolve) | no (gitignored) | the resolved graph — the generator input |
+| `resolved.kdl` | `apianyware-analyze` (resolve) | no (gitignored) | the resolved graph — the generator input |
 
-`extracted.json` and `resolved.json` are regenerable from the SDK + the
+`extracted.kdl` and `resolved.kdl` are regenerable from the SDK + the
 committed overlay, so they are gitignored; **only `annotations.apiw` is
 authored and committed.** It *is* the cache: there is no separate staging store.
 
 ## Pipeline overview
 
-`apianyware-analyze` (the resolve flow) reads a family's `extracted.json`, folds
-in its committed `annotations.apiw`, and writes `resolved.json`. The three passes
+`apianyware-analyze` (the resolve flow) reads a family's `extracted.kdl`, folds
+in its committed `annotations.apiw`, and writes `resolved.kdl`. The three passes
 — `linked` (inheritance/conformance flattening, ownership families), `annotate`
 (merge the overlay + the convention-tier Datalog facts under §28 precedence), and
 `enrich` (annotation-derived relations + verification) — all run **in-process**;
-only `extracted.json` and `resolved.json` touch disk.
+only `extracted.kdl` and `resolved.kdl` touch disk.
 
 ```mermaid
 flowchart LR
-    SDK["macOS SDK headers<br/>+ Swift modules"] -->|"apianyware-collect"| EX["extracted.json"]
+    SDK["macOS SDK headers<br/>+ Swift modules"] -->|"apianyware-collect"| EX["extracted.kdl"]
     OV["annotations.apiw<br/><i>authored overlay (committed)</i>"]
 
     subgraph inproc["apianyware-analyze (resolve) — in-process, no checkpoints"]
@@ -46,7 +46,7 @@ flowchart LR
 
     EX --> L
     OV -.->|"folded in: §28 precedence"| AN
-    EN --> RES["resolved.json"]
+    EN --> RES["resolved.kdl"]
 
     style EX fill:#e3f2fd
     style OV fill:#e8f5e9
@@ -65,7 +65,7 @@ manual  >  accepted-LLM  >  convention  >  extraction  >  unknown
 
 `accepted-LLM` is simply a `source llm` fact in the *committed* overlay (see
 [Git is the accept boundary](#git-is-the-accept-boundary)). The **convention**
-tier is pure Datalog (ADR-0047) recomputed every run from `extracted.json` —
+tier is pure Datalog (ADR-0047) recomputed every run from `extracted.kdl` —
 nothing to cache. The winning *value* is what the generator sees; the audit
 (below) additionally stamps each winner's `source` and records disagreeing losers
 as `superseded-by`, **provenance only** — emit projects the facts, never their
@@ -76,11 +76,11 @@ as `superseded-by`, **provenance only** — emit projects the facts, never their
 | | tokens | home |
 |---|---|---|
 | **authored overlay** | `llm`, `manual` | `annotations.apiw` (committed) |
-| **resolved graph** | `extraction`, `convention:<rule>`, `llm`, `manual`, `unknown` | `resolved.json` `fact_provenance` (derived) |
+| **resolved graph** | `extraction`, `convention:<rule>`, `llm`, `manual`, `unknown` | `resolved.kdl` `fact_provenance` (derived) |
 
 Subagents author `source llm`; `manual` is a human hand-edit. The full ladder
 (with `convention:<rule>` stamps and `superseded-by` losers) exists only in the
-derived `resolved.json`, never in the overlay.
+derived `resolved.kdl`, never in the overlay.
 
 ## When to run
 
@@ -101,7 +101,7 @@ cargo run -p apianyware-collect -- --only Foundation
 cargo run -p apianyware-collect -- --list
 ```
 
-Writes `platforms/macos/api/<Framework>/extracted.json`.
+Writes `platforms/macos/api/<Framework>/extracted.kdl`.
 
 ## Step 2 — Resolve
 
@@ -110,19 +110,19 @@ cargo run -p apianyware-analyze                    # resolve every family
 cargo run -p apianyware-analyze -- --only Foundation
 ```
 
-Writes `platforms/macos/api/<Framework>/resolved.json` — the inheritance- and
+Writes `platforms/macos/api/<Framework>/resolved.kdl` — the inheritance- and
 conformance-flattened, Swift-renamed surface the overlay is authored over, plus
 the per-fact-slot `fact_provenance` carriage the audit populates.
 
 ## Step 3 — Detect staleness
 
 Staleness is computed **live** — set-diffing each committed overlay against the
-current **resolved API surface** (`resolved.json`), with no stored content hash.
-The comparison surface is the *resolved* graph, not raw `extracted.json`: the
+current **resolved API surface** (`resolved.kdl`), with no stored content hash.
+The comparison surface is the *resolved* graph, not raw `extracted.kdl`: the
 overlay is authored over the flattened/renamed surface, so diffing against
-pre-resolve `extracted.json` mis-reports ~⅓ of facts as orphaned (a fact keyed
+pre-resolve `extracted.kdl` mis-reports ~⅓ of facts as orphaned (a fact keyed
 under a subclass for an inherited method; `FileManager` vs `NSFileManager`).
-`resolved.json` is self-contained, so the check is a pure file read — **resolve
+`resolved.kdl` is self-contained, so the check is a pure file read — **resolve
 must be current first**.
 
 ```
@@ -202,7 +202,7 @@ git add -p && git commit                                        # = accept
 ```
 
 `audit` is informational (always exits 0). Per family it reports, from the
-`resolved.json` `fact_provenance`:
+`resolved.kdl` `fact_provenance`:
 
 - **disagreements** — every fact-slot whose winner superseded ≥1 *disagreeing*
   lower tier: the winning `{source, value}` plus each loser. The high-value

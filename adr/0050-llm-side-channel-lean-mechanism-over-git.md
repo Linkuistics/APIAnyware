@@ -27,7 +27,7 @@ surface. Three facts surfaced during the design session reframe the scope:
    KDL in a PR), and *accept* (commit it) are already delivered by git + the human-readable
    format. The overlay **is** the cache.
 2. **The convention tier is pure datalog derivation** (ADR-0047) recomputed every pipeline
-   run from `extracted.json`. There is nothing to cache on that tier — recomputation *is*
+   run from `extracted.kdl`. There is nothing to cache on that tier — recomputation *is*
    regeneration; the only expensive producer is the LLM tier, whose output is the committed
    overlay.
 3. **`annotate` runs once per SDK update** (k26 steer) → *keep the carriage minimal*. A
@@ -53,9 +53,9 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
 
 2. **Two source vocabularies, two homes.** The **authored overlay** (`annotations.apiw`,
    committed) carries only authored tiers — `source ∈ {llm, manual}`. The **resolved graph**
-   (`resolved.json`, derived + gitignored) carries the full ladder — `source ∈ {extraction,
+   (`resolved.kdl`, derived + gitignored) carries the full ladder — `source ∈ {extraction,
    convention:<rule>, llm, manual, unknown}` — after the audit. Per-fact provenance lives in
-   `resolved.json`, **not** the overlay. The `AnnotationSource` enum reconciles to the §4
+   `resolved.kdl`, **not** the overlay. The `AnnotationSource` enum reconciles to the §4
    vocabulary (`Heuristic`→`Convention` with a `<rule>` payload, `HumanReviewed`→`Manual`,
    `Extraction`/`Unknown` added by the children that produce them).
 
@@ -69,22 +69,22 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
 
 4. **Staleness is computed live; regeneration is explicit, in Claude Code.** Staleness =
    set-diffing a family's committed overlay against the current **resolved API surface**
-   (`resolved.json`) — *orphaned* (a fact's `(receiver, selector)` is gone), *new-surface* (a
+   (`resolved.kdl`) — *orphaned* (a fact's `(receiver, selector)` is gone), *new-surface* (a
    current method of *annotatable shape* with no fact), *shape-changed* (a fact's targeted
    `param_index` no longer holds its kind) — with **no stored content hash**
    (artifacts-not-state). The comparison surface is the **resolved** graph, *not* raw
-   `extracted.json`: the overlay is authored over the inheritance-flattened,
+   `extracted.kdl`: the overlay is authored over the inheritance-flattened,
    protocol-conformance-flattened, Swift-renamed surface (the LLM is dispatched over
-   `all_methods`), so a naive diff against pre-resolve `extracted.json` mis-reports ~⅓ of facts
+   `all_methods`), so a naive diff against pre-resolve `extracted.kdl` mis-reports ~⅓ of facts
    as orphaned (inherited methods keyed under a subclass; `FileManager` vs `NSFileManager`).
-   `resolved.json` is self-contained — its `all_methods` already carry the cross-framework
+   `resolved.kdl` is self-contained — its `all_methods` already carry the cross-framework
    closure — so the check stays a pure file read: **no resolve pass and no dependency loading**
-   inside the command, only the requirement that `resolved.json` be current (the natural
+   inside the command, only the requirement that `resolved.kdl` be current (the natural
    post-SDK-bump order: collect → resolve → `annotations stale`). *Annotatable shape* is the
    **structural** predicate — a **block parameter** or an **`NSError **` out-param** — the two
    shapes the LLM reliably annotates; the legacy `delegate`/`observer` **selector-substring**
    signal is excluded (it surfaces accessor getters the LLM declines, ~75% steady-state noise).
-   *(This corrects the design as first written — k46 implementation found "extracted.json" was
+   *(This corrects the design as first written — k46 implementation found "extracted.kdl" was
    the wrong surface; the rest of §4 stands.)* Regeneration dispatches Claude-Code subagents for
    the stale families only; each writes that family's `annotations.apiw` **directly** (the
    `.llm.json` side-channel is gone). The external-provider flow (`config.example.toml`,
@@ -118,12 +118,12 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
   as granular as a git commit (you accept a family's diff, not an individual fact) — acceptable
   for an once-per-SDK-update cadence, and a human can still hand-edit a single fact to `manual`.
 - **The schema tightens** (overlay `source` enum → `{llm, manual}`, dropping the never-used
-  `heuristic`/`human_reviewed` tokens); the machine `resolved.json` JSON Schema for the
+  `heuristic`/`human_reviewed` tokens); the machine `resolved.kdl` KDL-Schema for the
   full ladder + `superseded-by` remains **ws8's** (this ADR only extends the Rust serde).
 - **Decomposition** (skeleton-first; grown lazily, not pre-spawned): `provenance-vocab-k44`
   (reconcile the enum/schema to §4 vocab — foundational, golden-neutral) → `precedence-audit`
   (the resolve-time disagreement audit → per-fact `source` + `superseded-by` in
-  `resolved.json`) → `staleness-regen` (the `annotations stale` subcommand) →
+  `resolved.kdl`) → `staleness-regen` (the `annotations stale` subcommand) →
   `disagreement-report` (the `annotations audit` subcommand) → `orchestration-skill` (rework
   the `analyze` command/skill + subagent prompt + `annotation-workflow.md` over `.apiw`) →
   `retire-tooling` (retire the dead scaffolding; rework `lint-annotations`).
@@ -131,7 +131,7 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
 ## Why this clears the ADR bar
 
 - **Hard to reverse:** the workflow *shape* (git-as-accept-boundary, two-vocab/two-home
-  provenance, audit-in-resolved.json) is load-bearing for every ws5 child and for ws6's
+  provenance, audit-in-resolved.kdl) is load-bearing for every ws5 child and for ws6's
   eventual consumption of provenance; choosing it wrong means rebuilding the data model.
 - **Surprising without context:** the brief's six adjectives read as "build a subsystem"; the
   decision is "build almost nothing new — git already does most of it." A future reader will

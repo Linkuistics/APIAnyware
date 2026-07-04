@@ -256,7 +256,7 @@ fn empty_optional_fields_skipped_in_serialization() {
 #[test]
 fn pattern_instance_roundtrip() {
     // A `bracket` instance bound to a real begin/end pair, provenance-stamped —
-    // the resolved.json carriage shape (ADR-0048, workstream-3 child 2).
+    // the resolved.kdl carriage shape (ADR-0048, workstream-3 child 2).
     let op = |selector: &str| {
         vec![Participant::Operation {
             framework: Some("Foundation".to_string()),

@@ -55,7 +55,7 @@ fi
 # (constant) — are Swift-native (objc_exposed: false, no C symbol), so they need
 # the gerbil bindings generated/createml/ AND the @_cdecl trampolines in
 # libAPIAnywareGerbil. CreateML is NOT in the gerbil bindings of this worktree by
-# default. The SHARED corpus (platforms/macos/api/CreateML/resolved.json) is
+# default. The SHARED corpus (platforms/macos/api/CreateML/resolved.kdl) is
 # brought in ONCE by the racket sibling (racket-impl-k144) and persists
 # (gitignored) in this worktree, so gerbil only re-runs its PER-TARGET generate +
 # relink — no collect/analyze, no golden move (CreateML is additive; verified
@@ -69,7 +69,7 @@ fi
 # the dylib BEFORE bundling — generate → relink → bundle (the k107 order).
 if [ ! -f "$BINDINGS/createml/functions.ss" ]; then
   echo "== [prereq] bring CreateML into the gerbil bindings (absent) =="
-  if [ ! -f "$WS/platforms/macos/api/CreateML/resolved.json" ]; then
+  if [ ! -f "$WS/platforms/macos/api/CreateML/resolved.kdl" ]; then
     echo "== [prereq] CreateML corpus absent — targeted collect + analyze =="
     cargo run -q -p apianyware-collect  -- --only CreateML
     cargo run -q -p apianyware-analyze  -- --only CreateML

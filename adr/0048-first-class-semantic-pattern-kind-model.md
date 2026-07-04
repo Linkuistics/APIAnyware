@@ -30,7 +30,7 @@ A single **two-level, unified** model:
    framework- *and* target-independent definition — roles + laws — authored once as
    `semantic/pattern-kinds/<kind>.apiw`. A **pattern-instance** binds a kind's roles to a
    concrete framework's participants and is carried in the **platform spec triad**
-   (`platforms/macos/api/<Framework>/resolved.json`), *because an instance is platform
+   (`platforms/macos/api/<Framework>/resolved.kdl`), *because an instance is platform
    knowledge*. This keeps `semantic/` projection-AND-platform-independent (the domain's
    defining rule) and rhymes with ws2's neutral-schema-vs-per-family-annotations split.
 

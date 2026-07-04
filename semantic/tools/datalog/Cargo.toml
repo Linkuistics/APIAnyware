@@ -7,6 +7,7 @@ description = "Shared Datalog base relations, fact loaders, and types for resolv
 
 [dependencies]
 apianyware-types.workspace = true
+apianyware-spec-format.workspace = true
 ascent.workspace = true
 serde.workspace = true
 serde_json.workspace = true

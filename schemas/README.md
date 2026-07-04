@@ -18,8 +18,9 @@ reports. This is the "obvious place for schemas" the success criteria demand
 
 The remaining schemas are authored in workstream 8 (schemas + validation):
 
-- the **JSON Schema** for the machine `extracted.json` / `resolved.json` (the
-  machine IR is JSON, ADR-0046's k17 retreat — only the authored overlay is KDL);
+- the **machine KDL-Schema** for the machine `extracted.kdl` / `resolved.kdl`
+  (the machine IR is KDL — ADR-0046 §5 — validated by reusing the generic
+  KDL-Schema engine, so the whole spec stack is one schema language);
 - schemas for **app-kinds**, common **AppSpecs**, target **capability profiles**,
   and **conformance reports**;
 - the validation **tooling/CI** that runs every schema.

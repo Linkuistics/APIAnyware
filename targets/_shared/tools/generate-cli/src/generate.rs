@@ -50,7 +50,7 @@ pub fn output_dir_for_target(base_output_dir: &Path, info: &TargetInfo) -> PathB
 
 /// Generate bindings for the specified targets (or all if none specified).
 ///
-/// For each target, generates every family from its `resolved.json`. Reads the
+/// For each target, generates every family from its `resolved.kdl`. Reads the
 /// resolved IR per family under `input_dir` (the `api/` root), writes to
 /// `{base_output_dir}/{target}/bindings/macos/{generated_subdir}/`.
 pub fn run_generation(
@@ -61,11 +61,11 @@ pub fn run_generation(
 ) -> Result<Vec<GenerationSummary>> {
     // Load every family's resolved IR (the generator input).
     let frameworks =
-        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
 
     if frameworks.is_empty() {
         bail!(
-            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
             input_dir.display()
         );
     }
@@ -210,10 +210,10 @@ pub fn run_racket_native_dispatch(input_dir: &Path, swift_out: &Path) -> Result<
     };
 
     let frameworks =
-        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
     if frameworks.is_empty() {
         bail!(
-            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
             input_dir.display()
         );
     }
@@ -249,10 +249,10 @@ pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
     use apianyware_emit_racket::trampoline::{collect_trampolines, generate_trampolines_swift};
 
     let frameworks =
-        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
     if frameworks.is_empty() {
         bail!(
-            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
             input_dir.display()
         );
     }
@@ -299,10 +299,10 @@ pub fn run_chez_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
     use apianyware_emit_chez::trampoline::{collect_trampolines, generate_trampolines_swift};
 
     let frameworks =
-        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
     if frameworks.is_empty() {
         bail!(
-            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
             input_dir.display()
         );
     }
@@ -356,10 +356,10 @@ pub fn run_gerbil_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
     use apianyware_emit_gerbil::trampoline::{collect_trampolines, generate_trampolines_swift};
 
     let frameworks =
-        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
     if frameworks.is_empty() {
         bail!(
-            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
             input_dir.display()
         );
     }
@@ -409,10 +409,10 @@ pub fn run_sbcl_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize>
     use apianyware_emit_sbcl::trampoline::{collect_trampolines, generate_trampolines_swift};
 
     let frameworks =
-        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.json", None)?;
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
     if frameworks.is_empty() {
         bail!(
-            "no resolved.json found under {} (run `apianyware-analyze` first)",
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
             input_dir.display()
         );
     }
@@ -471,13 +471,13 @@ mod tests {
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../platforms/macos/api");
         let frameworks = match apianyware_datalog::loading::load_all_family_artifacts(
             &api_root,
-            "resolved.json",
+            "resolved.kdl",
             None,
         ) {
             Ok(fws) if !fws.is_empty() => fws,
             _ => {
                 eprintln!(
-                    "SKIP sbcl_residual_reproduces_the_6d_invariant: no resolved.json under {} \
+                    "SKIP sbcl_residual_reproduces_the_6d_invariant: no resolved.kdl under {} \
                          (gitignored — run the regeneration pipeline to exercise this gate)",
                     api_root.display()
                 );
@@ -500,12 +500,12 @@ mod tests {
     fn sbcl_run_trampolines_reproduces_6d_end_to_end() {
         let api_root =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../platforms/macos/api");
-        if apianyware_datalog::loading::load_all_family_artifacts(&api_root, "resolved.json", None)
+        if apianyware_datalog::loading::load_all_family_artifacts(&api_root, "resolved.kdl", None)
             .map(|f| f.is_empty())
             .unwrap_or(true)
         {
             eprintln!(
-                "SKIP sbcl_run_trampolines_reproduces_6d_end_to_end: no resolved.json under {} \
+                "SKIP sbcl_run_trampolines_reproduces_6d_end_to_end: no resolved.kdl under {} \
                  (gitignored — run the regeneration pipeline to exercise this gate)",
                 api_root.display()
             );
@@ -578,13 +578,15 @@ mod tests {
         }
     }
 
-    /// Write a family's `resolved.json` into the per-family spec layout the
-    /// generator reads: `<api_root>/<Framework>/resolved.json` (ADR-0046).
+    /// Write a family's `resolved.kdl` into the per-family spec layout the
+    /// generator reads: `<api_root>/<Framework>/resolved.kdl` (ADR-0046).
     fn write_test_framework(api_root: &Path, fw: &Framework) {
         let family_dir = api_root.join(&fw.name);
         std::fs::create_dir_all(&family_dir).unwrap();
-        let json = serde_json::to_string_pretty(fw).unwrap();
-        std::fs::write(family_dir.join("resolved.json"), json).unwrap();
+        // Write through the machine codec so the on-disk encoding matches what the
+        // generator reads back (KDL via the JiK codec, ADR-0046 §5) — not raw JSON.
+        apianyware_spec_format::machine::write_framework(fw, &family_dir.join("resolved.kdl"))
+            .unwrap();
     }
 
     #[test]
@@ -702,7 +704,7 @@ mod tests {
 
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("no resolved.json"));
+        assert!(err.contains("no resolved.kdl"));
     }
 
     // -----------------------------------------------------------------------

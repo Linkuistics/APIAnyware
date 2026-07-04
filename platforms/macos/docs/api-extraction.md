@@ -2,17 +2,18 @@
 
 A map over the authoritative co-located references, not a re-author. Each macOS API
 family under [`api/`](../api/) is described by a three-stage **spec triad**
-(ADR-0046, as amended by the k17 machine-KDL no-go); this page sketches how the
-triad is produced and points at the authoritative docs for each stage.
+(ADR-0046); this page sketches how the triad is produced and points at the
+authoritative docs for each stage.
 
 | File | Producer | Tracked? | Role |
 | --- | --- | --- | --- |
-| `extracted.json` | `apianyware-collect` | gitignored | mechanical extraction facts (the datalog fact base) — JSON |
+| `extracted.kdl` | `apianyware-collect` | gitignored | mechanical extraction facts (the datalog fact base) — KDL |
 | `annotations.apiw` | manual + accepted-LLM | **committed** | the one authored semantic overlay — KDL (`.apiw`) |
-| `resolved.json` | `apianyware-analyze` | gitignored | the deterministic merged graph; the generator input — JSON |
+| `resolved.kdl` | `apianyware-analyze` | gitignored | the deterministic merged graph; the generator input — KDL |
 
-The authoritative reference for the three files — what each carries, why the
-machine artifacts are JSON while the overlay is KDL, and which are gitignored — is
+The authoritative reference for the three files — what each carries, how the
+machine artifacts (KDL via a fast non-preserving codec) and the authored overlay
+(KDL via the format-preserving `kdl` crate) differ, and which are gitignored — is
 [`api/README.md`](../api/README.md). Read it first; this page only frames the
 pipeline around it.
 
@@ -20,8 +21,8 @@ pipeline around it.
 
 ```mermaid
 flowchart LR
-  SDK["macOS SDK headers<br/>+ Swift modules"] -->|"apianyware-collect"| E["api/&lt;F&gt;/extracted.json"]
-  E -->|"apianyware-analyze<br/><i>(linked → annotate-merge → enrich)</i>"| R["api/&lt;F&gt;/resolved.json"]
+  SDK["macOS SDK headers<br/>+ Swift modules"] -->|"apianyware-collect"| E["api/&lt;F&gt;/extracted.kdl"]
+  E -->|"apianyware-analyze<br/><i>(linked → annotate-merge → enrich)</i>"| R["api/&lt;F&gt;/resolved.kdl"]
   O["api/&lt;F&gt;/annotations.apiw<br/><i>authored overlay</i>"] -.->|"folded in by §28 precedence"| R
   R -->|"apianyware-generate"| B["targets/&lt;t&gt;/ bindings"]
 
@@ -36,7 +37,7 @@ former `collection/ir/` + `analysis/ir/` are retired — the intermediate stages
 in-process, not on disk; `pipeline-cutover-k20`):
 
 1. **collect** — `apianyware-collect` extracts mechanical facts from the SDK
-   headers and Swift modules into `extracted.json` (the datalog fact base). The
+   headers and Swift modules into `extracted.kdl` (the datalog fact base). The
    extraction subtleties — non-UTF-8 `CXString` panics, `API_UNAVAILABLE(macos)`
    drops, the Swift-overlay-name vs. ObjC-runtime-name unification, the
    synthetic-framework pattern for headers outside the `.framework` tree — are
@@ -44,10 +45,10 @@ in-process, not on disk; `pipeline-cutover-k20`):
 2. **analyze** — `apianyware-analyze` runs the in-process passes (`linked` datalog
    cross-reference → annotate-merge → enrich), **folding in** the authored
    `annotations.apiw` overlay by the §28 precedence (`manual > accepted-LLM >
-   convention > extraction`), and writes `resolved.json`. The convention tier is
+   convention > extraction`), and writes `resolved.kdl`. The convention tier is
    now `ascent` datalog rules (ADR-0047), not the retired imperative
    `heuristics.rs`.
-3. **generate** — `apianyware-generate` consumes `resolved.json` to emit each
+3. **generate** — `apianyware-generate` consumes `resolved.kdl` to emit each
    target's bindings (ws6 / `targets/`).
 
 When to run each stage — first-time setup, an SDK update, adding a framework — is
@@ -56,14 +57,15 @@ the LLM side-channel that authors the overlay (see below).
 
 ## The authored overlay vs. the machine artifacts
 
-Only `annotations.apiw` is authored and committed; `extracted.json` and
-`resolved.json` are **regenerable** from the SDK + the overlay and so are
+Only `annotations.apiw` is authored and committed; `extracted.kdl` and
+`resolved.kdl` are **regenerable** from the SDK + the overlay and so are
 gitignored. The overlay is the one place human and accepted-LLM semantic facts
 enter — parameter ownership, block-invocation style, threading constraints, error
-patterns, and the pattern-instances ws3 carries. The format is KDL (`.apiw`); the
-machine artifacts reverted to JSON after the k17 spike found the production-grade
-KDL-2.0 library ~80–100× slower to parse than `serde_json` on the real multi-MB IR
-(ADR-0046 §5's JSON retreat). Full detail: [`api/README.md`](../api/README.md) and
+patterns, and the pattern-instances ws3 carries. Everything is KDL: the overlay
+via the format-preserving `kdl` crate (`.apiw`), the machine artifacts via a fast
+non-preserving JiK codec (~1.2–3.2× `serde_json`; the `kdl` document model that
+serves the overlay would be ~84× on the multi-MB IR, so the machine loop does not
+use it — ADR-0046 §5). Full detail: [`api/README.md`](../api/README.md) and
 [ADR-0046](../../../adr/0046-spec-interchange-format-kdl-everywhere.md).
 
 ## The LLM side-channel that authors the overlay
