@@ -75,7 +75,7 @@ which you *produce* — and treat the ones you produce as deliverables, not note
 | `semantic/docs/` (`analysis.md`, `enrich-rules.md`, `api-pattern-catalog.md`) + `platforms/macos/docs/` (`collection.md`, `annotation-workflow.md`) | how `collect → analyse → generate` feeds your emitter |
 | `targets/_shared/docs/` (`emitter-contract.md`, `type-mapping.md`) | the contract your `TargetEmitter` must satisfy |
 | `apps/macos/docs/_index.md` + per-app `apps/macos/<app>/docs/spec.md` | the language-agnostic sample-app portfolio you must implement and VM-verify |
-| `semantic/docs/testing/` | the TestAnyware VM-verification methodology every app is held to (parked here pending workstream 9) |
+| `testing/` | the multi-layer test model (`test-model.md`) + the TestAnyware VM-verification methodology (`testanyware-workflow.md`) every app is held to |
 | ADR-0010, ADR-0011 | the north star (native library *is* the binding) and hermetic isolation — why you build standalone |
 | ADR-0004, ADR-0005 | one binding style per target; maximally idiomatic, not a portable subset |
 | ADR-0024, ADR-0045 | docs co-locate with their subject; the central `adr/`/`prd/` carve-out |

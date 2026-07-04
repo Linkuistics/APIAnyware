@@ -21,7 +21,7 @@ top-level doc home, consistent with the repo's `adr/`, `prd/`, `process/`, and `
   edit-build-test-inspect-patch loop, and why validity is not behaviour. Start here.
 - **`testanyware-workflow.md`** — the **TestAnyware GUI-testing methodology**: the operational
   how-to for driving a GUI app in a live VM (the runbook behind test-model layers 8–9).
-  *Promoted here from `semantic/docs/testing/` by `promote-testanyware-docs-k158`.*
+  *Promoted here by `promote-testanyware-docs-k158`.*
 - **`strategies/`** — per-scenario testing strategies (e.g. modal-overlay apps).
   *Promoted here by `promote-testanyware-docs-k158`.*
 

@@ -71,8 +71,8 @@ seam.**
    `testing/test-model.md` answers *"does the binding behave?"*. Doc-only (no `tools/`),
    consistent with the repo's other non-domain top-level dirs (`adr/`, `prd/`, `process/`),
    leaving the five source-material domains untouched and satisfying §45.13. It also homes the
-   parked TestAnyware methodology docs (`semantic/docs/testing/`, promoted by
-   `promote-testanyware-docs-k158`). Rejected: `schemas/docs` adjacency (overloads the schema
+   TestAnyware GUI-testing methodology docs (promoted by `promote-testanyware-docs-k158`).
+   Rejected: `schemas/docs` adjacency (overloads the schema
    domain with behavioural content); co-located + thin index (no clean home for the parked
    docs; weak §45.13).
 

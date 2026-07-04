@@ -813,8 +813,7 @@ local `docs/`, and the root `README.md` is a map only (§11). `README.md` and
 **Co-located docs / docs-with-subject** (the §10 placement rule):
 - semantic vocabulary → `semantic/docs/` (the analysis/enrich pipeline docs
   `analysis.md`, `enrich-rules.md`, `api-pattern-catalog.md`,
-  `memory-architecture.md`; cross-cutting design specs under `semantic/docs/design/`;
-  TestAnyware methodology parked at `semantic/docs/testing/` pending workstream 9).
+  `memory-architecture.md`; cross-cutting design specs under `semantic/docs/design/`).
 - platform truth → `platforms/<platform>/docs/` (`collection.md`,
   `annotation-workflow.md`, `codesigning-identity.md`).
 - shared target machinery → `targets/_shared/docs/` (the new-target guide
@@ -831,6 +830,8 @@ local `docs/`, and the root `README.md` is a map only (§11). `README.md` and
   `apps/<platform>/docs/`. (Pre-AppSpec `test-strategy.md` checklists retired,
   `apps-layout-finalize-k84`.)
 - schema docs → `schemas/docs/`.
+- test model + methodology → `testing/` (the multi-layer `test-model.md`, the
+  `testanyware-workflow.md` GUI-testing runbook, and `strategies/`).
 _Avoid_: a "main tier" / single top-level `docs/` (dissolved by the
 `structural-refactoring` grove); treating `docs/` as a place at all.
 

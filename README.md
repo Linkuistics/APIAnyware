@@ -81,7 +81,7 @@ cargo fmt --all && cargo clippy --workspace
 Per-target native adapters (Swift dylibs / native cores) build from each target
 unit; see that target's `docs/reference.md`. Every sample app is verified
 visually in a macOS VM via TestAnyware — **never run GUI apps from the host CLI**
-— per [`semantic/docs/testing/general.md`](semantic/docs/testing/general.md).
+— per [`testing/testanyware-workflow.md`](testing/testanyware-workflow.md).
 
 ## Documentation
 

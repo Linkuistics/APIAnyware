@@ -14,4 +14,4 @@ complex.
 
 ## All GUI testing uses TestAnyware
 
-Never run apps directly. See `{{PROJECT}}/semantic/docs/testing/general.md` for workflow.
+Never run apps directly. See `{{PROJECT}}/testing/testanyware-workflow.md` for workflow.
