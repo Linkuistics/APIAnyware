@@ -23,7 +23,7 @@ see ADR-0016).
 ## Consequences
 
 - **The chez emitter does not change** for dispatch/marshalling — chez was
-  already largely ADR-0010-compliant; the grove's real work is the ADR-0011
+  already largely ADR-0010-compliant; the real work is the ADR-0011
   de-Common and the ADR-0016 threading deepening, not an emitter rewrite.
 - **libffi-generic is a conceptual escape hatch only** (for any signature the
   emitter cannot type statically; variadics are already filtered). Measured ~3×

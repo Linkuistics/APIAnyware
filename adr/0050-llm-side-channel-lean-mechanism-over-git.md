@@ -10,14 +10,15 @@ external paid API.
 
 ## Context
 
-Workstream 5's mandate (root brief decomposition #5) is to make the per-family
+The mandate for the annotation side-channel is to make the per-family
 `annotations.apiw` overlay *cached / regenerable / diffable / reviewable / provenance-tracked
-/ confidence-scored*, and to realize the §4 fact-precedence / disagreement audit that ws2
-(k26) and ws3 (D6) deferred here. Read naively, those six adjectives suggest a new subsystem:
+/ confidence-scored*, and to realize the §4 fact-precedence / disagreement audit that the
+spec-format and semantic models deferred here. Read naively, those six adjectives suggest a
+new subsystem:
 a staging area, a propose→accept state machine, a content-hash cache, a bespoke diff/review
 surface. Three facts surfaced during the design session reframe the scope:
 
-1. **The overlay is already a git-committed `.apiw` text file.** ws2's `pipeline-cutover-k20`
+1. **The overlay is already a git-committed `.apiw` text file.** The spec-format cutover
    reshaped the flat `_llm-annotations/*.llm.json` staging side-channel into the committed
    per-family `annotations.apiw` overlay. So *diffable* (`git diff`), *reviewable* (read the
    KDL in a PR), and *accept* (commit it) are already delivered by git + the human-readable
@@ -26,7 +27,7 @@ surface. Three facts surfaced during the design session reframe the scope:
    run from `extracted.kdl`. There is nothing to cache on that tier — recomputation *is*
    regeneration; the only expensive producer is the LLM tier, whose output is the committed
    overlay.
-3. **`annotate` runs once per SDK update** (k26 steer) → *keep the carriage minimal*. A
+3. **`annotate` runs once per SDK update** → *keep the carriage minimal*. A
    heavyweight staging/cache/state-machine subsystem is over-engineering for an
    once-per-update task whose review surface is already a `git diff`.
 
@@ -39,7 +40,7 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
 
 ## Decision
 
-**ws5 is a lean mechanism over git + the existing pipeline, not a bespoke staging subsystem.**
+**The side-channel is a lean mechanism over git + the existing pipeline, not a bespoke staging subsystem.**
 
 1. **Git is the propose → review → accept boundary.** A freshly-dispatched subagent writes
    `source llm` facts into the working tree; the human reviews the `git diff` and commits
@@ -80,8 +81,7 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
    **structural** predicate — a **block parameter** or an **`NSError **` out-param** — the two
    shapes the LLM reliably annotates; the legacy `delegate`/`observer` **selector-substring**
    signal is excluded (it surfaces accessor getters the LLM declines, ~75% steady-state noise).
-   *(This corrects the design as first written — k46 implementation found "extracted.kdl" was
-   the wrong surface; the rest of §4 stands.)* Regeneration dispatches Claude-Code subagents for
+   Regeneration dispatches Claude-Code subagents for
    the stale families only; each writes that family's `annotations.apiw` **directly** (the
    `.llm.json` side-channel is gone). The external-provider flow (`config.example.toml`,
    `llm-annotate.sh`) is dead.
@@ -114,22 +114,16 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
   as granular as a git commit (you accept a family's diff, not an individual fact) — acceptable
   for an once-per-SDK-update cadence, and a human can still hand-edit a single fact to `manual`.
 - **The schema tightens** (overlay `source` enum → `{llm, manual}`, dropping the never-used
-  `heuristic`/`human_reviewed` tokens); the machine `resolved.kdl` KDL-Schema for the
-  full ladder + `superseded-by` remains **ws8's** (this ADR only extends the Rust serde).
-- **Decomposition** (skeleton-first; grown lazily, not pre-spawned): `provenance-vocab-k44`
-  (reconcile the enum/schema to §4 vocab — foundational, golden-neutral) → `precedence-audit`
-  (the resolve-time disagreement audit → per-fact `source` + `superseded-by` in
-  `resolved.kdl`) → `staleness-regen` (the `annotations stale` subcommand) →
-  `disagreement-report` (the `annotations audit` subcommand) → `orchestration-skill` (rework
-  the `analyze` command/skill + subagent prompt + `annotation-workflow.md` over `.apiw`) →
-  `retire-tooling` (retire the dead scaffolding; rework `lint-annotations`).
+  `heuristic`/`human_reviewed` tokens); this decision extends only the Rust serde. The machine
+  `resolved.kdl` — the full ladder + `superseded-by` — is covered by the open `machine-ir`
+  KDL Schema in `schemas/`, validated by the same KDL-Schema engine (ADR-0046 §5).
 
 ## Why this clears the ADR bar
 
 - **Hard to reverse:** the workflow *shape* (git-as-accept-boundary, two-vocab/two-home
-  provenance, audit-in-resolved.kdl) is load-bearing for every ws5 child and for ws6's
-  eventual consumption of provenance; choosing it wrong means rebuilding the data model.
-- **Surprising without context:** the brief's six adjectives read as "build a subsystem"; the
+  provenance, audit-in-resolved.kdl) is load-bearing for the whole side-channel and for the
+  target model's consumption of provenance; choosing it wrong means rebuilding the data model.
+- **Surprising without context:** the mandate's six adjectives read as "build a subsystem"; the
   decision is "build almost nothing new — git already does most of it." A future reader will
   ask why there is no staging area.
 - **A real trade-off:** a staging/state-machine subsystem (per-fact accept granularity,

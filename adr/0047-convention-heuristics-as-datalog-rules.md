@@ -38,8 +38,8 @@ inference are already datalog).
   attribution at no extra cost.
 - **One inference style:** conventions and resolution unify under `ascent`, removing the
   imperative/declarative split in the analysis pipeline.
-- **Cost:** converting 1,236 lines of classifiers to rules is a substantial migration — its own
-  child work leaf, sequenced after (or parallel to) the format cutover, with goldens-as-truth
+- **Cost:** converting 1,236 lines of classifiers to rules is a substantial migration —
+  sequenced after the format cutover, with goldens-as-truth
   guarding equivalence (the rule set must reproduce the current classifications before extending).
 - **Why this clears the ADR bar:** hard-to-reverse (rewrites the heuristics layer), surprising
   (datalog where one expects classifier functions), a real trade-off (compile-time legibility +

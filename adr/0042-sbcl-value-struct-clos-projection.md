@@ -11,9 +11,9 @@ constructors that **wrap the produced box into an instance**. The class is **not
 `objc-class` metaclass (ADR-0034) — a value struct has no ObjC `Class`, so none of its MOP
 hooks (alloc/init, foreign ivar offsets, subclass synthesis) apply.
 
-This ADR records the realization of leaf `value-struct-residual-wiring-k37`, the
-object-model decision deferred when leaf `method-init-residual-wiring-k15` (045) wired the
-**class-owner** half. It completes the §6d Swift-native residual's value-owner half on the
+This ADR records the value-struct residual wiring — the
+object-model decision deferred when the **class-owner** half was wired. It completes
+the §6d Swift-native residual's value-owner half on the
 Lisp side; the trampoline classification + the `@_cdecl` Swift side were already done by
 045 (the value-receiver `emit_method_tramp` branches: unbox via `awSbclUnbox`, mutating
 write-back) and 050 (`AwSbclValueBox` / `awSbclBox` / `aw_sbcl_box_free`).
@@ -106,9 +106,9 @@ no class tripped it — manifest once value structs were emitted).
   breaking the object model. The constructor must wrap.
 - **Routing `make-instance 'ns:<struct>` through the trampoline (a value alloc/init).**
   Rejected — `make-instance` is left as the standard CLOS make (the internal `:ptr` wrap);
-  the named `ns:make-<struct>` constructor is the surface, matching 045's class-owner
+  the named `ns:make-<struct>` constructor is the surface, matching the class-owner
   choice and avoiding a metaclass.
-- **Collision-rename the arity-clashing selector.** Rejected for this leaf — renaming
+- **Collision-rename the arity-clashing selector.** Rejected here — renaming
   diverges the shared `ns:` surface from the §6d naming and the other targets; dropping the
   rare conflicting `defmethod` (with a `WARN`) is the lower-risk, scoped choice.
 
@@ -116,14 +116,14 @@ no class tripped it — manifest once value structs were emitted).
 
 - **Emitter** (`emit-sbcl`): a new `emit_struct` module (`generate_struct_file`); a
   `struct_residual_methods`/`struct_residual_inits` pair (the `owner_is_class=false` dual of
-  045's class collectors); `collect_generics` / `generic_arity_conflicts` fold in struct
+  the class collectors); `collect_generics` / `generic_arity_conflicts` fold in struct
   residual generics; `coerce_init_result` wraps value owners; `emit_framework` writes
   `structs.lisp` + writes `generics.lisp` even for a struct-only (class-less) framework; a
   `generic_arity_index` + `arity_consistent` filter on both residual paths.
 - **Runtime** (`value-struct.lisp`): the `ns:value-struct` root + box finalizer, loaded
   after `swift-trampoline.lisp`; the app binding loader gains a residual-gated
   `structs.lisp` step.
-- **The §6d count is unchanged** — this leaf binds, it does not reclassify; the value-owner
+- **The §6d count is unchanged** — this decision binds, it does not reclassify; the value-owner
   trampolines were always counted, only their Lisp emission was unwired.
 - **Verified end-to-end** — the runtime integration smoke now proves the value-struct chain
   (a `Pair` value struct: `make-instance`-wrapped constructor → `(aw-ptr self)` receiver →

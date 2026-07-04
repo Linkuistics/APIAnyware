@@ -26,22 +26,21 @@ targets as the optimised case (rather than as a narrower design) is the load-
 bearing reframing of this ADR: it means covering Swift-native APIs is *filling in
 the elided residual*, not bolting a second mechanism onto an ObjC binding.
 
-This ADR is the user-confirmed charter recorded durably (see the project memory
-`project-complete-api-model-and-swift-coverage`, incorporated into this grove's
-inbox 2026-06-15). It **refines ADR-0010** with the complete-API framing and the
-elision optimisation, and is governed by **ADR-0011** (each target's native
-library is hermetically isolated — the trampoline layer is per-target, not a
-shared substrate). It stays deliberately at the **model level**: the IR-boundary
-changes that make the direct-vs-trampoline split explicit, and the concrete
-structure of the trampoline library, are separate decisions taken in their own
-ADRs/specs by later leaves of this grove (the IR boundary in 030, the racket
-trampoline in 040). This ADR must not pre-empt them.
+This ADR records the complete-API charter durably (see the project memory
+`project-complete-api-model-and-swift-coverage`). It **refines ADR-0010** with the
+complete-API framing and the elision optimisation, and is governed by **ADR-0011**
+(each target's native library is hermetically isolated — the trampoline layer is
+per-target, not a shared substrate). It stays deliberately at the **model level**:
+the IR-boundary changes that make the direct-vs-trampoline split explicit, and the
+concrete structure of the trampoline library, are separate decisions in their own
+ADRs (the IR objc-exposure boundary in ADR-0026, the racket trampoline structure in
+ADR-0027).
 
 ## Why this is recorded now (the accidental ceiling)
 
-The model is being enshrined *because the shared `collect → analyse` pipeline was
+The model is enshrined *because the shared `collect → analyse` pipeline was
 silently enforcing an ObjC-only ceiling that the design never intended*. Traced
-evidence (file:line as of this grove's 010-plan, 2026-06-15):
+evidence (file:line, 2026-06-15):
 
 - **The Swift-native delta is dropped at extraction.**
   `non_c_linkable_skip_reason()`
@@ -71,9 +70,9 @@ evidence (file:line as of this grove's 010-plan, 2026-06-15):
   (value types, generics, associated-type protocols, async). The
   direct-vs-trampoline boundary is therefore *accidental* today, not chosen.
 
-⇒ Recording the model makes the boundary **explicit and intended**: this grove is
-both **additive** (recover the dropped `s:` functions/constants, cover the
-un-walked kinds to the bindable extent, build the trampoline library) and
+⇒ Recording the model makes the boundary **explicit and intended**, and the
+recovery is both **additive** (recover the dropped `s:` functions/constants, cover
+the un-walked kinds to the bindable extent, build the trampoline library) and
 **corrective** (make `source`/reachability load-bearing so direct-vs-trampoline
 is a decided property, not an emergent accident).
 
@@ -105,17 +104,16 @@ is a decided property, not an emergent accident).
   binding model*, *Trampoline*, *Trampoline elision* glossary entries, already
   landed) and the README design-goal section.
 - **`source`/reachability becomes load-bearing.** Making the direct-vs-trampoline
-  split a decided property is the corrective half of the grove. The *mechanism*
+  split a decided property is the corrective half of the model. The *mechanism*
   (how the IR carries reachability, how the dropped `s:` symbols are recovered,
-  the pointer-constant rule) is decided in 030, not here.
+  the pointer-constant rule) is decided in ADR-0026, not here.
 - **A per-target trampoline library is established.** Each target's native (Swift)
   library gains C-ABI trampolines re-exporting its Swift-native residual; the
   emitter binds them. Per ADR-0011 this layer is per-target and shares no
-  substrate. The concrete structure is decided per target (racket first, in 040).
+  substrate. The concrete structure is decided per target (racket first, in ADR-0027).
 - **The model applies to every target, current and future.** racket/chez/gerbil
-  are re-run and re-verified under it within this grove; `add-sbcl-clos-target`
-  resumes with its paused Swift library reframed as *the trampoline layer of this
-  model* (the dependency this grove unblocks).
+  bind under it, and sbcl's native library is the trampoline layer of this model
+  (ADR-0038).
 - **Refines ADR-0010, governed by ADR-0011, deepens ADR-0005.** The idiomatic
   per-target mapping is delivered through the native library that *is* the
   complete-API binding; isolation keeps each target's trampoline layer its own.

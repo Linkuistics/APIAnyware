@@ -37,7 +37,7 @@ compute) are safe *without* a main-thread bounce.
   main, which works for today's UI sample apps; this ADR fixes the latent crash
   for the first sample app that takes a genuinely background callback.
 
-## Implementation (leaf 030)
+## Implementation
 
 The activation is **not** hand-written `Sactivate_thread`/`Sdestroy_thread`
 bookkeeping in the native trampolines. Chez Scheme's `foreign-callable`

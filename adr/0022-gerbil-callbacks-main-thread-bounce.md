@@ -15,7 +15,7 @@ structurally unavailable on this toolchain.
 `targets/gerbil/docs/research/2026-06-08-gerbil-threading-spike/FINDINGS.md` (the 080 spike,
 spike-gated by 030 decision D4) characterized the biggest chez→gerbil divergence:
 
-- The Homebrew bottle's Gambit (v4.9.7, the toolchain the grove standardized on,
+- The Homebrew bottle's Gambit (v4.9.7, the standardized toolchain,
   070 build note) is **single-VM / single-threaded-VMs / green-thread**,
   `___MAX_PROCESSORS 1`. The processor state is a **process-global**
   (`&___GSTATE->vmstate0…pstate[0]`), **not** thread-local — every OS thread
@@ -64,10 +64,10 @@ invoke.
 
 ## Consequences
 
-- **The native core is deepened, not replaced.** The 050 trampolines were a
+- **The native core is deepened, not replaced.** The early trampolines were a
   main-thread *placeholder* (direct re-entry, safe only because the run loop calls
   on main); this ADR makes off-main entry safe by construction. Implemented in
-  leaf 080/020.
+  the native core.
 - **Lifetime/pool (ADR-0019) needs no per-thread machinery.** Since Scheme is only
   ever entered on the main thread, wills fire and the entry-point
   `@autoreleasepool` pushes on the main thread as today — *no* per-thread pool or
@@ -80,7 +80,7 @@ invoke.
 - **Deadlock caveat.** A `dispatch_sync`-bouncing (value-returning) callback whose
   result the main thread is synchronously blocked waiting for would deadlock — the
   same caveat racket's bounce carries. Void completions (async) are immune.
-- **Verified** by a background-callback smoke test (leaf 080/030, cf. chez
+- **Verified** by a background-callback smoke test (cf. chez
   `smoke-dispatch.sls` test 4): a `dispatch_async` worker driving a real Gerbil
   callback under a live run loop, looped to surface any crash or corruption.
 - Target-local under **ADR-0011**. Evidence: the 080 spike FINDINGS.

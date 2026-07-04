@@ -13,7 +13,7 @@ trampoline-only Swift dylib), **ADR-0020** (the manifest class graph + the
 `register-objc-class!` wrap registry), and **ADR-0026** (the `objc_exposed`
 boundary fact).
 
-This is the design decision of `050-gerbil/010-build`. It is a **horizontal port,
+This is the gerbil design decision. It is a **horizontal port,
 not a rediscovery**: the hard design work — the receiver-handle call-by-name shape,
 init producers (D2), mutating write-back (D3), the async completion-callback form
 (D5/R4), the curated swift-residual close (B1–B5) — is already decided in ADR-0030
@@ -158,10 +158,10 @@ is **deliberately not ported** — the same call ADR-0029 §4 made for free func
   `OpaqueHandle`/`ThrowsBridge` layer.
 - **`runtime/async-bridge.ss` is new** (`aw-async-call`) and **`emit-gerbil` emits
   value-struct modules for the first time** (population B).
-- **gerbil-only** (ADR-0011). gerbil is the **third and last** target; on close the
-  grove's "propagate to all targets, each VM-verified" done-bar is met. The IndexSet
+- **gerbil-only** (ADR-0011). gerbil is the **third and last** target; the
+  "propagate to all targets, each VM-verified" done-bar is met. The IndexSet
   pop-B and URLSession async exemplars are the shared known-good cases.
-- **Proof** (this leaf, the ADR-0030 §6/§B6 pattern, gerbil-local): codegen unit
+- **Proof** (the ADR-0030 §6/§B6 pattern, gerbil-local): codegen unit
   tests in `emit-gerbil/trampoline.rs`, a charter-#4 routing assertion + a
   population-B struct-file test in `emit_class.rs` (139 emit-gerbil tests green), the
   **whole 117-framework method/init residual compiling clean** against the real SDK
@@ -171,7 +171,7 @@ is **deliberately not ported** — the same call ADR-0029 §4 made for free func
   pop-A async `URLSession.data(from: file://…)` delivering a real `(Data,
   URLResponse)` via the CFRunLoop pump). The full cold rerun + `cargo test
   --workspace` + `run-smokes.sh` registration + VM-verify of both exemplars in a
-  bundled self-contained `.app` is the sibling leaf `050-gerbil/020-rerun-verify`.
+  bundled self-contained `.app` is a separate follow-up.
 
 See `CONTEXT.md` (*Receiver handle*, *Population A/B*, *Init producer*), ADR-0030
 (the racket method structure this ports), ADR-0031 (the chez method structure this

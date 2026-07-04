@@ -8,13 +8,13 @@ be edited (§Context). ADR-0038 §6 owns the self-containment *principle* (the d
 only new non-system dependency); this ADR owns the *relocation mechanism*. Governed by
 ADR-0010 (the native library *is* the binding), ADR-0011 (per-target hermetic bundling),
 and composes ADR-0034 §6 / ADR-0038 §5 (the `save-lisp-and-die` startup re-resolution
-split). It realizes the build leaf `070-distribution-bundler`.
+split). It is realized in `bundle-sbcl`.
 
 ## Context — a dumped image cannot be edited or `install_name_tool`'d
 
 `save-lisp-and-die :executable t` produces the app artifact by **appending the Lisp
 core after the runtime executable's `__LINKEDIT` segment**. That layout breaks every
-post-dump Mach-O edit the peer bundlers rely on (060/020 finding,
+post-dump Mach-O edit the peer bundlers rely on (per
 `apps/hello-window/learnings.md`):
 
 - `install_name_tool` refuses it — *"the `__LINKEDIT` segment does not cover the end

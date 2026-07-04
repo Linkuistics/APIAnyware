@@ -3,7 +3,7 @@
 Decides how the **sbcl** target maps an ObjC selector to its `ns:` generic-function
 symbol, refining the contract's §3.2 naming rule (**ADR-0033**) and the SBCL dispatch
 design (**ADR-0034** §2, "one `defgeneric` per selector"). Surfaced by the first real
-multi-framework app load (`060-build-sample-apps/020-hello-window`), which it unblocks.
+multi-framework app load (hello-window), which it unblocks.
 Applies the **complete-API** model (**ADR-0025**): the bound surface is the whole macOS
 API, which is collision-free by construction.
 
@@ -66,8 +66,8 @@ Consequences:
 
 This is a property of **macOS-API selectors**, not of SBCL: the colon carries the
 arg-structure on every target. "Preserve selector structure" is therefore proposed as a
-**cross-target naming rule** (racket / chez / gerbil) — captured here for those targets'
-groves to adopt; only SBCL realizes it in this grove.
+**cross-target naming rule** (racket / chez / gerbil) — captured here for those targets
+to adopt; only SBCL realizes it today.
 
 ## Alternatives rejected
 

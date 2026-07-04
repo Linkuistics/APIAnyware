@@ -1,8 +1,7 @@
 # SBCL surfaces `NSError**`/`NSException` as a flat `ns:objc-error` condition hierarchy
 
 Designs the **condition hierarchy** the CL-family interface contract
-(**ADR-0033**, spec §3.7) declared but deferred (grove leaf
-`030-design/030-lifetime-threading-conditions`, C2/Q8). The contract already fixed
+(**ADR-0033**, spec §3.7) declared but deferred. The contract already fixed
 the *direction* — Cocoa errors surface as **signalled CL conditions**, *not* as
 returned `(values result error)` pairs (the CL idiom for `NSError**`), with a named
 `ns:` root all such conditions descend from. This ADR confirms the root name and
@@ -79,8 +78,8 @@ ObjC message) is deferred until a sample app needs it.
   cross-app rewrite.
 - The `signal-cocoa-error` helper and the three condition types live in the sbcl
   runtime `objc` cluster; the emitter routes `NSError**`-bearing selectors to the
-  signaller (build leaf `050`); the `ThrowsBridge` lands with the trampoline layer
-  (leaf `040`).
+  signaller (the runtime); the `ThrowsBridge` lands with the trampoline layer
+  (ADR-0038).
 - **`NSException` capture is secondary.** Converting an `NSException` to
   `ns:objc-exception` requires the native dispatch core to `@catch` it; the primary
   design is the `NSError**` path. The hierarchy *accommodates* `NSException` (the

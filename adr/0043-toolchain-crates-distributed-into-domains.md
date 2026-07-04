@@ -1,6 +1,6 @@
 # Toolchain crates are distributed into the five domains, not gathered in a central `tools/`
 
-The `structural-refactoring` grove re-architects the repository from its
+The `structural-refactoring` work re-architects the repository from its
 *pipeline-phase* shape (`collection/` → `analysis/` → `generation/`) into the five
 *domain* partitions of `REFACTOR.md` §8–§9 — `semantic/`, `platforms/`, `apps/`,
 `targets/`, `schemas/`. Those domains house **data, specs, and docs**; they give no
@@ -62,5 +62,4 @@ domain owner — see Consequences.
   *code*: the shared `emit` substrate stays shared, so "distribute to targets" cannot
   mean "duplicate `emit` per target."
 
-See `REFACTOR.md` (§8–§10, §40), the grove root `BRIEF.md`, and the
-`structural-refactoring` planning leaf `plan-k1` running log (decisions D1–D4).
+See `REFACTOR.md` (§8–§10, §40) for the domain decomposition this serves.

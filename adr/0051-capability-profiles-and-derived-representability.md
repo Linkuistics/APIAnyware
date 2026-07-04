@@ -4,7 +4,7 @@
 validation — capability profiles reuse it), ADR-0049 (app-kinds as a distinct
 platform entity — the *distinct-entity / shared-mechanism* precedent, and the
 consumer of the app-form face), ADR-0048 (first-class semantic pattern-kinds — the
-other ws6 *input*), ADR-0043/0044 (toolchain crates distributed into domains; the
+other target-model *input*), ADR-0043/0044 (toolchain crates distributed into domains; the
 shared `targets/_shared` home), ADR-0015 (the interpreted-vs-compiled FFI model the
 sibling target descriptor turns on), ADR-0014/0016/0022/0035 (the per-target
 foreign-thread concurrency models the profiles are grounded in).
@@ -22,10 +22,10 @@ capability "levels" and §7.7's per-API "statuses" two vocabularies, or one? **(
 Is the per-API representability status **authored** (a third committed `.apiw` face)
 or **derived**? **(3)** What does the profile key on — the macOS source-weirdness an
 API exhibits (so it directly yields a status), or something platform-independent? The
-project already has the inputs a derivation would need: ws4 authored the §30
+project already has the inputs a derivation would need: the platform model authored the §30
 **source-weirdness** a concrete `(receiver, selector)` exhibits
-(`platforms/macos/tests/api-semantics/<facet>.apiw`), and ws4 D4 ruled that the §7.7
-status is **wholly ws6's** — `platforms/` carries only the weirdness vocabulary, never
+(`platforms/macos/tests/api-semantics/<facet>.apiw`), and ruled the §7.7
+status **wholly the target's** — `platforms/` carries only the weirdness vocabulary, never
 a status.
 
 ## Decision
@@ -58,7 +58,7 @@ the status falls out of a pure floor over the profile and the platform's weirdne
    `native-runtime-embedding`) feeding per-app-kind feasibility (the child-5 conformance
    `app-kind support` call), **not** per-API representability.
 
-3. **Per-API representability is DERIVED, never authored** (the ws4-D1 carriage
+3. **Per-API representability is DERIVED, never authored** (the platform-model carriage
    discipline, again): committing a per-API status would duplicate a derivable fact and
    rot against SDK / binding drift, so it is computed on demand and stays uncommitted
    (constraint 4). The derivation is a **floor**:
@@ -82,7 +82,7 @@ the status falls out of a pure floor over the profile and the platform's weirdne
    focused validator** — *not* a schema enum. A `semantic { … }` body may only name §20
    semantic dimensions and an `app-form { … }` body only §20/§36 app-form dimensions,
    and the KDL Schema Language cannot state a vocabulary that depends on the enclosing
-   node (the exact reason ws4's §30 `weirdness` and ws3's pattern-law `token` are side
+   node (the exact reason the platform §30 `weirdness` and the pattern-law `token` are side
    tables, not schema enums). The `rung`, by contrast, *is* a schema enum (§1).
 
 5. **One shared crate, domain-pure derivation.** All of this lives in the single shared
@@ -107,16 +107,17 @@ the status falls out of a pure floor over the profile and the platform's weirdne
   (they **bounce** to the main thread, ADR-0014/0022/0035). A `may-reenter` API thus
   derives `exact-runtime` on chez and `idiomatic-conventional` on the others — the
   activation-vs-bounce distinction surfacing in the *derived* status.
-- **Platforms stay status-free (ws4 D4 held).** `platforms/` carries only the §30
+- **Platforms stay status-free.** `platforms/` carries only the §30
   weirdness vocabulary; the status is computed in `targets/`. Adding Linux/.NET adds a
   weirdness source and reuses every profile unchanged.
-- **ws8 seam (the standing ws2/3/4 mirror):** ws6 authored only the
-  `capability.kdl-schema` contract + the focused in-crate validator; the *machine* JSON
-  Schema for any derived representability/conformance report + CI tooling stay
-  workstream 8.
-- **ws9 / child-5 seam:** the app-form face and the derived semantic statuses are
-  *inputs* to the child-5 conformance report and the ws9 testing architecture; this ADR
-  builds the model + library, not the report or the runner.
+- **Validation boundary:** the `capability.kdl-schema` contract + the focused in-crate
+  validator live with the model, validated by the shared KDL-Schema engine like every
+  authored artifact; there is no JSON Schema (ADR-0046 §5). The derived
+  representability / conformance reports stay derived and uncommitted, so they are
+  un-schema'd (constraint 4).
+- **Consumers:** the app-form face and the derived semantic statuses are *inputs* to the
+  `apianyware-conformance` report and the test model (`testing/`, ADR-0053); this decision is
+  the model + library, not the report or a runner.
 - **Why this clears the ADR bar:** hard-to-reverse (a 7-rung enum + a new schema + a
   weirdness→capability map + four authored profiles to follow), surprising (one ladder
   not two; the status *derived* not authored; the profile *platform-independent* not

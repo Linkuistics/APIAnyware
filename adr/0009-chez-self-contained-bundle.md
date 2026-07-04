@@ -20,7 +20,7 @@ Evidence: `targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`. Desi
 - **Keep source-exec (the prior model).** Rejected on the spike numbers:
   104 MB / ~13.9 s cold launch vs. 4.5 MB / ~0.29 s for the standalone (~30×
   smaller, ~50× faster), *and* it keeps the system-Chez dependency that the
-  `060-chez-self-contained-runtime` node exists to remove. Dev iteration does not
+  self-contained-runtime bundle exists to remove. Dev iteration does not
   need a bundle — the unbundled `chez --libdirs <tree> --script <entry>` run
   serves that on a dev machine (which has Chez), so retiring the source-exec
   *bundle* path costs the dev loop nothing.
@@ -55,7 +55,7 @@ Evidence: `targets/chez/docs/research/2026-05-29-chez-standalone-spike.md`. Desi
   precompile, or amortised at launch). This is a bundler/CI cost, not a user-
   facing one; the shipped launch is ~50× faster.
 - **Several deferred follow-ups evaporate** (recorded in the design spec §7):
-  leaf-160 Chez-version coupling, the menu-bar-name `execv` gotcha, and the
+  the Chez-version-coupling follow-up, the menu-bar-name `execv` gotcha, and the
   golden-image Chez pre-install note — all presupposed a system Chez that no
   longer exists in the shipped artifact.
 - **Hard to reverse in one direction, easy in the other.** Deleting

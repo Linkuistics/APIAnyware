@@ -1,7 +1,6 @@
 # SBCL `ns:ns-object` lifetime = `sb-ext:finalize` + main-thread release queue + entry-point pool
 
-Decides the **sbcl** target's lifetime model for wrapped ObjC `id`s (grove leaf
-`030-design/030-lifetime-threading-conditions`, D1). The SBCL realization of the
+Decides the **sbcl** target's lifetime model for wrapped ObjC `id`s. The SBCL realization of the
 two-mechanism model established by chez **ADR-0007** (guardian + entry-point pool)
 and gerbil **ADR-0019** (Gambit will + entry-point pool), with one SBCL-specific
 twist neither precedent faced: **finalizers run off the main thread.**
@@ -60,7 +59,7 @@ intentionally combined (the chez/gerbil shape):
   registration, the release queue, and the `with-autorelease-pool` entry-point
   macro that drains it. Load-bearing: bugs surface as use-after-free or unbounded
   Activity-Monitor growth (same failure signature as the chez guardian / gerbil
-  will). Implemented in build leaf `050`.
+  will). Implemented in the runtime.
 - **The entry-point-pool convention generalizes to the CL family — as a user
   obligation, not shared code.** Per ADR-0033 C1 (observable behaviour normative,
   mechanism private), the *obligation* (sample-app authors wrapping non-runloop
@@ -77,5 +76,4 @@ intentionally combined (the chez/gerbil shape):
 - **Hard to reverse:** every entry point in every sample app and every wrapped
   object inherits the pool-wrap + finalize convention from the runtime macros.
 - Target-local under **ADR-0011**. Verified premise: the finalizer-thread fact
-  (this ADR's "twist"); full mechanism verified by a background-release smoke test
-  in leaf `050`.
+  (this ADR's "twist"); full mechanism verified by a background-release smoke test.

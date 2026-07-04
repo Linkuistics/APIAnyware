@@ -15,11 +15,11 @@ REFACTOR §15 requires common, target-independent **app specs** under
 `apps/<platform>/<app>/`; §7.8 frames generated apps as behavioural conformance
 tests; §16 puts the per-target **implementations** under
 `targets/<t>/app-implementations/`; §33 lists "AppSpec sample app tests" as a test
-layer. The ws7 brief — written from those sections alone — presumed ws7 would mint a
+layer. The app model was first presumed to mint a
 *grove-native* AppSpec: an authored `.apiw` KDL entity (the **instance** side of
-ADR-0049's app-kind **category**), with a ws8 machine schema and a ws9-built runner,
-mirroring how ws3/ws4/ws6 each became an authored `.apiw` entity + KDL-Schema +
-focused validator.
+ADR-0049's app-kind **category**), with a machine schema and a separate runner,
+mirroring how the semantic / platform / target models each became an authored `.apiw`
+entity + KDL-Schema + focused validator.
 
 That presumption is wrong, and a reviewer will ask why. **REFACTOR §34 already names
 two external sibling systems** and says APIAnyware should *"consume or reference"*
@@ -29,8 +29,8 @@ already exists** (git remote `Linkuistics/AppSpec`, itself driven as a grove): i
 a `#lang app-spec` scenario DSL, a harness / **Driver** / runner, a `testanyware-sdk`
 that drives a live macOS VM, a three-tier verification strategy, and a precise
 vocabulary (App / Implementation / Scenario / Scenario suite / Contract). The runner
-§34's brief presumed ws9 would build **already exists**; the spec format ws8 was to
-schema-validate is `#lang app-spec`, owned **outside** this repo. Re-minting a
+that §34 presumed would be built **already exists**; the spec format that would have been
+schema-validated is `#lang app-spec`, owned **outside** this repo. Re-minting a
 grove-native `.apiw` AppSpec would duplicate and fork an established external project.
 
 Three further facts shaped the decision. **(1)** The AppSpec project deliberately
@@ -43,7 +43,7 @@ contracts living downstream in the consumer. **(2)** The intended authoring mode
 from best-practice guidelines, attack vectors, and patterns/anti-patterns
 (human-validated); then run the suites against any implementation. AppSpec will be
 *"largely dominated by prompts and workflows, rather than a lot of coding of tools."*
-**(3)** That is the same shape as APIAnyware's own ws5 LLM side-channel (ADR-0050):
+**(3)** That is the same shape as APIAnyware's own LLM side-channel (ADR-0050):
 the LLM proposes, git + a human review and accept, regeneration is idempotent.
 
 ## Decision
@@ -70,11 +70,11 @@ the toolkit and its formats live in the AppSpec project and hold no app data.**
 
 3. **No grove-native `.apiw` AppSpec entity, schema, or validator.** This is a
    deliberate asymmetry from the grove's `.apiw`-everywhere convention (ADR-0046) and
-   from the ws3/ws4/ws6 authored-entity template: the *concept* of an app
+   from the semantic / platform / target authored-entity template: the *concept* of an app
    specification is owned by an external project, so APIAnyware does not mint a
-   competing machine entity for it. The ws7 brief's "author the AppSpec `.apiw` Schema
-   + validator" line and the ws8 *AppSpec-schema* / ws9 *AppSpec-runner* seams that
-   presumed it are withdrawn. Grove-domain *structural* facts an app still carries —
+   competing machine entity for it. The presumption that APIAnyware would "author the
+   AppSpec `.apiw` Schema + validator" — and the corresponding *AppSpec-schema* /
+   *AppSpec-runner* seams — is withdrawn. Grove-domain *structural* facts an app still carries —
    its app-kind (ADR-0049 instance side), the pattern-kinds it exercises, the
    display-name the bundler reads — stay **prose** in the app's description until a
    real machine consumer needs them; only then is a thin machine manifest authored
@@ -87,12 +87,10 @@ the toolkit and its formats live in the AppSpec project and hold no app data.**
    as ADR-0050 made it for annotations. Hand-authoring suites would be authoring the
    generator's output by hand.
 
-5. **The AppSpec toolkit is developed in its own grove, at a pause point of this
-   grove.** Building it (largely prompts + workflows) is not ws7's code to write;
-   ws7 authors the toolkit's seed/PRD, initializes the AppSpec grove
-   (`~/Development/AppSpec`) via the cross-grove `grove-meta` inbox, and marks a
-   pause-point leaf where structural-refactoring hands off, the AppSpec grove runs,
-   and this grove resumes for the parts that depend on it.
+5. **The AppSpec toolkit is developed as its own project, not built here.** Building it
+   (largely prompts + workflows) is not APIAnyware's code to write: the toolkit lives at
+   `~/Development/AppSpec` as its own project, and `apps/macos/` consumes its formats and
+   runner.
 
 ## Consequences
 
@@ -100,25 +98,22 @@ the toolkit and its formats live in the AppSpec project and hold no app data.**
   *tooling and formats* live in AppSpec; the VM substrate lives in TestAnyware. The
   surprising part — that the grove *declines* its own `.apiw`-everywhere convention
   for apps — is the reason this ADR exists.
-- **ws7 shrinks and re-aims:** from "author N `.apiw` AppSpecs (+ schema + validator)"
-  to "establish the consume/reference relationship + boundary + glossary, bootstrap
-  reverse-gen, build the AppSpec grove, mark the pause point." Forward-gen suites +
-  AppSpec-runner VM-verify are deferred behind the AppSpec grove.
-- **ws8 / ws9 seams adjusted:** ws8 does **not** schema-validate `#lang app-spec` (the
-  AppSpec project owns its reader/validation); the AppSpec *runner* is the AppSpec
-  project's, not a ws9 build. ws9's testing architecture *references* AppSpec results
+- **Schema + runner boundary:** APIAnyware does **not** schema-validate `#lang app-spec` (the
+  AppSpec project owns its reader/validation), and the AppSpec *runner* is the AppSpec
+  project's; the test model (`testing/`, ADR-0053) *references* AppSpec results
   (§33 layer 8) rather than building the runner.
 - **The bundler is undisturbed:** the four bundlers keep reading each app's display
   name from the first H1 of its description (`apps/macos/<app>/docs/spec.md` today);
   any later rename is its own scoped change.
-- **A cross-project interface to settle later (seed, not resolved here):** AppSpec's
+- **A cross-project interface to settle later:** AppSpec's
   forward-gen inputs — *patterns / anti-patterns / attack-vectors / guidelines* —
   overlap APIAnyware's own first-class **semantic `pattern-kinds`** (ADR-0048) and
   platform truth (ADR-0049). Whether these are shared entities consumed across the
   boundary or a distinct app-behaviour/security axis is an open interface question
-  seeded to the AppSpec grove.
+  owned by the AppSpec project.
 - **Why this clears the ADR bar:** hard-to-reverse (a cross-project boundary, an
-  on-disk data placement, the withdrawal of presumed ws7/ws8/ws9 scope), surprising
+  on-disk data placement, the withdrawal of a presumed authored-entity + schema + runner
+  scope), surprising
   (the grove declines its own authored-entity convention), and a real trade-off
   (reinvent a grove-native AppSpec for `.apiw` uniformity vs consume an established
   external project — the project chose consumption).

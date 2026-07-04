@@ -12,8 +12,8 @@ literals) is not adopted — the machine side is KDL too.
 REFACTOR §29 calls for "a human-editable DSL and a canonical interchange format" — the DSL
 "pleasant for humans", the YAML "stable and machine-consumable" — feeding
 `extracted.{yaml} → annotations.apiw → resolved.{yaml} → generator`. Today the pipeline
-emits **JSON** at phase-shaped, gitignored paths (`collection/ir/`, `analysis/ir/`); workstream 2
-replaces that interchange. Two facts, surfaced during grilling, reframed the format choice:
+emits **JSON** at phase-shaped, gitignored paths (`collection/ir/`, `analysis/ir/`); the
+spec-format model replaces that interchange. Two facts reframed the format choice:
 
 1. **`serde_yaml` is archived/deprecated** (Mar 2024). Rust's canonical YAML-serde is dead;
    the survivors are contested forks (`serde_yml`, `serde_yaml_ng`, `serde_norway`). "YAML is
@@ -63,7 +63,7 @@ measured it (see *Consequences → Evidence*) rather than guessing.
   *machine* artifacts become human-readable, directly serving goldens-as-truth review.
 - **Filenames change** from §14's `.yaml`: `extracted.kdl` / `annotations.apiw` / `resolved.kdl`.
 - **Toolchain note:** `kdl` 6.7.1 needs rustc 1.95; this repo is on 1.93.1 → pin `kdl = "=6.3.4"`
-  or bump the toolchain (decided at the parser leaf).
+  or bump the toolchain.
 - **Evidence (cited):** the in-session LLM-authoring eval —
   [`semantic/docs/research/2026-06-24-kdl-authoring-eval/`](../semantic/docs/research/2026-06-24-kdl-authoring-eval/README.md).
   6 fresh subagents (2× KDL/YAML/JSON) authored the same 20 real-shape annotations; **6/6

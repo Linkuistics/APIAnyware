@@ -21,7 +21,7 @@ the umbrella and compile the FFI unit `-x objective-c` — that approach is not 
 headers the runtime data plane uses (`<objc/runtime.h>`, `<objc/message.h>`,
 CoreGraphics geometry) but **cannot parse the Foundation/AppKit umbrella headers**
 — it dies on `@class`, blocks (`^`), nullability (`nullable`), and lightweight
-generics (`NSArray<…>`). Found at leaf 050/010; reconfirmed here:
+generics (`NSArray<…>`). Found in the gerbil emitter work; reconfirmed here:
 
 ```
 NSObjCRuntime.h:617: error: stray '@' in program     # @class NSString, Protocol;
@@ -107,22 +107,21 @@ Emit `(c-declare "#include <stdbool.h>")` once if any slot is `bool`.
 tokens keep `#include <CoreGraphics/…>`. The four NS-prefixed structs have
 non-C-safe headers, so the emitter emits an **inline plain-C tagged typedef**
 instead (`CGFloat`→`double`, `NSUInteger`→`unsigned long`), preserving the
-`(c-define-type Tok (struct "tag"))` crossing token. (Implemented in leaf
-055/020.)
+`(c-define-type Tok (struct "tag"))` crossing token. (Implemented in the emitter.)
 
 ## Consequences
 
-- The bottle's default compiler builds everything; 060/070 bake **no** special
-  compiler flag for emitted modules. The only non-default compile remains the
+- The bottle's default compiler builds everything; the emitter and bundler bake **no**
+  special compiler flag for emitted modules. The only non-default compile remains the
   pre-existing `clang -fblocks` companion (`native_block.c`).
 - The emitter gains a small token→C-type table and per-symbol decl synthesis;
   emit-gerbil unit tests that asserted `#include <umbrella>` are rewritten.
 - The C seam types are ABI-only (`void *` for objects); type intent lives on the
   Scheme side, as in chez. Acceptable per ADR-0011 (per-target idiom).
 - Geometry: one ABI risk — the inline NS-struct field layouts are hardcoded; they
-  are cross-checked against the SDK headers and the 050/040 smoke-geometry build.
+  are cross-checked against the SDK headers and the smoke-geometry build.
 
-## Proof (this leaf, gcc-15, no clang / no `-x objective-c`)
+## Proof (gcc-15, no clang / no `-x objective-c`)
 
 Real Foundation symbols, synthesized `extern`s, default compiler:
 
@@ -142,7 +141,7 @@ an `NSRange` left C as a by-value `struct _NSRange` **return** (`NSRangeFromStri
 and re-entered as a by-value **arg** (`NSStringFromRange`), spelled only by the
 emitter's inline `struct _NSRange` — identical formatting out confirms the field
 offsets are ABI-exact. Converted-emitter output is compile-verified for constants
-at leaf 055/010 (`examples/dump_foundation_constants.rs`) and for functions +
-geometry at 055/020 (`examples/dump_foundation_functions.rs`); the runtime
+(`examples/dump_foundation_constants.rs`) and for functions +
+geometry (`examples/dump_foundation_functions.rs`); the runtime
 smoke-geometry suite additionally round-trips all four NS structs by value under
 the default compiler.

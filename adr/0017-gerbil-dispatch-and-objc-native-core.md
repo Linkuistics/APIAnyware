@@ -13,7 +13,7 @@ racket fat-dispatch model (**ADR-0013**) and the 020 spike's own headline by
 
 The 020 spike (`targets/gerbil/docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md`)
 recommended "go fat-native" but flagged that precompilation might reframe it.
-ADR-0015 weighed only runtime; this ADR records both axes, as the grove required.
+ADR-0015 weighed only runtime; this ADR records both axes.
 
 - **Runtime axis (FINDINGS §2): a tie.** Inline-cast `objc_msgSend` 11.00 ns ≈ via
   a separate C shim 10.98 ns. In a compiled-FFI target both are C in the binary,

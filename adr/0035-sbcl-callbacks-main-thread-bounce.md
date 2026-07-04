@@ -1,7 +1,6 @@
 # SBCL background callbacks bounce to the main thread (foreign-thread Lisp entry is GC-unsafe)
 
-Decides the **sbcl** target's threading/callback model (grove leaf
-`030-design/030-lifetime-threading-conditions`, D2). Mirrors gerbil **ADR-0022**
+Decides the **sbcl** target's threading/callback model. Mirrors gerbil **ADR-0022**
 and racket **ADR-0014** (foreign-thread callbacks bounced to a runtime-safe
 thread), and **rejects** the chez **ADR-0016** activation model — but, unlike
 gerbil, the rejection is reached **empirically**, not structurally. **Decision:** a
@@ -74,7 +73,7 @@ prohibition: **Lisp must never run on a foreign thread.**
   concurrency. Documented in `targets/sbcl/docs/reference.md`.
 - **The native core is deepened, not replaced.** Early runtime trampolines may
   re-enter Lisp directly (safe only because the run loop calls on main); this ADR
-  makes off-main entry safe by construction. Implemented in build leaf `050`.
+  makes off-main entry safe by construction. Implemented in the runtime.
 - **Lifetime interaction (ADR-0036).** SBCL's `sb-ext:finalize` runs on a dedicated
   finalizer thread, so a finalizer-driven `release` fires off-main. That is a
   *UI-affinity* concern, **not** the GC-safety concern of this ADR — the finalizer

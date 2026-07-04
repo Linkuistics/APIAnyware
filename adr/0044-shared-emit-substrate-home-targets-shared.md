@@ -1,9 +1,9 @@
 # The shared projection substrate lives under `targets/_shared/`, not `semantic/`
 
-The `structural-refactoring` grove's skeleton node must give the cross-cutting
+The cross-cutting
 `emit` crate — the shared projection substrate consumed by all four emitters
 (`emit-racket`/`-chez`/`-gerbil`/`-sbcl`) and the generate CLI, and incorporating
-the `naming` acronym table — a home in the five-domain tree. ADR-0043 distributed
+the `naming` acronym table — needs a home in the five-domain tree. ADR-0043 distributed
 the toolchain *by served-domain* but explicitly deferred `emit`'s exact home as a
 skeleton-step detail, flagging a real tension: `CONTEXT.md` records the `naming`
 acronym table as *"shared analysis-level data"* (pulling toward `semantic/`), while
@@ -68,5 +68,5 @@ happens to be shared across targets.
   `targets/_shared/`) is precedent-setting and surprising, not because the move is
   hard to undo.
 
-See `REFACTOR.md` (§7.2, §8), ADR-0043, ADR-0010/0011, `CONTEXT.md` ("naming"
-note), and the grove `structural-refactoring` skeleton node brief (`skeleton-k2`).
+See `REFACTOR.md` (§7.2, §8), ADR-0043, ADR-0010/0011, and `CONTEXT.md` ("naming"
+note).

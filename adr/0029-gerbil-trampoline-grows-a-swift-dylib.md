@@ -3,7 +3,7 @@
 Decides the **gerbil** target's mechanism for vending C-ABI **trampolines** for
 the Swift-native residual (`objc_exposed == false`), the gerbil counterpart to
 **ADR-0027** (racket) and **ADR-0028** (chez). It is the **deliberate deviation
-from ADR-0017** that `070-gerbil-extend` was opened to design: gerbil grows a
+from ADR-0017**: gerbil grows a
 **Swift compilation unit** — a small `libAPIAnywareGerbil.dylib` — where ADR-0017
 said gerbil would have *no Swift dylib and no `swift build` step*. Refines
 **ADR-0025** (the complete-API binding model + trampoline elision), consumes
@@ -26,7 +26,7 @@ Swift-native API **must be Swift** — only Swift can call the Swift ABI; `gsc`
 (a C/ObjC compiler) structurally cannot. So the residual is not a case where we
 *prefer* ObjC-in-gsc and could use Swift; it is a case where ObjC-in-gsc is
 **impossible**. ADR-0017's "no Swift dylib" was a decision about the native core
-it was scoped to; it did not contemplate Swift-native API coverage (that grove
+it was scoped to; it did not contemplate Swift-native API coverage (which
 came later). This ADR records the bend precisely: **the Swift dylib is admitted
 for the trampoline, and nothing else.**
 
@@ -42,7 +42,7 @@ A new SwiftPM dynamic-library target `APIAnywareGerbil` is added to
 helpers (§2). The existing ObjC native core (`runtime/objc.ss` `c-declare`,
 `runtime/native-core.ss`, `runtime/native_block.c`) stays exactly where ADR-0017
 put it — compiled by `gsc`/`clang` into the exe. The dylib does **not** absorb
-the native core (scope decided in the 070 grilling: necessity, not a build-time
+the native core (scoped by necessity, not a build-time
 gamble — see "Build-time finding" below).
 
 `apianyware-generate` emits a gitignored
@@ -123,11 +123,11 @@ chez's classification **exactly** (51 function trampolines, 7 constants; deferre
 6 closure / 10 nonbridged-struct / 4 unnameable / 34 unbindable-generic). That
 equality is the strongest evidence the port is faithful.
 
-## Build-time finding (N1) — hypothesis evaluated *and measured* (leaf 030)
+## Build-time finding (N1) — hypothesis evaluated *and measured*
 
 N1 (2026-06-15) hypothesised that moving native code into a Swift dylib could be a
 build-time **win** by offloading work out of the `gsc` compile (gerbil's defining
-pain — ADR-0023's generics cold build). The 070 grilling evaluated this and
+pain — ADR-0023's generics cold build). The design evaluation
 **scoped the dylib to the trampoline only, on the structural argument that the
 win does not hold:**
 
@@ -147,9 +147,9 @@ win does not hold:**
 Swift ABI), not by a build-time win.** The decision above does not depend on the
 measurement (necessity stands regardless); the measurement below closes N1 honestly.
 
-### Measured (leaf 030, 2026-06-18)
+### Measured (2026-06-18)
 
-Per the brief's "measured, not asserted" bar, leaf `030-rerun-verify` quantified
+A rerun-verify pass quantified
 the added `swift build` step and confirmed the generics compile is untouched:
 
 | | wall-clock |
@@ -204,21 +204,19 @@ and load-bearing.
   the emitter (`emit_functions` / `emit_constants`) routes `objc_exposed == false`
   decls to `define-c-lambda` trampoline bindings, replacing the prior skip at
   `emit_functions.rs:49` / `emit_constants.rs:133`.
-- `cargo test --workspace` green (985/0 at leaf 030, incl. the `bundle-gerbil`
+- `cargo test --workspace` green (985/0, incl. the `bundle-gerbil`
   swift-dylib relocation tests); the CLI smoke proves the spec §6a exemplars
   (`CreateML.timestampSeed()` → time-derived `Int`, `MLCreateErrorDomain` →
   `"com.apple.CreateML"`) resolve and run through `libAPIAnywareGerbil`, and is now
   chained into the gerbil `run-smokes.sh` harness as the permanent Swift-native
   regression guard. The full cold rerun + VM-verify (the project done-bar) + the N1
-  measurement **landed** in leaf `070-gerbil-extend/030` (2026-06-18) — the residual
+  measurement **landed** (2026-06-18) — the residual
   reproduced exactly (51/7; deferred 6/10/4/34), the bundled `.app` passed `otool -L`
   self-containment (dylib relocated into `Contents/Frameworks/`), and the probe
   rendered both exemplars live in the TestAnyware VM. See
   `generation/targets/gerbil/test-results/swift-native-probe/report.md`.
 - **Last target.** Completing gerbil closes the charter's "rerun every target"
-  done-bar, makes the grove ready to finish, and unpauses
-  `add-sbcl-clos-target` (whose paused Swift library is this model's trampoline
-  layer).
+  done-bar; sbcl's native library is this model's trampoline layer (ADR-0038).
 
 See `CONTEXT.md` (*Trampoline*, *Opaque handle*, *Unbindable residual*) for the
 glossary, ADR-0027 (racket) and ADR-0028 (chez) for the siblings, ADR-0017 for the

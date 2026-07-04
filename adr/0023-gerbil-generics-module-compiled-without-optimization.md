@@ -23,7 +23,7 @@ for a single sample app, dominated by this one module: `gsc -target C` ran
 ~2h44m single-threaded and `gcc -O1` ran ~2h+ at 9.7 GB RSS. Both compile
 stages are **superlinear in module/translation-unit size**, and `gxc -O` drives
 both. At that cost the per-app VM-verify portfolio (six more apps) is
-impractical (grove node `100-sample-apps`).
+impractical (deferred to the sample-app work).
 
 Because `generics.ss` is imported by *every* class module, even a tiny app like
 hello-window (≈7 classes) drags the full monolith into its compile closure.
@@ -50,7 +50,7 @@ generated module whose content is optimization-inert.
 - **Split `generics.ss` into N bounded modules** (parallelizable, sidesteps
   per-unit superlinearity). The durable fix if no-`-O` alone misses the
   `< 15 min/app cold` budget; deferred as the escalation rather than done up
-  front (grove probe-first, lazy decomposition).
+  front (probe-first, lazy decomposition).
 - **Persist/commit a warm `gerbil-cache`.** Rejected: fights the `build/`
   gitignore and bloats the repo (94 MB C + objects) to paper over an
   architectural cost.
@@ -58,7 +58,7 @@ generated module whose content is optimization-inert.
   scaling to the full-macOS binding set, but does not shrink today's
   2-framework cost (an app pulls both frameworks regardless). Out of scope here.
 
-## Measured outcome (grove leaf 090/010, 2026-06-08)
+## Measured outcome (2026-06-08)
 
 Implemented the no-`-O` generics pass in `compile.rs` and re-measured a cold
 hello-window build (`build/` wiped, BOTTLE 0.18.2, `SDKROOT` exported). Findings:
@@ -75,13 +75,13 @@ hello-window build (`build/` wiped, BOTTLE 0.18.2, `SDKROOT` exported). Findings
   are the fix.
 
 **Conclusion:** keep no-`-O` (strict improvement, composes with the split) and
-**split `generics.ss` into many small modules** (leaf `090/020`) — bounded,
+**split `generics.ss` into many small modules** — bounded,
 parallelizable `gsc` invocations. Compiling each small shard *also* without
 `-O` is the intended end state (small + unoptimized = fast). The true
 non-generics residual is still unmeasured (the build never got past generics);
-leaf `090/020` is the first chance to measure it against the `< 15 min` budget.
+the shard split is the first chance to measure it against the `< 15 min` budget.
 
-## Resolution (grove leaf 090/010-split, 2026-06-08)
+## Resolution (2026-06-08)
 
 No-`-O` alone was insufficient (above), so `generics.ss` is **sharded**: the
 emitter (`emit_generics.rs`, `GENERICS_SHARD_SIZE = 256`) writes the global
@@ -122,7 +122,7 @@ A one-line link-args bug surfaced and was fixed: `generics` becoming a
 
 ## Consequences
 
-- Cold-build budget: **`< 15 min/app`**, the done-bar for node `100-sample-apps`.
+- Cold-build budget: **`< 15 min/app`**, the sample-app cold-build done-bar.
 - The shipped `.app` is **unaffected** — this is purely a build-time change; the
   binary runs and launches identically.
 - A residual cost (~23 min in the original measurement) for the non-generics

@@ -59,5 +59,5 @@ committed normalization).
 - The racket snapshot tests remain **non-hermetic**: because the enriched IR is
   gitignored, `load_enriched_framework` returns `None` in a clean worktree and
   the Foundation/AppKit cases skip-as-pass. Making those tests hermetic (a
-  pinned IR fixture) is a separate, deferred concern — see the grove's
+  pinned IR fixture) is a separate, deferred concern — see the
   goldens-as-truth decision (2026-05-30).

@@ -7,7 +7,7 @@ called from a thin Racket ffi2 binding — rather than through in-Racket
 dispatcher.
 
 This is the first concrete application of **ADR-0010** (the per-target native
-library *is* the binding) to the hot path, under the grove directive to optimise
+library *is* the binding) to the hot path, under the directive to optimise
 so the target language never has to consider the FFI boundary, paying with
 generated native code rather than interpreted scripting code.
 
@@ -72,7 +72,7 @@ the Racket wrapper trends toward a single coercion-free ffi2 call.
 - Applies the **ADR-0010** economics (generated bespoke native code per target)
   and is **target-local** under **ADR-0011** (lives in `APIAnywareRacket`).
 
-## Implementation (leaf 040) — the hard-to-reverse specifics
+## Implementation — the hard-to-reverse specifics
 
 - **Entries are generated *Swift*, not the spike's `.m`.** SwiftPM forbids mixing
   `.swift` and `.m`/`.c` in one target, so to keep the dispatch table inside the
@@ -90,8 +90,8 @@ the Racket wrapper trends toward a single coercion-free ffi2 call.
   entry a pure function of its ABI signature, so per-class emission needs no
   global counter and the per-signature ffi2 binding (`define-aw-msg`, runtime
   `ffi2-dispatch.rkt`) is reconstructible anywhere.
-- **Depth-0 boundary (this leaf).** Struct-by-value and C-string signatures are
-  *non-routable* — their out-buffer / `char*<->string` marshalling is the
-  marshalling-depth concern of leaf 050; they keep the retained `get-ffi-obj`
+- **Depth-0 boundary.** Struct-by-value and C-string signatures are
+  *non-routable* — their out-buffer / `char*<->string` marshalling is a later
+  marshalling-depth concern; they keep the retained `get-ffi-obj`
   path (emitted as `_cprocedure`, since the ffi2 header shadows `ffi/unsafe`'s
-  `->`). The all-object `tell` path is likewise retained (deleted in leaf 060).
+  `->`). The all-object `tell` path is likewise retained (later deleted).

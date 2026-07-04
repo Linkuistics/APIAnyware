@@ -10,7 +10,7 @@ per-target — nothing native is shared with racket), **ADR-0010** (the native
 library *is* the binding), **ADR-0015** (Scheme-side marshalling), and **ADR-0026**
 (the `objc_exposed` boundary fact).
 
-This is the design decision of `040-chez/010-build`. It is a **horizontal port,
+This is the chez design decision. It is a **horizontal port,
 not a rediscovery**: the hard design work — the receiver-handle call-by-name shape,
 init producers (D2), mutating write-back (D3), the async completion-callback form
 (D5/R4), and the 955-error swift-residual close (B1–B5) — is already decided in
@@ -123,9 +123,9 @@ not the scripting target, so chez inherits it:
   trampolines are kept (they run when called on the main thread), the warning count
   the honest record.
 
-### 7. `(chezscheme)`-builtin name collisions on init producers (the 020 close)
+### 7. `(chezscheme)`-builtin name collisions on init producers
 
-Surfaced by the `020-rerun-verify` cold rerun + method-probe VM-verify (not visible
+Surfaced by the cold rerun + method-probe VM-verify (not visible
 to the in-process smoke, which imports leaf libraries directly; the bundler loads the
 **framework umbrella**, which imports every sub-library). A value-struct **init
 producer** spells `make-<struct>`, and Chez exports `make-date`, `make-list`, … from
@@ -157,16 +157,16 @@ counts are unchanged (import-line only).
   `OpaqueHandle`/throws layer.
 - **`runtime/async-bridge.sls` is new** (`aw-async-call`) and **`emit-chez`
   emits struct files for the first time** (population B).
-- **chez-only** (ADR-0011). gerbil inherits this structure in `050-gerbil` (a thin
+- **chez-only** (ADR-0011). gerbil inherits this structure (ADR-0032, a thin
   ADR over ADR-0029's dylib path); the IndexSet pop-B and URLSession async exemplars
   are the shared known-good cases.
-- **Proof** (this leaf, the ADR-0030 §6/§B6 pattern, chez-local): codegen unit tests
+- **Proof** (the ADR-0030 §6/§B6 pattern, chez-local): codegen unit tests
   in `emit-chez/trampoline.rs`, a charter-#4 routing assertion test + a population-B
   struct-file test in `emit_class.rs`, the **whole 117-framework method/init residual
   compiling clean** against the real SDK in Swift 6 mode (0 errors; the B5 warnings
   carry), and the §6c residual-count reproduction reported above. The full cold
   rerun + `cargo test --workspace` + CLI-smoke registration + VM-verify of both
-  exemplars is the sibling leaf `040-chez/020-rerun-verify`.
+  exemplars is a separate follow-up.
 
 See `CONTEXT.md` (*Receiver handle*, *Population A/B*, *Init producer*), ADR-0030
 (the racket method structure this ports), ADR-0028 (the chez free-function

@@ -15,7 +15,7 @@ Today they are neither first-class nor unified. Patterns are a **closed Rust enu
 `annotate/pattern_detection.rs` into a loosely-typed `Framework.api_patterns:
 Vec<ApiPattern>` IR list (`participants` is `serde_json::Value`). Relationships **do not exist
 in code at all**. There is no *authored* definition of a pattern, no provenance/precedence on
-pattern facts (unlike method annotations, which ws2 gave the §28 ladder), and §31/§32 read as if
+pattern facts (unlike method annotations, which carry the §28 provenance ladder), and §31/§32 read as if
 patterns and relationships were two different kinds of thing.
 
 ## Decision
@@ -28,7 +28,7 @@ A single **two-level, unified** model:
    concrete framework's participants and is carried in the **platform spec triad**
    (`platforms/macos/api/<Framework>/resolved.kdl`), *because an instance is platform
    knowledge*. This keeps `semantic/` projection-AND-platform-independent (the domain's
-   defining rule) and rhymes with ws2's neutral-schema-vs-per-family-annotations split.
+   defining rule) and rhymes with the neutral-schema-vs-per-family-annotations split.
 
 2. **Relationships fold *into* pattern-kinds — one entity, not two.** A relationship (§31) is a
    **degenerate pattern-kind**: type-roles + ownership/lifetime/invalidation laws, no operation
@@ -44,7 +44,7 @@ A single **two-level, unified** model:
 4. **Instances are provenance-tiered, replacing the heuristic enum.** The 10 stereotypes become
    an **open authored data registry** (no closed Rust enum). `detect_patterns` becomes **one
    producer** stamping `source=convention`, co-existing with `llm` and `manual` instances under
-   the ws2 precedence `manual > llm > convention > extraction`. Detection re-expresses as
+   the precedence `manual > llm > convention > extraction`. Detection re-expresses as
    `ascent` datalog (ADR-0047), in `platforms/macos/tools/` (Cocoa-specific), so
    `source=convention:<rule>` falls out of the derivation trace. `Framework.api_patterns` is
    replaced by these first-class instances.
@@ -61,15 +61,18 @@ A single **two-level, unified** model:
   glossary pins it.
 - **Uniform provenance:** pattern/relationship facts gain the same `source`/`confidence`/
   `provenance` stamp + precedence as method annotations — §32's "confidence, manual override
-  status" for free. ws3 defines the *carriage*; the cache/regen/review/diff *workflow* + the
-  disagreement/precedence audit is **ws5's** (mirrors the k26 seam).
-- **Schema ownership:** ws3 authors the pattern-kind `.apiw` KDL Schema + a focused in-crate
-  validator (`schemas/spec-format/pattern-kinds.kdl-schema`), mirroring ws2's
-  `annotations.kdl-schema`; ws8 owns the machine JSON Schema + validation tooling/CI.
+  status" for free. This model defines the *carriage*; the cache/regen/review/diff *workflow*
+  and the disagreement/precedence audit that applies it live in the annotation side-channel
+  (ADR-0050).
+- **Schema ownership:** the pattern-kind `.apiw` KDL Schema + a focused in-crate validator
+  live with the model (`schemas/spec-format/pattern-kinds.kdl-schema`), mirroring
+  `annotations.kdl-schema`; `apianyware-validate` runs the one shared KDL-Schema engine over it
+  as it does over every artifact — there is no separate machine JSON Schema (ADR-0046 §5).
 - **Crate homes:** a new `semantic/tools/patterns` crate owns the kind registry + `.apiw`
   parsing; detection is datalog in `platforms/macos/tools/`; carriage extends `types` +
-  `resolve`. Consumed by ws6 (target idiom/emit, which projects kinds to target constructs via
-  the existing `emit/pattern_dispatch` seam) and informs ws9 (semantic tests).
+  `resolve`. The target-model emit layer projects kinds to target constructs via the
+  `emit/pattern_dispatch` seam (ADR-0051); the semantic-layer tests (`testing/`, ADR-0053)
+  draw on the model.
 - **Why this clears the ADR bar:** hard-to-reverse (data model + on-disk domain placement +
   schema), surprising (REFACTOR §31/§32 present patterns and relationships as distinct; this
   unifies them and moves instances out of the directory literally named `pattern-kinds/`), a

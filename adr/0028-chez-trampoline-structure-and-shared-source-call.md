@@ -5,11 +5,11 @@ Swift-native residual (`objc_exposed == false`), the chez counterpart to
 **ADR-0027** (racket). Refines **ADR-0025** (the complete-API binding model and
 trampoline elision), consumes **ADR-0026** (the `objc_exposed` IR fact), and is
 governed by **ADR-0011** (the trampoline layer is per-target) and **ADR-0010** (the
-native library *is* the binding). It also records — as the leaf's brief required —
+native library *is* the binding). It also records
 the **ADR-0011 shared-source call** now that a second Swift-trampoline target
 exists.
 
-This is the design decision of `060-chez-extend/010-chez-trampoline-build`. It
+This is the chez trampoline design decision. It
 reuses the racket design spec `targets/racket/docs/design/2026-06-15-racket-trampoline.md` (the
 marshalling taxonomy, deferred buckets §5a–c, and known-good exemplars §6a all
 carry over unchanged — same shared IR) rather than re-deriving it.
@@ -89,7 +89,7 @@ counted, never silently dropped.
 
 ## The ADR-0011 shared-source call: keep hermetic duplication
 
-The leaf required an explicit, recorded resolution of the
+This ADR records an explicit resolution of the
 per-target-vs-shared-source question now that two Swift-trampoline targets exist.
 
 **Call: keep hermetic per-target duplication (the ADR-0011 default). Do not extract
@@ -133,9 +133,9 @@ this call rather than overturning it.
   (`runtime/tests/smoke-swift-trampoline.sls`) proves the spec §6a exemplars
   (`CreateML.timestampSeed()` → time-derived `Int`, `MLCreateErrorDomain` →
   `"com.apple.CreateML"`) resolve and run through libAPIAnywareChez. The full cold
-  rerun + VM-verify is leaf `060-chez-extend/020`.
-- **Chez-only.** Gerbil (070) decides its own trampoline structure; the
-  shared-source call above stands until that leaf revisits it.
+  rerun + VM-verify is a separate follow-up.
+- **Chez-only.** Gerbil decides its own trampoline structure (ADR-0029); the
+  shared-source call above stands.
 
 See `CONTEXT.md` (*Trampoline*, *Opaque handle*, *Unbindable residual*) for the
 glossary, ADR-0027 for the racket sibling, ADR-0015 for the Scheme-side-marshalling

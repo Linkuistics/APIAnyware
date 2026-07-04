@@ -14,10 +14,9 @@ synthesizes a real ObjC class via `objc_allocateClassPair`. Because a dumped ima
 pointers, the runtime carries a **startup re-resolution pass** that re-`dlopen`s
 each framework and re-resolves every `Class`/`SEL` from its baked string identity.
 
-This ADR records the realization of D3 (010-plan) / D6 (030-design parent), settled
-in `030-design/020-object-model`. Each load-bearing mechanism below was **verified
-first-hand against SBCL 2.6.5 (arm64) and the live ObjC runtime**, per the leaf's
-"do not assume" mandate — the prior-art survey
+This ADR records the sbcl object model. Each load-bearing mechanism below was **verified
+first-hand against SBCL 2.6.5 (arm64) and the live ObjC runtime** (the
+"do not assume" mandate) — the prior-art survey
 (`targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md`) is CCL-centric and
 explicitly left these un-de-risked (§6 gaps).
 
@@ -25,11 +24,11 @@ explicitly left these un-de-risked (§6 gaps).
 
 **Settled upstream (carried in, not re-litigated):**
 
-- **D3 (010-plan):** MOP projection of ObjC into CLOS, all-in — not a single
+- **Object model:** MOP projection of ObjC into CLOS, all-in — not a single
   `objc-object` wrapper (gerbil pre-rejected that as "vacuous", ADR-0020) and
   not a manifest `defclass` graph *without* the MOP (that is gerbil's shape,
   ADR-0020 — sbcl goes further).
-- **D6 (030-design parent):** dispatch is per-selector generics **specialized on
+- **Dispatch:** dispatch is per-selector generics **specialized on
   the receiver** over the real metaclass-backed class graph. Holds D3's line
   against the single-dispatch veneer of every prior CL bridge (CCL only *wraps*
   ObjC's runtime message send, research §B3), and dodges the gerbil-ADR-0020
@@ -162,9 +161,8 @@ and selector **strings survive** the dump; `objc_getClass "NSString"` returns
 **NULL** until Foundation is re-`dlopen`ed (while `NSObject`, in always-mapped
 libobjc, survives); re-resolution after re-`dlopen` yields valid `Class`/`SEL`
 pointers. This makes the pass **mandatory and sufficient**, and is load-bearing for
-`070` (`bundle-sbcl`). How much of the framework-load / re-resolution burden the
-target's Swift dylib's own load-time setup absorbs is decided in
-`030-design/040-trampoline-layer`.
+`bundle-sbcl`. How much of the framework-load / re-resolution burden the
+target's Swift dylib's own load-time setup absorbs is decided in ADR-0038.
 
 ## Considered options
 
@@ -200,12 +198,12 @@ target's Swift dylib's own load-time setup absorbs is decided in
 - **No new build-time machinery.** Unlike gerbil (ADR-0021 BOTTLE toolchain +
   ADR-0023 shard/parallel pipeline), the sbcl binding compiles as one ordinary
   closure in seconds.
-- **Boundaries to sibling leaves.** The per-signature `objc_msgSend` FFI crossing
-  is the compiled-FFI mechanism (ADR-0015 / D2, `sb-alien` open-coded typed alien
-  per ABI) realized in 040/050, not re-decided here. Lifetime, threading/callbacks,
-  and the `NSError**` condition hierarchy are `030-design/030`. The Swift-native
-  residual trampoline (`libAPIAnywareSbcl`) and its interaction with the §6
-  re-resolution pass are `030-design/040`.
+- **Boundaries to sibling decisions.** The per-signature `objc_msgSend` FFI crossing
+  is the compiled-FFI mechanism (ADR-0015, `sb-alien` open-coded typed alien
+  per ABI) realized in the emitter and runtime, not re-decided here. Lifetime,
+  threading/callbacks, and the `NSError**` condition hierarchy are ADR-0036/0035/0037.
+  The Swift-native residual trampoline (`libAPIAnywareSbcl`) and its interaction with
+  the §6 re-resolution pass are ADR-0038.
 - **Hard to reverse:** the metaclass shape, the explicit-`defgeneric` surface, and
   the baked-graph + startup-re-resolution contract are baked into every generated
   binding, every sample app, and `bundle-sbcl`. The SBCL target design spec
@@ -216,7 +214,7 @@ target's Swift dylib's own load-time setup absorbs is decided in
   are the spec-shared surface.
 
 See `targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md` (§B1–B5, §5.1, §6, §7) for
-the prior-art evidence and the gaps this leaf closed first-hand; ADR-0033 + the
+the prior-art evidence and the gaps this ADR closed first-hand; ADR-0033 + the
 contract spec for the upper-layer surface this realizes; ADR-0010 for static emit;
 ADR-0005 for the idiom posture; gerbil ADR-0020 (manifest graph + the "vacuous
 dispatch" critique D6 answers) and ADR-0023 (generics cost — the risk this ADR

@@ -12,7 +12,7 @@ binding), and realizes the **lower layer** of the CL-family interface contract
 method frontier (§8/§9), the deferred buckets, and the B1–B5 swift-residual close —
 same shared IR → identical residual.
 
-It is the sbcl realization of the leaf `030-design/040-trampoline-layer`, and it
+It is the sbcl trampoline layer, and it
 **composes** the already-settled sibling decisions: ADR-0034 (object model + startup
 re-resolution), ADR-0035 (main-thread bounce), ADR-0036 (lifetime + release queue),
 ADR-0037 (`NSError**`/`throws` → `ns:cocoa-error`). Where those ADRs said "the
@@ -49,7 +49,7 @@ not optional:
 
 ## Decision
 
-### 1. One broader dylib — the sole native unit (the fork this leaf settled)
+### 1. One broader dylib — the sole native unit (the fork settled here)
 
 A single SwiftPM dynamic-library target **`APIAnywareSbcl`** is added to
 `swift/Package.swift` (alongside `APIAnywareRacket`, `APIAnywareChez`,
@@ -143,15 +143,15 @@ These realize the already-accepted sibling ADRs; this ADR fixes only their *home
   `define-alien-callable` pointer + the selector's type encoding to a dylib entry
   (`SubclassSynth.swift`) that builds the native **bounce-shim IMP** wrapping that
   pointer and `class_addMethod`s it. The IMP build is dylib-side because the installed
-  IMP *must* be the native bounce shim (§1). *Mechanism note for `050`:* a
+  IMP *must* be the native bounce shim (§1). *Mechanism note:* a
   `@convention(c)` IMP is signature-specific, so the bounce shim is either generated
   per overridable selector-signature (the emitter already generates per-selector code)
-  or forwarded via `NSInvocation` — a build-leaf choice, not fixed here.
+  or forwarded via `NSInvocation` — a build-time choice, not fixed here.
 - **`ThrowsBridge`/`AsyncBridge`/`OpaqueHandle`** carry their racket/gerbil roles;
   `ThrowsBridge` feeds the *one* `ns:cocoa-error` signaller that also serves the direct
   `NSError**` path (ADR-0037).
 
-### 5. `save-lisp-and-die` interaction — the relive-burden split (the leaf's headline question)
+### 5. `save-lisp-and-die` interaction — the relive-burden split (the headline question)
 
 A dumped image (`save-lisp-and-die`, D4) keeps baked Lisp metadata but loses live
 foreign pointers (ADR-0034 §6, spike `…/sbcl-mop-spike/5-startup-re-resolution.sh`).
@@ -177,7 +177,7 @@ absorb the `Class`/`SEL` relive**:
 
 ⇒ **The dylib stays passive** — no `aw_sbcl_revive` entry. The relive is Lisp-metadata
 work; routing it through the dylib would buy nothing and couple two independent concerns.
-This is the precise answer to the leaf's "does the dylib's load-time setup absorb part of
+This is the precise answer to "does the dylib's load-time setup absorb part of
 the relive burden?": **only for its own framework subset, via dyld, for free; the rest
 stays Lisp-side.**
 
@@ -253,13 +253,13 @@ surface that the shared-IR convergence produces. No shared code crosses the impl
 - **Build order:** `generate → swift build → load in SBCL → (for an app) save-lisp-and-die`.
   The app image `load-shared-object`s the dylib; `bundle-sbcl` vendors + relocates it into
   `Contents/Frameworks/`.
-- **Build-leaf boundaries.** `050` builds the dylib (the six files) + binds the `aw_sbcl_*`
+- **Component boundaries.** The runtime builds the dylib (the six files) + binds the `aw_sbcl_*`
   entries via `sb-alien` + the per-signature bounce-shim mechanism + composes the Lisp
-  startup re-resolution pass (ADR-0034 §6) with the dylib's auto-reopen (§5). `040` (emitter)
+  startup re-resolution pass (ADR-0034 §6) with the dylib's auto-reopen (§5). The emitter
   routes `objc_exposed == false` decls to trampoline bindings and emits the global pass.
-  `070` (`bundle-sbcl`) extends the vendor set to include `libAPIAnywareSbcl`.
-- **The SBCL target design spec** (`targets/sbcl/docs/design/2026-06-20-sbcl-target-design.md`,
-  authored in this leaf) synthesizes ADR-0034/0035/0036/0037 + this ADR into the full
+  `bundle-sbcl` extends the vendor set to include `libAPIAnywareSbcl`.
+- **The SBCL target design spec** (`targets/sbcl/docs/design/2026-06-20-sbcl-target-design.md`)
+  synthesizes ADR-0034/0035/0036/0037 + this ADR into the full
   buildable design.
 - **Hard to reverse:** the sole-native-unit shape, the `aw_sbcl_*` entry convention, and the
   relive-split are baked into every generated binding, every sample app, and `bundle-sbcl`.

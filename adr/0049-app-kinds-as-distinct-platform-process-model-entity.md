@@ -61,7 +61,7 @@ the platforms domain, and is projection-free.**
 4. **Projection-free.** `kind.apiw` states what a kind *is* — platform truth — never
    how any target language emits it (no "generate the racket NSApplication main").
    The bundlers (`targets/*/tools/bundle-*`) are *consumers* of this truth, in the
-   `targets/` domain (workstream 6); they are not part of it.
+   `targets/` domain; they are not part of it.
 
 ## Consequences
 
@@ -73,16 +73,17 @@ the platforms domain, and is projection-free.**
   (parse + schema embed + registry + focused validator + a standing `tests/` guard)
   and `apianyware-platform-manifest` (platforms-domain home + `include_str!` schema
   embed), so there is a well-trodden template, but the data model is its own.
-- **ws8 seam (mirrors ADR-0048 D7 / ws3):** this workstream authors only the
-  `app-kind.kdl-schema` contract + the focused in-crate validator; the machine-JSON
-  schema and CI validation tooling stay workstream 8.
-- **ws6 seam:** target emitters/bundlers project a kind's bundle/process model to a
+- **Validation:** the `app-kind.kdl-schema` contract + the focused in-crate validator live
+  with the model (mirroring ADR-0048); the shared KDL-Schema engine that `apianyware-validate`
+  runs validates it like every other artifact — there is no separate machine-JSON schema
+  (ADR-0046 §5).
+- **Projection boundary:** target emitters/bundlers project a kind's bundle/process model to a
   target's build (`.app` layout, Info.plist emission, launchd plist) by *reading*
   the registry; the projection lives in `targets/`, never in the kind.
-- **ws9 seam (declare-now / execute-later):** `kind.apiw` carries only
+- **Test-obligation boundary (declare / execute):** `kind.apiw` carries only
   *test-obligation references*; the obligation bodies are authored in
-  `platforms/macos/tests/app-kinds/<kind>.apiw` (workstream 4 child 3) and executed
-  by the testing architecture (workstream 9).
+  `platforms/macos/tests/app-kinds/<kind>.apiw`, and their execution belongs to the test model
+  (`testing/`, ADR-0053), not the kind.
 - **Why this clears the ADR bar:** hard-to-reverse (a new crate + a new schema + an
   on-disk domain placement + seven authored kinds to follow), surprising (the
   reuse-vs-distinct call against the very-similar ADR-0048 mechanism), a real

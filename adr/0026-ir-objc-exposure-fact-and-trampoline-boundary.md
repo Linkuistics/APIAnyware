@@ -7,11 +7,10 @@ deciding the *mechanism* ADR-0025 deliberately deferred: how the shared
 those facts is. Governed by **ADR-0011** (the trampoline layer is per-target; only
 the analysis/IR is shared) and **ADR-0010** (the native library is the binding).
 
-This is the single shared-pipeline decision of the
-`add-swift-native-api-coverage` grove. Everything downstream of it is per-target
-(racket first, in 040).
+This is the single shared-pipeline decision; everything downstream of it is per-target
+(racket first, in ADR-0027).
 
-## Context — what the investigation found (010-design, 2026-06-15)
+## Context — what the investigation found (2026-06-15)
 
 The boundary design rests on three empirical findings, all verified against
 swift-api-digester output and the current IR types:
@@ -92,8 +91,8 @@ three dispositions for a top-level `Func`/`Var`:
 Additionally, the silently un-walked ABI kinds `Macro`/`TypeAlias`/
 `AssociatedType` (the `_ => {}` fall-through) are **recorded in `skipped_symbols`
 with a `deferred_abi_kind` reason** rather than vanishing. *Recording* them is in
-scope; *recovering/walking* them remains deferred to a later frontier leaf
-(ADR-0025/D2, "mechanism first, frontier grows"). After this change
+scope; *recovering/walking* them remains a deferred frontier
+(ADR-0025, "mechanism first, frontier grows"). After this change
 `skipped_symbols` means "genuinely cannot be represented or is deferred", never
 "Swift-native and therefore dropped".
 
@@ -161,11 +160,11 @@ all ObjC declarations are bound directly, unchanged.
 - **IR schema change.** `objc_exposed: bool` (default true,
   `skip_serializing_if` true) is added to eight IR structs. Every struct literal
   constructing them across `collection/`, `analysis/`, and tests must add the
-  field — mechanical churn owned by 020-build.
+  field — mechanical churn.
 - **`non_c_linkable_skip_reason()` is replaced** by a three-way classifier shared
   with the `objc_exposed` derivation. `SWIFT_NATIVE` is retired from the drop
   path; a `deferred_abi_kind` reason is added for the un-walked kinds.
-- **Golden / snapshot impact (for 020-build).** Collected goldens gain
+- **Golden / snapshot impact.** Collected goldens gain
   `objc_exposed: false` on newly-retained Swift-native top-level funcs/constants
   **and** on already-retained Swift-native types (classes/enums/structs/protocols
   with `s:` USRs, which already flow through). `skipped_symbols` loses its

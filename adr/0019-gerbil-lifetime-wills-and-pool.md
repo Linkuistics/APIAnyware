@@ -44,8 +44,8 @@ Two mechanisms intentionally combined, exactly as ADR-0007:
   wrapping must wrap them in `with-autorelease-pool` themselves (the same rule
   Cocoa imposes on ObjC command-line tools) — documented in
   `targets/gerbil/docs/reference.md`.
-- **Threading interaction is deferred:** whether wills/pools fire correctly on
+- **Threading interaction is separate:** whether wills/pools fire correctly on
   foreign OS threads entering Gambit depends on Gambit's green-thread model and is
-  resolved by the spike-gated threading leaf (cf. chez ADR-0016's per-thread pool
-  + guardian-mutex interaction). This ADR covers the single-threaded / main-thread
-  model; the threading leaf extends it.
+  resolved by the gerbil callback-threading model (ADR-0022; cf. chez ADR-0016's
+  per-thread pool + guardian-mutex interaction). This ADR covers the single-threaded
+  / main-thread model; ADR-0022 extends it.

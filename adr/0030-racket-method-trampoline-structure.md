@@ -6,14 +6,14 @@ structs that ADR-0027's free-function trampoline does not reach. Generalises
 **ADR-0027** (the racket free-function trampoline: call-by-name `@_cdecl`
 re-export) from *free functions* to *methods* by adding an **opaque receiver
 handle** as the first C parameter. Governed by **ADR-0011** (the trampoline layer
-is per-target — this ADR is racket-only; chez/gerbil inherit it in this grove's
-040/050 with thin ADRs), **ADR-0010** (the native library *is* the binding), and
-**ADR-0026** (the `objc_exposed` boundary fact). Consumes the method-recovery IR
-landed in `020-method-recovery` (`ir::Method.swift_fn` with `self_kind`,
-`ir::Struct.methods`, recovered `init_method`).
+is per-target — this ADR is racket-only; chez/gerbil inherit it in ADR-0031/ADR-0032),
+**ADR-0010** (the native library *is* the binding), and
+**ADR-0026** (the `objc_exposed` boundary fact). Consumes the recovered method IR
+(`ir::Method.swift_fn` with `self_kind`, `ir::Struct.methods`, recovered
+`init_method`).
 
-This is the design decision of `030-racket/010-build` (the sync structural core).
-`async` methods are split to `030-racket/020-async-method` (ADR addendum there).
+This is the racket design decision (the sync structural core).
+`async` methods are split to the async-method addendum (below).
 The implementation-level contract is in
 `targets/racket/docs/design/2026-06-15-racket-trampoline.md` (§method).
 
@@ -81,12 +81,12 @@ pass records the reason). The broken msgSend for Swift-native selectors is gone.
 
 Method args reuse ADR-0027's scalar/string taxonomy verbatim. The deferral set
 grows with method-specific, per-reason counts (the §5 discipline): generic method,
-async method (→ leaf 020), `consuming` receiver, static/class method,
+async method, `consuming` receiver, static/class method,
 operator/non-identifier name, variadic, nullable-scalar return, and — in this
-structural leaf — value-struct **params** and object/reference params (the async
-leaf's R1). Nothing is silently dropped.
+structural core — value-struct **params** and object/reference params (the async
+frontier's R1). Nothing is silently dropped.
 
-### 6. Codegen robustness against the lossy IR (kick-backs, resolved in leaf)
+### 6. Codegen robustness against the lossy IR (kick-backs, resolved here)
 
 Compile-checking the **entire generated Foundation residual** (68 inits + 92
 methods + 2 constants) against the real framework — the strongest available proof,
@@ -107,7 +107,7 @@ seven classes of bug rooted in the IR's lossy normalization:
   (`Decimal(Int)` vs `Decimal(UInt)`) is selected *by* the param type, so a
   width-agnostic cast would make the constructor ambiguous.
 - **Nested value-struct param names** (`Data.Base64EncodingOptions`, not
-  bare-spellable) → value-struct method params are deferred in this structural leaf
+  bare-spellable) → value-struct method params are deferred here
   (a qualified-name follow-up).
 
 ## Consequences
@@ -122,7 +122,7 @@ seven classes of bug rooted in the IR's lossy normalization:
   suppresses), closing charter #4 for methods.
 - **Receiver marshalling reuses the box/`Unmanaged` lifetime model** — no new
   handle type, no new lifetime (constraint honoured from ADR-0027).
-- **Racket-only.** chez/gerbil inherit this structure in 040/050 (thin ADRs over
+- **Racket-only.** chez/gerbil inherit this structure (ADR-0031/0032, thin ADRs over
   ADR-0028/0029); the IndexSet pop-B and URLSession async exemplars are the shared
   known-good cases.
 - **Proof** (the §6 deviation pattern — racket-local, no cross-target golden
@@ -131,13 +131,13 @@ seven classes of bug rooted in the IR's lossy normalization:
   Foundation in Swift 6 mode, and an **in-process smoke** binding the real
   `IndexSet` init/contains/insert `@_cdecl`s raw — proving init producer (D2) →
   value-receiver unbox (D2) → mutating write-back (D3) on one stable handle. The
-  full cold-pipeline rerun + VM-verify is `030-rerun-verify`.
+  full cold-pipeline rerun + VM-verify is a separate follow-up.
 
 See `CONTEXT.md` (*Receiver handle*, *Population A/B*, *Init producer*), ADR-0027
 (the free-function structure this generalises), ADR-0026 (the `objc_exposed`
 fact), and the design spec §method for the how.
 
-## Addendum: async methods + object-ref params (`030-racket/020-async-method`)
+## Addendum: async methods + object-ref params
 
 The sync structural core above classified `async` methods `deferred_async` and
 deferred object/reference params. This addendum decides both — the headline being a
@@ -196,7 +196,7 @@ assumed**: an objc twin like `NSDate` also appears as a hidden `inout Date` para
 speculative entry can surface an uncompilable method. **Init object params stay
 deferred** — a bridging constructor (`Data(referencing: NSData)`) genuinely wants the
 reference, the opposite of the method-call case, and the IR cannot tell them apart.
-The set widens in `030-rerun-verify` over enriched IR (which may expose `inout`).
+The set widens in the full-pipeline rerun over enriched IR (which may expose `inout`).
 
 ### A4. Proof
 
@@ -204,17 +204,17 @@ Codegen unit tests in `trampoline.rs` (async throws/void/non-throwing, the two a
 deferrals, object-ref bridging); the whole-Foundation residual compiling clean
 against real Foundation in Swift 6 (the async `URLSession.data` overloads + the R1
 params included — the only residual error is a *pre-existing* `provenance: null`
-availability gap on `AttributeContainer.filter`, resolved by the full pipeline in
-`030-rerun-verify`); and an **in-process smoke**
+availability gap on `AttributeContainer.filter`, resolved by the full pipeline);
+and an **in-process smoke**
 (`generation/targets/racket/runtime/smoke/`) driving the real `async-bridge.rkt` to
 run `URLSession.data(from: file://…)` end-to-end and assert a real
 `(Data, URLResponse)` came back. The generated-class-file **require wiring** (sync +
 async) and the `needs_native`-branch `_fun` interaction are carried to
-`030-rerun-verify` (they surface only at full-pipeline generate + load).
+the full-pipeline rerun (they surface only at full-pipeline generate + load).
 
-## Addendum: the full-residual `swift build` close (`030-racket/040-swift-residual-verify`)
+## Addendum: the full-residual `swift build` close
 
-Leaves 010/020 only *typechecked Foundation* in isolation. Compiling the **full
+Earlier passes only *typechecked Foundation* in isolation. Compiling the **full
 117-framework method/init residual** (593 init + 588 method `@_cdecl`s) surfaced 955
 errors across ~14 categories that single-framework typechecks never reached. The
 slice closed by **raising the deployment floor + re-attributing implementation-detail
@@ -290,7 +290,7 @@ always crashes), they have a real `@_cdecl` that **runs when called on the main
 thread** — the actual GUI use case for these SwiftUI/RealityKit-shaped APIs.
 `MainActor.assumeIsolated`-wrapping does *not* cleanly recover them (the non-Sendable
 `@MainActor` return value still cannot cross back to the nonisolated context), so a
-sound off-main variant is a future async-hopping frontier (captured for a later leaf),
+sound off-main variant is a future async-hopping frontier,
 not a defer. The warning count is the honest record of the constraint.
 
 ### B6. Proof (the §6b-analog method-slice close)

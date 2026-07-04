@@ -5,12 +5,12 @@ how `libAPIAnywareRacket` vends C-ABI **trampolines** for the Swift-native
 residual (`objc_exposed == false`), and how the racket emitter binds them.
 Refines **ADR-0025** (the complete-API binding model and trampoline elision),
 governed by **ADR-0011** (the trampoline layer is per-target — this ADR is
-racket-only; chez/gerbil get their own in 060/070) and **ADR-0010** (the native
+racket-only; chez/gerbil get their own in ADR-0028/ADR-0029) and **ADR-0010** (the native
 library *is* the binding). Extends the generated-Swift mechanism of **ADR-0013**
 (typed native dispatch) to a second problem.
 
-This is the design decision of `040-racket-trampoline`. It is consumed by 040's
-build leaves and re-verified end-to-end in 050.
+This is the racket free-function trampoline design decision, consumed by the racket
+build and re-verified end-to-end.
 
 ## Context
 
@@ -31,8 +31,8 @@ name** + **argument labels** (parsed from `printed_name`), digester-normalized
 `doc_refs`). Name yes, module-by-context, mangled-symbol available — that
 asymmetry is what makes "how does the trampoline call the API" a real fork.
 
-The user directive for this grove (memory `feedback-maximize-target-idiom-and-perf`,
-restated when grilling 040): **maximize native idiom and completeness over
+The user directive (memory `feedback-maximize-target-idiom-and-perf`):
+**maximize native idiom and completeness over
 minimizing work** — "a complete implementation, defer nothing". This ADR records
 the boundary at which "complete" meets what a flat C ABI can express.
 
