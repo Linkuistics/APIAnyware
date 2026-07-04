@@ -36,12 +36,26 @@ Two children, because the entire downstream shape **forks on one measurement**:
    machine-oriented (non-format-preserving) KDL codec against `serde_json` on the real IR,
    reports numbers, recommends. **The user decides go/no-go on the numbers** (D2). This is
    the only *risk* in ws8; it runs first so the build is planned with the risk resolved.
-2. **`02-build-plan-k151`** (planning) — runs *after* the spike. Fixes the machine-IR format
-   decision, then grills the still-open questions (below) and grows the concrete build leaves
-   (machine-IR schema · unified validation mechanism · `schemas/docs/` prose · CI). Deferred
-   here because one-schema-language-vs-two, and whether there is an IR-migration to build and
-   document, both depend on the spike outcome — pre-spawning build leaves now would be
-   speculative (lazy materialization).
+2. **`02-build-plan-k151`** (planning, DONE) — ran *after* the spike. Fixed the machine-IR format
+   decision (GO → KDL, folded into ADR-0046 in place per D9), grilled the open questions (→ D4–D8),
+   updated `CONTEXT.md` inline, and grew the four build leaves below. Also received + externalized
+   the user's ADR-consolidation steer (D9 → root BRIEF #10).
+
+The four build leaves it grew (skeleton-first, golden-neutral by default; only `k152` touches the
+emit path, and only to keep it byte-identical):
+
+3. **`03-machine-kdl-codec-k152`** (work) — **the format flip.** Productionize the Value-bridge JiK
+   codec, replace the JSON `machine.rs` seam, rename `extracted`/`resolved` → `.kdl`, swap
+   call-sites. The one golden-sensitive leaf → runs first; **golden-neutral at the emit layer is the
+   gate.** (D4/D7)
+4. **`04-machine-kdl-schema-k153`** (work) — the machine-IR **KDL-Schema** + focused in-crate
+   validator reusing `validate_against_schema` (the dissolved machine-JSON-Schema seam, now one
+   schema language). Additive/golden-neutral.
+5. **`05-validate-umbrella-k154`** (work) — the **one validation mechanism**: `apianyware-validate`
+   tree-walking command at the new `schemas/tools/validate/` crate + `make validate`. (D5/D6)
+6. **`06-validation-docs-k155`** (work) — the `schemas/docs/` **validation-model prose** + README +
+   CONTEXT vocab; records the D8 report-deferral trigger. Last leaf → its retirement cascades the
+   node (promote outcomes to the root BRIEF).
 
 ## Open questions deferred to child `02` (post-spike planning)
 
@@ -141,10 +155,56 @@ call 2026-07-04).** The spike measured the path k17 never tested — a machine-o
   `validate_against_schema`** — the machine-JSON-Schema seam every prior workstream deferred here
   **dissolves**, one schema language; (d) the migration is **golden-neutral at the emit layer**
   (generator reads the same typed `Framework`; only on-disk encoding changes) — the hard invariant
-  the cutover leaf must hold; (e) raise the draft ADR
-  (`…/ADR-DRAFT-supersede-k17-machine-kdl.md`) as a real ADR superseding the ADR-0046 k17 Update.
-  Implementation depth (Value-bridge vs native serde JiK format, ~1.3–1.5×) is `02`'s call on the
-  headroom numbers.
+  the cutover leaf must hold; (e) record the format decision in an ADR. [**k151 outcome:** per the
+  new ADR policy (**D9**), folded **into ADR-0046 in place** — §5 + status now state the machine IR
+  is KDL via a non-preserving codec — rather than raising a superseding ADR-0053; the k17 no-go
+  section was removed as history. "KDL everywhere" is literally true again; the draft + drafted 0053
+  were deleted.] Implementation depth (Value-bridge vs native serde JiK) is `02`'s call → **D4**.
+
+**D4 — Codec depth = Value-bridge; native serde JiK deferred.** User-confirmed recommendation
+(2026-07-04). The production codec reuses the existing serde derives via `to_value`/`from_value` +
+the ~300-line JiK codec (~2.4–3.2× typed, clears the D2 ≤5× bar with ~2× headroom **today**). A
+native serde JiK format (~1.3–1.5×, no `Value` intermediate) is a **documented deferred trigger** —
+worth it only if the generate-loop delta is ever felt (fractions of a second at realistic corpus
+sizes). Leaf: `machine-kdl-codec-k152`.
+
+**D5 — Validation runs locally; CI deferred.** User call (2026-07-04): build **one**
+tree-walking `apianyware-validate` command wired into a `make validate` target alongside
+`lint-annotations`; **do not** stand up GitHub Actions CI. `.github/workflows/` is absent → CI is
+net-new infrastructure, a separately-scoped concern out of ws8's lean scope (mirrors ws5's
+lean-mechanism stance, ADR-0050). The per-crate `tests/*_registry.rs` stay as in-crate guards; the
+umbrella is a runnable driver over the same engine, not a replacement. Leaf: `validate-umbrella-k154`.
+
+**D6 — `schemas/` becomes an active tool home.** User call (2026-07-04): the umbrella lives at a new
+crate **`schemas/tools/validate/`** (crate-home convention — a crate lives under the domain it
+serves; the validation umbrella serves the schemas domain). The generic KDL-Schema **engine** stays
+in `semantic/tools/spec-format` (it is the schema-*language* engine, a semantic-domain concern).
+Leaf: `validate-umbrella-k154`.
+
+**D7 — Machine IR filenames rename to `.kdl`.** User call (2026-07-04): `extracted.json`/
+`resolved.json` → **`extracted.kdl`/`resolved.kdl`** (extension matches content; restores ADR-0046
+§2's original intent; serves goldens-as-truth review + KDL tooling). Mechanical churn: `.gitignore`,
+~2–3 call-sites, docs. Flips the `CONTEXT.md` _Avoid_ note that forbade these names. Leaf:
+`machine-kdl-codec-k152`.
+
+**D8 — Derived-report schemas deferred (reports stay on-demand).** User call (2026-07-04): ws8
+schemas the machine **IR** (the core data model, stable shape) but **not** ad-hoc derived reports
+(conformance coverage, capability/representability). Reports stay derived / uncommitted / un-schema'd
+(constraint 4; consistent with ws6/ws7 — index points at the report). Trigger recorded for reopen:
+"IF a real machine consumer of a report materializes." Leaf: `validation-docs-k155` records the
+trigger.
+
+**D9 — ADR policy: current-state, in-place, no supersession chains, minimum coherent set.** User
+steer (2026-07-04, mid-session): ADRs must **always represent the current state**, be **modified in
+place**, and **not record design history** (no "later ADR supersedes earlier"); the corpus is
+compressed to a **minimum coherent set**. Applied immediately to this session's own output: the
+machine-format decision was folded **into ADR-0046 in place** (not a new superseding ADR-0053 — that
+draft + the drafted 0053 were deleted), and the k17 no-go "Update" section was removed (its outcome
+is now §5's current-state statement; the pre-existing k26 provenance "Update" section is a different
+topic, left for the consolidation step). **The corpus-wide compression of ADRs 0001–0052 is
+externalized as a new root grove step** (root BRIEF decomposition #10, after ws9, before
+grove-finish) — a new concern, not absorbed here. Going-forward policy recorded in the root BRIEF so
+ws9's ADRs are current-state / in-place, not new chains.
 
 **State of the current tree (established by exploration, not yet a decision):**
 - The KDL-Schema **engine is already shared** (`validate_against_schema`); every producing crate

@@ -88,11 +88,31 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    `#lang app-spec` suite, **each live-VM-verified ×4** (87 scenarios total). Finalized the
    canonical per-app layout (k84) and the portfolio index + conformance/coverage tie-in (k85). No
    machine manifest (D3); structural facts stay prose. See **App-model outcomes** below.
-8. **schemas + validation** — `schemas/`: formal validation of every artifact.
+8. **schemas + validation** — `schemas/`: formal validation of every artifact. *(node
+   `schema-validation-k149`, in progress — machine IR un-retreated to KDL (ADR-0046 §5, in place);
+   four build leaves grown k152–k155.)*
 9. **testing architecture** — the multi-layer test model (§33), TestAnyware /
    AppSpec integration (§34).
+10. **ADR consolidation** *(added 2026-07-04, user steer — see ADR policy below)* — compress the ADR
+   corpus (0001–0052+) into a **minimum coherent set** of **current-state, in-place** ADRs: fold out
+   every supersession chain and "Update — …" history section (e.g. ADR-0046's k26 provenance Update;
+   any residue elsewhere), merge/retire redundant ADRs, so each ADR reads as the decision *as it now
+   stands*. Runs **after ws9** (compress once the corpus is final) and **before grove-finish** (it
+   dovetails with the finish cycle's "promote ADRs that outlive the grove" step). Materialize the
+   leaf lazily when ws9 retires.
 
-(2)–(9) interleave once the skeleton lands; (2) is the spine most others consume.
+(2)–(9) interleave once the skeleton lands; (2) is the spine most others consume. (10) is a
+documentation-hygiene pass gated on the design being final.
+
+## ADR policy (user steer, 2026-07-04)
+
+**ADRs represent the current state, are modified in place, and record no design history.** No "later
+ADR supersedes an earlier one" chains; when a decision changes, **edit the owning ADR in place** and
+delete the superseded framing. The corpus is kept to a **minimum coherent set**. This is effective
+now: ws9 (and any later session) raises current-state / in-place ADRs, never new supersession chains;
+the one-off compression of the *existing* corpus is workstream #10. (First application: ws8 folded the
+machine-KDL decision into ADR-0046 in place rather than raising a superseding ADR-0053 — see the
+`schema-validation-k149` running log D9.)
 
 ## Pointers
 

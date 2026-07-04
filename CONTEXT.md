@@ -942,24 +942,30 @@ imperative `heuristics.rs` for ascent rules, ADR-0047).
 
 **Spec triad**:
 The three per-API-family files under `platforms/macos/api/<Framework>/` (REFACTOR §14):
-`extracted.json` (mechanical extraction facts — the datalog fact base), `annotations.apiw` (the
-**one** authored semantic overlay — manual + accepted-LLM), and `resolved.json` (the
+`extracted.kdl` (mechanical extraction facts — the datalog fact base), `annotations.apiw` (the
+**one** authored semantic overlay — manual + accepted-LLM), and `resolved.kdl` (the
 deterministic merged graph; the generator input, ≈ the retired `enriched`). Replaces today's four
 JSON checkpoints with **one** per-family triad; the intermediate stages stay in-process, not on
-disk. The machine files are `.json` (not `.kdl`): the k17 spike returned **no-go** on machine KDL
-and the JSON retreat was invoked (ADR-0046 Update); only the authored overlay is KDL.
-_Avoid_: the `.yaml` filenames of §14 (superseded); `extracted.kdl`/`resolved.kdl` (machine side
-is JSON since the k17 retreat); calling `resolved.json` the "enriched IR" (that term is retired).
+disk. **All three are now KDL 2.0** — the ws8 spike (`machine-format-spike-k150`) measured the
+*non-preserving* machine codec k17 never tested and the machine IR **un-retreated to KDL** (D3 GO,
+2026-07-04; recorded in ADR-0046 §5, amended in place — the k17 no-go reversed on the ws8 spike).
+Machine-side implemented by the ws8 codec cutover (`machine-kdl-codec-k152`); one format, one
+schema language.
+_Avoid_: the `.yaml` filenames of §14 (superseded); `extracted.json`/`resolved.json` (the machine
+side un-retreated to KDL at ws8 — that JSON was the transient k17→ws8 state); calling `resolved.kdl`
+the "enriched IR" (that term is retired).
 
-**KDL interchange / `.apiw`** _(authored only, post-k17)_:
-The authored overlay format (ADR-0046, amended): **KDL 2.0** for the **authored** overlay
-(`.apiw` extension) only. The **machine** artifacts (`extracted.json`/`resolved.json`) are
-**JSON** — the k17 spike measured the only production-grade KDL-2.0 library (the official
-document-model `kdl` crate) at ~80–100× slower to parse than `serde_json` on the real multi-MB
-IR, so its §5 JSON retreat was invoked. KDL stays where it earns its place: the human/LLM-authored
-overlay, where the authoring eval backs it (`semantic/docs/research/2026-06-24-kdl-authoring-eval/`)
-and format-preserving diagnostics matter. No YAML anywhere.
-_Avoid_: "KDL everywhere / KDL for the machine IR" (the machine side reverted to JSON, k17);
+**KDL interchange / `.apiw`** _(KDL everywhere again, post-ws8)_:
+The interchange format (ADR-0046; machine side amended in place at ws8): **KDL 2.0 everywhere** — the
+**authored** overlay (`.apiw`) *and* the **machine** artifacts (`extracted.kdl`/`resolved.kdl`).
+The authored overlay uses the format-preserving `kdl` crate (authoring eval backs it,
+`semantic/docs/research/2026-06-24-kdl-authoring-eval/`; diagnostics matter). The machine IR uses a
+hand-written **non-preserving JiK codec** over `serde_json::Value` (ADR-0046 §5; homed in
+`semantic/tools/spec-format`) — the k17 ~80–100× tax was the *format-preserving document model*, not
+KDL; the non-preserving codec runs at ~1.3× raw / ~2.4–3.2× typed (spike
+`2026-07-04-kdl-machine-codec-spike/`). No YAML anywhere.
+_Avoid_: "the machine IR is JSON" (that was the transient k17→ws8 state — un-retreated to KDL, ADR-0046 §5); "KDL is too
+slow for the machine IR" (that was the *document-model* crate; the machine codec is non-preserving);
 "the YAML interchange" (§29's YAML was reversed); "a YAML dialect" (`.apiw` is KDL, not YAML).
 
 **Schema contract (`annotations.kdl-schema`)** _(authored overlay only; ws2 owns it)_:
@@ -968,13 +974,17 @@ The authoritative, **language-neutral** contract for the authored `.apiw` overla
 `kdl-schema-k19`). The Rust serde types are *one conforming implementation*, not the source of
 truth; any KDL tool in any language validates an `.apiw` file against it. There is **no maintained
 KDL-2.0 schema validator** (the language is frozen at SCHEMA-SPEC 1.0), so the `spec-format` crate
-ships a focused in-crate validator of the contract's subset as the §29 validator step; adopting a
-general one is ws8's. The machine `extracted.json`/`resolved.json` get a **JSON Schema** owned by
-**ws8**, which also owns validation tooling/CI and the
-app-kind/AppSpec/capability-profile/conformance-report schemas.
+ships a focused in-crate validator of the contract's subset as the §29 validator step. The machine
+`extracted.kdl`/`resolved.kdl` get a **machine KDL-Schema** (ws8 `machine-kdl-schema-k153`) validated
+by the **same generic engine** (`apianyware_spec_format::validate_against_schema`) — the
+machine-JSON-Schema seam every prior workstream deferred to ws8 **dissolved** when the machine IR became KDL (ADR-0046 §5; one schema
+language). ws8 also owns the single tree-walking validation command (`apianyware-validate`, homed at
+`schemas/tools/validate/`) + `make validate`; CI is deferred (none exists). AppSpec is **not** ws8's
+(ADR-0052 — external format, owns its own validation).
 _Avoid_: deriving the contract from the Rust types (types conform to the schema, not vice-versa);
-a JSON Schema over a projection of the KDL (rejected — reintroduces JSON); putting the `.apiw`
-schema or its validator in ws8 (ws2 owns the `.apiw` schema + validator step; ws8 owns the rest).
+"a machine JSON Schema" (the machine IR is KDL, ADR-0046 §5, so its schema is a
+KDL-Schema); putting the `.apiw` schema or its validator in ws8 (ws2 owns the `.apiw` schema +
+validator step; ws8 owns the machine schema + the umbrella).
 
 **`linked` (datalog stage)** _(rename, replacing the colliding "resolved" stage)_:
 The in-process datalog cross-reference stage (cross-class/protocol linking + convention rules),

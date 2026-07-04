@@ -186,10 +186,11 @@ sub-second-to-low-seconds emit total.
 - **Golden-neutral invariant:** the migration is golden-neutral **at the emit layer** — the
   generator output must stay byte-identical (it reads the same `Framework`). Only the on-disk IR
   encoding changes. That invariant is `02`'s follow-on to hold; this leaf moved no emit path.
-- **ADR:** a draft superseding the ADR-0046 k17 Update is in
-  [`ADR-DRAFT-supersede-k17-machine-kdl.md`](./ADR-DRAFT-supersede-k17-machine-kdl.md). It is a
-  **draft** — the actual ADR is raised by `02-build-plan-k151` **after** the user's D2 go/no-go, so
-  it records the real decision rather than presuming it.
+- **ADR:** the user's D2 go/no-go was **GO** (2026-07-04). Per the grove's ADR policy (current-state,
+  in-place, no supersession chains), `02-build-plan-k151` folded the decision **into
+  [ADR-0046](../../../../adr/0046-spec-interchange-format-kdl-everywhere.md) in place** (§5 + status:
+  the machine IR is KDL via a non-preserving codec) rather than raising a separate superseding ADR.
+  ("KDL everywhere" is literally true again.)
 
 ## Caveats (research discipline)
 
