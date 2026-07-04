@@ -1585,6 +1585,35 @@ propose→review→accept boundary — the **ws5 side-channel philosophy** (ADR-
 to app specs. The durable human-adjacent artifact is the **spec**, not the hand-written
 suite. _Avoid_: hand-authoring suites (that authors the generator's output by hand).
 
+## Test model (refactor workstream 9)
+
+Introduced by the `structural-refactoring` grove, workstream 9 (`testing-architecture-k156`). The
+**behaviour axis** of conformance — "does the binding *behave*?" — orthogonal to ws8 **validation**
+("is the artifact *well-formed*?"). REFACTOR §33/§34, settled around **ADR-0053** and the node
+running log **D1–D5**. Model prose: `testing/test-model.md` (the behaviour-axis twin of
+`schemas/docs/validation-model.md`).
+
+**Multi-layer test model** _(the ws9 deliverable)_:
+A **documented federation**, not a test-running machine. It maps REFACTOR §33's twelve **test
+layers** to the homes that already realise them (spec-validation → ws8 `apianyware-validate`;
+extraction → emit goldens + `extract-*/tests`; annotation → ws5 `annotations {stale,audit}`;
+conformance → ws6 `apianyware-conformance`; sample-app / GUI → the external AppSpec suites), marks
+the **honest gaps** (performance §11, dedicated leak/lifetime/threading stress §12, and the layer-6
+api-semantics **execution**), and names the external-runner seam. ws9 builds **no runner and no
+crate** — the runner is external (AppSpec, ADR-0052) and per-target execution hooks are ws6's.
+_Avoid_: "the test runner" / "the test harness" (there is none grove-side — execution is AppSpec's,
+ADR-0052); conflating the **test model** (behaviour, `testing/`) with the **validation model**
+(well-formedness, `schemas/`); claiming layer-6 / perf / stress coverage that is documented as a gap.
+
+**Test layer** _(REFACTOR §33 vocab)_:
+One of the twelve levels at which testing happens (spec-validation · extraction-regression ·
+annotation-review · adapter-ABI · target-binding-unit · semantic-pattern · cross-target-conformance ·
+AppSpec-sample-app · GUI/accessibility · packaging/signing/install · performance ·
+leak/lifetime/threading stress). Each layer has a **home** (an existing crate / goldens / declaration /
+external suite) or is a **documented gap**. _Avoid_: treating the layers as one suite to be *run* by a
+single command (they are a federation of independently-homed test kinds — D1); "test level" is an
+acceptable synonym.
+
 ## Example dialogue
 
 > **Dev**: Should we add a `--style functional` to the CLI for the new Chez
