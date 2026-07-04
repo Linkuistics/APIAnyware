@@ -1012,6 +1012,63 @@ winner stamped, losers kept as a `superseded-by` record; a fact with no producer
 _Avoid_: a float confidence (false precision — enum chosen); a separate provenance store keyed
 to facts (it is in-format); silently defaulting an unknown (it stays explicit).
 
+## Validation (refactor workstream 8)
+
+Introduced by the `structural-refactoring` grove, workstream 8 (`schema-validation-k149`).
+"Formal validation of every artifact" (root BRIEF #8), settled around **ADR-0046 §5** and the
+node running log **D4–D8/D10**. Model prose: `schemas/docs/validation-model.md`.
+
+**One schema language, one engine**:
+Every schema in `schemas/spec-format/` (all thirteen) is **KDL Schema Language** (KDL-in-KDL) and
+every validator delegates to **one** generic engine, `apianyware_spec_format::validate_against_schema`
+(homed in `semantic/tools/spec-format`). No JSON Schema anywhere — the machine-JSON-Schema seam
+ws2–ws6 deferred to ws8 **dissolved** when the machine IR un-retreated to KDL (ADR-0046 §5).
+_Avoid_: "a machine JSON Schema" / "JSON Schema over a JSON projection" (rejected, ADR-0046 §3 —
+one language); calling any producing crate's validator the source of truth (the schema is the
+contract; serde types conform to it).
+
+**Validation umbrella / `apianyware-validate`** _(the one command; `validate-umbrella-k154`, D6)_:
+The single tree-walking validation command, homed at the crate `schemas/tools/validate/`. A **lean
+driver** — it embeds no schema and re-implements no validation; it dispatches every authored `.apiw`
+to its producing crate's validator and reports per-class. **Coverage-as-a-guard**: any `.apiw` that
+matches no known layout is a **failure** (exit 1, "unclassified"), so a new artifact type can't
+silently escape validation. Wired to **`make validate`**. Exit codes: 0 clean · 1 failure or
+unclassified · 2 usage/precondition.
+_Avoid_: "the umbrella re-validates" (it delegates); putting the generic *engine* in
+`schemas/tools/validate` (the engine is a semantic-domain concern in `spec-format`; the umbrella is
+a driver).
+
+**Three validation layers** _(complementary, deliberately overlapping)_:
+(1) the `apianyware-validate` **umbrella** (runnable driver, `make validate`); (2) the per-crate
+**`tests/*_registry.rs`** guards (the `cargo test` face — each crate loads + validates every real
+authored file of its class); (3) **`lint-annotations`** (`apianyware-analyze annotations
+stale|audit`, ADR-0050 §5) — the overlay **drift** gate, freshness not validity. Validation runs
+**locally** (`make` + `cargo test`); **CI is deferred** — `.github/workflows/` is absent (D5).
+_Avoid_: "CI validates the schemas" (no CI exists — deferred, net-new infra); conflating
+`lint-annotations` freshness with schema validity (orthogonal — an overlay can be schema-valid and
+stale).
+
+**Authored vs. machine validation** _(the opt-in split; D10)_:
+Authored `.apiw` (committed, closed content model) is validated **by default** — fast, zero
+precondition, fresh-checkout-friendly. The **machine IR** (`extracted.kdl`/`resolved.kdl`, derived +
+gitignored, **open** content model) is validated **only under `--machine`** (opt-in) because it runs
+on the format-preserving `kdl` parser (~2 s/MB → minutes-scale on the materialized corpus; a
+flattened `resolved.kdl` can exceed 80 MB); `--machine` validates authored **+** machine in one run,
+streams cheapest-first, and errors (exit 2) with a "run the pipeline first" precondition when the IR
+is absent. **Deferred trigger** (D10): a `serde_json::Value`-based engine reusing the schema *model*
+would cut machine validation ~50× — build only if `--machine` wall-time is ever felt (mirrors D4's
+native-serde-JiK deferral).
+_Avoid_: running `--machine` in `make validate` (it must stay fast); "the machine IR is un-validated"
+(it is — on opt-in).
+
+**Derived reports stay on-demand** _(D8)_:
+ws8 schemas the machine **IR** (stable core data model) but **not** ad-hoc derived reports —
+conformance coverage + capability/representability stay **derived / uncommitted / un-schema'd**
+(constraint 4; ws6/ws7 point at the report). Only conformance's *authored judgment slice*
+(`conformance.apiw`) has a schema; the derived slice is computed on demand by `apianyware-conformance`.
+**Reopen trigger**: IF a real machine consumer of a report materializes.
+_Avoid_: committing or schema-ing a derived report pre-emptively (constraint 4 — recompute it).
+
 ## Semantic model (refactor workstream 3)
 
 Introduced by the `structural-refactoring` grove, workstream 3 (`semantic-model-k27`):

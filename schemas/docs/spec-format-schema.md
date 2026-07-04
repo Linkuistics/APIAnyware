@@ -9,13 +9,16 @@ overlay, *why* it is language-neutral, and *how* a non-Rust tool consumes it.
 | Schema | Validates | Authored by |
 |--------|-----------|-------------|
 | [`../spec-format/annotations.kdl-schema`](../spec-format/annotations.kdl-schema) | the authored `annotations.apiw` overlay | **ws2** (here) |
-| *(machine KDL-Schema, TBD)* | machine `extracted.kdl` / `resolved.kdl` | **ws8** |
-| *(TBD)* | app-kinds, common AppSpecs, target capability profiles, conformance reports | **ws8** |
+| [`../spec-format/machine-ir.kdl-schema`](../spec-format/machine-ir.kdl-schema) | machine `extracted.kdl` / `resolved.kdl` | **ws8** |
+| the other eleven `../spec-format/*.kdl-schema` | pattern-kinds, platform manifest, app-kinds, platform tests, the six target-model entities | **ws3–ws6** |
 
 The spec triad is `extracted.kdl` → `annotations.apiw` → `resolved.kdl` per API family
 (`platforms/macos/api/<Framework>/`). The **whole** triad is KDL (ADR-0046 §5); the machine
 artifacts get a **machine KDL-Schema** — reusing the generic KDL-Schema engine, one schema
-language — owned by ws8, not here.
+language — shipped by ws8 (`machine-kdl-schema-k153`). The full per-schema table is
+[`../spec-format/README.md`](../spec-format/README.md); the model tying the layers together is
+[`validation-model.md`](validation-model.md). (Common **AppSpecs** are the external AppSpec
+project's format and are *not* schema'd here — ADR-0052.)
 
 ## Language-neutral by design (ADR-0046 §3)
 
@@ -59,9 +62,21 @@ Evidence the contract is correct against real content: the crate's test suite va
 fixtures (`tests/fixtures/{valid,invalid}.apiw`), the output of the k18 writer (`write_apiw`), and
 **every committed `_llm-annotations` file folded into `.apiw`** (152 files at time of writing).
 
-## ws8 boundary (recorded here)
+## The ws2 boundary (how the seam actually resolved)
 
-ws8 owns: the **validation tooling/CI**; the **machine KDL-Schema** for the machine
-`extracted.kdl` / `resolved.kdl` (reusing the generic engine); and the schemas for the **other**
-artifacts (app-kinds, common AppSpecs, target capability profiles, conformance reports). ws2 owns
-only the `.apiw` schema above and the `validate_apiw` step.
+ws2 authored only the `.apiw` overlay schema above and its `validate_apiw` step. Everything ws2
+originally deferred "to ws8" landed differently than this doc first predicted, and the record now
+stands as:
+
+- The schemas for the **other authored artifacts** (pattern-kinds, platform manifest, app-kinds,
+  platform tests, the six target-model entities) were each authored by **the workstream that owns
+  the data** (ws3–ws6), not ws8 — every producing crate ships its schema + validator together.
+- The **machine KDL-Schema** for `extracted.kdl` / `resolved.kdl` *was* ws8's
+  (`machine-kdl-schema-k153`), reusing the generic engine — the machine-JSON-Schema seam dissolved
+  when the machine IR un-retreated to KDL (ADR-0046 §5).
+- The **validation umbrella** (`apianyware-validate`) was ws8's (`validate-umbrella-k154`); **CI
+  was deferred** — none exists, so it stays net-new infrastructure (D5).
+- Common **AppSpecs** are *not* schema'd here at all — `#lang app-spec` is the external AppSpec
+  project's format and owns its own validation (ADR-0052).
+
+The full picture is [`validation-model.md`](validation-model.md).

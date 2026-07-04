@@ -19,9 +19,9 @@
 #   (orphaned / new-surface / shape-changed) — so this target fails CI exactly
 #   when an overlay needs regenerating. `annotations audit` is informational
 #   (always exit 0): per-family disagreement + per-tier win distribution read
-#   from each `resolved.json`'s `fact_provenance` carriage.
+#   from each `resolved.kdl`'s `fact_provenance` carriage.
 #
-#   PRECONDITION: both read the gitignored per-family `resolved.json`. Run the
+#   PRECONDITION: both read the gitignored per-family `resolved.kdl`. Run the
 #   resolve pipeline first (`apianyware-collect` then `apianyware-analyze`) so the
 #   surface is current; each subcommand emits an actionable error if it is absent.
 
