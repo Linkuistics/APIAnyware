@@ -1,0 +1,28 @@
+# Throwaway spike (machine-format-spike-k150) — NOT part of the workspace.
+# Re-measures the machine-IR-to-KDL decision with a *machine-oriented*
+# (non-format-preserving) codec — the path k17 never tested (ADR-0046 k17 Update).
+[package]
+name = "kdl-machine-codec"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Standalone — do not join the parent workspace.
+[workspace]
+
+[dependencies]
+serde_json = "1"
+# Behind `--typed`: the real IR types, to bound the Value-bridge overhead
+# (to_value/from_value) a production KDL machine codec would pay vs serde_json's
+# direct typed<->text path.
+apianyware-types = { path = "<repo>/semantic/tools/types" }
+# The k17 baseline path: the official format-preserving document-model crate.
+# Pinned =6.3.4 (6.5+ needs rustc >= 1.95; this host is 1.93.1). Only used behind
+# the `--docmodel` flag to reconfirm k17's anchor on current fixtures + the
+# resolved shape k17 never measured.
+kdl = "=6.3.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

@@ -122,6 +122,30 @@ Scope of "the json documents we produce" = **`extracted.json` + `resolved.json`*
 `platforms/macos/api/<F>/`, gitignored, ~153 families); the `.methods.json`/`.llm.json` files are
 transient LLM-pipeline intermediates, out of scope.
 
+**D3 — GO: the machine IR un-retreats to KDL (spike `machine-format-spike-k150`; user D2
+call 2026-07-04).** The spike measured the path k17 never tested — a machine-oriented
+(non-format-preserving) JiK codec over `serde_json::Value`. Numbers (report:
+`semantic/docs/research/2026-07-04-kdl-machine-codec-spike/`):
+- **raw codec (text↔Value): ~1.24–1.29× `serde_json`**; production **typed** path via the cheapest
+  impl (Value-bridge): **~2.4–2.5× read / ~2.9–3.2× write** — all under the D2 ≤5× bar with ~2×
+  headroom. k17's document-model path re-confirmed at **~84×** (the tax was format-preservation, not
+  KDL). Full 4-target regenerate delta ≈ **+2.2 s** at a ~400 MB corpus (vs *minutes* for k17's path).
+- **correctness settled + extended**: lossless round-trip on **both** `extracted` AND `resolved`
+  (k17 only tested `extracted`); emitted text is **spec-valid KDL 2.0**. Size a wash.
+- **no ecosystem crate clears the bar** (serde bridges route through the doc-model; `knus` needs a
+  full non-serde IR re-derive) → the codec is a **hand-written ~300-line module, already prototyped
+  + validated** in the spike.
+- **The user's go/no-go is GO.** Consequences fixed for `02-build-plan-k151`: (a) machine IR format
+  = KDL (filenames likely `extracted.kdl`/`resolved.kdl`); (b) codec homes in
+  `semantic/tools/spec-format`; (c) the machine schema is a **KDL-Schema reusing
+  `validate_against_schema`** — the machine-JSON-Schema seam every prior workstream deferred here
+  **dissolves**, one schema language; (d) the migration is **golden-neutral at the emit layer**
+  (generator reads the same typed `Framework`; only on-disk encoding changes) — the hard invariant
+  the cutover leaf must hold; (e) raise the draft ADR
+  (`…/ADR-DRAFT-supersede-k17-machine-kdl.md`) as a real ADR superseding the ADR-0046 k17 Update.
+  Implementation depth (Value-bridge vs native serde JiK format, ~1.3–1.5×) is `02`'s call on the
+  headroom numbers.
+
 **State of the current tree (established by exploration, not yet a decision):**
 - The KDL-Schema **engine is already shared** (`validate_against_schema`); every producing crate
   (`app-kinds`, `platform-manifest`, `platform-tests`, all six `target-model` submodules,
