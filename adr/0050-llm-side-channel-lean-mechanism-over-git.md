@@ -1,16 +1,12 @@
 # The LLM analysis side-channel is a lean mechanism over git + the pipeline, not a staging subsystem
 
-**Status:** accepted
-
-**Raised by:** `structural-refactoring` grove, workstream 5 (`llm-side-channel-k43`).
-
 **Builds on:** ADR-0046 §4 (the provenance/precedence *carriage* model — `source ∈
 {extraction, convention:<rule>, llm, manual}`, `confidence` enum, `provenance`, precedence
 `manual > accepted-LLM > convention > extraction > unknown`, winner stamped + losers
-`superseded-by`). ADR-0046 §4 line 54 explicitly scoped *"the workflow over this
-(caching/regeneration/review-accept/diff)"* to workstream 5; this ADR is that workflow.
-ADR-0047 (convention tier as `ascent` datalog). The economic constraint that LLM annotation
-runs **within Claude Code subagents**, not an external paid API.
+`superseded-by`): §4 defines the *carriage*; this ADR is the *workflow* over it
+(caching/regeneration/review-accept/diff). ADR-0047 (convention tier as `ascent` datalog).
+The economic constraint that LLM annotation runs **within Claude Code subagents**, not an
+external paid API.
 
 ## Context
 

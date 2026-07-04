@@ -1,7 +1,5 @@
 # Gerbil object model: manifest ObjC class hierarchy, dual dispatch surface, transparent extensible subclassing
 
-**Status:** accepted (supersedes ADR-0018)
-
 The `gerbil` target reifies the **full ObjC class graph as a Gerbil `defclass`
 hierarchy** and exposes **both** of Gerbil's dispatch surfaces over it — the
 built-in `{sel obj}` MOP *and* `:std/generic` `(sel obj)` generic functions —
@@ -13,13 +11,11 @@ NSView) …)` with override methods synthesizes a *real* ObjC subclass at runtim
 macOS frameworks dispatch their callbacks into the user's Gerbil methods.
 *Deriving in Gerbil = deriving in ObjC.*
 
-## Why this supersedes ADR-0018
+## Why a manifest hierarchy, not a single-handle veneer
 
-ADR-0018 chose a *single* `(defstruct objc-obj (ptr))` handle with an opt-in
-`:std/generic` veneer and **no class graph**, justified on dispatch-cost
-measurements (proc core 16.3 ns, `:std/generic` 29.4 ns, built-in `{}` 42.8 ns)
-and the argument that "ObjC dispatch is already dynamic, so a Scheme class graph
-buys nothing." Two flaws surfaced while building leaf 040/020:
+The obvious cheaper alternative — a *single* `(defstruct objc-obj (ptr))` handle
+with an opt-in `:std/generic` veneer and **no class graph** — is rejected for two
+reasons that make the manifest hierarchy load-bearing:
 
 1. **Receiver-only generic dispatch over one type is vacuous.** With every
    wrapped object the same `objc-obj` type, `(length o)` can only ever resolve to
@@ -28,17 +24,18 @@ buys nothing." Two flaws surfaced while building leaf 040/020:
    with different syntax*, defeating the reason gerbil exists as a third Scheme:
    to explore the OO/generic paradigm against the macOS APIs (racket = dynamic
    `tell`; chez = procedural; gerbil = OO/generics).
-2. **"Buys nothing" weighed only runtime mechanics and ignored extension.** A
-   wrapper-only hierarchy lets you *call* framework methods but never *override*
-   them — a Gerbil subtype is invisible to AppKit, so the run loop never invokes
-   your method. The value of native OO in Cocoa **is** extension (custom
-   `NSView`/`drawRect:`, controllers), which requires synthesizing a real ObjC
-   class. That is the whole point, and ADR-0018 foreclosed it.
+2. **A wrapper-only hierarchy cannot extend the frameworks.** It lets you *call*
+   framework methods but never *override* them — a Gerbil subtype is invisible to
+   AppKit, so the run loop never invokes your method. The value of native OO in
+   Cocoa **is** extension (custom `NSView`/`drawRect:`, controllers), which
+   requires synthesizing a real ObjC class. A manifest hierarchy is therefore
+   *required* for either dispatch surface to be meaningful, and extension is
+   central, not out-of-scope.
 
-The dispatch-cost numbers from ADR-0018 still stand and still inform the layering
-(the proc core remains the fast path); what changes is that a manifest hierarchy
-is *required* for either dispatch surface to be meaningful, and extension is
-promoted from out-of-scope to central.
+The dispatch-cost measurements behind the fast-path layering (proc core 16.3 ns,
+`:std/generic` veneer 29.4 ns, built-in `{}` 42.8 ns) live in
+`targets/gerbil/docs/research/2026-06-03-gerbil-ffi-dispatch-spike/FINDINGS.md`;
+the inlinable proc core remains the fast path both surfaces forward to.
 
 ## Decision
 
@@ -95,5 +92,5 @@ promoted from out-of-scope to central.
   into every generated binding and every sample app. `targets/gerbil/docs/reference.md`
   documents both surfaces, the fast-path layering, and the transparent-subclass
   idiom.
-- Leaf 010's FFI crossings + selector caches survive untouched; its single-
-  `objc-obj` proc/constructor/property *surface* is rewritten around the graph.
+- The FFI crossings + selector caches are the proc core's; the object *surface*
+  over them is the manifest `defclass` graph, not a single `objc-obj` handle.

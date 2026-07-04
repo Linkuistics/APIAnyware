@@ -1,9 +1,5 @@
 # First-class semantic pattern-kinds, with relationships folded in
 
-**Status:** accepted
-
-**Raised by:** `structural-refactoring` grove, workstream 3 (`semantic-model-k27`).
-
 **Relates to:** ADR-0046 (spec format / triad / provenance carriage — instances reuse it),
 ADR-0047 (convention heuristics as datalog — the instance-detection tier reuses it). Realized
 by the PRD `prd/2026-06-25-semantic-pattern-kind-model.md`.
@@ -45,7 +41,7 @@ A single **two-level, unified** model:
    compose operations *plus relationships*" is exactly the pattern-instance-ref case: a
    `subscription` binds its `destroy` role to a `callback-destroy-notifier` relationship-instance.
 
-4. **Instances are provenance-tiered, superseding the heuristic enum.** The 10 stereotypes become
+4. **Instances are provenance-tiered, replacing the heuristic enum.** The 10 stereotypes become
    an **open authored data registry** (no closed Rust enum). `detect_patterns` becomes **one
    producer** stamping `source=convention`, co-existing with `llm` and `manual` instances under
    the ws2 precedence `manual > llm > convention > extraction`. Detection re-expresses as

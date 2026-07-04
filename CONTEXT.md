@@ -466,7 +466,7 @@ recursion — use `call-super`; `call-next-method` is for Lisp-subclass-of-Lisp-
 chains only); a raw `define-alien-callable` installed *as* an IMP (it runs Lisp on the
 framework's foreign thread — the ADR-0035 crash; the IMP must be the dylib's native
 bounce shim); a single `objc-object` wrapper class with generics (gerbil pre-rejected
-as "vacuous" — receiver-only dispatch over one type, ADR-0018→0020); "manifest
+as "vacuous" — receiver-only dispatch over one type, ADR-0020); "manifest
 `defclass` graph" *without* the MOP (that is gerbil's shape, ADR-0020 — sbcl goes
 further); "dynamic synthesis from the ObjC runtime" as sbcl's mechanism (that is
 CCL's model — sbcl emits the graph statically, runtime owns only the MOP hooks);
@@ -691,7 +691,7 @@ Racket-CS-C-API alternative).
 ## Gerbil native binding mechanism
 
 **Manifest class hierarchy (gerbil)**:
-The gerbil object model (ADR-0020, supersedes ADR-0018): the **full ObjC class
+The gerbil object model (ADR-0020): the **full ObjC class
 graph reified as a Gerbil `defclass` hierarchy** (`NSButton : NSControl : NSView
 : NSResponder : NSObject`), full ancestor chain incl. intermediate classes we
 bind no methods of, matching Apple's documented graph. Root is a runtime-owned
@@ -699,8 +699,8 @@ bind no methods of, matching Apple's documented graph. Root is a runtime-owned
 framework's module (cross-framework ancestry ⇒ cross-module import). Lifetime is
 a Gambit **will** + entry-point autoreleasepool (ADR-0019).
 _Avoid_: `objc-obj` / a single `(defstruct objc-obj (ptr))` handle (the
-superseded ADR-0018 model — receiver-only dispatch over one type is vacuous);
-"no class graph".
+rejected single-handle model — receiver-only dispatch over one type is vacuous,
+ADR-0020); "no class graph".
 
 **Class registry / `register-objc-class!` (gerbil)**:
 The wrap-boundary + subclassing-bridge registry (ADR-0020). Each emitted class
@@ -777,8 +777,8 @@ top-level binding). Both forward to an inlinable **proc core** (`nsstring-length
 16.3 ns — DRY substrate + designated fast path) bottoming out in the `%msg-…`
 crossings. OO is the natural **extension** surface, generics the **consumption**
 surface.
-_Avoid_: "OO veneer" / "opt-in single layer" (superseded ADR-0018); calling `{}`
-"rejected" (both surfaces are emitted now).
+_Avoid_: "OO veneer" / "opt-in single layer" (the rejected single-handle model,
+ADR-0020); calling `{}` "rejected" (both surfaces are emitted now).
 
 **Transparent extensible subclassing (gerbil)**:
 The gerbil extension model (ADR-0020): deriving `(defclass (MyView NSView) …)`
@@ -805,7 +805,7 @@ racket/chez shape; gerbil compiles ObjC inline via gsc).
 
 ## Documentation structure
 
-Documentation **lives with its subject** (REFACTOR §10, ADR-0024/ADR-0045):
+Documentation **lives with its subject** (REFACTOR §10, ADR-0024):
 there is **no large top-level `docs/` tree**. Each domain owns its docs under a
 local `docs/`, and the root `README.md` is a map only (§11). `README.md` and
 `CONTEXT.md` remain at the repo root.
@@ -837,7 +837,7 @@ _Avoid_: a "main tier" / single top-level `docs/` (dissolved by the
 
 **Central record dirs / `adr/` + `prd/`**:
 The two cross-cutting *record* artifacts that resist co-location, kept as small,
-single-purpose **top-level** dirs (ADR-0045): `adr/` — the global decision log (a
+single-purpose **top-level** dirs (ADR-0024): `adr/` — the global decision log (a
 connected graph crossing every target: supersession chains, later targets citing
 earlier ones; global numbering, the sole per-target-flavoured content kept
 central) — and `prd/` — human-facing agreement checkpoints. A focused `adr/`/`prd/`

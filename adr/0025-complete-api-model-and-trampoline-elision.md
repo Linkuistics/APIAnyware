@@ -1,7 +1,5 @@
 # The complete-API binding model and trampoline elision
 
-**Status:** accepted
-
 Each target's binding is *abstractly* a **complete C-ABI re-export of the entire
 macOS API** — every Objective-C **and** Swift-native declaration, surfaced to the
 target language through a per-target native (Swift) library that vends the whole

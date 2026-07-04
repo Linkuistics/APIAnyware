@@ -1,10 +1,5 @@
 # The multi-layer test model is a documented federation, not a test-running machine
 
-**Status:** accepted
-
-**Raised by:** `structural-refactoring` grove, workstream 9 (testing architecture,
-`test-model-k157`).
-
 **Relates to:** ADR-0052 (AppSpec is the external LLM-driven spec/test toolkit APIAnyware
 consumes — the layer-8/9 executor this decision references), ADR-0051 (capability profiles
 and derived representability — per-target execution hooks are ws6's), ADR-0046 §5 / the

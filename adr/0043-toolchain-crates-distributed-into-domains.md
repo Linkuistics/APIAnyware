@@ -1,7 +1,5 @@
 # Toolchain crates are distributed into the five domains, not gathered in a central `tools/`
 
-**Status:** accepted
-
 The `structural-refactoring` grove re-architects the repository from its
 *pipeline-phase* shape (`collection/` → `analysis/` → `generation/`) into the five
 *domain* partitions of `REFACTOR.md` §8–§9 — `semantic/`, `platforms/`, `apps/`,

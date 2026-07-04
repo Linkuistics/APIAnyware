@@ -1,7 +1,5 @@
 # The racket trampoline structure: call-by-name re-export, complete marshalling to the C-ABI limit
 
-**Status:** accepted
-
 Decides the **per-target** mechanism that ADR-0026 left to the first implementor:
 how `libAPIAnywareRacket` vends C-ABI **trampolines** for the Swift-native
 residual (`objc_exposed == false`), and how the racket emitter binds them.

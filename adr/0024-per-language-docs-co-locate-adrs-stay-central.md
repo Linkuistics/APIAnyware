@@ -1,82 +1,68 @@
-# Per-language docs co-locate in the target unit; ADRs stay central
+# Docs co-locate with their subject; the cross-cutting ADR/PRD log stays central at top-level `adr/`/`prd/`
 
-**Status:** accepted
+Documentation splits into two tiers by the same axis ADR-0011 uses for code, and
+there is **no large top-level `docs/` directory** (REFACTOR.md §10): documentation
+lives beside the thing it documents. **Per-subject docs co-locate** inside the unit
+they describe — a target's reference, design spikes, FFI model, and per-app
+realization notes live under `targets/<lang>/docs/` (+ per-app `learnings.md`); a
+domain's docs live in that domain (`semantic/docs/`, `platforms/macos/docs/`,
+`schemas/docs/`, `testing/`) — never in a shared central pile that interleaves
+several subjects. This carries ADR-0011's locality posture into the docs a
+contributor reads while working on one subject.
 
-Documentation splits into two tiers by the same axis that ADR-0011 uses for
-code. **Main (cross-cutting) docs** — anything about the project as a whole or
-the shared `collect → analyse → generate` pipeline — consolidate under a single
-top-level `docs/` tree (`adr/ pipeline/ specs/ research/ apps/ testing/ guides/
-prd/` + `docs/README.md` as the map). **Per-language (target-specific) docs**
-co-locate inside the target's own on-disk unit `generation/targets/<lang>/`:
-`docs/reference.md`, `docs/developer-guide.md`, `docs/design/`, `docs/research/`,
-and per-app `apps/<app>/learnings.md` alongside the already-co-located
-`test-results/<app>/report.md`. The former `knowledge/` tree is dissolved into
-this split.
-
-This extends **ADR-0011** (targets are hermetically isolated; only the API
-analysis is shared) from code to documentation: a target's reference, design
-spikes, and per-app realization notes are part of the target unit, not a shared
-central pile that interleaves three targets' specifics. It carries ADR-0011's
-locality posture into the docs a contributor reads while working on one target.
-
-**The one exception is ADRs.** The decision log is a *connected graph that
-crosses target boundaries* — supersession chains (0020→0018, 0005→0004) and
-later targets citing earlier ones (gerbil ADRs cite chez ADRs) — so all of
-`adr/0001..NNNN` stays central with unchanged global numbering. Co-locating
-ADRs would sever those cross-target edges and force per-target renumbering.
+**The one exception is the cross-cutting decision/record log.** ADRs (and PRDs)
+belong to no single domain: the ADR set is a connected graph that crosses target
+and domain boundaries — later targets cite earlier ones (gerbil ADRs cite chez
+ADRs), and the capability, interface-contract, and format decisions span domains —
+so co-locating or per-domain renumbering would sever those edges. They stay
+**central** in small, single-purpose **top-level** directories: `adr/` (the global
+decision log) and `prd/` (product requirement docs), each holding only its record
+type. This is **not** a reintroduced large top-level `docs/`: `adr/`/`prd/` are
+focused record homes, not a documentation tree, and are §10's explicit carve-out
+(success-criterion §45.7 reads against a re-accreting `docs/`, not against these).
 
 ## Considered options
 
-- **Status quo: target docs scattered across six trees.** Target-specific
-  material lived in `docs/adr/`, `docs/specs/`, `docs/research/`,
-  `knowledge/targets/`, `knowledge/matrix/`, and `generation/targets/<lang>/`. A
-  contributor on one target gathered context from all six; a newcomer could not
-  tell shared docs from target-specific ones because they were interleaved
-  (e.g. a racket-only ADR sitting mid-sequence among foundational ADRs); and
-  there was no template separating what a new-target author *reads* from what
-  they *produce*.
-- **Central `docs/targets/<lang>/` tree.** Keep one top-level docs root, with a
-  per-target subtree under it. Discoverable in one place, but it re-centralizes
-  exactly what ADR-0011's isolation separates: the target unit on disk and the
-  docs about it drift apart, and "everything about one target in one place" is
-  lost the moment the docs live elsewhere.
-- **Per-target ADR renumbering / co-located ADRs.** Move each target's ADRs into
-  its unit and renumber locally. Rejected: it breaks the connected decision
-  graph — supersession and cross-target citation edges become dangling or
-  ambiguous — for no locality gain that the central log does not already give.
-- **Co-locate per-language docs; keep ADRs central (chosen).** Everything about
-  one target lives in its unit except the ADRs, whose value *is* their
-  cross-target connectivity. Some discoverability cost for the central main tier
-  is paid back by `docs/README.md` as the map and by the read-vs-produce split in
-  the new-target authoring guide.
+- **Central `docs/targets/<lang>/` tree.** One top-level docs root with a
+  per-target subtree. Discoverable in one place, but it re-centralizes exactly what
+  ADR-0011's isolation separates: the unit on disk and the docs about it drift
+  apart, and "everything about one subject in one place" is lost the moment the
+  docs live elsewhere. Rejected.
+- **Per-domain / co-located ADRs** (`semantic/docs/adr/`, `targets/<t>/docs/adr/`, …).
+  Move each domain's ADRs into its unit and renumber locally. Rejected: it breaks
+  the connected decision graph — cross-target citation edges become dangling or
+  ambiguous — and buries a cross-cutting log inside one domain (ADR-0034 is
+  SBCL-specific and ADR-0021 gerbil-specific, but neither belongs *to* the SBCL or
+  gerbil unit as a record). No locality gain the central log does not already give.
+- **Keep the log under a `docs/adr/`.** Lowest churn, and a `docs/` holding *only*
+  `adr/` is arguably within §10's spirit — but it leaves a top-level `docs/`
+  directory standing, which §10 and §45.7 read against, and invites later
+  re-accretion of other docs into it. Rejected in favour of a top-level `adr/`.
+- **Co-locate per-subject docs; keep the ADR/PRD log central at top-level
+  `adr/`/`prd/` (chosen).** Everything about one subject lives in its unit except
+  the cross-cutting records, whose value *is* their connectivity. The
+  discoverability cost of the central record tier is paid back by the read-vs-produce
+  split in the new-target authoring guide
+  (`targets/_shared/docs/adding-a-language-target.md`).
 
 ## Consequences
 
-- **`knowledge/` is dissolved.** Its pipeline, app-portfolio, and TestAnyware
-  docs fold into `docs/pipeline/`, `docs/apps/`, `docs/testing/`; its per-target
-  `targets/<lang>.md` becomes `generation/targets/<lang>/docs/reference.md` and
-  its `matrix/<app>/<lang>.md` becomes
-  `generation/targets/<lang>/apps/<app>/learnings.md`.
-- **Each target unit owns a canonical doc layout.** `docs/reference.md`,
-  `docs/developer-guide.md` (where present), `docs/design/`, `docs/research/`,
-  per-app `learnings.md`. A target is not "done" until its docs exist in this
-  structure — the new-target authoring guide
-  (`targets/_shared/docs/adding-a-language-target.md`) makes producing them an explicit,
-  sequenced step with a read-the-main-tier / produce-the-per-language split.
-- **ADRs remain central with global numbering** — the sole per-target-flavoured
-  content kept central, justified by the cross-target decision graph.
-- **Cross-references were repaired in bulk.** The move touched ~160 files; every
-  live navigational pointer (READMEs, code comments, ADR back-references,
-  per-target reference/guide cross-links) was repointed, while historical
-  narrative inside dated design specs, research findings, test reports, and
-  completed plans was deliberately left as a record of past state.
-- **Duplication across similar targets is accepted by design**, as in ADR-0011 —
-  e.g. each Scheme-family target repeats some setup in its own `reference.md`
-  rather than sharing a central "read racket.md for the common bits" doc. The
-  same ADR-0010 economics (LLM-assisted authoring) make per-target docs
-  affordable.
+- **Each unit owns a canonical doc layout.** A target carries `docs/reference.md`,
+  the `docs/{overview,language-characteristics,ffi-model,idiom-map,representability}.md`
+  set, `docs/design/`, `docs/research/`, and per-app `learnings.md`; a target is not
+  "done" until its docs exist in this structure — the new-target authoring guide
+  makes producing them an explicit, sequenced step with a read-the-shared /
+  produce-the-per-subject split.
+- **The ADR log keeps global, stable numbering under `adr/`.** Numbering is global
+  and the parent path is top-level (not under a `docs/`); a future reader asking
+  "why a top-level `adr/` when §10 bans a top-level `docs/`?" is answered above —
+  ADRs are the deliberate central exception. `prd/` follows the same
+  cross-cutting-record logic. `adr/` also establishes the pattern for any genuinely
+  cross-cutting *record* artifact that belongs to no single domain.
+- **Duplication across similar subjects is accepted by design**, as in ADR-0011 —
+  each Scheme-family target repeats some setup in its own `reference.md` rather than
+  sharing a central "read racket.md for the common bits" doc. The same ADR-0010
+  economics (LLM-assisted authoring) make per-subject docs affordable.
 
-See the PRD `prd/2026-06-14-docs-restructure-main-and-per-language.md` for
-the full move-map, and `CONTEXT.md` ("Documentation structure": *Main docs /
-main tier*, *Per-language docs / co-located target docs*) for the glossary
-definitions.
+See `REFACTOR.md` (§10, §11, §45.7) and `CONTEXT.md` ("Documentation structure")
+for the glossary definitions.

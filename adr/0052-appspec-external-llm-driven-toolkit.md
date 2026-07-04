@@ -1,18 +1,13 @@
 # AppSpec is an external LLM-driven spec/test toolkit; APIAnyware consumes it
 
-**Status:** accepted
-
-**Raised by:** `structural-refactoring` grove, workstream 7 (app model,
-`appspec-foundation-k63`).
-
 **Relates to:** ADR-0049 (app-kinds as a distinct platform entity — the *category*
-side whose *instance* side this workstream was presumed to author), ADR-0050 (the
-ws5 LLM side-channel as a lean mechanism over git — the propose→review→accept
-philosophy this ADR reuses for app specs), ADR-0046 (spec format / `.apiw`
-KDL-everywhere — the convention this ADR deliberately does **not** extend to apps),
-ADR-0024/0045 (docs co-located / central ADRs). Supersedes the ws7 brief's presumed
-"ws7 authors the AppSpec `.apiw` KDL Schema + a focused in-crate validator" and the
-ws8/ws9 seams that presumed a grove-native AppSpec entity.
+side whose *instance* side an app-spec names), ADR-0050 (the LLM side-channel as a
+lean mechanism over git — the propose→review→accept philosophy this ADR reuses for
+app specs), ADR-0046 (spec format / `.apiw` KDL-everywhere — the convention this ADR
+deliberately does **not** extend to apps), ADR-0024 (docs co-located / central ADRs).
+An app-spec is therefore **not** a grove-native `.apiw` entity: there is no
+APIAnyware-authored AppSpec KDL Schema or validator — `#lang app-spec` is the
+external toolkit's format, and AppSpec owns its own reader/validation.
 
 ## Context
 

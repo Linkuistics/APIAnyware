@@ -92,7 +92,7 @@ per-method: opaque pointers at depth 0; typed scalars/strings/structs at depth 1
 `NSError**` → `(values result error)` at depth 2 — but the marshalling lives in
 idiomatic Gerbil/`define-c-lambda`, not a native entry, mirroring chez.
 
-## 3a. Object model — Q2 settled (→ ADR-0018)
+## 3a. Object model — Q2 settled (→ a single-handle veneer, later replaced by the manifest hierarchy, ADR-0020)
 
 **Decision: an opt-in OO veneer of `:std/generic` generic functions over a single
 procedural core, dispatching on one `objc-obj` handle struct (no class graph).**
@@ -257,8 +257,9 @@ knowledge/targets/gerbil.md           # target-wide learnings
 - **ADR-0017** — Gerbil dispatch & native-core model (Q1; §3, §6): generated
   `define-c-lambda` dispatch (converge chez 0015) + ObjC-in-gsc native core
   (diverge racket/chez Swift dylib); records both axes incl. precompilation.
-- **ADR-0018** — Gerbil object model (Q2; §3a): opt-in `:std/generic` veneer over a
-  procedural core, single handle struct.
+- **ADR-0020** — Gerbil object model (Q2; §3a): the manifest ObjC class hierarchy
+  that replaced this section's initially-chosen `:std/generic` veneer over a single
+  handle struct.
 - **ADR-0019** — Gerbil lifetime model (§5): Gambit wills + entry-point
   `@autoreleasepool`.
 - Error model (§ error model) converges with **ADR-0006** — no new ADR.

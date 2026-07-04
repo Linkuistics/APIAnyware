@@ -67,3 +67,41 @@ the when-to-write test, edit/merge/split/delete-in-place, identity-by-slug); thi
 - **Golden-neutral** (docs only) — flag loudly if any change would move emit output (it should not).
 - After this retires, the grove has no live leaf → the **grove-finish** cycle (propose to the user;
   promote briefs, delete `.grove/`, merge to `main`, remove worktree, `grove-llm complete --done`).
+
+## Running log
+
+**Audit (2026-07-04).** Corpus = 53 ADRs (0001–0053). Residue map:
+- **Status lines:** 39 ADRs carry `**Status:** accepted`; 0001–0009 + 0012 have none (older grove
+  ADRs). The `decision-records` skill forbids a `Status` line outright (changelog machinery) → strip
+  all 39. Four carry trailing substance to preserve (0020 `(supersedes ADR-0018)`, 0023 `confirmed. …`,
+  0046 `KDL 2.0 is the format…`) or are deleted (0018).
+- **Supersession chains / dated Update sections:** 0018 (`superseded by ADR-0020` tombstone), 0020
+  (`## Why this supersedes ADR-0018`), 0046 (`## Update — …ws5` + `Supersedes (in part)` + `Raised by`),
+  0038↔0041 (relocation-mechanism supersession blockquote + prose), 0024 (migration narrative + stale
+  `docs/` tree + supersession-chain justification), 0052 (`Supersedes the ws7 brief's presumed…` +
+  `Raised by`). Minor word-level: 0010/0011 (past-grove pointers), 0013:66, 0021:13, 0026:37, 0048:48,
+  0034 (0018→0020 repoints), 0025 (source/reachability — left as-is; defers mechanism to 0026).
+
+**D1 — De-numbering to pure-slug filenames: NO (keep `NNNN-slug.md` + `ADR-NNNN` citations).**
+The `decision-records` skill argues identity-by-slug, but de-numbering here is a churn wildly out of
+proportion to a hygiene pass: **744 files outside `.grove/` (362 of them source `.rs`/`.ss`/`.rkt`)**
+carry `ADR-NNNN` citations, including source comments that flow into **generated output** — rewriting
+them would threaten this leaf's **golden-neutral** done-bar. The filenames already carry the slug as a
+suffix (the handle is present); the number is a stable prefix. Verdict: keep numbers, keep citation
+style; where an ADR is retired, **leave a numbering gap** rather than renumber (renumber ripples into
+all 744 files). Recorded per the brief's explicit-call request.
+
+**D2 — Retirements: delete 0018, merge 0045→0024 (two gaps: 18, 45).**
+- **0018** is a pure `superseded by ADR-0020` tombstone; its decision (single-handle veneer, no class
+  graph) is dead. Its enduring measurement table already lives in the cited FINDINGS.md. Delete;
+  reconcile ~15 live refs → ADR-0020 (which absorbs the "why not the single-handle veneer" rationale).
+  Golden-neutral: **no golden references 0018** (emit emits `ADR-0020` comments; `runtime/objc.ss` is
+  hand-authored).
+- **0045** ("central ADRs relocate to top-level `adr/`") opens by explaining itself *through* 0024 and
+  carries `Refines: ADR-0024` — the "one ADR pretending to be two" smell. The current state is one
+  decision (docs co-locate; the cross-cutting ADR/PRD log is the exception at top-level `adr/`/`prd/`).
+  Merge 0045's placement decision + §10 carve-out into 0024; delete 0045; reconcile ~6 live refs.
+- Per-target ADRs (trampolines/callbacks/lifetime/object-model/nserror ×4 targets) are **distinct
+  decisions** under the hermetic-isolation design (ADR-0011) — merging would destroy info + break
+  per-target citation locality. **No merge.** The corpus is large because the design has ~50 genuine
+  hard/surprising/traded-off decisions, not because it is redundant.

@@ -1,7 +1,5 @@
 # The chez trampoline structure, and the ADR-0011 shared-source call
 
-**Status:** accepted
-
 Decides the **chez** target's mechanism for vending C-ABI **trampolines** for the
 Swift-native residual (`objc_exposed == false`), the chez counterpart to
 **ADR-0027** (racket). Refines **ADR-0025** (the complete-API binding model and

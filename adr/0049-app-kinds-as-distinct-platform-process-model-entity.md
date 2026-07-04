@@ -1,10 +1,5 @@
 # App-kinds as a distinct platform process-model entity
 
-**Status:** accepted
-
-**Raised by:** `structural-refactoring` grove, workstream 4 (app-kinds node,
-`mechanism-k35`).
-
 **Relates to:** ADR-0046 (spec format / `.apiw` KDL overlays / generic KDL-Schema
 validation — app-kinds reuse it), ADR-0048 (first-class semantic pattern-kinds —
 the *parallel* model this one is deliberately distinct from), ADR-0043 (toolchain

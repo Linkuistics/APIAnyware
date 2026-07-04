@@ -1,16 +1,14 @@
 # sbcl `.app` self-containment: `dlopen` namestring relocation + `DYLD_FALLBACK`, not `install_name_tool`
 
-**Status:** accepted
-
-Fixes the **sbcl** target's `bundle-sbcl` self-containment mechanism, **superseding
-the relocation method asserted in ADR-0038 §6** (and the SBCL target design spec §6),
-which both assumed `bundle-sbcl` would vendor + relocate `libAPIAnywareSbcl` "via
-`install_name_tool` … the same path `bundle-gerbil`'s `relocate.rs` runs" (gerbil
-ADR-0029 §3, chez ADR-0009). Building the 060 sample apps proved that path
-**impossible** on an SBCL target, so the decision below replaces it. Governed by
-ADR-0010 (the native library *is* the binding), ADR-0011 (per-target hermetic
-bundling), and composes ADR-0034 §6 / ADR-0038 §5 (the `save-lisp-and-die` startup
-re-resolution split). It realizes the build leaf `070-distribution-bundler`.
+The **sbcl** target's `bundle-sbcl` achieves `.app` self-containment at **runtime**, not
+by rewriting Mach-O load commands: `install_name_tool` and the peer targets'
+vendor-and-relocate path (`bundle-gerbil`'s `relocate.rs`, gerbil ADR-0029 §3 / chez
+ADR-0009) are **impossible** on an SBCL target, because a `save-lisp-and-die` image cannot
+be edited (§Context). ADR-0038 §6 owns the self-containment *principle* (the dylib is the
+only new non-system dependency); this ADR owns the *relocation mechanism*. Governed by
+ADR-0010 (the native library *is* the binding), ADR-0011 (per-target hermetic bundling),
+and composes ADR-0034 §6 / ADR-0038 §5 (the `save-lisp-and-die` startup re-resolution
+split). It realizes the build leaf `070-distribution-bundler`.
 
 ## Context — a dumped image cannot be edited or `install_name_tool`'d
 
@@ -83,8 +81,8 @@ is untouched (re-signing it is both unnecessary and impossible, §Context).
 
 ## Considered options
 
-- **`install_name_tool` + `@executable_path` (ADR-0038 §6, the peer path).** *Impossible*
-  on a dumped image (§Context). The decision this ADR supersedes.
+- **`install_name_tool` + `@executable_path` (the peer targets' path).** *Impossible*
+  on a dumped image (§Context) — the reason sbcl relocates at runtime instead.
 - **Dump against a custom `--without-zstd` (or relocatable) SBCL.** Removes the libzstd
   load command at the source, so no stub would be needed for it. Rejected: it makes the
   bundler depend on a non-stock SBCL build/maintenance burden, for a gap the
@@ -107,8 +105,8 @@ is untouched (re-signing it is both unnecessary and impossible, §Context).
 - **Hard to reverse:** the stub-as-`CFBundleExecutable` + image-as-Resource layout, the
   `AW_NATIVE_DYLIB_RECORD_AS` contract, and the don't-re-sign-the-image rule are baked
   into every bundled sbcl `.app`.
-- ADR-0038 §6 and the SBCL target design spec §6 are **superseded** by this ADR for the
-  relocation mechanism (their other sections stand). A pointer is added to both.
+- The relocation mechanism lives here; ADR-0038 §6 owns the complementary
+  self-containment *principle* (dylib = only new non-system dependency) and points here.
 
 ## Evidence
 

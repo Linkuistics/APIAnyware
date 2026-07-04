@@ -1,7 +1,5 @@
 # `libAPIAnywareSbcl` is the SBCL target's sole native unit — trampolines plus the runtime concerns gerbil kept in ObjC
 
-**Status:** accepted
-
 Decides the **sbcl** target's mechanism for vending C-ABI **trampolines** for the
 Swift-native residual (`objc_exposed == false`), the sbcl counterpart to
 **ADR-0027** (racket), **ADR-0028** (chez), and **ADR-0029** (gerbil). Refines
@@ -183,30 +181,22 @@ This is the precise answer to the leaf's "does the dylib's load-time setup absor
 the relive burden?": **only for its own framework subset, via dyld, for free; the rest
 stays Lisp-side.**
 
-### 6. Self-containment preserved by the existing relocation path (gerbil ADR-0029 §3)
-
-> **SUPERSEDED by ADR-0041 for the relocation *mechanism*.** Building the 060 sample
-> apps proved `install_name_tool` **impossible** on a `save-lisp-and-die` image (the Lisp
-> core sits past `__LINKEDIT`). `bundle-sbcl` does **not** reuse `bundle-gerbil`'s
-> `relocate.rs`; it closes the two gaps at runtime instead — `libzstd` via a stub's
-> `DYLD_FALLBACK_LIBRARY_PATH`, `libAPIAnywareSbcl` via a relocated `*shared-objects*`
-> namestring. The framing below (the dylib is the only new non-system dependency; the
-> Swift runtime is OS-resident) still holds; only the `install_name_tool` paragraph is
-> wrong. See ADR-0041.
+### 6. Self-containment: the dylib is the only new non-system dependency
 
 `save-lisp-and-die :executable t` embeds the SBCL runtime into the dumped executable;
-the exe `dlopen`s `libAPIAnywareSbcl` at startup. Self-containment is upheld by the
-**same machinery** gerbil uses, not a new exception:
+the exe `dlopen`s `libAPIAnywareSbcl` at startup. Self-containment turns on a single
+fact: **the dylib is the only new non-system, non-framework dependency.**
 
 - **The Swift runtime is OS-resident** (`/usr/lib/swift/` on macOS ≥ 12), linked as any
-  system library — no vendored Swift runtime. The dylib is the only new non-system,
-  non-framework dependency.
-- **`bundle-sbcl` vendors-and-relocates exactly this category.** It copies the built
-  `libAPIAnywareSbcl.dylib` into `Contents/Frameworks/` and rewrites the exe's load
-  command to `@executable_path/../Frameworks/libAPIAnywareSbcl.dylib` via
-  `install_name_tool` — the same path `bundle-gerbil`'s `relocate.rs` runs for the
-  gerbil dylib and openssl@3 (ADR-0029 §3), after which `otool -L` on the bundled exe
-  shows only `/usr/lib/*`, system frameworks, and `@executable_path/..`.
+  system library — no vendored Swift runtime.
+- **`bundle-sbcl` vendors `libAPIAnywareSbcl` into the bundle** (`Contents/Frameworks/`),
+  after which `otool -L` on the bundled exe shows only `/usr/lib/*`, system frameworks,
+  and the bundle-relative dylib.
+
+The **relocation mechanism** that makes the vendored dylib resolvable is **ADR-0041**
+(`dlopen` namestring relocation + `DYLD_FALLBACK`) — *not* `install_name_tool` or
+`bundle-gerbil`'s `relocate.rs`, both of which are impossible on a `save-lisp-and-die`
+image (its Lisp core sits past `__LINKEDIT`).
 
 ### 7. Scope — reproduces the §6d invariant exactly
 

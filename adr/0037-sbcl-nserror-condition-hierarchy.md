@@ -1,7 +1,5 @@
 # SBCL surfaces `NSError**`/`NSException` as a flat `ns:objc-error` condition hierarchy
 
-**Status:** accepted
-
 Designs the **condition hierarchy** the CL-family interface contract
 (**ADR-0033**, spec §3.7) declared but deferred (grove leaf
 `030-design/030-lifetime-threading-conditions`, C2/Q8). The contract already fixed

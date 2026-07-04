@@ -1,9 +1,5 @@
 # Convention heuristics are datalog rules, not imperative classifiers
 
-**Status:** accepted
-
-**Raised by:** `structural-refactoring` grove, workstream 2 (`spec-format-k16`).
-
 **Relates to:** ADR-0046 (the spec format; supplies the `convention:<rule>` provenance source).
 
 ## Context

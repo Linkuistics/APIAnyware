@@ -102,7 +102,7 @@ args are not delivered; struct/`float`/`double` override *returns* are unsupport
 (raise at install). Argument-passing super-sends are deferred. Main-thread only
 (foreign-thread activation is node 080).
 
-## Object model (ADR-0018/0020)
+## Object model (ADR-0020)
 
 A returned `id` is `wrap`ped to its **exact bound Gerbil type**: `object_getClass`
 → the registry → the class's constructor, walking the ObjC superclass chain to the

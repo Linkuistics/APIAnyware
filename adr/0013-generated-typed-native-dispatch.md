@@ -1,7 +1,5 @@
 # Generated typed native dispatch (one entry per signature), not generic dispatch
 
-**Status:** accepted
-
 The `racket` target dispatches Objective-C methods through **native dispatch
 entry points generated per distinct method signature from the API analysis**,
 called from a thin Racket ffi2 binding — rather than through in-Racket
@@ -63,7 +61,7 @@ the Racket wrapper trends toward a single coercion-free ffi2 call.
 - **`emit_class.rs` stops open-coding `objc_msgSend`**; a new native dispatch
   generator consumes the signatures `shared_signatures.rs` already dedups.
 - **`MessageSend.swift` (`aw_common_msg_*`) is deleted** — it was unused dead
-  code and is superseded.
+  code and is no longer generated.
 - **A libffi fallback path is retained** for any statically un-typable signature.
 - **Per-call dispatch is not the GUI-app bottleneck**, so the primary win is
   architectural (thin scripting seam, ADR-0010); the 2–8× speedup is a guaranteed

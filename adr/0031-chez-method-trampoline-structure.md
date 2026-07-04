@@ -1,7 +1,5 @@
 # The chez method trampoline structure, and the first chez async path
 
-**Status:** accepted
-
 Decides the **chez** target's mechanism for binding the **Swift-native method
 frontier** — the `objc_exposed == false` methods/initializers on classes and
 structs — the chez counterpart to **ADR-0030** (racket). Generalises the chez

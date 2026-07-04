@@ -1,7 +1,5 @@
 # SBCL value structs project to plain CLOS classes on a `ns:value-struct` root, wrapping the opaque box
 
-**Status:** accepted
-
 The `sbcl` target's **population-B value-struct** residual — a Swift value struct
 (`objc_exposed == false`, e.g. `IndexSet`, `CharacterSet`, `AffineTransform`) carrying
 bindable Swift-native methods/inits — projects each such struct to a **plain CLOS class**

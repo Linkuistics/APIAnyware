@@ -1,7 +1,7 @@
 ;;; runtime/objc.ss — gerbil target object model + lifetime + error model.
 ;;;
 ;;; The single module every generated binding imports (`:gerbil-bindings/runtime/
-;;; objc`). It owns, per ADR-0018/0020 (object model), ADR-0019 (lifetime) and
+;;; objc`). It owns, per ADR-0020 (object model), ADR-0019 (lifetime) and
 ;;; ADR-0006 (error model):
 ;;;
 ;;;   - the manifest class-graph ROOT `(defclass NSObject (ptr) …)` — every

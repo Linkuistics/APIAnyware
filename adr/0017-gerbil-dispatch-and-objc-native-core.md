@@ -1,7 +1,5 @@
 # Gerbil keeps generated `define-c-lambda` dispatch; native core is ObjC-in-gsc, not a Swift dylib
 
-**Status:** accepted
-
 The `gerbil` target dispatches ObjC methods through **generated per-signature
 `define-c-lambda` wrappers emitted into the Gerbil binding library** (converging
 with chez **ADR-0015**), and authors its native core — the concerns that cannot be

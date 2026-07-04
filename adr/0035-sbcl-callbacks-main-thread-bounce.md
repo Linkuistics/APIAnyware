@@ -1,7 +1,5 @@
 # SBCL background callbacks bounce to the main thread (foreign-thread Lisp entry is GC-unsafe)
 
-**Status:** accepted
-
 Decides the **sbcl** target's threading/callback model (grove leaf
 `030-design/030-lifetime-threading-conditions`, D2). Mirrors gerbil **ADR-0022**
 and racket **ADR-0014** (foreign-thread callbacks bounced to a runtime-safe

@@ -1,10 +1,5 @@
 # Capability profiles and derived representability
 
-**Status:** accepted
-
-**Raised by:** `structural-refactoring` grove, workstream 6 (target model,
-`capability-k52`).
-
 **Relates to:** ADR-0046 (spec format / `.apiw` KDL overlays / generic KDL-Schema
 validation — capability profiles reuse it), ADR-0049 (app-kinds as a distinct
 platform entity — the *distinct-entity / shared-mechanism* precedent, and the

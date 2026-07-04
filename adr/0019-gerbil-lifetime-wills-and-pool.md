@@ -1,7 +1,5 @@
 # Gerbil `objc-obj` lifetime = Gambit wills + entry-point autoreleasepool
 
-**Status:** accepted
-
 Each wrapped ObjC `id` becomes an `objc-obj` whose Scheme wrapper registers a
 **Gambit `will`** (`make-will testator action`) that sends ObjC `release` when the
 wrapper becomes collectable. The app `main` and every ObjC-side entry point

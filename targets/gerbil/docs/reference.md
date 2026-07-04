@@ -18,7 +18,7 @@ Companion design + decisions:
   compiled by gsc into the exe, **no Swift dylib**.
 - ADR-0019 — lifetime = Gambit wills + entry-point autoreleasepool.
 - ADR-0020 — manifest ObjC class hierarchy, dual dispatch surface, transparent
-  extensible subclassing (supersedes ADR-0018's single-handle veneer).
+  extensible subclassing (not a single-handle veneer).
 - ADR-0021 — the emitter synthesizes C declarations; it never `#include`s a
   framework umbrella header (everything compiles under the default gcc-15).
 - ADR-0022 — background callbacks bounce to the main thread (no chez-style

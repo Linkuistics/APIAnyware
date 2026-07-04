@@ -1,7 +1,5 @@
 # A same-language family with a portable object model may share a spec-level interface contract
 
-**Status:** accepted
-
 Establishes the **CL-family interface-sharing axis**: the Common Lisp targets
 (SBCL built now; CCL, AllegroCL, LispWorks on the roster) share a **single,
 documented, specification-level interface** — the `ns:` package, class and

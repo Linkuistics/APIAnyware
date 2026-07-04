@@ -1,7 +1,5 @@
 # Chez callbacks are outbound, with `Sactivate_thread` for background threads
 
-**Status:** accepted
-
 Extends **ADR-0007** (chez lifetime model) and mirrors racket's **ADR-0014**
 (outbound callbacks over native trampolines), with a chez-specific divergence the
 spike (`targets/chez/docs/research/2026-06-02-chez-dispatch-spike/`, `FINDINGS.md` §C) made

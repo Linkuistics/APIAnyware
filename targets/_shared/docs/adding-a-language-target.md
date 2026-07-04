@@ -55,7 +55,7 @@ it and you could plausibly stand up a fifth.
 > **Docs co-locate with their subject (ADR-0024 + REFACTOR §10):** there is **no
 > top-level `docs/` tree** — every domain owns a local `docs/`, and the cross-cutting
 > decision log + agreement checkpoints live in the small top-level `adr/` and `prd/`
-> (ADR-0045). You **read** the shared docs co-located across domains and **produce**
+> (ADR-0024). You **read** the shared docs co-located across domains and **produce**
 > the per-target docs inside `targets/<id>/docs/`; doing so is a sequenced step of
 > authoring, not an afterthought (Step 9), and a target is not *done* until its docs
 > exist in the canonical structure. See **"Documentation"** immediately below for the
@@ -78,7 +78,7 @@ which you *produce* — and treat the ones you produce as deliverables, not note
 | `testing/` | the multi-layer test model (`test-model.md`) + the TestAnyware VM-verification methodology (`testanyware-workflow.md`) every app is held to |
 | ADR-0010, ADR-0011 | the north star (native library *is* the binding) and hermetic isolation — why you build standalone |
 | ADR-0004, ADR-0005 | one binding style per target; maximally idiomatic, not a portable subset |
-| ADR-0024, ADR-0045 | docs co-locate with their subject; the central `adr/`/`prd/` carve-out |
+| ADR-0024 | docs co-locate with their subject; the central `adr/`/`prd/` carve-out |
 
 **Produce (the per-target docs — two co-located doc sets, the shape every live
 target now carries):**

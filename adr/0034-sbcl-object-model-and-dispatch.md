@@ -1,7 +1,5 @@
 # SBCL object model: ObjC projected into CLOS via the MOP, statically emitted, receiver-specialized dispatch
 
-**Status:** accepted
-
 The `sbcl` target's object model **projects ObjC's class system into CLOS through
 SBCL's Metaobject Protocol (`sb-mop`)**. An `objc-class` metaclass (a subclass of
 `standard-class`) backs every bound ObjC class; the **emitter statically generates
@@ -28,13 +26,13 @@ explicitly left these un-de-risked (§6 gaps).
 **Settled upstream (carried in, not re-litigated):**
 
 - **D3 (010-plan):** MOP projection of ObjC into CLOS, all-in — not a single
-  `objc-object` wrapper (gerbil pre-rejected that as "vacuous", ADR-0018→0020) and
+  `objc-object` wrapper (gerbil pre-rejected that as "vacuous", ADR-0020) and
   not a manifest `defclass` graph *without* the MOP (that is gerbil's shape,
   ADR-0020 — sbcl goes further).
 - **D6 (030-design parent):** dispatch is per-selector generics **specialized on
   the receiver** over the real metaclass-backed class graph. Holds D3's line
   against the single-dispatch veneer of every prior CL bridge (CCL only *wraps*
-  ObjC's runtime message send, research §B3), and dodges the gerbil-ADR-0018
+  ObjC's runtime message send, research §B3), and dodges the gerbil-ADR-0020
   "vacuous receiver-only dispatch over one type" critique by dispatching over a
   *real* class graph rather than one wrapper type.
 - **Static emit + runtime MOP (ADR-0010):** the emitter generates the class graph
@@ -171,7 +169,7 @@ target's Swift dylib's own load-time setup absorbs is decided in
 ## Considered options
 
 - **Single `objc-object` wrapper + generic veneer.** Rejected upstream (D3) — the
-  gerbil-ADR-0018 "vacuous receiver-only dispatch over one type" failure; strip the
+  gerbil-ADR-0020 "vacuous receiver-only dispatch over one type" failure; strip the
   veneer and what remains is chez with different syntax.
 - **Manifest `defclass` graph *without* the MOP** (gerbil ADR-0020's shape).
   Workable, but forfeits the MOP's slot/allocation hooks that make ivar access and
@@ -220,6 +218,6 @@ target's Swift dylib's own load-time setup absorbs is decided in
 See `targets/_shared/docs/research/cl-cocoa-bridges-across-the-family.md` (§B1–B5, §5.1, §6, §7) for
 the prior-art evidence and the gaps this leaf closed first-hand; ADR-0033 + the
 contract spec for the upper-layer surface this realizes; ADR-0010 for static emit;
-ADR-0005 for the idiom posture; gerbil ADR-0020 (manifest graph) and ADR-0023
-(generics cost — the risk this ADR closes) for the precedents; ADR-0018 for the
-"vacuous dispatch" critique D6 answers.
+ADR-0005 for the idiom posture; gerbil ADR-0020 (manifest graph + the "vacuous
+dispatch" critique D6 answers) and ADR-0023 (generics cost — the risk this ADR
+closes) for the precedents.

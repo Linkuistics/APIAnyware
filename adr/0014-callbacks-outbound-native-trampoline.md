@@ -1,7 +1,5 @@
 # Callbacks stay outbound through native trampolines; ffi2 callbacks rejected
 
-**Status:** accepted
-
 For the inbound path (Objective-C invoking Racket — delegates, blocks, target/
 action, completion handlers), the `racket` target keeps **outbound** embedding:
 Racket creates a `_cprocedure`/`function-ptr` callback and registers it behind a

@@ -1,7 +1,5 @@
 # Chez keeps direct `foreign-procedure` dispatch and Scheme-side marshalling
 
-**Status:** accepted
-
 Adopting **ADR-0010** (the per-target native library *is* the binding), the
 `racket` target relocated outbound ObjC dispatch and value marshalling into
 generated native entry points (**ADR-0013**), because Racket's FFI crossing was

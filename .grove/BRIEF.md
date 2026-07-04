@@ -108,7 +108,14 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    any residue elsewhere), merge/retire redundant ADRs, so each ADR reads as the decision *as it now
    stands*. Runs **after ws9** (compress once the corpus is final) and **before grove-finish** (it
    dovetails with the finish cycle's "promote ADRs that outlive the grove" step). Materialize the
-   leaf lazily when ws9 retires.
+   leaf lazily when ws9 retires. **Split across two leaves on audit** (the corpus proved to warrant it,
+   per the brief's decompose note): `adr-consolidation-k159` did the mechanical/structural cluster —
+   strip `Status` lines, fold out supersession chains + dated `Update` sections, **delete ADR-0018**
+   (dead tombstone → 0020) + **merge ADR-0045 into ADR-0024** (docs-placement = one decision), reconcile
+   all citations, keep numbers / leave gaps (de-numbering NO — 744 citing files, golden-risk). Then
+   `adr-workstream-narrative-to-current-state-k160` folds the **workstream-process narrative** out of the
+   ADR bodies (stale "ws8 owns machine JSON Schema" notes now that ws8 dissolved that seam, future-tense
+   "Seams for the remaining workstreams" sections, dangling `.grove/`-leaf pointers).
 
 (2)–(9) interleave once the skeleton lands; (2) is the spine most others consume. (10) is a
 documentation-hygiene pass gated on the design being final.

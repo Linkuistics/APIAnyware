@@ -1,6 +1,6 @@
 # Gerbil: compile the shared `generics.ss` module without optimization
 
-**Status:** accepted, **confirmed**. The durable fix is three compounding levers
+The durable fix is three compounding levers
 — **shard** `generics.ss` into many small modules behind a re-export facade,
 compile the shards **without `-O`**, and compile them **in parallel**. Cold
 hello-window build: **~5h 7min → 8.4 min** (under the `< 15 min` budget). See

@@ -1,14 +1,11 @@
 # The spec interchange format is KDL everywhere — a per-family extracted/annotations/resolved triad
 
-**Status:** accepted. KDL 2.0 is the format for the whole spec stack — the authored `.apiw` overlay
+KDL 2.0 is the format for the whole spec stack — the authored `.apiw` overlay
 (format-preserving `kdl` crate) and the machine IR (`extracted.kdl` / `resolved.kdl`, a
-non-preserving codec — §5).
-
-**Supersedes (in part):** `REFACTOR.md` §29 (which specified a human DSL **plus** a
-*YAML* canonical interchange) and §14's `extracted.yaml` / `resolved.yaml` file literals.
-The split-format intent of §29 stands; the choice of *YAML* for the machine side does not.
-
-**Raised by:** `structural-refactoring` grove, workstream 2 (`spec-format-k16`).
+non-preserving codec — §5). There is no YAML interchange, and JSON is not used for the
+interchange. `REFACTOR.md` §29's split human-DSL / machine-interchange *intent* holds, but
+its choice of *YAML* for the machine side (and §14's `extracted.yaml` / `resolved.yaml`
+literals) is not adopted — the machine side is KDL too.
 
 ## Context
 
@@ -48,7 +45,7 @@ measured it (see *Consequences → Evidence*) rather than guessing.
    `provenance` (doc URL / rationale); precedence (`manual > accepted-LLM > convention >
    extraction > unknown`, §28) is applied deterministically in resolve, the **winner stamped and
    losers retained** as a `superseded-by` record; a fact with no producer is explicit `unknown`.
-   The *workflow* over this (caching/regeneration/review-accept/diff) is workstream 5's.
+   The *workflow* over this (caching/regeneration/review-accept/diff) is ADR-0050's.
 5. **The machine IR uses a non-preserving KDL codec.** The format-preserving `kdl` document model
    parses the multi-MB IR ~80–100× slower than `serde_json` — right for authored `.apiw` (where
    diagnostics + layout matter), too heavy for the "regenerate aggressively" machine loop. A machine
@@ -77,20 +74,5 @@ measured it (see *Consequences → Evidence*) rather than guessing.
   surprising (contradicts §29's YAML), a real trade-off (against a — now deprecated — YAML and the
   more-ubiquitous JSON). The machine layer's reversibility is the explicit JSON-retreat gate.
 - The convention-heuristics-as-datalog decision (which supplies the `convention:<rule>` provenance)
-  is **ADR-0047**.
-
-## Update — per-fact provenance carriage deferred to ws5 (2026-06-24, leaf `flip-retire-k26`)
-
-§4 above is the decided *carriage model*; this update records its **implementation status** after
-the convention flip. The convention facets (`apianyware-conventions`, ADR-0047) *compute* a
-per-fact/per-index `convention:<rule>` stamp, but the flip keeps it **off-disk**: `annotate`
-assembles convention annotations **byte-identical to the legacy heuristic output** (`source =
-Heuristic` at method level; no per-fact `source`, no `superseded-by`). The full §4 rollout —
-per-fact `source` stamps on `ParamOwnership`/`BlockParamAnnotation` + per-method threading/error,
-the `.apiw` schema/writer + machine serde extension, emit consumers, and the disagreement/precedence
-audit (winner stamped + losers `superseded-by`) — is **workstream 5's** (it owns the
-provenance/precedence *mechanism*; §4 line 54 already scopes the workflow to ws5, and no consumer of
-per-fact provenance exists until ws5 builds one). This honours the seam **ws2 defines the carriage,
-ws5 builds the mechanism** without speculatively reshaping the schema. Steer (user, k26): `annotate`
-runs once per SDK update, so the carriage is kept minimal. Equivalence proven by goldens-as-truth
-(Foundation `resolved.json` byte-identical pre/post-flip; emit goldens green on all four targets).
+  is **ADR-0047**. The per-fact provenance *mechanism* over this carriage — resolve-time
+  disagreement audit, `source` stamping, `superseded-by` — is **ADR-0050**.

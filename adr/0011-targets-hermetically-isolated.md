@@ -1,7 +1,5 @@
 # Targets are hermetically isolated; only the API analysis is shared
 
-**Status:** accepted
-
 Each language target is **hermetically isolated**: its generator (emitter), its
 runtime, and its native (Swift) library are entirely self-contained and share
 **nothing** with other targets. The *only* thing common across targets is the
@@ -34,9 +32,7 @@ in tension, and we resolve it in favour of idiom + isolation.
 - **`APIAnywareCommon` is dissolved** — its code is absorbed into each of
   `APIAnywareRacket`, `APIAnywareChez`, `APIAnywareGerbil`, and the shared target
   is deleted from `swift/Package.swift`. Each produces a self-contained dylib with
-  no shared dependency. (Executed in the `update-racket-to-9.2-and-use-ffi2`
-  grove, which therefore owns keeping all three targets building + their Swift
-  tests green.)
+  no shared dependency.
 - **The only cross-target sharing is the analysis IR.** `collect` + `analyse`
   (the macOS API model / enriched IR) stay shared; `generate`, runtime, and
   native library are per-target. The emitter framework may share *mechanism*

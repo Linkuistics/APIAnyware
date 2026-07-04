@@ -1,7 +1,5 @@
 # The racket method trampoline structure: receiver-handle call-by-name, init producers, mutating write-back
 
-**Status:** accepted
-
 Decides the **per-target** mechanism for binding the **Swift-native method
 frontier** — the `objc_exposed == false` methods/initializers on classes and
 structs that ADR-0027's free-function trampoline does not reach. Generalises

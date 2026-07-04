@@ -1,7 +1,5 @@
 # The per-target native library is the binding
 
-**Status:** accepted
-
 APIAnyware's **fundamental design goal**: for each target language we write a
 **native (Swift) library, purpose-built and optimised for that one target to
 bind to**, which maps the macOS API model idiomatically into the target language
@@ -42,10 +40,9 @@ error-prone to hand-write across many targets.
   stays at on-disk-layout / IR-decision level, not at native-source level.
 - **Performance is a first-class goal:** a fat native core behind a thin static
   FFI crossing.
-- **The Racket 9.2 + ffi2 migration is reframed:** ffi2 becomes the thin, static
-  seam by which Racket calls the fat `libAPIAnywareRacket` native library (via
-  Racket CS's C embedding facilities), *not* the mechanism for a Racket-heavy
-  binding. See the grove `update-racket-to-9.2-and-use-ffi2`.
+- **ffi2 is the thin, static seam** by which Racket calls the fat
+  `libAPIAnywareRacket` native library (via Racket CS's C embedding facilities),
+  *not* the mechanism for a Racket-heavy binding.
 - **Deepens ADR-0005** (idiomatic per target) and complements **ADR-0004** (one
   target per shape): the idiomatic mapping is now delivered chiefly through the
   native library's deliberate design rather than through emitted FFI source.

@@ -1,7 +1,5 @@
 # Typed `make-instance` init appliers, and FP-trap masking for Cocoa
 
-**Status:** accepted
-
 Two runtime mechanisms the first GUI app (`060-build-sample-apps/020-hello-window`)
 required, refining the SBCL object model (**ADR-0034** §5, `make-instance` →
 `alloc`/`init`) and lifetime/threading runtime (**ADR-0036**). Both block *every* app, so

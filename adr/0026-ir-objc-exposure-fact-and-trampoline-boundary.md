@@ -1,7 +1,5 @@
 # The `objc_exposed` IR fact and the direct-vs-trampoline emitter contract
 
-**Status:** accepted
-
 Refines **ADR-0025** (the complete-API binding model and trampoline elision) by
 deciding the *mechanism* ADR-0025 deliberately deferred: how the shared
 `collect → analyse` IR carries the facts that let each emitter derive the
@@ -33,8 +31,9 @@ swift-api-digester output and the current IR types:
    boundary: an `@objc` Swift class is `SwiftInterface` yet ObjC-runtime
    reachable. Worse, `ir::Class` has **no `source` and no `usr` field** — so the
    corrective half ("skip genuinely Swift-native classes") *requires* adding a
-   new fact to `Class` regardless of framing. The ADR-0025 phrasing "make
-   `source` load-bearing" is therefore superseded here by an explicit fact.
+   new fact to `Class` regardless of framing. So the direct-vs-trampoline boundary
+   is driven by an explicit `objc_exposed` fact on `ir::Class`, which is what
+   ADR-0025's "make `source`/reachability load-bearing" resolves to in the IR.
 
 3. **The USR test is three-way, not `c:` vs `s:`.** `c:@macro@` (preprocessor)
    and `c:@Ea@`/`c:@EA@` (anonymous-enum members) start with `c:` but are **not**

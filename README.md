@@ -43,7 +43,7 @@ REFACTOR §10) — there is no large top-level `docs/` tree.
 | `targets/<target>/` | Everything specific to one target: emitter + bundler (`tools/`), native adapter (`adapters/`), generated bindings (`bindings/`), app implementations (`app-implementations/`), conformance reports, and `docs/`. |
 | `targets/_shared/` | Cross-target machinery owned by no target: the shared projection substrate `emit`, `stub-launcher`, the generate CLI ([ADR-0044](adr/0044-shared-emit-substrate-home-targets-shared.md)). |
 | `schemas/` | Formal schemas validating every artifact (`schemas/docs/`). |
-| `adr/` | The central Architecture Decision Record log — a cross-target decision graph kept central with global numbering ([ADR-0045](adr/0045-central-adrs-relocate-to-root-adr.md)). |
+| `adr/` | The central Architecture Decision Record log — a cross-target decision graph kept central with global numbering ([ADR-0024](adr/0024-per-language-docs-co-locate-adrs-stay-central.md)). |
 | `prd/` | Human-facing agreement checkpoints (Product Requirement Documents). |
 | `process/` | Development-process / tooling artifacts (completed plans, skill design) owned by no domain. |
 | `website/` | The project website (`index.md`, `meta.yml`). |

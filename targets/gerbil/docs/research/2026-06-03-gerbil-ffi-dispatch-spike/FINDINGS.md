@@ -312,7 +312,7 @@ must vendor + relocate (chez-style). 030's distribution leaf APPLIES this recipe
 ## 7. Dual-surface object model (✅ — added 2026-06-03, reopens Q2)
 
 **Spike `07-dual-surface.ss` (gxi, no FFI — pure dispatch semantics).** Run after
-040/020 surfaced that ADR-0018's *single `objc-obj` handle* makes receiver-only
+040/020 surfaced that the initially-chosen *single `objc-obj` handle* makes receiver-only
 generic dispatch **vacuous** (one type → nothing to dispatch on), collapsing
 gerbil into "chez with different syntax" and defeating the three-Scheme paradigm
 experiment. The pivot: **manifest the ObjC class graph as a Gerbil type
@@ -341,7 +341,7 @@ spike `03b`; this proves the *names* coexist too.)
 **Decision (user-confirmed):** ONE gerbil target reifies the ObjC class graph as a
 `defclass` hierarchy and emits **both** surfaces over it — built-in `{sel obj}` OO
 *and* `:std/generic` `(sel obj)` generics — bottoming out in the leaf-010 `%msg-…`
-FFI crossings. **Supersedes ADR-0018** (the single-handle/thin-veneer model). Two
+FFI crossings, replacing the initial single-handle/thin-veneer model (ADR-0020). Two
 separate gerbil targets are NOT needed — that would ~double the workstream
 (emitter, runtime, bundler, 14 sample apps, docs) to vary an axis one target
 varies internally. Build cost moves to the **wrap boundary**: returning an `id`

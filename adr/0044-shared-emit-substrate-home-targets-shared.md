@@ -1,7 +1,5 @@
 # The shared projection substrate lives under `targets/_shared/`, not `semantic/`
 
-**Status:** accepted
-
 The `structural-refactoring` grove's skeleton node must give the cross-cutting
 `emit` crate — the shared projection substrate consumed by all four emitters
 (`emit-racket`/`-chez`/`-gerbil`/`-sbcl`) and the generate CLI, and incorporating

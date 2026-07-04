@@ -193,8 +193,8 @@ single-receiver dispatch and only *wraps* it. The SBCL target's CONTEXT.md
 glossary currently proposes `defgeneric`/`defmethod` with native CLOS multiple
 dispatch; **that is a divergence from CCL, not a borrow**, and 030 must decide
 whether multiple-dispatch generics buy enough idiom to justify departing from the
-proven single-dispatch-veneer model (cf. gerbil ADR-0018's "vacuous receiver-only
-dispatch").
+proven single-dispatch-veneer model (cf. gerbil's "vacuous receiver-only
+dispatch" rationale, ADR-0020).
 
 ### B4. `make-instance` → alloc/init; subclassing; method definition
 
@@ -404,7 +404,7 @@ evidence, but the burden is now on the counter-argument):
 3. **Dispatch — decide deliberately, do not default.** All prior art keeps ObjC
    **single-receiver** dispatch and only veneers CLOS over it. The SBCL glossary
    proposes **multiple-dispatch generics** — a *divergence*. 030 must justify it
-   against the gerbil "vacuous receiver-only dispatch" precedent (ADR-0018/0020)
+   against the gerbil "vacuous receiver-only dispatch" precedent (ADR-0020)
    or fall back to the proven single-dispatch veneer.
 4. **Static-vs-dynamic — bake metadata, relive pointers at startup.** No bridge
    has a static graph; emit baked class IDs + ivar offsets + selector strings,

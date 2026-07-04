@@ -55,7 +55,7 @@ in this grove; CCL/AllegroCL/LispWorks shape what the contract abstracts over (D
 ## 2. Object model + dispatch (ADR-0034)
 
 The headline distinctive: ObjC's class system is **projected into CLOS through
-`sb-mop`** — not a single wrapper class (gerbil pre-rejected as "vacuous", ADR-0018),
+`sb-mop`** — not a single wrapper class (gerbil pre-rejected as "vacuous"),
 not a manifest `defclass` graph *without* the MOP (gerbil's shape, ADR-0020); SBCL
 goes further to a real metaobject projection.
 

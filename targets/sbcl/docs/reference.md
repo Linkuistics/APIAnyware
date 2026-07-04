@@ -63,7 +63,7 @@ Three commitments distinguish sbcl from the Scheme targets:
    metaclass (a `standard-class` subclass) backs every bound ObjC class; the
    runtime-owned root `ns:ns-object` carries the foreign `ptr` (the `id`); the full
    ancestor chain is reified. This goes **further** than gerbil's manifest graph
-   (ADR-0020) and rejects the single-wrapper-class "vacuous" shape (ADR-0018) —
+   (ADR-0020) and rejects the single-wrapper-class "vacuous" shape —
    dispatch rides a *real* metaclass-backed class graph, with ivars as foreign
    slots via `slot-value-using-class`.
 2. **Per-selector generic dispatch over the real graph (D6, ADR-0034 §3).** One

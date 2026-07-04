@@ -1,7 +1,5 @@
 # Gerbil grows a Swift dylib for the Swift-native trampoline (the ADR-0017 deviation)
 
-**Status:** accepted
-
 Decides the **gerbil** target's mechanism for vending C-ABI **trampolines** for
 the Swift-native residual (`objc_exposed == false`), the gerbil counterpart to
 **ADR-0027** (racket) and **ADR-0028** (chez). It is the **deliberate deviation

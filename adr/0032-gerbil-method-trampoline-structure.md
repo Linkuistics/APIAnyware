@@ -1,7 +1,5 @@
 # The gerbil method trampoline structure, and the first gerbil async path
 
-**Status:** accepted
-
 Decides the **gerbil** target's mechanism for binding the **Swift-native method
 frontier** — the `objc_exposed == false` methods/initializers on classes and
 structs — the gerbil counterpart to **ADR-0030** (racket) and **ADR-0031** (chez).

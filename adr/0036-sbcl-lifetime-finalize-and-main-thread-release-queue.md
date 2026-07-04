@@ -1,7 +1,5 @@
 # SBCL `ns:ns-object` lifetime = `sb-ext:finalize` + main-thread release queue + entry-point pool
 
-**Status:** accepted
-
 Decides the **sbcl** target's lifetime model for wrapped ObjC `id`s (grove leaf
 `030-design/030-lifetime-threading-conditions`, D1). The SBCL realization of the
 two-mechanism model established by chez **ADR-0007** (guardian + entry-point pool)

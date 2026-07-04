@@ -1,7 +1,5 @@
 # Selector-structure-preserving generic names — each `:` → `_`, each camelCase hump → `-`
 
-**Status:** accepted
-
 Decides how the **sbcl** target maps an ObjC selector to its `ns:` generic-function
 symbol, refining the contract's §3.2 naming rule (**ADR-0033**) and the SBCL dispatch
 design (**ADR-0034** §2, "one `defgeneric` per selector"). Surfaced by the first real

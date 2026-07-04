@@ -1,7 +1,5 @@
 # Gerbil emitter synthesizes C declarations; it never `#include`s a framework umbrella header
 
-**Status:** accepted
-
 The `gerbil` target's emitted data modules (`constants.ss`, `functions.ss`, and
 any class module taking/returning a geometry struct by value) declare the C
 symbols their `define-c-lambda` bodies name by **synthesizing the C declaration in
@@ -10,9 +8,10 @@ plain-C typedef for a non-C-safe struct — and **never by `#include`-ing the
 framework umbrella header** (`<Foundation/Foundation.h>`, `<AppKit/AppKit.h>`, …).
 Every emitted module therefore compiles under the bottle's **default C compiler
 (gcc-15)** with **no** `-cc clang`, **no** `-x objective-c`, **no** SDKROOT
-contract, and **no** per-module compiler selection. This supersedes design-spec §4
+contract, and **no** per-module compiler selection. This deviates from the earlier
+design-spec §4 approach
 (`targets/gerbil/docs/design/2026-06-03-gerbil-target-design.md`), which had the emitter `#include`
-the umbrella and compile the FFI unit `-x objective-c`.
+the umbrella and compile the FFI unit `-x objective-c` — that approach is not used.
 
 ## Context
 

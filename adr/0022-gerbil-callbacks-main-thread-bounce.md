@@ -1,7 +1,5 @@
 # Gerbil background callbacks bounce to the main thread (no thread activation)
 
-**Status:** accepted
-
 Extends **ADR-0019** (gerbil lifetime: wills + entry-point pool, which deferred
 threading) and mirrors racket **ADR-0014** (foreign-thread callbacks bounced to a
 Scheme-safe thread), **diverging from chez ADR-0016** (which could activate
