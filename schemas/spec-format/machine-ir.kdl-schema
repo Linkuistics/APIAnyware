@@ -1,0 +1,395 @@
+// machine-ir.kdl-schema — the authoritative, language-neutral contract for the
+// MACHINE interchange IR (`platforms/macos/api/<F>/extracted.kdl` and
+// `resolved.kdl`), ADR-0046 §5.
+//
+// Written in the KDL Schema Language (KDL-in-KDL; kdl.dev SCHEMA-SPEC), so any
+// KDL tool in any language can validate a machine IR file — the payoff of the
+// ws8 machine-IR-to-KDL flip: ONE schema language over EVERY artifact (the
+// machine-JSON-Schema seam every prior workstream deferred here has dissolved).
+// The Rust `apianyware-spec-format` crate is ONE conforming validator of this
+// contract (its `validate_machine_kdl` step embeds this file), not its source of
+// truth.
+//
+// ── WHAT THE MACHINE IR LOOKS LIKE ON DISK ─────────────────────────────────────
+// The machine IR is an `apianyware_types::ir::Framework` bridged through
+// `serde_json::Value` and encoded by the generic JSON-in-KDL (JiK) codec
+// (`apianyware-spec-format::jik`). That codec is a total, DOMAIN-BLIND bijection
+// with JSON, so the on-disk shape is the JiK shape, NOT a hand-designed one:
+//   • an object member  → a node named by the (always-quoted) key,
+//   • an array          → an `(array)`-typed node whose elements are `-`-named
+//                          children,
+//   • an object         → an `(object)`-typed node whose members are key-named
+//                          children,
+//   • a scalar          → a node with ONE positional argument (`#null` / `#true`
+//                          / `#false` / number / quoted string).
+// JiK never emits KDL *properties* (`key=value`) — every node is either one
+// positional value (a scalar) or a `{…}` block (a container). So this schema
+// uses `value {…}` and `children {…}` and never `prop {…}`. It matches array
+// elements with a `node "-"` definition. The generic engine keys node
+// definitions by NAME and IGNORES the `(array)` / `(object)` type annotation, so
+// this schema constrains structure by name + child shape, not by that annotation.
+//
+// ── ALTITUDE: SPECIFY THE SPINE, ACCEPT-ANY BELOW THE LANGUAGE'S LIMITS ─────────
+// The KDL Schema Language (as the shared engine implements it) has NO `$ref` and
+// NO recursion. `TypeRef` (return types, parameter types, …) is a RECURSIVE
+// `#[serde(tag="kind")]` enum, and Method/Property/Param recur at many sites. So
+// a fully-mirrored schema is not expressible. This schema therefore:
+//   • specifies ONCE-appearing shapes richly — the document, and the six
+//     declaration entities (Class / Protocol / Enum / Struct / Function /
+//     Constant) — typing their direct scalar fields;
+//   • specifies MULTIPLY-appearing shapes (Method / Property / Param) by their
+//     required IDENTITY field only (`selector` / `name`), inlined at each use
+//     site (no `$ref` ⇒ genuine duplication — keep the inlined blocks in sync);
+//   • treats every RECURSION / POLYMORPHISM boundary as accept-any
+//     (`other-nodes-allowed #true`): a `TypeRef` object (`return_type` / `type`),
+//     `provenance` / `doc_refs` / `swift_fn`, and the resolved-only `enrichment`
+//     / `verification` / `patterns` / `class_annotations` zoo. Accept-any nodes
+//     are NOT recursed into, which is exactly what the recursion boundary needs.
+//
+// ── OPEN CONTENT MODEL (deliberately unlike the authored-`.apiw` schemas) ───────
+// The twelve `schemas/spec-format/*.kdl-schema` files are DEFAULT-DENY because
+// they guard HAND-AUTHORED overlays where an unknown node is a human error. This
+// contract is different in kind: the machine IR is GENERATED (serde controls the
+// keys — no typos possible), DERIVED, gitignored, and EVOLVES as the pipeline
+// grows. A strict schema would turn the registry test into a tripwire on every
+// IR field addition. So this schema sets `other-nodes-allowed #true` at every
+// object level: it validates required-node PRESENCE, scalar TYPES, and the
+// `checkpoint` ENUM, while tolerating additive IR evolution. That catches the
+// real machine-file failure modes (truncation → a missing required node; a
+// corrupt hand-edit → a wrong scalar type) without re-deriving serde's guarantee.
+//
+// ── ONE SCHEMA FOR BOTH extracted AND resolved ─────────────────────────────────
+// `resolved.kdl` is the SAME `Framework` type as `extracted.kdl` with
+// later-phase fields added (`ancestors` / `all_methods` / `all_properties` /
+// per-method `origin` … at the entity level; `class_annotations` / `patterns` /
+// `enrichment` / `verification` at the document level). This single schema covers
+// both: those fields are optional (`min` defaults to 0), and the `checkpoint`
+// enum admits either phase. No `extracted`/`resolved` split.
+//
+// `min`/`max` mean OCCURRENCE count in a node-definition body, and VALUE
+// CARDINALITY in a `value {…}` body (KDL Schema convention).
+
+document {
+    info {
+        title "APIAnyware machine interchange IR (extracted.kdl / resolved.kdl)" lang="en"
+        description "The derived per-framework fact base (extracted) and merged graph (resolved): an apianyware_types::ir::Framework encoded as JSON-in-KDL by the machine codec. ADR-0046 §5." lang="en"
+        author "APIAnyware structural-refactoring grove · workstream 8 (schema-validation-k149 → machine-kdl-schema-k153)"
+    }
+
+    // Tolerate additive IR evolution at the document root (see OPEN CONTENT MODEL).
+    other-nodes-allowed #true
+
+    // ── Document identity ──────────────────────────────────────────────────────
+    // The framework name — the one field with no serde default; always present.
+    node "name" {
+        min 1
+        max 1
+        value { type "string"; min 1; max 1; }
+    }
+    // The pipeline phase that produced this file. On-disk it is exactly one of
+    // these two (the in-process `linked` / `annotated` passes are never written
+    // to these artifacts); this enum is the schema's sharpest semantic check.
+    node "checkpoint" {
+        min 1
+        max 1
+        value { type "string"; min 1; max 1; enum "extracted" "resolved"; }
+    }
+    // Checkpoint-format version (e.g. "1.0").
+    node "format_version" {
+        max 1
+        value { type "string"; min 1; max 1; }
+    }
+    // macOS SDK version used during collection (e.g. "15.4"). Optional.
+    node "sdk_version" {
+        max 1
+        value { type "string"; min 1; max 1; }
+    }
+    // ISO-8601 collection timestamp. Optional.
+    node "collected_at" {
+        max 1
+        value { type "string"; min 1; max 1; }
+    }
+
+    // Frameworks this one depends on — an array of strings.
+    node "depends_on" {
+        max 1
+        children {
+            node "-" { value { type "string"; min 1; max 1; } }
+        }
+    }
+
+    // Symbols skipped during extraction — an array of {name, kind, reason}.
+    node "skipped_symbols" {
+        max 1
+        children {
+            node "-" {
+                other-nodes-allowed #true
+                children {
+                    node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                    node "kind" { max 1; value { type "string"; min 1; max 1; } }
+                    node "reason" { max 1; value { type "string"; min 1; max 1; } }
+                }
+            }
+        }
+    }
+
+    // ── Declarations ───────────────────────────────────────────────────────────
+    // Each is an array of one entity kind. The `-` element specifies the entity's
+    // direct scalar fields (typed) + its required identity, with nested entity
+    // collections recursing and the TypeRef/provenance zoo left accept-any.
+
+    // Classes. `super` is the serde rename of `superclass`.
+    node "classes" {
+        max 1
+        children {
+            node "-" {
+                other-nodes-allowed #true
+                children {
+                    node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                    node "super" { max 1; value { type "string"; min 1; max 1; } }
+                    node "protocols" {
+                        max 1
+                        children { node "-" { value { type "string"; min 1; max 1; } } }
+                    }
+                    node "swift_attributes" {
+                        max 1
+                        children { node "-" { value { type "string"; min 1; max 1; } } }
+                    }
+                    node "objc_exposed" { max 1; value { type "boolean"; min 1; max 1; } }
+                    node "swift_name" { max 1; value { type "string"; min 1; max 1; } }
+                    node "properties" {
+                        max 1
+                        // (Property — name-identified; contents open.)
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children { node "name" { min 1; max 1; value { type "string"; min 1; max 1; } } }
+                        } }
+                    }
+                    node "methods" {
+                        max 1
+                        // (Method — selector-identified; return_type + params
+                        // specified, deeper TypeRef zoo open. No `$ref`: this block
+                        // is inlined identically at every method site.)
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children {
+                                node "selector" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                                node "return_type" { max 1; other-nodes-allowed #true; }
+                                node "params" {
+                                    max 1
+                                    children { node "-" {
+                                        other-nodes-allowed #true
+                                        children {
+                                            node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                                            node "type" { max 1; other-nodes-allowed #true; }
+                                        }
+                                    } }
+                                }
+                            }
+                        } }
+                    }
+                    // Resolved-only: category origin + inheritance-flattened views.
+                    node "category_methods" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children {
+                                node "category" { max 1; value { type "string"; min 1; max 1; } }
+                                node "origin_framework" { max 1; value { type "string"; min 1; max 1; } }
+                                node "methods" {
+                                    max 1
+                                    children { node "-" {
+                                        other-nodes-allowed #true
+                                        children { node "selector" { min 1; max 1; value { type "string"; min 1; max 1; } } }
+                                    } }
+                                }
+                            }
+                        } }
+                    }
+                    node "ancestors" {
+                        max 1
+                        children { node "-" { value { type "string"; min 1; max 1; } } }
+                    }
+                    node "all_methods" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children {
+                                node "selector" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                                node "return_type" { max 1; other-nodes-allowed #true; }
+                                node "params" {
+                                    max 1
+                                    children { node "-" {
+                                        other-nodes-allowed #true
+                                        children {
+                                            node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                                            node "type" { max 1; other-nodes-allowed #true; }
+                                        }
+                                    } }
+                                }
+                            }
+                        } }
+                    }
+                    node "all_properties" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children { node "name" { min 1; max 1; value { type "string"; min 1; max 1; } } }
+                        } }
+                    }
+                }
+            }
+        }
+    }
+
+    // Protocols.
+    node "protocols" {
+        max 1
+        children {
+            node "-" {
+                other-nodes-allowed #true
+                children {
+                    node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                    node "inherits" {
+                        max 1
+                        children { node "-" { value { type "string"; min 1; max 1; } } }
+                    }
+                    node "objc_exposed" { max 1; value { type "boolean"; min 1; max 1; } }
+                    node "required_methods" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children { node "selector" { min 1; max 1; value { type "string"; min 1; max 1; } } }
+                        } }
+                    }
+                    node "optional_methods" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children { node "selector" { min 1; max 1; value { type "string"; min 1; max 1; } } }
+                        } }
+                    }
+                    node "properties" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children { node "name" { min 1; max 1; value { type "string"; min 1; max 1; } } }
+                        } }
+                    }
+                }
+            }
+        }
+    }
+
+    // Enums. `type` is the serde rename of `enum_type` (a TypeRef ⇒ open).
+    node "enums" {
+        max 1
+        children {
+            node "-" {
+                other-nodes-allowed #true
+                children {
+                    node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                    node "type" { max 1; other-nodes-allowed #true; }
+                    node "objc_exposed" { max 1; value { type "boolean"; min 1; max 1; } }
+                    node "values" {
+                        max 1
+                        // (EnumValue — name + integer value.)
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children {
+                                node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                                node "value" { max 1; value { type "number"; min 1; max 1; } }
+                            }
+                        } }
+                    }
+                }
+            }
+        }
+    }
+
+    // C structs.
+    node "structs" {
+        max 1
+        children {
+            node "-" {
+                other-nodes-allowed #true
+                children {
+                    node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                    node "fields" {
+                        max 1
+                        // (StructField — name + type (a TypeRef ⇒ open).)
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children {
+                                node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                                node "type" { max 1; other-nodes-allowed #true; }
+                            }
+                        } }
+                    }
+                    node "methods" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children { node "selector" { min 1; max 1; value { type "string"; min 1; max 1; } } }
+                        } }
+                    }
+                    node "objc_exposed" { max 1; value { type "boolean"; min 1; max 1; } }
+                }
+            }
+        }
+    }
+
+    // C functions.
+    node "functions" {
+        max 1
+        children {
+            node "-" {
+                other-nodes-allowed #true
+                children {
+                    node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                    node "inline" { max 1; value { type "boolean"; min 1; max 1; } }
+                    node "variadic" { max 1; value { type "boolean"; min 1; max 1; } }
+                    node "objc_exposed" { max 1; value { type "boolean"; min 1; max 1; } }
+                    node "params" {
+                        max 1
+                        children { node "-" {
+                            other-nodes-allowed #true
+                            children {
+                                node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                                node "type" { max 1; other-nodes-allowed #true; }
+                            }
+                        } }
+                    }
+                    node "return_type" { max 1; other-nodes-allowed #true; }
+                    node "swift_fn" { max 1; other-nodes-allowed #true; }
+                }
+            }
+        }
+    }
+
+    // Global constants / extern variables. `type` is the serde rename of
+    // `constant_type` (a TypeRef ⇒ open).
+    node "constants" {
+        max 1
+        children {
+            node "-" {
+                other-nodes-allowed #true
+                children {
+                    node "name" { min 1; max 1; value { type "string"; min 1; max 1; } }
+                    node "type" { max 1; other-nodes-allowed #true; }
+                    node "macro_value" { max 1; value { type "string"; min 1; max 1; } }
+                    node "objc_exposed" { max 1; value { type "boolean"; min 1; max 1; } }
+                }
+            }
+        }
+    }
+
+    // ── Resolved-only document additions (accept-any: deep / polymorphic zoo) ───
+    // Per-class/protocol annotations, pattern-instances, enrichment relations, and
+    // the verification report. Present only in `resolved.kdl`; their shapes are
+    // deep and evolving, so this contract only asserts they appear at most once.
+    node "class_annotations" { max 1; other-nodes-allowed #true; }
+    node "patterns" { max 1; other-nodes-allowed #true; }
+    node "enrichment" { max 1; other-nodes-allowed #true; }
+    node "verification" { max 1; other-nodes-allowed #true; }
+}

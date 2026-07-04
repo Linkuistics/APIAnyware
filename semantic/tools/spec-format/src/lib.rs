@@ -20,6 +20,10 @@
 //!   against the language-neutral KDL Schema contract
 //!   (`schemas/spec-format/annotations.kdl-schema`, ADR-0046 §3), embedded so the
 //!   validator and the contract never drift.
+//! - [`machine_schema`] — the **machine** validator step (ws8). Validates a
+//!   machine IR (`extracted.kdl` / `resolved.kdl`) against
+//!   `schemas/spec-format/machine-ir.kdl-schema` (ADR-0046 §5) using the *same*
+//!   generic engine — one schema language over every artifact.
 //!
 //! Pipeline rewiring to the per-family triad paths is `pipeline-cutover-k20`.
 
@@ -28,7 +32,9 @@ pub mod convert;
 pub mod error;
 pub mod jik;
 pub mod machine;
+pub mod machine_schema;
 pub mod schema;
 
 pub use error::{Result, SpecFormatError};
+pub use machine_schema::validate_machine_kdl;
 pub use schema::{validate_against_schema, validate_apiw};

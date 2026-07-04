@@ -45,3 +45,12 @@ is a **lean driver over the machinery that already exists**, not new machinery (
   concern if worth a trigger note, don't build it.
 - The machine IR is gitignored/derived — the command should validate it when materialized and give an
   actionable "run the pipeline first" message when absent (mirror `make lint-annotations`'s precondition).
+- **Machine-IR validation perf (finding from k153):** `validate_machine_kdl` runs on the shared engine,
+  whose front door is the format-preserving `kdl::KdlDocument::parse` — the ~84×-`serde_json` parser JiK
+  exists to bypass. Measured **~2 s/MB**, ~98% of it that parse; a flattened `resolved.kdl` can exceed
+  80 MB (AppKit), so validating the full materialized corpus is a **minutes-scale** operation. k153's
+  registry test bounds this with a cumulative work budget. The umbrella must **not** silently validate
+  the whole corpus on every `make validate` — decide the policy (opt-in `--machine` flag / bounded set /
+  a `jik`-parser fast path that validates the `serde_json::Value` instead of the `KdlDocument`). The
+  fast-path — a `Value`-based validation engine reusing the schema *model* — is the clean fix but is
+  **new machinery** (the current engine is `KdlNode`-based); weigh it against the lean-driver mandate.

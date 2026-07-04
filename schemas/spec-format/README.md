@@ -1,9 +1,23 @@
-# schemas/spec-format/ — the authored `.apiw` overlay contracts
+# schemas/spec-format/ — the spec-format KDL Schema contracts
 
-Each file is a language-neutral contract (ADR-0046 §3) for one authored `.apiw` family,
-written in the KDL Schema Language (KDL-in-KDL). A Rust crate is *one conforming validator*
-of each; any KDL tool in any language can validate against them.
+Each file is a language-neutral contract (ADR-0046 §3) written in the KDL Schema Language
+(KDL-in-KDL). A Rust crate is *one conforming validator* of each; any KDL tool in any language
+can validate against them. All but one describe an **authored `.apiw`** family; the exception,
+`machine-ir.kdl-schema`, is the one **machine / derived** contract (the ws8 payoff — the machine
+IR flipped to KDL, so it is validated by the *same* engine and language, not a separate JSON
+Schema).
 
+- **`machine-ir.kdl-schema`** — the **machine** interchange IR (`platforms/macos/api/<F>/`
+  `extracted.kdl` + `resolved.kdl`), an `apianyware_types::ir::Framework` in JSON-in-KDL (ADR-0046
+  §5). Workstream 8 (`schema-validation-k149` → `machine-kdl-schema-k153`); validated by
+  `apianyware-spec-format`'s `validate_machine_kdl`. Unlike the authored contracts it is an **open
+  content model** (the IR is generated + derived + evolving, so it tolerates additive fields while
+  pinning the document spine, entity identity, scalar types, and the `checkpoint` enum). One schema
+  covers both phases (`resolved` is the same type with later-phase fields, optional). The KDL Schema
+  Language's lack of `$ref`/recursion sets its altitude — see the schema header for the full
+  rationale (the JiK on-disk shape, the accept-any recursion boundary). Validation runs on the
+  format-preserving `kdl` parser at ~2 s/MB, so the umbrella command (`validate-umbrella-k154`) owns
+  bounding machine-scale validation.
 - **`annotations.kdl-schema`** — the authored `annotations.apiw` overlay. Workstream 2
   (`spec-format-k16` → `kdl-schema-k19`); validated by `apianyware-spec-format`'s `validate_apiw`.
 - **`pattern-kinds.kdl-schema`** — the first-class semantic pattern-kind registry
@@ -69,8 +83,11 @@ of each; any KDL tool in any language can validate against them.
   the platforms domain; cf. `capability.kdl-schema`). Identity matches the *target* directory (the
   file's grandparent) and `platform` the file STEM (platform-in-filename, unlike policy/adapter).
 
-The Rust `apianyware-spec-format` crate is *one conforming validator* of this contract (its
-`validate_apiw` step embeds this file); any KDL tool in any language can validate an `.apiw` file
-against it. See [`../docs/spec-format-schema.md`](../docs/spec-format-schema.md) for the rationale,
-the cross-language consumption notes, and the ws8 boundary (machine-`.json` JSON Schema + the
-app-kind / AppSpec / capability-profile / conformance-report schemas live there).
+The Rust `apianyware-spec-format` crate is *one conforming validator* of the authored contracts
+(its `validate_apiw` step embeds `annotations.kdl-schema`) and of the machine contract (its
+`validate_machine_kdl` step embeds `machine-ir.kdl-schema`); any KDL tool in any language can
+validate the corresponding file against them. See
+[`../docs/spec-format-schema.md`](../docs/spec-format-schema.md) for the rationale and the
+cross-language consumption notes. The single tree-walking validation mechanism over every artifact
+is `apianyware-validate` (`validate-umbrella-k154`); the `schemas/docs/` validation-model prose is
+`validation-docs-k155`.
