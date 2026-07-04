@@ -34,6 +34,8 @@ members = [
     "targets/gerbil/tools/bundle-gerbil",
     "targets/sbcl/tools/emit-sbcl",
     "targets/sbcl/tools/bundle-sbcl",
+    # schemas/ domain — the one validation mechanism over every authored artifact
+    "schemas/tools/validate",
 ]
 
 [workspace.package]

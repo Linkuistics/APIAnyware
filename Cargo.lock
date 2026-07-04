@@ -447,6 +447,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "apianyware-validate"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apianyware-app-kinds",
+ "apianyware-patterns",
+ "apianyware-platform-manifest",
+ "apianyware-platform-tests",
+ "apianyware-spec-format",
+ "apianyware-target-model",
+ "clap",
+]
+
+[[package]]
 name = "ascent"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

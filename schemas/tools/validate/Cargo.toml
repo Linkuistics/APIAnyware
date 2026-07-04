@@ -1,0 +1,19 @@
+[package]
+name = "apianyware-validate"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI: apianyware-validate — the one validation mechanism (ws8, ADR-0046 §5). Tree-walks every authored .apiw artifact and dispatches each to its producing crate's KDL-Schema validator; with --machine, also validates the derived machine IR (extracted.kdl/resolved.kdl). A lean driver over the existing per-crate validators — it wires them together, it does not re-implement validation."
+
+[dependencies]
+apianyware-spec-format.workspace = true
+apianyware-patterns.workspace = true
+apianyware-app-kinds.workspace = true
+apianyware-platform-manifest.workspace = true
+apianyware-platform-tests.workspace = true
+apianyware-target-model.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+
+[lints]
+workspace = true

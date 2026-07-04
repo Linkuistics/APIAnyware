@@ -206,6 +206,23 @@ externalized as a new root grove step** (root BRIEF decomposition #10, after ws9
 grove-finish) — a new concern, not absorbed here. Going-forward policy recorded in the root BRIEF so
 ws9's ADRs are current-state / in-place, not new chains.
 
+**D10 — Machine-IR validation is opt-in (`--machine`); the `Value`-based fast-path engine stays
+deferred.** (leaf `validate-umbrella-k154`, 2026-07-04 — the "decide the policy" call the k154 brief
+flagged.) `apianyware-validate` validates authored `.apiw` by default (fast, fresh-checkout-friendly,
+zero precondition — what `make validate` runs) and the derived machine IR **only under `--machine`**
+(when given, it validates authored **+** machine IR in **one run**, satisfying the k154 "in one run"
+done-bar). Rationale: the leaf's lean-driver mandate + D4's precedent (perf machinery is a *deferred
+trigger*, not built now). The full materialized corpus is minutes-scale on the format-preserving KDL
+parser (~2 s/MB; measured ~160 MB across 14 families locally), so it must not run on every
+`make validate`; `--machine` streams per-file progress (cheapest first — no silent hang) and emits an
+actionable "run the pipeline first" precondition error (exit 2) when the IR is absent, mirroring
+`make lint-annotations`. Exit codes: 0 clean · 1 any validation failure **or** an unclassified `.apiw`
+(coverage-gap guard) · 2 usage/precondition. **Deferred trigger for k155 to record durably:** a
+`serde_json::Value`-based validation engine reusing the schema *model* (not the `KdlNode` doc-model)
+would cut machine-IR validation ~50× by bypassing the format-preserving parse — the clean fix, but
+**new machinery**; build it only if `--machine` wall-time is ever actually felt (mirrors D4's
+native-serde-JiK deferral).
+
 **State of the current tree (established by exploration, not yet a decision):**
 - The KDL-Schema **engine is already shared** (`validate_against_schema`); every producing crate
   (`app-kinds`, `platform-manifest`, `platform-tests`, all six `target-model` submodules,
