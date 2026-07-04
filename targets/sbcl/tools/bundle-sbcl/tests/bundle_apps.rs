@@ -1,10 +1,10 @@
 //! Integration tests for the sbcl bundler.
 //!
-//! The cheap, deterministic checks (residual classification against the real app
-//! tree, the missing-driver precheck) run in any `cargo test`. The heavy
-//! end-to-end build — drive `save-lisp-and-die`, assemble the bundle, then revive
-//! the dumped image through the stub — needs SBCL + the swift toolchain and is
-//! seconds-to-minutes long, so it is `#[ignore]`d and run explicitly:
+//! The cheap, deterministic check (the missing-driver precheck) runs in any
+//! `cargo test`. The heavy end-to-end build — drive `save-lisp-and-die`, assemble
+//! the bundle, then revive the dumped image through the stub — needs SBCL + the
+//! swift toolchain and is seconds-to-minutes long, so it is `#[ignore]`d and run
+//! explicitly:
 //!
 //! ```text
 //! cargo test -p apianyware-bundle-sbcl -- --ignored --nocapture
@@ -13,7 +13,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use apianyware_bundle_sbcl::{bundle_app, driver_needs_dylib, AppSpec, BundleError};
+use apianyware_bundle_sbcl::{bundle_app, AppSpec, BundleError};
 
 fn workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -42,25 +42,6 @@ fn driver(script: &str) -> PathBuf {
 
 fn sbcl_tree_present() -> bool {
     driver("hello-window").is_file()
-}
-
-/// The residual classification must match the real app tree: hello-window is
-/// pure-ObjC (no dylib); swift-native-probe loads libAPIAnywareSbcl. This anchors
-/// `driver_needs_dylib` against the actual dump drivers the bundler reuses.
-#[test]
-fn classifies_residual_apps_against_real_tree() {
-    if !sbcl_tree_present() {
-        eprintln!("SKIPPED: sbcl app tree not present (emit/apps not local)");
-        return;
-    }
-    assert!(
-        !driver_needs_dylib(&driver("hello-window")),
-        "hello-window is pure ObjC — no libAPIAnywareSbcl"
-    );
-    assert!(
-        driver_needs_dylib(&driver("swift-native-probe")),
-        "swift-native-probe loads libAPIAnywareSbcl (§6d residual)"
-    );
 }
 
 /// A script with no matching `apps/<script>/dump.lisp` fails with
@@ -125,13 +106,14 @@ fn builds_and_revives_hello_window_app() {
         app.join("Contents").join("Info.plist").is_file(),
         "Info.plist present"
     );
-    // Pure-ObjC app: no residual dylib vendored.
+    // hello-window is residual: its applicationWillTerminate: delegate needs
+    // libAPIAnywareSbcl's subclass bounce shim (k70), so the dylib is vendored.
     assert!(
-        !app.join("Contents")
+        app.join("Contents")
             .join("Frameworks")
             .join("libAPIAnywareSbcl.dylib")
-            .exists(),
-        "hello-window is pure ObjC — no libAPIAnywareSbcl vendored"
+            .is_file(),
+        "hello-window loads libAPIAnywareSbcl — dylib vendored into Frameworks"
     );
 
     // Revive through the stub: the construction-smoke env makes the image build
