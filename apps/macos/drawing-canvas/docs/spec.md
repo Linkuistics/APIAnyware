@@ -30,7 +30,7 @@ A regular, dock-visible, single-window AppKit application (`gui-app`). Launch is
 7. **Run** — enter the AppKit run loop; the process blocks servicing events.
 8. **Terminate** — via the **Quit** command (Command-Q → `-[NSApplication terminate:]`), the `gui-app` app-kind's termination model (`termination "ns-application-terminate"`). See §9.
 
-   **Termination is Quit-driven, not close-driven.** No implementation installs an application delegate or opts into terminate-after-last-window-closed, and the app-kind does not require it; on stock AppKit, closing the window hides it and the process keeps running **(unknown — to confirm in-VM)**. Three implementations' printed guidance ("Close window or Ctrl+C to exit") suggests otherwise; that text is guidance prose, not behaviour.
+   **Termination is Quit-driven, not close-driven.** No implementation installs an application delegate or opts into terminate-after-last-window-closed, and the app-kind does not require it; on stock AppKit, closing the window hides it and the process keeps running (confirmed on all four impls — `run-results.md` scenario 17, the seventh portfolio app to confirm; ADR-0010 D4). Three implementations' printed guidance ("Close window or Ctrl+C to exit") suggests otherwise; that text is guidance prose, not behaviour.
 
 No timers, no background threads, no app-driven animation: every redraw is a response to a user gesture (a mouse event or a toolbar action requesting `setNeedsDisplay:`).
 

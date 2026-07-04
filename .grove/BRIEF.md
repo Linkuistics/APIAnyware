@@ -78,7 +78,16 @@ retire (do not pre-spawn all nine — runaway-tree anti-pattern).
    apps/bindings-split reshape + new-target-guide resync (k61). All in the shared
    `targets/_shared/tools/target-model` crate; goldens unmoved throughout. See
    **Target-model outcomes** below.
-7. **apps** — `apps/macos/` common specs + `targets/<t>/app-implementations/`.
+7. **app model** ✅ *(node `app-model-k62`, complete 2026-07-04)* — `apps/macos/`: the
+   common, target-independent app data. Reframed by exploration + user steer (ADR-0052): an
+   app-spec is **not** a grove-native `.apiw` entity — it is authored against + run by the
+   **external AppSpec toolkit** (`~/Development/AppSpec`, an LLM-driven reverse-gen/forward-gen/run
+   toolkit that holds no app data), consumed under `apps/macos/<app>/`. ws7 built + ran that
+   toolkit grove to completion (k65/k66 pause point), then took eight apps end-to-end
+   (hello-window k64 + k77–k83), each a reverse-gen'd `spec.md` + two contracts + a forward-gen'd
+   `#lang app-spec` suite, **each live-VM-verified ×4** (87 scenarios total). Finalized the
+   canonical per-app layout (k84) and the portfolio index + conformance/coverage tie-in (k85). No
+   machine manifest (D3); structural facts stay prose. See **App-model outcomes** below.
 8. **schemas + validation** — `schemas/`: formal validation of every artifact.
 9. **testing architecture** — the multi-layer test model (§33), TestAnyware /
    AppSpec integration (§34).
@@ -339,6 +348,61 @@ Seams for the remaining workstreams:
   tests` field *references* test results; it does not build the runner.
 - **Deferred *apply-projection* follow-on (D3):** turning on emitter consumption of
   pattern-instances is golden-intentional and lives in a **separate future grove**, not ws7/8/9.
+
+## App-model outcomes (promoted from `app-model-k62` on retirement)
+
+Durable decisions/handoffs the remaining workstreams depend on (the vocabulary lives in
+`CONTEXT.md` "App model" + **ADR-0052** + the `app-model-k62` running log D1–D5; the prose in
+`apps/README.md` + `apps/macos/README.md` + `apps/macos/docs/{_index,reverse-gen-workflow,
+appspec-toolkit-seed}.md` + each app's `docs/`). ws7 turned out **not** to be an
+entity-authoring workstream at all — exploration + a user steer reframed it as *homing +
+reconciling the external AppSpec toolkit's data*:
+
+- **The app-spec is external, not grove-native (D1 + D2′; ADR-0052).** An app-spec is authored
+  against, and run by, the **external AppSpec project** (`~/Development/AppSpec`) — an LLM-driven,
+  human-in-the-loop toolkit (reverse-gen a spec from an impl · forward-gen a suite from the spec ·
+  run it against any impl in a live VM through TestAnyware) that **holds no app data**. The data
+  lives here under `apps/macos/<app>/` in the toolkit's own **`#lang app-spec`** format; the grove
+  does **not** reinvent it as `.apiw`. Three-layer boundary: **TestAnyware** (VM substrate) →
+  **AppSpec** (toolkit + formats) → **APIAnyware `apps/macos/`** (the generated+validated data).
+  The AppSpec toolkit grove was built, seeded, and **run to completion** during the k66 pause
+  (three capabilities: reverse-gen/forward-gen/run).
+- **Eight apps, all live-VM-verified ×4 (D2).** The finalized portfolio: hello-window ·
+  ui-controls-gallery · note-editor · mini-browser · drawing-canvas · scenekit-viewer ·
+  pdfkit-viewer · swift-native-probe — 87 `#lang app-spec` scenarios total; all app-kind
+  `gui-app` (ADR-0049 instance side). Each per-app node was decomposed on entry and carried its
+  own VM-verify done-bar ([[vm-verify-every-app]]); reds adjudicate to run-mechanism classes
+  (OCR small-text, delayed-truncate, driver races) with the fact proven via a second channel —
+  **no impl defect survived** in any app.
+- **Canonical per-app layout (k84).** `docs/{spec,logging-contract,observable-state,run-results}.md`
+  + `scenarios/*.rkt` + `run-values.rkt`; optional (present only when earned) `docs/learnings.md`,
+  `run-values-<impl>.rkt`, `fixtures/`. Pre-AppSpec `test-strategy.md` checklists retired.
+- **No machine manifest; structural facts as prose (D3, re-confirmed at k85).** The app↔app-kind
+  binding, exercised pattern-kinds, and display-name stay **prose** in each `spec.md` structured
+  header. The bundlers read the display-name from `spec.md`'s first H1 (zero-churn). A machine
+  `app.apiw` is **deferred** (constraint 4) — k85 re-ran the "IF a real machine consumer
+  materializes" test against the coverage tie-in and it resolved **no** (the tie-in reads the
+  app-kind binding from each *target's* `conformance/macos.apiw`, never `apps/macos/`).
+- **Coverage is derived, not hand-maintained (k85).** Per-target app status is derived on demand
+  by `apianyware-conformance` (ws6 — scans `app-implementations/` + `reports/`, cross-checks
+  authored judgment); the portfolio index `apps/macos/docs/_index.md` **points at** that report
+  rather than duplicating it. Roster edges settled: **swift-native-method-probe** is a per-target
+  verification probe (racket/chez/gerbil; sbcl method-port is a research item), **not** a
+  portfolio app — no common AppSpec; **modaliser** is an external real-world reference app that
+  informed the design, not a sample — nothing relocated (its `knowledge/` was untracked and is
+  absent from the tree).
+
+Seams for the remaining workstreams:
+
+- **ws8 (schemas):** ws7 authored **no** grove-native AppSpec `.apiw` schema — the earlier "ws7
+  may author the AppSpec KDL Schema + validator" presumption was **dropped** (D1): `#lang
+  app-spec` is the external AppSpec project's format, and **AppSpec owns its own reader/validation**.
+  So the standing ws2/3/4/5/6 "ws8 owns the machine JSON Schema" seam does **not** extend to
+  AppSpec data — there is no grove-authored AppSpec artifact for ws8 to schema.
+- **ws9 (testing):** ws9 owns the APIAnyware-side multi-layer test model (§33). The **AppSpec
+  runner** (§34) that drives a suite against a running impl is the **external AppSpec project's**,
+  already built + run to completion during the k66 pause — so ws9 integrates/references it rather
+  than building it (the ws4/ws6 declare-now/execute-later mirror, but with the executor external).
 
 ## Notes
 
