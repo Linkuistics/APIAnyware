@@ -1,10 +1,4 @@
 framework ContactsUI {
-    class CNContactPicker {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class CNContactViewController {
         method commitEditingAndReturnError: is-instance=#true {
             threading main_thread_only

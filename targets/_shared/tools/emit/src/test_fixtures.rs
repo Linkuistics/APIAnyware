@@ -89,14 +89,18 @@ pub fn build_snapshot_test_framework() -> Framework {
 fn type_id() -> TypeRef {
     TypeRef {
         nullable: false,
-        kind: TypeRefKind::Id,
+        kind: TypeRefKind::Id {
+            protocols: Vec::new(),
+        },
     }
 }
 
 fn type_id_nullable() -> TypeRef {
     TypeRef {
         nullable: true,
-        kind: TypeRefKind::Id,
+        kind: TypeRefKind::Id {
+            protocols: Vec::new(),
+        },
     }
 }
 
@@ -249,7 +253,7 @@ fn property(name: &str, property_type: TypeRef, readonly: bool) -> Property {
         property_type,
         readonly,
         class_property: false,
-        is_copy: false,
+        ownership: None,
         deprecated: false,
         source: None,
         provenance: None,
@@ -776,6 +780,7 @@ fn build_version_constant() -> Constant {
     Constant {
         name: "TKVersionString".to_string(),
         constant_type: type_class("NSString"),
+        array_element: None,
         source: None,
         provenance: None,
         doc_refs: None,
@@ -788,6 +793,7 @@ fn build_timeout_constant() -> Constant {
     Constant {
         name: "TKDefaultTimeout".to_string(),
         constant_type: type_double(),
+        array_element: None,
         source: None,
         provenance: None,
         doc_refs: None,
@@ -801,8 +807,11 @@ fn build_cfstr_constant() -> Constant {
         name: "TKStatusAttribute".to_string(),
         constant_type: TypeRef {
             nullable: true,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         },
+        array_element: None,
         source: None,
         provenance: None,
         doc_refs: None,

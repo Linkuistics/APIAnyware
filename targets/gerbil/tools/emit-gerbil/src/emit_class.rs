@@ -1813,7 +1813,7 @@ fn emit_property(
 
 fn coerce_arg_expr(param: &Param, var: &str) -> String {
     match &param.param_type.kind {
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             format!("(->ptr {var})")
         }
         TypeRefKind::Selector => format!("(sel_registerName {var})"),
@@ -1823,7 +1823,7 @@ fn coerce_arg_expr(param: &Param, var: &str) -> String {
 
 fn setter_value_expr(t: &TypeRef) -> String {
     match &t.kind {
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             "(->ptr value)".to_string()
         }
         TypeRefKind::Selector => "(sel_registerName value)".to_string(),
@@ -1991,7 +1991,7 @@ mod tests {
             property_type: ty(kind),
             readonly,
             class_property: false,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: None,
             provenance: None,
@@ -2113,7 +2113,12 @@ mod tests {
             flattened(
                 "runAction:",
                 "SCNActionable",
-                vec![param("action", TypeRefKind::Id)],
+                vec![param(
+                    "action",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
                 TypeRef::void(),
             ),
             // Superclass-inherited (class origin) — the manifest graph carries it.
@@ -2224,7 +2229,9 @@ mod tests {
                 "description",
                 false,
                 false,
-                ty(TypeRefKind::Id),
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
             )],
             vec![],
         );
@@ -2276,7 +2283,13 @@ mod tests {
         let cls = cls_with(
             "NSWindow",
             vec![],
-            vec![prop("title", TypeRefKind::Id, false)],
+            vec![prop(
+                "title",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+                false,
+            )],
         );
         let out = generate_class_file(&cls, "AppKit");
         assert!(out.contains(";; --- Properties ---"));
@@ -2310,7 +2323,14 @@ mod tests {
     fn class_method_uses_get_class_receiver() {
         let cls = cls_with(
             "NSString",
-            vec![make_method("string", true, false, ty(TypeRefKind::Id))],
+            vec![make_method(
+                "string",
+                true,
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
+            )],
             vec![],
         );
         let out = generate_class_file(&cls, "Foundation");
@@ -2389,8 +2409,18 @@ mod tests {
             }),
         );
         m.params = vec![
-            param("object", TypeRefKind::Id),
-            param("key", TypeRefKind::Id),
+            param(
+                "object",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            ),
+            param(
+                "key",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            ),
         ];
         let cls = cls_with("NSMutableDictionary", vec![m], vec![]);
         let out = generate_class_file(&cls, "Foundation");
@@ -2455,7 +2485,9 @@ mod tests {
                 "firstObject",
                 false,
                 false,
-                ty(TypeRefKind::Id),
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
             )],
             vec![],
         );
@@ -2487,7 +2519,12 @@ mod tests {
             }),
         );
         m.params = vec![
-            param("path", TypeRefKind::Id),
+            param(
+                "path",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            ),
             param("error", TypeRefKind::Pointer),
         ];
         let cls = cls_with("NSData", vec![m], vec![]);
@@ -2547,9 +2584,21 @@ mod tests {
     /// still defers (raw pointers are unbindable) — no proc, no crossing.
     #[test]
     fn non_error_trailing_pointer_method_deferred() {
-        let mut m = make_method("getBytes:error:", false, false, ty(TypeRefKind::Id));
+        let mut m = make_method(
+            "getBytes:error:",
+            false,
+            false,
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+        );
         m.params = vec![
-            param("buffer", TypeRefKind::Id),
+            param(
+                "buffer",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            ),
             param("error", TypeRefKind::Pointer),
         ];
         let cls = cls_with("NSData", vec![m], vec![]);
@@ -2577,10 +2626,17 @@ mod tests {
             "dataWithContentsOfURL:error:",
             false,
             false,
-            ty(TypeRefKind::Id),
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
         );
         m.params = vec![
-            param("url", TypeRefKind::Id),
+            param(
+                "url",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            ),
             param("error", TypeRefKind::Pointer),
         ];
         let cls = cls_with("NSData", vec![m], vec![]);
@@ -2711,7 +2767,14 @@ mod tests {
         // binds via objc_msgSend (the %msg- crossing); the Swift-native one routes to
         // the receiver-handle trampoline section (the %swift- crossing against the
         // content-addressed libAPIAnywareGerbil entry), NEVER objc_msgSend (charter #4).
-        let objc = make_method("title", false, false, ty(TypeRefKind::Id));
+        let objc = make_method(
+            "title",
+            false,
+            false,
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+        );
         let swiftm = swift_method(
             "describe",
             ty(TypeRefKind::Primitive {

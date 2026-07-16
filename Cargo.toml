@@ -34,6 +34,8 @@ members = [
     "targets/gerbil/tools/bundle-gerbil",
     "targets/sbcl/tools/emit-sbcl",
     "targets/sbcl/tools/bundle-sbcl",
+    "targets/typescript/tools/emit-typescript",
+    "targets/typescript/tools/bundle-typescript",
     # schemas/ domain — the one validation mechanism over every authored artifact
     "schemas/tools/validate",
 ]
@@ -60,6 +62,7 @@ plist = "1.7"
 # `miette` for format-preserving diagnostics.
 kdl = "=6.3.4"
 miette = "7"
+similar = "3"
 
 # Internal crates
 apianyware-types = { path = "semantic/tools/types" }
@@ -82,6 +85,7 @@ apianyware-emit-racket = { path = "targets/racket/tools/emit-racket" }
 apianyware-emit-chez = { path = "targets/chez/tools/emit-chez" }
 apianyware-emit-gerbil = { path = "targets/gerbil/tools/emit-gerbil" }
 apianyware-emit-sbcl = { path = "targets/sbcl/tools/emit-sbcl" }
+apianyware-emit-typescript = { path = "targets/typescript/tools/emit-typescript" }
 apianyware-stub-launcher = { path = "targets/_shared/tools/stub-launcher" }
 apianyware-bundle-racket = { path = "targets/racket/tools/bundle-racket" }
 apianyware-bundle-chez = { path = "targets/chez/tools/bundle-chez" }

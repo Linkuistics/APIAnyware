@@ -70,14 +70,6 @@ framework Foundation {
             block-param 2 invocation=synchronous
             source llm
         }
-        method addObserver:toObjectsAtIndexes:forKeyPath:options:context: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method addObserver:forKeyPath:options:context: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSAttributedString {
         method enumerateAttributesInRange:options:usingBlock: is-instance=#true {
@@ -145,12 +137,6 @@ framework Foundation {
             source llm
         }
     }
-    class NSCache {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSCalendar {
         method enumerateDatesStartingAfterDate:matchingComponents:options:usingBlock: is-instance=#true {
             block-param 3 invocation=synchronous
@@ -192,12 +178,6 @@ framework Foundation {
         }
         method predicateWithBlock: is-instance=#false {
             block-param 0 invocation=stored
-            source llm
-        }
-    }
-    class NSConnection {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -332,14 +312,6 @@ framework Foundation {
         }
     }
     class NSDistributedNotificationCenter {
-        method addObserver:selector:name:object: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method addObserver:selector:name:object:suspensionBehavior: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method addObserverForName:object:queue:usingBlock: is-instance=#true {
             block-param 3 invocation=stored
             source llm
@@ -582,10 +554,6 @@ framework Foundation {
             error-pattern error_out_param
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method setUbiquitous:itemAtURL:destinationURL:error: is-instance=#true {
             error-pattern error_out_param
             source llm
@@ -737,12 +705,6 @@ framework Foundation {
             source llm
         }
     }
-    class NSInputStream {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSInvocationOperation {
         method setCompletionBlock: is-instance=#true {
             block-param 0 invocation=stored
@@ -821,33 +783,15 @@ framework Foundation {
             source llm
         }
     }
-    class NSKeyValueSharedObservers {
-        method addObserver:forKeyPath:options:context: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method addSharedObserver:forKey:options:context: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSKeyedArchiver {
         method archivedDataWithRootObject:requiringSecureCoding:error: is-instance=#false {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
     class NSKeyedUnarchiver {
         method initForReadingFromData:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
         method unarchiveTopLevelObjectWithData:error: is-instance=#false {
@@ -921,12 +865,6 @@ framework Foundation {
             source llm
         }
     }
-    class NSMachPort {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSMassFormatter {
         method getObjectValue:forString:errorDescription: is-instance=#true {
             error-pattern error_out_param
@@ -955,12 +893,6 @@ framework Foundation {
             source llm
         }
     }
-    class NSMessagePort {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSMetadataQuery {
         method enumerateResultsUsingBlock: is-instance=#true {
             block-param 0 invocation=synchronous
@@ -968,10 +900,6 @@ framework Foundation {
         }
         method enumerateResultsWithOptions:usingBlock: is-instance=#true {
             block-param 1 invocation=synchronous
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -1075,23 +1003,7 @@ framework Foundation {
             source llm
         }
     }
-    class NSNetService {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSNetServiceBrowser {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSNotificationCenter {
-        method addObserver:selector:name:object: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method addObserverForName:object:queue:usingBlock: is-instance=#true {
             block-param 3 invocation=stored
             source llm
@@ -1190,16 +1102,6 @@ framework Foundation {
             block-param 2 invocation=synchronous
             source llm
         }
-        method addObserver:forKeyPath:options:context: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSOutputStream {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSPersonNameComponentsFormatter {
         method getObjectValue:forString:errorDescription: is-instance=#true {
@@ -1212,12 +1114,6 @@ framework Foundation {
         }
         method isPartialStringValid:proposedSelectedRange:originalString:originalSelectedRange:errorDescription: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class NSPort {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -1332,10 +1228,6 @@ framework Foundation {
             block-param 1 invocation=synchronous
             source llm
         }
-        method addObserver:forKeyPath:options:context: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSSimpleCString {
         method loadDataWithTypeIdentifier:forItemProviderCompletionHandler: is-instance=#true {
@@ -1344,12 +1236,6 @@ framework Foundation {
         }
         method objectWithItemProviderData:typeIdentifier:error: is-instance=#false {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class NSSocketPort {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -1364,18 +1250,6 @@ framework Foundation {
         }
         method sortDescriptorWithKey:ascending:comparator: is-instance=#false {
             block-param 2 invocation=stored
-            source llm
-        }
-    }
-    class NSSpellServer {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSStream {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -1708,10 +1582,6 @@ framework Foundation {
             block-param 0 invocation=async_copied
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSUserAppleScriptTask {
         method executeWithAppleEvent:completionHandler: is-instance=#true {
@@ -1738,12 +1608,6 @@ framework Foundation {
         }
         method initWithURL:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class NSUserNotificationCenter {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -1881,12 +1745,6 @@ framework Foundation {
             source llm
         }
     }
-    class NSXMLParser {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSXPCConnection {
         method remoteObjectProxyWithErrorHandler: is-instance=#true {
             block-param 0 invocation=synchronous
@@ -1906,12 +1764,6 @@ framework Foundation {
         }
         method synchronousRemoteObjectProxyWithErrorHandler: is-instance=#true {
             block-param 0 invocation=synchronous
-            source llm
-        }
-    }
-    class NSXPCListener {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

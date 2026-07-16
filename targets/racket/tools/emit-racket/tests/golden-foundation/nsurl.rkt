@@ -16,11 +16,14 @@
 
 
 ;; --- Class predicates ---
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
 (define (nsnumber? v) (objc-instance-of? v "NSNumber"))
 (define (nsprogress? v) (objc-instance-of? v "NSProgress"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (nsurl? v) (objc-instance-of? v "NSURL"))
+(define (nsurlhandle? v) (objc-instance-of? v "NSURLHandle"))
 (define (_playgroundquicklook? v) (objc-instance-of? v "_PlaygroundQuickLook"))
 (provide NSURL)
 (provide/contract
@@ -48,7 +51,7 @@
   [nsurl-parameter-string (c-> nsurl? (or/c nsstring? objc-nil?))]
   [nsurl-password (c-> nsurl? (or/c nsstring? objc-nil?))]
   [nsurl-path (c-> nsurl? (or/c nsstring? objc-nil?))]
-  [nsurl-path-components (c-> nsurl? any/c)]
+  [nsurl-path-components (c-> nsurl? (or/c nsarray? objc-nil?))]
   [nsurl-path-extension (c-> nsurl? (or/c nsstring? objc-nil?))]
   [nsurl-port (c-> nsurl? (or/c nsnumber? objc-nil?))]
   [nsurl-query (c-> nsurl? (or/c nsstring? objc-nil?))]
@@ -58,11 +61,17 @@
   [nsurl-scheme (c-> nsurl? (or/c nsstring? objc-nil?))]
   [nsurl-standardized-url (c-> nsurl? (or/c nsurl? objc-nil?))]
   [nsurl-user (c-> nsurl? (or/c nsstring? objc-nil?))]
+  [nsurl-url-by-appending-path-component (c-> nsurl? (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
+  [nsurl-url-by-appending-path-component-is-directory (c-> nsurl? (or/c string? objc-object? #f) boolean? (or/c nsurl? objc-nil?))]
+  [nsurl-url-by-appending-path-extension (c-> nsurl? (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
   [nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error (c-> nsurl? exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values (or/c nsdata? objc-nil?) (or/c objc-object? #f)))]
+  [nsurl-check-promised-item-is-reachable-and-return-error (c-> nsurl? (values boolean? (or/c objc-object? #f)))]
+  [nsurl-check-resource-is-reachable-and-return-error (c-> nsurl? (values boolean? (or/c objc-object? #f)))]
   [nsurl-copy-with-zone (c-> nsurl? (or/c cpointer? #f) any/c)]
   [nsurl-encode-with-coder (c-> nsurl? (or/c string? objc-object? #f) void?)]
   [nsurl-file-reference-url (c-> nsurl? (or/c nsurl? objc-nil?))]
   [nsurl-get-file-system-representation-max-length (c-> nsurl? (or/c cpointer? #f) exact-nonnegative-integer? boolean?)]
+  [nsurl-get-promised-item-resource-value-for-key-error (c-> nsurl? (or/c cpointer? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsurl-get-resource-value-for-key-error (c-> nsurl? (or/c cpointer? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsurl-init-absolute-url-with-data-representation-relative-to-url (c-> nsurl? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nsurl-init-by-resolving-bookmark-data-options-relative-to-url-bookmark-data-is-stale-error (c-> nsurl? (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c cpointer? #f) (values any/c (or/c objc-object? #f)))]
@@ -75,15 +84,16 @@
   [nsurl-is-file-url (c-> nsurl? boolean?)]
   [nsurl-item-provider-visibility-for-representation-with-type-identifier (c-> nsurl? (or/c string? objc-object? #f) exact-integer?)]
   [nsurl-load-data-with-type-identifier-for-item-provider-completion-handler (c-> nsurl? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
+  [nsurl-promised-item-resource-values-for-keys-error (c-> nsurl? (or/c string? objc-object? #f) (values (or/c nsdictionary? objc-nil?) (or/c objc-object? #f)))]
   [nsurl-remove-all-cached-resource-values! (c-> nsurl? void?)]
   [nsurl-remove-cached-resource-value-for-key! (c-> nsurl? (or/c string? objc-object? #f) void?)]
-  [nsurl-resource-values-for-keys-error (c-> nsurl? (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
+  [nsurl-resource-values-for-keys-error (c-> nsurl? (or/c string? objc-object? #f) (values (or/c nsdictionary? objc-nil?) (or/c objc-object? #f)))]
   [nsurl-set-resource-value-for-key-error! (c-> nsurl? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsurl-set-resource-values-error! (c-> nsurl? (or/c string? objc-object? #f) (values boolean? (or/c objc-object? #f)))]
   [nsurl-set-temporary-resource-value-for-key! (c-> nsurl? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsurl-start-accessing-security-scoped-resource (c-> nsurl? boolean?)]
   [nsurl-stop-accessing-security-scoped-resource (c-> nsurl? void?)]
-  [nsurl-writable-type-identifiers-for-item-provider (c-> nsurl? any/c)]
+  [nsurl-writable-type-identifiers-for-item-provider (c-> nsurl? (or/c nsarray? objc-nil?))]
   [nsurl-url-by-resolving-alias-file-at-url-options-error (c-> (or/c string? objc-object? #f) exact-nonnegative-integer? (values any/c (or/c objc-object? #f)))]
   [nsurl-url-by-resolving-bookmark-data-options-relative-to-url-bookmark-data-is-stale-error (c-> (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c cpointer? #f) (values any/c (or/c objc-object? #f)))]
   [nsurl-url-with-data-representation-relative-to-url (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
@@ -97,9 +107,10 @@
   [nsurl-file-url-with-path-is-directory (c-> (or/c string? objc-object? #f) boolean? (or/c nsurl? objc-nil?))]
   [nsurl-file-url-with-path-is-directory-relative-to-url (c-> (or/c string? objc-object? #f) boolean? (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
   [nsurl-file-url-with-path-relative-to-url (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
+  [nsurl-file-url-with-path-components (c-> (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
   [nsurl-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
-  [nsurl-readable-type-identifiers-for-item-provider (c-> any/c)]
-  [nsurl-resource-values-for-keys-from-bookmark-data (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nsurl-readable-type-identifiers-for-item-provider (c-> (or/c nsarray? objc-nil?))]
+  [nsurl-resource-values-for-keys-from-bookmark-data (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdictionary? objc-nil?))]
   [nsurl-supports-secure-coding (c-> boolean?)]
   [nsurl-write-bookmark-data-to-url-options-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (values boolean? (or/c objc-object? #f)))]
   )
@@ -111,6 +122,7 @@
 (define-aw-msg aw_racket_msg_0_P (-> ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_0_N (-> ptr_t ptr_t string_t))
 (define-aw-msg aw_racket_msg_0_b (-> ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_0_b_e (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_0_v (-> ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_P_P_e (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
@@ -248,12 +260,36 @@
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "user"))))))
 
 ;; --- Instance methods ---
+(define (nsurl-url-by-appending-path-component self path-component)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "URLByAppendingPathComponent:")) (id->ffi2-ptr (coerce-arg path-component))))
+   ))
+(define (nsurl-url-by-appending-path-component-is-directory self path-component is-directory)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_Pb_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "URLByAppendingPathComponent:isDirectory:")) (id->ffi2-ptr (coerce-arg path-component)) is-directory))
+   ))
+(define (nsurl-url-by-appending-path-extension self path-extension)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "URLByAppendingPathExtension:")) (id->ffi2-ptr (coerce-arg path-extension))))
+   ))
 ;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error self options keys relative-url)
   (let ([errbuf (malloc _pointer)])
     (let ([result (aw_racket_msg_QPP_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "bookmarkDataWithOptions:includingResourceValuesForKeys:relativeToURL:error:")) options (id->ffi2-ptr (coerce-arg keys)) (id->ffi2-ptr (coerce-arg relative-url)) (cpointer->ptr_t errbuf))]
           [err (ptr-ref errbuf _pointer)])
       (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
+;; NSError out-param: result-or-error wrapper candidate
+(define (nsurl-check-promised-item-is-reachable-and-return-error self)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_0_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "checkPromisedItemIsReachableAndReturnError:")) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
+;; NSError out-param: result-or-error wrapper candidate
+(define (nsurl-check-resource-is-reachable-and-return-error self)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_0_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "checkResourceIsReachableAndReturnError:")) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsurl-copy-with-zone self zone)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "copyWithZone:")) (id->ffi2-ptr zone)))
@@ -266,6 +302,12 @@
    ))
 (define (nsurl-get-file-system-representation-max-length self buffer max-buffer-length)
   (aw_racket_msg_PQ_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getFileSystemRepresentation:maxLength:")) (id->ffi2-ptr buffer) max-buffer-length))
+;; NSError out-param: result-or-error wrapper candidate
+(define (nsurl-get-promised-item-resource-value-for-key-error self value key)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_PP_b_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getPromisedItemResourceValue:forKey:error:")) (id->ffi2-ptr value) (id->ffi2-ptr (coerce-arg key)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values result (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 ;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-get-resource-value-for-key-error self value key)
   (let ([errbuf (malloc _pointer)])
@@ -315,6 +357,12 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:")) (id->ffi2-ptr (coerce-arg type-identifier)) (id->ffi2-ptr _blk1)))
    ))
+;; NSError out-param: result-or-error wrapper candidate
+(define (nsurl-promised-item-resource-values-for-keys-error self keys)
+  (let ([errbuf (malloc _pointer)])
+    (let ([result (aw_racket_msg_P_P_e (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "promisedItemResourceValuesForKeys:error:")) (id->ffi2-ptr (coerce-arg keys)) (cpointer->ptr_t errbuf))]
+          [err (ptr-ref errbuf _pointer)])
+      (values (wrap-objc-object (ffi2-ptr->id result)) (if (ptr-equal? err #f) #f (wrap-objc-object err #:retained #t))))))
 (define (nsurl-remove-all-cached-resource-values! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeAllCachedResourceValues"))))
 (define (nsurl-remove-cached-resource-value-for-key! self key)
@@ -406,6 +454,10 @@
 (define (nsurl-file-url-with-path-relative-to-url path base-url)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr NSURL) (id->ffi2-ptr (sel_registerName "fileURLWithPath:relativeToURL:")) (id->ffi2-ptr (coerce-arg path)) (id->ffi2-ptr (coerce-arg base-url))))
+   ))
+(define (nsurl-file-url-with-path-components components)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSURL) (id->ffi2-ptr (sel_registerName "fileURLWithPathComponents:")) (id->ffi2-ptr (coerce-arg components))))
    ))
 ;; NSError out-param: result-or-error wrapper candidate
 (define (nsurl-object-with-item-provider-data-type-identifier-error data type-identifier)

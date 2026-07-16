@@ -19,14 +19,12 @@ framework QuartzCore {
     }
     class CAEmitterLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class CAGradientLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -39,28 +37,24 @@ framework QuartzCore {
     }
     class CALayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class CAMetalDisplayLink {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class CAMetalLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class CAOpenGLLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -73,21 +67,18 @@ framework QuartzCore {
     }
     class CAReplicatorLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class CAScrollLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class CAShapeLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -100,14 +91,12 @@ framework QuartzCore {
     }
     class CATextLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class CATiledLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -121,7 +110,6 @@ framework QuartzCore {
     }
     class CATransformLayer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

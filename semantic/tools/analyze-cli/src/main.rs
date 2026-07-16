@@ -103,7 +103,7 @@ fn run_resolve(args: &ResolveArgs) -> Result<()> {
 /// The full in-process resolve. Loads `extracted.kdl` per family, runs the
 /// datalog `linked` pass (pass 1: inheritance resolution, effective methods,
 /// ownership families), merges the authored `annotations.apiw` overlay applying
-/// §28 precedence (`manual > accepted-LLM > convention > extraction`), runs the
+/// §28 precedence (`manual > extraction > accepted-LLM > convention`), runs the
 /// enrichment pass (pass 2: annotation-derived relations + verification), and
 /// writes `resolved.kdl` per family — the generator input.
 fn run_pipeline(api_root: &Path, pattern_kinds_dir: &Path, only: Option<&[String]>) -> Result<()> {

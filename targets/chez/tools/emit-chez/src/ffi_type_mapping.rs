@@ -122,7 +122,7 @@ impl FfiTypeMapper for ChezFfiTypeMapper {
                     .map(str::to_string)
                     .unwrap_or_else(|| "void*".to_string())
             }
-            TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+            TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
                 "void*".to_string()
             }
             TypeRefKind::Selector => "void*".to_string(),
@@ -309,7 +309,15 @@ mod tests {
     #[test]
     fn object_types_are_void_ptr() {
         let m = ChezFfiTypeMapper;
-        assert_eq!(m.map_type(&ty(TypeRefKind::Id), false), "void*");
+        assert_eq!(
+            m.map_type(
+                &ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                }),
+                false
+            ),
+            "void*"
+        );
         assert_eq!(m.map_type(&ty(TypeRefKind::Instancetype), false), "void*");
         assert_eq!(
             m.map_type(

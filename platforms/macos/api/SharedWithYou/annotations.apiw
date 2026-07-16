@@ -6,17 +6,14 @@ framework SharedWithYou {
             source llm
         }
         method setCloudSharingDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setCloudSharingServiceDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -43,7 +40,6 @@ framework SharedWithYou {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading any_thread
             source llm
         }

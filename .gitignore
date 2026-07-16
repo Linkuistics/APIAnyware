@@ -45,6 +45,9 @@ targets/racket/adapters/macos/sources/Generated/
 targets/chez/adapters/macos/sources/Generated/
 targets/gerbil/adapters/macos/sources/Generated/
 targets/sbcl/adapters/macos/sources/Generated/
+# The typescript (Node) analogue: the generated outbound dispatch table, emitted into
+# the addon's sources and compiled by its build.sh (outbound-dispatch-table-k58).
+targets/typescript/bindings/node/native/src/Generated/
 
 # Bytecode / fasl caches beside each target's runtime (racket raco make, etc.).
 targets/*/bindings/macos/runtime/compiled/

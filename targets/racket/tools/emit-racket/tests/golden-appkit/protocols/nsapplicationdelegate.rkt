@@ -5,12 +5,12 @@
 ;; NSApplicationDelegate defines 45 methods:
 ;;   void-returning (29):
 ;;     applicationShouldTerminate:  (sender:NSApplication)
-;;     application:openURLs:  (application:NSApplication, urls:id)
-;;     application:openFiles:  (sender:NSApplication, filenames:id)
-;;     application:printFiles:withSettings:showPrintPanels:  (application:NSApplication, fileNames:id, printSettings:id, showPrintPanels:bool)
+;;     application:openURLs:  (application:NSApplication, urls:NSArray)
+;;     application:openFiles:  (sender:NSApplication, filenames:NSArray)
+;;     application:printFiles:withSettings:showPrintPanels:  (application:NSApplication, fileNames:NSArray, printSettings:NSDictionary, showPrintPanels:bool)
 ;;     application:didRegisterForRemoteNotificationsWithDeviceToken:  (application:NSApplication, deviceToken:NSData)
 ;;     application:didFailToRegisterForRemoteNotificationsWithError:  (application:NSApplication, error:NSError)
-;;     application:didReceiveRemoteNotification:  (application:NSApplication, userInfo:id)
+;;     application:didReceiveRemoteNotification:  (application:NSApplication, userInfo:NSDictionary)
 ;;     application:willEncodeRestorableState:  (app:NSApplication, coder:NSCoder)
 ;;     application:didDecodeRestorableState:  (app:NSApplication, coder:NSCoder)
 ;;     application:didFailToContinueUserActivityWithType:error:  (application:NSApplication, userActivityType:NSString, error:NSError)

@@ -9,12 +9,13 @@ use std::path::Path;
 
 use clang::{Entity, EntityKind, EntityVisitResult, Linkage, TypeKind};
 
+use apianyware_types::annotation::OwnershipKind;
 use apianyware_types::ir;
 use apianyware_types::provenance::{Availability, DeclarationSource, DocRefs, SourceProvenance};
 use apianyware_types::skipped_symbol_reason;
 use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
-use crate::type_mapping::map_type;
+use crate::type_mapping::{map_type, TypeMapLog, TypeSite};
 
 /// State accumulated during AST traversal for a single framework.
 #[derive(Debug, Default)]
@@ -26,6 +27,9 @@ pub struct ExtractionResult {
     pub functions: Vec<ir::Function>,
     pub constants: Vec<ir::Constant>,
     pub skipped_symbols: Vec<ir::SkippedSymbol>,
+    /// Refinements the lowering records rather than models. Reported in the
+    /// extraction pass log; not persisted to the IR.
+    pub type_map_log: TypeMapLog,
 }
 
 /// Extract all declarations from a translation unit's AST.
@@ -64,9 +68,12 @@ pub fn extract_from_translation_unit(
                 // is possible for this entity kind.
                 if let Some(name) = entity.get_name() {
                     if seen_classes.insert(name.clone()) {
-                        if let Some(class) =
-                            extract_class(&entity, sdk_path, &mut result.skipped_symbols)
-                        {
+                        if let Some(class) = extract_class(
+                            &entity,
+                            sdk_path,
+                            &mut result.skipped_symbols,
+                            &mut result.type_map_log,
+                        ) {
                             result.classes.push(class);
                         }
                     }
@@ -78,9 +85,12 @@ pub fn extract_from_translation_unit(
                 if entity.is_definition() {
                     if let Some(name) = entity.get_name() {
                         if seen_protocols.insert(name.clone()) {
-                            if let Some(protocol) =
-                                extract_protocol(&entity, sdk_path, &mut result.skipped_symbols)
-                            {
+                            if let Some(protocol) = extract_protocol(
+                                &entity,
+                                sdk_path,
+                                &mut result.skipped_symbols,
+                                &mut result.type_map_log,
+                            ) {
                                 result.protocols.push(protocol);
                             }
                         }
@@ -95,6 +105,7 @@ pub fn extract_from_translation_unit(
                     &mut category_methods,
                     &mut category_properties,
                     &mut result.skipped_symbols,
+                    &mut result.type_map_log,
                 );
             }
             EntityKind::EnumDecl => {
@@ -105,7 +116,9 @@ pub fn extract_from_translation_unit(
                 if entity.is_definition() {
                     if let Some(name) = entity.get_name() {
                         if !name.is_empty() && seen_enums.insert(name.clone()) {
-                            if let Some(en) = extract_enum(&entity, sdk_path) {
+                            if let Some(en) =
+                                extract_enum(&entity, sdk_path, &mut result.type_map_log)
+                            {
                                 result.enums.push(en);
                             }
                         }
@@ -118,7 +131,9 @@ pub fn extract_from_translation_unit(
                 if entity.is_definition() {
                     if let Some(name) = entity.get_name() {
                         if !name.is_empty() && seen_structs.insert(name.clone()) {
-                            if let Some(st) = extract_struct(&entity, sdk_path) {
+                            if let Some(st) =
+                                extract_struct(&entity, sdk_path, &mut result.type_map_log)
+                            {
                                 result.structs.push(st);
                             }
                         }
@@ -128,9 +143,12 @@ pub fn extract_from_translation_unit(
             EntityKind::FunctionDecl => {
                 if let Some(name) = entity.get_name() {
                     if seen_functions.insert(name.clone()) {
-                        if let Some(func) =
-                            extract_function(&entity, sdk_path, &mut result.skipped_symbols)
-                        {
+                        if let Some(func) = extract_function(
+                            &entity,
+                            sdk_path,
+                            &mut result.skipped_symbols,
+                            &mut result.type_map_log,
+                        ) {
                             result.functions.push(func);
                         }
                     }
@@ -139,9 +157,12 @@ pub fn extract_from_translation_unit(
             EntityKind::VarDecl => {
                 if let Some(name) = entity.get_name() {
                     if seen_constants.insert(name.clone()) {
-                        if let Some(constant) =
-                            extract_constant(&entity, sdk_path, &mut result.skipped_symbols)
-                        {
+                        if let Some(constant) = extract_constant(
+                            &entity,
+                            sdk_path,
+                            &mut result.skipped_symbols,
+                            &mut result.type_map_log,
+                        ) {
                             result.constants.push(constant);
                         }
                     }
@@ -166,9 +187,25 @@ pub fn extract_from_translation_unit(
         EntityVisitResult::Continue
     });
 
-    // Merge category methods and properties into their classes
+    // Merge category methods and properties into their classes. A category method is a
+    // real, callable method (ObjC has no notion of "the primary @interface's methods" at
+    // the runtime level) — `resolve`'s `method_decl`/`effective_method` and every target's
+    // method surface read `class.methods` alone, so a method left only in
+    // `class.category_methods` is invisible everywhere downstream
+    // (`text-undo-surface-gap-k121`: `NSResponder.undoManager`, `NSTextView.allowsUndo` —
+    // both ordinary category methods, corpus-wide, not TS-specific). Mirrors the property
+    // merge below; `method.category` records which category contributed it (the property
+    // merge has no analogous field since `Property` carries no category name).
     for class in &mut result.classes {
         if let Some(categories) = category_methods.remove(&class.name) {
+            let collisions = merge_category_methods_into(&mut class.methods, &categories);
+            if collisions > 0 {
+                tracing::warn!(
+                    class = %class.name,
+                    collisions,
+                    "category method selector already declared (own or an earlier category) — kept the first declaration"
+                );
+            }
             class.category_methods = categories;
         }
         if let Some(props) = category_properties.remove(&class.name) {
@@ -191,6 +228,36 @@ pub fn extract_from_translation_unit(
     result.constants.sort_by(|a, b| a.name.cmp(&b.name));
 
     result
+}
+
+/// Merge each category's methods into `methods` (a class's own declared methods),
+/// stamping [`ir::Method::category`] with the contributing category's name so a
+/// downstream reader can still tell a merged method apart from a primary-`@interface`
+/// one. Skips (and counts) a selector already present — either the class's own
+/// declaration or an earlier category's — keeping the first one seen; returns the
+/// collision count so the caller can log it (never drop a fact silently).
+fn merge_category_methods_into(
+    methods: &mut Vec<ir::Method>,
+    categories: &[ir::CategoryGroup],
+) -> usize {
+    let mut seen: HashSet<(String, bool)> = methods
+        .iter()
+        .map(|m| (m.selector.clone(), m.class_method))
+        .collect();
+    let mut collisions = 0usize;
+    for group in categories {
+        for method in &group.methods {
+            let key = (method.selector.clone(), method.class_method);
+            if !seen.insert(key) {
+                collisions += 1;
+                continue;
+            }
+            let mut merged = method.clone();
+            merged.category = Some(group.category.clone());
+            methods.push(merged);
+        }
+    }
+    collisions
 }
 
 /// Append an audit-trail entry into a framework's `skipped_symbols` list.
@@ -219,6 +286,7 @@ fn extract_class(
     entity: &Entity<'_>,
     sdk_path: &Path,
     skipped_symbols: &mut Vec<ir::SkippedSymbol>,
+    log: &mut TypeMapLog,
 ) -> Option<ir::Class> {
     let name = entity.get_name()?;
 
@@ -259,12 +327,14 @@ fn extract_class(
     entity.visit_children(|child, _parent| {
         match child.get_kind() {
             EntityKind::ObjCInstanceMethodDecl | EntityKind::ObjCClassMethodDecl => {
-                if let Some(method) = extract_method(&child, sdk_path, &name, skipped_symbols) {
+                if let Some(method) = extract_method(&child, sdk_path, &name, skipped_symbols, log)
+                {
                     methods.push(method);
                 }
             }
             EntityKind::ObjCPropertyDecl => {
-                if let Some(prop) = extract_property(&child, sdk_path, &name, skipped_symbols) {
+                if let Some(prop) = extract_property(&child, sdk_path, &name, skipped_symbols, log)
+                {
                     properties.push(prop);
                 }
             }
@@ -450,6 +520,7 @@ fn extract_method(
     sdk_path: &Path,
     owner_name: &str,
     skipped_symbols: &mut Vec<ir::SkippedSymbol>,
+    log: &mut TypeMapLog,
 ) -> Option<ir::Method> {
     let selector = entity.get_name()?;
 
@@ -475,9 +546,10 @@ fn extract_method(
     let init_method = !class_method && (selector == "init" || selector.starts_with("initWith"));
 
     let result_type = entity.get_result_type()?;
-    let return_type = map_type(&result_type);
+    let site = TypeSite::new(owner_name, &selector);
+    let return_type = map_type(&result_type, site, log);
 
-    let params = extract_params(entity);
+    let params = extract_params(entity, site, log);
 
     let deprecated = matches!(entity.get_availability(), clang::Availability::Deprecated);
 
@@ -508,7 +580,7 @@ fn extract_method(
     })
 }
 
-fn extract_params(entity: &Entity<'_>) -> Vec<ir::Param> {
+fn extract_params(entity: &Entity<'_>, site: TypeSite<'_>, log: &mut TypeMapLog) -> Vec<ir::Param> {
     entity
         .get_children()
         .iter()
@@ -516,7 +588,7 @@ fn extract_params(entity: &Entity<'_>) -> Vec<ir::Param> {
         .filter_map(|c| {
             let name = c.get_name().unwrap_or_default();
             let param_type_clang = c.get_type()?;
-            let param_type = map_type(&param_type_clang);
+            let param_type = map_type(&param_type_clang, site, log);
             Some(ir::Param { name, param_type })
         })
         .collect()
@@ -531,6 +603,7 @@ fn extract_property(
     sdk_path: &Path,
     owner_name: &str,
     skipped_symbols: &mut Vec<ir::SkippedSymbol>,
+    log: &mut TypeMapLog,
 ) -> Option<ir::Property> {
     let name = entity.get_name()?;
 
@@ -551,12 +624,12 @@ fn extract_property(
     }
 
     let property_type_clang = entity.get_type()?;
-    let property_type = map_type(&property_type_clang);
+    let property_type = map_type(&property_type_clang, TypeSite::new(owner_name, &name), log);
 
     let objc_attrs = entity.get_objc_attributes();
     let readonly = objc_attrs.is_some_and(|a| a.readonly);
     let class_property = objc_attrs.is_some_and(|a| a.class);
-    let is_copy = objc_attrs.is_some_and(|a| a.copy);
+    let ownership = objc_attrs.and_then(declared_ownership);
 
     let deprecated = matches!(entity.get_availability(), clang::Availability::Deprecated);
 
@@ -568,7 +641,7 @@ fn extract_property(
         property_type,
         readonly,
         class_property,
-        is_copy,
+        ownership,
         deprecated,
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
@@ -576,6 +649,30 @@ fn extract_property(
         origin: None,
         objc_exposed: true,
     })
+}
+
+/// The ownership qualifier a `@property` declares, read off the one
+/// `ObjCAttributes` value the extractor already fetches (ADR-0047 §4 — a declared
+/// attribute is extracted, not guessed).
+///
+/// ObjC spells the qualifier six ways over four semantics: `strong` and `retain`
+/// are synonyms, as are `assign` and `unsafe_unretained`. Clang rejects a
+/// declaration carrying two *different* semantics, so the ladder below is a
+/// tie-break that should never fire on the SDK — it is here so a surprising
+/// declaration lowers deterministically rather than by field order. `None` means
+/// the declaration states no qualifier at all.
+fn declared_ownership(attrs: clang::ObjCAttributes) -> Option<OwnershipKind> {
+    if attrs.copy {
+        Some(OwnershipKind::Copy)
+    } else if attrs.weak {
+        Some(OwnershipKind::Weak)
+    } else if attrs.strong || attrs.retain {
+        Some(OwnershipKind::Strong)
+    } else if attrs.assign || attrs.unsafe_retained {
+        Some(OwnershipKind::UnsafeUnretained)
+    } else {
+        None
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -586,6 +683,7 @@ fn extract_protocol(
     entity: &Entity<'_>,
     sdk_path: &Path,
     skipped_symbols: &mut Vec<ir::SkippedSymbol>,
+    log: &mut TypeMapLog,
 ) -> Option<ir::Protocol> {
     let name = entity.get_name()?;
 
@@ -617,7 +715,8 @@ fn extract_protocol(
     entity.visit_children(|child, _parent| {
         match child.get_kind() {
             EntityKind::ObjCInstanceMethodDecl | EntityKind::ObjCClassMethodDecl => {
-                if let Some(method) = extract_method(&child, sdk_path, &name, skipped_symbols) {
+                if let Some(method) = extract_method(&child, sdk_path, &name, skipped_symbols, log)
+                {
                     if child.is_objc_optional() {
                         optional_methods.push(method);
                     } else {
@@ -626,7 +725,8 @@ fn extract_protocol(
                 }
             }
             EntityKind::ObjCPropertyDecl => {
-                if let Some(prop) = extract_property(&child, sdk_path, &name, skipped_symbols) {
+                if let Some(prop) = extract_property(&child, sdk_path, &name, skipped_symbols, log)
+                {
                     properties.push(prop);
                 }
             }
@@ -662,6 +762,7 @@ fn extract_category(
     category_methods: &mut HashMap<String, Vec<ir::CategoryGroup>>,
     category_properties: &mut HashMap<String, Vec<ir::Property>>,
     skipped_symbols: &mut Vec<ir::SkippedSymbol>,
+    log: &mut TypeMapLog,
 ) {
     // Get the class this category extends
     let class_name = entity
@@ -682,13 +783,15 @@ fn extract_category(
     entity.visit_children(|child, _parent| {
         match child.get_kind() {
             EntityKind::ObjCInstanceMethodDecl | EntityKind::ObjCClassMethodDecl => {
-                if let Some(method) = extract_method(&child, sdk_path, &class_name, skipped_symbols)
+                if let Some(method) =
+                    extract_method(&child, sdk_path, &class_name, skipped_symbols, log)
                 {
                     methods.push(method);
                 }
             }
             EntityKind::ObjCPropertyDecl => {
-                if let Some(prop) = extract_property(&child, sdk_path, &class_name, skipped_symbols)
+                if let Some(prop) =
+                    extract_property(&child, sdk_path, &class_name, skipped_symbols, log)
                 {
                     properties.push(prop);
                 }
@@ -763,11 +866,11 @@ fn relativize_unnamed_name(name: &str, sdk_path: &Path) -> String {
     )
 }
 
-fn extract_enum(entity: &Entity<'_>, sdk_path: &Path) -> Option<ir::Enum> {
+fn extract_enum(entity: &Entity<'_>, sdk_path: &Path, log: &mut TypeMapLog) -> Option<ir::Enum> {
     let name = relativize_unnamed_name(&entity.get_name()?, sdk_path);
 
     let enum_clang_type = entity.get_enum_underlying_type()?;
-    let enum_type = map_type(&enum_clang_type);
+    let enum_type = map_type(&enum_clang_type, TypeSite::top_level(&name), log);
 
     // Pick signed vs unsigned interpretation per the underlying type.
     // libclang sign-extends top-bit-set values into the i64 component, so
@@ -849,7 +952,11 @@ fn is_unsigned_int_kind(kind: TypeKind) -> bool {
 // Struct extraction
 // ---------------------------------------------------------------------------
 
-fn extract_struct(entity: &Entity<'_>, sdk_path: &Path) -> Option<ir::Struct> {
+fn extract_struct(
+    entity: &Entity<'_>,
+    sdk_path: &Path,
+    log: &mut TypeMapLog,
+) -> Option<ir::Struct> {
     let name = entity.get_name()?;
 
     let mut fields = Vec::new();
@@ -857,9 +964,11 @@ fn extract_struct(entity: &Entity<'_>, sdk_path: &Path) -> Option<ir::Struct> {
         if child.get_kind() == EntityKind::FieldDecl {
             if let Some(field_name) = child.get_name() {
                 if let Some(field_clang_type) = child.get_type() {
+                    let field_type =
+                        map_type(&field_clang_type, TypeSite::new(&name, &field_name), log);
                     fields.push(ir::StructField {
                         name: field_name,
-                        field_type: map_type(&field_clang_type),
+                        field_type,
                     });
                 }
             }
@@ -891,6 +1000,7 @@ fn extract_function(
     entity: &Entity<'_>,
     sdk_path: &Path,
     skipped_symbols: &mut Vec<ir::SkippedSymbol>,
+    log: &mut TypeMapLog,
 ) -> Option<ir::Function> {
     let name = entity.get_name()?;
 
@@ -930,9 +1040,10 @@ fn extract_function(
     }
 
     let result_type = entity.get_result_type()?;
-    let return_type = map_type(&result_type);
+    let site = TypeSite::top_level(&name);
+    let return_type = map_type(&result_type, site, log);
 
-    let params = extract_params(entity);
+    let params = extract_params(entity, site, log);
     let variadic = entity.is_variadic();
 
     // Check if the function is declared as inline
@@ -965,6 +1076,7 @@ fn extract_constant(
     entity: &Entity<'_>,
     sdk_path: &Path,
     skipped_symbols: &mut Vec<ir::SkippedSymbol>,
+    log: &mut TypeMapLog,
 ) -> Option<ir::Constant> {
     let name = entity.get_name()?;
 
@@ -1010,7 +1122,23 @@ fn extract_constant(
     }
 
     let constant_clang_type = entity.get_type()?;
-    let constant_type = map_type(&constant_clang_type);
+    let constant_type = map_type(&constant_clang_type, TypeSite::top_level(&name), log);
+
+    // An array-typed global's *value* is its own symbol address, not something stored at that
+    // address — distinct from an ordinary pointer variable, which `constant_type` above already
+    // maps honestly (`TypeKind::ConstantArray`/`IncompleteArray` collapse to `TypeRefKind::Pointer`,
+    // still ABI-correct: a `dlsym`'d array symbol is genuinely pointer-width). Recorded here, at the
+    // constant's own declared type, rather than by changing that shared collapse: a parameter/
+    // return/field position never carries this distinction (C's array-to-pointer decay already
+    // turns those into a stored-pointer `Pointer` before libclang reports the type), so folding it
+    // into `map_type_kind` would risk relabelling positions this leaf never reasoned about
+    // (`array-constant-symbol-value-k109`).
+    let array_element = match constant_clang_type.get_kind() {
+        TypeKind::ConstantArray | TypeKind::IncompleteArray => constant_clang_type
+            .get_element_type()
+            .map(|elem| map_type(&elem, TypeSite::top_level(&name), log)),
+        _ => None,
+    };
 
     let provenance = extract_provenance(entity, sdk_path);
     let doc_refs = extract_doc_refs(entity);
@@ -1018,6 +1146,7 @@ fn extract_constant(
     Some(ir::Constant {
         name,
         constant_type,
+        array_element,
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
@@ -1063,8 +1192,11 @@ fn extract_cfstr_macro_constant(entity: &Entity<'_>, sdk_path: &Path) -> Option<
         // return NULL, though it won't for valid UTF-8 literals.
         constant_type: TypeRef {
             nullable: true,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         },
+        array_element: None,
         source: Some(DeclarationSource::ObjcHeader),
         provenance: Some(provenance),
         doc_refs: Some(doc_refs),
@@ -1312,6 +1444,94 @@ fn is_from_framework(entity: &Entity<'_>, framework_name: &str, sdk_path: &Path)
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn test_method(selector: &str, class_method: bool) -> ir::Method {
+        ir::Method {
+            selector: selector.to_string(),
+            class_method,
+            init_method: false,
+            params: Vec::new(),
+            return_type: apianyware_types::TypeRef::void(),
+            deprecated: false,
+            variadic: false,
+            source: None,
+            provenance: None,
+            doc_refs: None,
+            origin: None,
+            category: None,
+            overrides: None,
+            returns_retained: None,
+            satisfies_protocol: None,
+            objc_exposed: true,
+            swift_fn: None,
+        }
+    }
+
+    fn test_category(name: &str, methods: Vec<ir::Method>) -> ir::CategoryGroup {
+        ir::CategoryGroup {
+            category: name.to_string(),
+            origin_framework: "AppKit".to_string(),
+            methods,
+        }
+    }
+
+    #[test]
+    fn merge_category_methods_into_appends_and_tags_category() {
+        let mut methods = vec![test_method("initWithFrame:", false)];
+        let categories = vec![test_category(
+            "NSSharing",
+            vec![test_method("allowsUndo", false)],
+        )];
+        let collisions = merge_category_methods_into(&mut methods, &categories);
+        assert_eq!(collisions, 0);
+        assert_eq!(methods.len(), 2);
+        let merged = methods
+            .iter()
+            .find(|m| m.selector == "allowsUndo")
+            .expect("allowsUndo should be merged in");
+        assert_eq!(merged.category.as_deref(), Some("NSSharing"));
+    }
+
+    #[test]
+    fn merge_category_methods_into_skips_and_counts_a_selector_the_class_already_declares() {
+        let mut methods = vec![test_method("allowsUndo", false)];
+        let categories = vec![test_category(
+            "NSSharing",
+            vec![test_method("allowsUndo", false)],
+        )];
+        let collisions = merge_category_methods_into(&mut methods, &categories);
+        assert_eq!(collisions, 1);
+        assert_eq!(methods.len(), 1, "the own declaration wins, not duplicated");
+        assert_eq!(
+            methods[0].category, None,
+            "the own declaration is untouched"
+        );
+    }
+
+    #[test]
+    fn merge_category_methods_into_skips_and_counts_a_selector_two_categories_both_declare() {
+        let mut methods = Vec::new();
+        let categories = vec![
+            test_category("NSSharing", vec![test_method("allowsUndo", false)]),
+            test_category("NSDeprecated", vec![test_method("allowsUndo", false)]),
+        ];
+        let collisions = merge_category_methods_into(&mut methods, &categories);
+        assert_eq!(collisions, 1);
+        assert_eq!(methods.len(), 1);
+        assert_eq!(methods[0].category.as_deref(), Some("NSSharing"));
+    }
+
+    #[test]
+    fn merge_category_methods_into_treats_class_and_instance_methods_as_distinct_keys() {
+        let mut methods = vec![test_method("allowsUndo", true)];
+        let categories = vec![test_category(
+            "NSSharing",
+            vec![test_method("allowsUndo", false)],
+        )];
+        let collisions = merge_category_methods_into(&mut methods, &categories);
+        assert_eq!(collisions, 0);
+        assert_eq!(methods.len(), 2);
+    }
 
     #[test]
     fn catch_clang_utf8_panic_returns_none_when_closure_panics() {

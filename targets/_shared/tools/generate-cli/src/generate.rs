@@ -122,6 +122,7 @@ pub fn run_generation(
         // other target uses the registry instance unchanged.
         let gerbil_configured;
         let sbcl_configured;
+        let typescript_configured;
         let active: &dyn TargetEmitter = if info.id == apianyware_emit_gerbil::GERBIL_TARGET_INFO.id
         {
             let reg = apianyware_emit_gerbil::class_graph::ClassRegistry::from_framework_refs(
@@ -159,6 +160,93 @@ pub fn run_generation(
                 );
             sbcl_configured = apianyware_emit_sbcl::SbclEmitter::with_registries(reg, protos);
             &sbcl_configured
+        } else if info.id == apianyware_emit_typescript::TS_TARGET_INFO.id {
+            // TypeScript takes the same whole-program shape but with **three**
+            // ownership registries: a cross-framework class parent / protocol
+            // conformance resolves to its owning `@apianyware/<fw>` module, and —
+            // new to this target — the `.d.ts` surface makes referenced enums a
+            // typed import too (ADR-0055 §6 upgrades an enum alias off `number`),
+            // so enum ownership is registry-resolved as well. No gerbil-style
+            // global generics module: ES modules import symbols directly.
+            let reg = apianyware_emit_typescript::class_graph::ClassRegistry::from_framework_refs(
+                &ordered_frameworks,
+            );
+            let enums = apianyware_emit_typescript::enum_graph::EnumRegistry::from_framework_refs(
+                &ordered_frameworks,
+            );
+            let protos =
+                apianyware_emit_typescript::protocol_graph::ProtocolRegistry::from_framework_refs(
+                    &ordered_frameworks,
+                );
+            // The whole-program synthetic-init blocklist (`nsobject-plain-init-surface-gap-k122`):
+            // a class with a real descendant somewhere in the corpus whose own bare `-init`
+            // override is already incompatible with a `this`-typed synthetic member (several
+            // NetworkExtension/Intents provider/response families mark it `NS_UNAVAILABLE`) must
+            // not receive one — adding it would be a NEW TS override-compatibility error the
+            // corpus gate did not have before this class had any `init` at all.
+            let init_blocklist = apianyware_emit_typescript::class_graph::synthetic_init_blocklist(
+                &ordered_frameworks,
+            );
+            tracing::info!(
+                count = init_blocklist.len(),
+                names = %init_blocklist.iter().cloned().collect::<Vec<_>>().join(", "),
+                "typescript synthetic-init blocklist"
+            );
+            // What the corpus's `id<P>` qualifiers did (ADR-0055 §4b). A qualifier that cannot bind
+            // (no proven emittable interface) degrades to `NSObject` — the prior behaviour, so always
+            // safe — but it is **never silent** (k57): every degraded name is reported, so a protocol
+            // whose interface stops being emitted shows up here rather than as a quietly weaker type
+            // surface.
+            let binding =
+                apianyware_emit_typescript::degradation_report(&ordered_frameworks, &protos);
+            tracing::info!(
+                bound = binding.bound,
+                degraded = binding.degraded_occurrences(),
+                degraded_names = binding.degraded.len(),
+                detail = %binding.summary(),
+                "typescript protocol-qualifier binding"
+            );
+            // ObjC has two namespaces, TypeScript one (`protocol-class-name-collapse-k90`): a
+            // protocol whose name a declared class also carries no longer degrades — it re-encodes
+            // as `<Name>Protocol` (`protocol_type_name`) so the framework barrel never exports one
+            // symbol twice. Counted at the DECLARATION level (once per colliding name), never silent.
+            let renamed =
+                apianyware_emit_typescript::renamed_protocols(&ordered_frameworks, &protos);
+            tracing::info!(
+                count = renamed.len(),
+                names = %renamed.iter().cloned().collect::<Vec<_>>().join(", "),
+                "typescript protocol/class name collisions re-encoded"
+            );
+            // What the bound slots *did* (ADR-0059 §3/§6, `emitted-delegate-spec-k84`) — the bridge
+            // that turns a JS object literal in an `id<P>` slot into a real ObjC forwarder. The dual
+            // of the report above: that one says which qualifiers earned a type, this one says which
+            // slots earned a value. Both count every drop, so neither a narrowed type nor a
+            // never-firing delegate method can land silently (k57).
+            let slots = apianyware_emit_typescript::slot_report(
+                &ordered_frameworks,
+                &protos,
+                |fw, class_name| {
+                    apianyware_emit::enrichment::class_error_selectors(
+                        fw.enrichment.as_ref(),
+                        class_name,
+                    )
+                },
+            );
+            tracing::info!(
+                bridged = slots.bridged,
+                associated = slots.associated,
+                skipped = slots.bridged - slots.associated,
+                init_owned = slots.init_owned,
+                deferred = %slots.summary(),
+                "typescript delegate-spec slots"
+            );
+            typescript_configured = apianyware_emit_typescript::TsEmitter::with_registries(
+                reg,
+                enums,
+                protos,
+                init_blocklist,
+            );
+            &typescript_configured
         } else {
             *emitter
         };
@@ -282,6 +370,230 @@ pub fn run_racket_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usiz
         "generated Swift-native trampolines"
     );
     Ok(entries)
+}
+
+/// Generate the **typescript** target's outbound dispatch table (ADR-0054 §1, the
+/// racket ADR-0013 shape) into the Node addon's `src/Generated/DispatchTable.swift`;
+/// `build.sh` then compiles it into `APIAnywareTypeScript.node`.
+///
+/// A **global** pass like the racket dispatch table: one napi callback per distinct
+/// ABI-collapsed signature across every framework (+ the non-folding `…_o` +1
+/// siblings and `…_n` non-object-pointer siblings, ADR-0057 §4, and the `…_e`
+/// error-`@catch` siblings, ADR-0058), plus a
+/// generated `awRegisterGeneratedDispatch` the hand-written module registration
+/// calls. The collection walks the same `bound_methods` frontier the `.ts`/`.d.ts`
+/// emitters walk, so the table and the emitted call sites agree by construction.
+/// Fallible methods the error-out frontier defers (v-register/struct shapes the
+/// `awexc.m` mechanism cannot carry) are counted in the log — mirror-consistent,
+/// never silent. Returns the number of entries written.
+pub fn run_typescript_dispatch(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_emit_typescript::dispatch_table::{
+        collect_global_entries, generate_dispatch_swift,
+    };
+
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
+    if frameworks.is_empty() {
+        bail!(
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
+    }
+
+    let table = collect_global_entries(&frameworks);
+    let swift = generate_dispatch_swift(&table);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let (plain, owned, no_wrap, error) = table.axis_counts();
+    // Deferrals are reported **by reason**, never as a bare total (the "defer nothing silently"
+    // discipline): a Swift nominal type the IR declares nowhere is named, with the method count it
+    // cost, so a *new* unbindable Swift type surfaces as its own line rather than nudging a total.
+    let nominal: Vec<String> = table
+        .nominal_deferral_counts()
+        .into_iter()
+        .map(|(name, n)| format!("{name}×{n}"))
+        .collect();
+    tracing::info!(
+        entries = table.entries.len(),
+        plain,
+        owned,
+        no_wrap,
+        error_out = error,
+        deferred_fallible = table.deferred_fallible.len(),
+        deferred_swift_nominal = table.deferred_nominal.len(),
+        swift_nominal_types = %nominal.join(" "),
+        output = %swift_out.display(),
+        "generated typescript outbound dispatch table"
+    );
+    Ok(table.entries.len())
+}
+
+/// Generate the **typescript** target's inbound table — the IMP trampolines
+/// (ADR-0059 §1, the inbound dual of [`run_typescript_dispatch`]), the per-signature
+/// block-maker pairs (ADR-0059 §2), and the per-signature `aw_ts_super_*` super-send
+/// entries (ADR-0059 §4) — into the Node addon's `src/Generated/InboundTable.swift`;
+/// `build.sh` then compiles it into `APIAnywareTypeScript.node`.
+///
+/// A **global** pass with the frontier form of the mirror invariant: the IMP
+/// collection walks the same `bound_methods` instance frontier the `.ts`/`.d.ts`
+/// class emitters walk plus the same interface frontier the protocol emitter walks,
+/// so every encoding a delegate spec / subclass override can name has its typed
+/// trampoline in the generated `awGeneratedInboundIMP(forEncoding:)` map; the block
+/// collection walks the block-typed params of **all** class + protocol methods (the
+/// *future* frontier — block-carrying methods are still method_filter-deferred), so
+/// every signature the block emitter will name has its `awGeneratedMakeBlock` /
+/// `awGeneratedMakeEscapingBlock` case; the super-send collection rides the **same**
+/// frontier as the IMPs (a super-send exists exactly where an override can), fanned
+/// out over the ADR-0057 §4 owned (`_o`) retain axis. Frontier shapes outside the
+/// inbound alphabet (geometry-struct / C-string — `drawRect:` and kin) are deferred
+/// and counted in the log — never silent. Returns the number of trampolines written.
+pub fn run_typescript_inbound(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_emit_typescript::inbound_table::{
+        collect_inbound_table, generate_inbound_swift,
+    };
+
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
+    if frameworks.is_empty() {
+        bail!(
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
+    }
+
+    let table = collect_inbound_table(&frameworks);
+    let swift = generate_inbound_swift(&table);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let (super_plain, super_owned, super_no_wrap) = table.super_axis_counts();
+    tracing::info!(
+        entries = table.entries.len(),
+        deferred = table.deferred.len(),
+        block_signatures = table.block_entries.len(),
+        deferred_blocks = table.deferred_blocks.len(),
+        super_entries = table.super_entries.len(),
+        super_plain,
+        super_owned,
+        super_no_wrap,
+        output = %swift_out.display(),
+        "generated typescript inbound table (IMP trampolines + block makers + super-sends)"
+    );
+    Ok(table.entries.len())
+}
+
+/// Generate the **typescript** target's Swift-native `s:` residual trampolines (ADR-0061,
+/// the racket ADR-0027 shape) into the Node addon's `src/Generated/TrampolineTable.swift`;
+/// `build.sh` then compiles them into `APIAnywareTypeScript.node`.
+///
+/// A **global** pass like the two tables above: every framework's `objc_exposed == false`
+/// free function is either trampolined — a napi callback that `import`s the owning module
+/// and calls the API **by name**, so swiftc owns Swift-ABI correctness — or recorded as
+/// deferred with a reason. The per-reason counts are logged, so a clean generate reports
+/// what was bound and what was not (ADR-0061 §3, "defer nothing, but say what truly can't
+/// be bound"). The collection and the `.ts` emitter share
+/// `trampoline::classify_function`, so the generated table and the emitted `aw_ts_swift_*`
+/// call sites agree by construction. Returns the number of trampolines written.
+pub fn run_typescript_trampolines(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_emit_typescript::trampoline::{collect_trampolines, generate_trampolines_swift};
+
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
+    if frameworks.is_empty() {
+        bail!(
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
+    }
+
+    let set = collect_trampolines(&frameworks);
+    let swift = generate_trampolines_swift(&set);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    let deferred: Vec<String> = set
+        .defer_counts()
+        .iter()
+        .map(|(reason, n)| format!("{n} {reason}"))
+        .collect();
+    tracing::info!(
+        entries = set.functions.len(),
+        deferred = %if deferred.is_empty() { "none".to_string() } else { deferred.join(", ") },
+        output = %swift_out.display(),
+        "generated typescript Swift-native residual trampolines"
+    );
+    Ok(set.functions.len())
+}
+
+/// Generate the **typescript** target's plain-C free-function table (ADR-0054 §1a — ADR-0025's
+/// trampoline-elided limit for a named C export) into the Node addon's
+/// `src/Generated/FunctionTable.swift`; `build.sh` then compiles it into
+/// `APIAnywareTypeScript.node`.
+///
+/// A **global** pass like its three siblings, and the last gap between what the emitted `.ts`
+/// names and what the addon exports. Unlike the outbound `aw_ts_msg_*` table — which folds the
+/// corpus into one entry per ABI signature because every method multiplexes through one
+/// `objc_msgSend` address — a C function is called by its own address, so its **exports cannot
+/// fold**: one `aw_ts_fn_<symbol>` per symbol. Its *bodies* still fold by signature, joined to
+/// the symbol by `napi_create_function`'s `data` descriptor, so the file is
+/// `entries`-many registrations over `signatures`-many callbacks. The collection and the `.ts`
+/// emitter share `emit_functions::is_bound_direct_c`, so the table and the emitted call sites
+/// agree by construction. Returns the number of exported entries written.
+pub fn run_typescript_functions(input_dir: &Path, swift_out: &Path) -> Result<usize> {
+    use apianyware_emit_typescript::function_table::{
+        collect_function_entries, generate_function_table_swift,
+    };
+
+    let frameworks =
+        apianyware_datalog::loading::load_all_family_artifacts(input_dir, "resolved.kdl", None)?;
+    if frameworks.is_empty() {
+        bail!(
+            "no resolved.kdl found under {} (run `apianyware-analyze` first)",
+            input_dir.display()
+        );
+    }
+
+    let table = collect_function_entries(&frameworks);
+    let swift = generate_function_table_swift(&table);
+
+    if let Some(parent) = swift_out.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(swift_out, swift).with_context(|| format!("writing {}", swift_out.display()))?;
+
+    // "Defer nothing silently": the duplicate declarations the per-symbol key deduped, and the
+    // closed unbundled set, ride the pass log as well as the generated file's trailer.
+    let duplicates: Vec<String> = table
+        .duplicates
+        .iter()
+        .map(|d| format!("{} ({} kept, {} dropped)", d.symbol, d.kept, d.dropped))
+        .collect();
+    let unbundled: Vec<&str> = table.unbundled().into_iter().collect();
+    tracing::info!(
+        entries = table.entries.len(),
+        signatures = table.signatures().len(),
+        frameworks = table.framework_counts().len(),
+        folded_object_returns = table.entries.values().filter(|e| e.fold_retain).count(),
+        unbundled = %if unbundled.is_empty() { "none".to_string() } else { unbundled.join(", ") },
+        deduped = %if duplicates.is_empty() { "none".to_string() } else { duplicates.join("; ") },
+        output = %swift_out.display(),
+        "generated typescript plain-C free-function table"
+    );
+    Ok(table.entries.len())
 }
 
 /// Generate the **chez** target's Swift-native trampolines (ADR-0027 ported to
@@ -454,13 +766,23 @@ mod tests {
     /// **The §6d invariant** (ADR-0038 §7 / racket spec §6d) — the hard done-bar for the
     /// sbcl trampoline leaf (`040/050`). The Swift-native residual is a deterministic
     /// function of the *shared* resolved IR, so the sbcl classification must reproduce
-    /// racket's/chez's/gerbil's **exactly**: 51 function + 7 constant + 576 init + 554
+    /// racket's/chez's/gerbil's **exactly**: 51 function + 7 constant + 563 init + 549
     /// method trampolines. The strongest evidence the hermetic port is faithful (ADR-0011).
+    /// (Re-measured 2026-07-15 against a byte-for-byte-reproducible fresh regeneration —
+    /// `corpus-reproducibility-k86` — after a real SDK/environment drift from the leaf's
+    /// original 2026-06-20 baseline of 576 init + 554 method: see
+    /// `sbcl-trampoline-count-inconsistency-k108`.)
     ///
     /// The resolved IR is gitignored (regenerated from the SDK + LLM pipeline), so this
     /// test **skips-as-pass** when the IR is absent — local checkouts and CI without a
     /// regeneration step — and asserts the counts when it is present (post-regeneration,
     /// the release gate, exactly as the racket snapshot tests gate on local IR).
+    ///
+    /// Compared as **one tuple**, not four sequential `assert_eq!`s: a sequential assert
+    /// stops at the first mismatch and hides any further-drifted field behind it — exactly
+    /// how this gate previously mistook an already-drifted `methods` count (554 → 549) for
+    /// a "gap between two call sites" that never existed (k108) — the `inits` mismatch
+    /// panicked first and the `methods` assertion never ran.
     #[test]
     fn sbcl_residual_reproduces_the_6d_invariant() {
         use apianyware_emit_sbcl::trampoline::collect_trampolines;
@@ -486,10 +808,16 @@ mod tests {
         };
 
         let set = collect_trampolines(&frameworks);
-        assert_eq!(set.functions.len(), 51, "function trampolines (§6d)");
-        assert_eq!(set.constants.len(), 7, "constant trampolines (§6d)");
-        assert_eq!(set.inits.len(), 576, "init trampolines (§6d)");
-        assert_eq!(set.methods.len(), 554, "method trampolines (§6d)");
+        assert_eq!(
+            (
+                set.functions.len(),
+                set.constants.len(),
+                set.inits.len(),
+                set.methods.len(),
+            ),
+            (51, 7, 563, 549),
+            "(function, constant, init, method) trampolines (§6d)"
+        );
     }
 
     /// The §6d invariant through the **public pipeline pass** (leaf 040/060) — the
@@ -516,9 +844,11 @@ mod tests {
         let swift_out = tmp.path().join("Generated/Trampolines.swift");
         let entries = run_sbcl_trampolines(&api_root, &swift_out).unwrap();
 
-        // 51 fn + 7 const + 576 init + 554 method = 1188 (the node's hard done-bar),
-        // and the pass actually wrote the residual `.swift`.
-        assert_eq!(entries, 51 + 7 + 576 + 554, "§6d residual entry total");
+        // 51 fn + 7 const + 563 init + 549 method = 1170 (the node's hard done-bar,
+        // re-measured 2026-07-15 — see the sibling test's doc comment and
+        // `sbcl-trampoline-count-inconsistency-k108`), and the pass actually wrote the
+        // residual `.swift`.
+        assert_eq!(entries, 51 + 7 + 563 + 549, "§6d residual entry total");
         assert!(swift_out.exists(), "Trampolines.swift written by the pass");
     }
 
@@ -828,11 +1158,12 @@ mod tests {
         // Every registered emitter runs through the pipeline and produces a full
         // framework tree. sbcl became a mature target with leaf 040/060 (the
         // orchestrator + facade), so all four now carry the strong output
-        // assertions.
+        // assertions; typescript joined at Step 5 of its build phase
+        // (cli-registration-k56).
         assert_eq!(
             summaries.len(),
-            4,
-            "should run racket + chez + gerbil + sbcl emitters"
+            5,
+            "should run racket + chez + gerbil + sbcl + typescript emitters"
         );
         for s in &summaries {
             assert!(
@@ -937,6 +1268,49 @@ mod tests {
                 "(defclass ns:ns-text-storage (ns:ns-mutable-attributed-string) () (:metaclass objc-class))"
             ),
             "child derives from the cross-framework parent through the wired registry:\n{storage}"
+        );
+    }
+
+    #[test]
+    fn typescript_cross_framework_parent_import_resolves_through_registry() {
+        // The end-to-end proof that the CLI pre-pass builds and threads
+        // typescript's cross-framework ClassRegistry: Foundation owns
+        // NSMutableAttributedString; AppKit's NSTextStorage extends it.
+        // `emit_framework` sees only AppKit, so the emitted class imports its
+        // parent from `@apianyware/foundation` (rather than degrading to the
+        // current framework) only because the pre-pass built the registry over
+        // both frameworks and swapped in the configured emitter.
+        let tmp = tempfile::tempdir().unwrap();
+        let input_dir = tmp.path().join("enriched");
+        let output_dir = tmp.path().join("targets");
+
+        let mut foundation = make_test_framework("Foundation");
+        foundation.classes = vec![bare_class("NSMutableAttributedString", "NSObject")];
+
+        let mut appkit = make_test_framework("AppKit");
+        appkit.depends_on = vec!["Foundation".to_string()];
+        appkit.classes = vec![bare_class("NSTextStorage", "NSMutableAttributedString")];
+
+        write_test_framework(&input_dir, &foundation);
+        write_test_framework(&input_dir, &appkit);
+
+        let registry = EmitterRegistry::new();
+        let targets = vec!["typescript".to_string()];
+        run_generation(&registry, &input_dir, &output_dir, Some(&targets)).unwrap();
+
+        // `generated_subdir = "generated"`; per-class `<class_low>.ts` under the
+        // framework dir.
+        let storage = std::fs::read_to_string(
+            output_dir.join("typescript/bindings/macos/generated/appkit/nstextstorage.ts"),
+        )
+        .unwrap();
+        assert!(
+            storage.contains("class NSTextStorage extends NSMutableAttributedString"),
+            "child extends the cross-framework parent:\n{storage}"
+        );
+        assert!(
+            storage.contains("'@apianyware/foundation'"),
+            "cross-framework parent import should resolve through the wired registry:\n{storage}"
         );
     }
 

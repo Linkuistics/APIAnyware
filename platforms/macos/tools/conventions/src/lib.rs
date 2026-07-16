@@ -33,19 +33,65 @@ pub use readback::{
 /// All frameworks load into one program so a single run covers the whole set
 /// (the convention rules are per-method and do not cross frameworks, but this
 /// matches the `resolve`/`enrich` "one program, all frameworks" shape).
+///
+/// The pass log counts the facet by winning kind, and — the number this leaf
+/// exists to make visible — how many slots the **declared** attribute took *off*
+/// a disagreeing name sniff (ADR-0047 §4). Each such override is named, so the
+/// heuristic the header displaces is never displaced silently.
 pub fn derive_ownership(frameworks: &[Framework]) -> BTreeMap<MethodKey, OwnershipFacet> {
     let mut prog = program::ConventionProgram::default();
     for framework in frameworks {
         fact_loader::load_framework_facts(&mut prog, framework);
     }
     prog.run();
+
+    let overrides = readback::declared_overrides(&prog);
+    for over in &overrides {
+        tracing::warn!(
+            receiver = %over.receiver,
+            selector = %over.selector,
+            param = over.param_index,
+            declared = ?over.declared,
+            sniffed = ?over.sniffed,
+            sniffed_rule = over.sniffed_rule,
+            "declared property attribute overrides the naming heuristic"
+        );
+    }
+
+    let facets = readback::ownership_facets(&prog);
+    let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
+    for facet in facets.values() {
+        for slot in &facet.parameter_ownership {
+            *counts.entry(kind_name(slot.ownership)).or_default() += 1;
+        }
+    }
     tracing::info!(
         params = prog.param.len(),
-        weak = prog.weak_param.len(),
-        copy = prog.copy_param.len(),
+        declared_candidates = prog
+            .ownership_candidate
+            .iter()
+            .filter(|(_, _, _, priority, _, _)| *priority == 0)
+            .count(),
+        declared_on_non_object = prog.declared_on_non_object.len(),
+        overrode_sniff = overrides.len(),
+        weak = counts.get("weak").copied().unwrap_or(0),
+        strong = counts.get("strong").copied().unwrap_or(0),
+        copy = counts.get("copy").copied().unwrap_or(0),
+        unsafe_unretained = counts.get("unsafe_unretained").copied().unwrap_or(0),
         "convention ownership facet derived"
     );
-    readback::ownership_facets(&prog)
+    facets
+}
+
+/// The serde token for an [`OwnershipKind`], used to key the pass-log counts.
+fn kind_name(kind: apianyware_types::annotation::OwnershipKind) -> &'static str {
+    use apianyware_types::annotation::OwnershipKind as K;
+    match kind {
+        K::Strong => "strong",
+        K::Weak => "weak",
+        K::Copy => "copy",
+        K::UnsafeUnretained => "unsafe_unretained",
+    }
 }
 
 /// Derive the block-invocation facet for every method across `frameworks`,

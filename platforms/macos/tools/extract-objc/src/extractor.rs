@@ -29,6 +29,19 @@ pub fn extract_framework(
 
     let result = extract_from_translation_unit(&entity, &framework.name, &sdk.path);
 
+    // A protocol qualifier the IR does not model is named, not dropped: `Class<P>` and
+    // `NSFoo<P> *` are the two positions `TypeRefKind::Id { protocols }` cannot hold.
+    for deferral in &result.type_map_log.deferred_qualifiers {
+        tracing::warn!(
+            framework = %framework.name,
+            owner = %deferral.owner,
+            member = %deferral.member,
+            declared = %deferral.type_display,
+            protocols = %deferral.protocols.join(", "),
+            "protocol qualifier deferred: only id<P> is modelled"
+        );
+    }
+
     tracing::info!(
         framework = %framework.name,
         classes = result.classes.len(),
@@ -37,6 +50,7 @@ pub fn extract_framework(
         structs = result.structs.len(),
         functions = result.functions.len(),
         constants = result.constants.len(),
+        deferred_qualifiers = result.type_map_log.deferred_qualifiers.len(),
         "extraction complete"
     );
 

@@ -25,10 +25,6 @@ framework ImageCaptureCore {
             threading any_thread
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method setPtpEventHandler: is-instance=#true {
             block-param 0 invocation=stored
             source llm
@@ -82,16 +78,6 @@ framework ImageCaptureCore {
             threading any_thread
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class ICDeviceBrowser {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class ICScannerDevice {
         method requestCloseSessionWithOptions:completion: is-instance=#true {
@@ -107,10 +93,6 @@ framework ImageCaptureCore {
         method requestOpenSessionWithOptions:completion: is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

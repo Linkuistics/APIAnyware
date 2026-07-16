@@ -49,7 +49,7 @@ pub fn map_contract(type_ref: &TypeRef, is_return_type: bool) -> String {
                 _ => "any/c".to_string(),
             }
         }
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             if type_ref.nullable {
                 "(or/c cpointer? #f)".to_string()
             } else {
@@ -462,7 +462,9 @@ mod tests {
 
         let id_t = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         assert_eq!(map_contract(&id_t, false), "cpointer?");
     }
@@ -1004,7 +1006,9 @@ mod tests {
                     name: "uint64".into(),
                 },
             )],
-            TypeRefKind::Id,
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
             false,
             false,
         )];
@@ -1058,7 +1062,12 @@ mod tests {
         let functions = vec![make_function(
             "dispatch_async_f",
             vec![
-                make_param("queue", TypeRefKind::Id),
+                make_param(
+                    "queue",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                ),
                 make_param("context", TypeRefKind::Pointer),
                 make_param(
                     "work",
@@ -1109,9 +1118,16 @@ mod tests {
                         params: vec![],
                     },
                 ),
-                make_param("attr", TypeRefKind::Id),
+                make_param(
+                    "attr",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                ),
             ],
-            TypeRefKind::Id,
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
             false,
             false,
         )];
@@ -1133,7 +1149,9 @@ mod tests {
                     name: "uint64".into(),
                 },
             )],
-            TypeRefKind::Id,
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
             false,
             false,
         )];

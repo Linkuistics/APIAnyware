@@ -1,7 +1,6 @@
 framework CoreImage {
     class CIBlendKernel {
         method applyWithExtent:roiCallback:arguments: is-instance=#true {
-            param-ownership 1 ownership=copy
             block-param 1 invocation=stored
             source llm
         }
@@ -20,7 +19,6 @@ framework CoreImage {
     }
     class CIColorKernel {
         method applyWithExtent:roiCallback:arguments: is-instance=#true {
-            param-ownership 1 ownership=copy
             block-param 1 invocation=stored
             source llm
         }
@@ -81,7 +79,6 @@ framework CoreImage {
     }
     class CIKernel {
         method applyWithExtent:roiCallback:arguments: is-instance=#true {
-            param-ownership 1 ownership=copy
             block-param 1 invocation=stored
             source llm
         }
@@ -100,7 +97,6 @@ framework CoreImage {
     }
     class CIRenderDestination {
         method initWithWidth:height:pixelFormat:commandBuffer:mtlTextureProvider: is-instance=#true {
-            param-ownership 4 ownership=copy
             block-param 4 invocation=stored
             source llm
         }
@@ -113,12 +109,10 @@ framework CoreImage {
     }
     class CIWarpKernel {
         method applyWithExtent:roiCallback:arguments: is-instance=#true {
-            param-ownership 1 ownership=copy
             block-param 1 invocation=stored
             source llm
         }
         method applyWithExtent:roiCallback:inputImage:arguments: is-instance=#true {
-            param-ownership 1 ownership=copy
             block-param 1 invocation=stored
             source llm
         }

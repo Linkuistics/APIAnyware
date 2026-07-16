@@ -246,10 +246,6 @@ framework HealthKit {
             block-param 0 invocation=async_copied
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method updateActivityWithUUID:addMedatata:completion: is-instance=#true {
             block-param 2 invocation=async_copied
             source llm
@@ -420,12 +416,6 @@ framework HealthKit {
         }
         method initWithRoute:dateInterval:dataHandler: is-instance=#true {
             block-param 2 invocation=stored
-            source llm
-        }
-    }
-    class HKWorkoutSession {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

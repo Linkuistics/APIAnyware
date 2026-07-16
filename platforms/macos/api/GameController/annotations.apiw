@@ -1,132 +1,110 @@
 framework GameController {
     class GCController {
         method setControllerPausedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method startWirelessControllerDiscoveryWithCompletionHandler: is-instance=#false {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=async_copied
             source llm
         }
     }
     class GCControllerAxisInput {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCControllerButtonInput {
         method setPressedChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setTouchedChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCControllerDirectionPad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCControllerLiveInput {
         method setElementValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setInputStateAvailableHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCControllerTouchpad {
         method setTouchDown: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setTouchMoved: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setTouchUp: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCDeviceCursor {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCDirectionalGamepad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCDualSenseAdaptiveTrigger {
         method setPressedChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setTouchedChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCDualSenseGamepad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCDualShockGamepad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
@@ -136,117 +114,95 @@ framework GameController {
             error-pattern error_out_param
             source llm
         }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class GCExtendedGamepad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCExtendedGamepadSnapshot {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCGamepad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCGamepadSnapshot {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCKeyboardInput {
         method setKeyChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCMicroGamepad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCMicroGamepadSnapshot {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCMotion {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCMouseInput {
         method setMouseMovedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCPhysicalInputProfile {
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
@@ -259,24 +215,20 @@ framework GameController {
     }
     class GCRacingWheelInput {
         method setElementValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setInputStateAvailableHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class GCXboxGamepad {
         method setValueChangedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setValueDidChangeHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }

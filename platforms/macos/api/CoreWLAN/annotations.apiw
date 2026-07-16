@@ -50,10 +50,6 @@ framework CoreWLAN {
         }
     }
     class CWWiFiClient {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method startMonitoringEventWithType:error: is-instance=#true {
             error-pattern error_out_param
             source llm

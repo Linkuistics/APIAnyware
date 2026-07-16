@@ -63,7 +63,7 @@ fn prop(name: &str, kind: TypeRefKind, readonly: bool) -> Property {
         property_type: ty(kind),
         readonly,
         class_property: false,
-        is_copy: false,
+        ownership: None,
         deprecated: false,
         source: None,
         provenance: None,
@@ -94,7 +94,13 @@ fn class(name: &str, superclass: &str, methods: Vec<Method>, properties: Vec<Pro
 /// → NSControl), a method, a writable property, and one Swift-native (`objc_exposed
 /// == false`) method that must land in the residual.
 fn fixture() -> Framework {
-    let mut swift_native = method("nativeOnly", ty(TypeRefKind::Id), vec![]);
+    let mut swift_native = method(
+        "nativeOnly",
+        ty(TypeRefKind::Id {
+            protocols: Vec::new(),
+        }),
+        vec![],
+    );
     swift_native.objc_exposed = false;
 
     Framework {
@@ -114,7 +120,12 @@ fn fixture() -> Framework {
                     method(
                         "addSubview:",
                         TypeRef::void(),
-                        vec![param("view", TypeRefKind::Id)],
+                        vec![param(
+                            "view",
+                            TypeRefKind::Id {
+                                protocols: Vec::new(),
+                            },
+                        )],
                     ),
                     swift_native,
                 ],

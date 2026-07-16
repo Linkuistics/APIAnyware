@@ -2,7 +2,8 @@
 
 **Builds on:** ADR-0046 §4 (the provenance/precedence *carriage* model — `source ∈
 {extraction, convention:<rule>, llm, manual}`, `confidence` enum, `provenance`, precedence
-`manual > accepted-LLM > convention > extraction > unknown`, winner stamped + losers
+`manual > extraction > accepted-LLM > convention > unknown` (re-ranked by
+`declared-fact-precedence-k87` — ADR-0047 §4), winner stamped + losers
 `superseded-by`): §4 defines the *carriage*; this ADR is the *workflow* over it
 (caching/regeneration/review-accept/diff). ADR-0047 (convention tier as `ascent` datalog).
 The economic constraint that LLM annotation runs **within Claude Code subagents**, not an
@@ -59,10 +60,11 @@ from the decided §4 vocabulary. Emit is **provenance-blind** — it projects th
 3. **The disagreement audit runs at resolve time and is golden-neutral by construction.**
    Per `(receiver, selector)` fact-slot, gather every producing tier, apply §28 precedence,
    **stamp the winner's `source`**, record each *disagreeing* loser as `superseded-by
-   { source; value }`, and leave a no-producer slot **explicit `unknown`**. This only stamps
-   *provenance* — the winning *value* already matches today's `llm`-over-convention merge — so
-   per-fact provenance is **emit-invisible** and goldens-as-truth cannot move. That invariant
-   is the regression gate for the whole rollout.
+   { source; value }`, and leave a no-producer slot **explicit `unknown`**. Per-fact provenance
+   is **emit-invisible** (emit projects the *facts*, never their `source`), and the one place
+   the k87 re-rank changes a winning *value* — the 17 intra-axis ownership slots where a
+   declared `assign` now beats `llm=weak` — is invisible to every consumer, which reads the
+   retain axis. Goldens-as-truth stays the regression gate for the whole rollout.
 
 4. **Staleness is computed live; regeneration is explicit, in Claude Code.** Staleness =
    set-diffing a family's committed overlay against the current **resolved API surface**

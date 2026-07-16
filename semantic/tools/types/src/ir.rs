@@ -6,7 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::annotation::ClassAnnotations;
+use crate::annotation::{ClassAnnotations, OwnershipKind};
 use crate::enrichment::{EnrichmentData, VerificationReport};
 use crate::pattern_instance::PatternInstance;
 use crate::provenance::{DeclarationSource, DocRefs, SourceProvenance};
@@ -324,12 +324,20 @@ pub struct Property {
     #[serde(default)]
     pub class_property: bool,
 
-    /// Whether the property carries the `(copy)` attribute. For block-typed
-    /// properties this is the canonical signal that the synthesised setter
-    /// stores the block (`Block_copy`-ed) on the instance — used by the
-    /// annotate step to classify the setter's block parameter as `stored`.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub is_copy: bool,
+    /// The ownership qualifier the declaration carries — `@property (weak)`,
+    /// `(copy)`, `(strong)`/`(retain)`, `(assign)`/`(unsafe_unretained)` — read
+    /// off the one `ObjCAttributes` value clang hands the extractor. `None` when
+    /// the declaration states none (a plain scalar `@property BOOL enabled;`, or
+    /// a Swift-sourced declaration, which has no ObjC attributes to read).
+    ///
+    /// This is a **declared attribute**, not a derived fact (ADR-0047 §4): the
+    /// convention tier's priority-0 `weak-`/`strong-property-attribute` rules
+    /// have it as their premise and outrank every rule whose premise is a *name*.
+    /// [`Self::is_copy`] is the `(copy)` arm — the block-invocation facet's
+    /// canonical signal that the synthesised setter stores a `Block_copy`-ed
+    /// block on the instance.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ownership: Option<OwnershipKind>,
 
     /// Whether this property is deprecated.
     #[serde(default)]
@@ -364,6 +372,17 @@ pub struct Property {
         skip_serializing_if = "crate::serde_helpers::is_true"
     )]
     pub objc_exposed: bool,
+}
+
+impl Property {
+    /// Whether the declaration carries `@property (copy)`.
+    ///
+    /// The `(copy)` arm of [`Self::ownership`], named because it is a premise in
+    /// its own right: for a block-typed property it is the block-invocation
+    /// facet's signal that the synthesised setter *stores* the block.
+    pub fn is_copy(&self) -> bool {
+        self.ownership == Some(OwnershipKind::Copy)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -636,6 +655,20 @@ pub struct Constant {
     /// Constant type.
     #[serde(rename = "type")]
     pub constant_type: TypeRef,
+
+    /// Present when the constant's own declared C type is an array (`extern const T X[]` /
+    /// `extern const T X[N]`) — `constant_type` still reads `Pointer` (the ABI shape a
+    /// `dlsym`'d array symbol collapses to is genuinely pointer-width), but an array global's
+    /// *value* is its own symbol address, not something stored at that address the way a
+    /// pointer *variable*'s value is. Only a top-level constant's own type carries this
+    /// distinction — a parameter/return/field position never reaches here, because C's
+    /// array-to-pointer decay already turns those into an ordinary stored-pointer `Pointer`
+    /// before libclang reports the type. Carries the array's **element** type (mapped like any
+    /// other), so a reader can tell a byte/char buffer (plausibly a banner string) from
+    /// anything else, without re-deriving the fact from `constant_type` (which no longer has
+    /// it). `array-constant-symbol-value-k109`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub array_element: Option<TypeRef>,
 
     /// Which extractor produced this declaration.
     #[serde(default, skip_serializing_if = "Option::is_none")]

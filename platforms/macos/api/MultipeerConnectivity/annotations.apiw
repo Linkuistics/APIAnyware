@@ -1,10 +1,4 @@
 framework MultipeerConnectivity {
-    class MCAdvertiserAssistant {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class MCBrowserViewController {
         method commitEditingAndReturnError: is-instance=#true {
             threading main_thread_only
@@ -16,20 +10,7 @@ framework MultipeerConnectivity {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
-            source llm
-        }
-    }
-    class MCNearbyServiceAdvertiser {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class MCNearbyServiceBrowser {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -40,10 +21,6 @@ framework MultipeerConnectivity {
         }
         method sendResourceAtURL:withName:toPeer:withCompletionHandler: is-instance=#true {
             block-param 3 invocation=async_copied
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
         method startStreamWithName:toPeer:error: is-instance=#true {

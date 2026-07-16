@@ -64,9 +64,24 @@ pub enum TypeRefKind {
     #[serde(rename = "class_ref")]
     ClassRef,
 
-    /// Untyped object pointer (`id`).
+    /// Untyped object pointer (`id`), optionally protocol-qualified
+    /// (`id<NSCopying>`, `id<NSObject, NSCopying>`).
+    ///
+    /// `protocols` names the protocols the declaration qualifies the `id` with.
+    /// A list, because `id<NSObject, NSCopying>` is legal. Serde-default and
+    /// skip-if-empty, so an unqualified `id` serialises byte-identically to the
+    /// pre-qualifier IR.
+    ///
+    /// The qualifier is a refinement **of `id`** specifically. Protocol
+    /// qualifiers in the two other positions clang allows — `Class<P>` and
+    /// `NSFoo<P> *` — are a counted deferral at extraction, not a modelling
+    /// axis (they occur 43 times across AppKit/Foundation/CoreData/WebKit/
+    /// AVFoundation, against 1163 for `id<P>`).
     #[serde(rename = "id")]
-    Id,
+    Id {
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        protocols: Vec<String>,
+    },
 
     /// Return type that matches the receiver's type.
     #[serde(rename = "instancetype")]

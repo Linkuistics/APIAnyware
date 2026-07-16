@@ -25,7 +25,7 @@ pub trait FfiTypeMapper {
     fn is_object_type(&self, type_ref: &TypeRef) -> bool {
         matches!(
             type_ref.kind,
-            TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype
+            TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype
         )
     }
 
@@ -167,7 +167,7 @@ impl FfiTypeMapper for RacketFfiTypeMapper {
                     .map(str::to_string)
                     .unwrap_or_else(|| "_pointer".to_string())
             }
-            TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+            TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
                 "_id".to_string()
             }
             TypeRefKind::Selector => "_pointer".to_string(),
@@ -353,7 +353,15 @@ mod tests {
             ),
             "_id"
         );
-        assert_eq!(m.map_type(&make_type(TypeRefKind::Id), false), "_id");
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Id {
+                    protocols: Vec::new()
+                }),
+                false
+            ),
+            "_id"
+        );
         assert_eq!(
             m.map_type(&make_type(TypeRefKind::Instancetype), true),
             "_id"
@@ -747,7 +755,9 @@ mod tests {
     #[test]
     fn test_trait_helper_methods() {
         let m = RacketFfiTypeMapper;
-        assert!(m.is_object_type(&make_type(TypeRefKind::Id)));
+        assert!(m.is_object_type(&make_type(TypeRefKind::Id {
+            protocols: Vec::new()
+        })));
         assert!(m.is_object_type(&make_type(TypeRefKind::Class {
             name: "NSString".into(),
             framework: None,
@@ -911,7 +921,12 @@ mod tests {
                 }),
                 false,
             ),
-            (make_type(TypeRefKind::Id), false),
+            (
+                make_type(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
+                false,
+            ),
             (
                 make_type(TypeRefKind::Class {
                     name: "NSString".into(),
@@ -960,7 +975,15 @@ mod tests {
         // End-to-end through the IR: objects → ptr_t, geometry → struct_t name,
         // signed/unsigned enum widths preserved.
         let m = RacketFfi2TypeMapper;
-        assert_eq!(m.map_type(&make_type(TypeRefKind::Id), false), "ptr_t");
+        assert_eq!(
+            m.map_type(
+                &make_type(TypeRefKind::Id {
+                    protocols: Vec::new()
+                }),
+                false
+            ),
+            "ptr_t"
+        );
         assert_eq!(
             m.map_type(
                 &make_type(TypeRefKind::Class {

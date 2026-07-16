@@ -1,7 +1,6 @@
 framework IntentsUI {
     class INUIAddVoiceShortcutButton {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -17,7 +16,6 @@ framework IntentsUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -33,7 +31,6 @@ framework IntentsUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

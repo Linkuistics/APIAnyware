@@ -69,10 +69,6 @@ framework CoreSpotlight {
             threading any_thread
             source llm
         }
-        method setIndexDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method endIndexBatchWithExpectedClientState:newClientState:completionHandler: is-instance=#true {
             block-param 2 invocation=async_copied
             threading any_thread

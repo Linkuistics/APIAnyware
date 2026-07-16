@@ -4,18 +4,10 @@ framework NotificationCenter {
             error-pattern error_out_param
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NCWidgetSearchViewController {
         method commitEditingAndReturnError: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

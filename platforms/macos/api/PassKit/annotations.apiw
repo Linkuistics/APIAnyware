@@ -80,7 +80,6 @@ framework PassKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -92,7 +91,6 @@ framework PassKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -115,7 +113,6 @@ framework PassKit {
             source llm
         }
         method sessionForPass:delegate:completion: is-instance=#false {
-            param-ownership 1 ownership=weak
             block-param 2 invocation=async_copied
             source llm
         }

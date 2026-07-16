@@ -1,16 +1,4 @@
 framework ScreenCaptureKit {
-    class SCContentSharingPicker {
-        method addObserver: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class SCRecordingOutput {
-        method initWithConfiguration:delegate: is-instance=#true {
-            param-ownership 1 ownership=weak
-            source llm
-        }
-    }
     class SCScreenshotManager {
         method captureImageInRect:completionHandler: is-instance=#false {
             block-param 1 invocation=async_copied
@@ -63,10 +51,6 @@ framework ScreenCaptureKit {
         method addStreamOutput:type:sampleHandlerQueue:error: is-instance=#true {
             param-ownership 0 ownership=weak
             error-pattern error_out_param
-            source llm
-        }
-        method initWithFilter:configuration:delegate: is-instance=#true {
-            param-ownership 2 ownership=weak
             source llm
         }
         method removeRecordingOutput:error: is-instance=#true {

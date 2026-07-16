@@ -346,7 +346,13 @@ mod tests {
     fn objc_exposed_false_protocol_method_excluded() {
         // A Swift-native protocol requirement carries no ObjC selector — excluded
         // from both the generic surface and the registration (ADR-0026 §3).
-        let mut native = m("nativeRequirement", vec![], TypeRefKind::Id);
+        let mut native = m(
+            "nativeRequirement",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+        );
         native.objc_exposed = false;
         let p = proto(
             "TKMixed",
@@ -378,7 +384,13 @@ mod tests {
     #[test]
     fn all_native_protocol_has_no_surface() {
         // A protocol whose only methods are Swift-native has no ObjC surface.
-        let mut native = m("nativeRequirement", vec![], TypeRefKind::Id);
+        let mut native = m(
+            "nativeRequirement",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+        );
         native.objc_exposed = false;
         let p = proto("TKAllNative", vec![native], vec![]);
         assert!(!has_surface(&p));
@@ -396,7 +408,9 @@ mod tests {
                     obj_param("col", "NSTableColumn"),
                     obj_param("row", "NSInteger"),
                 ],
-                TypeRefKind::Id,
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             )],
         );
         let decls = protocol_generic_decls(&p, &empty());

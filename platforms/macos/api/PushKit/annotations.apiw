@@ -1,8 +1,2 @@
 framework PushKit {
-    class PKPushRegistry {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
 }

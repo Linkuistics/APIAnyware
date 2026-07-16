@@ -311,7 +311,9 @@ mod tests {
         let params = vec![
             TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
             TypeRef {
                 nullable: false,

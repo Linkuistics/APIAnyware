@@ -163,10 +163,6 @@ framework AVFAudio {
             error-pattern error_out_param
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class AVAudioPlayerNode {
         method installTapOnBus:bufferSize:format:block: is-instance=#true {
@@ -213,10 +209,6 @@ framework AVFAudio {
         }
         method initWithURL:settings:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -559,10 +551,6 @@ framework AVFAudio {
     class AVSpeechSynthesizer {
         method requestPersonalVoiceAuthorizationWithCompletionHandler: is-instance=#false {
             block-param 0 invocation=async_copied
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
         method writeUtterance:toBufferCallback: is-instance=#true {

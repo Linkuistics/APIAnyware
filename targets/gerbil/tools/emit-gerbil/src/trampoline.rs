@@ -363,7 +363,7 @@ fn classify_return(t: &TypeRef) -> RetMarshal {
         // type (ADR-0029 §2). A genuinely-Swift class would also land here; its
         // dynamic ObjC class is unbound, so `wrap` walks to the nearest bound
         // ancestor (NSObject worst case) — never a crash.
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             RetMarshal::Object
         }
         // A typedef alias (`NSTimeInterval`) names a valid in-scope Swift type;
@@ -718,7 +718,7 @@ fn type_shape(t: &TypeRef) -> String {
         TypeRefKind::Class { name, .. } => format!("c:{name}"),
         TypeRefKind::Alias { name, .. } => format!("a:{name}"),
         TypeRefKind::Struct { name } => format!("s:{name}"),
-        TypeRefKind::Id => "id".into(),
+        TypeRefKind::Id { .. } => "id".into(),
         TypeRefKind::Instancetype => "instancetype".into(),
         TypeRefKind::CString => "cstr".into(),
         TypeRefKind::Pointer => "ptr".into(),
@@ -2855,6 +2855,7 @@ mod tests {
         let c = Constant {
             name: "MLCreateErrorDomain".into(),
             constant_type: nsstring(),
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -2883,6 +2884,7 @@ mod tests {
         let c = Constant {
             name: "MLDefaultTimeout".into(),
             constant_type: prim("double"),
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

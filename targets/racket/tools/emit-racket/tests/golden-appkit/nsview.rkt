@@ -8,6 +8,7 @@
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
+         "../../runtime/block.rkt"
          "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
@@ -17,6 +18,7 @@
 ;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
+(define (cadisplaylink? v) (objc-instance-of? v "CADisplayLink"))
 (define (calayer? v) (objc-instance-of? v "CALayer"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -25,6 +27,9 @@
 (define (nsbitmapimagerep? v) (objc-instance-of? v "NSBitmapImageRep"))
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
+(define (nsdraggingsession? v) (objc-instance-of? v "NSDraggingSession"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
 (define (nslayoutguide? v) (objc-instance-of? v "NSLayoutGuide"))
 (define (nslayoutxaxisanchor? v) (objc-instance-of? v "NSLayoutXAxisAnchor"))
@@ -63,7 +68,7 @@
   [nsview-set-autoresizes-subviews! (c-> nsview? boolean? void?)]
   [nsview-autoresizing-mask (c-> nsview? exact-nonnegative-integer?)]
   [nsview-set-autoresizing-mask! (c-> nsview? exact-nonnegative-integer? void?)]
-  [nsview-background-filters (c-> nsview? any/c)]
+  [nsview-background-filters (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-set-background-filters! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-baseline-offset-from-bottom (c-> nsview? real?)]
   [nsview-bottom-anchor (c-> nsview? (or/c nslayoutyaxisanchor? objc-nil?))]
@@ -85,8 +90,8 @@
   [nsview-compatible-with-responsive-scrolling (c-> boolean?)]
   [nsview-compositing-filter (c-> nsview? (or/c cifilter? objc-nil?))]
   [nsview-set-compositing-filter! (c-> nsview? (or/c string? objc-object? #f) void?)]
-  [nsview-constraints (c-> nsview? any/c)]
-  [nsview-content-filters (c-> nsview? any/c)]
+  [nsview-constraints (c-> nsview? (or/c nsarray? objc-nil?))]
+  [nsview-content-filters (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-set-content-filters! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-default-focus-ring-type (c-> exact-nonnegative-integer?)]
   [nsview-default-menu (c-> (or/c nsmenu? objc-nil?))]
@@ -107,7 +112,7 @@
   [nsview-set-frame-center-rotation! (c-> nsview? real? void?)]
   [nsview-frame-rotation (c-> nsview? real?)]
   [nsview-set-frame-rotation! (c-> nsview? real? void?)]
-  [nsview-gesture-recognizers (c-> nsview? any/c)]
+  [nsview-gesture-recognizers (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-set-gesture-recognizers! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-has-ambiguous-layout (c-> nsview? boolean?)]
   [nsview-height-adjust-limit (c-> nsview? real?)]
@@ -131,7 +136,7 @@
   [nsview-set-layer-contents-redraw-policy! (c-> nsview? exact-integer? void?)]
   [nsview-layer-uses-core-image-filters (c-> nsview? boolean?)]
   [nsview-set-layer-uses-core-image-filters! (c-> nsview? boolean? void?)]
-  [nsview-layout-guides (c-> nsview? any/c)]
+  [nsview-layout-guides (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-layout-margins-guide (c-> nsview? (or/c nslayoutguide? objc-nil?))]
   [nsview-leading-anchor (c-> nsview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsview-left-anchor (c-> nsview? (or/c nslayoutxaxisanchor? objc-nil?))]
@@ -169,9 +174,9 @@
   [nsview-previous-valid-key-view (c-> nsview? (or/c nsview? objc-nil?))]
   [nsview-print-job-title (c-> nsview? (or/c nsstring? objc-nil?))]
   [nsview-rect-preserved-during-live-resize (c-> nsview? any/c)]
-  [nsview-registered-dragged-types (c-> nsview? any/c)]
+  [nsview-registered-dragged-types (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-requires-constraint-based-layout (c-> boolean?)]
-  [nsview-restorable-state-key-paths (c-> any/c)]
+  [nsview-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nsview-right-anchor (c-> nsview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsview-rotated-from-base (c-> nsview? boolean?)]
   [nsview-rotated-or-scaled-from-base (c-> nsview? boolean?)]
@@ -180,7 +185,7 @@
   [nsview-safe-area-rect (c-> nsview? any/c)]
   [nsview-shadow (c-> nsview? (or/c nsshadow? objc-nil?))]
   [nsview-set-shadow! (c-> nsview? (or/c string? objc-object? #f) void?)]
-  [nsview-subviews (c-> nsview? any/c)]
+  [nsview-subviews (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-set-subviews! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-superview (c-> nsview? (or/c nsview? objc-nil?))]
   [nsview-tag (c-> nsview? exact-integer?)]
@@ -189,7 +194,7 @@
   [nsview-top-anchor (c-> nsview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nsview-touch-bar (c-> nsview? (or/c nstouchbar? objc-nil?))]
   [nsview-set-touch-bar! (c-> nsview? (or/c string? objc-object? #f) void?)]
-  [nsview-tracking-areas (c-> nsview? any/c)]
+  [nsview-tracking-areas (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-trailing-anchor (c-> nsview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsview-translates-autoresizing-mask-into-constraints (c-> nsview? boolean?)]
   [nsview-set-translates-autoresizing-mask-into-constraints! (c-> nsview? boolean? void?)]
@@ -218,14 +223,14 @@
   [nsview-set-writing-tools-coordinator! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-accepts-first-mouse (c-> nsview? (or/c string? objc-object? #f) boolean?)]
   [nsview-accessibility-activation-point (c-> nsview? any/c)]
-  [nsview-accessibility-allowed-values (c-> nsview? any/c)]
+  [nsview-accessibility-allowed-values (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-application-focused-ui-element (c-> nsview? any/c)]
   [nsview-accessibility-attributed-string-for-range (c-> nsview? any/c (or/c nsattributedstring? objc-nil?))]
-  [nsview-accessibility-attributed-user-input-labels (c-> nsview? any/c)]
+  [nsview-accessibility-attributed-user-input-labels (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-cancel-button (c-> nsview? any/c)]
   [nsview-accessibility-cell-for-column-row (c-> nsview? exact-integer? exact-integer? any/c)]
   [nsview-accessibility-children (c-> nsview? (or/c nsarray? objc-nil?))]
-  [nsview-accessibility-children-in-navigation-order (c-> nsview? any/c)]
+  [nsview-accessibility-children-in-navigation-order (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-clear-button (c-> nsview? any/c)]
   [nsview-accessibility-close-button (c-> nsview? any/c)]
   [nsview-accessibility-column-count (c-> nsview? exact-integer?)]
@@ -235,8 +240,8 @@
   [nsview-accessibility-columns (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-contents (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-critical-value (c-> nsview? any/c)]
-  [nsview-accessibility-custom-actions (c-> nsview? any/c)]
-  [nsview-accessibility-custom-rotors (c-> nsview? any/c)]
+  [nsview-accessibility-custom-actions (c-> nsview? (or/c nsarray? objc-nil?))]
+  [nsview-accessibility-custom-rotors (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-decrement-button (c-> nsview? any/c)]
   [nsview-accessibility-default-button (c-> nsview? any/c)]
   [nsview-accessibility-disclosed-by-row (c-> nsview? any/c)]
@@ -316,7 +321,7 @@
   [nsview-accessibility-selected-rows (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-selected-text (c-> nsview? (or/c nsstring? objc-nil?))]
   [nsview-accessibility-selected-text-range (c-> nsview? any/c)]
-  [nsview-accessibility-selected-text-ranges (c-> nsview? any/c)]
+  [nsview-accessibility-selected-text-ranges (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-serves-as-title-for-ui-elements (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-shared-character-range (c-> nsview? any/c)]
   [nsview-accessibility-shared-focus-elements (c-> nsview? (or/c nsarray? objc-nil?))]
@@ -335,7 +340,7 @@
   [nsview-accessibility-url (c-> nsview? (or/c nsurl? objc-nil?))]
   [nsview-accessibility-unit-description (c-> nsview? (or/c nsstring? objc-nil?))]
   [nsview-accessibility-units (c-> nsview? exact-integer?)]
-  [nsview-accessibility-user-input-labels (c-> nsview? any/c)]
+  [nsview-accessibility-user-input-labels (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-value (c-> nsview? any/c)]
   [nsview-accessibility-value-description (c-> nsview? (or/c nsstring? objc-nil?))]
   [nsview-accessibility-vertical-scroll-bar (c-> nsview? any/c)]
@@ -350,29 +355,48 @@
   [nsview-accessibility-window (c-> nsview? any/c)]
   [nsview-accessibility-windows (c-> nsview? (or/c nsarray? objc-nil?))]
   [nsview-accessibility-zoom-button (c-> nsview? any/c)]
+  [nsview-add-constraint! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-add-constraints! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-add-cursor-rect-cursor! (c-> nsview? any/c (or/c string? objc-object? #f) void?)]
+  [nsview-add-gesture-recognizer! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-add-layout-guide! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-add-subview! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-add-subview-positioned-relative-to! (c-> nsview? (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) void?)]
   [nsview-add-tool-tip-rect-owner-user-data! (c-> nsview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) exact-integer?)]
+  [nsview-add-tracking-area! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-add-tracking-rect-owner-user-data-assume-inside! (c-> nsview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) boolean? exact-integer?)]
+  [nsview-additional-safe-area-insets! (c-> nsview? any/c)]
+  [nsview-adjust-page-height-new-top-bottom-limit (c-> nsview? (or/c cpointer? #f) real? real? real? void?)]
+  [nsview-adjust-page-width-new-left-right-limit (c-> nsview? (or/c cpointer? #f) real? real? real? void?)]
   [nsview-adjust-scroll (c-> nsview? any/c any/c)]
+  [nsview-alignment-rect-for-frame (c-> nsview? any/c any/c)]
   [nsview-ancestor-shared-with-view (c-> nsview? (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
   [nsview-animation-for-key (c-> nsview? (or/c string? objc-object? #f) any/c)]
-  [nsview-animations (c-> nsview? any/c)]
+  [nsview-animations (c-> nsview? (or/c nsdictionary? objc-nil?))]
   [nsview-animator (c-> nsview? any/c)]
   [nsview-appearance (c-> nsview? (or/c nsappearance? objc-nil?))]
   [nsview-autoscroll (c-> nsview? (or/c string? objc-object? #f) boolean?)]
   [nsview-backing-aligned-rect-options (c-> nsview? any/c exact-nonnegative-integer? any/c)]
   [nsview-become-first-responder (c-> nsview? boolean?)]
+  [nsview-begin-document! (c-> nsview? void?)]
+  [nsview-begin-dragging-session-with-items-event-source! (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdraggingsession? objc-nil?))]
   [nsview-begin-gesture-with-event! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-begin-page-in-rect-at-placement! (c-> nsview? any/c any/c void?)]
   [nsview-bitmap-image-rep-for-caching-display-in-rect (c-> nsview? any/c (or/c nsbitmapimagerep? objc-nil?))]
   [nsview-cache-display-in-rect-to-bitmap-image-rep (c-> nsview? any/c (or/c string? objc-object? #f) void?)]
   [nsview-cancel-operation (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-capitalize-word (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-center-scan-rect! (c-> nsview? any/c any/c)]
   [nsview-center-selection-in-visible-area! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-center-x-anchor! (c-> nsview? (or/c nslayoutxaxisanchor? objc-nil?))]
+  [nsview-center-y-anchor! (c-> nsview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nsview-change-case-of-letter (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-change-mode-with-event (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-complete (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-conclude-drag-operation (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-constraints-affecting-layout-for-orientation (c-> nsview? exact-integer? (or/c nsarray? objc-nil?))]
+  [nsview-content-compression-resistance-priority-for-orientation (c-> nsview? exact-integer? real?)]
+  [nsview-content-hugging-priority-for-orientation (c-> nsview? exact-integer? real?)]
   [nsview-context-menu-key-down (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-convert-point-from-view (c-> nsview? any/c (or/c string? objc-object? #f) any/c)]
   [nsview-convert-point-to-view (c-> nsview? any/c (or/c string? objc-object? #f) any/c)]
@@ -393,6 +417,8 @@
   [nsview-convert-size-to-backing (c-> nsview? any/c any/c)]
   [nsview-convert-size-to-layer (c-> nsview? any/c any/c)]
   [nsview-cursor-update (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-data-with-eps-inside-rect (c-> nsview? any/c (or/c nsdata? objc-nil?))]
+  [nsview-data-with-pdf-inside-rect (c-> nsview? any/c (or/c nsdata? objc-nil?))]
   [nsview-delete-backward (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-delete-backward-by-decomposing-previous-character (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-delete-forward (c-> nsview? (or/c string? objc-object? #f) void?)]
@@ -405,11 +431,13 @@
   [nsview-delete-word-forward (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-did-add-subview (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-did-close-menu-with-event (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsview-discard-cursor-rects (c-> nsview? void?)]
   [nsview-display! (c-> nsview? void?)]
   [nsview-display-if-needed! (c-> nsview? void?)]
   [nsview-display-if-needed-ignoring-opacity! (c-> nsview? void?)]
   [nsview-display-if-needed-in-rect! (c-> nsview? any/c void?)]
   [nsview-display-if-needed-in-rect-ignoring-opacity! (c-> nsview? any/c void?)]
+  [nsview-display-link-with-target-selector! (c-> nsview? (or/c string? objc-object? #f) string? (or/c cadisplaylink? objc-nil?))]
   [nsview-display-rect! (c-> nsview? any/c void?)]
   [nsview-display-rect-ignoring-opacity! (c-> nsview? any/c void?)]
   [nsview-display-rect-ignoring-opacity-in-context! (c-> nsview? any/c (or/c string? objc-object? #f) void?)]
@@ -418,12 +446,23 @@
   [nsview-dragging-entered (c-> nsview? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsview-dragging-exited (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-dragging-updated (c-> nsview? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsview-draw-focus-ring-mask (c-> nsview? void?)]
+  [nsview-draw-page-border-with-size (c-> nsview? any/c void?)]
   [nsview-draw-rect (c-> nsview? any/c void?)]
+  [nsview-edge-insets-for-layout-region (c-> nsview? (or/c string? objc-object? #f) any/c)]
   [nsview-effective-appearance (c-> nsview? (or/c nsappearance? objc-nil?))]
+  [nsview-encode-restorable-state-with-coder (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-encode-restorable-state-with-coder-background-queue (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsview-encode-with-coder (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-end-document! (c-> nsview? void?)]
   [nsview-end-gesture-with-event! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-end-page! (c-> nsview? void?)]
+  [nsview-enter-full-screen-mode-with-options (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsview-exercise-ambiguity-in-layout (c-> nsview? void?)]
+  [nsview-exit-full-screen-mode-with-options (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-flags-changed (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-flush-buffered-key-events (c-> nsview? void?)]
+  [nsview-frame-for-alignment-rect (c-> nsview? any/c any/c)]
   [nsview-get-rects-being-drawn-count (c-> nsview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsview-get-rects-exposed-during-live-resize-count (c-> nsview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsview-help-requested (c-> nsview? (or/c string? objc-object? #f) void?)]
@@ -442,6 +481,8 @@
   [nsview-insert-tab-ignoring-field-editor! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-insert-text! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-interpret-key-events (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-invalidate-intrinsic-content-size (c-> nsview? void?)]
+  [nsview-invalidate-restorable-state (c-> nsview? void?)]
   [nsview-is-accessibility-alternate-ui-visible (c-> nsview? boolean?)]
   [nsview-is-accessibility-disclosed (c-> nsview? boolean?)]
   [nsview-is-accessibility-edited (c-> nsview? boolean?)]
@@ -460,16 +501,23 @@
   [nsview-is-accessibility-selected (c-> nsview? boolean?)]
   [nsview-is-accessibility-selector-allowed (c-> nsview? string? boolean?)]
   [nsview-is-descendant-of (c-> nsview? (or/c string? objc-object? #f) boolean?)]
+  [nsview-is-drawing-find-indicator (c-> nsview? boolean?)]
   [nsview-is-flipped (c-> nsview? boolean?)]
   [nsview-is-hidden (c-> nsview? boolean?)]
   [nsview-is-hidden-or-has-hidden-ancestor (c-> nsview? boolean?)]
+  [nsview-is-horizontal-content-size-constraint-active (c-> nsview? boolean?)]
+  [nsview-is-in-full-screen-mode (c-> nsview? boolean?)]
   [nsview-is-opaque (c-> nsview? boolean?)]
   [nsview-is-rotated-from-base (c-> nsview? boolean?)]
   [nsview-is-rotated-or-scaled-from-base (c-> nsview? boolean?)]
+  [nsview-is-vertical-content-size-constraint-active (c-> nsview? boolean?)]
   [nsview-key-down (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-key-up (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-knows-page-range (c-> nsview? (or/c cpointer? #f) boolean?)]
   [nsview-layout (c-> nsview? void?)]
+  [nsview-layout-guide-for-layout-region (c-> nsview? (or/c string? objc-object? #f) (or/c nslayoutguide? objc-nil?))]
   [nsview-layout-subtree-if-needed (c-> nsview? void?)]
+  [nsview-location-of-print-rect (c-> nsview? any/c any/c)]
   [nsview-lowercase-word (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-magnify-with-event (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-make-backing-layer (c-> nsview? (or/c calayer? objc-nil?))]
@@ -479,6 +527,7 @@
   [nsview-make-text-writing-direction-left-to-right (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-make-text-writing-direction-natural (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-make-text-writing-direction-right-to-left (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-make-touch-bar (c-> nsview? (or/c nstouchbar? objc-nil?))]
   [nsview-menu-for-event (c-> nsview? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nsview-mouse-in-rect (c-> nsview? any/c any/c boolean?)]
   [nsview-mouse-cancelled (c-> nsview? (or/c string? objc-object? #f) void?)]
@@ -527,7 +576,9 @@
   [nsview-move-word-right! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-move-word-right-and-modify-selection! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-needs-to-draw-rect (c-> nsview? any/c boolean?)]
+  [nsview-new-window-for-tab (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-no-responder-for (c-> nsview? string? void?)]
+  [nsview-note-focus-ring-mask-changed (c-> nsview? void?)]
   [nsview-other-mouse-down (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-other-mouse-dragged (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-other-mouse-up (c-> nsview? (or/c string? objc-object? #f) void?)]
@@ -537,28 +588,58 @@
   [nsview-page-up-and-modify-selection (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-perform-drag-operation! (c-> nsview? (or/c string? objc-object? #f) boolean?)]
   [nsview-perform-key-equivalent! (c-> nsview? (or/c string? objc-object? #f) boolean?)]
+  [nsview-perform-text-finder-action! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-prepare-content-in-rect (c-> nsview? any/c void?)]
   [nsview-prepare-for-drag-operation (c-> nsview? (or/c string? objc-object? #f) boolean?)]
   [nsview-prepare-for-reuse (c-> nsview? void?)]
+  [nsview-present-error (c-> nsview? (or/c string? objc-object? #f) boolean?)]
+  [nsview-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nsview-pressure-change-with-event (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-print (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-quick-look-preview-items (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-quick-look-with-event (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-rect-for-layout-region (c-> nsview? (or/c string? objc-object? #f) any/c)]
+  [nsview-rect-for-page (c-> nsview? exact-integer? any/c)]
   [nsview-rect-for-smart-magnification-at-point-in-rect (c-> nsview? any/c any/c any/c)]
+  [nsview-reflect-scrolled-clip-view (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-register-for-dragged-types (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-remove-all-tool-tips! (c-> nsview? void?)]
+  [nsview-remove-constraint! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-remove-constraints! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-remove-cursor-rect-cursor! (c-> nsview? any/c (or/c string? objc-object? #f) void?)]
   [nsview-remove-from-superview! (c-> nsview? void?)]
   [nsview-remove-from-superview-without-needing-display! (c-> nsview? void?)]
+  [nsview-remove-gesture-recognizer! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-remove-layout-guide! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-remove-tool-tip! (c-> nsview? exact-integer? void?)]
+  [nsview-remove-tracking-area! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-remove-tracking-rect! (c-> nsview? exact-integer? void?)]
   [nsview-replace-subview-with! (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsview-reset-cursor-rects! (c-> nsview? void?)]
   [nsview-resign-first-responder (c-> nsview? boolean?)]
   [nsview-resize-subviews-with-old-size (c-> nsview? any/c void?)]
   [nsview-resize-with-old-superview-size (c-> nsview? any/c void?)]
+  [nsview-restore-state-with-coder (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-restore-user-activity-state (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-right-mouse-down (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-right-mouse-dragged (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-right-mouse-up (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-rotate-by-angle (c-> nsview? real? void?)]
   [nsview-rotate-with-event (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-ruler-view-did-add-marker (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsview-ruler-view-did-move-marker (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsview-ruler-view-did-remove-marker (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsview-ruler-view-handle-mouse-down (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsview-ruler-view-location-for-point (c-> nsview? (or/c string? objc-object? #f) any/c real?)]
+  [nsview-ruler-view-point-for-location (c-> nsview? (or/c string? objc-object? #f) real? any/c)]
+  [nsview-ruler-view-should-add-marker (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsview-ruler-view-should-move-marker (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsview-ruler-view-should-remove-marker (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsview-ruler-view-will-add-marker-at-location (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nsview-ruler-view-will-move-marker-to-location (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nsview-ruler-view-will-set-client-view (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsview-scale-unit-square-to-size (c-> nsview? any/c void?)]
+  [nsview-scroll-clip-view-to-point (c-> nsview? (or/c string? objc-object? #f) any/c void?)]
   [nsview-scroll-line-down (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-scroll-line-up (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-scroll-page-down (c-> nsview? (or/c string? objc-object? #f) void?)]
@@ -701,15 +782,21 @@
   [nsview-set-appearance! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-set-bounds-origin! (c-> nsview? any/c void?)]
   [nsview-set-bounds-size! (c-> nsview? any/c void?)]
+  [nsview-set-content-compression-resistance-priority-for-orientation! (c-> nsview? real? exact-integer? void?)]
+  [nsview-set-content-hugging-priority-for-orientation! (c-> nsview? real? exact-integer? void?)]
   [nsview-set-frame-origin! (c-> nsview? any/c void?)]
   [nsview-set-frame-size! (c-> nsview? any/c void?)]
   [nsview-set-identifier! (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-set-keyboard-focus-ring-needs-display-in-rect! (c-> nsview? any/c void?)]
   [nsview-set-mark! (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-set-needs-display-in-rect! (c-> nsview? any/c void?)]
   [nsview-should-be-treated-as-ink-event (c-> nsview? (or/c string? objc-object? #f) boolean?)]
   [nsview-should-delay-window-ordering-for-event (c-> nsview? (or/c string? objc-object? #f) boolean?)]
   [nsview-show-context-help (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-show-context-menu-for-selection (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-show-definition-for-attributed-string-at-point (c-> nsview? (or/c string? objc-object? #f) any/c void?)]
+  [nsview-show-definition-for-attributed-string-range-options-baseline-origin-provider (c-> nsview? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nsview-show-writing-tools (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-smart-magnify-with-event (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-sort-subviews-using-function-context (c-> nsview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsview-supplemental-target-for-action-sender (c-> nsview? string? (or/c string? objc-object? #f) any/c)]
@@ -726,10 +813,16 @@
   [nsview-transpose (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-transpose-words (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-try-to-perform-with (c-> nsview? string? (or/c string? objc-object? #f) boolean?)]
+  [nsview-unregister-dragged-types (c-> nsview? void?)]
+  [nsview-update-constraints (c-> nsview? void?)]
+  [nsview-update-constraints-for-subtree-if-needed (c-> nsview? void?)]
   [nsview-update-dragging-items-for-drag (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-update-layer (c-> nsview? void?)]
+  [nsview-update-tracking-areas (c-> nsview? void?)]
+  [nsview-update-user-activity-state (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-uppercase-word (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-valid-requestor-for-send-type-return-type (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nsview-validate-proposed-first-responder-for-event (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nsview-view-did-change-backing-properties (c-> nsview? void?)]
   [nsview-view-did-change-effective-appearance (c-> nsview? void?)]
   [nsview-view-did-end-live-resize (c-> nsview? void?)]
@@ -741,13 +834,17 @@
   [nsview-view-will-move-to-superview (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-view-will-move-to-window (c-> nsview? (or/c string? objc-object? #f) void?)]
   [nsview-view-will-start-live-resize (c-> nsview? void?)]
-  [nsview-view-with-tag (c-> nsview? exact-integer? any/c)]
+  [nsview-view-with-tag (c-> nsview? exact-integer? (or/c nsview? objc-nil?))]
   [nsview-wants-forwarded-scroll-events-for-axis (c-> nsview? exact-integer? boolean?)]
   [nsview-wants-periodic-dragging-updates (c-> nsview? boolean?)]
   [nsview-wants-scroll-events-for-swipe-tracking-on-axis (c-> nsview? exact-integer? boolean?)]
   [nsview-will-open-menu-with-event (c-> nsview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsview-will-present-error (c-> nsview? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nsview-will-remove-subview (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-write-eps-inside-rect-to-pasteboard (c-> nsview? any/c (or/c string? objc-object? #f) void?)]
+  [nsview-write-pdf-inside-rect-to-pasteboard (c-> nsview? any/c (or/c string? objc-object? #f) void?)]
   [nsview-yank (c-> nsview? (or/c string? objc-object? #f) void?)]
+  [nsview-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsview-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
   [nsview-is-compatible-with-responsive-scrolling (c-> boolean?)]
   )
@@ -771,29 +868,45 @@
 (define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_P_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_P_Q (-> ptr_t ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_P_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_E (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPd_d (-> ptr_t ptr_t ptr_t ptr_t double_t double_t))
 (define-aw-msg aw_racket_msg_PqP_v (-> ptr_t ptr_t ptr_t int64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pd_O (-> ptr_t ptr_t ptr_t double_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pddd_v (-> ptr_t ptr_t ptr_t double_t double_t double_t void_t))
+(define-aw-msg aw_racket_msg_PO_d (-> ptr_t ptr_t ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_PO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PGPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
 (define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))
+(define-aw-msg aw_racket_msg_q_f (-> ptr_t ptr_t int64_t float_t))
+(define-aw-msg aw_racket_msg_q_R (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_G (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_qq_P (-> ptr_t ptr_t int64_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_Q_v (-> ptr_t ptr_t uint64_t void_t))
 (define-aw-msg aw_racket_msg_f_v (-> ptr_t ptr_t float_t void_t))
+(define-aw-msg aw_racket_msg_fq_v (-> ptr_t ptr_t float_t int64_t void_t))
 (define-aw-msg aw_racket_msg_d_v (-> ptr_t ptr_t double_t void_t))
 (define-aw-msg aw_racket_msg_R_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_R_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_R_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_R_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_R (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RPP_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_RPPb_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t int64_t))
 (define-aw-msg aw_racket_msg_RQ_R (-> ptr_t ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RZ_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_O_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_O_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
@@ -1720,15 +1833,41 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityZoomButton"))))
    ))
+(define (nsview-add-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nsview-add-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nsview-add-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
+(define (nsview-add-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nsview-add-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nsview-add-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nsview-add-subview-positioned-relative-to! self view place other-view)
   (aw_racket_msg_PqP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:positioned:relativeTo:")) (id->ffi2-ptr (coerce-arg view)) place (id->ffi2-ptr (coerce-arg other-view))))
 (define (nsview-add-tool-tip-rect-owner-user-data! self rect owner data)
   (aw_racket_msg_RPP_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addToolTipRect:owner:userData:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data)))
+(define (nsview-add-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nsview-add-tracking-rect-owner-user-data-assume-inside! self rect owner data flag)
+  (aw_racket_msg_RPPb_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingRect:owner:userData:assumeInside:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data) flag))
+(define (nsview-additional-safe-area-insets! self)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_0_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "additionalSafeAreaInsets")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+(define (nsview-adjust-page-height-new-top-bottom-limit self new-bottom old-top old-bottom bottom-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageHeightNew:top:bottom:limit:")) (id->ffi2-ptr new-bottom) old-top old-bottom bottom-limit))
+(define (nsview-adjust-page-width-new-left-right-limit self new-right old-left old-right right-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageWidthNew:left:right:limit:")) (id->ffi2-ptr new-right) old-left old-right right-limit))
 (define (nsview-adjust-scroll self new-visible)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustScroll:")) (id->ffi2-ptr new-visible) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nsview-alignment-rect-for-frame self frame)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "alignmentRectForFrame:")) (id->ffi2-ptr frame) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
 (define (nsview-ancestor-shared-with-view self view)
   (wrap-objc-object
@@ -1758,8 +1897,16 @@
     (ptr-ref buf _NSRect)))
 (define (nsview-become-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "becomeFirstResponder"))))
+(define (nsview-begin-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDocument"))))
+(define (nsview-begin-dragging-session-with-items-event-source! self items event source)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDraggingSessionWithItems:event:source:")) (id->ffi2-ptr (coerce-arg items)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg source))))
+   ))
 (define (nsview-begin-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-begin-page-in-rect-at-placement! self rect location)
+  (aw_racket_msg_RO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginPageInRect:atPlacement:")) (id->ffi2-ptr rect) (id->ffi2-ptr location)))
 (define (nsview-bitmap-image-rep-for-caching-display-in-rect self rect)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "bitmapImageRepForCachingDisplayInRect:")) (id->ffi2-ptr rect)))
@@ -1776,6 +1923,14 @@
     (ptr-ref buf _NSRect)))
 (define (nsview-center-selection-in-visible-area! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerSelectionInVisibleArea:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsview-center-x-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerXAnchor"))))
+   ))
+(define (nsview-center-y-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerYAnchor"))))
+   ))
 (define (nsview-change-case-of-letter self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCaseOfLetter:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-change-mode-with-event self event)
@@ -1784,6 +1939,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "complete:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-conclude-drag-operation self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "concludeDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsview-constraints-affecting-layout-for-orientation self orientation)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "constraintsAffectingLayoutForOrientation:")) orientation))
+   ))
+(define (nsview-content-compression-resistance-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentCompressionResistancePriorityForOrientation:")) orientation))
+(define (nsview-content-hugging-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentHuggingPriorityForOrientation:")) orientation))
 (define (nsview-context-menu-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contextMenuKeyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsview-convert-point-from-view self point view)
@@ -1860,6 +2023,14 @@
     (ptr-ref buf _NSSize)))
 (define (nsview-cursor-update self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "cursorUpdate:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-data-with-eps-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithEPSInsideRect:")) (id->ffi2-ptr rect)))
+   ))
+(define (nsview-data-with-pdf-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithPDFInsideRect:")) (id->ffi2-ptr rect)))
+   ))
 (define (nsview-delete-backward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-delete-backward-by-decomposing-previous-character self sender)
@@ -1884,6 +2055,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didAddSubview:")) (id->ffi2-ptr (coerce-arg subview))))
 (define (nsview-did-close-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didCloseMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-discard-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardCursorRects"))))
 (define (nsview-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "display"))))
 (define (nsview-display-if-needed! self)
@@ -1894,6 +2067,10 @@
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRect:")) (id->ffi2-ptr rect)))
 (define (nsview-display-if-needed-in-rect-ignoring-opacity! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRectIgnoringOpacity:")) (id->ffi2-ptr rect)))
+(define (nsview-display-link-with-target-selector! self target selector)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayLinkWithTarget:selector:")) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName selector))))
+   ))
 (define (nsview-display-rect! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRect:")) (id->ffi2-ptr rect)))
 (define (nsview-display-rect-ignoring-opacity! self rect)
@@ -1910,20 +2087,46 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingExited:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-dragging-updated self sender)
   (aw_racket_msg_P_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingUpdated:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsview-draw-focus-ring-mask self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawFocusRingMask"))))
+(define (nsview-draw-page-border-with-size self border-size)
+  (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawPageBorderWithSize:")) (id->ffi2-ptr border-size)))
 (define (nsview-draw-rect self dirty-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawRect:")) (id->ffi2-ptr dirty-rect)))
+(define (nsview-edge-insets-for-layout-region self layout-region)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_P_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "edgeInsetsForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
 (define (nsview-effective-appearance self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "effectiveAppearance"))))
    ))
+(define (nsview-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nsview-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nsview-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nsview-end-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endDocument"))))
 (define (nsview-end-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-end-page! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endPage"))))
+(define (nsview-enter-full-screen-mode-with-options self screen options)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enterFullScreenMode:withOptions:")) (id->ffi2-ptr (coerce-arg screen)) (id->ffi2-ptr (coerce-arg options))))
+(define (nsview-exercise-ambiguity-in-layout self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exerciseAmbiguityInLayout"))))
+(define (nsview-exit-full-screen-mode-with-options self options)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exitFullScreenModeWithOptions:")) (id->ffi2-ptr (coerce-arg options))))
 (define (nsview-flags-changed self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flagsChanged:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsview-flush-buffered-key-events self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flushBufferedKeyEvents"))))
+(define (nsview-frame-for-alignment-rect self alignment-rect)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameForAlignmentRect:")) (id->ffi2-ptr alignment-rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nsview-get-rects-being-drawn-count self rects count)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRectsBeingDrawn:count:")) (id->ffi2-ptr rects) (id->ffi2-ptr count)))
 (define (nsview-get-rects-exposed-during-live-resize-count self exposed-rects count)
@@ -1964,6 +2167,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
 (define (nsview-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nsview-invalidate-intrinsic-content-size self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSize"))))
+(define (nsview-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nsview-is-accessibility-alternate-ui-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilityAlternateUIVisible"))))
 (define (nsview-is-accessibility-disclosed self)
@@ -2000,26 +2207,44 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilitySelectorAllowed:")) (id->ffi2-ptr (sel_registerName selector))))
 (define (nsview-is-descendant-of self view)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDescendantOf:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nsview-is-drawing-find-indicator self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDrawingFindIndicator"))))
 (define (nsview-is-flipped self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isFlipped"))))
 (define (nsview-is-hidden self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHidden"))))
 (define (nsview-is-hidden-or-has-hidden-ancestor self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHiddenOrHasHiddenAncestor"))))
+(define (nsview-is-horizontal-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHorizontalContentSizeConstraintActive"))))
+(define (nsview-is-in-full-screen-mode self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isInFullScreenMode"))))
 (define (nsview-is-opaque self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isOpaque"))))
 (define (nsview-is-rotated-from-base self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRotatedFromBase"))))
 (define (nsview-is-rotated-or-scaled-from-base self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRotatedOrScaledFromBase"))))
+(define (nsview-is-vertical-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVerticalContentSizeConstraintActive"))))
 (define (nsview-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsview-key-up self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyUp:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-knows-page-range self range)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "knowsPageRange:")) (id->ffi2-ptr range)))
 (define (nsview-layout self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layout"))))
+(define (nsview-layout-guide-for-layout-region self layout-region)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutGuideForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region))))
+   ))
 (define (nsview-layout-subtree-if-needed self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutSubtreeIfNeeded"))))
+(define (nsview-location-of-print-rect self rect)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_R_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "locationOfPrintRect:")) (id->ffi2-ptr rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
 (define (nsview-lowercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lowercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-magnify-with-event self event)
@@ -2040,6 +2265,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsview-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nsview-menu-for-event self event)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "menuForEvent:")) (id->ffi2-ptr (coerce-arg event))))
@@ -2138,8 +2367,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-needs-to-draw-rect self rect)
   (aw_racket_msg_R_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "needsToDrawRect:")) (id->ffi2-ptr rect)))
+(define (nsview-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
+(define (nsview-note-focus-ring-mask-changed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noteFocusRingMaskChanged"))))
 (define (nsview-other-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "otherMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsview-other-mouse-dragged self event)
@@ -2158,38 +2391,77 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-perform-key-equivalent! self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-prepare-content-in-rect self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareContentInRect:")) (id->ffi2-ptr rect)))
 (define (nsview-prepare-for-drag-operation self sender)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-prepare-for-reuse self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForReuse"))))
+(define (nsview-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nsview-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nsview-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-print self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "print:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-quick-look-preview-items self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookPreviewItems:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-quick-look-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-rect-for-layout-region self layout-region)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_P_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nsview-rect-for-page self page)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_q_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForPage:")) page (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nsview-rect-for-smart-magnification-at-point-in-rect self location visible-rect)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_OR_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForSmartMagnificationAtPoint:inRect:")) (id->ffi2-ptr location) (id->ffi2-ptr visible-rect) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nsview-reflect-scrolled-clip-view self clip-view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "reflectScrolledClipView:")) (id->ffi2-ptr (coerce-arg clip-view))))
+(define (nsview-register-for-dragged-types self new-types)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForDraggedTypes:")) (id->ffi2-ptr (coerce-arg new-types))))
 (define (nsview-remove-all-tool-tips! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeAllToolTips"))))
+(define (nsview-remove-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nsview-remove-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nsview-remove-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
 (define (nsview-remove-from-superview! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperview"))))
 (define (nsview-remove-from-superview-without-needing-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperviewWithoutNeedingDisplay"))))
+(define (nsview-remove-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nsview-remove-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nsview-remove-tool-tip! self tag)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeToolTip:")) tag))
+(define (nsview-remove-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nsview-remove-tracking-rect! self tag)
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingRect:")) tag))
 (define (nsview-replace-subview-with! self old-view new-view)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replaceSubview:with:")) (id->ffi2-ptr (coerce-arg old-view)) (id->ffi2-ptr (coerce-arg new-view))))
+(define (nsview-reset-cursor-rects! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resetCursorRects"))))
 (define (nsview-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
 (define (nsview-resize-subviews-with-old-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeSubviewsWithOldSize:")) (id->ffi2-ptr old-size)))
 (define (nsview-resize-with-old-superview-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeWithOldSuperviewSize:")) (id->ffi2-ptr old-size)))
+(define (nsview-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsview-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nsview-right-mouse-down self event)
@@ -2202,8 +2474,36 @@
   (aw_racket_msg_d_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateByAngle:")) angle))
 (define (nsview-rotate-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-ruler-view-did-add-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsview-ruler-view-did-move-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsview-ruler-view-did-remove-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsview-ruler-view-handle-mouse-down self ruler event)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:handleMouseDown:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-ruler-view-location-for-point self ruler point)
+  (aw_racket_msg_PO_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:locationForPoint:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr point)))
+(define (nsview-ruler-view-point-for-location self ruler point)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_Pd_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:pointForLocation:")) (id->ffi2-ptr (coerce-arg ruler)) point (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
+(define (nsview-ruler-view-should-add-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsview-ruler-view-should-move-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsview-ruler-view-should-remove-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsview-ruler-view-will-add-marker-at-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willAddMarker:atLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nsview-ruler-view-will-move-marker-to-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willMoveMarker:toLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nsview-ruler-view-will-set-client-view self ruler new-client)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willSetClientView:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg new-client))))
 (define (nsview-scale-unit-square-to-size self new-unit-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scaleUnitSquareToSize:")) (id->ffi2-ptr new-unit-size)))
+(define (nsview-scroll-clip-view-to-point self clip-view point)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollClipView:toPoint:")) (id->ffi2-ptr (coerce-arg clip-view)) (id->ffi2-ptr point)))
 (define (nsview-scroll-line-down self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollLineDown:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-scroll-line-up self sender)
@@ -2488,12 +2788,18 @@
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsOrigin:")) (id->ffi2-ptr new-origin)))
 (define (nsview-set-bounds-size! self new-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsSize:")) (id->ffi2-ptr new-size)))
+(define (nsview-set-content-compression-resistance-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentCompressionResistancePriority:forOrientation:")) priority orientation))
+(define (nsview-set-content-hugging-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentHuggingPriority:forOrientation:")) priority orientation))
 (define (nsview-set-frame-origin! self new-origin)
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrameOrigin:")) (id->ffi2-ptr new-origin)))
 (define (nsview-set-frame-size! self new-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrameSize:")) (id->ffi2-ptr new-size)))
 (define (nsview-set-identifier! self identifier)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
+(define (nsview-set-keyboard-focus-ring-needs-display-in-rect! self rect)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setKeyboardFocusRingNeedsDisplayInRect:")) (id->ffi2-ptr rect)))
 (define (nsview-set-mark! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setMark:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-set-needs-display-in-rect! self invalid-rect)
@@ -2506,6 +2812,15 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-show-context-menu-for-selection self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsview-show-definition-for-attributed-string-at-point self attr-string text-baseline-origin)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:atPoint:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr text-baseline-origin)))
+;; block param 3: stored (retained across calls)
+(define (nsview-show-definition-for-attributed-string-range-options-baseline-origin-provider self attr-string target-range options origin-provider)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block origin-provider (list _NSRange) _NSPoint))
+  (aw_racket_msg_PGPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:range:options:baselineOriginProvider:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr target-range) (id->ffi2-ptr (coerce-arg options)) (id->ffi2-ptr _blk3)))
+(define (nsview-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-smart-magnify-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "smartMagnifyWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsview-sort-subviews-using-function-context self compare context)
@@ -2540,16 +2855,28 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "transposeWords:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-try-to-perform-with self action object)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryToPerform:with:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg object))))
+(define (nsview-unregister-dragged-types self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterDraggedTypes"))))
+(define (nsview-update-constraints self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraints"))))
+(define (nsview-update-constraints-for-subtree-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraintsForSubtreeIfNeeded"))))
 (define (nsview-update-dragging-items-for-drag self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateDraggingItemsForDrag:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-update-layer self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateLayer"))))
+(define (nsview-update-tracking-areas self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateTrackingAreas"))))
+(define (nsview-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nsview-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsview-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
+(define (nsview-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nsview-view-did-change-backing-properties self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "viewDidChangeBackingProperties"))))
 (define (nsview-view-did-change-effective-appearance self)
@@ -2584,12 +2911,24 @@
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
 (define (nsview-will-open-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willOpenMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsview-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nsview-will-remove-subview self subview)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willRemoveSubview:")) (id->ffi2-ptr (coerce-arg subview))))
+(define (nsview-write-eps-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writeEPSInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
+(define (nsview-write-pdf-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writePDFInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nsview-yank self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yank:")) (id->ffi2-ptr (coerce-arg sender))))
 
 ;; --- Class methods ---
+(define (nsview-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSView) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nsview-default-animation-for-key key)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSView) (id->ffi2-ptr (sel_registerName "defaultAnimationForKey:")) (id->ffi2-ptr (coerce-arg key))))

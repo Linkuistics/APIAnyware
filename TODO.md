@@ -105,15 +105,22 @@ classes collapsed. Regression test: `objc_bridged_class_uses_runtime_name_from_u
 / idempotent / swift-native guards). Worked analysis:
 `generation/targets/sbcl/apps/swift-native-probe/learnings.md`.
 
-## racket / chez snapshot goldens are stale vs the current SDK (MacOSX26.5)
+## ✅ RESOLVED — racket / chez snapshot goldens are stale vs the current SDK (MacOSX26.5)
 
-**Surfaced by:** verifying k38 (2026-06-23). The `emit-racket` real-IR snapshot subset tests
-(`snapshot_racket_foundation_subset`, `snapshot_racket_appkit_subset`) fail **locally** against
-SDK-26.5 enriched IR with drift unrelated to any code change — e.g. AppKit gained
-`NSTextView.characterIndex(for:)`. Their goldens were bootstrapped on an older SDK (the racket
-grove era). These tests **skip-as-pass without local IR**, so CI is green; the failure only
-shows locally once the pipeline has been run. **Fix:** a deliberate goldens-as-truth refresh
-(`UPDATE_GOLDEN=1`) on a controlled full pipeline run for the current SDK — a maintenance pass,
-not part of any feature change (so SDK drift is not folded into an unrelated commit). sbcl and
-gerbil goldens are already current (they were the only Foundation file that k38's dedup
-changed, and that change was accepted).
+**Surfaced by:** verifying k38 (2026-06-23). **Resolved:** folded into the deliberate
+goldens-as-truth refresh `objc-object-type-lowering-golden-review-k107` did on 2026-07-15 as
+part of its own corpus-wide golden review (a superset of this: every emitter's real-IR golden,
+not just racket's, reviewed and accepted against a fresh full regeneration). **Correction to
+this entry's own header:** chez was never in scope here — it has no golden/snapshot-test
+mechanism at all (confirmed by k107, not assumed), so "chez" in the original title was inaccurate
+from the start.
+
+### The defect (was)
+
+The `emit-racket` real-IR snapshot subset tests (`snapshot_racket_foundation_subset`,
+`snapshot_racket_appkit_subset`) failed **locally** against SDK-26.5 enriched IR with drift
+unrelated to any code change — e.g. AppKit gained `NSTextView.characterIndex(for:)`. Their
+goldens were bootstrapped on an older SDK (the racket grove era). These tests **skip-as-pass
+without local IR**, so CI stayed green; the failure only showed locally once the pipeline had
+been run. sbcl and gerbil goldens were already current at the time (they were the only
+Foundation file that k38's dedup changed, and that change was accepted).

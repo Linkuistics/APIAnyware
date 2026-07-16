@@ -261,7 +261,9 @@ mod tests {
                 params: vec![],
                 return_type: TypeRef {
                     nullable: false,
-                    kind: TypeRefKind::Id,
+                    kind: TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
                 },
                 deprecated: false,
                 variadic: false,

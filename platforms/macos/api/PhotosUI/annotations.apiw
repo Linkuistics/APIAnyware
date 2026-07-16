@@ -1,10 +1,4 @@
 framework PhotosUI {
-    class PHLivePhotoView {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class PHPickerViewController {
         method commitEditingAndReturnError: is-instance=#true {
             threading main_thread_only
@@ -16,7 +10,6 @@ framework PhotosUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

@@ -1,38 +1,4 @@
 framework CoreBluetooth {
-    class CBCentralManager {
-        method initWithDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method initWithDelegate:queue:options: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class CBPeripheral {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class CBPeripheralManager {
-        method initWithDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method initWithDelegate:queue:options: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     subagent-report {
         block-synchronous 0
         block-async-copied 0

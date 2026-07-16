@@ -106,6 +106,7 @@ fn objc_exposed_skipped_when_true_emitted_when_false() {
     let exposed = apianyware_types::ir::Constant {
         name: "kObjc".to_string(),
         constant_type: cstring_type(),
+        array_element: None,
         source: None,
         provenance: None,
         doc_refs: None,
@@ -143,4 +144,57 @@ fn objc_exposed_false_survives_checkpoint_round_trip() {
     let reparsed: Framework = serde_json::from_str(&serde_json::to_string(&fw).unwrap()).unwrap();
     assert!(!reparsed.functions[0].objc_exposed);
     assert!(!reparsed.constants[0].objc_exposed);
+}
+
+// ---------------------------------------------------------------------------
+// Protocol-qualified `id` (`protocol-qualifier-ir-k81`)
+// ---------------------------------------------------------------------------
+
+/// The qualifier is additive: an unqualified `id` serialises exactly as it did
+/// before `protocols` existed. This is what lets the four Lisp targets' goldens
+/// stay byte-identical across the change — the wire format did not move.
+#[test]
+fn unqualified_id_serialises_without_a_protocols_key() {
+    let json = serde_json::to_string(&TypeRef {
+        nullable: false,
+        kind: TypeRefKind::Id {
+            protocols: Vec::new(),
+        },
+    })
+    .unwrap();
+    assert_eq!(json, r#"{"nullable":false,"kind":"id"}"#);
+}
+
+/// A pre-qualifier document — `{"kind":"id"}` with no `protocols` key — still
+/// deserialises. Every checkpoint written before this change is one of these.
+#[test]
+fn id_without_protocols_key_deserialises_as_unqualified() {
+    let t: TypeRef = serde_json::from_str(r#"{"kind":"id"}"#).unwrap();
+    match t.kind {
+        TypeRefKind::Id { protocols } => assert!(protocols.is_empty()),
+        other => panic!("expected Id, got {other:?}"),
+    }
+}
+
+/// `id<NSObject, NSCopying>` is legal ObjC, so the qualifier is a list, and it
+/// survives the serialise → deserialise checkpoint boundary in order.
+#[test]
+fn qualified_id_round_trips_its_protocol_list() {
+    let original = TypeRef {
+        nullable: true,
+        kind: TypeRefKind::Id {
+            protocols: vec!["NSObject".to_string(), "NSCopying".to_string()],
+        },
+    };
+    let json = serde_json::to_string(&original).unwrap();
+    assert_eq!(
+        json,
+        r#"{"nullable":true,"kind":"id","protocols":["NSObject","NSCopying"]}"#
+    );
+
+    let reparsed: TypeRef = serde_json::from_str(&json).unwrap();
+    match reparsed.kind {
+        TypeRefKind::Id { protocols } => assert_eq!(protocols, ["NSObject", "NSCopying"]),
+        other => panic!("expected Id, got {other:?}"),
+    }
 }

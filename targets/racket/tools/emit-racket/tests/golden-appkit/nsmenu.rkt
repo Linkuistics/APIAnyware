@@ -41,7 +41,7 @@
   [nsmenu-font (c-> nsmenu? (or/c nsfont? objc-nil?))]
   [nsmenu-set-font! (c-> nsmenu? (or/c string? objc-object? #f) void?)]
   [nsmenu-highlighted-item (c-> nsmenu? (or/c nsmenuitem? objc-nil?))]
-  [nsmenu-item-array (c-> nsmenu? any/c)]
+  [nsmenu-item-array (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-set-item-array! (c-> nsmenu? (or/c string? objc-object? #f) void?)]
   [nsmenu-menu-bar-height (c-> nsmenu? real?)]
   [nsmenu-menu-changed-messages-enabled (c-> nsmenu? boolean?)]
@@ -52,7 +52,7 @@
   [nsmenu-presentation-style (c-> nsmenu? exact-integer?)]
   [nsmenu-set-presentation-style! (c-> nsmenu? exact-integer? void?)]
   [nsmenu-properties-to-update (c-> nsmenu? exact-nonnegative-integer?)]
-  [nsmenu-selected-items (c-> nsmenu? any/c)]
+  [nsmenu-selected-items (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-set-selected-items! (c-> nsmenu? (or/c string? objc-object? #f) void?)]
   [nsmenu-selection-mode (c-> nsmenu? exact-integer?)]
   [nsmenu-set-selection-mode! (c-> nsmenu? exact-integer? void?)]
@@ -67,14 +67,14 @@
   [nsmenu-user-interface-layout-direction (c-> nsmenu? exact-integer?)]
   [nsmenu-set-user-interface-layout-direction! (c-> nsmenu? exact-integer? void?)]
   [nsmenu-accessibility-activation-point (c-> nsmenu? any/c)]
-  [nsmenu-accessibility-allowed-values (c-> nsmenu? any/c)]
+  [nsmenu-accessibility-allowed-values (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-application-focused-ui-element (c-> nsmenu? any/c)]
   [nsmenu-accessibility-attributed-string-for-range (c-> nsmenu? any/c (or/c nsattributedstring? objc-nil?))]
-  [nsmenu-accessibility-attributed-user-input-labels (c-> nsmenu? any/c)]
+  [nsmenu-accessibility-attributed-user-input-labels (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-cancel-button (c-> nsmenu? any/c)]
   [nsmenu-accessibility-cell-for-column-row (c-> nsmenu? exact-integer? exact-integer? any/c)]
   [nsmenu-accessibility-children (c-> nsmenu? (or/c nsarray? objc-nil?))]
-  [nsmenu-accessibility-children-in-navigation-order (c-> nsmenu? any/c)]
+  [nsmenu-accessibility-children-in-navigation-order (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-clear-button (c-> nsmenu? any/c)]
   [nsmenu-accessibility-close-button (c-> nsmenu? any/c)]
   [nsmenu-accessibility-column-count (c-> nsmenu? exact-integer?)]
@@ -84,8 +84,8 @@
   [nsmenu-accessibility-columns (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-contents (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-critical-value (c-> nsmenu? any/c)]
-  [nsmenu-accessibility-custom-actions (c-> nsmenu? any/c)]
-  [nsmenu-accessibility-custom-rotors (c-> nsmenu? any/c)]
+  [nsmenu-accessibility-custom-actions (c-> nsmenu? (or/c nsarray? objc-nil?))]
+  [nsmenu-accessibility-custom-rotors (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-decrement-button (c-> nsmenu? any/c)]
   [nsmenu-accessibility-default-button (c-> nsmenu? any/c)]
   [nsmenu-accessibility-disclosed-by-row (c-> nsmenu? any/c)]
@@ -165,7 +165,7 @@
   [nsmenu-accessibility-selected-rows (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-selected-text (c-> nsmenu? (or/c nsstring? objc-nil?))]
   [nsmenu-accessibility-selected-text-range (c-> nsmenu? any/c)]
-  [nsmenu-accessibility-selected-text-ranges (c-> nsmenu? any/c)]
+  [nsmenu-accessibility-selected-text-ranges (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-serves-as-title-for-ui-elements (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-shared-character-range (c-> nsmenu? any/c)]
   [nsmenu-accessibility-shared-focus-elements (c-> nsmenu? (or/c nsarray? objc-nil?))]
@@ -184,7 +184,7 @@
   [nsmenu-accessibility-url (c-> nsmenu? (or/c nsurl? objc-nil?))]
   [nsmenu-accessibility-unit-description (c-> nsmenu? (or/c nsstring? objc-nil?))]
   [nsmenu-accessibility-units (c-> nsmenu? exact-integer?)]
-  [nsmenu-accessibility-user-input-labels (c-> nsmenu? any/c)]
+  [nsmenu-accessibility-user-input-labels (c-> nsmenu? (or/c nsarray? objc-nil?))]
   [nsmenu-accessibility-value (c-> nsmenu? any/c)]
   [nsmenu-accessibility-value-description (c-> nsmenu? (or/c nsstring? objc-nil?))]
   [nsmenu-accessibility-vertical-scroll-bar (c-> nsmenu? any/c)]
@@ -370,8 +370,11 @@
   [nsmenu-set-appearance! (c-> nsmenu? (or/c string? objc-object? #f) void?)]
   [nsmenu-set-identifier! (c-> nsmenu? (or/c string? objc-object? #f) void?)]
   [nsmenu-set-submenu-for-item! (c-> nsmenu? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsmenu-submenu-action (c-> nsmenu? (or/c string? objc-object? #f) void?)]
   [nsmenu-update (c-> nsmenu? void?)]
   [nsmenu-menu-bar-visible (c-> boolean?)]
+  [nsmenu-palette-menu-with-colors-titles-selection-handler (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c procedure? #f) any/c)]
+  [nsmenu-palette-menu-with-colors-titles-template-image-selection-handler (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c procedure? #f) any/c)]
   [nsmenu-pop-up-context-menu-with-event-for-view (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsmenu-pop-up-context-menu-with-event-for-view-with-font (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsmenu-set-menu-bar-visible! (c-> boolean? void?)]
@@ -400,6 +403,7 @@
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PPPq_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_Pq_v (-> ptr_t ptr_t ptr_t int64_t void_t))
@@ -1361,12 +1365,28 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
 (define (nsmenu-set-submenu-for-item! self menu item)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setSubmenu:forItem:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg item))))
+(define (nsmenu-submenu-action self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "submenuAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsmenu-update self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "update"))))
 
 ;; --- Class methods ---
 (define (nsmenu-menu-bar-visible)
   (aw_racket_msg_0_b (id->ffi2-ptr NSMenu) (id->ffi2-ptr (sel_registerName "menuBarVisible"))))
+;; block param 2: async-copied (runtime-managed)
+(define (nsmenu-palette-menu-with-colors-titles-selection-handler colors item-titles on-selection-change)
+  (define-values (_blk2 _blk2-id)
+    (make-objc-block on-selection-change (list _id) _void))
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr NSMenu) (id->ffi2-ptr (sel_registerName "paletteMenuWithColors:titles:selectionHandler:")) (id->ffi2-ptr (coerce-arg colors)) (id->ffi2-ptr (coerce-arg item-titles)) (id->ffi2-ptr _blk2)))
+   ))
+;; block param 3: async-copied (runtime-managed)
+(define (nsmenu-palette-menu-with-colors-titles-template-image-selection-handler colors item-titles image on-selection-change)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block on-selection-change (list _id) _void))
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPPP_P (id->ffi2-ptr NSMenu) (id->ffi2-ptr (sel_registerName "paletteMenuWithColors:titles:templateImage:selectionHandler:")) (id->ffi2-ptr (coerce-arg colors)) (id->ffi2-ptr (coerce-arg item-titles)) (id->ffi2-ptr (coerce-arg image)) (id->ffi2-ptr _blk3)))
+   ))
 (define (nsmenu-pop-up-context-menu-with-event-for-view menu event view)
   (aw_racket_msg_PPP_v (id->ffi2-ptr NSMenu) (id->ffi2-ptr (sel_registerName "popUpContextMenu:withEvent:forView:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg view))))
 (define (nsmenu-pop-up-context-menu-with-event-for-view-with-font menu event view font)

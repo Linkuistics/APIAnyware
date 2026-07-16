@@ -341,7 +341,9 @@ mod tests {
                 params: vec![],
                 return_type: TypeRef {
                     nullable: false,
-                    kind: TypeRefKind::Id,
+                    kind: TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
                 },
                 deprecated: false,
                 variadic: false,
@@ -416,6 +418,7 @@ mod tests {
                     params: vec![],
                 },
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

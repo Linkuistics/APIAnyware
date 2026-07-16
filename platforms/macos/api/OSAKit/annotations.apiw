@@ -4,16 +4,6 @@ framework OSAKit {
             error-pattern error_out_param
             source llm
         }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class OSAScriptView {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     subagent-report {
         block-synchronous 0

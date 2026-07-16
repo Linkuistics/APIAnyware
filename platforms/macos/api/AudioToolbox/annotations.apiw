@@ -37,36 +37,30 @@ framework AudioToolbox {
             source llm
         }
         method setMIDIOutputEventBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setMIDIOutputEventListBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setMusicalContextBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setProfileChangedBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setTransportStateBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingRenderObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
@@ -80,13 +74,11 @@ framework AudioToolbox {
             source llm
         }
         method setOutputProvider: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setInputHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
@@ -154,36 +146,30 @@ framework AudioToolbox {
             source llm
         }
         method setMIDIOutputEventBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setMIDIOutputEventListBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setMusicalContextBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setProfileChangedBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setTransportStateBlock: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingRenderObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
@@ -191,19 +177,16 @@ framework AudioToolbox {
     }
     class AUParameter {
         method tokenByAddingParameterAutomationObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterRecordingObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
@@ -211,19 +194,16 @@ framework AudioToolbox {
     }
     class AUParameterGroup {
         method tokenByAddingParameterAutomationObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterRecordingObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
@@ -231,66 +211,55 @@ framework AudioToolbox {
     }
     class AUParameterNode {
         method tokenByAddingParameterAutomationObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterRecordingObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setImplementorValueObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setImplementorValueProvider: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setImplementorStringFromValueCallback: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setImplementorValueFromStringCallback: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setImplementorDisplayNameWithLengthCallback: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class AUParameterTree {
         method tokenByAddingParameterAutomationObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method tokenByAddingParameterRecordingObserver: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm

@@ -275,7 +275,9 @@ fn convenience_error_method_derived() {
         methods: vec![make_method(
             "contentsOfDirectoryAtPath:error:",
             vec![],
-            TypeRefKind::Id,
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         )],
         category_methods: vec![],
         swift_attributes: vec![],
@@ -330,7 +332,7 @@ fn collection_iterable_from_count_and_object_at_index() {
             },
             readonly: true,
             class_property: false,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: None,
             provenance: None,
@@ -338,7 +340,13 @@ fn collection_iterable_from_count_and_object_at_index() {
             origin: None,
             objc_exposed: true,
         }],
-        methods: vec![make_method("objectAtIndex:", vec![], TypeRefKind::Id)],
+        methods: vec![make_method(
+            "objectAtIndex:",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+        )],
         category_methods: vec![],
         swift_attributes: vec![],
         ancestors: vec![],
@@ -964,7 +972,7 @@ fn cross_framework_collection_iterables_isolated() {
             },
             readonly: true,
             class_property: false,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: None,
             provenance: None,
@@ -972,7 +980,13 @@ fn cross_framework_collection_iterables_isolated() {
             origin: None,
             objc_exposed: true,
         }],
-        methods: vec![make_method("objectAtIndex:", vec![], TypeRefKind::Id)],
+        methods: vec![make_method(
+            "objectAtIndex:",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+        )],
         category_methods: vec![],
         swift_attributes: vec![],
         ancestors: vec![],
@@ -1023,7 +1037,13 @@ fn three_framework_comprehensive_enrichment_isolation() {
         protocols: vec![],
         properties: vec![],
         methods: vec![
-            make_method("removeItemAtPath:error:", vec![], TypeRefKind::Id),
+            make_method(
+                "removeItemAtPath:error:",
+                vec![],
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            ),
             make_method(
                 "setUbiquitous:",
                 vec![],
@@ -1223,7 +1243,13 @@ fn flag_mismatch_violation_scoped_to_owning_framework() {
         protocols: vec![],
         properties: vec![],
         methods: vec![{
-            let mut m = make_method("copyItems", vec![], TypeRefKind::Id);
+            let mut m = make_method(
+                "copyItems",
+                vec![],
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            );
             // Resolve explicitly processed this method and says NOT retained,
             // but naming convention ("copy" family) says retained → mismatch
             m.returns_retained = Some(false);

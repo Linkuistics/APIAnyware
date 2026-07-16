@@ -35,12 +35,6 @@ framework MapKit {
             source llm
         }
     }
-    class MKLocalSearchCompleter {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class MKLookAroundSceneRequest {
         method getSceneWithCompletionHandler: is-instance=#true {
             block-param 0 invocation=async_copied
@@ -64,7 +58,6 @@ framework MapKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -90,7 +83,6 @@ framework MapKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -113,7 +105,6 @@ framework MapKit {
     }
     class MKMapView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

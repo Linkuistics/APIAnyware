@@ -1,0 +1,29 @@
+{
+  "name": "@apianyware/runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dumb runtime seam for the APIAnyware TypeScript (Node) target — the pure-TS package the emitted per-framework modules import their seam symbols from (ADR-0055/0057/0058).",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "biome check .",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,10 +1,4 @@
 framework AVFoundation {
-    class AVAggregateAssetDownloadTask {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class AVAsset {
         method loadValuesAsynchronouslyForKeys:completionHandler: is-instance=#true {
             block-param 1 invocation=async_copied
@@ -44,12 +38,6 @@ framework AVFoundation {
         }
         method findUnusedTrackIDWithCompletionHandler: is-instance=#true {
             block-param 0 invocation=async_copied
-            source llm
-        }
-    }
-    class AVAssetDownloadTask {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -151,18 +139,6 @@ framework AVFoundation {
             source llm
         }
     }
-    class AVAssetReaderOutputCaptionAdaptor {
-        method setValidationDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class AVAssetResourceLoader {
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class AVAssetResourceLoadingRequest {
         method streamingContentKeyRequestDataForApp:contentIdentifier:options:error: is-instance=#true {
             error-pattern error_out_param
@@ -210,10 +186,6 @@ framework AVFoundation {
         }
         method initWithURL:fileType:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -283,12 +255,6 @@ framework AVFoundation {
             source llm
         }
     }
-    class AVCapturePhotoOutputReadinessCoordinator {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class AVCaptureSlider {
         method setActionQueue:action: is-instance=#true {
             block-param 1 invocation=stored
@@ -310,12 +276,6 @@ framework AVFoundation {
     class AVCaptureSystemZoomSlider {
         method initWithDevice:action: is-instance=#true {
             block-param 1 invocation=stored
-            source llm
-        }
-    }
-    class AVCaptureVideoPreviewLayer {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -372,16 +332,6 @@ framework AVFoundation {
         }
         method makeSecureTokenForExpirationDateOfPersistableContentKey:completionHandler: is-instance=#true {
             block-param 1 invocation=async_copied
-            source llm
-        }
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class AVDelegatingPlaybackCoordinator {
-        method initWithPlaybackControlDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -756,47 +706,7 @@ framework AVFoundation {
             source llm
         }
     }
-    class AVPlayerItemLegibleOutput {
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class AVPlayerItemMetadataCollector {
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class AVPlayerItemMetadataOutput {
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class AVPlayerItemRenderedLegibleOutput {
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class AVPlayerItemVideoOutput {
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class AVPlayerLayer {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class AVPlayerPlaybackCoordinator {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method coordinateUsingCoordinationMedium:error: is-instance=#true {
             error-pattern error_out_param
             source llm
@@ -823,10 +733,6 @@ framework AVFoundation {
         }
     }
     class AVSampleBufferDisplayLayer {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method requestMediaDataWhenReadyOnQueue:usingBlock: is-instance=#true {
             block-param 1 invocation=stored
             source llm
@@ -887,12 +793,6 @@ framework AVFoundation {
         }
         method semanticSegmentationMatteFromImageSourceAuxiliaryDataType:dictionaryRepresentation:error: is-instance=#false {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class AVSynchronizedLayer {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

@@ -3,8 +3,10 @@
 //! Pushes one `param` tuple per method parameter, over the **same method set**
 //! the annotate step classifies (so the rule output is comparable to the legacy
 //! `heuristics.rs` output method-for-method): a class's inheritance-flattened
-//! `all_methods` (falling back to direct `methods` when unresolved) plus its
-//! category methods, and every protocol's required + optional methods. For each
+//! `all_methods` (falling back to direct `methods` when unresolved — both already
+//! carry its category methods, extraction merges them in,
+//! `text-undo-surface-gap-k121`), and every protocol's required + optional
+//! methods. For each
 //! method it also pushes a `param_count` tuple (the block-invocation
 //! last-parameter rule and the error-pattern trailing-out-param rule need the
 //! arity) and, for each `Pointer`-typed parameter, a `pointer_param` tuple (the
@@ -46,13 +48,6 @@ pub fn load_framework_facts(prog: &mut ConventionProgram, framework: &Framework)
             // class receiver (`is_class = true`).
             prog.receiver_method
                 .push((class.name.clone(), method.selector.clone(), true));
-        }
-        for group in &class.category_methods {
-            for method in &group.methods {
-                load_method_params(prog, &class.name, method);
-                prog.receiver_method
-                    .push((class.name.clone(), method.selector.clone(), true));
-            }
         }
         // Direct (not flattened) properties: the legacy block-setter check
         // consults `class.properties`, even for inherited methods.
@@ -111,18 +106,29 @@ fn load_method_params(prog: &mut ConventionProgram, receiver: &str, method: &Met
 
 /// Push one `property` fact per **instance** property in `properties`, keyed by
 /// `receiver`. Class properties are skipped (the copy-block-property-setter rule
-/// requires `!p.class_property`); `is_block` records whether the declared type
-/// is an ObjC block.
+/// requires `!p.class_property`).
+///
+/// Carries the **declared** ownership qualifier verbatim (`None` when the header
+/// states none), plus the two type bits the rules gate on: `is_object` (the
+/// declared type is an object pointer) and `is_block` (it is an ObjC block).
+/// `is_object` is what stops a scalar `@property (assign) BOOL` from stamping its
+/// setter's argument with an ownership it cannot have.
 fn load_receiver_properties(prog: &mut ConventionProgram, receiver: &str, properties: &[Property]) {
     for property in properties {
         if property.class_property {
             continue;
         }
-        let is_block = matches!(property.property_type.kind, TypeRefKind::Block { .. });
+        let kind = &property.property_type.kind;
+        let is_object = matches!(
+            kind,
+            TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype
+        );
+        let is_block = matches!(kind, TypeRefKind::Block { .. });
         prog.property.push((
             receiver.to_string(),
             property.name.clone(),
-            property.is_copy,
+            property.ownership,
+            is_object,
             is_block,
         ));
     }

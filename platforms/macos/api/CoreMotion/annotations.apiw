@@ -10,10 +10,6 @@ framework CoreMotion {
         }
     }
     class CMHeadphoneMotionManager {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method startDeviceMotionUpdatesToQueue:withHandler: is-instance=#true {
             block-param 1 invocation=stored
             source llm

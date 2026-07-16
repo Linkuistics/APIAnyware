@@ -21,7 +21,6 @@ framework DiscRecordingUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -38,7 +37,6 @@ framework DiscRecordingUI {
             source llm
         }
         method beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -58,7 +56,6 @@ framework DiscRecordingUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -90,7 +87,6 @@ framework DiscRecordingUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -107,7 +103,6 @@ framework DiscRecordingUI {
             source llm
         }
         method beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -127,7 +122,6 @@ framework DiscRecordingUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -144,7 +138,6 @@ framework DiscRecordingUI {
             source llm
         }
         method beginSetupSheetForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -164,7 +157,6 @@ framework DiscRecordingUI {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

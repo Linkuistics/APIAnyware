@@ -28,14 +28,12 @@ framework WebKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class WKHTTPCookieStore {
         method addObserver: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -115,7 +113,6 @@ framework WebKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -144,13 +141,11 @@ framework WebKit {
             source llm
         }
         method setDisconnectHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading main_thread_only
             source llm
         }
         method setMessageHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading main_thread_only
             source llm
@@ -273,12 +268,10 @@ framework WebKit {
             source llm
         }
         method setNavigationDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setUIDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -342,32 +335,6 @@ framework WebKit {
         }
         method saveToURL:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class WebView {
-        method setDownloadDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setFrameLoadDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setPolicyDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setResourceLoadDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setUIDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setEditingDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

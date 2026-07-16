@@ -183,7 +183,14 @@ mod tests {
     #[test]
     fn plain_method_supported() {
         let m = GerbilFfiTypeMapper;
-        let meth = method("length", false, false, ty(TypeRefKind::Id));
+        let meth = method(
+            "length",
+            false,
+            false,
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+        );
         assert!(is_supported_method(&meth, &m));
     }
 
@@ -191,11 +198,25 @@ mod tests {
     fn variadic_and_deprecated_deferred() {
         let m = GerbilFfiTypeMapper;
         assert!(!is_supported_method(
-            &method("foo:", true, false, ty(TypeRefKind::Id)),
+            &method(
+                "foo:",
+                true,
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                })
+            ),
             &m
         ));
         assert!(!is_supported_method(
-            &method("foo:", false, true, ty(TypeRefKind::Id)),
+            &method(
+                "foo:",
+                false,
+                true,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                })
+            ),
             &m
         ));
     }
@@ -269,7 +290,15 @@ mod tests {
     fn error_out_method_recognised_by_set_and_trailing_pointer() {
         let mut errs = HashSet::new();
         errs.insert("writeToFile:error:".to_string());
-        let m = error_method("writeToFile:error:", vec![param("path", TypeRefKind::Id)]);
+        let m = error_method(
+            "writeToFile:error:",
+            vec![param(
+                "path",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+        );
         assert!(is_error_out_method(&m, &errs));
         // Selector not in the set ⇒ not error-routed even with a trailing pointer.
         assert!(!is_error_out_method(&m, &HashSet::new()));
@@ -290,7 +319,15 @@ mod tests {
         let m = GerbilFfiTypeMapper;
         let mut errs = HashSet::new();
         errs.insert("writeToFile:error:".to_string());
-        let meth = error_method("writeToFile:error:", vec![param("path", TypeRefKind::Id)]);
+        let meth = error_method(
+            "writeToFile:error:",
+            vec![param(
+                "path",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+        );
         // Plain supportedness still defers it (the raw trailing pointer).
         assert!(!is_supported_method(&meth, &m));
         // Error-context supportedness accepts it (the trailing pointer is the cell).
@@ -301,7 +338,15 @@ mod tests {
     fn non_error_trailing_pointer_still_defers() {
         let m = GerbilFfiTypeMapper;
         // Same shape, but the selector is NOT an enrichment error method.
-        let meth = error_method("getBytes:length:", vec![param("buf", TypeRefKind::Id)]);
+        let meth = error_method(
+            "getBytes:length:",
+            vec![param(
+                "buf",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+        );
         assert!(!is_supported_method_ctx(&meth, &m, &HashSet::new()));
     }
 

@@ -45,7 +45,9 @@ fn load_type_facts(prog: &mut EnrichmentProgram, framework: &Framework, framewor
                 .push((class.name.clone(), protocol.clone()));
         }
 
-        // Load methods — prefer all_methods (inheritance-flattened) if available
+        // Load methods — prefer all_methods (inheritance-flattened) if available.
+        // Both already carry the class's category methods (extraction merges
+        // `category_methods` into `methods`, `text-undo-surface-gap-k121`).
         let methods = if class.all_methods.is_empty() {
             &class.methods
         } else {
@@ -54,13 +56,6 @@ fn load_type_facts(prog: &mut EnrichmentProgram, framework: &Framework, framewor
 
         for method in methods {
             load_method_type_facts(prog, &class.name, method);
-        }
-
-        // Also load category methods
-        for category_group in &class.category_methods {
-            for method in &category_group.methods {
-                load_method_type_facts(prog, &class.name, method);
-            }
         }
 
         for prop in &class.properties {
@@ -144,7 +139,7 @@ fn load_method_type_facts(prog: &mut EnrichmentProgram, class_name: &str, method
 fn method_returns_object_type(kind: &TypeRefKind) -> bool {
     matches!(
         kind,
-        TypeRefKind::Id | TypeRefKind::Instancetype | TypeRefKind::Class { .. }
+        TypeRefKind::Id { .. } | TypeRefKind::Instancetype | TypeRefKind::Class { .. }
     )
 }
 
@@ -195,9 +190,20 @@ fn load_annotation_facts(prog: &mut EnrichmentProgram, framework: &Framework) {
                     .push((class_ann.class_name.clone(), method_ann.selector.clone()));
             }
 
-            // Weak parameter ownership
+            // Non-retaining parameter ownership. The question this relation
+            // answers is the **retain axis** — "must the caller keep this
+            // argument alive?" — and ObjC declares "no" two ways: `weak` (zeroing)
+            // and `assign`/`unsafe_unretained` (non-zeroing). Both are
+            // non-retaining, so both belong here; testing `== Weak` would
+            // re-derive the axis with an incomplete test and silently drop the 17
+            // pre-ARC delegate slots (`NSXMLParser`, `NSStream`, `NSFileManager`, …)
+            // whose headers spell it `assign` — slots the naming heuristic used to
+            // call weak before extraction read the declaration (ADR-0047 §4).
             for param in &method_ann.parameter_ownership {
-                if param.ownership == OwnershipKind::Weak {
+                if matches!(
+                    param.ownership,
+                    OwnershipKind::Weak | OwnershipKind::UnsafeUnretained
+                ) {
                     prog.weak_param.push((
                         class_ann.class_name.clone(),
                         method_ann.selector.clone(),
@@ -314,7 +320,13 @@ mod tests {
 
     #[test]
     fn loads_object_returning_method() {
-        let method = make_method("copy", vec![], TypeRefKind::Id);
+        let method = make_method(
+            "copy",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+        );
         let fw = make_framework_with_class("NSString", vec![method], vec![]);
         let mut prog = EnrichmentProgram::default();
         load_framework_facts(&mut prog, &fw);

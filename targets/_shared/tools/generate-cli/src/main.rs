@@ -104,6 +104,70 @@ struct Cli {
     /// Skip generating the sbcl Swift-native trampolines.
     #[arg(long)]
     no_sbcl_trampolines: bool,
+
+    /// Output path for the typescript target's generated outbound dispatch table
+    /// (ADR-0054 §1, the ADR-0013 shape — one napi callback per distinct ABI signature
+    /// + `_o`/`_e` siblings). Written when typescript is among the generated targets;
+    /// the addon's `build.sh` then compiles it into `APIAnywareTypeScript.node`.
+    #[arg(
+        long,
+        default_value = "targets/typescript/bindings/node/native/src/Generated/DispatchTable.swift"
+    )]
+    typescript_dispatch_out: PathBuf,
+
+    /// Skip generating the typescript outbound dispatch table.
+    #[arg(long)]
+    no_typescript_dispatch: bool,
+
+    /// Output path for the typescript target's generated inbound table (ADR-0059
+    /// §1/§2/§4, the inbound dual of the outbound dispatch table — one typed
+    /// `@convention(c)` trampoline per distinct inbound ABI signature keyed by ObjC
+    /// type encoding, one noescape+escaping block-maker pair per block signature, and
+    /// one `aw_ts_super_*` napi entry per super-send signature). Written when
+    /// typescript is among the generated targets; the addon's `build.sh` then compiles
+    /// it into `APIAnywareTypeScript.node`.
+    #[arg(
+        long,
+        default_value = "targets/typescript/bindings/node/native/src/Generated/InboundTable.swift"
+    )]
+    typescript_inbound_out: PathBuf,
+
+    /// Skip generating the typescript inbound IMP trampoline table.
+    #[arg(long)]
+    no_typescript_inbound: bool,
+
+    /// Output path for the typescript target's generated Swift-native `s:` residual
+    /// trampolines (ADR-0061 — one napi callback per `objc_exposed == false` free function,
+    /// calling the API by name into its framework module). A **distinct file stem** from the
+    /// hand-written `src/trampolines.swift`, whose object file would otherwise collide.
+    /// Written when typescript is among the generated targets; the addon's `build.sh` then
+    /// compiles it into `APIAnywareTypeScript.node`.
+    #[arg(
+        long,
+        default_value = "targets/typescript/bindings/node/native/src/Generated/TrampolineTable.swift"
+    )]
+    typescript_trampolines_out: PathBuf,
+
+    /// Skip generating the typescript Swift-native residual trampolines.
+    #[arg(long)]
+    no_typescript_trampolines: bool,
+
+    /// Output path for the typescript target's generated plain-C free-function table
+    /// (ADR-0054 §1a — one `aw_ts_fn_<symbol>` export per C symbol, over shared
+    /// per-signature bodies joined by `napi_create_function`'s `data` descriptor). A
+    /// **fourth distinct file stem**: `src/trampolines.swift` exists, and
+    /// `DispatchTable`/`InboundTable`/`TrampolineTable` are taken. Written when typescript is
+    /// among the generated targets; the addon's `build.sh` then compiles it into
+    /// `APIAnywareTypeScript.node`.
+    #[arg(
+        long,
+        default_value = "targets/typescript/bindings/node/native/src/Generated/FunctionTable.swift"
+    )]
+    typescript_functions_out: PathBuf,
+
+    /// Skip generating the typescript plain-C free-function table.
+    #[arg(long)]
+    no_typescript_functions: bool,
 }
 
 fn main() -> Result<()> {
@@ -197,6 +261,60 @@ fn main() -> Result<()> {
             entries,
             output = %cli.sbcl_trampolines_out.display(),
             "sbcl Swift-native trampolines generated — run `swift build` to compile them"
+        );
+    }
+
+    // Generate the typescript target's outbound dispatch table (ADR-0054 §1) when
+    // typescript was among the targets — a global pass over all frameworks, the same
+    // build order as racket's ADR-0013 table: generate (here) -> the addon's build.sh
+    // compiles hand-written + generated Swift into APIAnywareTypeScript.node.
+    let typescript_generated = summaries.iter().any(|s| s.target_id == "typescript");
+    if typescript_generated && !cli.no_typescript_dispatch {
+        let entries =
+            generate::run_typescript_dispatch(&cli.input_dir, &cli.typescript_dispatch_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.typescript_dispatch_out.display(),
+            "typescript outbound dispatch table generated — run the addon's build.sh to compile it"
+        );
+    }
+
+    // Generate the typescript target's inbound table (ADR-0059 §1/§2/§4: IMP trampolines,
+    // block makers, super-sends) — the inbound dual of the outbound table, same
+    // global-pass shape and build order.
+    if typescript_generated && !cli.no_typescript_inbound {
+        let entries =
+            generate::run_typescript_inbound(&cli.input_dir, &cli.typescript_inbound_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.typescript_inbound_out.display(),
+            "typescript inbound table generated — run the addon's build.sh to compile it"
+        );
+    }
+
+    // Generate the typescript target's Swift-native `s:` residual trampolines (ADR-0061) —
+    // the free-function dual of the outbound table: one call-by-name napi callback per
+    // residual function. Same global-pass shape and build order as racket's ADR-0027 pass.
+    if typescript_generated && !cli.no_typescript_trampolines {
+        let entries =
+            generate::run_typescript_trampolines(&cli.input_dir, &cli.typescript_trampolines_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.typescript_trampolines_out.display(),
+            "typescript Swift-native residual trampolines generated — run the addon's build.sh to compile them"
+        );
+    }
+
+    // Generate the typescript target's plain-C free-function table (ADR-0054 §1a) — the other
+    // free-function family: an ObjC/C symbol dispatched directly by its own address, where the
+    // pass above binds the Swift-native residual by name. Same global-pass shape and build order.
+    if typescript_generated && !cli.no_typescript_functions {
+        let entries =
+            generate::run_typescript_functions(&cli.input_dir, &cli.typescript_functions_out)?;
+        tracing::info!(
+            entries,
+            output = %cli.typescript_functions_out.display(),
+            "typescript plain-C free-function table generated — run the addon's build.sh to compile it"
         );
     }
 

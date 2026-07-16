@@ -283,7 +283,15 @@ mod tests {
 
     #[test]
     fn object_return_is_raw_sap_not_wrapped() {
-        let fs = vec![func("TKMakeWidget", vec![], TypeRefKind::Id, false, false)];
+        let fs = vec![func(
+            "TKMakeWidget",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+            false,
+            false,
+        )];
         let out = generate_functions_file(&fs, "TestKit");
         assert!(out.contains(
             "(sb-alien:define-alien-routine (\"TKMakeWidget\" ns:tk-make-widget) sb-alien:system-area-pointer)"
@@ -296,7 +304,12 @@ mod tests {
     fn object_argument_is_raw_sap() {
         let fs = vec![func(
             "TKConsume",
-            vec![param("obj", TypeRefKind::Id)],
+            vec![param(
+                "obj",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
             prim("void"),
             false,
             false,
@@ -415,7 +428,12 @@ mod tests {
             func(
                 "dispatch_async",
                 vec![
-                    param("q", TypeRefKind::Id),
+                    param(
+                        "q",
+                        TypeRefKind::Id {
+                            protocols: Vec::new(),
+                        },
+                    ),
                     param("blk", TypeRefKind::Pointer),
                 ],
                 prim("void"),
@@ -424,7 +442,12 @@ mod tests {
             ),
             func(
                 "dispatch_cancel",
-                vec![param("q", TypeRefKind::Id)],
+                vec![param(
+                    "q",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
                 prim("void"),
                 false,
                 false,

@@ -1,0 +1,13 @@
+[package]
+name = "apianyware-bundle-typescript"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Bundle Node TypeScript sample apps into self-contained macOS .app bundles"
+
+[dependencies]
+apianyware-stub-launcher.workspace = true
+plist.workspace = true
+tempfile = "3"
+thiserror.workspace = true
+tracing.workspace = true

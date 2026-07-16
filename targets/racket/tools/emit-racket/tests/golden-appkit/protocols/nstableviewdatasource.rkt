@@ -5,7 +5,7 @@
 ;; NSTableViewDataSource defines 12 methods:
 ;;   void-returning (6):
 ;;     tableView:setObjectValue:forTableColumn:row:  (tableView:NSTableView, object:id, tableColumn:NSTableColumn, row:int64)
-;;     tableView:sortDescriptorsDidChange:  (tableView:NSTableView, oldDescriptors:id)
+;;     tableView:sortDescriptorsDidChange:  (tableView:NSTableView, oldDescriptors:NSArray)
 ;;     tableView:draggingSession:willBeginAtPoint:forRowIndexes:  (tableView:NSTableView, session:NSDraggingSession, screenPoint:NSPoint, rowIndexes:NSIndexSet)
 ;;     tableView:draggingSession:endedAtPoint:operation:  (tableView:NSTableView, session:NSDraggingSession, screenPoint:NSPoint, operation:NSDragOperation)
 ;;     tableView:updateDraggingItemsForDrag:  (tableView:NSTableView, draggingInfo:id)

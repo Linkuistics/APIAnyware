@@ -53,12 +53,10 @@ framework CoreData {
             source llm
         }
         method setDictionaryHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setManagedObjectHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
@@ -79,12 +77,10 @@ framework CoreData {
     }
     class NSCustomMigrationStage {
         method setDidMigrateHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
         method setWillMigrateHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
@@ -134,10 +130,6 @@ framework CoreData {
     class NSFetchedResultsController {
         method performFetch: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

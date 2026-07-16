@@ -145,10 +145,6 @@ framework Virtualization {
             error-pattern error_out_param
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method validateURL:error: is-instance=#false {
             error-pattern error_out_param
             source llm
@@ -169,12 +165,6 @@ framework Virtualization {
     class VZVirtioBlockDeviceConfiguration {
         method validateBlockDeviceIdentifier:error: is-instance=#false {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class VZVirtioConsoleDevice {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -216,12 +206,6 @@ framework Virtualization {
             source llm
         }
     }
-    class VZVirtioSocketListener {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class VZVirtualMachine {
         method "pause(completionHandler:)" is-instance=#true {
             block-param 0 invocation=async_copied
@@ -259,7 +243,6 @@ framework Virtualization {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

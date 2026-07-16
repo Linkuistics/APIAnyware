@@ -77,16 +77,24 @@ better than guessing; the convention tier fills defensible gaps at resolve time.
    - `async_copied` — copied for later async invocation
    - `stored` — stored for repeated invocation (observers, handlers)
 
-2. **`param-ownership <index> ownership=<kind>`** — only for non-default
-   ownership (`weak` / `copy` / `unsafe_unretained`); omit `strong` (the
-   default).
-
-3. **`threading <constraint>`** — only when documentation is explicit:
+2. **`threading <constraint>`** — only when documentation is explicit:
    `main_thread_only` | `any_thread`.
 
-4. **`error-pattern <pattern>`** — only when the method has an error out-param:
+3. **`error-pattern <pattern>`** — only when the method has an error out-param:
    `error_out_param` (returns nil/NO on failure with an `NSError **`) |
    `nil_on_failure` | `throws_exception`.
+
+**Do not author `param-ownership` facts.** `declared-fact-precedence-k87` /
+`llm-ownership-prune-k94` measured the committed overlay's ~725 LLM ownership
+facts against the declared header attribute and the convention-tier name
+sniffs: 719 were redundant (a declared `@property` qualifier or a
+delegate/observer/block-param name pattern already produces the identical
+value) and only 6 carried real information the compiler/conventions could not
+derive. Ownership is a **compiler-first fact** (`@property (weak)/(copy)/
+(strong)/(assign)`, ADR-0047 §4) — reading Apple's prose for it is almost
+always redundant, occasionally wrong (the header is authoritative when the two
+disagree), and never worth the subagent turn. Leave existing `param-ownership`
+facts in the overlay untouched.
 
 Every method node also carries **`source llm`** (required — you author the
 `accepted-LLM` tier; `manual` is reserved for human hand-edits). Optionally add
@@ -135,12 +143,11 @@ Hard rules (the validation step will reject violations):
   match the method's `class_method` flag in the resolved surface.
 - Every `class` value is a receiver name that appears in the resolved surface;
   every `method` selector appears under that receiver.
-- `block-param <i>` must target a param whose type is a block; `param-ownership
-  <i>` must target an object param; indices are zero-based and in range.
+- `block-param <i>` must target a param whose type is a block; indices are
+  zero-based and in range.
 - Enum values must be the exact tokens above (`synchronous` / `async_copied` /
-  `stored`; `weak` / `copy` / `unsafe_unretained`; `main_thread_only` /
-  `any_thread`; `error_out_param` / `nil_on_failure` / `throws_exception`;
-  `source` is `llm` here).
+  `stored`; `main_thread_only` / `any_thread`; `error_out_param` /
+  `nil_on_failure` / `throws_exception`; `source` is `llm` here).
 - Emit no empty method shells — omit a method you have no facts for, and omit a
   class whose methods all fall under that rule.
 - Keep classes and methods sorted (the existing file is sorted; preserve it).
@@ -156,7 +163,6 @@ real CoreData miscount). Include only the categories you tracked.
         block-async-copied 15
         block-synchronous 4
         block-stored 11
-        parameter-ownership 5
         error-pattern 58
     }
 ```

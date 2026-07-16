@@ -12,7 +12,7 @@
 ;;     tableView:didDragTableColumn:  (tableView:NSTableView, tableColumn:NSTableColumn)
 ;;     tableView:heightOfRow:  (tableView:NSTableView, row:int64)
 ;;     tableView:sizeToFitWidthOfColumn:  (tableView:NSTableView, column:int64)
-;;     tableView:userDidChangeVisibilityOfTableColumns:  (tableView:NSTableView, columns:id)
+;;     tableView:userDidChangeVisibilityOfTableColumns:  (tableView:NSTableView, columns:NSArray)
 ;;     tableViewSelectionDidChange:  (notification:NSNotification)
 ;;     tableViewColumnDidMove:  (notification:NSNotification)
 ;;     tableViewColumnDidResize:  (notification:NSNotification)

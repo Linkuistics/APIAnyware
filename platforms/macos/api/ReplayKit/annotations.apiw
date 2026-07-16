@@ -1,19 +1,11 @@
 framework ReplayKit {
     class RPBroadcastActivityController {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method showBroadcastPickerAtPoint:fromWindow:preferredExtensionIdentifier:completionHandler: is-instance=#false {
             block-param 3 invocation=async_copied
             source llm
         }
     }
     class RPBroadcastController {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method startBroadcastWithHandler: is-instance=#true {
             block-param 0 invocation=async_copied
             source llm
@@ -24,20 +16,12 @@ framework ReplayKit {
         }
     }
     class RPPreviewViewController {
-        method setPreviewControllerDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method commitEditingAndReturnError: is-instance=#true {
             error-pattern error_out_param
             source llm
         }
     }
     class RPScreenRecorder {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method startRecordingWithHandler: is-instance=#true {
             block-param 0 invocation=async_copied
             source llm

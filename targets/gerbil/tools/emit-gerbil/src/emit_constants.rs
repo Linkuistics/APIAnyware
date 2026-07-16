@@ -73,7 +73,9 @@ fn classify(c: &Constant, mapper: &dyn FfiTypeMapper) -> Flavour {
         return Flavour::CfString(v.clone());
     }
     match &c.constant_type.kind {
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => Flavour::Object,
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
+            Flavour::Object
+        }
         TypeRefKind::Struct { .. } => Flavour::StructAddr,
         _ => Flavour::Scalar(mapper.map_type(&c.constant_type, true)),
     }
@@ -317,6 +319,7 @@ mod tests {
                 nullable: false,
                 kind,
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -330,8 +333,11 @@ mod tests {
             name: name.into(),
             constant_type: TypeRef {
                 nullable: true,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -444,6 +450,7 @@ mod tests {
                 nullable: false,
                 kind,
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

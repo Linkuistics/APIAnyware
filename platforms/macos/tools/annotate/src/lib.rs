@@ -15,17 +15,21 @@
 //!    produces the authored `annotations.apiw` overlay for ambiguous cases.
 //!
 //! The `validate` module runs the resolve-time **precedence audit**: per
-//! fact-slot it applies §28 precedence (`manual > accepted-LLM > convention >
-//! extraction > unknown`), stamps the winning tier's `source`, and retains each
+//! fact-slot it applies §28 precedence (`manual > extraction > accepted-LLM >
+//! convention > unknown`), stamps the winning tier's `source`, and retains each
 //! disagreeing loser as a `superseded-by` record (ADR-0046 §4 / ADR-0050 §3).
 //!
 //! The per-fact `convention:<rule>` stamps the [`apianyware_conventions`] facets
 //! compute — formerly discarded by the k26 cutover — are carried here into the
 //! convention tier's `fact_provenance` so the audit can attribute a
-//! convention-won slot to its backing rule. The audit stamps *provenance* only;
-//! the winning *value* of every slot is byte-identical to the legacy
-//! `llm`-over-convention merge, so provenance is emit-invisible and the goldens
-//! cannot move (ADR-0050 D4).
+//! convention-won slot to its backing rule. **A rule whose sole premises are
+//! compiler declarations stamps `Extraction`, not `Convention`**
+//! (`declared-fact-precedence-k87`, ADR-0047 §4) — see
+//! [`EXTRACTION_TIER_RULES`] — so such a fact reaches the audit already
+//! outranking the LLM tier. The audit itself stamps *provenance* only; the
+//! winning *value* of every slot is byte-identical to the legacy
+//! `llm`-over-convention merge (modulo the k87 re-rank), so provenance is
+//! emit-invisible and the goldens cannot move (ADR-0050 D4).
 
 pub mod llm;
 pub mod surface;
@@ -68,6 +72,40 @@ struct ConventionFacets {
     error: BTreeMap<MethodKey, ErrorPatternFacet>,
 }
 
+/// `convention:<rule>` names whose *sole* premises are compiler declarations
+/// (ADR-0047 §4, `declared-fact-precedence-k87`) — such a rule's fact stamps
+/// [`AnnotationSource::Extraction`], not [`AnnotationSource::Convention`], even
+/// though it runs in the same `apianyware-conventions` datalog engine as every
+/// other rule here. Membership is mechanical: could the rule fire on a corpus
+/// with all names stripped? The declared-property-attribute ownership rule
+/// (one name per [`apianyware_types::annotation::OwnershipKind`], from
+/// `conventions::program::rule_for_declared`) and `block-copy-property-setter`
+/// pass; every name-sniff / positional-default rule stays `Convention` — the
+/// fallback for the undeclared case.
+const EXTRACTION_TIER_RULES: &[&str] = &[
+    "weak-property-attribute",
+    "strong-property-attribute",
+    "copy-property-attribute",
+    "unsafe-unretained-property-attribute",
+    "block-copy-property-setter",
+];
+
+/// The producing tier for a fact-slot given its winning `convention:<rule>`
+/// stamp(s). A slot's stamps are homogeneous — the conventions-crate readback
+/// cascade resolves to one priority level's rule(s) per slot — so any one
+/// stamp settles it.
+fn tier_for_rules(rules: &[String]) -> AnnotationSource {
+    let is_declared = rules.iter().any(|r| {
+        r.strip_prefix("convention:")
+            .is_some_and(|rule| EXTRACTION_TIER_RULES.contains(&rule))
+    });
+    if is_declared {
+        AnnotationSource::Extraction
+    } else {
+        AnnotationSource::Convention
+    }
+}
+
 impl ConventionFacets {
     /// Run the convention rules over `frameworks` and collect the four facets.
     fn derive(frameworks: &[Framework]) -> Self {
@@ -85,9 +123,13 @@ impl ConventionFacets {
     /// `heuristics.rs` output; ws5's `precedence-audit-k45` lands the per-fact
     /// `convention:<rule>` stamps the facets compute (formerly discarded by
     /// k26) into `fact_provenance`, so the resolve-time audit can stamp a
-    /// convention-won slot with its backing rule. Every slot here is
-    /// `Convention`-sourced with no losers — the audit reconciles against the
-    /// authored overlay (ADR-0046 §4 / ADR-0050 §3).
+    /// convention-won slot with its backing rule. Every ownership/block slot is
+    /// tagged `Convention` or `Extraction` by [`tier_for_rules`] — a
+    /// declaration-premised rule stamps `Extraction` even here, before the
+    /// slot ever reaches the audit (ADR-0047 §4, k87); threading/error have no
+    /// declaration-premised rule today and stay `Convention`. No slot carries a
+    /// loser yet — the audit reconciles against the authored overlay (ADR-0046
+    /// §4 / ADR-0050 §3).
     fn annotation_for(&self, receiver: &str, method: &Method) -> MethodAnnotation {
         let key = (receiver.to_string(), method.selector.clone());
 
@@ -110,24 +152,26 @@ impl ConventionFacets {
         // facets carry a method-level stamp list.
         let mut prov = MethodFactProvenance::default();
         for po in &parameter_ownership {
+            let rules = ownership_facet
+                .and_then(|f| f.provenance.get(&(po.param_index as u32)))
+                .cloned()
+                .unwrap_or_default();
             prov.parameter_ownership.push(SlotProvenance {
                 param_index: Some(po.param_index),
-                source: AnnotationSource::Convention,
-                rules: ownership_facet
-                    .and_then(|f| f.provenance.get(&(po.param_index as u32)))
-                    .cloned()
-                    .unwrap_or_default(),
+                source: tier_for_rules(&rules),
+                rules,
                 superseded_by: Vec::new(),
             });
         }
         for bp in &block_parameters {
+            let rules = block_facet
+                .and_then(|f| f.provenance.get(&(bp.param_index as u32)))
+                .cloned()
+                .unwrap_or_default();
             prov.block_parameters.push(SlotProvenance {
                 param_index: Some(bp.param_index),
-                source: AnnotationSource::Convention,
-                rules: block_facet
-                    .and_then(|f| f.provenance.get(&(bp.param_index as u32)))
-                    .cloned()
-                    .unwrap_or_default(),
+                source: tier_for_rules(&rules),
+                rules,
                 superseded_by: Vec::new(),
             });
         }
@@ -250,15 +294,11 @@ pub fn annotate_framework(
             &class.all_methods
         };
 
+        // `methods`/`all_methods` already carry category methods (extraction merges
+        // `class.category_methods` into `class.methods`, `text-undo-surface-gap-k121`) —
+        // a separate category loop here would double-annotate the same selector.
         for method in methods {
             annotate_and_push(class, method, &facets, &llm_index, &mut method_annotations);
-        }
-
-        // Also annotate category methods (e.g., NSExtendedArray on NSArray).
-        for category_group in &class.category_methods {
-            for method in &category_group.methods {
-                annotate_and_push(class, method, &facets, &llm_index, &mut method_annotations);
-            }
         }
 
         if !method_annotations.is_empty() {

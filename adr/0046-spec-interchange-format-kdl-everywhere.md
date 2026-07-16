@@ -42,8 +42,10 @@ measured it (see *Consequences → Evidence*) rather than guessing.
 4. **Provenance/confidence are carried in the format** (the data model that *can express* them):
    every `resolved.kdl` fact carries `source ∈ {extraction, convention:<rule>, llm, manual}`;
    authored facts carry `confidence` as a coarse **enum `high|medium|low`** (not a float) plus a
-   `provenance` (doc URL / rationale); precedence (`manual > accepted-LLM > convention >
-   extraction > unknown`, §28) is applied deterministically in resolve, the **winner stamped and
+   `provenance` (doc URL / rationale); precedence (`manual > extraction > accepted-LLM >
+   convention > unknown` — §28, re-ranked by `declared-fact-precedence-k87`: the extraction tier
+   carries declaration-premised facts, and the compiler outranks accepted prose — ADR-0047 §4) is
+   applied deterministically in resolve, the **winner stamped and
    losers retained** as a `superseded-by` record; a fact with no producer is explicit `unknown`.
    The *workflow* over this (caching/regeneration/review-accept/diff) is ADR-0050's.
 5. **The machine IR uses a non-preserving KDL codec.** The format-preserving `kdl` document model

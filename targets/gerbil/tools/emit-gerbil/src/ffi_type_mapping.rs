@@ -340,7 +340,7 @@ impl FfiTypeMapper for GerbilFfiTypeMapper {
                     .map(str::to_string)
                     .unwrap_or_else(|| POINTER.to_string())
             }
-            TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+            TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
                 POINTER.to_string()
             }
             TypeRefKind::Selector => POINTER.to_string(),
@@ -517,7 +517,15 @@ mod tests {
     #[test]
     fn object_types_are_pointer() {
         let m = GerbilFfiTypeMapper;
-        assert_eq!(m.map_type(&ty(TypeRefKind::Id), false), "(pointer void)");
+        assert_eq!(
+            m.map_type(
+                &ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                }),
+                false
+            ),
+            "(pointer void)"
+        );
         assert_eq!(
             m.map_type(&ty(TypeRefKind::Instancetype), false),
             "(pointer void)"
@@ -635,7 +643,9 @@ mod tests {
         };
         let id_param = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         // void (^)(id) — all slots reduce to scalar/pointer tokens → bridgeable.
         assert!(is_bridgeable_block(

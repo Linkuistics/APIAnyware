@@ -18,6 +18,7 @@
 ;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
+(define (cadisplaylink? v) (objc-instance-of? v "CADisplayLink"))
 (define (calayer? v) (objc-instance-of? v "CALayer"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -25,9 +26,15 @@
 (define (nsattributedstring? v) (objc-instance-of? v "NSAttributedString"))
 (define (nsbitmapimagerep? v) (objc-instance-of? v "NSBitmapImageRep"))
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
+(define (nscell? v) (objc-instance-of? v "NSCell"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
+(define (nsdraggingsession? v) (objc-instance-of? v "NSDraggingSession"))
+(define (nsenumerator? v) (objc-instance-of? v "NSEnumerator"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsfont? v) (objc-instance-of? v "NSFont"))
+(define (nsformatter? v) (objc-instance-of? v "NSFormatter"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
 (define (nsindexset? v) (objc-instance-of? v "NSIndexSet"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
@@ -44,7 +51,9 @@
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (nstablecolumn? v) (objc-instance-of? v "NSTableColumn"))
 (define (nstableheaderview? v) (objc-instance-of? v "NSTableHeaderView"))
+(define (nstablerowview? v) (objc-instance-of? v "NSTableRowView"))
 (define (nstableview? v) (objc-instance-of? v "NSTableView"))
+(define (nstext? v) (objc-instance-of? v "NSText"))
 (define (nstextinputcontext? v) (objc-instance-of? v "NSTextInputContext"))
 (define (nstouchbar? v) (objc-instance-of? v "NSTouchBar"))
 (define (nsurl? v) (objc-instance-of? v "NSURL"))
@@ -98,7 +107,7 @@
   [nstableview-set-autosave-table-columns! (c-> nstableview? boolean? void?)]
   [nstableview-background-color (c-> nstableview? (or/c nscolor? objc-nil?))]
   [nstableview-set-background-color! (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-background-filters (c-> nstableview? any/c)]
+  [nstableview-background-filters (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-set-background-filters! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-base-writing-direction (c-> nstableview? exact-integer?)]
   [nstableview-set-base-writing-direction! (c-> nstableview? exact-integer? void?)]
@@ -115,7 +124,7 @@
   [nstableview-can-draw-subviews-into-layer (c-> nstableview? boolean?)]
   [nstableview-set-can-draw-subviews-into-layer! (c-> nstableview? boolean? void?)]
   [nstableview-candidate-list-touch-bar-item (c-> nstableview? (or/c nscandidatelisttouchbaritem? objc-nil?))]
-  [nstableview-cell (c-> nstableview? any/c)]
+  [nstableview-cell (c-> nstableview? (or/c nscell? objc-nil?))]
   [nstableview-set-cell! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-cell-class (c-> cpointer?)]
   [nstableview-set-cell-class! (c-> cpointer? void?)]
@@ -130,8 +139,8 @@
   [nstableview-compatible-with-responsive-scrolling (c-> boolean?)]
   [nstableview-compositing-filter (c-> nstableview? (or/c cifilter? objc-nil?))]
   [nstableview-set-compositing-filter! (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-constraints (c-> nstableview? any/c)]
-  [nstableview-content-filters (c-> nstableview? any/c)]
+  [nstableview-constraints (c-> nstableview? (or/c nsarray? objc-nil?))]
+  [nstableview-content-filters (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-set-content-filters! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-continuous (c-> nstableview? boolean?)]
   [nstableview-set-continuous! (c-> nstableview? boolean? void?)]
@@ -174,7 +183,7 @@
   [nstableview-focus-view (c-> (or/c nsview? objc-nil?))]
   [nstableview-font (c-> nstableview? (or/c nsfont? objc-nil?))]
   [nstableview-set-font! (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-formatter (c-> nstableview? any/c)]
+  [nstableview-formatter (c-> nstableview? (or/c nsformatter? objc-nil?))]
   [nstableview-set-formatter! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-frame (c-> nstableview? any/c)]
   [nstableview-set-frame! (c-> nstableview? any/c void?)]
@@ -182,7 +191,7 @@
   [nstableview-set-frame-center-rotation! (c-> nstableview? real? void?)]
   [nstableview-frame-rotation (c-> nstableview? real?)]
   [nstableview-set-frame-rotation! (c-> nstableview? real? void?)]
-  [nstableview-gesture-recognizers (c-> nstableview? any/c)]
+  [nstableview-gesture-recognizers (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-set-gesture-recognizers! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-grid-color (c-> nstableview? (or/c nscolor? objc-nil?))]
   [nstableview-set-grid-color! (c-> nstableview? (or/c string? objc-object? #f) void?)]
@@ -225,7 +234,7 @@
   [nstableview-set-layer-contents-redraw-policy! (c-> nstableview? exact-integer? void?)]
   [nstableview-layer-uses-core-image-filters (c-> nstableview? boolean?)]
   [nstableview-set-layer-uses-core-image-filters! (c-> nstableview? boolean? void?)]
-  [nstableview-layout-guides (c-> nstableview? any/c)]
+  [nstableview-layout-guides (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-layout-margins-guide (c-> nstableview? (or/c nslayoutguide? objc-nil?))]
   [nstableview-leading-anchor (c-> nstableview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nstableview-left-anchor (c-> nstableview? (or/c nslayoutxaxisanchor? objc-nil?))]
@@ -273,10 +282,10 @@
   [nstableview-rect-preserved-during-live-resize (c-> nstableview? any/c)]
   [nstableview-refuses-first-responder (c-> nstableview? boolean?)]
   [nstableview-set-refuses-first-responder! (c-> nstableview? boolean? void?)]
-  [nstableview-registered-dragged-types (c-> nstableview? any/c)]
-  [nstableview-registered-nibs-by-identifier (c-> nstableview? any/c)]
+  [nstableview-registered-dragged-types (c-> nstableview? (or/c nsarray? objc-nil?))]
+  [nstableview-registered-nibs-by-identifier (c-> nstableview? (or/c nsdictionary? objc-nil?))]
   [nstableview-requires-constraint-based-layout (c-> boolean?)]
-  [nstableview-restorable-state-key-paths (c-> any/c)]
+  [nstableview-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nstableview-right-anchor (c-> nstableview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nstableview-rotated-from-base (c-> nstableview? boolean?)]
   [nstableview-rotated-or-scaled-from-base (c-> nstableview? boolean?)]
@@ -297,16 +306,16 @@
   [nstableview-set-selection-highlight-style! (c-> nstableview? exact-integer? void?)]
   [nstableview-shadow (c-> nstableview? (or/c nsshadow? objc-nil?))]
   [nstableview-set-shadow! (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-sort-descriptors (c-> nstableview? any/c)]
+  [nstableview-sort-descriptors (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-set-sort-descriptors! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-string-value (c-> nstableview? (or/c nsstring? objc-nil?))]
   [nstableview-set-string-value! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-style (c-> nstableview? exact-integer?)]
   [nstableview-set-style! (c-> nstableview? exact-integer? void?)]
-  [nstableview-subviews (c-> nstableview? any/c)]
+  [nstableview-subviews (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-set-subviews! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-superview (c-> nstableview? (or/c nsview? objc-nil?))]
-  [nstableview-table-columns (c-> nstableview? any/c)]
+  [nstableview-table-columns (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-tag (c-> nstableview? exact-integer?)]
   [nstableview-set-tag! (c-> nstableview? exact-integer? void?)]
   [nstableview-target (c-> nstableview? any/c)]
@@ -316,7 +325,7 @@
   [nstableview-top-anchor (c-> nstableview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nstableview-touch-bar (c-> nstableview? (or/c nstouchbar? objc-nil?))]
   [nstableview-set-touch-bar! (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-tracking-areas (c-> nstableview? any/c)]
+  [nstableview-tracking-areas (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-trailing-anchor (c-> nstableview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nstableview-translates-autoresizing-mask-into-constraints (c-> nstableview? boolean?)]
   [nstableview-set-translates-autoresizing-mask-into-constraints! (c-> nstableview? boolean? void?)]
@@ -353,16 +362,17 @@
   [nstableview-window (c-> nstableview? (or/c nswindow? objc-nil?))]
   [nstableview-writing-tools-coordinator (c-> nstableview? (or/c nswritingtoolscoordinator? objc-nil?))]
   [nstableview-set-writing-tools-coordinator! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-abort-editing (c-> nstableview? boolean?)]
   [nstableview-accepts-first-mouse (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
   [nstableview-accessibility-activation-point (c-> nstableview? any/c)]
-  [nstableview-accessibility-allowed-values (c-> nstableview? any/c)]
+  [nstableview-accessibility-allowed-values (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-application-focused-ui-element (c-> nstableview? any/c)]
   [nstableview-accessibility-attributed-string-for-range (c-> nstableview? any/c (or/c nsattributedstring? objc-nil?))]
-  [nstableview-accessibility-attributed-user-input-labels (c-> nstableview? any/c)]
+  [nstableview-accessibility-attributed-user-input-labels (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-cancel-button (c-> nstableview? any/c)]
   [nstableview-accessibility-cell-for-column-row (c-> nstableview? exact-integer? exact-integer? any/c)]
   [nstableview-accessibility-children (c-> nstableview? (or/c nsarray? objc-nil?))]
-  [nstableview-accessibility-children-in-navigation-order (c-> nstableview? any/c)]
+  [nstableview-accessibility-children-in-navigation-order (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-clear-button (c-> nstableview? any/c)]
   [nstableview-accessibility-close-button (c-> nstableview? any/c)]
   [nstableview-accessibility-column-count (c-> nstableview? exact-integer?)]
@@ -372,8 +382,8 @@
   [nstableview-accessibility-columns (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-contents (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-critical-value (c-> nstableview? any/c)]
-  [nstableview-accessibility-custom-actions (c-> nstableview? any/c)]
-  [nstableview-accessibility-custom-rotors (c-> nstableview? any/c)]
+  [nstableview-accessibility-custom-actions (c-> nstableview? (or/c nsarray? objc-nil?))]
+  [nstableview-accessibility-custom-rotors (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-decrement-button (c-> nstableview? any/c)]
   [nstableview-accessibility-default-button (c-> nstableview? any/c)]
   [nstableview-accessibility-disclosed-by-row (c-> nstableview? any/c)]
@@ -441,7 +451,7 @@
   [nstableview-accessibility-row-count (c-> nstableview? exact-integer?)]
   [nstableview-accessibility-row-header-ui-elements (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-row-index-range (c-> nstableview? any/c)]
-  [nstableview-accessibility-rows (c-> nstableview? any/c)]
+  [nstableview-accessibility-rows (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-ruler-marker-type (c-> nstableview? exact-integer?)]
   [nstableview-accessibility-screen-point-for-layout-point (c-> nstableview? any/c any/c)]
   [nstableview-accessibility-screen-size-for-layout-size (c-> nstableview? any/c any/c)]
@@ -450,10 +460,10 @@
   [nstableview-accessibility-selected-cells (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-selected-children (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-selected-columns (c-> nstableview? (or/c nsarray? objc-nil?))]
-  [nstableview-accessibility-selected-rows (c-> nstableview? any/c)]
+  [nstableview-accessibility-selected-rows (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-selected-text (c-> nstableview? (or/c nsstring? objc-nil?))]
   [nstableview-accessibility-selected-text-range (c-> nstableview? any/c)]
-  [nstableview-accessibility-selected-text-ranges (c-> nstableview? any/c)]
+  [nstableview-accessibility-selected-text-ranges (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-serves-as-title-for-ui-elements (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-shared-character-range (c-> nstableview? any/c)]
   [nstableview-accessibility-shared-focus-elements (c-> nstableview? (or/c nsarray? objc-nil?))]
@@ -472,7 +482,7 @@
   [nstableview-accessibility-url (c-> nstableview? (or/c nsurl? objc-nil?))]
   [nstableview-accessibility-unit-description (c-> nstableview? (or/c nsstring? objc-nil?))]
   [nstableview-accessibility-units (c-> nstableview? exact-integer?)]
-  [nstableview-accessibility-user-input-labels (c-> nstableview? any/c)]
+  [nstableview-accessibility-user-input-labels (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-value (c-> nstableview? any/c)]
   [nstableview-accessibility-value-description (c-> nstableview? (or/c nsstring? objc-nil?))]
   [nstableview-accessibility-vertical-scroll-bar (c-> nstableview? any/c)]
@@ -482,25 +492,39 @@
   [nstableview-accessibility-visible-character-range (c-> nstableview? any/c)]
   [nstableview-accessibility-visible-children (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-visible-columns (c-> nstableview? (or/c nsarray? objc-nil?))]
-  [nstableview-accessibility-visible-rows (c-> nstableview? any/c)]
+  [nstableview-accessibility-visible-rows (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-warning-value (c-> nstableview? any/c)]
   [nstableview-accessibility-window (c-> nstableview? any/c)]
   [nstableview-accessibility-windows (c-> nstableview? (or/c nsarray? objc-nil?))]
   [nstableview-accessibility-zoom-button (c-> nstableview? any/c)]
+  [nstableview-add-constraint! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-add-constraints! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-add-cursor-rect-cursor! (c-> nstableview? any/c (or/c string? objc-object? #f) void?)]
+  [nstableview-add-gesture-recognizer! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-add-layout-guide! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-add-subview! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-add-subview-positioned-relative-to! (c-> nstableview? (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) void?)]
   [nstableview-add-table-column! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-add-tool-tip-rect-owner-user-data! (c-> nstableview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) exact-integer?)]
+  [nstableview-add-tracking-area! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-add-tracking-rect-owner-user-data-assume-inside! (c-> nstableview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) boolean? exact-integer?)]
+  [nstableview-additional-safe-area-insets! (c-> nstableview? any/c)]
+  [nstableview-adjust-page-height-new-top-bottom-limit (c-> nstableview? (or/c cpointer? #f) real? real? real? void?)]
+  [nstableview-adjust-page-width-new-left-right-limit (c-> nstableview? (or/c cpointer? #f) real? real? real? void?)]
   [nstableview-adjust-scroll (c-> nstableview? any/c any/c)]
+  [nstableview-alignment-rect-for-frame (c-> nstableview? any/c any/c)]
   [nstableview-ancestor-shared-with-view (c-> nstableview? (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
   [nstableview-animation-for-key (c-> nstableview? (or/c string? objc-object? #f) any/c)]
-  [nstableview-animations (c-> nstableview? any/c)]
+  [nstableview-animations (c-> nstableview? (or/c nsdictionary? objc-nil?))]
   [nstableview-animator (c-> nstableview? any/c)]
   [nstableview-appearance (c-> nstableview? (or/c nsappearance? objc-nil?))]
   [nstableview-autoscroll (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
   [nstableview-backing-aligned-rect-options (c-> nstableview? any/c exact-nonnegative-integer? any/c)]
   [nstableview-become-first-responder (c-> nstableview? boolean?)]
+  [nstableview-begin-document! (c-> nstableview? void?)]
+  [nstableview-begin-dragging-session-with-items-event-source! (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdraggingsession? objc-nil?))]
   [nstableview-begin-gesture-with-event! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-begin-page-in-rect-at-placement! (c-> nstableview? any/c any/c void?)]
   [nstableview-begin-updates! (c-> nstableview? void?)]
   [nstableview-bitmap-image-rep-for-caching-display-in-rect (c-> nstableview? any/c (or/c nsbitmapimagerep? objc-nil?))]
   [nstableview-cache-display-in-rect-to-bitmap-image-rep (c-> nstableview? any/c (or/c string? objc-object? #f) void?)]
@@ -509,6 +533,8 @@
   [nstableview-capitalize-word (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-center-scan-rect! (c-> nstableview? any/c any/c)]
   [nstableview-center-selection-in-visible-area! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-center-x-anchor! (c-> nstableview? (or/c nslayoutxaxisanchor? objc-nil?))]
+  [nstableview-center-y-anchor! (c-> nstableview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nstableview-change-case-of-letter (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-change-mode-with-event (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-column-at-point (c-> nstableview? any/c exact-integer?)]
@@ -517,6 +543,9 @@
   [nstableview-column-with-identifier (c-> nstableview? (or/c string? objc-object? #f) exact-integer?)]
   [nstableview-complete (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-conclude-drag-operation (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-constraints-affecting-layout-for-orientation (c-> nstableview? exact-integer? (or/c nsarray? objc-nil?))]
+  [nstableview-content-compression-resistance-priority-for-orientation (c-> nstableview? exact-integer? real?)]
+  [nstableview-content-hugging-priority-for-orientation (c-> nstableview? exact-integer? real?)]
   [nstableview-context-menu-key-down (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-convert-point-from-view (c-> nstableview? any/c (or/c string? objc-object? #f) any/c)]
   [nstableview-convert-point-to-view (c-> nstableview? any/c (or/c string? objc-object? #f) any/c)]
@@ -536,7 +565,10 @@
   [nstableview-convert-size-from-layer (c-> nstableview? any/c any/c)]
   [nstableview-convert-size-to-backing (c-> nstableview? any/c any/c)]
   [nstableview-convert-size-to-layer (c-> nstableview? any/c any/c)]
+  [nstableview-current-editor (c-> nstableview? (or/c nstext? objc-nil?))]
   [nstableview-cursor-update (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-data-with-eps-inside-rect (c-> nstableview? any/c (or/c nsdata? objc-nil?))]
+  [nstableview-data-with-pdf-inside-rect (c-> nstableview? any/c (or/c nsdata? objc-nil?))]
   [nstableview-delete-backward (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-delete-backward-by-decomposing-previous-character (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-delete-forward (c-> nstableview? (or/c string? objc-object? #f) void?)]
@@ -554,11 +586,13 @@
   [nstableview-did-add-subview (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-did-close-menu-with-event (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstableview-did-remove-row-view-for-row (c-> nstableview? (or/c string? objc-object? #f) exact-integer? void?)]
+  [nstableview-discard-cursor-rects (c-> nstableview? void?)]
   [nstableview-display! (c-> nstableview? void?)]
   [nstableview-display-if-needed! (c-> nstableview? void?)]
   [nstableview-display-if-needed-ignoring-opacity! (c-> nstableview? void?)]
   [nstableview-display-if-needed-in-rect! (c-> nstableview? any/c void?)]
   [nstableview-display-if-needed-in-rect-ignoring-opacity! (c-> nstableview? any/c void?)]
+  [nstableview-display-link-with-target-selector! (c-> nstableview? (or/c string? objc-object? #f) string? (or/c cadisplaylink? objc-nil?))]
   [nstableview-display-rect! (c-> nstableview? any/c void?)]
   [nstableview-display-rect-ignoring-opacity! (c-> nstableview? any/c void?)]
   [nstableview-display-rect-ignoring-opacity-in-context! (c-> nstableview? any/c (or/c string? objc-object? #f) void?)]
@@ -573,19 +607,34 @@
   [nstableview-dragging-session-will-begin-at-point (c-> nstableview? (or/c string? objc-object? #f) any/c void?)]
   [nstableview-dragging-updated (c-> nstableview? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nstableview-draw-background-in-clip-rect (c-> nstableview? any/c void?)]
+  [nstableview-draw-cell (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-draw-cell-inside (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-draw-focus-ring-mask (c-> nstableview? void?)]
   [nstableview-draw-grid-in-clip-rect (c-> nstableview? any/c void?)]
+  [nstableview-draw-page-border-with-size (c-> nstableview? any/c void?)]
   [nstableview-draw-rect (c-> nstableview? any/c void?)]
   [nstableview-draw-row-clip-rect (c-> nstableview? exact-integer? any/c void?)]
   [nstableview-draw-with-expansion-frame-in-view (c-> nstableview? any/c (or/c string? objc-object? #f) void?)]
+  [nstableview-edge-insets-for-layout-region (c-> nstableview? (or/c string? objc-object? #f) any/c)]
   [nstableview-edit-column-row-with-event-select (c-> nstableview? exact-integer? exact-integer? (or/c string? objc-object? #f) boolean? void?)]
+  [nstableview-edit-with-frame-editor-delegate-event (c-> nstableview? any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstableview-effective-appearance (c-> nstableview? (or/c nsappearance? objc-nil?))]
+  [nstableview-encode-restorable-state-with-coder (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-encode-restorable-state-with-coder-background-queue (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstableview-encode-with-coder (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-end-document! (c-> nstableview? void?)]
+  [nstableview-end-editing! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-end-gesture-with-event! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-end-page! (c-> nstableview? void?)]
   [nstableview-end-updates! (c-> nstableview? void?)]
+  [nstableview-enter-full-screen-mode-with-options (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nstableview-enumerate-available-row-views-using-block (c-> nstableview? (or/c procedure? #f) void?)]
+  [nstableview-exercise-ambiguity-in-layout (c-> nstableview? void?)]
+  [nstableview-exit-full-screen-mode-with-options (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-expansion-frame-with-frame (c-> nstableview? any/c any/c)]
   [nstableview-flags-changed (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-flush-buffered-key-events (c-> nstableview? void?)]
+  [nstableview-frame-for-alignment-rect (c-> nstableview? any/c any/c)]
   [nstableview-frame-of-cell-at-column-row (c-> nstableview? exact-integer? exact-integer? any/c)]
   [nstableview-get-rects-being-drawn-count (c-> nstableview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nstableview-get-rects-exposed-during-live-resize-count (c-> nstableview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
@@ -610,6 +659,9 @@
   [nstableview-insert-tab-ignoring-field-editor! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-insert-text! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-interpret-key-events (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-invalidate-intrinsic-content-size (c-> nstableview? void?)]
+  [nstableview-invalidate-intrinsic-content-size-for-cell (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-invalidate-restorable-state (c-> nstableview? void?)]
   [nstableview-is-accessibility-alternate-ui-visible (c-> nstableview? boolean?)]
   [nstableview-is-accessibility-disclosed (c-> nstableview? boolean?)]
   [nstableview-is-accessibility-edited (c-> nstableview? boolean?)]
@@ -630,19 +682,26 @@
   [nstableview-is-column-selected (c-> nstableview? exact-integer? boolean?)]
   [nstableview-is-continuous (c-> nstableview? boolean?)]
   [nstableview-is-descendant-of (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
+  [nstableview-is-drawing-find-indicator (c-> nstableview? boolean?)]
   [nstableview-is-enabled (c-> nstableview? boolean?)]
   [nstableview-is-flipped (c-> nstableview? boolean?)]
   [nstableview-is-hidden (c-> nstableview? boolean?)]
   [nstableview-is-hidden-or-has-hidden-ancestor (c-> nstableview? boolean?)]
   [nstableview-is-highlighted (c-> nstableview? boolean?)]
+  [nstableview-is-horizontal-content-size-constraint-active (c-> nstableview? boolean?)]
+  [nstableview-is-in-full-screen-mode (c-> nstableview? boolean?)]
   [nstableview-is-opaque (c-> nstableview? boolean?)]
   [nstableview-is-rotated-from-base (c-> nstableview? boolean?)]
   [nstableview-is-rotated-or-scaled-from-base (c-> nstableview? boolean?)]
   [nstableview-is-row-selected (c-> nstableview? exact-integer? boolean?)]
+  [nstableview-is-vertical-content-size-constraint-active (c-> nstableview? boolean?)]
   [nstableview-key-down (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-key-up (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-knows-page-range (c-> nstableview? (or/c cpointer? #f) boolean?)]
   [nstableview-layout (c-> nstableview? void?)]
+  [nstableview-layout-guide-for-layout-region (c-> nstableview? (or/c string? objc-object? #f) (or/c nslayoutguide? objc-nil?))]
   [nstableview-layout-subtree-if-needed (c-> nstableview? void?)]
+  [nstableview-location-of-print-rect (c-> nstableview? any/c any/c)]
   [nstableview-lowercase-word (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-magnify-with-event (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-make-backing-layer (c-> nstableview? (or/c calayer? objc-nil?))]
@@ -652,7 +711,8 @@
   [nstableview-make-text-writing-direction-left-to-right (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-make-text-writing-direction-natural (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-make-text-writing-direction-right-to-left (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-make-view-with-identifier-owner (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nstableview-make-touch-bar (c-> nstableview? (or/c nstouchbar? objc-nil?))]
+  [nstableview-make-view-with-identifier-owner (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
   [nstableview-menu-for-event (c-> nstableview? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nstableview-mouse-in-rect (c-> nstableview? any/c any/c boolean?)]
   [nstableview-mouse-cancelled (c-> nstableview? (or/c string? objc-object? #f) void?)]
@@ -703,7 +763,9 @@
   [nstableview-move-word-right! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-move-word-right-and-modify-selection! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-needs-to-draw-rect (c-> nstableview? any/c boolean?)]
+  [nstableview-new-window-for-tab (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-no-responder-for (c-> nstableview? string? void?)]
+  [nstableview-note-focus-ring-mask-changed (c-> nstableview? void?)]
   [nstableview-note-height-of-rows-with-indexes-changed (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-note-number-of-rows-changed (c-> nstableview? void?)]
   [nstableview-other-mouse-down (c-> nstableview? (or/c string? objc-object? #f) void?)]
@@ -716,28 +778,45 @@
   [nstableview-perform-click! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-perform-drag-operation! (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
   [nstableview-perform-key-equivalent! (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
+  [nstableview-perform-text-finder-action! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-prepare-content-in-rect (c-> nstableview? any/c void?)]
   [nstableview-prepare-for-drag-operation (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
   [nstableview-prepare-for-reuse (c-> nstableview? void?)]
+  [nstableview-present-error (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
+  [nstableview-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nstableview-pressure-change-with-event (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-print (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-quick-look-preview-items (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-quick-look-with-event (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-rect-for-layout-region (c-> nstableview? (or/c string? objc-object? #f) any/c)]
+  [nstableview-rect-for-page (c-> nstableview? exact-integer? any/c)]
   [nstableview-rect-for-smart-magnification-at-point-in-rect (c-> nstableview? any/c any/c any/c)]
   [nstableview-rect-of-column (c-> nstableview? exact-integer? any/c)]
   [nstableview-rect-of-row (c-> nstableview? exact-integer? any/c)]
+  [nstableview-reflect-scrolled-clip-view (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-register-for-dragged-types (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-register-nib-for-identifier (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstableview-reload-data (c-> nstableview? void?)]
   [nstableview-reload-data-for-row-indexes-column-indexes (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstableview-remove-all-tool-tips! (c-> nstableview? void?)]
+  [nstableview-remove-constraint! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-remove-constraints! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-remove-cursor-rect-cursor! (c-> nstableview? any/c (or/c string? objc-object? #f) void?)]
   [nstableview-remove-from-superview! (c-> nstableview? void?)]
   [nstableview-remove-from-superview-without-needing-display! (c-> nstableview? void?)]
+  [nstableview-remove-gesture-recognizer! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-remove-layout-guide! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-remove-rows-at-indexes-with-animation! (c-> nstableview? (or/c string? objc-object? #f) exact-nonnegative-integer? void?)]
   [nstableview-remove-table-column! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-remove-tool-tip! (c-> nstableview? exact-integer? void?)]
+  [nstableview-remove-tracking-area! (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-remove-tracking-rect! (c-> nstableview? exact-integer? void?)]
   [nstableview-replace-subview-with! (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstableview-reset-cursor-rects! (c-> nstableview? void?)]
   [nstableview-resign-first-responder (c-> nstableview? boolean?)]
   [nstableview-resize-subviews-with-old-size (c-> nstableview? any/c void?)]
   [nstableview-resize-with-old-superview-size (c-> nstableview? any/c void?)]
+  [nstableview-restore-state-with-coder (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-restore-user-activity-state (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-right-mouse-down (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-right-mouse-dragged (c-> nstableview? (or/c string? objc-object? #f) void?)]
@@ -746,9 +825,22 @@
   [nstableview-rotate-with-event (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-row-at-point (c-> nstableview? any/c exact-integer?)]
   [nstableview-row-for-view (c-> nstableview? (or/c string? objc-object? #f) exact-integer?)]
-  [nstableview-row-view-at-row-make-if-necessary (c-> nstableview? exact-integer? boolean? any/c)]
+  [nstableview-row-view-at-row-make-if-necessary (c-> nstableview? exact-integer? boolean? (or/c nstablerowview? objc-nil?))]
   [nstableview-rows-in-rect (c-> nstableview? any/c any/c)]
+  [nstableview-ruler-view-did-add-marker (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstableview-ruler-view-did-move-marker (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstableview-ruler-view-did-remove-marker (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstableview-ruler-view-handle-mouse-down (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstableview-ruler-view-location-for-point (c-> nstableview? (or/c string? objc-object? #f) any/c real?)]
+  [nstableview-ruler-view-point-for-location (c-> nstableview? (or/c string? objc-object? #f) real? any/c)]
+  [nstableview-ruler-view-should-add-marker (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nstableview-ruler-view-should-move-marker (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nstableview-ruler-view-should-remove-marker (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nstableview-ruler-view-will-add-marker-at-location (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nstableview-ruler-view-will-move-marker-to-location (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nstableview-ruler-view-will-set-client-view (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstableview-scale-unit-square-to-size (c-> nstableview? any/c void?)]
+  [nstableview-scroll-clip-view-to-point (c-> nstableview? (or/c string? objc-object? #f) any/c void?)]
   [nstableview-scroll-column-to-visible (c-> nstableview? exact-integer? void?)]
   [nstableview-scroll-line-down (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-scroll-line-up (c-> nstableview? (or/c string? objc-object? #f) void?)]
@@ -761,12 +853,16 @@
   [nstableview-scroll-to-end-of-document (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-scroll-wheel (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-select-all (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-select-cell (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-select-column-indexes-by-extending-selection (c-> nstableview? (or/c string? objc-object? #f) boolean? void?)]
   [nstableview-select-line (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-select-paragraph (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-select-row-indexes-by-extending-selection (c-> nstableview? (or/c string? objc-object? #f) boolean? void?)]
   [nstableview-select-to-mark (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-select-with-frame-editor-delegate-start-length (c-> nstableview? any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-integer? exact-integer? void?)]
   [nstableview-select-word (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-selected-cell (c-> nstableview? (or/c nscell? objc-nil?))]
+  [nstableview-selected-tag (c-> nstableview? exact-integer?)]
   [nstableview-send-action-to (c-> nstableview? string? (or/c string? objc-object? #f) boolean?)]
   [nstableview-send-action-on (c-> nstableview? exact-nonnegative-integer? exact-integer?)]
   [nstableview-set-accessibility-activation-point! (c-> nstableview? any/c void?)]
@@ -897,18 +993,24 @@
   [nstableview-set-appearance! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-set-bounds-origin! (c-> nstableview? any/c void?)]
   [nstableview-set-bounds-size! (c-> nstableview? any/c void?)]
+  [nstableview-set-content-compression-resistance-priority-for-orientation! (c-> nstableview? real? exact-integer? void?)]
+  [nstableview-set-content-hugging-priority-for-orientation! (c-> nstableview? real? exact-integer? void?)]
   [nstableview-set-dragging-source-operation-mask-for-local! (c-> nstableview? exact-nonnegative-integer? boolean? void?)]
   [nstableview-set-drop-row-drop-operation! (c-> nstableview? exact-integer? exact-nonnegative-integer? void?)]
   [nstableview-set-frame-origin! (c-> nstableview? any/c void?)]
   [nstableview-set-frame-size! (c-> nstableview? any/c void?)]
   [nstableview-set-identifier! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-set-indicator-image-in-table-column! (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstableview-set-keyboard-focus-ring-needs-display-in-rect! (c-> nstableview? any/c void?)]
   [nstableview-set-mark! (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-set-needs-display-in-rect! (c-> nstableview? any/c void?)]
   [nstableview-should-be-treated-as-ink-event (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
   [nstableview-should-delay-window-ordering-for-event (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
   [nstableview-show-context-help (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-show-context-menu-for-selection (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-show-definition-for-attributed-string-at-point (c-> nstableview? (or/c string? objc-object? #f) any/c void?)]
+  [nstableview-show-definition-for-attributed-string-range-options-baseline-origin-provider (c-> nstableview? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nstableview-show-writing-tools (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-size-last-column-to-fit (c-> nstableview? void?)]
   [nstableview-size-that-fits (c-> nstableview? any/c any/c)]
   [nstableview-size-to-fit (c-> nstableview? void?)]
@@ -926,36 +1028,31 @@
   [nstableview-take-integer-value-from (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-take-object-value-from (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-take-string-value-from (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-text-did-begin-editing (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-text-did-change (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-text-did-end-editing (c-> nstableview? (or/c string? objc-object? #f) void?)]
-  [nstableview-text-should-begin-editing (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
-  [nstableview-text-should-end-editing (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
   [nstableview-text-view-url-for-contents-of-text-attachment-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c nsurl? objc-nil?))]
-  [nstableview-text-view-candidates-for-selected-range (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c any/c)]
+  [nstableview-text-view-candidates-for-selected-range (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c (or/c nsarray? objc-nil?))]
   [nstableview-text-view-candidates-for-selected-range (c-> nstableview? (or/c string? objc-object? #f) any/c (or/c nsarray? objc-nil?))]
   [nstableview-text-view-clicked-on-cell-in-rect-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c exact-nonnegative-integer? void?)]
   [nstableview-text-view-clicked-on-link-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? boolean?)]
-  [nstableview-text-view-completions-for-partial-word-range-index-of-selected-item (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c (or/c cpointer? #f) any/c)]
-  [nstableview-text-view-did-check-text-in-range-types-options-results-orthography-word-count (c-> nstableview? (or/c string? objc-object? #f) any/c exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-integer? any/c)]
+  [nstableview-text-view-completions-for-partial-word-range-index-of-selected-item (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c (or/c cpointer? #f) (or/c nsarray? objc-nil?))]
+  [nstableview-text-view-did-check-text-in-range-types-options-results-orthography-word-count (c-> nstableview? (or/c string? objc-object? #f) any/c exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-integer? (or/c nsarray? objc-nil?))]
   [nstableview-text-view-do-command-by-selector (c-> nstableview? (or/c string? objc-object? #f) string? boolean?)]
   [nstableview-text-view-double-clicked-on-cell-in-rect-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c exact-nonnegative-integer? void?)]
   [nstableview-text-view-dragged-cell-in-rect-event-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) exact-nonnegative-integer? void?)]
   [nstableview-text-view-menu-for-event-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c nsmenu? objc-nil?))]
   [nstableview-text-view-should-change-text-in-range-replacement-string (c-> nstableview? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) boolean?)]
   [nstableview-text-view-should-change-text-in-ranges-replacement-strings (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
-  [nstableview-text-view-should-change-typing-attributes-to-attributes (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nstableview-text-view-should-change-typing-attributes-to-attributes (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdictionary? objc-nil?))]
   [nstableview-text-view-should-select-candidate-at-index (c-> nstableview? (or/c string? objc-object? #f) exact-nonnegative-integer? boolean?)]
   [nstableview-text-view-should-set-spelling-state-range (c-> nstableview? (or/c string? objc-object? #f) exact-integer? any/c exact-integer?)]
-  [nstableview-text-view-should-update-touch-bar-item-identifiers (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nstableview-text-view-should-update-touch-bar-item-identifiers (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nstableview-text-view-will-change-selection-from-character-range-to-character-range (c-> nstableview? (or/c string? objc-object? #f) any/c any/c any/c)]
-  [nstableview-text-view-will-change-selection-from-character-ranges-to-character-ranges (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
-  [nstableview-text-view-will-check-text-in-range-options-types (c-> nstableview? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c cpointer? #f) any/c)]
+  [nstableview-text-view-will-change-selection-from-character-ranges-to-character-ranges (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
+  [nstableview-text-view-will-check-text-in-range-options-types (c-> nstableview? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c cpointer? #f) (or/c nsdictionary? objc-nil?))]
   [nstableview-text-view-will-display-tool-tip-for-character-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c nsstring? objc-nil?))]
   [nstableview-text-view-will-show-sharing-service-picker-for-items (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nssharingservicepicker? objc-nil?))]
-  [nstableview-text-view-writable-pasteboard-types-for-cell-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? any/c)]
+  [nstableview-text-view-writable-pasteboard-types-for-cell-at-index (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c nsarray? objc-nil?))]
   [nstableview-text-view-write-cell-at-index-to-pasteboard-type (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
-  [nstableview-text-view-writing-tools-ignored-ranges-in-enclosing-range (c-> nstableview? (or/c string? objc-object? #f) any/c any/c)]
+  [nstableview-text-view-writing-tools-ignored-ranges-in-enclosing-range (c-> nstableview? (or/c string? objc-object? #f) any/c (or/c nsarray? objc-nil?))]
   [nstableview-text-view-did-change-selection (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-text-view-did-change-typing-attributes (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-text-view-writing-tools-did-end (c-> nstableview? (or/c string? objc-object? #f) void?)]
@@ -972,12 +1069,21 @@
   [nstableview-try-to-perform-with (c-> nstableview? string? (or/c string? objc-object? #f) boolean?)]
   [nstableview-undo-manager-for-text-view (c-> nstableview? (or/c string? objc-object? #f) (or/c nsundomanager? objc-nil?))]
   [nstableview-unhide-rows-at-indexes-with-animation (c-> nstableview? (or/c string? objc-object? #f) exact-nonnegative-integer? void?)]
+  [nstableview-unregister-dragged-types (c-> nstableview? void?)]
+  [nstableview-update-cell (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-update-cell-inside (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-update-constraints (c-> nstableview? void?)]
+  [nstableview-update-constraints-for-subtree-if-needed (c-> nstableview? void?)]
   [nstableview-update-dragging-items-for-drag (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-update-layer (c-> nstableview? void?)]
+  [nstableview-update-tracking-areas (c-> nstableview? void?)]
+  [nstableview-update-user-activity-state (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-uppercase-word (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-valid-requestor-for-send-type-return-type (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nstableview-validate-editing (c-> nstableview? void?)]
+  [nstableview-validate-proposed-first-responder-for-event (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nstableview-validate-user-interface-item (c-> nstableview? (or/c string? objc-object? #f) boolean?)]
-  [nstableview-view-at-column-row-make-if-necessary (c-> nstableview? exact-integer? exact-integer? boolean? any/c)]
+  [nstableview-view-at-column-row-make-if-necessary (c-> nstableview? exact-integer? exact-integer? boolean? (or/c nsview? objc-nil?))]
   [nstableview-view-did-change-backing-properties (c-> nstableview? void?)]
   [nstableview-view-did-change-effective-appearance (c-> nstableview? void?)]
   [nstableview-view-did-end-live-resize (c-> nstableview? void?)]
@@ -989,13 +1095,17 @@
   [nstableview-view-will-move-to-superview (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-view-will-move-to-window (c-> nstableview? (or/c string? objc-object? #f) void?)]
   [nstableview-view-will-start-live-resize (c-> nstableview? void?)]
-  [nstableview-view-with-tag (c-> nstableview? exact-integer? any/c)]
+  [nstableview-view-with-tag (c-> nstableview? exact-integer? (or/c nsview? objc-nil?))]
   [nstableview-wants-forwarded-scroll-events-for-axis (c-> nstableview? exact-integer? boolean?)]
   [nstableview-wants-periodic-dragging-updates (c-> nstableview? boolean?)]
   [nstableview-wants-scroll-events-for-swipe-tracking-on-axis (c-> nstableview? exact-integer? boolean?)]
   [nstableview-will-open-menu-with-event (c-> nstableview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstableview-will-present-error (c-> nstableview? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nstableview-will-remove-subview (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-write-eps-inside-rect-to-pasteboard (c-> nstableview? any/c (or/c string? objc-object? #f) void?)]
+  [nstableview-write-pdf-inside-rect-to-pasteboard (c-> nstableview? any/c (or/c string? objc-object? #f) void?)]
   [nstableview-yank (c-> nstableview? (or/c string? objc-object? #f) void?)]
+  [nstableview-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nstableview-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
   [nstableview-is-compatible-with-responsive-scrolling (c-> boolean?)]
   )
@@ -1021,6 +1131,8 @@
 (define-aw-msg aw_racket_msg_P_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_P_q (-> ptr_t ptr_t ptr_t int64_t))
 (define-aw-msg aw_racket_msg_P_Q (-> ptr_t ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_P_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_E (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
@@ -1028,10 +1140,12 @@
 (define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PPP_b (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PPPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PPPQ_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t uint64_t ptr_t))
 (define-aw-msg aw_racket_msg_PPQ_P (-> ptr_t ptr_t ptr_t ptr_t uint64_t ptr_t))
 (define-aw-msg aw_racket_msg_PPQ_b (-> ptr_t ptr_t ptr_t ptr_t uint64_t bool_t))
 (define-aw-msg aw_racket_msg_PPQPP_b (-> ptr_t ptr_t ptr_t ptr_t uint64_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PPd_d (-> ptr_t ptr_t ptr_t ptr_t double_t double_t))
 (define-aw-msg aw_racket_msg_PPRPQ_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t uint64_t void_t))
 (define-aw-msg aw_racket_msg_PPRQ_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t uint64_t void_t))
 (define-aw-msg aw_racket_msg_PPG_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
@@ -1043,12 +1157,16 @@
 (define-aw-msg aw_racket_msg_PqG_q (-> ptr_t ptr_t ptr_t int64_t ptr_t int64_t))
 (define-aw-msg aw_racket_msg_PQ_b (-> ptr_t ptr_t ptr_t uint64_t bool_t))
 (define-aw-msg aw_racket_msg_PQ_v (-> ptr_t ptr_t ptr_t uint64_t void_t))
+(define-aw-msg aw_racket_msg_Pd_O (-> ptr_t ptr_t ptr_t double_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pddd_v (-> ptr_t ptr_t ptr_t double_t double_t double_t void_t))
 (define-aw-msg aw_racket_msg_PO_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PO_d (-> ptr_t ptr_t ptr_t ptr_t double_t))
 (define-aw-msg aw_racket_msg_PO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_POQ_v (-> ptr_t ptr_t ptr_t ptr_t uint64_t void_t))
 (define-aw-msg aw_racket_msg_PG_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PGP_b (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PGPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PGPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PGQPPPq_P (-> ptr_t ptr_t ptr_t ptr_t uint64_t ptr_t ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_PGG_G (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
@@ -1056,6 +1174,7 @@
 (define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
 (define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))
+(define-aw-msg aw_racket_msg_q_f (-> ptr_t ptr_t int64_t float_t))
 (define-aw-msg aw_racket_msg_q_R (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_G (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
@@ -1071,16 +1190,22 @@
 (define-aw-msg aw_racket_msg_Q_v (-> ptr_t ptr_t uint64_t void_t))
 (define-aw-msg aw_racket_msg_Qb_v (-> ptr_t ptr_t uint64_t bool_t void_t))
 (define-aw-msg aw_racket_msg_f_v (-> ptr_t ptr_t float_t void_t))
+(define-aw-msg aw_racket_msg_fq_v (-> ptr_t ptr_t float_t int64_t void_t))
 (define-aw-msg aw_racket_msg_d_v (-> ptr_t ptr_t double_t void_t))
 (define-aw-msg aw_racket_msg_R_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_R_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_R_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_R_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_R_G (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_R (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RPP_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_RPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RPPb_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t int64_t))
+(define-aw-msg aw_racket_msg_RPPqq_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t int64_t void_t))
 (define-aw-msg aw_racket_msg_RQ_R (-> ptr_t ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RZ_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_O_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_O_q (-> ptr_t ptr_t ptr_t int64_t))
@@ -1803,6 +1928,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setWritingToolsCoordinator:")) (id->ffi2-ptr (coerce-arg value))))
 
 ;; --- Instance methods ---
+(define (nstableview-abort-editing self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "abortEditing"))))
 (define (nstableview-accepts-first-mouse self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "acceptsFirstMouse:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-accessibility-activation-point self)
@@ -2287,6 +2414,16 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityZoomButton"))))
    ))
+(define (nstableview-add-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nstableview-add-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nstableview-add-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
+(define (nstableview-add-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nstableview-add-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nstableview-add-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nstableview-add-subview-positioned-relative-to! self view place other-view)
@@ -2295,9 +2432,25 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTableColumn:")) (id->ffi2-ptr (coerce-arg table-column))))
 (define (nstableview-add-tool-tip-rect-owner-user-data! self rect owner data)
   (aw_racket_msg_RPP_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addToolTipRect:owner:userData:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data)))
+(define (nstableview-add-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nstableview-add-tracking-rect-owner-user-data-assume-inside! self rect owner data flag)
+  (aw_racket_msg_RPPb_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingRect:owner:userData:assumeInside:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data) flag))
+(define (nstableview-additional-safe-area-insets! self)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_0_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "additionalSafeAreaInsets")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+(define (nstableview-adjust-page-height-new-top-bottom-limit self new-bottom old-top old-bottom bottom-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageHeightNew:top:bottom:limit:")) (id->ffi2-ptr new-bottom) old-top old-bottom bottom-limit))
+(define (nstableview-adjust-page-width-new-left-right-limit self new-right old-left old-right right-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageWidthNew:left:right:limit:")) (id->ffi2-ptr new-right) old-left old-right right-limit))
 (define (nstableview-adjust-scroll self new-visible)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustScroll:")) (id->ffi2-ptr new-visible) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nstableview-alignment-rect-for-frame self frame)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "alignmentRectForFrame:")) (id->ffi2-ptr frame) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
 (define (nstableview-ancestor-shared-with-view self view)
   (wrap-objc-object
@@ -2327,8 +2480,16 @@
     (ptr-ref buf _NSRect)))
 (define (nstableview-become-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "becomeFirstResponder"))))
+(define (nstableview-begin-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDocument"))))
+(define (nstableview-begin-dragging-session-with-items-event-source! self items event source)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDraggingSessionWithItems:event:source:")) (id->ffi2-ptr (coerce-arg items)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg source))))
+   ))
 (define (nstableview-begin-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-begin-page-in-rect-at-placement! self rect location)
+  (aw_racket_msg_RO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginPageInRect:atPlacement:")) (id->ffi2-ptr rect) (id->ffi2-ptr location)))
 (define (nstableview-begin-updates! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginUpdates"))))
 (define (nstableview-bitmap-image-rep-for-caching-display-in-rect self rect)
@@ -2349,6 +2510,14 @@
     (ptr-ref buf _NSRect)))
 (define (nstableview-center-selection-in-visible-area! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerSelectionInVisibleArea:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstableview-center-x-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerXAnchor"))))
+   ))
+(define (nstableview-center-y-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerYAnchor"))))
+   ))
 (define (nstableview-change-case-of-letter self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCaseOfLetter:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-change-mode-with-event self event)
@@ -2367,6 +2536,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "complete:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-conclude-drag-operation self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "concludeDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstableview-constraints-affecting-layout-for-orientation self orientation)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "constraintsAffectingLayoutForOrientation:")) orientation))
+   ))
+(define (nstableview-content-compression-resistance-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentCompressionResistancePriorityForOrientation:")) orientation))
+(define (nstableview-content-hugging-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentHuggingPriorityForOrientation:")) orientation))
 (define (nstableview-context-menu-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contextMenuKeyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-convert-point-from-view self point view)
@@ -2441,8 +2618,20 @@
   (let ([buf (malloc _NSSize)])
     (aw_racket_msg_Z_Z (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "convertSizeToLayer:")) (id->ffi2-ptr size) (cpointer->ptr_t buf))
     (ptr-ref buf _NSSize)))
+(define (nstableview-current-editor self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "currentEditor"))))
+   ))
 (define (nstableview-cursor-update self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "cursorUpdate:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-data-with-eps-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithEPSInsideRect:")) (id->ffi2-ptr rect)))
+   ))
+(define (nstableview-data-with-pdf-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithPDFInsideRect:")) (id->ffi2-ptr rect)))
+   ))
 (define (nstableview-delete-backward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-delete-backward-by-decomposing-previous-character self sender)
@@ -2477,6 +2666,8 @@
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didCloseMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-did-remove-row-view-for-row self row-view row)
   (aw_racket_msg_Pq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didRemoveRowView:forRow:")) (id->ffi2-ptr (coerce-arg row-view)) row))
+(define (nstableview-discard-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardCursorRects"))))
 (define (nstableview-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "display"))))
 (define (nstableview-display-if-needed! self)
@@ -2487,6 +2678,10 @@
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRect:")) (id->ffi2-ptr rect)))
 (define (nstableview-display-if-needed-in-rect-ignoring-opacity! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRectIgnoringOpacity:")) (id->ffi2-ptr rect)))
+(define (nstableview-display-link-with-target-selector! self target selector)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayLinkWithTarget:selector:")) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName selector))))
+   ))
 (define (nstableview-display-rect! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRect:")) (id->ffi2-ptr rect)))
 (define (nstableview-display-rect-ignoring-opacity! self rect)
@@ -2517,31 +2712,62 @@
   (aw_racket_msg_P_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingUpdated:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-draw-background-in-clip-rect self clip-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawBackgroundInClipRect:")) (id->ffi2-ptr clip-rect)))
+(define (nstableview-draw-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstableview-draw-cell-inside self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawCellInside:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstableview-draw-focus-ring-mask self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawFocusRingMask"))))
 (define (nstableview-draw-grid-in-clip-rect self clip-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawGridInClipRect:")) (id->ffi2-ptr clip-rect)))
+(define (nstableview-draw-page-border-with-size self border-size)
+  (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawPageBorderWithSize:")) (id->ffi2-ptr border-size)))
 (define (nstableview-draw-rect self dirty-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawRect:")) (id->ffi2-ptr dirty-rect)))
 (define (nstableview-draw-row-clip-rect self row clip-rect)
   (aw_racket_msg_qR_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawRow:clipRect:")) row (id->ffi2-ptr clip-rect)))
 (define (nstableview-draw-with-expansion-frame-in-view self content-frame view)
   (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawWithExpansionFrame:inView:")) (id->ffi2-ptr content-frame) (id->ffi2-ptr (coerce-arg view))))
+(define (nstableview-edge-insets-for-layout-region self layout-region)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_P_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "edgeInsetsForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
 (define (nstableview-edit-column-row-with-event-select self column row event select)
   (aw_racket_msg_qqPb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "editColumn:row:withEvent:select:")) column row (id->ffi2-ptr (coerce-arg event)) select))
+;; param 2: weak reference
+(define (nstableview-edit-with-frame-editor-delegate-event self rect text-obj delegate event)
+  (aw_racket_msg_RPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "editWithFrame:editor:delegate:event:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg text-obj)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-effective-appearance self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "effectiveAppearance"))))
    ))
+(define (nstableview-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nstableview-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nstableview-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nstableview-end-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endDocument"))))
+(define (nstableview-end-editing! self text-obj)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endEditing:")) (id->ffi2-ptr (coerce-arg text-obj))))
 (define (nstableview-end-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-end-page! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endPage"))))
 (define (nstableview-end-updates! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endUpdates"))))
+(define (nstableview-enter-full-screen-mode-with-options self screen options)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enterFullScreenMode:withOptions:")) (id->ffi2-ptr (coerce-arg screen)) (id->ffi2-ptr (coerce-arg options))))
 ;; block param 0: synchronous (caller frees)
 (define (nstableview-enumerate-available-row-views-using-block self handler)
   (define-values (_blk0 _blk0-id)
     (make-objc-block handler (list _id _int64) _void))
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enumerateAvailableRowViewsUsingBlock:")) (id->ffi2-ptr _blk0)))
+(define (nstableview-exercise-ambiguity-in-layout self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exerciseAmbiguityInLayout"))))
+(define (nstableview-exit-full-screen-mode-with-options self options)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exitFullScreenModeWithOptions:")) (id->ffi2-ptr (coerce-arg options))))
 (define (nstableview-expansion-frame-with-frame self content-frame)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "expansionFrameWithFrame:")) (id->ffi2-ptr content-frame) (cpointer->ptr_t buf))
@@ -2550,6 +2776,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flagsChanged:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-flush-buffered-key-events self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flushBufferedKeyEvents"))))
+(define (nstableview-frame-for-alignment-rect self alignment-rect)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameForAlignmentRect:")) (id->ffi2-ptr alignment-rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nstableview-frame-of-cell-at-column-row self column row)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_qq_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameOfCellAtColumn:row:")) column row (cpointer->ptr_t buf))
@@ -2606,6 +2836,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
 (define (nstableview-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nstableview-invalidate-intrinsic-content-size self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSize"))))
+(define (nstableview-invalidate-intrinsic-content-size-for-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSizeForCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstableview-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nstableview-is-accessibility-alternate-ui-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilityAlternateUIVisible"))))
 (define (nstableview-is-accessibility-disclosed self)
@@ -2646,6 +2882,8 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isContinuous"))))
 (define (nstableview-is-descendant-of self view)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDescendantOf:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nstableview-is-drawing-find-indicator self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDrawingFindIndicator"))))
 (define (nstableview-is-enabled self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isEnabled"))))
 (define (nstableview-is-flipped self)
@@ -2656,6 +2894,10 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHiddenOrHasHiddenAncestor"))))
 (define (nstableview-is-highlighted self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHighlighted"))))
+(define (nstableview-is-horizontal-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHorizontalContentSizeConstraintActive"))))
+(define (nstableview-is-in-full-screen-mode self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isInFullScreenMode"))))
 (define (nstableview-is-opaque self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isOpaque"))))
 (define (nstableview-is-rotated-from-base self)
@@ -2664,14 +2906,26 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRotatedOrScaledFromBase"))))
 (define (nstableview-is-row-selected self row)
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRowSelected:")) row))
+(define (nstableview-is-vertical-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVerticalContentSizeConstraintActive"))))
 (define (nstableview-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-key-up self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyUp:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-knows-page-range self range)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "knowsPageRange:")) (id->ffi2-ptr range)))
 (define (nstableview-layout self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layout"))))
+(define (nstableview-layout-guide-for-layout-region self layout-region)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutGuideForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region))))
+   ))
 (define (nstableview-layout-subtree-if-needed self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutSubtreeIfNeeded"))))
+(define (nstableview-location-of-print-rect self rect)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_R_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "locationOfPrintRect:")) (id->ffi2-ptr rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
 (define (nstableview-lowercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lowercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-magnify-with-event self event)
@@ -2692,6 +2946,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstableview-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nstableview-make-view-with-identifier-owner self identifier owner)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeViewWithIdentifier:owner:")) (id->ffi2-ptr (coerce-arg identifier)) (id->ffi2-ptr (coerce-arg owner))))
@@ -2798,8 +3056,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-needs-to-draw-rect self rect)
   (aw_racket_msg_R_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "needsToDrawRect:")) (id->ffi2-ptr rect)))
+(define (nstableview-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
+(define (nstableview-note-focus-ring-mask-changed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noteFocusRingMaskChanged"))))
 (define (nstableview-note-height-of-rows-with-indexes-changed self index-set)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noteHeightOfRowsWithIndexesChanged:")) (id->ffi2-ptr (coerce-arg index-set))))
 (define (nstableview-note-number-of-rows-changed self)
@@ -2824,18 +3086,35 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-perform-key-equivalent! self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-prepare-content-in-rect self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareContentInRect:")) (id->ffi2-ptr rect)))
 (define (nstableview-prepare-for-drag-operation self sender)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-prepare-for-reuse self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForReuse"))))
+(define (nstableview-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nstableview-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nstableview-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-print self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "print:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-quick-look-preview-items self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookPreviewItems:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-quick-look-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-rect-for-layout-region self layout-region)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_P_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nstableview-rect-for-page self page)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_q_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForPage:")) page (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nstableview-rect-for-smart-magnification-at-point-in-rect self location visible-rect)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_OR_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForSmartMagnificationAtPoint:inRect:")) (id->ffi2-ptr location) (id->ffi2-ptr visible-rect) (cpointer->ptr_t buf))
@@ -2848,6 +3127,10 @@
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_q_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectOfRow:")) row (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nstableview-reflect-scrolled-clip-view self clip-view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "reflectScrolledClipView:")) (id->ffi2-ptr (coerce-arg clip-view))))
+(define (nstableview-register-for-dragged-types self new-types)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForDraggedTypes:")) (id->ffi2-ptr (coerce-arg new-types))))
 (define (nstableview-register-nib-for-identifier self nib identifier)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerNib:forIdentifier:")) (id->ffi2-ptr (coerce-arg nib)) (id->ffi2-ptr (coerce-arg identifier))))
 (define (nstableview-reload-data self)
@@ -2856,24 +3139,42 @@
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "reloadDataForRowIndexes:columnIndexes:")) (id->ffi2-ptr (coerce-arg row-indexes)) (id->ffi2-ptr (coerce-arg column-indexes))))
 (define (nstableview-remove-all-tool-tips! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeAllToolTips"))))
+(define (nstableview-remove-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nstableview-remove-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nstableview-remove-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
 (define (nstableview-remove-from-superview! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperview"))))
 (define (nstableview-remove-from-superview-without-needing-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperviewWithoutNeedingDisplay"))))
+(define (nstableview-remove-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nstableview-remove-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nstableview-remove-rows-at-indexes-with-animation! self indexes animation-options)
   (aw_racket_msg_PQ_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeRowsAtIndexes:withAnimation:")) (id->ffi2-ptr (coerce-arg indexes)) animation-options))
 (define (nstableview-remove-table-column! self table-column)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTableColumn:")) (id->ffi2-ptr (coerce-arg table-column))))
 (define (nstableview-remove-tool-tip! self tag)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeToolTip:")) tag))
+(define (nstableview-remove-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nstableview-remove-tracking-rect! self tag)
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingRect:")) tag))
 (define (nstableview-replace-subview-with! self old-view new-view)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replaceSubview:with:")) (id->ffi2-ptr (coerce-arg old-view)) (id->ffi2-ptr (coerce-arg new-view))))
+(define (nstableview-reset-cursor-rects! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resetCursorRects"))))
 (define (nstableview-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
 (define (nstableview-resize-subviews-with-old-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeSubviewsWithOldSize:")) (id->ffi2-ptr old-size)))
 (define (nstableview-resize-with-old-superview-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeWithOldSuperviewSize:")) (id->ffi2-ptr old-size)))
+(define (nstableview-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nstableview-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nstableview-right-mouse-down self event)
@@ -2898,8 +3199,36 @@
   (let ([buf (malloc _NSRange)])
     (aw_racket_msg_R_G (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rowsInRect:")) (id->ffi2-ptr rect) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRange)))
+(define (nstableview-ruler-view-did-add-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstableview-ruler-view-did-move-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstableview-ruler-view-did-remove-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstableview-ruler-view-handle-mouse-down self ruler event)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:handleMouseDown:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-ruler-view-location-for-point self ruler point)
+  (aw_racket_msg_PO_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:locationForPoint:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr point)))
+(define (nstableview-ruler-view-point-for-location self ruler point)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_Pd_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:pointForLocation:")) (id->ffi2-ptr (coerce-arg ruler)) point (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
+(define (nstableview-ruler-view-should-add-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstableview-ruler-view-should-move-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstableview-ruler-view-should-remove-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstableview-ruler-view-will-add-marker-at-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willAddMarker:atLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nstableview-ruler-view-will-move-marker-to-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willMoveMarker:toLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nstableview-ruler-view-will-set-client-view self ruler new-client)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willSetClientView:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg new-client))))
 (define (nstableview-scale-unit-square-to-size self new-unit-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scaleUnitSquareToSize:")) (id->ffi2-ptr new-unit-size)))
+(define (nstableview-scroll-clip-view-to-point self clip-view point)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollClipView:toPoint:")) (id->ffi2-ptr (coerce-arg clip-view)) (id->ffi2-ptr point)))
 (define (nstableview-scroll-column-to-visible self column)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollColumnToVisible:")) column))
 (define (nstableview-scroll-line-down self sender)
@@ -2924,6 +3253,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollWheel:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-select-all self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectAll:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstableview-select-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectCell:")) (id->ffi2-ptr (coerce-arg cell))))
 (define (nstableview-select-column-indexes-by-extending-selection self indexes extend)
   (aw_racket_msg_Pb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectColumnIndexes:byExtendingSelection:")) (id->ffi2-ptr (coerce-arg indexes)) extend))
 (define (nstableview-select-line self sender)
@@ -2934,8 +3265,17 @@
   (aw_racket_msg_Pb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectRowIndexes:byExtendingSelection:")) (id->ffi2-ptr (coerce-arg indexes)) extend))
 (define (nstableview-select-to-mark self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectToMark:")) (id->ffi2-ptr (coerce-arg sender))))
+;; param 2: weak reference
+(define (nstableview-select-with-frame-editor-delegate-start-length self rect text-obj delegate sel-start sel-length)
+  (aw_racket_msg_RPPqq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectWithFrame:editor:delegate:start:length:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg text-obj)) (id->ffi2-ptr (coerce-arg delegate)) sel-start sel-length))
 (define (nstableview-select-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectWord:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstableview-selected-cell self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectedCell"))))
+   ))
+(define (nstableview-selected-tag self)
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectedTag"))))
 (define (nstableview-send-action-to self action target)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sendAction:to:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg target))))
 (define (nstableview-send-action-on self mask)
@@ -3118,8 +3458,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilitySelectedChildren:")) (id->ffi2-ptr (coerce-arg accessibility-selected-children))))
 (define (nstableview-set-accessibility-selected-columns! self accessibility-selected-columns)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilitySelectedColumns:")) (id->ffi2-ptr (coerce-arg accessibility-selected-columns))))
-(define (nstableview-set-accessibility-selected-rows! self selected-rows)
-  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilitySelectedRows:")) (id->ffi2-ptr (coerce-arg selected-rows))))
+(define (nstableview-set-accessibility-selected-rows! self accessibility-selected-rows)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilitySelectedRows:")) (id->ffi2-ptr (coerce-arg accessibility-selected-rows))))
 (define (nstableview-set-accessibility-selected-text! self accessibility-selected-text)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilitySelectedText:")) (id->ffi2-ptr (coerce-arg accessibility-selected-text))))
 (define (nstableview-set-accessibility-selected-text-range! self accessibility-selected-text-range)
@@ -3196,6 +3536,10 @@
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsOrigin:")) (id->ffi2-ptr new-origin)))
 (define (nstableview-set-bounds-size! self new-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsSize:")) (id->ffi2-ptr new-size)))
+(define (nstableview-set-content-compression-resistance-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentCompressionResistancePriority:forOrientation:")) priority orientation))
+(define (nstableview-set-content-hugging-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentHuggingPriority:forOrientation:")) priority orientation))
 (define (nstableview-set-dragging-source-operation-mask-for-local! self mask is-local)
   (aw_racket_msg_Qb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setDraggingSourceOperationMask:forLocal:")) mask is-local))
 (define (nstableview-set-drop-row-drop-operation! self row drop-operation)
@@ -3208,6 +3552,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
 (define (nstableview-set-indicator-image-in-table-column! self image table-column)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIndicatorImage:inTableColumn:")) (id->ffi2-ptr (coerce-arg image)) (id->ffi2-ptr (coerce-arg table-column))))
+(define (nstableview-set-keyboard-focus-ring-needs-display-in-rect! self rect)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setKeyboardFocusRingNeedsDisplayInRect:")) (id->ffi2-ptr rect)))
 (define (nstableview-set-mark! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setMark:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-set-needs-display-in-rect! self invalid-rect)
@@ -3220,6 +3566,15 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-show-context-menu-for-selection self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstableview-show-definition-for-attributed-string-at-point self attr-string text-baseline-origin)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:atPoint:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr text-baseline-origin)))
+;; block param 3: async-copied (runtime-managed)
+(define (nstableview-show-definition-for-attributed-string-range-options-baseline-origin-provider self attr-string target-range options origin-provider)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block origin-provider (list _NSRange) _NSPoint))
+  (aw_racket_msg_PGPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:range:options:baselineOriginProvider:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr target-range) (id->ffi2-ptr (coerce-arg options)) (id->ffi2-ptr _blk3)))
+(define (nstableview-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-size-last-column-to-fit self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sizeLastColumnToFit"))))
 (define (nstableview-size-that-fits self size)
@@ -3260,16 +3615,6 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "takeObjectValueFrom:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-take-string-value-from self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "takeStringValueFrom:")) (id->ffi2-ptr (coerce-arg sender))))
-(define (nstableview-text-did-begin-editing self notification)
-  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "textDidBeginEditing:")) (id->ffi2-ptr (coerce-arg notification))))
-(define (nstableview-text-did-change self notification)
-  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "textDidChange:")) (id->ffi2-ptr (coerce-arg notification))))
-(define (nstableview-text-did-end-editing self notification)
-  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "textDidEndEditing:")) (id->ffi2-ptr (coerce-arg notification))))
-(define (nstableview-text-should-begin-editing self text-object)
-  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "textShouldBeginEditing:")) (id->ffi2-ptr (coerce-arg text-object))))
-(define (nstableview-text-should-end-editing self text-object)
-  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "textShouldEndEditing:")) (id->ffi2-ptr (coerce-arg text-object))))
 (define (nstableview-text-view-url-for-contents-of-text-attachment-at-index self text-view text-attachment char-index)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PPQ_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "textView:URLForContentsOfTextAttachment:atIndex:")) (id->ffi2-ptr (coerce-arg text-view)) (id->ffi2-ptr (coerce-arg text-attachment)) char-index))
@@ -3384,16 +3729,34 @@
    ))
 (define (nstableview-unhide-rows-at-indexes-with-animation self indexes row-animation)
   (aw_racket_msg_PQ_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unhideRowsAtIndexes:withAnimation:")) (id->ffi2-ptr (coerce-arg indexes)) row-animation))
+(define (nstableview-unregister-dragged-types self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterDraggedTypes"))))
+(define (nstableview-update-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstableview-update-cell-inside self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateCellInside:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstableview-update-constraints self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraints"))))
+(define (nstableview-update-constraints-for-subtree-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraintsForSubtreeIfNeeded"))))
 (define (nstableview-update-dragging-items-for-drag self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateDraggingItemsForDrag:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-update-layer self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateLayer"))))
+(define (nstableview-update-tracking-areas self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateTrackingAreas"))))
+(define (nstableview-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nstableview-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstableview-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
+(define (nstableview-validate-editing self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateEditing"))))
+(define (nstableview-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nstableview-validate-user-interface-item self item)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateUserInterfaceItem:")) (id->ffi2-ptr (coerce-arg item))))
 (define (nstableview-view-at-column-row-make-if-necessary self column row make-if-necessary)
@@ -3434,12 +3797,24 @@
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
 (define (nstableview-will-open-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willOpenMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nstableview-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nstableview-will-remove-subview self subview)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willRemoveSubview:")) (id->ffi2-ptr (coerce-arg subview))))
+(define (nstableview-write-eps-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writeEPSInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
+(define (nstableview-write-pdf-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writePDFInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nstableview-yank self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yank:")) (id->ffi2-ptr (coerce-arg sender))))
 
 ;; --- Class methods ---
+(define (nstableview-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTableView) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nstableview-default-animation-for-key key)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTableView) (id->ffi2-ptr (sel_registerName "defaultAnimationForKey:")) (id->ffi2-ptr (coerce-arg key))))

@@ -129,10 +129,39 @@ ascent! {
     // the effective_method is set to the protocol name so the checkpoint
     // builder can look up the original protocol method declaration for full
     // metadata (parameters, return type).
+    //
+    // A class can transitively conform to two protocols that both declare the
+    // same selector (e.g. NSTextView satisfies both the modern
+    // `NSTextInputClient` and the legacy `NSTextInput`, which both declare
+    // `characterIndexForPoint:`) — the ObjC runtime has exactly one method
+    // implementation for a given (class, selector), so this must resolve to
+    // one `effective_method` row, not two. `has_nondeprecated_protocol_method`
+    // lets a non-deprecated declaration always win over a deprecated one from a
+    // different protocol; two same-selector declarations of matching
+    // deprecation status are a residual, corpus-measured deferral (checkpoint.rs).
+    relation has_nondeprecated_protocol_method(String, String, bool);
+
+    has_nondeprecated_protocol_method(class.clone(), sel.clone(), *is_cm) <--
+        transitively_conforms_to(class, proto),
+        protocol_method(proto, sel, _is_req, is_cm, _is_init, is_dep, _is_var),
+        if !*is_dep;
+
     effective_method(
         class.clone(), sel.clone(), *is_cm, *is_init, *is_dep, *is_var, proto.clone()
     ) <--
         transitively_conforms_to(class, proto),
         protocol_method(proto, sel, _is_req, is_cm, is_init, is_dep, is_var),
-        !method_decl(class, sel, is_cm, _, _, _);
+        !method_decl(class, sel, is_cm, _, _, _),
+        if !*is_dep;
+
+    // A deprecated protocol declaration only wins when no conformed protocol
+    // offers a non-deprecated alternative for the same selector.
+    effective_method(
+        class.clone(), sel.clone(), *is_cm, *is_init, *is_dep, *is_var, proto.clone()
+    ) <--
+        transitively_conforms_to(class, proto),
+        protocol_method(proto, sel, _is_req, is_cm, is_init, is_dep, is_var),
+        !method_decl(class, sel, is_cm, _, _, _),
+        if *is_dep,
+        !has_nondeprecated_protocol_method(class, sel, is_cm);
 }

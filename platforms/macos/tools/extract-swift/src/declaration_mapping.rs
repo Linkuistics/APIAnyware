@@ -653,7 +653,7 @@ fn map_property(node: &AbiNode) -> Option<ir::Property> {
         // `(copy)` is an ObjC property attribute; Swift bridged properties
         // surface as ObjC overrides which carry the attribute on the ObjC
         // side. Default-false here; merge keeps the ObjC value.
-        is_copy: false,
+        ownership: None,
         deprecated: false,
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
@@ -750,6 +750,7 @@ fn map_top_level_constant(node: &AbiNode) -> Option<ir::Constant> {
     Some(ir::Constant {
         name: node.name.clone(),
         constant_type: map_swift_type(type_node),
+        array_element: None,
         source: Some(DeclarationSource::SwiftInterface),
         provenance: build_provenance(node),
         doc_refs: build_doc_refs(node),
@@ -851,13 +852,19 @@ fn extract_param_names(printed_name: &str) -> Vec<String> {
         .collect()
 }
 
-/// Extract simple type name from a qualified name like `"TestFramework.Base"` → `"Base"`.
+/// Extract the simple base type name from a printed, possibly module-qualified type name
+/// (`"TestFramework.Base"` → `"Base"`).
+///
+/// The digester also prints a generic superclass as its **instantiation**, parameter list
+/// and all (`"AppIntents.EntityQueryComparator<τ_0_0, AppIntents.τ_0_1.UnwrappedType,
+/// τ_0_2>"`), which the IR has no structured way to carry (`generic-class-name-surface-k78`)
+/// — so the parameter list is dropped first, before any `.`-splitting. Order matters: an
+/// argument inside that list can itself contain a `.` (an associated-type projection like
+/// `τ_0_1.UnwrappedType`), which would otherwise be mistaken for the module-qualifier dot and
+/// truncate the base name into a fragment (`"UnwrappedType, τ_0_2>"`).
 fn extract_simple_name(qualified: &str) -> String {
-    qualified
-        .rsplit('.')
-        .next()
-        .unwrap_or(qualified)
-        .to_string()
+    let base = qualified.split('<').next().unwrap_or(qualified);
+    base.rsplit('.').next().unwrap_or(base).to_string()
 }
 
 /// Check if a conformance is a Swift stdlib conformance that we skip in the IR.
@@ -1341,5 +1348,67 @@ mod tests {
             .find(|m| !m.init_method)
             .expect("instance method recovered");
         assert!(area.swift_fn.is_some(), "struct method carries swift_fn");
+    }
+
+    // ------------------------------------------------------------------
+    // extract_simple_name — generic superclass surface (generic-class-name-surface-k78)
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn extract_simple_name_strips_module_qualifier() {
+        assert_eq!(extract_simple_name("TestFramework.Base"), "Base");
+        assert_eq!(extract_simple_name("Base"), "Base");
+    }
+
+    #[test]
+    fn extract_simple_name_strips_a_generic_argument_list_before_the_qualifier_dot() {
+        // A printed generic instantiation must be dropped whole, not dot-split — the
+        // real AppIntents/MusicKit/Network population that used to leak into
+        // `Class::superclass` as e.g. `EntityQueryComparator<τ_0_0, τ_0_1, τ_0_2, τ_0_3>`.
+        assert_eq!(
+            extract_simple_name("AppIntents.EntityQueryComparator<τ_0_0, τ_0_1, τ_0_2, τ_0_3>"),
+            "EntityQueryComparator"
+        );
+        assert_eq!(
+            extract_simple_name("MusicKit.PartialMusicProperty<τ_0_0>"),
+            "PartialMusicProperty"
+        );
+    }
+
+    #[test]
+    fn extract_simple_name_does_not_fragment_on_a_dot_inside_a_generic_argument() {
+        // An argument can itself be module-qualified (an associated-type projection like
+        // `τ_0_1.UnwrappedType`); splitting on `<` FIRST keeps that dot from being mistaken
+        // for the module-qualifier dot and truncating the base name to just the fragment
+        // after it — the real `GreaterThanComparator` bug (`"UnwrappedType, τ_0_2>"`).
+        assert_eq!(
+            extract_simple_name(
+                "AppIntents.EntityQueryComparator<τ_0_0, AppIntents.τ_0_1.UnwrappedType, τ_0_2>"
+            ),
+            "EntityQueryComparator"
+        );
+    }
+
+    #[test]
+    fn map_class_superclass_is_the_generic_base_name_not_the_instantiation() {
+        let node: AbiNode = serde_json::from_value(json!({
+            "kind": "TypeDecl",
+            "name": "ContainsComparator",
+            "printedName": "ContainsComparator",
+            "declKind": "Class",
+            "moduleName": "AppIntents",
+            "usr": "s:10AppIntents18ContainsComparatorC",
+            "superclassUsr": "s:10AppIntents21EntityQueryComparatorC",
+            "superclassNames": ["AppIntents.EntityQueryComparator<τ_0_0, τ_0_1, τ_0_2, τ_0_3>"],
+            "children": []
+        }))
+        .expect("build class AbiNode");
+        let class = map_class(&node).expect("class maps");
+        assert_eq!(
+            class.superclass, "EntityQueryComparator",
+            "the superclass field must be a plain base name, never the printed generic \
+             instantiation — that string is what used to reach the emitter as an invalid \
+             import specifier / extends target / filename"
+        );
     }
 }

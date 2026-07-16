@@ -35,12 +35,6 @@ framework ShazamKit {
             source llm
         }
     }
-    class SHSession {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class SHSignature {
         method initWithDataRepresentation:error: is-instance=#true {
             error-pattern error_out_param

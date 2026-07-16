@@ -1,22 +1,4 @@
 framework GameplayKit {
-    class GKAgent {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class GKAgent2D {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class GKAgent3D {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class GKNSPredicateRule {
         method ruleWithBlockPredicate:action: is-instance=#false {
             block-param 0 invocation=stored

@@ -380,7 +380,7 @@ fn classify_return(t: &TypeRef) -> RetMarshal {
         // hand it back raw and `aw-wrap` it Lisp-side to its exact bound type (ADR-0038
         // §4). A genuinely-Swift class would also land here; its dynamic ObjC class is
         // unbound, so `aw-wrap` walks to the nearest bound ancestor (NSObject worst case).
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             RetMarshal::Object
         }
         // A typedef alias (`NSTimeInterval`) names a valid in-scope Swift type; carry the
@@ -740,7 +740,7 @@ fn type_shape(t: &TypeRef) -> String {
         TypeRefKind::Class { name, .. } => format!("c:{name}"),
         TypeRefKind::Alias { name, .. } => format!("a:{name}"),
         TypeRefKind::Struct { name } => format!("s:{name}"),
-        TypeRefKind::Id => "id".into(),
+        TypeRefKind::Id { .. } => "id".into(),
         TypeRefKind::Instancetype => "instancetype".into(),
         TypeRefKind::CString => "cstr".into(),
         TypeRefKind::Pointer => "ptr".into(),
@@ -2440,7 +2440,9 @@ mod tests {
     fn idty() -> TypeRef {
         TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         }
     }
     fn param(name: &str, t: TypeRef) -> Param {
@@ -2622,6 +2624,7 @@ mod tests {
         let c = Constant {
             name: "MLCreateErrorDomain".into(),
             constant_type: nsstring(),
+            array_element: None,
             source: None,
             macro_value: None,
             provenance: None,

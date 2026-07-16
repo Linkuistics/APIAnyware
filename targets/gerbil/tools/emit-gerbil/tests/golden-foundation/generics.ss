@@ -12,6 +12,7 @@
   :gerbil-bindings/generics/006
   :gerbil-bindings/generics/007
   :gerbil-bindings/generics/008
+  :gerbil-bindings/generics/009
   )
 (export
   (import: :gerbil-bindings/generics/000)
@@ -23,4 +24,5 @@
   (import: :gerbil-bindings/generics/006)
   (import: :gerbil-bindings/generics/007)
   (import: :gerbil-bindings/generics/008)
+  (import: :gerbil-bindings/generics/009)
   )

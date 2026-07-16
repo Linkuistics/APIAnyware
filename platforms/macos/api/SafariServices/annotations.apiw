@@ -81,7 +81,6 @@ framework SafariServices {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

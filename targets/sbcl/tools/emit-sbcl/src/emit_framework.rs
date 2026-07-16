@@ -775,7 +775,9 @@ mod tests {
             }],
             return_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
             deprecated: false,
             variadic: false,
@@ -800,7 +802,7 @@ mod tests {
             },
             readonly: true,
             class_property: false,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: None,
             provenance: None,

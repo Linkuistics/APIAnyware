@@ -35,24 +35,20 @@ framework ModelIO {
     }
     class MDLMaterialPropertyGraph {
         method initWithInputs:outputs:evaluationFunction: is-instance=#true {
-            param-ownership 2 ownership=copy
             block-param 2 invocation=stored
             source llm
         }
         method setEvaluationFunction: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
     }
     class MDLMaterialPropertyNode {
         method initWithInputs:outputs:evaluationFunction: is-instance=#true {
-            param-ownership 2 ownership=copy
             block-param 2 invocation=stored
             source llm
         }
         method setEvaluationFunction: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             source llm
         }
@@ -69,7 +65,6 @@ framework ModelIO {
     }
     class MDLMeshBufferMap {
         method initWithBytes:deallocator: is-instance=#true {
-            param-ownership 1 ownership=copy
             block-param 1 invocation=stored
             source llm
         }

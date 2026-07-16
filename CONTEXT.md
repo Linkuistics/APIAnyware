@@ -131,6 +131,29 @@ reachability is per-target in the limit); reusing `DeclarationSource`
 `SwiftInterface` yet `objc_exposed`); re-parsing the raw USR prefix in emitters
 (the classifier lives once, in collection).
 
+**`TypeRefKind::Class` overload / ObjC-class recognition set** _(IR fact; surfaced 2026-07-09,
+`swift-residual-cli-pass-k65`)_:
+A `TypeRef` of kind `class` does **not** mean "an ObjC class". A declaration sourced from a
+`.swiftinterface` lowers **every Swift nominal type** — struct, tuple, typealias — to `kind:
+"class"`, so `CoreGraphics.hypot` reaches the emitters as
+`(Class{CGFloat}, Class{CGFloat}) -> Class{CGFloat}` and `lgamma`/`remquo` as returning
+`Class{Tuple}`, while CoreGraphics's IR `classes` array declares exactly eight classes (none of them
+`CGFloat` or `Tuple`). The kind is a *syntactic* lowering, not a semantic claim. The sound test for
+"is this a wrappable object?" is membership in the **ObjC-class recognition set** — the union of
+every framework's declared `classes` — and, before that, whether the name is a **scalar-backed value
+type** (`CGFloat`, one C scalar at the ABI, which marshals by value whatever kind carries it). Two
+consequences bit the TS target: an object-return arm that fired on `Class{..}` would have boxed
+`hypot`'s `CGFloat` into a `__SwiftValue` via `as AnyObject?`, and a type surface that asked
+`is_object_type` would emit `__unwrap` on a number plus an `import` of a name no module exports. Note
+the two dual sets an emitter must keep straight: **`objc_exposed`** answers *can I reach this
+declaration without the Swift ABI?*; the recognition set answers *is this **type name** an ObjC
+class?* — orthogonal questions with orthogonal answers.
+_Avoid_: reading `TypeRefKind::Class` as "an ObjC object" (that is the bug); a per-name allowlist of
+Swift value types (the recognition set is derived from the IR, not curated — `scalar_value_type` is a
+*separate*, tiny ABI allowlist); conflating with `objc_exposed` (a *declaration* fact, not a *type*
+fact); assuming a synthetic `TypeRefKind::Alias{CGFloat}` fixture exercises the real IR (it does not
+— the real spelling is `Class`).
+
 **ObjC runtime class name (vs Swift-overlay name)** _(collection IR fact; settled — k38)_:
 The class identity APIAnyware keys on: the name the **live ObjC runtime** reports
 (`class_getName`), recovered at collection from the clang **USR**
@@ -572,8 +595,10 @@ auto-reopens it (in `*shared-objects*`) so its `aw_sbcl_*` symbols re-link for f
 and dyld re-loads its linked framework subset, while the **Lisp** startup pass owns
 the direct-msgSend frameworks + **all** `Class`/`SEL` re-resolution over the baked
 graph (ADR-0034 §6 / ADR-0038 §5). The residual is a **deterministic function of the
-shared IR** (the §6d invariant: 51 funcs + 7 constants + 576 init + 554 method,
-identical across targets), which is *itself* what makes the CL family converge: same
+shared IR** (the §6d invariant: 51 funcs + 7 constants + 563 init + 549 method,
+identical across targets — re-pinned 2026-07-15 after SDK/environment drift from the
+leaf's original 2026-06-20 baseline of 576 init + 554 method, `sbcl-trampoline-count-inconsistency-k108`),
+which is *itself* what makes the CL family converge: same
 analysis → same C ABI → same surface. This is the contract's **lower layer**; the
 `ns:`/CLOS surface is the **upper layer**.
 _Avoid_: "Swift coverage library" / "second mechanism" (it is the trampoline layer
@@ -648,6 +673,603 @@ serves the direct path and the Swift-`throws` trampoline (`ThrowsBridge`).
 _Avoid_: naming a condition `ns:ns-error`/`ns:ns-exception` (those are the bound CLOS
 classes); per-(domain×code) condition subclasses (rejected — bloats the contract);
 "returns an error tuple" (the family signals, per ADR-0033).
+
+## TypeScript target toolchain
+
+**`typescript` target** _(fifth target; substrate confirmed first-hand on arm64
+2026-07-05 — `typescript-target-k1` Q1 + the `ts-substrate-spike-k3` spike, ADR-0054)_:
+The fifth target — **TypeScript**, the first non-Lisp and first statically-typed
+one. **Two-target split (`ts-substrate-reeval-k11`, 2026-07-06):** TypeScript is delivered as **two
+separate targets** by JS substrate, because a Node binding and an embedded-JavaScriptCore binding are
+different *products*, not two idioms of one. **This entry describes the _Node_ TS target — built first**
+(the harder, richer one: libuv pump, N-API, threading). The **JSC TS target** ("typed TS directly over
+Cocoa": all-Swift/ObjC core, embedded system `JavaScriptCore.framework`, the ADR-0056 pump dissolved,
+`JSManagedValue` memory, ~0 MB distribution) is a **separate future grove**, grounded in
+`targets/typescript/docs/research/2026-07-06-ts-substrate-reeval/FINDINGS.md`. Node's core-language is
+**Swift-native N-API, no Rust — confirmed first-hand** (`napi-dispatch-spine-k35`, 2026-07-07): a Swift
+`@_cdecl("napi_register_module_v1")` unit hosts the Node-API C surface directly (`napi_*` resolved at
+`dlopen` via `-undefined dynamic_lookup`), so the interim two-unit napi-rs+dylib pair collapses to one
+loadable `.node`. The pump mechanism is now proven **Swift-native first-hand** (`embed-pump-harness-k42`,
+2026-07-07: the helper-thread pump + teardown run as plain Swift on/around the loop thread, GREEN); the
+one residual FINDINGS §D5 sliver — Swift on framework *completion* threads via the `napi_threadsafe_function`
+bounce — rides on the tsfn sibling of `libuv-pump-k41`, not the substrate.
+On-disk unit `targets/typescript/`; CLI `--target typescript`; emitter crate
+`emit-typescript`. **Reference runtime is Node**, but the native substrate is
+anchored on **N-API**, which makes the binding **engine-agnostic** — the one
+`.node` addon runs on Node, on **Deno** (NativeScript's `runtime-node-api`, a
+Node-API+libffi ObjC bridge, runs on both Node and Deno), and on **Bun** (whose
+own docs call an N-API module "the most stable way to interact with native code
+from Bun"). So Node is the *reference* runtime **without betting the target's
+future on it** — the deliberate hedge against JS-runtime churn (D1). Bun is ruled
+out as *reference* on the **libuv/`uv_run` GUI-integration gap** (Bun's JSC loop
+shims `napi_get_uv_event_loop` but not `uv_run`, so the native-runloop-pumps-Node
+integration panics — Bun issue #18546) **plus ecosystem-longevity**; Deno primarily on
+**ecosystem-longevity** — but note Deno **also** has a GUI-integration capability gap
+(source-verified: its `napi_get_uv_event_loop` returns a **shim** and it omits
+`uv_backend_fd`/`uv_backend_timeout`/`uv_run`, so the runloop-pumps-Node integration does
+**not** port to Deno as-is, like Bun — dispatch + tsfn do port). The earlier "Deno on
+longevity, not capability" is corrected to "longevity *and* a loop-integration gap." _(Spike correction: the earlier
+"struct-by-value wall" reason was a **`bun:ffi`** limitation — moot for the N-API
+substrate, where the struct is marshalled natively below the runtime's view; the
+same `.node` passes the CGRect struct return on Bun. FINDINGS probe 4.)_ Dispatch is
+**generated typed native
+dispatch** (the racket ADR-0013 shape): a native Swift `@_cdecl` napi-callback entry per
+ObjC method ABI signature that reads its JS args, `unsafeBitCast`s `objc_msgSend` to a
+concrete `@convention(c)` shape, and marshals the result back — hosted in a **single
+Swift-native N-API `.node`** (no Rust; the marshalling napi-rs used to do is generated
+Swift) — the fat native core the ADR-0010 north star wants, with `napi_threadsafe_function`
+giving first-class **background-thread callback delivery** (the D5 discriminator,
+answered natively). **Thread-0 ownership + threading** is settled (ADR-0054 §3 polarity; **ADR-0056**
+mechanism + callback bounce): the **native Cocoa runloop is authoritative** —
+`NSApplication.run()` owns thread 0 and **pumps Node's libuv loop as a guest** (reached
+via the stable `napi_get_uv_event_loop`, `uv_run(NOWAIT)`, from a source in
+**`kCFRunLoopCommonModes`**), *not* the reverse. Confirmed on a **decisive criterion**
+(not just principle): AppKit's routine *nested* runloops — modal, menu/resize tracking —
+starve a libuv-primary manual pump (2b); a common-modes source survives them (primacy
+analysis, `targets/typescript/docs/research/2026-07-05-libuv-runloop-primacy.md`).
+Governing constraint: **the binding must not break the runtime's own threading
+facilities** (libuv threadpool, `worker_threads`, `nextTick`/microtask) — only the *main*
+loop is pumped as a guest; the runtime's other threads run natively (confirmed first-hand:
+`worker_threads`, threadpool completions, timers, `setImmediate`, the stale-timeout case all
+GREEN under `NSApp.run()`, `libuv-runloop-primacy-spike-k6`; **re-confirmed under the production
+embedder** — native owns `main()`, Node embedded via `CommonEnvironmentSetup`+`LoadEnvironment`,
+the real `.node` addon + runtime loaded — by `embed-pump-harness-k42`, 2026-07-07, where the
+`nextTick`/microtask drain that the k6 *blocking-call* harness could not achieve (finding C) is
+GREEN because there is no ambient blocking JS→native call). Mechanism **decided (k6,
+2026-07-05): Electron's helper-thread shape (c)** — a helper thread `poll`s `uv_backend_fd`,
+signals a common-modes `CFRunLoopSource`, lock-steps one `uv_run(NOWAIT)`. The single-thread
+`CFFileDescriptor` shape (b) was **proven viable** first-hand (the fd *does* fire on the kqueue
+`uv_backend_fd` on macOS 26.5.1 — the dead-fd fear disproven) but **not shipped**: its idle
+advantage over (c) is marginal and it depends on undocumented CFFileDescriptor-on-kqueue
+behaviour (durability risk vs D1); retained as a future optimisation. **Entry architecture is
+load-bearing (k6):** the pump must wrap `uv_run` in a `v8::HandleScope`+`Context::Scope`+microtask
+checkpoint (bare `uv_run` crashes `CheckImmediate`; napi's public API is insufficient — needs the
+node/V8 embedding primitives), and the native side must own `main()` with **no ambient blocking
+JS→native call** while pumping (else V8 suppresses the microtask checkpoint and nested `uv_run`
+corrupts the loop) — the Electron/NativeScript `NSApplicationMain` model, *not* a `node app.js`
+that calls a blocking `run()`. **Both requirements are now realised + proven first-hand**
+(`embed-pump-harness-k42`, 2026-07-07): a native `main()`-owner embeds `libnode` (the ADR-0060 §1
+embedder core), keeps the V8 isolate entered on thread 0, and drives the pump via a C++ `pump_shim.cc`
+(`uv_run(NOWAIT)` inside `HandleScope`+`Context::Scope`+microtask checkpoint) from a Swift mechanism-(c)
+helper. The pump core (`src/pump.swift` + `src/pump_shim.cc`) is the reusable native-core code Step 8's
+`bundle-typescript` launcher will link. Background→main callbacks bounce via `napi_threadsafe_function` (the
+ADR-0014/0022/0035 analogue). Like the Lisp four it is a **trampoline-elided** target
+(ADR-0025): ObjC reached directly through the generated entries, a thin trampoline
+library only for the **Swift-native `s:` delta** + pointer constants. The `s:`
+free-function residual mechanism is **ADR-0061** (the TS port of racket ADR-0027):
+per residual function a generated napi-callback `import`s the owning framework and
+calls the API **by name** (swiftc owns the Swift ABI), registered in the addon's
+**exports object** under `aw_ts_swift_<Module>_<name>` — distinct from the plain-C
+`aw_ts_fn_<name>` (an ObjC/C symbol dispatched directly, the trampoline-elided limit).
+The **whole-corpus `aw_ts_swift_*` table is generated + wired** (`swift-residual-cli-pass-k65`,
+2026-07-09: 43 entries in `Generated/TrampolineTable.swift`, strong mirror-invariant unit,
+`hypot(3,4)===5` green against the generated entry), as are the pointer/scalar constants
+(ADR-0055 §6). **Two hard floors** are recorded, not built: **generic** free functions and Swift
+**operator** declarations (no TS identifier; sanitised entry names collide). The `aw_ts_fn_*`
+per-symbol C table is **generated + wired** (`fn-table-codegen-k69`, 2026-07-09: **2192** exports
+over **317** shared bodies in `Generated/FunctionTable.swift`; see *`aw_ts_fn_*` free-function
+resolution*), and the method/init/value-struct frontier remains (a follow-up-grove deferral,
+ADR-0061 §4). Alien on two
+axes the four Lisp targets are not: its FFI reach (settled here) and its **static
+`.d.ts` type surface** — a first-class deliverable no prior target has, deferred to
+`ts-design-grill-k4`.
+_Avoid_: a `deno`/`bun` target, or three sibling runtime targets (one target, one
+idiom — ADR-0004/0011; the runtime is *reference*, the substrate is
+engine-agnostic); "koffi" / in-runtime `objc_msgSend` recast as the dispatch
+substrate (the rejected B2 elision pole — dispatch is generated *native*, chosen on
+durability + threading); "ObjC-only" (it is the elided limit of the complete-API
+model, ADR-0025); calling Node the *only* runtime (the N-API substrate is portable
+across Node/Deno/Bun); conflating **`aw_ts_swift_*`** (the Swift-native `s:` residual —
+a generated call-by-name trampoline into a framework module, ADR-0061) with
+**`aw_ts_fn_*`** (a plain-C free function dispatched directly, the trampoline-elided
+limit — a *different* mechanism, a later generated-entry-table concern).
+
+**`aw_ts_fn_*` free-function resolution** _(settled by measurement — `fn-entry-spine-k68`,
+2026-07-09; generated whole-corpus + retain axis proven first-hand at `fn-table-codegen-k69`,
+2026-07-09, macOS 26.5.1/arm64)_:
+How the `typescript` target reaches a **plain-C free function** — the trampoline-elided limit
+(ADR-0025) for a named C export, and the *only* entry family whose exports and whose Swift bodies are
+keyed on **different axes**. An ObjC method multiplexes through one `objc_msgSend` address selected by
+selector, so the whole corpus folds into 998 `aw_ts_msg_<codes>` entries; a C function is called **by
+its own address**, so its **2192 exports are a floor** — but its *bodies* differ only by ABI signature,
+of which there are **317**. The join is `napi_create_function`'s **`data` payload**: one shared
+per-signature callback (`aw_ts_fnsig_<codes>`, an internal Swift name that never crosses to JS),
+registered 2192 times, each registration carrying the **descriptor** (`AwFnEntry`: symbol, framework,
+`bundled`, `retains`, cached address) of the symbol it must call. Exports keys stay `aw_ts_fn_<symbol>`
+(`function_entry_name`), so the emitted `.ts` call sites and the mirror invariant are untouched — a
+unit asserts **collected == referenced** and the whole corpus agrees exactly (2192 = 2192, no dead
+export, no missing entry). The **retain axis rides the descriptor**, not the entry name (there is **no
+`…_o` sibling** here — the export *is* the symbol): a C object return follows the CF **Create Rule**,
+and under uniform-+1 a **+0** return must **fold an `objc_retain`** in the entry because
+`__wrapRetained` does not retain — it takes a handle whose entry already folded (ADR-0057 §4) —
+while a **+1** (`Create`/`Copy`) return must not, since `__wrapOwned` takes the callee's own +1.
+**233** of the 2192 fold, exactly the emitted `__wrapRetained` call sites, disjoint from the 7
+`__wrapOwned` ones. The fold gates on the **wrap boundary** (`is_object_type`), never on the ABI shape
+being `Ptr`: `NSClassFromString` returns a `Class` and `NSSelectorFromString` a `SEL` — pointer-shaped,
+never wrapped, never folded (retaining a class leaks; `objc_retain` on a selector is UB). Proven
+against a live autorelease pool: `NSTemporaryDirectory()` reads `retainCount` 2 inside the pool and
+survives the drain at 1; `MTLCopyAllDevices()` reads 1 and never enters the pool.
+Addresses resolve **lazily, on first call, cached** — `dlsym(RTLD_DEFAULT)` → `dlopen` the owning
+framework → `dlsym` again — because a cold `dlsym` over the corpus resolves **1 of 2192** (the addon
+links only libSystem/CoreFoundation/CreateML/Foundation/libobjc) while a post-`dlopen` one resolves
+**2166 (98.8 %)**, and eagerly loading all 72 loadable frameworks costs ~90 ms and drags
+Metal/WebKit/Ruby/Tcl into every process. `dlopen` is the **only honest probe** of a system framework:
+since Big Sur the binaries live solely in the **dyld shared cache**, so the canonical path
+`/System/Library/Frameworks/<N>.framework/<N>` `dlopen`s fine while `stat` says it does not exist. One
+IR "framework" is not a bundle — **`libdispatch`** (62 symbols, in libSystem, always loaded) — and its
+descriptors carry `bundled: false` so a genuine miss is not blamed on a missing image. The **26**
+symbols that resolve nowhere even once their framework is loaded (24 Ruby header-only/deprecated
+declarations, 2 DirectoryService) **throw a JS `Error` naming symbol + framework** at the call —
+never a null-address call, never a silent no-op. Frontier: `is_supported_function` closes on the same
+**ABI-routability gate** `is_supported_method` does (`NativeSig::from_function`), which is what drops
+the emitted corpus from 2299 to 2192 — the 107 removed are `vFloat`/`vUInt32`/`vSInt32` (vecLib),
+`io_string_t`/`Str255`/`DVDDiscID` (C array typedefs), `vector_float2`/`simd_float2`, and `ALvoid`.
+_Avoid_: the `aw_ts_const_<code>(name)` shape as the precedent (a **closed 13-entry alphabet** that
+takes the symbol name as a *call argument* and `dlsym`s per read — it pays per call, changes the `.ts`
+call-site shape, and degrades **silently** to a zero value on a missing symbol); one baked Swift body
+per symbol (2192 bodies for no extra reach — *referencing* a symbol is impossible anyway: `Ruby`,
+`Tcl`, `GLUT`, `vecLib` have no Swift module to `import`); resolving at **registration** (a table of
+null addresses — cold `dlsym` resolves 1 of 2192); gating on the **filesystem** before `dlopen` (the
+path does not exist; the dyld shared cache does); reading the 2192↔317 gap as a "second alphabet"
+(`aw_ts_fnsig_*` is a private Swift symbol name reusing `AbiType::code`; the wire names are
+`aw_ts_fn_<symbol>` and nothing else); "**return the raw handle**, the `.ts` wraps it" for an object
+return (`__wrapRetained` **does not retain** — the name describes the handle's state, not an action;
+a +0 return handed over unfolded is a use-after-free the moment its autorelease pool drains);
+folding on `AbiType::Ptr` rather than on `is_object_type` (a `Class`/`SEL` return is pointer-shaped
+and never wrapped); conflating with **`aw_ts_swift_<Module>_<name>`** (the
+Swift-native `s:` residual's call-by-name trampoline, ADR-0061 — a *different* mechanism, and a
+uniform +1 where a direct-C object return follows the **CF Create Rule**).
+
+**typescript object model / `.d.ts` surface** _(settled — ADR-0055; grilled
+`ts-design-grill-k4` Q2, 2026-07-05)_:
+The `typescript` target's object model **mirrors the ObjC class graph as real ES6
+classes** — `class NSString extends NSObject`, static factories, true `extends` chains,
+each instance an ES6 object wrapping a **branded, disposable native handle** (the ObjC
+`id`, type-branded so an `NSString` handle is not an `NSArray`). The CL-family "mirror
+the graph" posture (sbcl ADR-0034 / gerbil ADR-0020) in TS's native class idiom — **not**
+the Scheme family's `objc-object` namespaces-of-procedures. Bodies are **statically
+generated** (one file per class, **per-framework modules** — `import { NSString } from
+'@apianyware/foundation'` — bounding artifact size by lazy import/tree-shaking), each
+method a coercion-free call into the ADR-0054 addon's per-signature dispatch entry; the
+**`.d.ts` is emitted from the same IR pass** (one artifact drives runtime + types, so
+they cannot drift), the runtime stays dumb (no call-time metadata consult, unlike
+NativeScript's runtime synthesis). **Selector → method name is the structure-preserving
+injective rule** (each `:` → `_`, camelCase humps kept: `setObject:forKey:` →
+`setObject_forKey_`) — the TS realization of ADR-0039 / PyObjC, injective so **no rename
+table / collision detector** is ever needed (chosen over camelCase colon-elision, which
+collides `foo`/`foo:`). **Protocols → TS `interface`s** classes explicitly `implements`
+(`@optional` → optional members). **Value types split** (ADR-0042 populations): POD
+aggregates → plain **by-value objects** (no handle/disposal, as the substrate already
+marshals them) — a closed set of **nine**, owned by the **runtime** (`structs.ts`, keyed by
+memory layout not framework, imported **type-only**), each shaped by one rule: **the JS object
+mirrors the C struct's fields**, so `CGRect` is **nested** (`{origin:{x,y}, size:{width,height}}`,
+faithful to `struct CGRect { CGPoint origin; CGSize size; }`, which is what lets `r.origin` feed a
+`CGPoint`-taking method) while the other eight are flat because their C structs are (ADR-0055 §5a);
+Swift-native value structs (`IndexSet`, `CharacterSet`) → **branded handle classes**.
+`NS_ENUM`/`NS_OPTIONS` → TS `enum`;
+nullability → `T | null` from ObjC/LLM annotations (strict-null across the surface);
+construction via faithful `alloc`/`init` (the TS `constructor` is internal). The
+lifetime contract that makes the handle *disposable* (`Symbol.dispose`/`using` +
+`FinalizationRegistry` backstop) is the **memory** decision (Q3), not this entry.
+_Avoid_: `objc-object`-style namespaces-of-procedures (that is the Scheme family — TS
+mirrors the graph as classes); runtime-synthesized classes + `.d.ts`-only (the
+NativeScript per-call-consult tax the substrate avoids); camelCase colon-elision selector
+names (non-injective — ADR-0055 §3 rejects it); one uniform "all structs are classes"
+representation (POD geometry is a plain by-value object, ADR-0042 split); calling the
+branded handle a "bare object" (it carries type-brand + disposal on the `NSObject` root).
+
+**SEL / Class value surface (typescript)** _(settled — ADR-0055 §3/§5b + §5b's registry;
+`sel-classref-surface-k72`, 2026-07-11; round-tripped first-hand against live AppKit)_:
+How the **two pointer-shaped kinds that are not objects** — `TypeRefKind::Selector` (`SEL`) and
+`TypeRefKind::ClassRef` (the `Class` metatype) — cross the seam. They are the dual of the
+`TypeRefKind::Class` overload trap: there the *kind* over-claims objecthood; here the **ABI** does.
+`AbiType::from_type_ref` collapses `Class`/`Id`/`Instancetype`/`ClassRef`/`Selector` alike to
+`Ptr`, so all five share a dispatch entry — but `is_object_type` is only `Class | Id |
+Instancetype`, so both emitter families' param arms fell through to *pass it raw* and their return
+arms to *return the raw handle*. The declared types lied in **both** directions: a JS `string`
+reaching `napiReadHandle` read as **0**, so `-[NSControl setAction:]` silently bound a **nil SEL**
+(Step 7's `hello-window` target/action would have hit it immediately), and a `bigint` came back
+under a declared `string` / `typeof NSObject`. The fix is a conversion at each end, single-sourced
+in **one** classifier (`PtrValue`, `ptr_value.rs`) read by four sites — each family's param arm,
+return arm, and runtime-seam import set — the mirror discipline `method_retain_axis` follows.
+A **SEL** is its selector-name `string` (ADR-0055 §3): `__sel` in (interning; `null` → the nil
+`SEL`, and note `''` is **not** nil — `sel_registerName("")` interns a real empty selector),
+`__selName` out (over a `sel_getName` primitive; the nil `SEL` → `null`, since `-[NSControl
+action]` legitimately has none). A **Class** is the **bound TS constructor** (ADR-0055 §5b):
+`__classArg` in, `__classCtor` out, over a **name-keyed registry** each emitted class populates
+from an ES2022 **static block** in its own body (`static { __registerClass('NSScanner',
+NSScanner); }` — the gerbil `register-objc-class!` / sbcl `*objc-class-registry*` convention; a
+static block survives tree-shaking and is absent from the `.d.ts`). Registration records a
+**thunk**, so importing a barrel costs zero native crossings. An **unregistered** class — module
+not imported, or private and absent from the IR (`-[@"x" class]` is `NSTaggedPointerString`: the
+*common* case for `-[NSObject class]`, not an edge case) — resolves to a **stand-in** carrying the
+true handle, with stable identity, upgrading to the genuine constructor if its module loads later.
+Neither kind is ever **wrapped** (no retain / uniquing / disposal — ADR-0057 §4), so both stay on
+the non-folding `_n` entries and **the native tables are untouched**; the conversion is pure
+`.ts`-side policy. Populations (real corpus): 25 SEL returns + 29 Class returns + 57 Class params
++ 94 SEL params = methods **plus exactly one free function each** (`NSSelectorFromString`,
+`NSClassFromString`, `NSStringFromClass`, `NSStringFromSelector`) — the two families ride one
+decision.
+_Avoid_: reading `is_object_type` as "is this a pointer?" (it is the **wrap boundary** — a `SEL`
+and a `Class` are pointers and are *not* objects; that gap **is** the defect); a branded opaque
+`ClassHandle` (honest but **inert** — composes with nothing, no `===` against a bound class, and a
+third handle population ADR-0055 §5 does not have); resolving an unregistered Class to `NSObject`
+(the *wrong* class, silently) or to `null` (loses a good one); `''` as the nil-`SEL` sentinel;
+retaining either (`objc_retain` on a `SEL` is UB, a retained `Class` leaks); re-deriving
+"is this a SEL or a Class?" outside `PtrValue` (the four readers must not drift).
+
+**inbound value surface (typescript)** _(settled — ADR-0059 §8 + ADR-0057 §2/§4;
+`inbound-value-kinds-k79`, 2026-07-11; ownership **measured** off `-retainCount`, not asserted)_:
+The **inbound dual** of the SEL/Class value surface above — what a JS delegate / block / subclass
+override actually **receives** and **returns**, as against what its emitted `interface` declares.
+The defect it closes is the same species and the same ABI collapse, one direction over: every ObjC
+value reached JS as a raw `bigint` handle (`inbound.swift`'s `.handle` arm) whatever the interface
+said, and had to be returned as one.
+The crux is **where the kind can live**. An inbound trampoline is content-addressed by **ABI
+signature** (`InboundSig::code_string`), and at the ABI an `id`, a `SEL`, a `Class`, a block and a
+raw pointer *are one thing* — all collapse to the pointer code `P` / encoding `@`. That collapse is
+right (it is what lets a few dozen trampolines cover the corpus) but it means the trampoline **cannot
+know** which pointer arg is an object; nor could it act on it (wrapping needs the uniquing map, the
+ctor registry, the selector memo — all TS-side policy). Outbound, the emitted **call site** converts,
+because it knows the declared type statically; inbound, the call site is one generic funnel
+(`__invokeCallback`).
+**So the declared type travels with the callback**, as a per-method **value-kind descriptor** the
+emitter derives from the IR and the *registrant* supplies (`__registerCallback(target, marshal)`):
+one **arg kind** per visible param (`raw` / `obj` / `sel` / `cls`) and one **return kind**.
+The runtime stays dumb (ADR-0055 §2) — it consults no signature table at call time, it applies a
+descriptor handed to it, exactly as an emitted call site applies the wrap primitive the emitter
+chose. The `obj` kind **carries no class** (`emitted-delegate-spec-k84`, 2026-07-12): it named the
+**declared** one until *dynamic class wrap (typescript)* made the class-less arm climb to the nearest
+**bound** ancestor — which *is* the declared class in the ordinary case and strictly better than it
+when the declaration is a bare `id` — so the class bought nothing and cost the spec module a **value**
+import of its own framework's classes, i.e. a barrel cycle and a TDZ on the `const SPEC_<P>`.
+**Two lifetime arms, both ADR-0057's.** Args are **borrowed** (+0) and wrap via **`__wrapBorrowed`**
+(the third wrap primitive — live wrapper → zero crossings; fresh mint → its own `retain`), forced by
+the same no-ARC argument as uniform-+1 itself: JS cannot intercept `this.lastSender = sender`.
+Returns follow the **`method_retain_axis` three-state axis** — the *same* predicate the outbound
+table, the call sites and the `$super` entries read: +0 → `objc_retainAutorelease` (so
+`return NSMenu.alloc().init()` is safe *by construction*, independent of the JS wrapper's +1), +1
+(an overridden `copyWithZone:`/`init`) → `objc_retain`, SEL/Class → neither.
+A descriptor that misses an arriving selector is a **loud, contained spec bug** (it throws; ADR-0059
+§7 reports + typed-defaults) — never a silently-raw handle. A callback registered with **no**
+descriptor traffics in raw handles (the pre-descriptor path the native batteries are written
+against); the emitter never produces a *partial* one.
+_Avoid_: marshalling inbound values **in the trampoline** (the ABI collapsed the kinds — it cannot);
+resolving the wrapper by the object's **literal** class (a class-cluster object's real class —
+`__NSCFString` for a declared `NSString`, `NSConcreteNotification` for an `NSNotification` — is one no
+binding declares, so it degrades to a stand-in with **no methods**: the climb to the nearest *bound*
+ancestor is the whole point, and skipping it is the bug that arm was written to fix); a **second,
+non-owning wrapper species** for borrowed args (turns `this.lastSender =
+sender` into a silent trap and puts an exception into a model that has none); handing back the bare
+`__unwrap` handle from an object return (under-retains a +1-convention override → crash);
+`retainCount` on a `cfstr` string as evidence of anything (it is **immortal** — `NSUIntegerMax` — so
+every accounting check against one passes vacuously; measure a `[[NSObject alloc] init]`).
+
+**class-reference binding (typescript)** _(settled — ADR-0055 §1b;
+`swift-nominal-type-surface-k66`, 2026-07-11; measured over the committed corpus)_:
+The resolution of the **`TypeRefKind::Class` overload** — the trap the SEL/Class entry above names.
+The IR spells two unrelated things `Class{name}`: an **ObjC-header** decl spells a genuine object
+pointer (`CLLocation *`), while a **`.swiftinterface`** decl spells *every Swift nominal type*
+(`Tuple`, `KeyPath`, `OpaqueTypeArchetype`, `Binding`, `Hasher`, `SIMD3`, `CGFloat`). 27 890
+`Class{…}` references in the corpus name something the IR never declares — **99.2 % of them from
+`.swiftinterface` decls**. A reference resolves against the **declared-class recognition set**
+(every class the IR declares — exactly the set the emitter emits, carried on `TsFfiTypeMapper`
+beside the known-enum set) and the decl's `DeclarationSource`, three ways
+(`class_binding.rs` — one predicate, four readers, the `PtrValue` discipline):
+**bind** (declared → its own TS class, imported from its owning module) · **degrade** (undeclared +
+**ObjC-sourced** → the runtime root `NSObject`: an ObjC header cannot write a non-object in a
+`Foo *` position, so the handle is a genuine object — declared type, wrap primitive and import all
+move together; the gerbil "nearest bound ancestor" precedent, and it keeps the API *round-trippable*)
+· **defer** (undeclared + **`.swiftinterface`-sourced** → the whole member, counted by type name in
+the pass log). Nothing at the ABI moves — `Class{…}` was always `Ptr` — so the native tables are
+byte-identical; a deferred member simply leaves the one frontier (`bound_methods`) the call sites
+*and* the table collection walk. **Import honesty** is the checkable consequence: an emitted
+artifact may only value-import a class the IR declares, the runtime root, or its
+(bare-node-backed) superclass.
+_Avoid_: degrading *everything* (it would `objc_retain` a Swift tuple — UB); deferring *everything*
+(sound, but deletes 45 real, callable methods for nothing); reading an absent `DeclarationSource`
+as "Swift" (the IR's posture is ObjC-unless-proven-Swift, as `objc_exposed` defaulting true already
+is, and the corpus stamps a source on every decl); re-deriving class membership outside the
+recognition set (that is how a body and its import drift).
+
+**class file stem / case tag (typescript)** _(settled — ADR-0055 §2b;
+`class-file-stem-collision-k76`, 2026-07-11; measured over the regenerated corpus)_:
+The **injective** class → on-disk-file map. The stem is the **lowercased** ObjC name
+(`NSString` → `nsstring`, the CL-target per-class-file convention), and lowercasing is **not
+injective**: Matter declares 17 ALL-CAPS acronym classes beside their Swift-friendly aliases
+(`MTRBaseClusterWakeOnLAN` / `MTRBaseClusterWakeOnLan`), each pair lowering to one stem — so the
+emitter wrote one file, the second class silently clobbered the first, and 34 sibling imports
+dangled. A name whose lowercased stem is **shared** — with another class, or with a **reserved
+module stem** (`index`, `enums`, `protocols`, `constants`, `functions`) — therefore takes a
+**case tag** suffix, `<lower>-<tag>`: the hex of the name's ASCII-uppercase bitmap, i.e. exactly
+the information the lowercasing discarded, so within a collision group it determines the name
+**losslessly** (injective *by construction*, not by digest luck). Backstopped by the **write-once
+guard**: the orchestrator refuses to write one filename twice and reports the count of *distinct*
+files written — the write-side dual of the import-honesty invariant above (the artifact set must
+*contain* a file per declared class, as it may only *import* a declared class).
+_Avoid_: spelling the ObjC name **verbatim** to "fix" it (macOS/APFS and Windows are
+case-**insensitive** — two stems differing only in case are still one file on disk; a
+disambiguator must differ in **more than case**); a **sequence number** within the group (not
+name-local — a new colliding sibling renumbers its neighbours, churning the corpus); re-deriving
+the stem at a second reader (the barrel doing so is how one file came to be re-exported twice).
+The same latent collision sits in **sbcl**, **chez** and **racket** (all lowercase a class name
+into a per-class file stem); **gerbil** writes no per-class files and is immune. Fixing them is
+its own leaf (ADR-0011 hermetic isolation).
+
+**typescript lifetime / memory model** _(settled — ADR-0057; grilled `ts-memory-design-k7`
+Q3, 2026-07-06; FR-on-main verified V8/Node)_:
+The `typescript` lifetime model for wrapped ObjC `id`s — the chez ADR-0007 / sbcl ADR-0036
+two-mechanism shape **re-polarised** because JS's GC finalizer is unreliable where theirs is
+guaranteed. **Primary release = deterministic `Symbol.dispose` / `using`** (ES2024, downlevels
+via `tsc`); **backstop = `FinalizationRegistry`**, which does a **silent best-effort `release`**
+(not a warn-only detector — under uniform-+1 a dropped handle is the normal graph-handoff path),
+on thread 0. Two heaps stay separate over an **explicit retain/release seam** — never fuse the JS
+object model/GC with ObjC's (MacRuby's GC→ARC death). **Uniform +1 at the wrap boundary** (every
+wrapper owns exactly one retain: +0 returns retained, +1 returns not re-retained) — forced because
+**JS has no ARC** store-time retain, so a pool-scoped +0 handle would be a UAF; realized as **three**
+wrap primitives — the outbound pair `__wrapRetained`/`__wrapOwned` (symmetric — both **`release` the
+redundant incoming +1 on a live-duplicate re-fetch**, e.g. `view.superview` in a loop /
+`copy`-returns-self) plus the inbound **`__wrapBorrowed`** (`inbound-value-kinds-k79`, 2026-07-11):
+an object *argument* handed to a JS callback is **borrowed** (+0 — the ObjC caller owns it, nothing
+folded a retain in), so the two cases **invert**: a live wrapper is returned with **zero native
+crossings** (nothing to balance) and a fresh mint **takes its own `retain`**. All three converge on
+one wrapper owning exactly one +1.
+**What class a wrapper mints as** (`dynamic-class-wrap-k88`, 2026-07-12): the class the **IR declared**
+for the slot, else — for a slot declaring none (a bare `id`; 1380 positions in AppKit + Foundation) —
+the class resolved **from the object**: `object_getClass`, then climb `class_getSuperclass` to the
+**nearest bound ancestor** (the same rule gerbil already used, ADR-0020; ADR-0057 §3b). The climb is
+the mechanism, not a fallback: Cocoa's **class clusters** mean an object's own class is usually private
+and absent from the IR (an `NSString` is really an `NSTaggedPointerString`, an `NSArray` an
+`__NSSingleObjectArrayI`), so resolving to the *literal* class would mint a method-less stand-in for
+almost every real object. Each wrap primitive takes a **class-less arm** (`__wrapRetained(id)`, one arg
+— the arity *is* the fact), resolved **inside the mint**, so a live wrapper still costs **zero** extra
+crossings. No bound ancestor at all → ADR-0055 §5b's **stand-in**.
+_Avoid_: "wrap an `id` as `NSObject`" (the pre-k88 lie — it minted a root object with none of the real
+class's methods, and is why a protocol-qualified slot could not be typed by its interface).
+**Wrapper uniquing** via `Map<id, WeakRef>` (one live wrapper per `id`;
+`===` identity; the +1 pins the id so it is a sound key). **Policy in the TS runtime** (map,
+`WeakRef`, FR, `disposed` flag, `[Symbol.dispose]`), **mechanism Swift-native** (`objc_retain`/
+`objc_release`; retain folded into the `@_cdecl` dispatch entry **iff +0** — a +1-convention return
+routes to a distinct **non-folding `…_o` entry**, and a pointer return that is **no object** (`SEL`/
+`Class` metatype — same ABI shape, never wrapped) to the non-folding, non-wrapping **`…_n` entry**
+(k70) — so the fold happens exactly once, gated on the wrap boundary, never the ABI shape). That
+**three-state retain axis has a fourth reader**: the object a JS callback **returns** (k79) — a +0
+selector hands back `objc_retainAutorelease` (the real ObjC +0-return contract), a +1 one
+(`copyWithZone:`/`init` overridden) `objc_retain`, a SEL/Class neither. **No main-thread release queue**
+(both `using` and FR run on thread 0 — unlike sbcl's off-main finalizer); AppKit objects are
+main-affine (don't wrap/dispose on `worker_threads`). **Lean autorelease-pool model** — rely on
+AppKit's ambient runloop pool; a `withAutoreleasePool(fn)` primitive for hot loops + worker
+threads (uniform-+1 demotes the pool from lifetime-mechanism to temporary-drain). Use-after-dispose
+throws `ObjectDisposedError`. **No graph cascade** (each +1 independent; ObjC refcounting cascades
+`dealloc`). The FR-contract / main-thread / pool tail was grilled against the Node+N-API substrate
+and **reworks in place if `ts-substrate-reeval-k11` picks embedded JavaScriptCore** (adds
+`JSManagedValue` as a supported third option; the ADR-0056 pump dissolves). Delegate-retain (keep
+unretained delegates alive) settled in **ADR-0059** (a strong `objc_setAssociatedObject` on the ObjC
+owner; see *typescript callback / delegate model*); the `dispose` flag/map-removal **ordering** (after
+`release`/any synchronous `dealloc`) is refined by ADR-0059 §4 so a JS `dealloc` override runs against
+a live handle.
+_Avoid_: "trust the GC hook / FR as primary" (JS FR may never run — it is the backstop, not the
+trigger); "leak-detector backstop" (FR *reclaims* silently; detection is a separate opt-in
+high-water facility, off by default); "pool-scoped +0 transients" (that is the chez/sbcl model —
+TS uses uniform +1 because JS has no ARC); "main-thread release queue" (not needed — sbcl-only,
+its finalizer is off-main); "the splice" (NativeScript's strong/weak refcount flip — fuses the
+heaps, rejected); fusing the JS and ObjC object models (MacRuby's fatal mistake).
+
+**typescript error model** _(settled — ADR-0058; grilled `ts-error-design-k8` Q5,
+2026-07-06)_:
+How the two Cocoa error sources reach the Node TS binding — **split by Cocoa semantics**,
+not unified. **`NSError**` (routine, recoverable) → a type-visible `Result<T> = { ok: true;
+value: T } | { ok: false; error: NSError }`** (a plain discriminated union — the target TS
+style's exact shape; the `ok` discriminant makes the compiler force the check, the
+type-visibility win a bare tuple can't give). **`NSException` (disaster/boundary) →
+thrown** as `NSExceptionError extends ObjCError extends Error` (JS-native ergonomics: stack
+trace, `instanceof`, `.exception` for the wrapped object). The `error` slot of a `Result`
+is the **raw `NSError` object-model wrapper** (ADR-0055) with its `.domain`/`.code`/
+`.userInfo`/`.localizedDescription()` — **no wrapper class** (unlike sbcl, where a CL
+*condition* is distinct from the CLOS object; in JS the value *is* the object). Throw-side
+hierarchy recovers sbcl's `ns:objc-error` root **on the throw channel only**: `ObjCError`
+(root) → `NSExceptionError` (the `ns:objc-exception` analogue) + `NSErrorError` (the
+`ns:cocoa-error` analogue, produced by escalation). **`unwrap<T>(r: Result<T>): T`** returns
+`value` or throws `NSErrorError(error)` — the opt-in bridge from the `Result` default to the
+throw channel (the style's "let errors bubble to a single handler per layer"; never throw a
+plain object). **Swift `throws` → the same `Result` channel** (via the ADR-0029/0038
+`ThrowsBridge`; Swift throws is routine, same class as `NSError`). Mechanics: **key on the
+primary return** (nil/`NO`), not on the error being set (Cocoa's "check the return, not the
+error"; out-param may be garbage on success); the **`@catch` is native** (an `NSException`
+must not unwind through the C ABI into V8 — ADR-0056 pump; the `@_cdecl` `…_e` entry catches
++ detects, the TS runtime builds the `Result`/throws — policy TS, mechanism Swift, the
+ADR-0057 §4 seam). **Native side realised (`error-catch-entries-k49`):** the `…_e` `@catch`
+lives in **one small ObjC (MRC) unit `awexc.m`** — the `objc_msgSend` runs there, inside
+`@try`/`@catch`, because Swift cannot `@catch` an ObjC exception and one must never unwind
+*through a Swift frame*; the Swift `@_cdecl` entry only reads the structured outcome. It
+retains the caught exception + out-param `NSError` **+1** (fold-iff-+0, both +0 autoreleased)
+and hands back the runtime's **`NativeErrorResult`** discriminant (`{thrown:true, exception,
+reason} | {thrown:false, primary, error}`, `result.ts`); the object *primary* folds per its
++0/+1 convention (`aw_ts_msg_<codes>_e` folds, `…_o_e` does not). **Selector name keeps the injective `_error_`** (ADR-0055 §3;
+`dataWithContentsOfFile:options:error:` → `dataWithContentsOfFile_options_error_`), only the
+out-param is dropped from the JS args — the captured steer (invariant over cosmetic
+elision). Positioned as **chez ADR-0006's in-band posture for `NSError**` + sbcl ADR-0037's
+unified root for the throw channel** — the TS synthesis of two precedents that diverged.
+_Avoid_: "throw everything like sbcl" (invisible to the type system — no checked exceptions
+— and turns routine `NSError` into stack-unwinding; sbcl chose conditions because that is
+CL's normative idiom, ADR-0033); "bare tuple `[T|null, NSError|null]`" (can't express
+"exactly one non-null" — the discriminated union dominates it; `r.value!` needs a non-null
+assertion); "elide `error:` from the method name" (non-injective — reintroduces the
+collision machinery ADR-0055 §3 removed); "a wrapper condition class around `NSError`" (that
+is sbcl's CLOS/condition split — TS carries the raw object); "unify the two channels" (loses
+the Cocoa routine-vs-disaster distinction Cocoa, the types, and the style all draw).
+Callback/delegate exception containment across the bg→main bounce → Q6
+(`ts-callbacks-design-k9`), on this hierarchy.
+
+**typescript callback / delegate model** _(settled — ADR-0059; the JS-facing **value types** the
+machinery leaves open are ADR-0059 §8 → see *inbound value surface (typescript)*; grilled + doubt-passed
+`ts-callbacks-design-k9` Q6, 2026-07-06; **on-thread-0 dynamic-subclass slice confirmed first-hand**
+`subclass-inbound-on-main-k37`, 2026-07-07 — a JS `NSObject` subclass overriding `-compare:` is called
+by Foundation's `-[NSArray sortedArrayUsingSelector:]` and its JS return value orders the array, with
+JS-exception containment holding at the boundary; the env-less-IMP delivery uses a `napi_env` +
+`napi_ref`-to-`__invokeCallback` captured at `installCallbackInvoker` time; raw ObjC ids stay `UInt`,
+never ARC-bridged; **on-thread-0 delegate slice confirmed first-hand** `delegate-inbound-on-main-k38`,
+2026-07-07 — a JS delegate is wrapped in a per-protocol memoized forwarding class
+(`defineForwarder`; back-ref + responds-bitset ivars; one typed trampoline IMP per method + a shared
+`respondsToSelector:` IMP answering from a **per-instance set-time snapshot** for exact `@optional`
+fidelity), kept alive by a strong `objc_setAssociatedObject` (`OBJC_ASSOCIATION_RETAIN` = `0x301`;
+the addon exposes it as the bare `associate(owner, key, obj)` primitive — it was a `bindDelegate`
+compound that *also* sent the setter and balanced the alloc `+1`, until `emitted-delegate-spec-k84`
+needed the association at an arbitrary **argument position** of an arbitrary selector, which no
+send-shaped primitive can serve; the compound is now composed TS-side in `__protocolArg`);
+**NSKeyedArchiver** — whose `delegate` is
+*unretained* — drove `archiver:willEncodeObject:` (value-returning) on a JS delegate held **only** by
+the association, and a second delegate sharing the same class but not implementing it was never called;
+**on-thread-0 NS_NOESCAPE block slice confirmed first-hand** `block-noescape-on-main-k39`, 2026-07-07 —
+a JS function passed to `-[NSArray enumerateObjectsUsingBlock:]` is wrapped by `makeBlock` into a real
+ObjC block (a `@convention(block)` Swift closure **capturing the `CallbackId`** — no selector, no
+back-ref ivar; the runtime reaches it via `__invokeCallback`'s `selector === undefined` branch —
+`_Block_copy`'d to the heap) whose invoke is a typed inbound trampoline; Foundation invokes it
+**synchronously on thread 0** per element (the JS body observes each), the fn held only for the call's
+duration then dropped by the `__withNoescapeBlock` register/`releaseBlock` bracket (no tsfn — the fast
+path), boundary containment holding per invocation; **on-thread-0 `$super` / `dealloc` / added-methods
+slice confirmed first-hand** `super-dealloc-on-main-k40`, 2026-07-07 — `this.$super.isEqual_(other)`
+reaches the base `-[NSObject isEqual:]` via `objc_msgSendSuper` (per-signature `aw_ts_super_*` entries,
+`super_class` = the emitted parent's `__cls`, so lookup begins at the base and skips the override — the
+ADR-0034 `call-next-method` trap native `super.` would hit) without re-entering it; a **shared `-dealloc`
+IMP on every synthesized subclass/forwarder** runs the JS `dealloc` override (against a **live** handle —
+ADR-0057 §6 ordering), chains `[super dealloc]` (natively when there is no JS override,
+`class_getSuperclass(object_getClass(self))`), and **releases the `callbacks`-registry keep-alive —
+closing the k37/k38 loop** (`__deliverDealloc` / `installDeallocDeliverer`; the strong entry that pinned a
+bound instance is dropped when the ObjC object dies); a `class_addMethod` target-action (`v@:@`) reaches
+JS with its sender — verified for subclass-dispose, no-override, direct-forwarder-release, and
+NSKeyedArchiver-association-drop, all thread-0 (raw ObjC ids stay `UInt`, never ARC-bridged; the metatype
+`AnyClass`→`UInt` bitcast trap is avoided by calling `class_getSuperclass` `@convention(c)` on raw
+handles); **off-main delivery + escaping blocks + off-main dealloc confirmed first-hand** `tsfn-bounce-k43` +
+`off-main-delivery-k44` + `block-escaping-off-main-k45` + `dealloc-off-main-k46`, 2026-07-07/08 — a **singleton
+`napi_threadsafe_function`** created on thread 0 bounces every off-main callback to thread 0 (void
+fire-and-forget / value-returning + completion-semaphore round-trip, always-post on a contained throw); the
+shared `deliver*` core branches on `pthread_main_np()` so subclass + delegate go off-main-aware together;
+and an **escaping** block (ADR-0059 §2 default) outlives its make call, delivers on thread 0 when invoked
+**later off a real GCD bg thread**, round-trips a value-returning (`P_B`) shape through the semaphore,
+contains a throwing body via `onCallbackError`, and is torn down **off-main** — its JS fn held by the
+**registry** (not a per-block tsfn), teardown routed to thread 0 via the singleton bounce's release path
+(the heap block captures an `EscapingBlockHolder` whose off-main `deinit` `awBounceReleaseCallback`s →
+`__releaseCallback`, the ADR-0057 release-on-thread-0 seam; `installBlockReleaseDeliverer`); and the **off-main
+`dealloc`** — the last off-main path — runs the JS override + registry drop on thread 0 via a **synchronous**
+bounce (`awBounceDealloc`, `dealloc_imp` branching on `pthread_main_np()`; never *async* → the object would
+be freed before the override runs → UAF of the JS back-ref), blocking the deallocating thread, then chaining
+`[super dealloc]` iff no override — the thread-0 delivery delegated to the same `deliverDealloc`
+(`gDeallocRef`) the on-thread-0 IMP uses; `associate`-flag /
+installable-encoding / stable-per-protocol-`methods` are emitter/analysis-upstream invariants, not
+re-validated in the dumb runtime)_:
+How JS functions/objects cross **into** ObjC and how ObjC calls **out** to JS — the **inbound dual of
+ADR-0054's outbound generated typed native dispatch**. Every ObjC-side inbound entry (a block invoke,
+a delegate IMP, a subclass-override IMP) is a **generated `@_cdecl` inbound trampoline, one per
+distinct ABI signature** (content-addressed like the outbound `aw_ts_msg_*` entries; signatures known
+statically from the IR → dumb runtime, no call-time reflection); live `NSInvocation`/`_objc_msgForward`
+reflection (the sbcl ADR-0034 §5 model) is kept **only as the escape hatch** for a signature the
+emitter never saw. **Four surfaces, one machinery:** (1) **closures → ObjC blocks** — a real block
+whose invoke is the trampoline; **escaping/unknown** blocks (ADR-0059 §2 default) outlive the call — the
+JS fn is held by the **registry** (the same `CallbackId` keep-alive as noescape), and delivery + off-main
+teardown both route through the **singleton** ADR-0056 §3 bounce (delivery = the same primitive that
+delivers every callback; teardown = its release path, legal from any thread → registry-drop on thread 0
+— the tsfn's §2 role refined from per-block-holder to teardown-router, reconciled in-ADR by
+`block-escaping-off-main-k45`), **`NS_NOESCAPE`** blocks use a direct-on-thread-0 fast path with **no tsfn**
+(baseline — always-tsfn would exhaust libuv handles on hot enumeration). (2) **JS object → delegate**
+and (3) **JS class → dynamic ObjC subclass** are **one machinery, two surfaces**: a delegate wraps the
+JS object (plain literal *or* class instance) in a **per-protocol memoized forwarding ObjC class**
+(`objc_allocateClassPair`; `respondsToSelector:` reads a **per-instance native selector snapshot taken
+at set-time on thread 0** → exact `@optional` fidelity, no off-main JS consult); a subclass synthesizes
+**one ObjC subclass per JS class** (`class MyView extends NSView`, IMP per overridden selector, one
+back-ref ivar). (4) **Dynamic subclassing** surface: super-send is a typed **`this.$super.drawRect_(r)`**
+accessor (`objc_msgSendSuper`; native `super.` would infinite-loop — the ADR-0034 `call-next-method`
+trap); `dealloc` is overridable, chains `this.$super.dealloc()`, delivered like any callback but
+**never async-bounced** (async would UAF the back-ref) — on thread 0 direct, **off-main synchronously
+bounced**; added ObjC-reachable methods via `class_addMethod`; instance state stays JS-side.
+**Delivery** consumes ADR-0056 §3 + the ADR-0035 split: **on thread 0 → direct synchronous**
+(value-returning callbacks return now); **off-main void → blocking tsfn** (backpressure, no silent
+drop); **off-main value-returning → tsfn-blocking + completion semaphore round-trip** (rare; the
+`dispatch_sync` analogue). **Keep-alive** (the delegate-retain caveat — setters don't retain): a
+**strong `objc_setAssociatedObject` on the ObjC owner** (keyed per property, conditioned on the IR
+`weak`/`strong` qualifier) ties the forwarder's life to the owner's; the inherent ObjC-owner⟷JS-delegate
+cross-heap cycle is broken by **disposing the owner** (ADR-0057). **Exception containment** (the
+ADR-0058 mirror): a JS exception is **caught at the trampoline boundary** (never unwinds the C ABI into
+the pump) → **reported via `onCallbackError`** (`uncaughtException` default) → **void returns /
+value-returning returns a typed nil/0 default**, and the off-main round-trip **always posts its
+semaphore** (JS-threw *and* tsfn-enqueue-failure) so the bg thread never hangs; no `NSException`
+re-raise by default. **Invariants:** class synthesis + `napi_ref`/`Map`/`WeakRef` mutation +
+`respondsToSelector:` snapshot are **thread-0-only**; `dispose` flips the `disposed` flag + removes the
+`Map` entry **after** `release`/any synchronous `dealloc` completes (reconciles ADR-0057 §6 — a JS
+`dealloc` override runs against a live handle). Policy in the TS runtime, C-ABI mechanism Swift-native
+(the ADR-0057 §4 / ADR-0058 seam).
+_Avoid_: live `NSInvocation` forwarding as the *primary* inbound mechanism (that is the escape hatch —
+the target is generated-typed, the outbound dual); native `super.method_()` for ObjC super-chaining
+(infinite recursion — use `this.$super`); a string-selector `callSuper` (loses static checking);
+"delegates and subclasses are separate mechanisms" (one machinery, two surfaces); "everything is a
+subclass" (object literals have no key → class churn); a class-level `respondsToSelector:` on the shared
+forwarding class (reports YES for every `@optional` → invisible-rows bug — it is a per-instance native
+snapshot); non-blocking void tsfn (silent callback loss); async-bouncing `dealloc` (UAF); re-raising a
+callback's JS exception as `NSException` (crash-prone pump unwind); calling `dealloc` "always on thread
+0" (the framework can drop the last ref off-main → synchronous bounce).
+
+**`bundle-typescript` / typescript (Node) distribution** _(settled — ADR-0060; grilled
+`ts-distribution-design-k10` Q7, 2026-07-06)_:
+How a Node TS sample app becomes a self-contained, TCC-correct macOS `.app`. The
+`CFBundleExecutable` is a **per-app native launcher that owns `main()` and embeds Node** — the
+Electron / NativeScript-for-macOS `NSApplicationMain` shape, **not** the stub-`execv`-runtime
+model of the four Lisp targets. Forced by ADR-0056: the native side must own `main()`; a
+`node app.js` / Node SEA reaches Cocoa only through a blocking JS→native `run()` call, which
+corrupts the nested `uv_run` (so **research D8's SEA suggestion is refuted**). The launcher boots
+Node via the C++ embedder API (`CommonEnvironmentSetup` + `LoadEnvironment`), then
+`NSApplicationMain()` pumps libuv as a guest (ADR-0056 (c)). Each bundle **vendors a pinned
+`libnode.<ver>.dylib`** — a matched pair with the launcher, coupled to **one Node major** because
+the C++ embedder API is **not ABI-stable** (nodejs.org/api/embedding.html). Recordable
+trade-off: dispatch is engine-agnostic (N-API, ADR-0054 §4) but **distribution is pinned** — the
+hedge protects dispatch, not the shipped app. Self-contained (chez ADR-0009); vendored non-system
+set widens sbcl §6 by exactly one (`libnode` added; Swift runtime stays OS-resident). Weight
+originally estimated ~50–90 MB (V8, the Electron tax); **`bundle-typescript-k126` measured
+hello-window's actual bundle at 132 MB** — this Homebrew `node@26` build's wide dynamic Homebrew
+closure (below), not `libnode` alone; shrinking `libnode` = future opt. **Per-app CDHash**
+comes from the per-app launcher's baked-in strings (no stub, no `execv`); reuses `stub-launcher`'s
+`codesign_path` (not its `generate_info_plist`, which bakes stub-specific concepts —
+`bundle-typescript` writes its own `Info.plist`). App JS ships as a **loose `.mjs` tree**
+under `Resources/app/` (no JS bundler dependency); the **`.d.ts` is dev-time, not shipped**;
+samples carry no `node_modules`. Relocation is the peer **vendor-and-relocate** path
+(`@executable_path`/`install_name_tool`, gerbil ADR-0029 §3 / chez ADR-0009) — **not** sbcl's
+runtime relocation (that was forced by an un-editable dumped image; the launcher is an ordinary
+Mach-O); sign **inside-out**. **The "minimal transitive vendoring" premise this decision
+originally assumed is false for this Homebrew `node@26` build** — `libnode` dynamically links
+~20 further Homebrew dylibs, two (`libicudata`, `libbrotlicommon`) reachable only via
+`@loader_path`/`@rpath` (invisible to a naive absolute-path scan) — the vendor-and-relocate
+*mechanism* is unaffected, it just vendors a wider closure than assumed
+(`bundle-typescript-k126`). The native addon itself needs **no relocation** (its N-API symbols
+dlopen-resolve against the host process; its only other deps are system frameworks + OS-resident
+Swift dylibs) — only the launcher's `libnode`/`libuv` closure does. Hardened-runtime / notarized
+builds must carry **`com.apple.security.cs.allow-jit`** (V8 JIT; Electron default) — the dev /
+VM-verified sample loop is ad-hoc-signed with no hardened runtime, so it does not.
+Node-target-scoped (ADR-0054 §target-scope); the JSC target's `~0 MB` distribution is a separate
+future grove.
+_Avoid_: "stub-launcher stub + `execv`" (structurally wrong — native owns `main()`); "Node SEA /
+`node app.js`" (refuted by ADR-0056); "runs on the user's system Node" (pinned vendored
+`libnode`); "sbcl-style runtime relocation" (unnecessary — ordinary Mach-O); shipping the
+`.d.ts` inside the runnable bundle; assuming an absolute-path-only `otool -L` scan finds every
+vendorable dependency (`@loader_path`/`@rpath` siblings need it too).
 
 ## Native binding mechanism
 
@@ -753,6 +1375,16 @@ synthesized `make-<cls>` (the default-ctor check is own-inits-only). Protocol
 _Avoid_: flattening the full `all_methods` set for gerbil (re-emits ancestor
 surfaces the manifest graph already carries); emitting an unknown protocol's
 stub methods.
+
+**TS analogue (`protocol-required-method-flattening-k102`)**: same closure shape
+(`ProtocolRegistry::conformance_closure`, `Class.protocols` only — never the ancestor
+chain's — over protocol `inherits`, excluding `NSObject`), but **required-methods-only**:
+TS's static `implements` cannot express "maybe present," so an `optional_methods` member is
+never flattened (dishonest — no guarantee every conformer implements it), unlike gerbil's
+dynamic dispatch which flattens both. Reads `Class.all_methods` (already resolve-phase
+flattened, `origin` = the declaring protocol) rather than re-deriving method data, gated by a
+second registry map (`ProtocolRegistry::is_required_method`, protocol → required
+`(selector, is_class_method)` set) alongside the `inherits` closure.
 
 **Generated `define-c-lambda` dispatch (gerbil)**:
 The gerbil outbound-dispatch mechanism: the emitter open-codes one typed
@@ -1000,13 +1632,15 @@ A "platform convention rule" (§28's precedence tier) expressed as a declarative
 `resolved.kdl` stamped `source="convention:<rule>"` — datalog's derivation trace **is** the
 provenance.
 _Avoid_: "heuristic classifier" (the retired imperative form); a runtime-loaded rule DSL
-(compile-time ascent — runtime is a deferred enhancement).
+(compile-time ascent — runtime is a deferred enhancement); a declaration-premised rule producing
+at this tier (sole-declaration premises produce at `Extraction` — ADR-0047 §4, k87).
 
 **Provenance stamp / precedence / confidence** _(carried in-format; workflow is ws5)_:
 The data model's record of *where a fact came from and who won*. Every `resolved.kdl` fact has a
 `source ∈ {extraction, convention:<rule>, llm, manual}`; authored facts add `confidence`
 (enum **`high|medium|low`**, not a float) + `provenance` (doc URL/rationale). Precedence
-(`manual > accepted-LLM > convention > extraction > unknown`, §28) is applied in resolve — the
+(`manual > extraction > accepted-LLM > convention > unknown` — §28, re-ranked by
+[[declared-fact-precedence-k87]]) is applied in resolve — the
 winner stamped, losers kept as a `superseded-by` record; a fact with no producer is explicit
 `unknown`. The *format* carries this (ws2); the caching/regeneration/review-accept/diff
 *workflow* is ws5.
@@ -1158,6 +1792,157 @@ emit goldens are unmoved.
 _Avoid_: imperative `detect_patterns` as the mechanism (retired into datalog, D3); a
 shared `semantic/tools` home for the *rules* (the engine is shared, the Cocoa rules are
 platform-specific — the ADR-0047 split).
+
+**Protocol-qualified `id`** _(settled — `delegate-slot-typing-k80`; landed —
+`protocol-qualifier-ir-k81`, 2026-07-11; typed — `protocol-binding-surface-k89`, 2026-07-12;
+ADR-0055 §4b)_:
+An `id` whose declaration names the protocols it conforms to — `id<NSApplicationDelegate>`,
+`id<NSObject, NSCopying>`. A **list**, and a refinement **of `id`** specifically: counting
+positions (method params + returns) across AppKit/Foundation/CoreData/WebKit/AVFoundation,
+`id<P>` occurs **1163** times against `Class<P>` **22** and `NSFoo<P> *` **21** — and the
+`<…>` on a class type is almost always a **generic** argument, not a protocol. Carried on the
+IR as `TypeRefKind::Id { protocols }` (serde-default, skip-if-empty, so an unqualified `id`
+serialises unchanged and no target's goldens move), populated from libclang's
+`get_objc_protocol_declarations()` **called on the pointee** — an `ObjCObjectPointer`'s
+protocols and generic args both hang off its `ObjCObject` pointee, and both accessors return
+empty if handed the pointer. A consumer **binds** the qualifier (types the slot by the
+protocol) or **degrades** it (falls back to the untyped object) — **per name, never per slot**:
+`id<NSCopying, NSTableViewDelegate>` binds the second and drops the first, because that is
+exactly what a conforming class's conformance clause carries. Guarded by **conformance
+honesty** — bind only if every declared conformer carries its conformance clause, else a legal
+call stops typechecking. The two rare positions (`Class<P>`, `NSFoo<P> *`) are a **counted
+deferral**, named with owner + selector in the extraction pass log, never a silent drop.
+
+**A bound slot's type depends on its position — the qualifier is variant.** A **param**
+(contravariant, what the API accepts) is the bare interface `P`, so any conforming value —
+including a plain host-language object — satisfies it. A **return** (covariant, what the API
+promises) is `P` **intersected with the object root** (`P & NSObject` in TS), because that is
+what the value *is* once the runtime wraps it as its real class ([[dynamic-class-wrap]]) — and a
+bare `P` return would be *narrower than the value*, so passing it into any untyped-object slot
+(which renders as the root) would stop compiling. Over the committed corpus: **280 positions
+bind, 55 degrade** across 13 names.
+_Avoid_: a separate `IdProtocol` **type kind** (the shared FFI mappers match `TypeRefKind`
+with wildcard arms, so a new kind falls through to "not an object" and silently un-objects
+every `id<P>` in all five targets); a `protocols` field on `TypeRef` beside `nullable` (the
+abstractly-truthful shape — clang attaches protocols to the object type whatever its base —
+but it pays ~407 construction-site edits to model the two positions that occur 43 times);
+treating the qualifier as a **delegate** fact (it types every `id<P>` slot in the corpus, and
+restricting it to delegate-shaped slots reintroduces name-sniffing); believing a *deferred*
+position keeps its **protocol** refined — it does not, only the qualifier is lost; the base
+class itself is recovered (`objc-object-type-lowering-k85`), see [[objc-object-type-lowering]].
+
+**emitted delegate spec (typescript)** _(settled + **verified first-hand** —
+`emitted-delegate-spec-k84`, 2026-07-12; ADR-0059 §3/§6/§8, ADR-0055 §4b)_:
+What makes a **bound** protocol-qualified param actually *installable* — the step from "the type
+admits a JS object literal" to "a JS object literal works". Each framework emits a **`delegates.ts`**
+carrying one `SPEC_<P>` per bound protocol (its name, its methods, their inbound value-kind
+descriptors), and every bound `id<P>` param in the corpus passes its argument through
+**`__protocolArg(owner, key, value, SPEC_<P>, associate)`**. The spec set **is** the bind set — a slot
+can never name a spec that was not emitted.
+Three facts that are easy to get wrong, each learned by getting it wrong:
+**The discrimination is at the *value*, not the slot** — a bound slot's type admits *both* a literal
+and a wrapped ObjC object, so `__protocolArg` tests what arrived (`NSObject` → `__unwrap`; else mint
+the forwarder). **The association key is `(selector, param index)`** (`'initWithFileType:delegate:#1'`),
+never the property name: the machinery runs on *every* bound `id<P>` param, and one selector can carry
+two. **An initializer's owner is its *return*, not its receiver** — `init…` may discard the object it
+was called on, so the emitted body hoists the arg, sends, then `__protocolAdopt(__ret, …)`.
+`delegates.ts` **imports nothing from its own framework** — that is why the `obj` kind carries no class
+(above): a value import of a class would close a barrel cycle and put the `const SPEC_<P>` in its TDZ
+exactly when a class body needs it.
+Over AppKit + Foundation: **122** bridged slots — **120** associate, **2** skip (`NSURLSessionTask`'s
+declared-`strong` delegate, the slot [[property-ownership-ir]] predicted, and
+`NSTextSelection.setSecondarySelectionLocation:`) — and **17** initializer params.
+_Avoid_: a native **send-shaped** bind primitive (the old `bindDelegate` = send + associate + balance;
+it cannot serve an association at an arbitrary *argument position*, so the compound belongs TS-side over
+a bare `associate`); keying the association on the **property name** (there need not be a property);
+associating onto an initializer's **receiver** (keys the forwarder to an object `init` may throw away);
+letting the skip arm skip the keep-alive **entirely** (the forwarder is minted at +1 and released
+immediately — it still has to survive the call, hence `objc_retainAutorelease`).
+
+**ObjC object-type erasure** _(measured — `protocol-qualifier-ir-k81`, 2026-07-11; **base class
+recovered** — `objc-object-type-lowering-k85`, 2026-07-15; **cross-target golden review + gate
+re-measurement done** — `objc-object-type-lowering-golden-review-k107`, 2026-07-15)_:
+libclang gives an `ObjCObjectPointer` an **`ObjCObject`** pointee (not `ObjCInterface`) the
+moment the type carries any refinement — a protocol qualifier, a generic argument, or
+`__kindof`. `extract-objc` now dispatches on `get_objc_object_base_type()`'s own kind rather than
+erasing every refined shape to `id`: base `ObjCInterface` → `Class{name, params}` (generic type
+arguments read off the *pointee* and mapped recursively — the same recursive shape
+**extract-swift** already produces for `Array<T> → NSArray`); base `ObjCId` → `Id{protocols}`
+(k81, unchanged); base `ObjCClass` → `ClassRef`. `__kindof` needed **no separate handling** —
+libclang reports the same `ObjCObject`/`ObjCInterface` pair for `__kindof NSView *` as for any
+other refined `NSView` pointer, so the base dispatch alone recovers `Class{NSView}`; an
+unspecialized generic argument (`ObjectType` used bare inside `NSArray<ObjectType>`'s own
+declaration) is an `ObjCTypeParam`, which already fell — and still falls — through the existing
+`TypeKind::ObjCTypeParam` arm to `Id{protocols:[]}`, so `Class.params` is not restricted to
+`Class` entries. Confirmed in the corpus: `NSString.componentsSeparatedByString:` now records
+`Class{NSArray, params:[Class{NSString}]}`, and the three TouchBar TS2416 corpus-gate positions
+(`NSCustomTouchBarItem.view`/`.viewController`, `NSSliderTouchBarItem.view`) recover `NSView`/
+`NSViewController` at the extraction level — **and clear `tsc --noEmit` end-to-end** (k107,
+against the first trustworthy full 252-framework regeneration, once `corpus-reproducibility-k86`
+landed): the corpus-gate **TS2416 bucket is now 0**, the trio plus a bonus clearance of
+`NSTableView.accessibilityRows` (`protocol-optionality-mis-extraction-k99`'s tracked residual —
+no longer wrongly flattened as required, most likely a side effect of k86's dedup fix
+generalizing past the one NSTextView tie it was measured against). Every chez/gerbil/racket/
+sbcl/typescript golden that moved on the regeneration was hand-reviewed and accepted (base-class
+recoveries only — `any/c`/`id`/`NSObject` → `NSArray`/`NSDictionary`/`NSCell`/etc. — none a
+regression); chez has no golden mechanism to review (confirmed, not assumed — no
+`snapshot_test.rs`/golden dir exists for it), and sbcl's curated Foundation golden showed no
+movement at all (CLOS dispatch signatures carry no static return type, so the recovery is
+invisible to that target's own idiom).
+A protocol qualifier on a non-`Id` base (`NSFoo<P> *`, `Class<P>`, 43 positions) is still a
+position the IR cannot hold — **counted, not dropped**, exactly as before; only the base class
+that used to be lost alongside it is now recovered.
+_Avoid_: reading "the qualifier is deferred on `Class<P>`" as "`Class<P>` lowers to `ClassRef`
+with no further loss" (the qualifier itself is still gone, only counted). k107's gate run is the
+**first-ever trustworthy** one (every prior number in this tree's history predates
+`corpus-reproducibility-k86` and should not be trusted as a baseline); it also surfaced a TS2420
+bucket (9) and a new TS2305 bucket (3, `CNKeyDescriptor` — a cross-framework protocol-ancestor
+export gap), neither an `objc-object-type-lowering-k85` regression (both root-caused against the
+real SDK headers, not assumed) — owned by `typecheck-gate-post-k86-residuals-k110`. TS2559 held
+exactly at the `corpus-typecheck-gate-k75`-era count (33), unchanged.
+
+**Declared attribute vs derived fact** _(the extraction floor — ADR-0047 §4;
+`delegate-slot-typing-k80`, 2026-07-11; realised + measured `property-ownership-ir-k82`, 2026-07-11;
+ladder re-ranked `declared-fact-precedence-k87`, 2026-07-13)_:
+The boundary that decides which producer owns a semantic fact. A fact the **headers declare**
+— `@property (weak)`, `(copy)`, `(strong)`, a protocol qualifier — is **extracted**, carried on
+the IR declaration, and produced at the **`Extraction` tier** by a rule whose **sole premises are
+compiler declarations** (`source: extraction`, rule name kept in `SlotProvenance::rules` — the
+`source` is the *evidence class*, the rule stamp the derivation). Membership test, mechanical:
+*could the rule fire on a corpus with all names stripped?* `weak-property-attribute` and
+`block-copy-property-setter` pass; name sniffs stay Convention — the **fallback for the undeclared
+case**, not a substitute for reading the declaration. The §28 producer ladder is
+**`manual > extraction > accepted-LLM > convention > unknown`** — evidence classes strongest-first
+(a human, the compiler, accepted prose, a naming pattern) — so a prose-derived LLM fact can no
+longer supersede a declared one: a contradiction (17 measured, all intra-axis `llm=weak` over a
+declared `assign`) auto-resolves in the compiler's favour and is recorded `superseded-by` by the
+audit. The floor is a standing instruction: for each facet, check whether libclang already has the
+answer. It found one immediately — extraction was calling `get_objc_attributes()` and keeping only
+`.copy`, discarding `weak`/`strong`/`assign`/`unsafe_retained`, while the pipeline answered *"does
+`setDelegate:` retain its argument?"* by asking *"is the parameter called `delegate`?"*. Realised
+as `ir::Property.ownership` + the ownership facet's **producer cascade** (declared attribute at
+Extraction → name sniff → block-copy default): 907 declared slots against 29 surviving sniffed
+ones, correcting 18 and finding the entire target/action `setTarget:` family the sniff could never
+see.
+_Avoid_: "the LLM/convention tier can derive it, so it needn't be extracted" (a probabilistic
+derivation of a compiler-known fact is the inversion the k87 re-rank closed — the overlay is for
+facts only Apple's *prose* knows); reading `Extraction` as "everything in `extracted.kdl` outranks
+the LLM" (the tier carries only declaration-premised facts; membership is the names-stripped test);
+testing one *spelling* of a declared fact instead of the axis it answers — see [[retain-axis]].
+
+**Retain axis** _(the ownership fact a binding actually consumes — `property-ownership-ir-k82`,
+2026-07-11)_:
+The one question every ownership reader is really asking: **does the receiver retain this argument,
+so must the caller keep it alive?** ObjC answers *no* in two spellings — `weak` (zeroing) and
+`assign`/`unsafe_unretained` (non-zeroing) — and *yes* in two more (`strong`≡`retain`; `copy` retains
+a copy). A reader that tests `ownership == Weak` has **re-derived the axis with an incomplete test**,
+and will silently drop every slot spelled the other way (measured: 17 pre-ARC delegate slots —
+`NSXMLParser`, `NSStream`, `NSFileManager`, …). One decision, N readers: ADR-0059 §6's associate-or-skip,
+`enrich`'s non-retaining relation and the emitted lifetime surface all key on the **axis**, never on one
+of its spellings. The `weak`-vs-`assign` distinction is real (a non-zeroing reference dangles) but no
+target consumes it today.
+_Avoid_: "weak" as a synonym for non-retaining in code (it is one of two); collapsing the two at
+**extraction** (the IR records what the header declares — the *readers* project onto the axis).
 
 **Pattern-model crate homes** _(D8 / the ws3 seam)_:
 A **new `semantic/tools/patterns` crate** owns the pattern-kind **registry** + `.apiw`
@@ -1315,7 +2100,8 @@ _Avoid_: the legacy spellings `heuristic`/`human_reviewed` (ADR-0046 §4 vocab i
 are resolved-side only); a float confidence (enum `high|medium|low`, ws2).
 
 **accepted-LLM** _(≡ a committed `source llm` fact)_:
-The §28 precedence tier above `convention` but below `manual`. There is **no separate
+The §28 precedence tier above `convention`, below `manual` and — since the k87 re-rank — below
+`extraction` (a declared fact beats accepted prose). There is **no separate
 proposed/accepted on-disk state**: an LLM fact in a *committed* overlay **is** accepted (the
 human accepted it by committing the `git diff`); an unreviewed fact lives only in the working
 tree / a PR branch. Git is the propose→review→accept boundary (ADR-0050).
@@ -1325,7 +2111,7 @@ distinct *source* value (it is just committed `llm`).
 **Disagreement audit / `superseded-by`** _(ADR-0046 §4; realized by ws5 `precedence-audit-k45`)_:
 The resolve-time merge: per `(receiver, selector)` **fact-slot** (one semantic claim — a
 param's ownership, a method's threading, etc.), gather every producing tier, apply §28
-precedence (`manual > accepted-LLM > convention > extraction > unknown`), **stamp the
+precedence (`manual > extraction > accepted-LLM > convention > unknown`, post-k87), **stamp the
 winner's `source`** on the resolved fact, and record each *disagreeing* loser as a
 `superseded-by { source; value }` entry. A fact-slot with no producer stays **explicit
 `unknown`** (never silently defaulted). Lands in `resolved.kdl` only; emit-invisible →
@@ -1341,9 +2127,10 @@ method-level `source = Unknown` (not a silent `Convention`); (ii) blocks stay **
 (a non-empty overlay block list replaces convention's wholesale — golden-neutral), so a convention
 block on a param the overlay omits is dropped with **no** `superseded-by` slot (no winning fact to attach to).
 _Avoid_: writing the audit into the overlay (it is derived → resolved.kdl); dropping a
-loser that merely *agrees* (only disagreements are `superseded-by`); a winning *value* change
-(precedence here only stamps provenance — the winning value already matches today's merge, so
-goldens cannot move).
+loser that merely *agrees* (only disagreements are `superseded-by`); assuming precedence can
+never change a winning *value* (the k87 re-rank flips 17 intra-axis ownership slots to the
+declared spelling — golden-neutrality comes from consumers reading the [[retain-axis]], not
+from value-identity).
 
 **Staleness / regeneration** _(replaces `check-llm-annotation-drift.sh`; ws5 `staleness-regen-k46`)_:
 Staleness is computed **live** by set-diffing a family's committed overlay against the current

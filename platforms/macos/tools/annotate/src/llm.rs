@@ -82,12 +82,10 @@ pub fn extract_interesting_methods(framework: &Framework) -> FrameworkSummary {
             &class.all_methods
         };
 
+        // `method_list` already carries category methods (extraction merges
+        // `class.category_methods` into `class.methods`, `text-undo-surface-gap-k121`) —
+        // a separate category pass here would double-collect the same selector.
         collect_interesting(method_list, &mut methods);
-
-        // Also check category methods
-        for category_group in &class.category_methods {
-            collect_interesting(&category_group.methods, &mut methods);
-        }
 
         if !methods.is_empty() {
             total_methods += methods.len();
@@ -189,7 +187,7 @@ fn classify_interest(method: &apianyware_types::ir::Method) -> Vec<String> {
 /// Produce a human-readable description of a type kind for LLM context.
 fn describe_type_kind(kind: &TypeRefKind) -> String {
     match kind {
-        TypeRefKind::Id => "id".to_string(),
+        TypeRefKind::Id { .. } => "id".to_string(),
         TypeRefKind::Class { name, .. } => format!("class:{name}"),
         TypeRefKind::ClassRef => "Class".to_string(),
         TypeRefKind::Selector => "SEL".to_string(),
@@ -655,7 +653,9 @@ mod tests {
     fn id_type() -> TypeRef {
         TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         }
     }
 
@@ -881,19 +881,28 @@ mod tests {
     }
 
     #[test]
-    fn category_methods_included() {
-        let mut class = make_class("TKBase", vec![]);
-        class.category_methods.push(CategoryGroup {
-            category: "TKExtension".to_string(),
-            origin_framework: "TestKit".to_string(),
-            methods: vec![make_method(
+    fn category_methods_included_via_methods_not_double_counted() {
+        // Extraction merges a category's methods into `class.methods` (tagging each
+        // with `category`, `text-undo-surface-gap-k121`) — `class.category_methods`
+        // stays populated too, as a record of which category contributed it, but
+        // `extract_interesting_methods` must read it only once, via `methods`/
+        // `all_methods`, or a merged category method would be double-counted.
+        let category_method = Method {
+            category: Some("TKExtension".to_string()),
+            ..make_method(
                 "performBlock:",
                 vec![Param {
                     name: "block".to_string(),
                     param_type: block_type(),
                 }],
                 void_type(),
-            )],
+            )
+        };
+        let mut class = make_class("TKBase", vec![category_method.clone()]);
+        class.category_methods.push(CategoryGroup {
+            category: "TKExtension".to_string(),
+            origin_framework: "TestKit".to_string(),
+            methods: vec![category_method],
         });
         let fw = make_framework("TestKit", vec![class]);
 
@@ -906,7 +915,12 @@ mod tests {
 
     #[test]
     fn type_kind_descriptions() {
-        assert_eq!(describe_type_kind(&TypeRefKind::Id), "id");
+        assert_eq!(
+            describe_type_kind(&TypeRefKind::Id {
+                protocols: Vec::new()
+            }),
+            "id"
+        );
         assert_eq!(describe_type_kind(&TypeRefKind::Pointer), "pointer");
         assert_eq!(
             describe_type_kind(&TypeRefKind::Primitive {

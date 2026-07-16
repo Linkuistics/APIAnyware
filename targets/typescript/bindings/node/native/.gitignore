@@ -1,0 +1,4 @@
+# Build products are reproducible from src/ via build.sh (ADR-0013/0038: generated,
+# gitignored, rebuilt from source). The .node addon links no committed binary.
+build/
+*.node

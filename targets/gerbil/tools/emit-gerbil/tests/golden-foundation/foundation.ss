@@ -2999,6 +2999,8 @@
   absolute-path
   absolute-string
   absolute-url
+  accept-connection-in-background-and-notify
+  accept-connection-in-background-and-notify-for-modes
   accept-input-for-mode-before-date
   acquire-function
   action-button-title
@@ -3009,12 +3011,15 @@
   actual-delivery-date
   adaptive
   add-attribute!
+  add-attribute-value-range!
+  add-attributes-range!
   add-barrier-block!
   add-characters-in-range!
   add-characters-in-string!
   add-child!
   add-child-with-pending-unit-count!
   add-dependency!
+  add-entries-from-dictionary!
   add-execution-block!
   add-file-wrapper!
   add-index!
@@ -3022,6 +3027,7 @@
   add-indexes-in-range!
   add-namespace!
   add-object!
+  add-objects-from-array!
   add-observer-for-name-object-queue-using-block!
   add-observer-selector-name-object!
   add-observer-selector-name-object-suspension-behavior!
@@ -3035,6 +3041,7 @@
   add-suite-named!
   add-timer-for-mode!
   add-user-info-entries-from-dictionary!
+  add-value-for-http-header-field!
   additional-actions
   additional-actions!
   additional-activation-action
@@ -3042,6 +3049,7 @@
   address
   address!
   address-components
+  address-components!
   addresses
   addresses!
   ae-desc
@@ -3057,6 +3065,7 @@
   all-header-fields
   all-http-header-fields
   all-keys
+  all-keys-for-object
   all-languages
   all-objects
   all-scripts
@@ -3085,6 +3094,9 @@
   annotated-string-from-person-name-components
   any-object
   app-store-receipt-url
+  append-attributed-string
+  append-data
+  append-string
   append-transform
   apple-event
   apple-event-class-code
@@ -3094,11 +3106,15 @@
   apple-event-code-for-return-type
   apple-event-code-for-suite
   applies-source-position-attributes
+  apply-difference
   archiver-data
   argument-names
   arguments
   arguments-retained
   array
+  array-by-adding-object
+  array-by-adding-objects-from-array
+  array-by-applying-difference
   array-for-key
   ascending
   associated-index
@@ -3115,10 +3131,12 @@
   attribute-keys
   attributecontainer-filter-inherited-by-added-text
   attributed-content-text
+  attributed-string-by-inflecting-string
   attributed-string-for-nil
   attributed-string-for-not-a-number
   attributed-string-for-object-value-with-default-attributes
   attributed-string-for-zero
+  attributed-substring-from-range
   attributed-title
   attributedstring-inflected
   attributedstringattributemutation-selectors
@@ -3135,9 +3153,13 @@
   base-specifier
   base-unit-value-from-value
   base-url
+  base64-encoded-data-with-options
+  base64-encoded-string-with-options
   become-current
   become-current-with-pending-unit-count
+  begin-activity-with-options-reason!
   begin-content-access!
+  begin-editing!
   begin-undo-grouping!
   bitmap-representation
   bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
@@ -3154,6 +3176,7 @@
   bundle-url
   bytecountformatstyle-format
   bytes
+  c-string-using-encoding
   cache-policy
   cached-response
   cached-response-for-request
@@ -3161,6 +3184,7 @@
   calendar-identifier
   call-stack-return-addresses
   call-stack-symbols
+  can-be-converted-to-encoding
   can-be-converted-to-unit
   can-load-object-of-class
   can-redo
@@ -3168,13 +3192,17 @@
   cancel
   cancel-all-operations
   cancel-by-producing-resume-data
+  cancel-perform-selector-target-argument
+  cancel-perform-selectors-with-target
   cancel-request-with-error
   cancel-with-close-code-reason
   cancellable
   cancelled
   canonical-xml-string-preserving-comments
   capitalized-string
+  capitalized-string-with-locale
   capture-streams
+  case-insensitive-compare
   case-sensitive
   cellular
   certificates
@@ -3189,6 +3217,8 @@
   characterset-insert-characters-in!
   characterset-invert!
   characterset-remove-characters-in!
+  check-promised-item-is-reachable-and-return-error
+  check-resource-is-reachable-and-return-error
   checking-types
   child-at-index
   child-count
@@ -3206,6 +3236,7 @@
   close-and-return-error!
   close-code
   close-code!
+  close-file!
   close-read!
   close-reason
   close-reason!
@@ -3231,10 +3262,14 @@
   command-name
   comment
   comment-url
+  common-prefix-with-string-options
   compact
   compare
   compare-date-to-date-to-unit-granularity
   compare-object-to-object
+  compare-options
+  compare-options-range
+  compare-options-range-locale
   comparison-predicate-modifier
   compiled
   complete-request-returning-items-completion-handler
@@ -3245,8 +3280,13 @@
   components-from-date-components-to-date-components-options
   components-from-date-to-date-options
   components-in-time-zone-from-date
+  components-joined-by-string
+  components-separated-by-characters-in-set
+  components-separated-by-string
   components-to-display-for-path
   compound-predicate-type
+  compress-using-algorithm-error
+  compressed-data-using-algorithm-error
   concurrent
   condition
   configuration
@@ -3269,6 +3309,7 @@
   contains-indexes
   contains-indexes-in-range
   contains-object
+  contains-string
   contains-value-for-key
   content-image
   contents-at-path
@@ -3326,6 +3367,7 @@
   current-request
   custom-mirror
   custom-playground-quick-look
+  custom-pronoun-for-language
   custom-selector
   data
   data-advanced-by
@@ -3338,13 +3380,18 @@
   data-representation
   data-reserve-capacity!
   data-task-with-request
+  data-task-with-request-completion-handler
   data-task-with-url
+  data-task-with-url-completion-handler
+  data-using-encoding
+  data-using-encoding-allow-lossy-conversion
   dataprotocol-selectors
   date
   date-add-time-interval!
   date-adding-time-interval
   date-advanced-by
   date-by-adding-components-to-date-options
+  date-by-adding-time-interval
   date-by-adding-unit-value-to-date-options
   date-by-setting-hour-minute-second-of-date-options
   date-by-setting-unit-value-of-date-options
@@ -3386,18 +3433,40 @@
   decimal-separator
   decodableattributedstringkey-selectors
   decodablewithconfiguration-selectors
+  decode-array-of-objects-of-class-for-key
+  decode-array-of-objects-of-classes-for-key
   decode-bool-for-key
   decode-data-object
+  decode-dictionary-with-keys-of-class-objects-of-class-for-key
+  decode-dictionary-with-keys-of-classes-objects-of-classes-for-key
   decode-double-for-key
   decode-float-for-key
   decode-int-for-key
   decode-int32-for-key
   decode-int64-for-key
+  decode-integer-for-key
+  decode-object
   decode-object-for-key
+  decode-object-of-class-for-key
+  decode-object-of-classes-for-key
+  decode-point
+  decode-point-for-key
   decode-port-object
+  decode-property-list
+  decode-property-list-for-key
+  decode-rect
+  decode-rect-for-key
+  decode-size
+  decode-size-for-key
+  decode-top-level-object-and-return-error
+  decode-top-level-object-for-key-error
+  decode-top-level-object-of-class-for-key-error
+  decode-top-level-object-of-classes-for-key-error
   decoding-failure-policy
   decomposed-string-with-canonical-mapping
   decomposed-string-with-compatibility-mapping
+  decompress-using-algorithm-error
+  decompressed-data-using-algorithm-error
   default-credential-for-protection-space
   default-date
   default-name-server-port-number
@@ -3405,6 +3474,7 @@
   definiteness
   delegate
   delegate-queue
+  delete-characters-in-range
   delete-cookie
   deletes-file-upon-failure
   deliver-notification
@@ -3419,6 +3489,7 @@
   description-function
   description-in-strings-file-format
   description-with-locale
+  description-with-locale-indent
   descriptor
   descriptor-at-index
   descriptor-for-keyword
@@ -3430,6 +3501,12 @@
   dictionary-for-key
   dictionary-representation
   difference-by-transforming-changes-with-block
+  difference-from-array
+  difference-from-array-with-options
+  difference-from-array-with-options-using-equivalence-test
+  difference-from-ordered-set
+  difference-from-ordered-set-with-options
+  difference-from-ordered-set-with-options-using-equivalence-test
   direct-parameter
   directory
   directory-attributes
@@ -3454,16 +3531,21 @@
   domain-lookup-start-date
   domain-resolution-protocol
   dominant-language
+  dominant-language-for-script
   dominant-script
   double-for-key
   double-value
   download-task-with-request
+  download-task-with-request-completion-handler
   download-task-with-resume-data
+  download-task-with-resume-data-completion-handler
   download-task-with-url
+  download-task-with-url-completion-handler
   drain
   dtd
   dtd-kind
   duration
+  earlier-date
   earliest-begin-date
   edge-insets-value
   editing-string-for-object-value
@@ -3485,6 +3567,8 @@
   encodableattributedstringkey-selectors
   encodablewithconfiguration-selectors
   encode-bool-for-key
+  encode-bycopy-object
+  encode-byref-object
   encode-class-name-into-class-name
   encode-conditional-object
   encode-conditional-object-for-key
@@ -3494,18 +3578,29 @@
   encode-int-for-key
   encode-int32-for-key
   encode-int64-for-key
+  encode-integer-for-key
+  encode-object
   encode-object-for-key
+  encode-point
+  encode-point-for-key
   encode-port-object
+  encode-property-list
+  encode-rect
+  encode-rect-for-key
   encode-root-object
+  encode-size
+  encode-size-for-key
   encode-with-coder
   encode-xpc-object-for-key
   encoded-data
   encoded-host
+  end-activity!
   end-column
   end-column!
   end-content-access!
   end-date
   end-date!
+  end-editing!
   end-index
   end-line
   end-line!
@@ -3526,6 +3621,13 @@
   enumerate-indexes-in-range-options-using-block
   enumerate-indexes-using-block
   enumerate-indexes-with-options-using-block
+  enumerate-keys-and-objects-using-block
+  enumerate-keys-and-objects-with-options-using-block
+  enumerate-lines-using-block
+  enumerate-matches-in-string-options-range-using-block
+  enumerate-objects-at-indexes-options-using-block
+  enumerate-objects-using-block
+  enumerate-objects-with-options-using-block
   enumerate-results-using-block
   enumerate-results-with-options-using-block
   enumerator-at-path
@@ -3547,6 +3649,7 @@
   evict-ubiquitous-item-at-url-error
   evicts-objects-with-discarded-content
   exception-during-operation-error-left-operand-right-operand
+  exchange-object-at-index-with-object-at-index
   executable-architectures
   executable-path
   executable-url
@@ -3570,6 +3673,7 @@
   expression-value-with-object-context
   external
   external-entity-resolving-policy
+  fail-with-error
   failure-policy
   failure-response
   false-expression
@@ -3579,20 +3683,40 @@
   fetch-start-date
   file-attributes
   file-completed-count
+  file-creation-date
   file-descriptor
   file-exists-at-path
+  file-extension-hidden
+  file-group-owner-account-id
+  file-group-owner-account-name
   file-handle-for-reading
   file-handle-for-writing
+  file-hfs-creator-code
+  file-hfs-type-code
+  file-is-append-only
+  file-is-immutable
+  file-modification-date
   file-operation-kind
+  file-owner-account-id
+  file-owner-account-name
   file-path-url
+  file-posix-permissions
   file-reference-url
+  file-size
+  file-system-file-number
+  file-system-number
   file-system-representation
   file-system-representation-with-path
   file-total-count
+  file-type
   file-url
   file-url-value
   file-wrappers
   filename
+  filter-using-predicate
+  filtered-array-using-predicate
+  filtered-ordered-set-using-predicate
+  filtered-set-using-predicate
   finalize
   finish-decoding
   finish-encoding
@@ -3601,7 +3725,9 @@
   fire
   fire-date
   first-index
+  first-match-in-string-options-range
   first-object
+  first-object-common-with-array
   first-weekday
   float-for-key
   float-value
@@ -3629,7 +3755,11 @@
   generates-decimal-numbers
   get-all-tasks-with-completion-handler
   get-argument-type-at-index
+  get-cached-response-for-data-task-completion-handler
   get-continuation-streams-with-completion-handler
+  get-cookies-for-task-completion-handler
+  get-credentials-for-protection-space-task-completion-handler
+  get-default-credential-for-protection-space-task-completion-handler
   get-file-provider-connection-with-completion-handler
   get-file-provider-services-for-item-at-url-completion-handler
   get-tasks-with-completion-handler
@@ -3655,11 +3785,13 @@
   has-member-in-plane
   has-ordered-to-many-relationship-for-key
   has-password
+  has-prefix
   has-property-for-key
   has-readable-property-for-key
   has-reply-button
   has-representation-conforming-to-type-identifier-file-options
   has-space-available
+  has-suffix
   has-thousand-separators
   has-thumbnail
   has-writable-property-for-key
@@ -3668,6 +3800,7 @@
   header-level
   help-anchor
   home-directory-for-current-user
+  home-directory-for-user
   host
   host-name
   hour
@@ -3693,6 +3826,7 @@
   includes-peer-to-peer
   includes-time-remaining-phrase
   includes-unit
+  increase-length-by
   indentation-level
   independent-conversation-queueing
   indeterminate
@@ -3704,12 +3838,22 @@
   index-less-than-index
   index-less-than-or-equal-to-index
   index-of-object
+  index-of-object-at-indexes-options-passing-test
+  index-of-object-identical-to
+  index-of-object-identical-to-in-range
+  index-of-object-in-range
+  index-of-object-in-sorted-range-options-using-comparator
+  index-of-object-passing-test
+  index-of-object-with-options-passing-test
   index-of-result
   index-passing-test
   index-path-by-adding-index
   index-path-by-removing-last-index
   index-with-options-passing-test
   indexes-in-range-options-passing-test
+  indexes-of-objects-at-indexes-options-passing-test
+  indexes-of-objects-passing-test
+  indexes-of-objects-with-options-passing-test
   indexes-passing-test
   indexes-with-options-passing-test
   indexpath-append!
@@ -3745,12 +3889,16 @@
   init-remote-with-tcp-port-host
   init-requiring-secure-coding
   init-symbolic-link-with-destination-url
+  init-to-file-at-path-append
   init-to-memory
   input-items
+  insert-attributed-string-at-index!
   insert-child-at-index!
   insert-children-at-index!
   insert-descriptor-at-index!
   insert-object-at-index!
+  insert-objects-at-indexes!
+  insert-string-at-index!
   insertion-container
   insertion-container!
   insertion-index
@@ -3771,10 +3919,14 @@
   interpreted-syntax
   interrupt
   intersect-hash-table
+  intersect-ordered-set
+  intersect-set
   intersection-with-date-interval
   intersects-date-interval
   intersects-hash-table
   intersects-indexes-in-range
+  intersects-ordered-set
+  intersects-set
   interval
   invalidate
   invalidate-and-cancel
@@ -3785,6 +3937,7 @@
   invocation
   invoke
   invoke-with-target
+  is-absolute-path
   is-adaptive
   is-asynchronous
   is-at-end
@@ -3804,6 +3957,7 @@
   is-date-in-tomorrow
   is-date-in-weekend
   is-date-in-yesterday
+  is-daylight-saving-time
   is-daylight-saving-time-for-date
   is-deletable-file-at-path
   is-directory
@@ -3815,11 +3969,21 @@
   is-enabled
   is-enumerating-directory-post-order
   is-equal-function
+  is-equal-to-array
+  is-equal-to-attributed-string
+  is-equal-to-data
+  is-equal-to-date
   is-equal-to-date-interval
+  is-equal-to-dictionary
   is-equal-to-hash-table
   is-equal-to-host
   is-equal-to-index-set
   is-equal-to-number
+  is-equal-to-ordered-set
+  is-equal-to-set
+  is-equal-to-string
+  is-equal-to-time-zone
+  is-equal-to-value
   is-equivalent-to-presentation-intent
   is-executable-file-at-path
   is-executing
@@ -3838,6 +4002,8 @@
   is-lenient
   is-loaded
   is-location-required-to-create-for-key
+  is-low-power-mode-enabled
+  is-mac-catalyst-app
   is-main-thread
   is-multipath
   is-old
@@ -3866,6 +4032,8 @@
   is-started
   is-stopped
   is-subset-of-hash-table
+  is-subset-of-ordered-set
+  is-subset-of-set
   is-superset-of-set
   is-suspended
   is-symbolic-link
@@ -3873,12 +4041,15 @@
   is-ubiquitous-item-at-url
   is-undo-registration-enabled
   is-undoing
+  is-unspecified
   is-valid
   is-valid-date
   is-valid-date-in-calendar
   is-well-formed
   is-word-in-user-dictionaries-case-sensitive
   is-writable-file-at-path
+  isi-os-app-on-mac
+  isi-os-app-on-vision
   item-at-url-did-change-ubiquity-attributes
   item-at-url-did-move-to-url
   item-at-url-will-move-to-url
@@ -3921,6 +4092,11 @@
   key-pointer-functions
   key-specifier
   key-with-apple-event-code
+  keys-of-entries-passing-test
+  keys-of-entries-with-options-passing-test
+  keys-sorted-by-value-using-comparator
+  keys-sorted-by-value-using-selector
+  keys-sorted-by-value-with-options-using-comparator
   keyword-for-descriptor-at-index
   keywords
   kind
@@ -3928,20 +4104,25 @@
   language-hint
   language-identifier
   language-map
+  languages-for-script
   last-index
   last-object
   last-path-component
+  later-date
+  launch
   launch-and-return-error
   launch-path
   launch-requirement-data
   leap-month
   left-expression
   length
+  length-of-bytes-using-encoding
   lenient
   level
   levels-of-undo
   limit-date-for-mode
   line-number
+  line-range-for-range
   link-item-at-path-to-path-error
   link-item-at-url-to-url-error
   load
@@ -3952,6 +4133,7 @@
   load-in-place-file-representation-for-type-identifier-completion-handler
   load-item-for-type-identifier-options-completion-handler
   load-object-of-class-completion-handler
+  load-preview-image-with-options-completion-handler
   load-suite-with-dictionary-from-bundle
   load-suites-from-bundle
   loaded
@@ -3973,17 +4155,33 @@
   localized-additional-description
   localized-attributed-string-for-key-value-table
   localized-capitalized-string
+  localized-case-insensitive-compare
+  localized-case-insensitive-contains-string
+  localized-compare
   localized-description
   localized-failure-reason
   localized-info-dictionary
   localized-lowercase-string
   localized-name
+  localized-name-locale
   localized-name-of-saving-computer
   localized-recovery-options
   localized-recovery-suggestion
+  localized-standard-compare
+  localized-standard-contains-string
+  localized-standard-range-of-string
+  localized-string-for-calendar-identifier
+  localized-string-for-collation-identifier
+  localized-string-for-collator-identifier
+  localized-string-for-country-code
+  localized-string-for-currency-code
   localized-string-for-date-relative-to-date
   localized-string-for-key-value-table
   localized-string-for-key-value-table-localizations
+  localized-string-for-language-code
+  localized-string-for-locale-identifier
+  localized-string-for-script-code
+  localized-string-for-variant-code
   localized-string-from-date-components
   localized-string-from-time-interval
   localized-uppercase-string
@@ -4001,6 +4199,7 @@
   long-value
   low-power-mode-enabled
   lowercase-string
+  lowercase-string-with-locale
   mac-catalyst-app
   mach-port
   main
@@ -4062,10 +4261,16 @@
   make-nsappleeventmanager
   make-nsapplescript-init-with-source
   make-nsarchiver
+  make-nsarray-init-with-array
+  make-nsarray-init-with-array-copy-items
   make-nsarray-init-with-coder
+  make-nsarray-init-with-contents-of-file
+  make-nsarray-init-with-contents-of-url
   make-nsassertionhandler
-  make-nsattributedstring
+  make-nsattributedstring-init-with-attributed-string
   make-nsattributedstring-init-with-coder
+  make-nsattributedstring-init-with-string
+  make-nsattributedstring-init-with-string-attributes
   make-nsattributedstringmarkdownparsingoptions
   make-nsattributedstringmarkdownsourceposition-init-with-coder
   make-nsattributedstringmarkdownsourceposition-init-with-start-line-start-column-end-line-end-column
@@ -4105,11 +4310,18 @@
   make-nscountedset-init-with-capacity
   make-nscountedset-init-with-set
   make-nscreatecommand
-  make-nsdata
+  make-nsdata-init-with-base64-encoded-data-options
+  make-nsdata-init-with-base64-encoded-string-options
   make-nsdata-init-with-coder
+  make-nsdata-init-with-contents-of-file
+  make-nsdata-init-with-contents-of-url
+  make-nsdata-init-with-data
   make-nsdatadetector
   make-nsdate-init-with-coder
+  make-nsdate-init-with-time-interval-since-date
+  make-nsdate-init-with-time-interval-since-now
   make-nsdate-init-with-time-interval-since-reference-date
+  make-nsdate-init-with-time-interval-since1970
   make-nsdatecomponents
   make-nsdatecomponents-init-with-coder
   make-nsdatecomponentsformatter
@@ -4126,6 +4338,11 @@
   make-nsdecimalnumberhandler-init-with-rounding-mode-scale-raise-on-exactness-raise-on-overflow-raise-on-underflow-raise-on-divide-by-zero
   make-nsdeletecommand
   make-nsdictionary-init-with-coder
+  make-nsdictionary-init-with-contents-of-file
+  make-nsdictionary-init-with-contents-of-url
+  make-nsdictionary-init-with-dictionary
+  make-nsdictionary-init-with-dictionary-copy-items
+  make-nsdictionary-init-with-objects-for-keys
   make-nsdimension-init-with-coder
   make-nsdimension-init-with-symbol-converter
   make-nsdirectoryenumerator
@@ -4153,6 +4370,7 @@
   make-nsfileaccessintent
   make-nsfilecoordinator-init-with-file-presenter
   make-nsfilehandle-init-with-coder
+  make-nsfilehandle-init-with-file-descriptor
   make-nsfilehandle-init-with-file-descriptor-close-on-dealloc
   make-nsfilemanager
   make-nsfilemanagerdelegate
@@ -4184,6 +4402,7 @@
   make-nsinflectionrule-init-with-coder
   make-nsinflectionruleexplicit-init-with-morphology
   make-nsinputstream-init-with-data
+  make-nsinputstream-init-with-file-at-path
   make-nsinputstream-init-with-url
   make-nsinvocation
   make-nsinvocationoperation-init-with-invocation
@@ -4243,19 +4462,23 @@
   make-nsmovecommand
   make-nsmutablearray-init-with-capacity
   make-nsmutablearray-init-with-coder
+  make-nsmutablearray-init-with-contents-of-file
+  make-nsmutablearray-init-with-contents-of-url
   make-nsmutableattributedstring
   make-nsmutablecharacterset
-  make-nsmutablecharacterset-init-with-coder
   make-nsmutablecopying
-  make-nsmutabledata
+  make-nsmutabledata-init-with-capacity
+  make-nsmutabledata-init-with-length
   make-nsmutabledictionary-init-with-capacity
   make-nsmutabledictionary-init-with-coder
+  make-nsmutabledictionary-init-with-contents-of-file
+  make-nsmutabledictionary-init-with-contents-of-url
   make-nsmutableindexset
   make-nsmutableorderedset-init-with-capacity
   make-nsmutableorderedset-init-with-coder
   make-nsmutableset-init-with-capacity
   make-nsmutableset-init-with-coder
-  make-nsmutablestring
+  make-nsmutablestring-init-with-capacity
   make-nsmutablestring-init-with-coder
   make-nsmutableurlrequest
   make-nsnamespecifier-init-with-coder
@@ -4298,7 +4521,16 @@
   make-nsorderedcollectiondifference-init-with-changes
   make-nsorderedcollectiondifference-init-with-insert-indexes-inserted-objects-remove-indexes-removed-objects
   make-nsorderedcollectiondifference-init-with-insert-indexes-inserted-objects-remove-indexes-removed-objects-additional-changes
+  make-nsorderedset-init-with-array
+  make-nsorderedset-init-with-array-copy-items
+  make-nsorderedset-init-with-array-range-copy-items
   make-nsorderedset-init-with-coder
+  make-nsorderedset-init-with-object
+  make-nsorderedset-init-with-ordered-set
+  make-nsorderedset-init-with-ordered-set-copy-items
+  make-nsorderedset-init-with-ordered-set-range-copy-items
+  make-nsorderedset-init-with-set
+  make-nsorderedset-init-with-set-copy-items
   make-nsorthography-init-with-coder
   make-nsorthography-init-with-dominant-script-language-map
   make-nsoutputstream-init-with-url-append
@@ -4327,7 +4559,7 @@
   make-nsprogressreporting
   make-nspropertylistserialization
   make-nspropertyspecifier
-  make-nsprotocolchecker
+  make-nsprotocolchecker-init-with-target-protocol
   make-nsproxy
   make-nspurgeabledata
   make-nsquitcommand
@@ -4356,7 +4588,10 @@
   make-nsscriptwhosetest-init-with-coder
   make-nssecurecoding
   make-nssecureunarchivefromdatatransformer
+  make-nsset-init-with-array
   make-nsset-init-with-coder
+  make-nsset-init-with-set
+  make-nsset-init-with-set-copy-items
   make-nssetcommand
   make-nssimplecstring
   make-nssocketport-init-with-protocol-family-socket-type-protocol-address
@@ -4373,7 +4608,11 @@
   make-nsspellserverdelegate
   make-nsstream
   make-nsstreamdelegate
+  make-nsstring-init-with-c-string-encoding
   make-nsstring-init-with-coder
+  make-nsstring-init-with-data-encoding
+  make-nsstring-init-with-string
+  make-nsstring-init-with-utf8-string
   make-nsstring-string
   make-nstask
   make-nstermofaddress
@@ -4384,8 +4623,9 @@
   make-nsthread-init-with-target-selector-object
   make-nstimer-init-with-fire-date-interval-repeats-block
   make-nstimer-init-with-fire-date-interval-target-selector-user-info-repeats
-  make-nstimezone
   make-nstimezone-init-with-coder
+  make-nstimezone-init-with-name
+  make-nstimezone-init-with-name-data
   make-nsubiquitouskeyvaluestore
   make-nsunarchiver
   make-nsundomanager
@@ -4459,8 +4699,8 @@
   make-nsurlconnectiondatadelegate
   make-nsurlconnectiondelegate
   make-nsurlconnectiondownloaddelegate
-  make-nsurlcredential
   make-nsurlcredential-init-with-coder
+  make-nsurlcredential-init-with-user-password-persistence
   make-nsurlcredentialstorage
   make-nsurldownload
   make-nsurldownloaddelegate
@@ -4470,6 +4710,7 @@
   make-nsurlprotectionspace-init-with-host-port-protocol-realm-authentication-method
   make-nsurlprotectionspace-init-with-proxy-host-port-type-realm-authentication-method
   make-nsurlprotocol-init-with-request-cached-response-client
+  make-nsurlprotocol-init-with-task-cached-response-client
   make-nsurlprotocolclient
   make-nsurlqueryitem-init-with-coder
   make-nsurlqueryitem-init-with-name-value
@@ -4538,6 +4779,8 @@
   make-nsxpclistenerendpoint-init-with-coder
   make-nsxpcproxycreating
   make-objectivecconvertibleattributedstringkey
+  make-objects-perform-selector
+  make-objects-perform-selector-with-object
   make-parseableformatstyle
   make-parsestrategy
   make-personnamecomponents
@@ -4565,10 +4808,12 @@
   markdowndecodableattributedstringkey-selectors
   matches-apple-event-code
   matches-contents-of-url
+  matches-in-string-options-range
   max-concurrent-operation-count
   maximum
   maximum-fraction-digits
   maximum-integer-digits
+  maximum-length-of-bytes-using-encoding
   maximum-message-size
   maximum-range-of-unit
   maximum-significant-digits
@@ -4593,6 +4838,8 @@
   minimum-significant-digits
   minimum-tolerance
   minus-hash-table
+  minus-ordered-set
+  minus-set
   minus-sign
   minute
   modification-date
@@ -4603,6 +4850,7 @@
   mounted-volume-ur-ls-including-resource-values-for-keys-options
   move-item-at-path-to-path-error!
   move-item-at-url-to-url-error!
+  move-objects-at-indexes-to-index!
   msgid
   multipath
   multiple-threads-enabled
@@ -4730,19 +4978,74 @@
   nsarchiver-encode-root-object
   nsarchiver-init-for-writing-with-mutable-data
   nsarchiver-replace-object-with-object!
+  nsarray-array
+  nsarray-array-by-adding-object
+  nsarray-array-by-adding-objects-from-array
+  nsarray-array-by-applying-difference
+  nsarray-array-with-array
+  nsarray-array-with-contents-of-file
+  nsarray-array-with-contents-of-url
+  nsarray-array-with-contents-of-url-error
+  nsarray-array-with-object
+  nsarray-components-joined-by-string
+  nsarray-contains-object
   nsarray-count
   nsarray-custom-mirror
   nsarray-description
+  nsarray-description-with-locale
+  nsarray-description-with-locale-indent
+  nsarray-difference-from-array
+  nsarray-difference-from-array-with-options
+  nsarray-difference-from-array-with-options-using-equivalence-test
   nsarray-encode-with-coder
+  nsarray-enumerate-objects-at-indexes-options-using-block
+  nsarray-enumerate-objects-using-block
+  nsarray-enumerate-objects-with-options-using-block
+  nsarray-filtered-array-using-predicate
   nsarray-first-object
+  nsarray-first-object-common-with-array
+  nsarray-index-of-object
+  nsarray-index-of-object-at-indexes-options-passing-test
+  nsarray-index-of-object-identical-to
+  nsarray-index-of-object-identical-to-in-range
+  nsarray-index-of-object-in-range
+  nsarray-index-of-object-in-sorted-range-options-using-comparator
+  nsarray-index-of-object-passing-test
+  nsarray-index-of-object-with-options-passing-test
+  nsarray-indexes-of-objects-at-indexes-options-passing-test
+  nsarray-indexes-of-objects-passing-test
+  nsarray-indexes-of-objects-with-options-passing-test
+  nsarray-is-equal-to-array
   nsarray-last-object
   nsarray-make-iterator
+  nsarray-make-objects-perform-selector
+  nsarray-make-objects-perform-selector-with-object
   nsarray-object-at-index
+  nsarray-object-at-indexed-subscript
+  nsarray-object-enumerator
+  nsarray-objects-at-indexes
+  nsarray-paths-matching-extensions
+  nsarray-remove-observer-for-key-path!
+  nsarray-remove-observer-from-objects-at-indexes-for-key-path!
+  nsarray-reverse-object-enumerator
+  nsarray-set-value-for-key!
   nsarray-sorted-array-hint
+  nsarray-sorted-array-using-comparator
+  nsarray-sorted-array-using-descriptors
+  nsarray-sorted-array-using-selector
+  nsarray-sorted-array-with-options-using-comparator
+  nsarray-subarray-with-range
   nsarray-supports-secure-coding
   nsarray-underestimated-count
+  nsarray-value-for-key
+  nsarray-write-to-file-atomically
+  nsarray-write-to-url-atomically
+  nsarray-write-to-url-error
   nsassertionhandler-current-handler
+  nsattributedstring-attributed-string-by-inflecting-string
+  nsattributedstring-attributed-substring-from-range
   nsattributedstring-encode-with-coder
+  nsattributedstring-is-equal-to-attributed-string
   nsattributedstring-length
   nsattributedstring-string
   nsattributedstring-supports-secure-coding
@@ -4993,12 +5296,62 @@
   nsclosecommand-save-options
   nscoder-allowed-classes
   nscoder-allows-keyed-coding
+  nscoder-contains-value-for-key
+  nscoder-decode-array-of-objects-of-class-for-key
+  nscoder-decode-array-of-objects-of-classes-for-key
+  nscoder-decode-bool-for-key
   nscoder-decode-data-object
+  nscoder-decode-dictionary-with-keys-of-class-objects-of-class-for-key
+  nscoder-decode-dictionary-with-keys-of-classes-objects-of-classes-for-key
+  nscoder-decode-double-for-key
+  nscoder-decode-float-for-key
+  nscoder-decode-int-for-key
+  nscoder-decode-int32-for-key
+  nscoder-decode-int64-for-key
+  nscoder-decode-integer-for-key
+  nscoder-decode-object
+  nscoder-decode-object-for-key
+  nscoder-decode-object-of-class-for-key
+  nscoder-decode-object-of-classes-for-key
+  nscoder-decode-point
+  nscoder-decode-point-for-key
+  nscoder-decode-property-list
+  nscoder-decode-property-list-for-key
+  nscoder-decode-rect
+  nscoder-decode-rect-for-key
+  nscoder-decode-size
+  nscoder-decode-size-for-key
   nscoder-decode-top-level-object
+  nscoder-decode-top-level-object-and-return-error
   nscoder-decode-top-level-object-for-key
+  nscoder-decode-top-level-object-for-key-error
+  nscoder-decode-top-level-object-of-class-for-key-error
+  nscoder-decode-top-level-object-of-classes-for-key-error
   nscoder-decoding-failure-policy
+  nscoder-encode-bool-for-key
+  nscoder-encode-bycopy-object
+  nscoder-encode-byref-object
+  nscoder-encode-conditional-object
+  nscoder-encode-conditional-object-for-key
   nscoder-encode-data-object
+  nscoder-encode-double-for-key
+  nscoder-encode-float-for-key
+  nscoder-encode-int-for-key
+  nscoder-encode-int32-for-key
+  nscoder-encode-int64-for-key
+  nscoder-encode-integer-for-key
+  nscoder-encode-object
+  nscoder-encode-object-for-key
+  nscoder-encode-point
+  nscoder-encode-point-for-key
+  nscoder-encode-property-list
+  nscoder-encode-rect
+  nscoder-encode-rect-for-key
+  nscoder-encode-root-object
+  nscoder-encode-size
+  nscoder-encode-size-for-key
   nscoder-error
+  nscoder-fail-with-error
   nscoder-requires-secure-coding
   nscoder-system-version
   nscoder-version-for-class-name
@@ -5082,23 +5435,48 @@
   nscountedset-remove-object!
   nscreatecommand-create-class-description
   nscreatecommand-resolved-key-dictionary
+  nsdata-base64-encoded-data-with-options
+  nsdata-base64-encoded-string-with-options
   nsdata-bytes
+  nsdata-compressed-data-using-algorithm-error
+  nsdata-data
+  nsdata-data-with-contents-of-file
+  nsdata-data-with-contents-of-url
+  nsdata-data-with-data
+  nsdata-decompressed-data-using-algorithm-error
   nsdata-description
   nsdata-encode-with-coder
   nsdata-end-index
+  nsdata-is-equal-to-data
   nsdata-length
+  nsdata-range-of-data-options-range
   nsdata-regions
   nsdata-start-index
+  nsdata-subdata-with-range
   nsdata-supports-secure-coding
+  nsdata-write-to-file-atomically
+  nsdata-write-to-url-atomically
   nsdatadetector-checking-types
   nsdatadetector-data-detector-with-types-error
+  nsdate-compare
   nsdate-custom-playground-quick-look
+  nsdate-date
+  nsdate-date-by-adding-time-interval
+  nsdate-date-with-time-interval-since-date
+  nsdate-date-with-time-interval-since-now
+  nsdate-date-with-time-interval-since-reference-date
+  nsdate-date-with-time-interval-since1970
   nsdate-description
+  nsdate-description-with-locale
   nsdate-distant-future
   nsdate-distant-past
+  nsdate-earlier-date
   nsdate-encode-with-coder
+  nsdate-is-equal-to-date
+  nsdate-later-date
   nsdate-now
   nsdate-supports-secure-coding
+  nsdate-time-interval-since-date
   nsdate-time-interval-since-now
   nsdate-time-interval-since-reference-date
   nsdate-time-interval-since1970
@@ -5315,17 +5693,59 @@
   nsdeletecommand-key-specifier
   nsdeletecommand-set-receivers-specifier!
   nsdictionary-all-keys
+  nsdictionary-all-keys-for-object
   nsdictionary-all-values
   nsdictionary-count
   nsdictionary-custom-mirror
   nsdictionary-description
   nsdictionary-description-in-strings-file-format
+  nsdictionary-description-with-locale
+  nsdictionary-description-with-locale-indent
+  nsdictionary-dictionary
+  nsdictionary-dictionary-with-contents-of-file
+  nsdictionary-dictionary-with-contents-of-url
+  nsdictionary-dictionary-with-contents-of-url-error
+  nsdictionary-dictionary-with-dictionary
+  nsdictionary-dictionary-with-object-for-key
+  nsdictionary-dictionary-with-objects-for-keys
   nsdictionary-encode-with-coder
+  nsdictionary-enumerate-keys-and-objects-using-block
+  nsdictionary-enumerate-keys-and-objects-with-options-using-block
+  nsdictionary-file-creation-date
+  nsdictionary-file-extension-hidden
+  nsdictionary-file-group-owner-account-id
+  nsdictionary-file-group-owner-account-name
+  nsdictionary-file-hfs-creator-code
+  nsdictionary-file-hfs-type-code
+  nsdictionary-file-is-append-only
+  nsdictionary-file-is-immutable
+  nsdictionary-file-modification-date
+  nsdictionary-file-owner-account-id
+  nsdictionary-file-owner-account-name
+  nsdictionary-file-posix-permissions
+  nsdictionary-file-size
+  nsdictionary-file-system-file-number
+  nsdictionary-file-system-number
+  nsdictionary-file-type
+  nsdictionary-is-equal-to-dictionary
   nsdictionary-key-enumerator
+  nsdictionary-keys-of-entries-passing-test
+  nsdictionary-keys-of-entries-with-options-passing-test
+  nsdictionary-keys-sorted-by-value-using-comparator
+  nsdictionary-keys-sorted-by-value-using-selector
+  nsdictionary-keys-sorted-by-value-with-options-using-comparator
   nsdictionary-make-iterator
+  nsdictionary-object-enumerator
   nsdictionary-object-for-key
+  nsdictionary-object-for-keyed-subscript
+  nsdictionary-objects-for-keys-not-found-marker
+  nsdictionary-shared-key-set-for-keys
   nsdictionary-supports-secure-coding
   nsdictionary-underestimated-count
+  nsdictionary-value-for-key
+  nsdictionary-write-to-file-atomically
+  nsdictionary-write-to-url-atomically
+  nsdictionary-write-to-url-error
   nsdimension-base-unit
   nsdimension-converter
   nsdimension-encode-with-coder
@@ -5460,26 +5880,50 @@
   nsfilecoordinator-purpose-identifier
   nsfilecoordinator-remove-file-presenter!
   nsfilecoordinator-set-purpose-identifier!
+  nsfilehandle-accept-connection-in-background-and-notify
+  nsfilehandle-accept-connection-in-background-and-notify-for-modes
   nsfilehandle-available-data
   nsfilehandle-bytes
   nsfilehandle-close-and-return-error!
+  nsfilehandle-close-file!
   nsfilehandle-encode-with-coder
   nsfilehandle-file-descriptor
+  nsfilehandle-file-handle-for-reading-at-path
+  nsfilehandle-file-handle-for-reading-from-url-error
+  nsfilehandle-file-handle-for-updating-at-path
+  nsfilehandle-file-handle-for-updating-url-error
+  nsfilehandle-file-handle-for-writing-at-path
+  nsfilehandle-file-handle-for-writing-to-url-error
   nsfilehandle-file-handle-with-null-device
   nsfilehandle-file-handle-with-standard-error
   nsfilehandle-file-handle-with-standard-input
   nsfilehandle-file-handle-with-standard-output
   nsfilehandle-offset
   nsfilehandle-offset-in-file
+  nsfilehandle-read-data-of-length
+  nsfilehandle-read-data-to-end-of-file
   nsfilehandle-read-data-to-end-of-file-and-return-error
   nsfilehandle-read-data-up-to-length-error
+  nsfilehandle-read-in-background-and-notify
+  nsfilehandle-read-in-background-and-notify-for-modes
   nsfilehandle-read-to-end
+  nsfilehandle-read-to-end-of-file-in-background-and-notify
+  nsfilehandle-read-to-end-of-file-in-background-and-notify-for-modes
   nsfilehandle-read-up-to-count
   nsfilehandle-seek-to-end
+  nsfilehandle-seek-to-end-of-file
+  nsfilehandle-seek-to-file-offset
   nsfilehandle-seek-to-offset-error
+  nsfilehandle-set-readability-handler!
+  nsfilehandle-set-writeability-handler!
   nsfilehandle-supports-secure-coding
   nsfilehandle-synchronize-and-return-error
+  nsfilehandle-synchronize-file
   nsfilehandle-truncate-at-offset-error
+  nsfilehandle-truncate-file-at-offset
+  nsfilehandle-wait-for-data-in-background-and-notify
+  nsfilehandle-wait-for-data-in-background-and-notify-for-modes
+  nsfilehandle-write-data
   nsfilehandle-write-data-error
   nsfilemanager-attributes-of-file-system-for-path-error
   nsfilemanager-attributes-of-item-at-path-error
@@ -5510,6 +5954,7 @@
   nsfilemanager-file-system-representation-with-path
   nsfilemanager-get-file-provider-services-for-item-at-url-completion-handler
   nsfilemanager-home-directory-for-current-user
+  nsfilemanager-home-directory-for-user
   nsfilemanager-is-deletable-file-at-path
   nsfilemanager-is-executable-file-at-path
   nsfilemanager-is-readable-file-at-path
@@ -5665,6 +6110,7 @@
   nshttpcookiestorage-cookies
   nshttpcookiestorage-cookies-for-url
   nshttpcookiestorage-delete-cookie
+  nshttpcookiestorage-get-cookies-for-task-completion-handler
   nshttpcookiestorage-remove-cookies-since-date!
   nshttpcookiestorage-set-cookie!
   nshttpcookiestorage-set-cookie-accept-policy!
@@ -5672,6 +6118,7 @@
   nshttpcookiestorage-shared-cookie-storage-for-group-container-identifier
   nshttpcookiestorage-shared-http-cookie-storage
   nshttpcookiestorage-sorted-cookies-using-descriptors
+  nshttpcookiestorage-store-cookies-for-task
   nshttpurlresponse-all-header-fields
   nshttpurlresponse-localized-string-for-status-code
   nshttpurlresponse-status-code
@@ -5716,11 +6163,15 @@
   nsindexspecifier-index
   nsindexspecifier-set-index!
   nsinflectionrule-automatic-rule
+  nsinflectionrule-can-inflect-language
   nsinflectionrule-can-inflect-preferred-localization
   nsinflectionrule-encode-with-coder
   nsinflectionrule-supports-secure-coding
   nsinflectionruleexplicit-morphology
   nsinputstream-has-bytes-available
+  nsinputstream-input-stream-with-data
+  nsinputstream-input-stream-with-file-at-path
+  nsinputstream-input-stream-with-url
   nsinvocation-arguments-retained
   nsinvocation-invocation-with-method-signature
   nsinvocation-invoke
@@ -5750,6 +6201,7 @@
   nsitemprovider-load-in-place-file-representation-for-type-identifier-completion-handler
   nsitemprovider-load-item-for-type-identifier-options-completion-handler
   nsitemprovider-load-object-of-class-completion-handler
+  nsitemprovider-load-preview-image-with-options-completion-handler
   nsitemprovider-register-data-representation-for-type-identifier-visibility-load-handler
   nsitemprovider-register-file-representation-for-type-identifier-file-options-visibility-load-handler
   nsitemprovider-register-item-for-type-identifier-load-handler
@@ -5757,6 +6209,7 @@
   nsitemprovider-register-object-visibility
   nsitemprovider-registered-type-identifiers
   nsitemprovider-registered-type-identifiers-with-file-options
+  nsitemprovider-set-preview-image-handler!
   nsitemprovider-set-suggested-name!
   nsitemprovider-suggested-name
   nsitemproviderreading-selectors
@@ -5849,9 +6302,13 @@
   nslocale-autoupdating-current-locale
   nslocale-available-locale-identifiers
   nslocale-calendar-identifier
+  nslocale-canonical-language-identifier-from-string
+  nslocale-canonical-locale-identifier-from-string
+  nslocale-character-direction-for-language
   nslocale-collation-identifier
   nslocale-collator-identifier
   nslocale-common-iso-currency-codes
+  nslocale-components-from-locale-identifier
   nslocale-country-code
   nslocale-currency-code
   nslocale-currency-symbol
@@ -5866,7 +6323,20 @@
   nslocale-iso-language-codes
   nslocale-language-code
   nslocale-language-identifier
+  nslocale-line-direction-for-language
   nslocale-locale-identifier
+  nslocale-locale-identifier-from-components
+  nslocale-locale-identifier-from-windows-locale-code
+  nslocale-locale-with-locale-identifier
+  nslocale-localized-string-for-calendar-identifier
+  nslocale-localized-string-for-collation-identifier
+  nslocale-localized-string-for-collator-identifier
+  nslocale-localized-string-for-country-code
+  nslocale-localized-string-for-currency-code
+  nslocale-localized-string-for-language-code
+  nslocale-localized-string-for-locale-identifier
+  nslocale-localized-string-for-script-code
+  nslocale-localized-string-for-variant-code
   nslocale-object-for-key
   nslocale-preferred-languages
   nslocale-quotation-begin-delimiter
@@ -5877,6 +6347,7 @@
   nslocale-system-locale
   nslocale-uses-metric-system
   nslocale-variant-code
+  nslocale-windows-locale-code-from-locale-identifier
   nslocalizednumberformatrule-automatic
   nslocalizednumberformatrule-encode-with-coder
   nslocalizednumberformatrule-new
@@ -6011,15 +6482,18 @@
   nsmethodsignature-method-return-type
   nsmethodsignature-number-of-arguments
   nsmethodsignature-signature-with-obj-c-types
+  nsmorphology-custom-pronoun-for-language
   nsmorphology-definiteness
   nsmorphology-determination
   nsmorphology-encode-with-coder
   nsmorphology-grammatical-case
   nsmorphology-grammatical-gender
   nsmorphology-grammatical-person
+  nsmorphology-is-unspecified
   nsmorphology-number
   nsmorphology-part-of-speech
   nsmorphology-pronoun-type
+  nsmorphology-set-custom-pronoun-for-language-error!
   nsmorphology-set-definiteness!
   nsmorphology-set-determination!
   nsmorphology-set-grammatical-case!
@@ -6054,12 +6528,47 @@
   nsmovecommand-key-specifier
   nsmovecommand-set-receivers-specifier!
   nsmutablearray-add-object!
+  nsmutablearray-add-objects-from-array!
+  nsmutablearray-apply-difference
+  nsmutablearray-array-with-capacity
+  nsmutablearray-array-with-contents-of-file
+  nsmutablearray-array-with-contents-of-url
+  nsmutablearray-exchange-object-at-index-with-object-at-index
+  nsmutablearray-filter-using-predicate
   nsmutablearray-insert-object-at-index!
+  nsmutablearray-insert-objects-at-indexes!
+  nsmutablearray-remove-all-objects!
   nsmutablearray-remove-last-object!
+  nsmutablearray-remove-object!
   nsmutablearray-remove-object-at-index!
+  nsmutablearray-remove-object-identical-to!
+  nsmutablearray-remove-object-identical-to-in-range!
+  nsmutablearray-remove-object-in-range!
+  nsmutablearray-remove-objects-at-indexes!
+  nsmutablearray-remove-objects-in-array!
+  nsmutablearray-remove-objects-in-range!
   nsmutablearray-replace-object-at-index-with-object!
+  nsmutablearray-replace-objects-at-indexes-with-objects!
+  nsmutablearray-replace-objects-in-range-with-objects-from-array!
+  nsmutablearray-replace-objects-in-range-with-objects-from-array-range!
+  nsmutablearray-set-array!
+  nsmutablearray-set-object-at-indexed-subscript!
+  nsmutablearray-sort-using-comparator
+  nsmutablearray-sort-using-descriptors
+  nsmutablearray-sort-using-selector
+  nsmutablearray-sort-with-options-using-comparator
+  nsmutableattributedstring-add-attribute-value-range!
+  nsmutableattributedstring-add-attributes-range!
+  nsmutableattributedstring-append-attributed-string
+  nsmutableattributedstring-begin-editing!
+  nsmutableattributedstring-delete-characters-in-range
+  nsmutableattributedstring-end-editing!
+  nsmutableattributedstring-insert-attributed-string-at-index!
   nsmutableattributedstring-mutable-string
+  nsmutableattributedstring-remove-attribute-range!
+  nsmutableattributedstring-replace-characters-in-range-with-attributed-string!
   nsmutableattributedstring-replace-characters-in-range-with-string!
+  nsmutableattributedstring-set-attributed-string!
   nsmutableattributedstring-set-attributes-range!
   nsmutablecharacterset-add-characters-in-range!
   nsmutablecharacterset-add-characters-in-string!
@@ -6090,12 +6599,30 @@
   nsmutablecharacterset-whitespace-and-newline-character-set
   nsmutablecharacterset-whitespace-character-set
   nsmutablecopying-selectors
+  nsmutabledata-append-data
+  nsmutabledata-compress-using-algorithm-error
+  nsmutabledata-data-with-capacity
+  nsmutabledata-data-with-length
+  nsmutabledata-decompress-using-algorithm-error
+  nsmutabledata-increase-length-by
   nsmutabledata-length
   nsmutabledata-mutable-bytes
+  nsmutabledata-reset-bytes-in-range!
+  nsmutabledata-set-data!
   nsmutabledata-set-length!
+  nsmutabledictionary-add-entries-from-dictionary!
+  nsmutabledictionary-dictionary-with-capacity
+  nsmutabledictionary-dictionary-with-contents-of-file
+  nsmutabledictionary-dictionary-with-contents-of-url
+  nsmutabledictionary-dictionary-with-shared-key-set
   nsmutabledictionary-encode-with-coder
+  nsmutabledictionary-remove-all-objects!
   nsmutabledictionary-remove-object-for-key!
+  nsmutabledictionary-remove-objects-for-keys!
+  nsmutabledictionary-set-dictionary!
   nsmutabledictionary-set-object-for-key!
+  nsmutabledictionary-set-object-for-keyed-subscript!
+  nsmutabledictionary-set-value-for-key!
   nsmutabledictionary-supports-secure-coding
   nsmutableindexset-add-index!
   nsmutableindexset-add-indexes!
@@ -6105,19 +6632,60 @@
   nsmutableindexset-remove-indexes!
   nsmutableindexset-remove-indexes-in-range!
   nsmutableindexset-shift-indexes-starting-at-index-by
+  nsmutableorderedset-add-object!
+  nsmutableorderedset-add-objects-from-array!
+  nsmutableorderedset-apply-difference
+  nsmutableorderedset-exchange-object-at-index-with-object-at-index
+  nsmutableorderedset-filter-using-predicate
   nsmutableorderedset-insert-object-at-index!
+  nsmutableorderedset-insert-objects-at-indexes!
+  nsmutableorderedset-intersect-ordered-set
+  nsmutableorderedset-intersect-set
+  nsmutableorderedset-minus-ordered-set
+  nsmutableorderedset-minus-set
+  nsmutableorderedset-move-objects-at-indexes-to-index!
+  nsmutableorderedset-ordered-set-with-capacity!
+  nsmutableorderedset-remove-all-objects!
+  nsmutableorderedset-remove-object!
   nsmutableorderedset-remove-object-at-index!
+  nsmutableorderedset-remove-objects-at-indexes!
+  nsmutableorderedset-remove-objects-in-array!
+  nsmutableorderedset-remove-objects-in-range!
   nsmutableorderedset-replace-object-at-index-with-object!
+  nsmutableorderedset-replace-objects-at-indexes-with-objects!
+  nsmutableorderedset-set-object-at-index!
+  nsmutableorderedset-set-object-at-indexed-subscript!
+  nsmutableorderedset-sort-range-options-using-comparator
+  nsmutableorderedset-sort-using-comparator
+  nsmutableorderedset-sort-using-descriptors
+  nsmutableorderedset-sort-with-options-using-comparator
+  nsmutableorderedset-union-ordered-set
+  nsmutableorderedset-union-set
   nsmutableset-add-object!
+  nsmutableset-add-objects-from-array!
+  nsmutableset-filter-using-predicate
+  nsmutableset-intersect-set
+  nsmutableset-minus-set
+  nsmutableset-remove-all-objects!
   nsmutableset-remove-object!
+  nsmutableset-set-set!
+  nsmutableset-set-with-capacity!
+  nsmutableset-union-set
+  nsmutablestring-append-string
+  nsmutablestring-delete-characters-in-range
   nsmutablestring-encode-with-coder
+  nsmutablestring-insert-string-at-index!
   nsmutablestring-item-provider-visibility-for-representation-with-type-identifier
   nsmutablestring-load-data-with-type-identifier-for-item-provider-completion-handler
   nsmutablestring-object-with-item-provider-data-type-identifier-error
   nsmutablestring-readable-type-identifiers-for-item-provider
   nsmutablestring-replace-characters-in-range-with-string!
+  nsmutablestring-replace-occurrences-of-string-with-string-options-range!
+  nsmutablestring-set-string!
+  nsmutablestring-string-with-capacity
   nsmutablestring-supports-secure-coding
   nsmutablestring-writable-type-identifiers-for-item-provider
+  nsmutableurlrequest-add-value-for-http-header-field!
   nsmutableurlrequest-all-http-header-fields
   nsmutableurlrequest-allows-cellular-access
   nsmutableurlrequest-allows-constrained-network-access
@@ -6156,6 +6724,7 @@
   nsmutableurlrequest-set-requires-dnssec-validation!
   nsmutableurlrequest-set-timeout-interval!
   nsmutableurlrequest-set-url!
+  nsmutableurlrequest-set-value-for-http-header-field!
   nsmutableurlrequest-timeout-interval
   nsmutableurlrequest-url
   nsnamespecifier-name
@@ -6197,6 +6766,8 @@
   nsnetservicedelegate-selectors
   nsnotification-encode-with-coder
   nsnotification-name
+  nsnotification-notification-with-name-object
+  nsnotification-notification-with-name-object-user-info
   nsnotification-object
   nsnotification-user-info
   nsnotificationcenter-add-observer-for-name-object-queue-using-block!
@@ -6226,6 +6797,21 @@
   nsnumber-is-equal-to-number
   nsnumber-long-long-value
   nsnumber-long-value
+  nsnumber-number-with-bool
+  nsnumber-number-with-char
+  nsnumber-number-with-double
+  nsnumber-number-with-float
+  nsnumber-number-with-int
+  nsnumber-number-with-integer
+  nsnumber-number-with-long
+  nsnumber-number-with-long-long
+  nsnumber-number-with-short
+  nsnumber-number-with-unsigned-char
+  nsnumber-number-with-unsigned-int
+  nsnumber-number-with-unsigned-integer
+  nsnumber-number-with-unsigned-long
+  nsnumber-number-with-unsigned-long-long
+  nsnumber-number-with-unsigned-short
   nsnumber-short-value
   nsnumber-string-value
   nsnumber-supports-secure-coding
@@ -6439,27 +7025,77 @@
   nsorderedcollectiondifference-inverse-difference
   nsorderedcollectiondifference-removals
   nsorderedset-array
+  nsorderedset-contains-object
   nsorderedset-count
   nsorderedset-description
+  nsorderedset-description-with-locale
+  nsorderedset-description-with-locale-indent
+  nsorderedset-difference-from-ordered-set
+  nsorderedset-difference-from-ordered-set-with-options
+  nsorderedset-difference-from-ordered-set-with-options-using-equivalence-test
   nsorderedset-encode-with-coder
+  nsorderedset-enumerate-objects-at-indexes-options-using-block
+  nsorderedset-enumerate-objects-using-block
+  nsorderedset-enumerate-objects-with-options-using-block
+  nsorderedset-filtered-ordered-set-using-predicate
   nsorderedset-first-object
   nsorderedset-index-of-object
+  nsorderedset-index-of-object-at-indexes-options-passing-test
+  nsorderedset-index-of-object-in-sorted-range-options-using-comparator
+  nsorderedset-index-of-object-passing-test
+  nsorderedset-index-of-object-with-options-passing-test
+  nsorderedset-indexes-of-objects-at-indexes-options-passing-test
+  nsorderedset-indexes-of-objects-passing-test
+  nsorderedset-indexes-of-objects-with-options-passing-test
+  nsorderedset-intersects-ordered-set
+  nsorderedset-intersects-set
+  nsorderedset-is-equal-to-ordered-set
+  nsorderedset-is-subset-of-ordered-set
+  nsorderedset-is-subset-of-set
   nsorderedset-last-object
   nsorderedset-make-iterator
   nsorderedset-object-at-index
+  nsorderedset-object-at-indexed-subscript
+  nsorderedset-object-enumerator
+  nsorderedset-objects-at-indexes
+  nsorderedset-ordered-set!
+  nsorderedset-ordered-set-by-applying-difference!
+  nsorderedset-ordered-set-with-array!
+  nsorderedset-ordered-set-with-array-range-copy-items!
+  nsorderedset-ordered-set-with-object!
+  nsorderedset-ordered-set-with-ordered-set!
+  nsorderedset-ordered-set-with-ordered-set-range-copy-items!
+  nsorderedset-ordered-set-with-set!
+  nsorderedset-ordered-set-with-set-copy-items!
+  nsorderedset-remove-observer-for-key-path!
+  nsorderedset-reverse-object-enumerator
   nsorderedset-reversed-ordered-set
   nsorderedset-set
+  nsorderedset-set!
+  nsorderedset-set-value-for-key!
+  nsorderedset-sorted-array-using-comparator
+  nsorderedset-sorted-array-using-descriptors
+  nsorderedset-sorted-array-with-options-using-comparator
   nsorderedset-supports-secure-coding
   nsorderedset-underestimated-count
+  nsorderedset-value-for-key
   nsorthography-all-languages
   nsorthography-all-scripts
+  nsorthography-default-orthography-for-language
   nsorthography-dominant-language
+  nsorthography-dominant-language-for-script
   nsorthography-dominant-script
   nsorthography-encode-with-coder
   nsorthography-language-map
+  nsorthography-languages-for-script
+  nsorthography-orthography-with-dominant-script-language-map
   nsorthography-supports-secure-coding
   nsoutputstream-has-space-available
+  nsoutputstream-init-to-file-at-path-append
   nsoutputstream-init-to-memory
+  nsoutputstream-output-stream-to-file-at-path-append
+  nsoutputstream-output-stream-to-memory
+  nsoutputstream-output-stream-with-url-append
   nspersonnamecomponents-encode-with-coder
   nspersonnamecomponents-family-name
   nspersonnamecomponents-given-name
@@ -6499,7 +7135,9 @@
   nspointerarray-pointer-functions
   nspointerarray-remove-pointer-at-index!
   nspointerarray-set-count!
+  nspointerarray-strong-objects-pointer-array
   nspointerarray-supports-secure-coding
+  nspointerarray-weak-objects-pointer-array
   nspointerfunctions-acquire-function
   nspointerfunctions-description-function
   nspointerfunctions-hash-function
@@ -6599,19 +7237,26 @@
   nsprocessinfo-active-processor-count
   nsprocessinfo-arguments
   nsprocessinfo-automatic-termination-support-enabled
+  nsprocessinfo-begin-activity-with-options-reason!
   nsprocessinfo-disable-automatic-termination
   nsprocessinfo-disable-sudden-termination
   nsprocessinfo-enable-automatic-termination
   nsprocessinfo-enable-sudden-termination
+  nsprocessinfo-end-activity!
   nsprocessinfo-environment
   nsprocessinfo-full-user-name
   nsprocessinfo-globally-unique-string
   nsprocessinfo-host-name
   nsprocessinfo-i-os-app-on-mac
   nsprocessinfo-i-os-app-on-vision
+  nsprocessinfo-is-low-power-mode-enabled
+  nsprocessinfo-is-mac-catalyst-app
+  nsprocessinfo-isi-os-app-on-mac
+  nsprocessinfo-isi-os-app-on-vision
   nsprocessinfo-low-power-mode-enabled
   nsprocessinfo-mac-catalyst-app
   nsprocessinfo-operating-system-version-string
+  nsprocessinfo-perform-activity-with-options-reason-using-block!
   nsprocessinfo-physical-memory
   nsprocessinfo-process-identifier
   nsprocessinfo-process-info
@@ -6686,6 +7331,7 @@
   nspropertylistserialization-property-list-is-valid-for-format
   nspropertylistserialization-write-property-list-to-stream-format-options-error
   nsprotocolchecker-protocol
+  nsprotocolchecker-protocol-checker-with-target-protocol
   nsprotocolchecker-target
   nsproxy-alloc
   nsproxy-class
@@ -6713,11 +7359,20 @@
   nsrecursivelock-try-lock
   nsrecursivelock-unlock
   nsregularexpression-encode-with-coder
+  nsregularexpression-enumerate-matches-in-string-options-range-using-block
   nsregularexpression-escaped-pattern-for-string
+  nsregularexpression-escaped-template-for-string
+  nsregularexpression-first-match-in-string-options-range
+  nsregularexpression-matches-in-string-options-range
   nsregularexpression-number-of-capture-groups
+  nsregularexpression-number-of-matches-in-string-options-range
   nsregularexpression-options
   nsregularexpression-pattern
+  nsregularexpression-range-of-first-match-in-string-options-range
   nsregularexpression-regular-expression-with-pattern-options-error
+  nsregularexpression-replace-matches-in-string-options-range-with-template!
+  nsregularexpression-replacement-string-for-result-in-string-offset-template!
+  nsregularexpression-string-by-replacing-matches-in-string-options-range-with-template
   nsregularexpression-supports-secure-coding
   nsrelativedatetimeformatter-calendar
   nsrelativedatetimeformatter-date-time-style
@@ -6740,23 +7395,34 @@
   nsrunloop-accept-input-for-mode-before-date
   nsrunloop-add-port-for-mode!
   nsrunloop-add-timer-for-mode!
+  nsrunloop-cancel-perform-selector-target-argument
+  nsrunloop-cancel-perform-selectors-with-target
   nsrunloop-current-mode
   nsrunloop-current-run-loop
   nsrunloop-limit-date-for-mode
   nsrunloop-main-run-loop
   nsrunloop-minimum-tolerance
   nsrunloop-now
+  nsrunloop-perform-block!
+  nsrunloop-perform-in-modes-block!
+  nsrunloop-perform-selector-target-argument-order-modes!
   nsrunloop-remove-port-for-mode!
+  nsrunloop-run
+  nsrunloop-run-mode-before-date
+  nsrunloop-run-until-date
   nsscanner-at-end
   nsscanner-case-sensitive
   nsscanner-characters-to-be-skipped
   nsscanner-current-index
+  nsscanner-is-at-end
   nsscanner-locale
+  nsscanner-localized-scanner-with-string
   nsscanner-scan-character
   nsscanner-scan-decimal
   nsscanner-scan-location
   nsscanner-scan-string
   nsscanner-scan-up-to-string
+  nsscanner-scanner-with-string
   nsscanner-set-case-sensitive!
   nsscanner-set-characters-to-be-skipped!
   nsscanner-set-current-index!
@@ -6872,15 +7538,39 @@
   nssecurecoding-selectors
   nssecureunarchivefromdatatransformer-allowed-top-level-classes
   nsset-all-objects
+  nsset-any-object
+  nsset-contains-object
   nsset-count
   nsset-custom-mirror
   nsset-description
+  nsset-description-with-locale
   nsset-encode-with-coder
+  nsset-enumerate-objects-using-block
+  nsset-enumerate-objects-with-options-using-block
+  nsset-filtered-set-using-predicate
+  nsset-intersects-set
+  nsset-is-equal-to-set
+  nsset-is-subset-of-set
   nsset-make-iterator
+  nsset-make-objects-perform-selector
+  nsset-make-objects-perform-selector-with-object
   nsset-member
   nsset-object-enumerator
+  nsset-objects-passing-test
+  nsset-objects-with-options-passing-test
+  nsset-remove-observer-for-key-path!
+  nsset-set!
+  nsset-set-by-adding-object!
+  nsset-set-by-adding-objects-from-array!
+  nsset-set-by-adding-objects-from-set!
+  nsset-set-value-for-key!
+  nsset-set-with-array!
+  nsset-set-with-object!
+  nsset-set-with-set!
+  nsset-sorted-array-using-descriptors
   nsset-supports-secure-coding
   nsset-underestimated-count
+  nsset-value-for-key
   nssetcommand-key-specifier
   nssetcommand-set-receivers-specifier!
   nssocketport-address
@@ -6932,48 +7622,116 @@
   nsstring-absolute-path
   nsstring-available-string-encodings
   nsstring-bool-value
+  nsstring-c-string-using-encoding
+  nsstring-can-be-converted-to-encoding
   nsstring-capitalized-string
+  nsstring-capitalized-string-with-locale
+  nsstring-case-insensitive-compare
   nsstring-character-at-index
+  nsstring-common-prefix-with-string-options
+  nsstring-compare
+  nsstring-compare-options
+  nsstring-compare-options-range
+  nsstring-compare-options-range-locale
+  nsstring-components-separated-by-characters-in-set
+  nsstring-components-separated-by-string
+  nsstring-contains-string
   nsstring-custom-playground-quick-look
+  nsstring-data-using-encoding
+  nsstring-data-using-encoding-allow-lossy-conversion
   nsstring-decomposed-string-with-canonical-mapping
   nsstring-decomposed-string-with-compatibility-mapping
   nsstring-default-c-string-encoding
   nsstring-description
   nsstring-double-value
   nsstring-encode-with-coder
+  nsstring-enumerate-lines-using-block
   nsstring-fastest-encoding
   nsstring-file-system-representation
   nsstring-float-value
+  nsstring-has-prefix
+  nsstring-has-suffix
   nsstring-hash
   nsstring-int-value
   nsstring-integer-value
+  nsstring-is-absolute-path
+  nsstring-is-equal-to-string
   nsstring-item-provider-visibility-for-representation-with-type-identifier
   nsstring-last-path-component
   nsstring-length
+  nsstring-length-of-bytes-using-encoding
+  nsstring-line-range-for-range
   nsstring-load-data-with-type-identifier-for-item-provider-completion-handler
   nsstring-localized-capitalized-string
+  nsstring-localized-case-insensitive-compare
+  nsstring-localized-case-insensitive-contains-string
+  nsstring-localized-compare
   nsstring-localized-lowercase-string
+  nsstring-localized-name-of-string-encoding
+  nsstring-localized-standard-compare
+  nsstring-localized-standard-contains-string
+  nsstring-localized-standard-range-of-string
   nsstring-localized-uppercase-string
   nsstring-long-long-value
   nsstring-lowercase-string
+  nsstring-lowercase-string-with-locale
+  nsstring-maximum-length-of-bytes-using-encoding
   nsstring-object-with-item-provider-data-type-identifier-error
+  nsstring-paragraph-range-for-range
   nsstring-path-components
   nsstring-path-extension
+  nsstring-path-with-components
   nsstring-precomposed-string-with-canonical-mapping
   nsstring-precomposed-string-with-compatibility-mapping
+  nsstring-property-list
+  nsstring-property-list-from-strings-file-format
+  nsstring-range-of-character-from-set
+  nsstring-range-of-character-from-set-options
+  nsstring-range-of-character-from-set-options-range
+  nsstring-range-of-composed-character-sequence-at-index
+  nsstring-range-of-composed-character-sequences-for-range
+  nsstring-range-of-string
+  nsstring-range-of-string-options
+  nsstring-range-of-string-options-range
+  nsstring-range-of-string-options-range-locale
   nsstring-readable-type-identifiers-for-item-provider
   nsstring-smallest-encoding
+  nsstring-string
   nsstring-string-by-abbreviating-with-tilde-in-path
+  nsstring-string-by-adding-percent-encoding-with-allowed-characters
+  nsstring-string-by-appending-path-component
+  nsstring-string-by-appending-path-extension
+  nsstring-string-by-appending-string
+  nsstring-string-by-applying-transform-reverse
   nsstring-string-by-deleting-last-path-component
   nsstring-string-by-deleting-path-extension
   nsstring-string-by-expanding-tilde-in-path
+  nsstring-string-by-folding-with-options-locale
+  nsstring-string-by-padding-to-length-with-string-starting-at-index
   nsstring-string-by-removing-percent-encoding
+  nsstring-string-by-replacing-characters-in-range-with-string
+  nsstring-string-by-replacing-occurrences-of-string-with-string
+  nsstring-string-by-replacing-occurrences-of-string-with-string-options-range
   nsstring-string-by-resolving-symlinks-in-path
   nsstring-string-by-standardizing-path
+  nsstring-string-by-trimming-characters-in-set
+  nsstring-string-with-c-string-encoding
+  nsstring-string-with-contents-of-file-encoding-error
+  nsstring-string-with-contents-of-url-encoding-error
+  nsstring-string-with-string
+  nsstring-string-with-utf8-string
+  nsstring-strings-by-appending-paths
+  nsstring-substring-from-index
+  nsstring-substring-to-index
+  nsstring-substring-with-range
   nsstring-supports-secure-coding
   nsstring-uppercase-string
+  nsstring-uppercase-string-with-locale
   nsstring-utf8-string
+  nsstring-variant-fitting-presentation-width
   nsstring-writable-type-identifiers-for-item-provider
+  nsstring-write-to-file-atomically-encoding-error
+  nsstring-write-to-url-atomically-encoding-error
   nstask-arguments
   nstask-current-directory-path
   nstask-current-directory-url
@@ -6981,9 +7739,11 @@
   nstask-executable-url
   nstask-interrupt
   nstask-is-running
+  nstask-launch
   nstask-launch-and-return-error
   nstask-launch-path
   nstask-launch-requirement-data
+  nstask-launched-task-with-launch-path-arguments
   nstask-process-identifier
   nstask-quality-of-service
   nstask-resume
@@ -7007,6 +7767,7 @@
   nstask-terminate
   nstask-termination-reason
   nstask-termination-status
+  nstask-wait-until-exit
   nstermofaddress-current-user
   nstermofaddress-encode-with-coder
   nstermofaddress-feminine
@@ -7017,22 +7778,41 @@
   nstermofaddress-new
   nstermofaddress-pronouns
   nstermofaddress-supports-secure-coding
+  nstextcheckingresult-address-checking-result-with-range-components!
   nstextcheckingresult-address-components
+  nstextcheckingresult-address-components!
   nstextcheckingresult-alternative-strings
   nstextcheckingresult-components
+  nstextcheckingresult-correction-checking-result-with-range-replacement-string
+  nstextcheckingresult-correction-checking-result-with-range-replacement-string-alternative-strings
+  nstextcheckingresult-dash-checking-result-with-range-replacement-string
   nstextcheckingresult-date
+  nstextcheckingresult-date-checking-result-with-range-date
+  nstextcheckingresult-date-checking-result-with-range-date-time-zone-duration
   nstextcheckingresult-duration
   nstextcheckingresult-encode-with-coder
+  nstextcheckingresult-grammar-checking-result-with-range-details
   nstextcheckingresult-grammar-details
+  nstextcheckingresult-link-checking-result-with-range-url
   nstextcheckingresult-number-of-ranges
   nstextcheckingresult-orthography
+  nstextcheckingresult-orthography-checking-result-with-range-orthography
   nstextcheckingresult-phone-number
+  nstextcheckingresult-phone-number-checking-result-with-range-phone-number
+  nstextcheckingresult-quote-checking-result-with-range-replacement-string
   nstextcheckingresult-range
+  nstextcheckingresult-range-at-index
+  nstextcheckingresult-range-with-name
   nstextcheckingresult-regular-expression
+  nstextcheckingresult-replacement-checking-result-with-range-replacement-string!
   nstextcheckingresult-replacement-string
+  nstextcheckingresult-replacement-string!
+  nstextcheckingresult-result-by-adjusting-ranges-with-offset
   nstextcheckingresult-result-type
+  nstextcheckingresult-spell-checking-result-with-range
   nstextcheckingresult-supports-secure-coding
   nstextcheckingresult-time-zone
+  nstextcheckingresult-transit-information-checking-result-with-range-components
   nstextcheckingresult-url
   nsthread-call-stack-return-addresses
   nsthread-call-stack-symbols
@@ -7089,12 +7869,16 @@
   nstimezone-default-time-zone
   nstimezone-description
   nstimezone-encode-with-coder
+  nstimezone-is-daylight-saving-time
   nstimezone-is-daylight-saving-time-for-date
+  nstimezone-is-equal-to-time-zone
   nstimezone-known-time-zone-names
   nstimezone-local-time-zone
+  nstimezone-localized-name-locale
   nstimezone-name
   nstimezone-next-daylight-saving-time-transition
   nstimezone-next-daylight-saving-time-transition-after-date
+  nstimezone-reset-system-time-zone!
   nstimezone-seconds-from-gmt
   nstimezone-seconds-from-gmt-for-date
   nstimezone-set-abbreviation-dictionary!
@@ -7102,6 +7886,10 @@
   nstimezone-supports-secure-coding
   nstimezone-system-time-zone
   nstimezone-time-zone-data-version
+  nstimezone-time-zone-for-seconds-from-gmt
+  nstimezone-time-zone-with-abbreviation
+  nstimezone-time-zone-with-name
+  nstimezone-time-zone-with-name-data
   nsubiquitouskeyvaluestore-array-for-key
   nsubiquitouskeyvaluestore-bool-for-key
   nsubiquitouskeyvaluestore-data-for-key
@@ -7438,6 +8226,8 @@
   nsurl-base-url
   nsurl-bookmark-data-with-contents-of-url-error
   nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
+  nsurl-check-promised-item-is-reachable-and-return-error
+  nsurl-check-resource-is-reachable-and-return-error
   nsurl-custom-playground-quick-look
   nsurl-data-representation
   nsurl-encode-with-coder
@@ -7447,6 +8237,7 @@
   nsurl-file-url
   nsurl-file-url-with-file-system-representation-is-directory-relative-to-url
   nsurl-file-url-with-path
+  nsurl-file-url-with-path-components
   nsurl-file-url-with-path-is-directory
   nsurl-file-url-with-path-is-directory-relative-to-url
   nsurl-file-url-with-path-relative-to-url
@@ -7471,6 +8262,7 @@
   nsurl-path-components
   nsurl-path-extension
   nsurl-port
+  nsurl-promised-item-resource-values-for-keys-error
   nsurl-query
   nsurl-readable-type-identifiers-for-item-provider
   nsurl-relative-path
@@ -7488,6 +8280,9 @@
   nsurl-start-accessing-security-scoped-resource
   nsurl-stop-accessing-security-scoped-resource
   nsurl-supports-secure-coding
+  nsurl-url-by-appending-path-component
+  nsurl-url-by-appending-path-component-is-directory
+  nsurl-url-by-appending-path-extension
   nsurl-url-by-deleting-last-path-component
   nsurl-url-by-deleting-path-extension
   nsurl-url-by-resolving-alias-file-at-url-options-error
@@ -7513,14 +8308,17 @@
   nsurlcache-current-disk-usage
   nsurlcache-current-memory-usage
   nsurlcache-disk-capacity
+  nsurlcache-get-cached-response-for-data-task-completion-handler
   nsurlcache-memory-capacity
   nsurlcache-remove-all-cached-responses!
+  nsurlcache-remove-cached-response-for-data-task!
   nsurlcache-remove-cached-response-for-request!
   nsurlcache-remove-cached-responses-since-date!
   nsurlcache-set-disk-capacity!
   nsurlcache-set-memory-capacity!
   nsurlcache-set-shared-url-cache!
   nsurlcache-shared-url-cache
+  nsurlcache-store-cached-response-for-data-task
   nsurlcache-store-cached-response-for-request
   nsurlcomponents-components-with-string
   nsurlcomponents-components-with-string-encoding-invalid-characters
@@ -7582,6 +8380,7 @@
   nsurlconnectiondelegate-selectors
   nsurlconnectiondownloaddelegate-selectors
   nsurlcredential-certificates
+  nsurlcredential-credential-with-user-password-persistence
   nsurlcredential-encode-with-coder
   nsurlcredential-has-password
   nsurlcredential-identity
@@ -7592,10 +8391,15 @@
   nsurlcredentialstorage-all-credentials
   nsurlcredentialstorage-credentials-for-protection-space
   nsurlcredentialstorage-default-credential-for-protection-space
+  nsurlcredentialstorage-get-credentials-for-protection-space-task-completion-handler
+  nsurlcredentialstorage-get-default-credential-for-protection-space-task-completion-handler
   nsurlcredentialstorage-remove-credential-for-protection-space!
   nsurlcredentialstorage-remove-credential-for-protection-space-options!
+  nsurlcredentialstorage-remove-credential-for-protection-space-options-task!
   nsurlcredentialstorage-set-credential-for-protection-space!
+  nsurlcredentialstorage-set-credential-for-protection-space-task!
   nsurlcredentialstorage-set-default-credential-for-protection-space!
+  nsurlcredentialstorage-set-default-credential-for-protection-space-task!
   nsurlcredentialstorage-shared-credential-storage
   nsurldownload-can-resume-download-decoded-with-encoding-mime-type
   nsurldownload-cancel
@@ -7620,6 +8424,7 @@
   nsurlprotectionspace-supports-secure-coding
   nsurlprotocol-cached-response
   nsurlprotocol-can-init-with-request
+  nsurlprotocol-can-init-with-task
   nsurlprotocol-canonical-request-for-request
   nsurlprotocol-client
   nsurlprotocol-property-for-key-in-request
@@ -7662,6 +8467,7 @@
   nsurlrequest-supports-secure-coding
   nsurlrequest-timeout-interval
   nsurlrequest-url
+  nsurlrequest-value-for-http-header-field
   nsurlresponse-encode-with-coder
   nsurlresponse-expected-content-length
   nsurlresponse-mime-type
@@ -7674,12 +8480,17 @@
   nsurlsession-data-from
   nsurlsession-data-task-publisher-for
   nsurlsession-data-task-with-request
+  nsurlsession-data-task-with-request-completion-handler
   nsurlsession-data-task-with-url
+  nsurlsession-data-task-with-url-completion-handler
   nsurlsession-delegate
   nsurlsession-delegate-queue
   nsurlsession-download-task-with-request
+  nsurlsession-download-task-with-request-completion-handler
   nsurlsession-download-task-with-resume-data
+  nsurlsession-download-task-with-resume-data-completion-handler
   nsurlsession-download-task-with-url
+  nsurlsession-download-task-with-url-completion-handler
   nsurlsession-finish-tasks-and-invalidate
   nsurlsession-flush-with-completion-handler
   nsurlsession-get-all-tasks-with-completion-handler
@@ -7695,8 +8506,11 @@
   nsurlsession-stream-task-with-net-service
   nsurlsession-upload-for-from-file
   nsurlsession-upload-task-with-request-from-data
+  nsurlsession-upload-task-with-request-from-data-completion-handler
   nsurlsession-upload-task-with-request-from-file
+  nsurlsession-upload-task-with-request-from-file-completion-handler
   nsurlsession-upload-task-with-resume-data
+  nsurlsession-upload-task-with-resume-data-completion-handler
   nsurlsession-upload-task-with-streamed-request
   nsurlsession-web-socket-task-with-request
   nsurlsession-web-socket-task-with-url
@@ -8020,6 +8834,7 @@
   nsuuid-uuid-string
   nsvalue-edge-insets-value
   nsvalue-encode-with-coder
+  nsvalue-is-equal-to-value
   nsvalue-nonretained-object-value
   nsvalue-obj-c-type
   nsvalue-point-value
@@ -8028,6 +8843,12 @@
   nsvalue-rect-value
   nsvalue-size-value
   nsvalue-supports-secure-coding
+  nsvalue-value-with-edge-insets
+  nsvalue-value-with-nonretained-object
+  nsvalue-value-with-point
+  nsvalue-value-with-range
+  nsvalue-value-with-rect
+  nsvalue-value-with-size
   nsvaluetransformer-allows-reverse-transformation
   nsvaluetransformer-reverse-transformed-value
   nsvaluetransformer-set-value-transformer-for-name!
@@ -8120,6 +8941,7 @@
   nsxmlelement-resolve-namespace-for-name
   nsxmlelement-resolve-prefix-for-namespace-uri
   nsxmlelement-set-attributes!
+  nsxmlelement-set-attributes-as-dictionary!
   nsxmlelement-set-attributes-with-dictionary!
   nsxmlelement-set-children!
   nsxmlelement-set-namespaces!
@@ -8248,11 +9070,13 @@
   number-of-arguments
   number-of-capture-groups
   number-of-items
+  number-of-matches-in-string-options-range
   number-of-ranges
   number-style
   obj-c-type
   object
   object-at-index
+  object-at-indexed-subscript
   object-being-tested
   object-by-applying-xslt-arguments-error
   object-by-applying-xslt-at-url-arguments-error
@@ -8260,16 +9084,21 @@
   object-enumerator
   object-for-info-dictionary-key
   object-for-key
+  object-for-keyed-subscript
   object-form
   object-is-forced-for-key
   object-is-forced-for-key-in-domain
   object-specifier
   object-value
   objectivecconvertibleattributedstringkey-selectors
+  objects-at-indexes
   objects-by-evaluating-specifier
   objects-by-evaluating-with-containers
+  objects-for-keys-not-found-marker
   objects-for-x-query-constants-error
   objects-for-x-query-error
+  objects-passing-test
+  objects-with-options-passing-test
   offset-in-file
   old
   open
@@ -8280,6 +9109,7 @@
   operation-queue
   operations
   options
+  ordered-set-by-applying-difference!
   ordinal
   ordinality-of-unit-in-unit-for-date
   original-request
@@ -8290,6 +9120,7 @@
   output-formatting
   padding-character
   padding-position
+  paragraph-range-for-range
   param-descriptor-for-keyword
   parameter-string
   parent
@@ -8308,6 +9139,7 @@
   path-for-resource-of-type
   path-for-resource-of-type-in-directory-for-localization
   paths-for-resources-of-type-in-directory-for-localization
+  paths-matching-extensions
   pattern
   pausable
   pause
@@ -8322,8 +9154,12 @@
   percent-encoded-query-items
   percent-encoded-user
   percent-symbol
+  perform-activity-with-options-reason-using-block!
   perform-as-current-with-pending-unit-count-using-block!
+  perform-block!
   perform-default-implementation!
+  perform-in-modes-block!
+  perform-selector-target-argument-order-modes!
   persistence
   persistent-domain-for-name
   persistent-identifier
@@ -8381,11 +9217,14 @@
   process-name
   processor-count
   progress
+  promised-item-resource-values-for-keys-error
   pronoun
   pronoun-type
   pronouns
   properties
   property-for-key
+  property-list
+  property-list-from-strings-file-format
   propertylistdecoder-set-user-info!
   propertylistdecoder-user-info
   propertylistencoder-output-format
@@ -8413,8 +9252,16 @@
   quotation-end-delimiter
   raise
   range
+  range-at-index
   range-container-object
   range-in-string
+  range-of-character-from-set
+  range-of-character-from-set-options
+  range-of-character-from-set-options-range
+  range-of-composed-character-sequence-at-index
+  range-of-composed-character-sequences-for-range
+  range-of-data-options-range
+  range-of-first-match-in-string-options-range
   range-of-fragment
   range-of-host
   range-of-password
@@ -8422,13 +9269,24 @@
   range-of-port
   range-of-query
   range-of-scheme
+  range-of-string
+  range-of-string-options
+  range-of-string-options-range
+  range-of-string-options-range-locale
   range-of-unit-in-unit-for-date
   range-of-user
   range-value
+  range-with-name
+  read-data-of-length
   read-data-of-min-length-max-length-timeout-completion-handler
+  read-data-to-end-of-file
   read-data-to-end-of-file-and-return-error
   read-data-up-to-length-error
   read-from-url-options-error
+  read-in-background-and-notify
+  read-in-background-and-notify-for-modes
+  read-to-end-of-file-in-background-and-notify
+  read-to-end-of-file-in-background-and-notify-for-modes
   ready
   realm
   reason
@@ -8495,7 +9353,9 @@
   remove-all-objects!
   remove-and-return-error!
   remove-attribute-for-name!
+  remove-attribute-range!
   remove-cached-resource-value-for-key!
+  remove-cached-response-for-data-task!
   remove-cached-response-for-request!
   remove-cached-responses-since-date!
   remove-characters-in-range!
@@ -8504,6 +9364,7 @@
   remove-cookies-since-date!
   remove-credential-for-protection-space!
   remove-credential-for-protection-space-options!
+  remove-credential-for-protection-space-options-task!
   remove-delivered-notification!
   remove-dependency!
   remove-descriptor-at-index!
@@ -8521,7 +9382,16 @@
   remove-object!
   remove-object-at-index!
   remove-object-for-key!
+  remove-object-identical-to!
+  remove-object-identical-to-in-range!
+  remove-object-in-range!
+  remove-objects-at-indexes!
+  remove-objects-for-keys!
+  remove-objects-in-array!
+  remove-objects-in-range!
   remove-observer!
+  remove-observer-for-key-path!
+  remove-observer-from-objects-at-indexes-for-key-path!
   remove-observer-name-object!
   remove-param-descriptor-with-keyword!
   remove-persistent-domain-for-name!
@@ -8535,12 +9405,20 @@
   remove-volatile-domain-for-name!
   repeated-day
   repeats
+  replace-characters-in-range-with-attributed-string!
   replace-characters-in-range-with-string!
   replace-child-at-index-with-node!
   replace-item-at-url-options-error!
+  replace-matches-in-string-options-range-with-template!
   replace-object-at-index-with-object!
   replace-object-with-object!
+  replace-objects-at-indexes-with-objects!
+  replace-objects-in-range-with-objects-from-array!
+  replace-objects-in-range-with-objects-from-array-range!
+  replace-occurrences-of-string-with-string-options-range!
   replacement-string
+  replacement-string!
+  replacement-string-for-result-in-string-offset-template!
   reply-timeout
   reply-with-exception
   request
@@ -8553,6 +9431,7 @@
   requires-dnssec-validation
   requires-secure-coding
   reserved-space-length
+  reset-bytes-in-range!
   reset-with-completion-handler!
   resign-current
   resolve-namespace-for-name
@@ -8571,6 +9450,7 @@
   response-start-date
   result
   result-at-index
+  result-by-adjusting-ranges-with-offset
   result-count
   result-type
   results
@@ -8583,6 +9463,7 @@
   return-type
   reused-connection
   reverse
+  reverse-object-enumerator
   reverse-transformed-value
   reversed-ordered-set
   reversed-sort-descriptor
@@ -8600,6 +9481,8 @@
   run
   run-in-new-thread
   run-loop-modes
+  run-mode-before-date
+  run-until-date
   running
   same-site-policy
   save-options
@@ -8631,6 +9514,8 @@
   secure
   secure-connection-end-date
   secure-connection-start-date
+  seek-to-end-of-file
+  seek-to-file-offset
   seek-to-offset-error
   selector
   selector-for-command
@@ -8651,6 +9536,7 @@
   session-only
   session-sends-launch-events
   set
+  set!*
   set-acquire-function!
   set-action-button-title!
   set-action-is-discardable!
@@ -8675,17 +9561,20 @@
   set-am-symbol!
   set-applies-source-position-attributes!
   set-arguments!
+  set-array!
   set-array-for-key!
   set-assumes-http3-capable!
   set-assumes-top-level-dictionary!
   set-attachments!
   set-attribute-descriptor-for-keyword!
   set-attributed-content-text!
+  set-attributed-string!
   set-attributed-string-for-nil!
   set-attributed-string-for-not-a-number!
   set-attributed-string-for-zero!
   set-attributed-title!
   set-attributes!
+  set-attributes-as-dictionary!
   set-attributes-of-item-at-path-error!
   set-attributes-range!
   set-attributes-with-dictionary!
@@ -8693,6 +9582,9 @@
   set-automatic-termination-support-enabled!
   set-base-specifier!
   set-bool-for-key!
+  set-by-adding-object!
+  set-by-adding-objects-from-array!
+  set-by-adding-objects-from-set!
   set-cache-policy!
   set-calendar!
   set-cancellable!
@@ -8724,6 +9616,7 @@
   set-count-of-bytes-client-expects-to-send!
   set-count-style!
   set-credential-for-protection-space!
+  set-credential-for-protection-space-task!
   set-currency-code!
   set-currency-decimal-separator!
   set-currency-grouping-separator!
@@ -8731,6 +9624,8 @@
   set-current-directory-path!
   set-current-directory-url!
   set-current-index!
+  set-custom-pronoun-for-language-error!
+  set-data!
   set-data-decoding-strategy!
   set-data-encoding-strategy!
   set-data-for-key!
@@ -8745,6 +9640,7 @@
   set-decimal-separator!
   set-decoding-failure-policy!
   set-default-credential-for-protection-space!
+  set-default-credential-for-protection-space-task!
   set-default-date!
   set-default-name-server-port-number!
   set-definiteness!
@@ -8758,6 +9654,7 @@
   set-descriptor-for-keyword!
   set-destination-allow-overwrite!
   set-determination!
+  set-dictionary!
   set-dictionary-for-key!
   set-direct-parameter!
   set-discardable!
@@ -8920,9 +9817,12 @@
   set-number!
   set-number-formatter!
   set-number-style!
+  set-object-at-index!
+  set-object-at-indexed-subscript!
   set-object-being-tested!
   set-object-for-key!
   set-object-for-key-cost!
+  set-object-for-keyed-subscript!
   set-object-form!
   set-object-value!
   set-operation-queue!
@@ -8964,6 +9864,7 @@
   set-predicate!
   set-preferred-filename!
   set-prefers-incremental-delivery!
+  set-preview-image-handler!
   set-priority!
   set-process-name!
   set-pronoun-type!
@@ -8980,6 +9881,7 @@
   set-query-items!
   set-queue-priority!
   set-range-container-object!
+  set-readability-handler!
   set-receivers-specifier!
   set-reference-date!
   set-referrer-url!
@@ -9022,6 +9924,7 @@
   set-selector!
   set-session-description!
   set-session-sends-launch-events!
+  set-set!
   set-shared-container-identifier!
   set-short-month-symbols!
   set-short-quarter-symbols!
@@ -9111,6 +10014,8 @@
   set-uses-strong-write-barrier!
   set-uses-weak-read-and-write-barriers!
   set-value-for-component!
+  set-value-for-http-header-field!
+  set-value-for-key!
   set-value-list-attributes!
   set-variables!
   set-version!
@@ -9126,6 +10031,7 @@
   set-weekday!
   set-weekday-ordinal!
   set-weekday-symbols!
+  set-writeability-handler!
   set-year!
   set-year-for-week-of-year!
   set-zero-formatting-behavior!
@@ -9159,8 +10065,17 @@
   socket
   socket-type
   sort-descriptors
+  sort-range-options-using-comparator
+  sort-using-comparator
+  sort-using-descriptors
+  sort-using-selector
+  sort-with-options-using-comparator
   sortcomparator-selectors
   sorted-array-hint
+  sorted-array-using-comparator
+  sorted-array-using-descriptors
+  sorted-array-using-selector
+  sorted-array-with-options-using-comparator
   sorted-cookies-using-descriptors
   sound-name
   source
@@ -9199,7 +10114,9 @@
   stop-query
   stopped
   storage-policy
+  store-cached-response-for-data-task
   store-cached-response-for-request
+  store-cookies-for-task
   stream-error
   stream-status
   stream-task-with-host-name-port
@@ -9207,12 +10124,24 @@
   string
   string-array-for-key
   string-by-abbreviating-with-tilde-in-path
+  string-by-adding-percent-encoding-with-allowed-characters
+  string-by-appending-path-component
+  string-by-appending-path-extension
+  string-by-appending-string
+  string-by-applying-transform-reverse
   string-by-deleting-last-path-component
   string-by-deleting-path-extension
   string-by-expanding-tilde-in-path
+  string-by-folding-with-options-locale
+  string-by-padding-to-length-with-string-starting-at-index
   string-by-removing-percent-encoding
+  string-by-replacing-characters-in-range-with-string
+  string-by-replacing-matches-in-string-options-range-with-template
+  string-by-replacing-occurrences-of-string-with-string
+  string-by-replacing-occurrences-of-string-with-string-options-range
   string-by-resolving-symlinks-in-path
   string-by-standardizing-path
+  string-by-trimming-characters-in-set
   string-edited-in-range-change-in-length
   string-for-key
   string-for-object-value
@@ -9233,13 +10162,19 @@
   string-from-value-unit
   string-value
   string-with-file-system-representation-length
+  strings-by-appending-paths
   stringstyle-format
   style
+  subarray-with-range
+  subdata-with-range
   subgroups
   subject-form
   subpaths-at-path
   subpaths-of-directory-at-path-error
   subpredicates
+  substring-from-index
+  substring-to-index
+  substring-with-range
   subtitle
   suggested-filename
   suggested-name
@@ -9257,6 +10192,7 @@
   symbolic-link-destination-url
   synchronize
   synchronize-and-return-error
+  synchronize-file
   synchronous-remote-object-proxy-with-error-handler
   system-id
   system-uptime
@@ -9288,6 +10224,7 @@
   thread-priority
   throughput
   time-interval
+  time-interval-since-date
   time-interval-since-now
   time-interval-since-reference-date
   time-interval-since1970
@@ -9317,6 +10254,7 @@
   translate-x-by-y-by
   true-expression
   truncate-at-offset-error
+  truncate-file-at-offset
   try-lock
   try-lock-when-condition
   two-digit-start-date
@@ -9340,6 +10278,8 @@
   undo-registration-enabled
   undoing
   union-hash-table
+  union-ordered-set
+  union-set
   unique-id
   unit
   unit-options
@@ -9361,10 +10301,14 @@
   unspecified
   upload-local-version-of-ubiquitous-item-at-url-with-conflict-resolution-policy-completion-handler
   upload-task-with-request-from-data
+  upload-task-with-request-from-data-completion-handler
   upload-task-with-request-from-file
+  upload-task-with-request-from-file-completion-handler
   upload-task-with-resume-data
+  upload-task-with-resume-data-completion-handler
   upload-task-with-streamed-request
   uppercase-string
+  uppercase-string-with-locale
   ur-ls-for-directory-in-domains
   ur-ls-for-resources-with-extension-subdirectory
   ur-ls-for-resources-with-extension-subdirectory-localization
@@ -9376,6 +10320,9 @@
   url-appending-path-component
   url-appending-path-component-is-directory
   url-appending-path-extension
+  url-by-appending-path-component
+  url-by-appending-path-component-is-directory
+  url-by-appending-path-extension
   url-by-deleting-last-path-component
   url-by-deleting-path-extension
   url-by-resolving-symlinks-in-path
@@ -9431,6 +10378,7 @@
   value-for-attribute
   value-for-component
   value-for-http-header-field
+  value-for-key
   value-from-base-unit-value
   value-list-attributes
   value-lists
@@ -9440,6 +10388,7 @@
   variable
   variables
   variant-code
+  variant-fitting-presentation-width
   version
   version-for-class-name
   very-short-month-symbols
@@ -9449,8 +10398,11 @@
   volatile-domain-for-name
   volatile-domain-names
   wait
+  wait-for-data-in-background-and-notify
+  wait-for-data-in-background-and-notify-for-modes
   wait-until-all-operations-are-finished
   wait-until-date
+  wait-until-exit
   wait-until-finished
   waits-for-connectivity
   web-socket-task-with-request
@@ -9464,8 +10416,14 @@
   weekday-symbols
   well-formed
   writable-type-identifiers-for-item-provider
+  write-data
   write-data-error
   write-data-timeout-completion-handler
+  write-to-file-atomically
+  write-to-file-atomically-encoding-error
+  write-to-url-atomically
+  write-to-url-atomically-encoding-error
+  write-to-url-error
   write-to-url-options-original-contents-url-error
   x-path
   xml-data

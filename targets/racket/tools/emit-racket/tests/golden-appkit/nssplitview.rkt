@@ -8,6 +8,7 @@
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
+         "../../runtime/block.rkt"
          "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
@@ -17,6 +18,7 @@
 ;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
+(define (cadisplaylink? v) (objc-instance-of? v "CADisplayLink"))
 (define (calayer? v) (objc-instance-of? v "CALayer"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -26,6 +28,9 @@
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
+(define (nsdraggingsession? v) (objc-instance-of? v "NSDraggingSession"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
 (define (nslayoutguide? v) (objc-instance-of? v "NSLayoutGuide"))
 (define (nslayoutxaxisanchor? v) (objc-instance-of? v "NSLayoutXAxisAnchor"))
@@ -61,7 +66,7 @@
   [nssplitview-allows-vibrancy (c-> nssplitview? boolean?)]
   [nssplitview-alpha-value (c-> nssplitview? real?)]
   [nssplitview-set-alpha-value! (c-> nssplitview? real? void?)]
-  [nssplitview-arranged-subviews (c-> nssplitview? any/c)]
+  [nssplitview-arranged-subviews (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-arranges-all-subviews (c-> nssplitview? boolean?)]
   [nssplitview-set-arranges-all-subviews! (c-> nssplitview? boolean? void?)]
   [nssplitview-autoresizes-subviews (c-> nssplitview? boolean?)]
@@ -70,7 +75,7 @@
   [nssplitview-set-autoresizing-mask! (c-> nssplitview? exact-nonnegative-integer? void?)]
   [nssplitview-autosave-name (c-> nssplitview? (or/c nsstring? objc-nil?))]
   [nssplitview-set-autosave-name! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
-  [nssplitview-background-filters (c-> nssplitview? any/c)]
+  [nssplitview-background-filters (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-set-background-filters! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-baseline-offset-from-bottom (c-> nssplitview? real?)]
   [nssplitview-bottom-anchor (c-> nssplitview? (or/c nslayoutyaxisanchor? objc-nil?))]
@@ -92,8 +97,8 @@
   [nssplitview-compatible-with-responsive-scrolling (c-> boolean?)]
   [nssplitview-compositing-filter (c-> nssplitview? (or/c cifilter? objc-nil?))]
   [nssplitview-set-compositing-filter! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
-  [nssplitview-constraints (c-> nssplitview? any/c)]
-  [nssplitview-content-filters (c-> nssplitview? any/c)]
+  [nssplitview-constraints (c-> nssplitview? (or/c nsarray? objc-nil?))]
+  [nssplitview-content-filters (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-set-content-filters! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-default-focus-ring-type (c-> exact-nonnegative-integer?)]
   [nssplitview-default-menu (c-> (or/c nsmenu? objc-nil?))]
@@ -120,7 +125,7 @@
   [nssplitview-set-frame-center-rotation! (c-> nssplitview? real? void?)]
   [nssplitview-frame-rotation (c-> nssplitview? real?)]
   [nssplitview-set-frame-rotation! (c-> nssplitview? real? void?)]
-  [nssplitview-gesture-recognizers (c-> nssplitview? any/c)]
+  [nssplitview-gesture-recognizers (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-set-gesture-recognizers! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-has-ambiguous-layout (c-> nssplitview? boolean?)]
   [nssplitview-height-adjust-limit (c-> nssplitview? real?)]
@@ -144,7 +149,7 @@
   [nssplitview-set-layer-contents-redraw-policy! (c-> nssplitview? exact-integer? void?)]
   [nssplitview-layer-uses-core-image-filters (c-> nssplitview? boolean?)]
   [nssplitview-set-layer-uses-core-image-filters! (c-> nssplitview? boolean? void?)]
-  [nssplitview-layout-guides (c-> nssplitview? any/c)]
+  [nssplitview-layout-guides (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-layout-margins-guide (c-> nssplitview? (or/c nslayoutguide? objc-nil?))]
   [nssplitview-leading-anchor (c-> nssplitview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nssplitview-left-anchor (c-> nssplitview? (or/c nslayoutxaxisanchor? objc-nil?))]
@@ -182,9 +187,9 @@
   [nssplitview-previous-valid-key-view (c-> nssplitview? (or/c nsview? objc-nil?))]
   [nssplitview-print-job-title (c-> nssplitview? (or/c nsstring? objc-nil?))]
   [nssplitview-rect-preserved-during-live-resize (c-> nssplitview? any/c)]
-  [nssplitview-registered-dragged-types (c-> nssplitview? any/c)]
+  [nssplitview-registered-dragged-types (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-requires-constraint-based-layout (c-> boolean?)]
-  [nssplitview-restorable-state-key-paths (c-> any/c)]
+  [nssplitview-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nssplitview-right-anchor (c-> nssplitview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nssplitview-rotated-from-base (c-> nssplitview? boolean?)]
   [nssplitview-rotated-or-scaled-from-base (c-> nssplitview? boolean?)]
@@ -193,7 +198,7 @@
   [nssplitview-safe-area-rect (c-> nssplitview? any/c)]
   [nssplitview-shadow (c-> nssplitview? (or/c nsshadow? objc-nil?))]
   [nssplitview-set-shadow! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
-  [nssplitview-subviews (c-> nssplitview? any/c)]
+  [nssplitview-subviews (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-set-subviews! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-superview (c-> nssplitview? (or/c nsview? objc-nil?))]
   [nssplitview-tag (c-> nssplitview? exact-integer?)]
@@ -202,7 +207,7 @@
   [nssplitview-top-anchor (c-> nssplitview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nssplitview-touch-bar (c-> nssplitview? (or/c nstouchbar? objc-nil?))]
   [nssplitview-set-touch-bar! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
-  [nssplitview-tracking-areas (c-> nssplitview? any/c)]
+  [nssplitview-tracking-areas (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-trailing-anchor (c-> nssplitview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nssplitview-translates-autoresizing-mask-into-constraints (c-> nssplitview? boolean?)]
   [nssplitview-set-translates-autoresizing-mask-into-constraints! (c-> nssplitview? boolean? void?)]
@@ -233,14 +238,14 @@
   [nssplitview-set-writing-tools-coordinator! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-accepts-first-mouse (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-accessibility-activation-point (c-> nssplitview? any/c)]
-  [nssplitview-accessibility-allowed-values (c-> nssplitview? any/c)]
+  [nssplitview-accessibility-allowed-values (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-application-focused-ui-element (c-> nssplitview? any/c)]
   [nssplitview-accessibility-attributed-string-for-range (c-> nssplitview? any/c (or/c nsattributedstring? objc-nil?))]
-  [nssplitview-accessibility-attributed-user-input-labels (c-> nssplitview? any/c)]
+  [nssplitview-accessibility-attributed-user-input-labels (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-cancel-button (c-> nssplitview? any/c)]
   [nssplitview-accessibility-cell-for-column-row (c-> nssplitview? exact-integer? exact-integer? any/c)]
   [nssplitview-accessibility-children (c-> nssplitview? (or/c nsarray? objc-nil?))]
-  [nssplitview-accessibility-children-in-navigation-order (c-> nssplitview? any/c)]
+  [nssplitview-accessibility-children-in-navigation-order (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-clear-button (c-> nssplitview? any/c)]
   [nssplitview-accessibility-close-button (c-> nssplitview? any/c)]
   [nssplitview-accessibility-column-count (c-> nssplitview? exact-integer?)]
@@ -250,8 +255,8 @@
   [nssplitview-accessibility-columns (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-contents (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-critical-value (c-> nssplitview? any/c)]
-  [nssplitview-accessibility-custom-actions (c-> nssplitview? any/c)]
-  [nssplitview-accessibility-custom-rotors (c-> nssplitview? any/c)]
+  [nssplitview-accessibility-custom-actions (c-> nssplitview? (or/c nsarray? objc-nil?))]
+  [nssplitview-accessibility-custom-rotors (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-decrement-button (c-> nssplitview? any/c)]
   [nssplitview-accessibility-default-button (c-> nssplitview? any/c)]
   [nssplitview-accessibility-disclosed-by-row (c-> nssplitview? any/c)]
@@ -331,7 +336,7 @@
   [nssplitview-accessibility-selected-rows (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-selected-text (c-> nssplitview? (or/c nsstring? objc-nil?))]
   [nssplitview-accessibility-selected-text-range (c-> nssplitview? any/c)]
-  [nssplitview-accessibility-selected-text-ranges (c-> nssplitview? any/c)]
+  [nssplitview-accessibility-selected-text-ranges (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-serves-as-title-for-ui-elements (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-shared-character-range (c-> nssplitview? any/c)]
   [nssplitview-accessibility-shared-focus-elements (c-> nssplitview? (or/c nsarray? objc-nil?))]
@@ -350,7 +355,7 @@
   [nssplitview-accessibility-url (c-> nssplitview? (or/c nsurl? objc-nil?))]
   [nssplitview-accessibility-unit-description (c-> nssplitview? (or/c nsstring? objc-nil?))]
   [nssplitview-accessibility-units (c-> nssplitview? exact-integer?)]
-  [nssplitview-accessibility-user-input-labels (c-> nssplitview? any/c)]
+  [nssplitview-accessibility-user-input-labels (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-value (c-> nssplitview? any/c)]
   [nssplitview-accessibility-value-description (c-> nssplitview? (or/c nsstring? objc-nil?))]
   [nssplitview-accessibility-vertical-scroll-bar (c-> nssplitview? any/c)]
@@ -365,30 +370,50 @@
   [nssplitview-accessibility-window (c-> nssplitview? any/c)]
   [nssplitview-accessibility-windows (c-> nssplitview? (or/c nsarray? objc-nil?))]
   [nssplitview-accessibility-zoom-button (c-> nssplitview? any/c)]
+  [nssplitview-add-arranged-subview! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-add-constraint! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-add-constraints! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-add-cursor-rect-cursor! (c-> nssplitview? any/c (or/c string? objc-object? #f) void?)]
+  [nssplitview-add-gesture-recognizer! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-add-layout-guide! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-add-subview! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-add-subview-positioned-relative-to! (c-> nssplitview? (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) void?)]
   [nssplitview-add-tool-tip-rect-owner-user-data! (c-> nssplitview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) exact-integer?)]
+  [nssplitview-add-tracking-area! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-add-tracking-rect-owner-user-data-assume-inside! (c-> nssplitview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) boolean? exact-integer?)]
+  [nssplitview-additional-safe-area-insets! (c-> nssplitview? any/c)]
+  [nssplitview-adjust-page-height-new-top-bottom-limit (c-> nssplitview? (or/c cpointer? #f) real? real? real? void?)]
+  [nssplitview-adjust-page-width-new-left-right-limit (c-> nssplitview? (or/c cpointer? #f) real? real? real? void?)]
   [nssplitview-adjust-scroll (c-> nssplitview? any/c any/c)]
   [nssplitview-adjust-subviews (c-> nssplitview? void?)]
+  [nssplitview-alignment-rect-for-frame (c-> nssplitview? any/c any/c)]
   [nssplitview-ancestor-shared-with-view (c-> nssplitview? (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
   [nssplitview-animation-for-key (c-> nssplitview? (or/c string? objc-object? #f) any/c)]
-  [nssplitview-animations (c-> nssplitview? any/c)]
+  [nssplitview-animations (c-> nssplitview? (or/c nsdictionary? objc-nil?))]
   [nssplitview-animator (c-> nssplitview? any/c)]
   [nssplitview-appearance (c-> nssplitview? (or/c nsappearance? objc-nil?))]
   [nssplitview-autoscroll (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-backing-aligned-rect-options (c-> nssplitview? any/c exact-nonnegative-integer? any/c)]
   [nssplitview-become-first-responder (c-> nssplitview? boolean?)]
+  [nssplitview-begin-document! (c-> nssplitview? void?)]
+  [nssplitview-begin-dragging-session-with-items-event-source! (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdraggingsession? objc-nil?))]
   [nssplitview-begin-gesture-with-event! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-begin-page-in-rect-at-placement! (c-> nssplitview? any/c any/c void?)]
   [nssplitview-bitmap-image-rep-for-caching-display-in-rect (c-> nssplitview? any/c (or/c nsbitmapimagerep? objc-nil?))]
   [nssplitview-cache-display-in-rect-to-bitmap-image-rep (c-> nssplitview? any/c (or/c string? objc-object? #f) void?)]
   [nssplitview-cancel-operation (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-capitalize-word (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-center-scan-rect! (c-> nssplitview? any/c any/c)]
   [nssplitview-center-selection-in-visible-area! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-center-x-anchor! (c-> nssplitview? (or/c nslayoutxaxisanchor? objc-nil?))]
+  [nssplitview-center-y-anchor! (c-> nssplitview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nssplitview-change-case-of-letter (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-change-mode-with-event (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-complete (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-conclude-drag-operation (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-constraints-affecting-layout-for-orientation (c-> nssplitview? exact-integer? (or/c nsarray? objc-nil?))]
+  [nssplitview-content-compression-resistance-priority-for-orientation (c-> nssplitview? exact-integer? real?)]
+  [nssplitview-content-hugging-priority-for-orientation (c-> nssplitview? exact-integer? real?)]
   [nssplitview-context-menu-key-down (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-convert-point-from-view (c-> nssplitview? any/c (or/c string? objc-object? #f) any/c)]
   [nssplitview-convert-point-to-view (c-> nssplitview? any/c (or/c string? objc-object? #f) any/c)]
@@ -409,6 +434,8 @@
   [nssplitview-convert-size-to-backing (c-> nssplitview? any/c any/c)]
   [nssplitview-convert-size-to-layer (c-> nssplitview? any/c any/c)]
   [nssplitview-cursor-update (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-data-with-eps-inside-rect (c-> nssplitview? any/c (or/c nsdata? objc-nil?))]
+  [nssplitview-data-with-pdf-inside-rect (c-> nssplitview? any/c (or/c nsdata? objc-nil?))]
   [nssplitview-delete-backward (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-delete-backward-by-decomposing-previous-character (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-delete-forward (c-> nssplitview? (or/c string? objc-object? #f) void?)]
@@ -421,11 +448,13 @@
   [nssplitview-delete-word-forward (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-did-add-subview (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-did-close-menu-with-event (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nssplitview-discard-cursor-rects (c-> nssplitview? void?)]
   [nssplitview-display! (c-> nssplitview? void?)]
   [nssplitview-display-if-needed! (c-> nssplitview? void?)]
   [nssplitview-display-if-needed-ignoring-opacity! (c-> nssplitview? void?)]
   [nssplitview-display-if-needed-in-rect! (c-> nssplitview? any/c void?)]
   [nssplitview-display-if-needed-in-rect-ignoring-opacity! (c-> nssplitview? any/c void?)]
+  [nssplitview-display-link-with-target-selector! (c-> nssplitview? (or/c string? objc-object? #f) string? (or/c cadisplaylink? objc-nil?))]
   [nssplitview-display-rect! (c-> nssplitview? any/c void?)]
   [nssplitview-display-rect-ignoring-opacity! (c-> nssplitview? any/c void?)]
   [nssplitview-display-rect-ignoring-opacity-in-context! (c-> nssplitview? any/c (or/c string? objc-object? #f) void?)]
@@ -435,12 +464,23 @@
   [nssplitview-dragging-exited (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-dragging-updated (c-> nssplitview? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nssplitview-draw-divider-in-rect (c-> nssplitview? any/c void?)]
+  [nssplitview-draw-focus-ring-mask (c-> nssplitview? void?)]
+  [nssplitview-draw-page-border-with-size (c-> nssplitview? any/c void?)]
   [nssplitview-draw-rect (c-> nssplitview? any/c void?)]
+  [nssplitview-edge-insets-for-layout-region (c-> nssplitview? (or/c string? objc-object? #f) any/c)]
   [nssplitview-effective-appearance (c-> nssplitview? (or/c nsappearance? objc-nil?))]
+  [nssplitview-encode-restorable-state-with-coder (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-encode-restorable-state-with-coder-background-queue (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nssplitview-encode-with-coder (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-end-document! (c-> nssplitview? void?)]
   [nssplitview-end-gesture-with-event! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-end-page! (c-> nssplitview? void?)]
+  [nssplitview-enter-full-screen-mode-with-options (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-exercise-ambiguity-in-layout (c-> nssplitview? void?)]
+  [nssplitview-exit-full-screen-mode-with-options (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-flags-changed (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-flush-buffered-key-events (c-> nssplitview? void?)]
+  [nssplitview-frame-for-alignment-rect (c-> nssplitview? any/c any/c)]
   [nssplitview-get-rects-being-drawn-count (c-> nssplitview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nssplitview-get-rects-exposed-during-live-resize-count (c-> nssplitview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nssplitview-help-requested (c-> nssplitview? (or/c string? objc-object? #f) void?)]
@@ -448,6 +488,7 @@
   [nssplitview-holding-priority-for-subview-at-index (c-> nssplitview? exact-integer? real?)]
   [nssplitview-identifier (c-> nssplitview? (or/c nsstring? objc-nil?))]
   [nssplitview-indent (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-insert-arranged-subview-at-index! (c-> nssplitview? (or/c string? objc-object? #f) exact-integer? void?)]
   [nssplitview-insert-backtab! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-insert-container-break! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-insert-double-quote-ignoring-substitution! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
@@ -460,6 +501,8 @@
   [nssplitview-insert-tab-ignoring-field-editor! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-insert-text! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-interpret-key-events (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-invalidate-intrinsic-content-size (c-> nssplitview? void?)]
+  [nssplitview-invalidate-restorable-state (c-> nssplitview? void?)]
   [nssplitview-is-accessibility-alternate-ui-visible (c-> nssplitview? boolean?)]
   [nssplitview-is-accessibility-disclosed (c-> nssplitview? boolean?)]
   [nssplitview-is-accessibility-edited (c-> nssplitview? boolean?)]
@@ -478,18 +521,25 @@
   [nssplitview-is-accessibility-selected (c-> nssplitview? boolean?)]
   [nssplitview-is-accessibility-selector-allowed (c-> nssplitview? string? boolean?)]
   [nssplitview-is-descendant-of (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-is-drawing-find-indicator (c-> nssplitview? boolean?)]
   [nssplitview-is-flipped (c-> nssplitview? boolean?)]
   [nssplitview-is-hidden (c-> nssplitview? boolean?)]
   [nssplitview-is-hidden-or-has-hidden-ancestor (c-> nssplitview? boolean?)]
+  [nssplitview-is-horizontal-content-size-constraint-active (c-> nssplitview? boolean?)]
+  [nssplitview-is-in-full-screen-mode (c-> nssplitview? boolean?)]
   [nssplitview-is-opaque (c-> nssplitview? boolean?)]
   [nssplitview-is-rotated-from-base (c-> nssplitview? boolean?)]
   [nssplitview-is-rotated-or-scaled-from-base (c-> nssplitview? boolean?)]
   [nssplitview-is-subview-collapsed (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-is-vertical (c-> nssplitview? boolean?)]
+  [nssplitview-is-vertical-content-size-constraint-active (c-> nssplitview? boolean?)]
   [nssplitview-key-down (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-key-up (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-knows-page-range (c-> nssplitview? (or/c cpointer? #f) boolean?)]
   [nssplitview-layout (c-> nssplitview? void?)]
+  [nssplitview-layout-guide-for-layout-region (c-> nssplitview? (or/c string? objc-object? #f) (or/c nslayoutguide? objc-nil?))]
   [nssplitview-layout-subtree-if-needed (c-> nssplitview? void?)]
+  [nssplitview-location-of-print-rect (c-> nssplitview? any/c any/c)]
   [nssplitview-lowercase-word (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-magnify-with-event (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-make-backing-layer (c-> nssplitview? (or/c calayer? objc-nil?))]
@@ -499,6 +549,7 @@
   [nssplitview-make-text-writing-direction-left-to-right (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-make-text-writing-direction-natural (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-make-text-writing-direction-right-to-left (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-make-touch-bar (c-> nssplitview? (or/c nstouchbar? objc-nil?))]
   [nssplitview-max-possible-position-of-divider-at-index (c-> nssplitview? exact-integer? real?)]
   [nssplitview-menu-for-event (c-> nssplitview? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nssplitview-min-possible-position-of-divider-at-index (c-> nssplitview? exact-integer? real?)]
@@ -549,7 +600,9 @@
   [nssplitview-move-word-right! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-move-word-right-and-modify-selection! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-needs-to-draw-rect (c-> nssplitview? any/c boolean?)]
+  [nssplitview-new-window-for-tab (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-no-responder-for (c-> nssplitview? string? void?)]
+  [nssplitview-note-focus-ring-mask-changed (c-> nssplitview? void?)]
   [nssplitview-other-mouse-down (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-other-mouse-dragged (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-other-mouse-up (c-> nssplitview? (or/c string? objc-object? #f) void?)]
@@ -559,28 +612,59 @@
   [nssplitview-page-up-and-modify-selection (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-perform-drag-operation! (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-perform-key-equivalent! (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-perform-text-finder-action! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-prepare-content-in-rect (c-> nssplitview? any/c void?)]
   [nssplitview-prepare-for-drag-operation (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-prepare-for-reuse (c-> nssplitview? void?)]
+  [nssplitview-present-error (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nssplitview-pressure-change-with-event (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-print (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-quick-look-preview-items (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-quick-look-with-event (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-rect-for-layout-region (c-> nssplitview? (or/c string? objc-object? #f) any/c)]
+  [nssplitview-rect-for-page (c-> nssplitview? exact-integer? any/c)]
   [nssplitview-rect-for-smart-magnification-at-point-in-rect (c-> nssplitview? any/c any/c any/c)]
+  [nssplitview-reflect-scrolled-clip-view (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-register-for-dragged-types (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-remove-all-tool-tips! (c-> nssplitview? void?)]
+  [nssplitview-remove-arranged-subview! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-remove-constraint! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-remove-constraints! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-remove-cursor-rect-cursor! (c-> nssplitview? any/c (or/c string? objc-object? #f) void?)]
   [nssplitview-remove-from-superview! (c-> nssplitview? void?)]
   [nssplitview-remove-from-superview-without-needing-display! (c-> nssplitview? void?)]
+  [nssplitview-remove-gesture-recognizer! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-remove-layout-guide! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-remove-tool-tip! (c-> nssplitview? exact-integer? void?)]
+  [nssplitview-remove-tracking-area! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-remove-tracking-rect! (c-> nssplitview? exact-integer? void?)]
   [nssplitview-replace-subview-with! (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nssplitview-reset-cursor-rects! (c-> nssplitview? void?)]
   [nssplitview-resign-first-responder (c-> nssplitview? boolean?)]
   [nssplitview-resize-subviews-with-old-size (c-> nssplitview? any/c void?)]
   [nssplitview-resize-with-old-superview-size (c-> nssplitview? any/c void?)]
+  [nssplitview-restore-state-with-coder (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-restore-user-activity-state (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-right-mouse-down (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-right-mouse-dragged (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-right-mouse-up (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-rotate-by-angle (c-> nssplitview? real? void?)]
   [nssplitview-rotate-with-event (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-ruler-view-did-add-marker (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nssplitview-ruler-view-did-move-marker (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nssplitview-ruler-view-did-remove-marker (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nssplitview-ruler-view-handle-mouse-down (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nssplitview-ruler-view-location-for-point (c-> nssplitview? (or/c string? objc-object? #f) any/c real?)]
+  [nssplitview-ruler-view-point-for-location (c-> nssplitview? (or/c string? objc-object? #f) real? any/c)]
+  [nssplitview-ruler-view-should-add-marker (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-ruler-view-should-move-marker (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-ruler-view-should-remove-marker (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-ruler-view-will-add-marker-at-location (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nssplitview-ruler-view-will-move-marker-to-location (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nssplitview-ruler-view-will-set-client-view (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nssplitview-scale-unit-square-to-size (c-> nssplitview? any/c void?)]
+  [nssplitview-scroll-clip-view-to-point (c-> nssplitview? (or/c string? objc-object? #f) any/c void?)]
   [nssplitview-scroll-line-down (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-scroll-line-up (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-scroll-page-down (c-> nssplitview? (or/c string? objc-object? #f) void?)]
@@ -723,10 +807,13 @@
   [nssplitview-set-appearance! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-set-bounds-origin! (c-> nssplitview? any/c void?)]
   [nssplitview-set-bounds-size! (c-> nssplitview? any/c void?)]
+  [nssplitview-set-content-compression-resistance-priority-for-orientation! (c-> nssplitview? real? exact-integer? void?)]
+  [nssplitview-set-content-hugging-priority-for-orientation! (c-> nssplitview? real? exact-integer? void?)]
   [nssplitview-set-frame-origin! (c-> nssplitview? any/c void?)]
   [nssplitview-set-frame-size! (c-> nssplitview? any/c void?)]
   [nssplitview-set-holding-priority-for-subview-at-index! (c-> nssplitview? real? exact-integer? void?)]
   [nssplitview-set-identifier! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-set-keyboard-focus-ring-needs-display-in-rect! (c-> nssplitview? any/c void?)]
   [nssplitview-set-mark! (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-set-needs-display-in-rect! (c-> nssplitview? any/c void?)]
   [nssplitview-set-position-of-divider-at-index! (c-> nssplitview? real? exact-integer? void?)]
@@ -734,6 +821,9 @@
   [nssplitview-should-delay-window-ordering-for-event (c-> nssplitview? (or/c string? objc-object? #f) boolean?)]
   [nssplitview-show-context-help (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-show-context-menu-for-selection (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-show-definition-for-attributed-string-at-point (c-> nssplitview? (or/c string? objc-object? #f) any/c void?)]
+  [nssplitview-show-definition-for-attributed-string-range-options-baseline-origin-provider (c-> nssplitview? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nssplitview-show-writing-tools (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-smart-magnify-with-event (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-sort-subviews-using-function-context (c-> nssplitview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nssplitview-supplemental-target-for-action-sender (c-> nssplitview? string? (or/c string? objc-object? #f) any/c)]
@@ -750,10 +840,16 @@
   [nssplitview-transpose (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-transpose-words (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-try-to-perform-with (c-> nssplitview? string? (or/c string? objc-object? #f) boolean?)]
+  [nssplitview-unregister-dragged-types (c-> nssplitview? void?)]
+  [nssplitview-update-constraints (c-> nssplitview? void?)]
+  [nssplitview-update-constraints-for-subtree-if-needed (c-> nssplitview? void?)]
   [nssplitview-update-dragging-items-for-drag (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-update-layer (c-> nssplitview? void?)]
+  [nssplitview-update-tracking-areas (c-> nssplitview? void?)]
+  [nssplitview-update-user-activity-state (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-uppercase-word (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-valid-requestor-for-send-type-return-type (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nssplitview-validate-proposed-first-responder-for-event (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nssplitview-view-did-change-backing-properties (c-> nssplitview? void?)]
   [nssplitview-view-did-change-effective-appearance (c-> nssplitview? void?)]
   [nssplitview-view-did-end-live-resize (c-> nssplitview? void?)]
@@ -765,13 +861,17 @@
   [nssplitview-view-will-move-to-superview (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-view-will-move-to-window (c-> nssplitview? (or/c string? objc-object? #f) void?)]
   [nssplitview-view-will-start-live-resize (c-> nssplitview? void?)]
-  [nssplitview-view-with-tag (c-> nssplitview? exact-integer? any/c)]
+  [nssplitview-view-with-tag (c-> nssplitview? exact-integer? (or/c nsview? objc-nil?))]
   [nssplitview-wants-forwarded-scroll-events-for-axis (c-> nssplitview? exact-integer? boolean?)]
   [nssplitview-wants-periodic-dragging-updates (c-> nssplitview? boolean?)]
   [nssplitview-wants-scroll-events-for-swipe-tracking-on-axis (c-> nssplitview? exact-integer? boolean?)]
   [nssplitview-will-open-menu-with-event (c-> nssplitview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nssplitview-will-present-error (c-> nssplitview? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nssplitview-will-remove-subview (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-write-eps-inside-rect-to-pasteboard (c-> nssplitview? any/c (or/c string? objc-object? #f) void?)]
+  [nssplitview-write-pdf-inside-rect-to-pasteboard (c-> nssplitview? any/c (or/c string? objc-object? #f) void?)]
   [nssplitview-yank (c-> nssplitview? (or/c string? objc-object? #f) void?)]
+  [nssplitview-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nssplitview-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
   [nssplitview-is-compatible-with-responsive-scrolling (c-> boolean?)]
   )
@@ -795,17 +895,29 @@
 (define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_P_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_P_Q (-> ptr_t ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_P_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_E (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPd_d (-> ptr_t ptr_t ptr_t ptr_t double_t double_t))
+(define-aw-msg aw_racket_msg_Pq_v (-> ptr_t ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_PqP_v (-> ptr_t ptr_t ptr_t int64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pd_O (-> ptr_t ptr_t ptr_t double_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pddd_v (-> ptr_t ptr_t ptr_t double_t double_t double_t void_t))
+(define-aw-msg aw_racket_msg_PO_d (-> ptr_t ptr_t ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_PO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PGPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
 (define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))
 (define-aw-msg aw_racket_msg_q_f (-> ptr_t ptr_t int64_t float_t))
 (define-aw-msg aw_racket_msg_q_d (-> ptr_t ptr_t int64_t double_t))
+(define-aw-msg aw_racket_msg_q_R (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_G (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_qq_P (-> ptr_t ptr_t int64_t int64_t ptr_t))
@@ -817,11 +929,14 @@
 (define-aw-msg aw_racket_msg_R_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_R_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_R_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_R_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_R (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RPP_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_RPPb_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t int64_t))
 (define-aw-msg aw_racket_msg_RQ_R (-> ptr_t ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RZ_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_O_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_O_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
@@ -1778,18 +1893,46 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityZoomButton"))))
    ))
+(define (nssplitview-add-arranged-subview! self view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addArrangedSubview:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nssplitview-add-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nssplitview-add-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nssplitview-add-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
+(define (nssplitview-add-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nssplitview-add-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nssplitview-add-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nssplitview-add-subview-positioned-relative-to! self view place other-view)
   (aw_racket_msg_PqP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:positioned:relativeTo:")) (id->ffi2-ptr (coerce-arg view)) place (id->ffi2-ptr (coerce-arg other-view))))
 (define (nssplitview-add-tool-tip-rect-owner-user-data! self rect owner data)
   (aw_racket_msg_RPP_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addToolTipRect:owner:userData:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data)))
+(define (nssplitview-add-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nssplitview-add-tracking-rect-owner-user-data-assume-inside! self rect owner data flag)
+  (aw_racket_msg_RPPb_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingRect:owner:userData:assumeInside:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data) flag))
+(define (nssplitview-additional-safe-area-insets! self)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_0_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "additionalSafeAreaInsets")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+(define (nssplitview-adjust-page-height-new-top-bottom-limit self new-bottom old-top old-bottom bottom-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageHeightNew:top:bottom:limit:")) (id->ffi2-ptr new-bottom) old-top old-bottom bottom-limit))
+(define (nssplitview-adjust-page-width-new-left-right-limit self new-right old-left old-right right-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageWidthNew:left:right:limit:")) (id->ffi2-ptr new-right) old-left old-right right-limit))
 (define (nssplitview-adjust-scroll self new-visible)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustScroll:")) (id->ffi2-ptr new-visible) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
 (define (nssplitview-adjust-subviews self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustSubviews"))))
+(define (nssplitview-alignment-rect-for-frame self frame)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "alignmentRectForFrame:")) (id->ffi2-ptr frame) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nssplitview-ancestor-shared-with-view self view)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "ancestorSharedWithView:")) (id->ffi2-ptr (coerce-arg view))))
@@ -1818,8 +1961,16 @@
     (ptr-ref buf _NSRect)))
 (define (nssplitview-become-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "becomeFirstResponder"))))
+(define (nssplitview-begin-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDocument"))))
+(define (nssplitview-begin-dragging-session-with-items-event-source! self items event source)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDraggingSessionWithItems:event:source:")) (id->ffi2-ptr (coerce-arg items)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg source))))
+   ))
 (define (nssplitview-begin-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-begin-page-in-rect-at-placement! self rect location)
+  (aw_racket_msg_RO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginPageInRect:atPlacement:")) (id->ffi2-ptr rect) (id->ffi2-ptr location)))
 (define (nssplitview-bitmap-image-rep-for-caching-display-in-rect self rect)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "bitmapImageRepForCachingDisplayInRect:")) (id->ffi2-ptr rect)))
@@ -1836,6 +1987,14 @@
     (ptr-ref buf _NSRect)))
 (define (nssplitview-center-selection-in-visible-area! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerSelectionInVisibleArea:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nssplitview-center-x-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerXAnchor"))))
+   ))
+(define (nssplitview-center-y-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerYAnchor"))))
+   ))
 (define (nssplitview-change-case-of-letter self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCaseOfLetter:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-change-mode-with-event self event)
@@ -1844,6 +2003,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "complete:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-conclude-drag-operation self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "concludeDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nssplitview-constraints-affecting-layout-for-orientation self orientation)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "constraintsAffectingLayoutForOrientation:")) orientation))
+   ))
+(define (nssplitview-content-compression-resistance-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentCompressionResistancePriorityForOrientation:")) orientation))
+(define (nssplitview-content-hugging-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentHuggingPriorityForOrientation:")) orientation))
 (define (nssplitview-context-menu-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contextMenuKeyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nssplitview-convert-point-from-view self point view)
@@ -1920,6 +2087,14 @@
     (ptr-ref buf _NSSize)))
 (define (nssplitview-cursor-update self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "cursorUpdate:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-data-with-eps-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithEPSInsideRect:")) (id->ffi2-ptr rect)))
+   ))
+(define (nssplitview-data-with-pdf-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithPDFInsideRect:")) (id->ffi2-ptr rect)))
+   ))
 (define (nssplitview-delete-backward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-delete-backward-by-decomposing-previous-character self sender)
@@ -1944,6 +2119,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didAddSubview:")) (id->ffi2-ptr (coerce-arg subview))))
 (define (nssplitview-did-close-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didCloseMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-discard-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardCursorRects"))))
 (define (nssplitview-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "display"))))
 (define (nssplitview-display-if-needed! self)
@@ -1954,6 +2131,10 @@
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRect:")) (id->ffi2-ptr rect)))
 (define (nssplitview-display-if-needed-in-rect-ignoring-opacity! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRectIgnoringOpacity:")) (id->ffi2-ptr rect)))
+(define (nssplitview-display-link-with-target-selector! self target selector)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayLinkWithTarget:selector:")) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName selector))))
+   ))
 (define (nssplitview-display-rect! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRect:")) (id->ffi2-ptr rect)))
 (define (nssplitview-display-rect-ignoring-opacity! self rect)
@@ -1972,20 +2153,46 @@
   (aw_racket_msg_P_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingUpdated:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-draw-divider-in-rect self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawDividerInRect:")) (id->ffi2-ptr rect)))
+(define (nssplitview-draw-focus-ring-mask self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawFocusRingMask"))))
+(define (nssplitview-draw-page-border-with-size self border-size)
+  (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawPageBorderWithSize:")) (id->ffi2-ptr border-size)))
 (define (nssplitview-draw-rect self dirty-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawRect:")) (id->ffi2-ptr dirty-rect)))
+(define (nssplitview-edge-insets-for-layout-region self layout-region)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_P_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "edgeInsetsForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
 (define (nssplitview-effective-appearance self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "effectiveAppearance"))))
    ))
+(define (nssplitview-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nssplitview-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nssplitview-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nssplitview-end-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endDocument"))))
 (define (nssplitview-end-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-end-page! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endPage"))))
+(define (nssplitview-enter-full-screen-mode-with-options self screen options)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enterFullScreenMode:withOptions:")) (id->ffi2-ptr (coerce-arg screen)) (id->ffi2-ptr (coerce-arg options))))
+(define (nssplitview-exercise-ambiguity-in-layout self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exerciseAmbiguityInLayout"))))
+(define (nssplitview-exit-full-screen-mode-with-options self options)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exitFullScreenModeWithOptions:")) (id->ffi2-ptr (coerce-arg options))))
 (define (nssplitview-flags-changed self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flagsChanged:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nssplitview-flush-buffered-key-events self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flushBufferedKeyEvents"))))
+(define (nssplitview-frame-for-alignment-rect self alignment-rect)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameForAlignmentRect:")) (id->ffi2-ptr alignment-rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nssplitview-get-rects-being-drawn-count self rects count)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRectsBeingDrawn:count:")) (id->ffi2-ptr rects) (id->ffi2-ptr count)))
 (define (nssplitview-get-rects-exposed-during-live-resize-count self exposed-rects count)
@@ -2004,6 +2211,8 @@
    ))
 (define (nssplitview-indent self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "indent:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nssplitview-insert-arranged-subview-at-index! self view index)
+  (aw_racket_msg_Pq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertArrangedSubview:atIndex:")) (id->ffi2-ptr (coerce-arg view)) index))
 (define (nssplitview-insert-backtab! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertBacktab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-insert-container-break! self sender)
@@ -2028,6 +2237,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
 (define (nssplitview-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nssplitview-invalidate-intrinsic-content-size self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSize"))))
+(define (nssplitview-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nssplitview-is-accessibility-alternate-ui-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilityAlternateUIVisible"))))
 (define (nssplitview-is-accessibility-disclosed self)
@@ -2064,12 +2277,18 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilitySelectorAllowed:")) (id->ffi2-ptr (sel_registerName selector))))
 (define (nssplitview-is-descendant-of self view)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDescendantOf:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nssplitview-is-drawing-find-indicator self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDrawingFindIndicator"))))
 (define (nssplitview-is-flipped self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isFlipped"))))
 (define (nssplitview-is-hidden self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHidden"))))
 (define (nssplitview-is-hidden-or-has-hidden-ancestor self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHiddenOrHasHiddenAncestor"))))
+(define (nssplitview-is-horizontal-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHorizontalContentSizeConstraintActive"))))
+(define (nssplitview-is-in-full-screen-mode self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isInFullScreenMode"))))
 (define (nssplitview-is-opaque self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isOpaque"))))
 (define (nssplitview-is-rotated-from-base self)
@@ -2080,14 +2299,26 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isSubviewCollapsed:")) (id->ffi2-ptr (coerce-arg subview))))
 (define (nssplitview-is-vertical self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVertical"))))
+(define (nssplitview-is-vertical-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVerticalContentSizeConstraintActive"))))
 (define (nssplitview-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nssplitview-key-up self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyUp:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-knows-page-range self range)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "knowsPageRange:")) (id->ffi2-ptr range)))
 (define (nssplitview-layout self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layout"))))
+(define (nssplitview-layout-guide-for-layout-region self layout-region)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutGuideForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region))))
+   ))
 (define (nssplitview-layout-subtree-if-needed self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutSubtreeIfNeeded"))))
+(define (nssplitview-location-of-print-rect self rect)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_R_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "locationOfPrintRect:")) (id->ffi2-ptr rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
 (define (nssplitview-lowercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lowercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-magnify-with-event self event)
@@ -2108,6 +2339,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nssplitview-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nssplitview-max-possible-position-of-divider-at-index self divider-index)
   (aw_racket_msg_q_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "maxPossiblePositionOfDividerAtIndex:")) divider-index))
 (define (nssplitview-menu-for-event self event)
@@ -2210,8 +2445,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-needs-to-draw-rect self rect)
   (aw_racket_msg_R_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "needsToDrawRect:")) (id->ffi2-ptr rect)))
+(define (nssplitview-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
+(define (nssplitview-note-focus-ring-mask-changed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noteFocusRingMaskChanged"))))
 (define (nssplitview-other-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "otherMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nssplitview-other-mouse-dragged self event)
@@ -2230,38 +2469,79 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-perform-key-equivalent! self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-prepare-content-in-rect self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareContentInRect:")) (id->ffi2-ptr rect)))
 (define (nssplitview-prepare-for-drag-operation self sender)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-prepare-for-reuse self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForReuse"))))
+(define (nssplitview-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nssplitview-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nssplitview-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-print self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "print:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-quick-look-preview-items self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookPreviewItems:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-quick-look-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-rect-for-layout-region self layout-region)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_P_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nssplitview-rect-for-page self page)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_q_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForPage:")) page (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nssplitview-rect-for-smart-magnification-at-point-in-rect self location visible-rect)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_OR_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForSmartMagnificationAtPoint:inRect:")) (id->ffi2-ptr location) (id->ffi2-ptr visible-rect) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nssplitview-reflect-scrolled-clip-view self clip-view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "reflectScrolledClipView:")) (id->ffi2-ptr (coerce-arg clip-view))))
+(define (nssplitview-register-for-dragged-types self new-types)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForDraggedTypes:")) (id->ffi2-ptr (coerce-arg new-types))))
 (define (nssplitview-remove-all-tool-tips! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeAllToolTips"))))
+(define (nssplitview-remove-arranged-subview! self view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeArrangedSubview:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nssplitview-remove-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nssplitview-remove-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nssplitview-remove-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
 (define (nssplitview-remove-from-superview! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperview"))))
 (define (nssplitview-remove-from-superview-without-needing-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperviewWithoutNeedingDisplay"))))
+(define (nssplitview-remove-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nssplitview-remove-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nssplitview-remove-tool-tip! self tag)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeToolTip:")) tag))
+(define (nssplitview-remove-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nssplitview-remove-tracking-rect! self tag)
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingRect:")) tag))
 (define (nssplitview-replace-subview-with! self old-view new-view)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replaceSubview:with:")) (id->ffi2-ptr (coerce-arg old-view)) (id->ffi2-ptr (coerce-arg new-view))))
+(define (nssplitview-reset-cursor-rects! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resetCursorRects"))))
 (define (nssplitview-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
 (define (nssplitview-resize-subviews-with-old-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeSubviewsWithOldSize:")) (id->ffi2-ptr old-size)))
 (define (nssplitview-resize-with-old-superview-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeWithOldSuperviewSize:")) (id->ffi2-ptr old-size)))
+(define (nssplitview-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nssplitview-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nssplitview-right-mouse-down self event)
@@ -2274,8 +2554,36 @@
   (aw_racket_msg_d_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateByAngle:")) angle))
 (define (nssplitview-rotate-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-ruler-view-did-add-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nssplitview-ruler-view-did-move-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nssplitview-ruler-view-did-remove-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nssplitview-ruler-view-handle-mouse-down self ruler event)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:handleMouseDown:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-ruler-view-location-for-point self ruler point)
+  (aw_racket_msg_PO_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:locationForPoint:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr point)))
+(define (nssplitview-ruler-view-point-for-location self ruler point)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_Pd_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:pointForLocation:")) (id->ffi2-ptr (coerce-arg ruler)) point (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
+(define (nssplitview-ruler-view-should-add-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nssplitview-ruler-view-should-move-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nssplitview-ruler-view-should-remove-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nssplitview-ruler-view-will-add-marker-at-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willAddMarker:atLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nssplitview-ruler-view-will-move-marker-to-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willMoveMarker:toLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nssplitview-ruler-view-will-set-client-view self ruler new-client)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willSetClientView:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg new-client))))
 (define (nssplitview-scale-unit-square-to-size self new-unit-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scaleUnitSquareToSize:")) (id->ffi2-ptr new-unit-size)))
+(define (nssplitview-scroll-clip-view-to-point self clip-view point)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollClipView:toPoint:")) (id->ffi2-ptr (coerce-arg clip-view)) (id->ffi2-ptr point)))
 (define (nssplitview-scroll-line-down self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollLineDown:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-scroll-line-up self sender)
@@ -2560,6 +2868,10 @@
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsOrigin:")) (id->ffi2-ptr new-origin)))
 (define (nssplitview-set-bounds-size! self new-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsSize:")) (id->ffi2-ptr new-size)))
+(define (nssplitview-set-content-compression-resistance-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentCompressionResistancePriority:forOrientation:")) priority orientation))
+(define (nssplitview-set-content-hugging-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentHuggingPriority:forOrientation:")) priority orientation))
 (define (nssplitview-set-frame-origin! self new-origin)
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrameOrigin:")) (id->ffi2-ptr new-origin)))
 (define (nssplitview-set-frame-size! self new-size)
@@ -2568,6 +2880,8 @@
   (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setHoldingPriority:forSubviewAtIndex:")) priority subview-index))
 (define (nssplitview-set-identifier! self identifier)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
+(define (nssplitview-set-keyboard-focus-ring-needs-display-in-rect! self rect)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setKeyboardFocusRingNeedsDisplayInRect:")) (id->ffi2-ptr rect)))
 (define (nssplitview-set-mark! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setMark:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-set-needs-display-in-rect! self invalid-rect)
@@ -2582,6 +2896,15 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-show-context-menu-for-selection self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nssplitview-show-definition-for-attributed-string-at-point self attr-string text-baseline-origin)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:atPoint:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr text-baseline-origin)))
+;; block param 3: async-copied (runtime-managed)
+(define (nssplitview-show-definition-for-attributed-string-range-options-baseline-origin-provider self attr-string target-range options origin-provider)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block origin-provider (list _NSRange) _NSPoint))
+  (aw_racket_msg_PGPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:range:options:baselineOriginProvider:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr target-range) (id->ffi2-ptr (coerce-arg options)) (id->ffi2-ptr _blk3)))
+(define (nssplitview-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-smart-magnify-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "smartMagnifyWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nssplitview-sort-subviews-using-function-context self compare context)
@@ -2616,16 +2939,28 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "transposeWords:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-try-to-perform-with self action object)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryToPerform:with:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg object))))
+(define (nssplitview-unregister-dragged-types self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterDraggedTypes"))))
+(define (nssplitview-update-constraints self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraints"))))
+(define (nssplitview-update-constraints-for-subtree-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraintsForSubtreeIfNeeded"))))
 (define (nssplitview-update-dragging-items-for-drag self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateDraggingItemsForDrag:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-update-layer self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateLayer"))))
+(define (nssplitview-update-tracking-areas self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateTrackingAreas"))))
+(define (nssplitview-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nssplitview-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nssplitview-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
+(define (nssplitview-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nssplitview-view-did-change-backing-properties self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "viewDidChangeBackingProperties"))))
 (define (nssplitview-view-did-change-effective-appearance self)
@@ -2660,12 +2995,24 @@
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
 (define (nssplitview-will-open-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willOpenMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nssplitview-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nssplitview-will-remove-subview self subview)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willRemoveSubview:")) (id->ffi2-ptr (coerce-arg subview))))
+(define (nssplitview-write-eps-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writeEPSInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
+(define (nssplitview-write-pdf-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writePDFInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nssplitview-yank self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yank:")) (id->ffi2-ptr (coerce-arg sender))))
 
 ;; --- Class methods ---
+(define (nssplitview-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSSplitView) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nssplitview-default-animation-for-key key)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSSplitView) (id->ffi2-ptr (sel_registerName "defaultAnimationForKey:")) (id->ffi2-ptr (coerce-arg key))))

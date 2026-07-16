@@ -27,6 +27,13 @@ impl EmitterRegistry {
             // method flattening), built over all loaded frameworks (see `generate.rs`).
             // The `new()` instance here backs `--list-targets` / lookups.
             Box::new(apianyware_emit_sbcl::SbclEmitter::new()),
+            // TypeScript's per-run emitter carries empty cross-framework
+            // ownership registries (class, enum *and* protocol — the `.d.ts`
+            // surface makes enums a typed import too); the `generate` pre-pass
+            // swaps in a populated `TsEmitter::with_registries` built over all
+            // loaded frameworks (see `generate.rs`). The `new()` instance here
+            // backs `--list-targets` / lookups.
+            Box::new(apianyware_emit_typescript::TsEmitter::new()),
         ];
         Self { emitters }
     }
@@ -86,6 +93,20 @@ mod tests {
         assert!(ids.contains(&"chez"));
         assert!(ids.contains(&"gerbil"));
         assert!(ids.contains(&"sbcl"));
+        assert!(ids.contains(&"typescript"));
+    }
+
+    #[test]
+    fn registry_contains_typescript() {
+        let registry = EmitterRegistry::new();
+        let typescript = registry.get("typescript");
+        assert!(
+            typescript.is_some(),
+            "registry should contain typescript emitter"
+        );
+        let info = typescript.unwrap().target_info();
+        assert_eq!(info.id, "typescript");
+        assert_eq!(info.display_name, "TypeScript");
     }
 
     #[test]
@@ -130,5 +151,7 @@ mod tests {
         assert!(list.contains("Gerbil Scheme"));
         assert!(list.contains("sbcl"));
         assert!(list.contains("SBCL"));
+        assert!(list.contains("typescript"));
+        assert!(list.contains("TypeScript"));
     }
 }

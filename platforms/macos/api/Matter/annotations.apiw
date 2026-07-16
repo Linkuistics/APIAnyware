@@ -54419,18 +54419,6 @@ framework Matter {
             source llm
         }
     }
-    class MTRCommissioningOperation {
-        method initWithParameters:setupPayload:delegate:queue: is-instance=#true {
-            param-ownership 2 ownership=weak
-            source llm
-        }
-    }
-    class MTRCommissioningParameters {
-        method setDeviceAttestationDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class MTRCommodityPriceClusterGetDetailedForecastResponseParams {
         method initWithResponseValue:error: is-instance=#true {
             error-pattern error_out_param
@@ -54479,21 +54467,7 @@ framework Matter {
             source llm
         }
     }
-    class MTRControllerFactoryParams {
-        method setOtaProviderDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class MTRDevice {
-        method addDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method addDelegate:queue:interestedPathsForAttributes:interestedPathsForEvents: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method downloadLogOfType:timeout:queue:completion: is-instance=#true {
             block-param 3 invocation=async_copied
             source llm
@@ -54518,10 +54492,6 @@ framework Matter {
             block-param 4 invocation=async_copied
             source llm
         }
-        method setDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method waitForAttributeValues:timeout:queue:completion: is-instance=#true {
             block-param 3 invocation=async_copied
             source llm
@@ -54532,10 +54502,6 @@ framework Matter {
         }
     }
     class MTRDeviceController {
-        method addDeviceControllerDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method cancelCommissioningForNodeID:error: is-instance=#true {
             error-pattern error_out_param
             source llm
@@ -54562,10 +54528,6 @@ framework Matter {
         }
         method removeServerEndpoint:queue:completion: is-instance=#true {
             block-param 2 invocation=async_copied
-            source llm
-        }
-        method setDeviceControllerDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
         method setupCommissioningSessionWithDiscoveredDevice:payload:newNodeID:error: is-instance=#true {
@@ -54612,26 +54574,12 @@ framework Matter {
             error-pattern error_out_param
             source llm
         }
-        method setPairingDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method sharedControllerWithID:xpcConnectBlock: is-instance=#false {
             block-param 1 invocation=async_copied
             source llm
         }
         method sharedControllerWithId:xpcConnectBlock: is-instance=#false {
             block-param 1 invocation=async_copied
-            source llm
-        }
-    }
-    class MTRDeviceControllerExternalCertificateParameters {
-        method initWithStorageDelegate:storageDelegateQueue:uniqueIdentifier:ipk:vendorID:operationalKeypair:operationalCertificate:intermediateCertificate:rootCertificate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setOTAProviderDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -54646,18 +54594,6 @@ framework Matter {
         }
         method startControllerFactory:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class MTRDeviceControllerFactoryParams {
-        method setOtaProviderDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class MTRDeviceControllerParameters {
-        method setOTAProviderDelegate:queue: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

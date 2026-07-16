@@ -17,6 +17,7 @@
 ;; --- Class predicates ---
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (define (nsurl? v) (objc-instance-of? v "NSURL"))
 (define (nsuserdefaults? v) (objc-instance-of? v "NSUserDefaults"))
@@ -24,21 +25,21 @@
 (provide/contract
   [make-nsuserdefaults-init-with-suite-name (c-> (or/c string? objc-object? #f) any/c)]
   [nsuserdefaults-standard-user-defaults (c-> (or/c nsuserdefaults? objc-nil?))]
-  [nsuserdefaults-volatile-domain-names (c-> nsuserdefaults? any/c)]
+  [nsuserdefaults-volatile-domain-names (c-> nsuserdefaults? (or/c nsarray? objc-nil?))]
   [nsuserdefaults-url-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsurl? objc-nil?))]
   [nsuserdefaults-add-suite-named! (c-> nsuserdefaults? (or/c string? objc-object? #f) void?)]
   [nsuserdefaults-array-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsuserdefaults-bool-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) boolean?)]
   [nsuserdefaults-data-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsdata? objc-nil?))]
-  [nsuserdefaults-dictionary-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) any/c)]
-  [nsuserdefaults-dictionary-representation (c-> nsuserdefaults? any/c)]
+  [nsuserdefaults-dictionary-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsdictionary? objc-nil?))]
+  [nsuserdefaults-dictionary-representation (c-> nsuserdefaults? (or/c nsdictionary? objc-nil?))]
   [nsuserdefaults-double-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) real?)]
   [nsuserdefaults-float-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) real?)]
   [nsuserdefaults-integer-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) exact-integer?)]
   [nsuserdefaults-object-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) any/c)]
   [nsuserdefaults-object-is-forced-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) boolean?)]
   [nsuserdefaults-object-is-forced-for-key-in-domain (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
-  [nsuserdefaults-persistent-domain-for-name (c-> nsuserdefaults? (or/c string? objc-object? #f) any/c)]
+  [nsuserdefaults-persistent-domain-for-name (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsdictionary? objc-nil?))]
   [nsuserdefaults-register-defaults (c-> nsuserdefaults? (or/c string? objc-object? #f) void?)]
   [nsuserdefaults-remove-object-for-key! (c-> nsuserdefaults? (or/c string? objc-object? #f) void?)]
   [nsuserdefaults-remove-persistent-domain-for-name! (c-> nsuserdefaults? (or/c string? objc-object? #f) void?)]
@@ -52,10 +53,10 @@
   [nsuserdefaults-set-persistent-domain-for-name! (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsuserdefaults-set-url-for-key! (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsuserdefaults-set-volatile-domain-for-name! (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
-  [nsuserdefaults-string-array-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) any/c)]
+  [nsuserdefaults-string-array-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsuserdefaults-string-for-key (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsstring? objc-nil?))]
   [nsuserdefaults-synchronize (c-> nsuserdefaults? boolean?)]
-  [nsuserdefaults-volatile-domain-for-name (c-> nsuserdefaults? (or/c string? objc-object? #f) any/c)]
+  [nsuserdefaults-volatile-domain-for-name (c-> nsuserdefaults? (or/c string? objc-object? #f) (or/c nsdictionary? objc-nil?))]
   [nsuserdefaults-reset-standard-user-defaults! (c-> void?)]
   )
 

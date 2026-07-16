@@ -15,6 +15,8 @@
 
 
 ;; --- Class predicates ---
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsmenu? v) (objc-instance-of? v "NSMenu"))
 (define (nsresponder? v) (objc-instance-of? v "NSResponder"))
 (define (nsstoryboard? v) (objc-instance-of? v "NSStoryboard"))
@@ -42,9 +44,9 @@
   [nswindowcontroller-next-responder (c-> nswindowcontroller? (or/c nsresponder? objc-nil?))]
   [nswindowcontroller-set-next-responder! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-owner (c-> nswindowcontroller? any/c)]
-  [nswindowcontroller-preview-representable-activity-items (c-> nswindowcontroller? any/c)]
+  [nswindowcontroller-preview-representable-activity-items (c-> nswindowcontroller? (or/c nsarray? objc-nil?))]
   [nswindowcontroller-set-preview-representable-activity-items! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
-  [nswindowcontroller-restorable-state-key-paths (c-> any/c)]
+  [nswindowcontroller-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nswindowcontroller-should-cascade-windows (c-> nswindowcontroller? boolean?)]
   [nswindowcontroller-set-should-cascade-windows! (c-> nswindowcontroller? boolean? void?)]
   [nswindowcontroller-should-close-document (c-> nswindowcontroller? boolean?)]
@@ -83,7 +85,10 @@
   [nswindowcontroller-delete-to-mark (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-delete-word-backward (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-delete-word-forward (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-dismiss-controller (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-do-command-by-selector (c-> nswindowcontroller? string? void?)]
+  [nswindowcontroller-encode-restorable-state-with-coder (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-encode-restorable-state-with-coder-background-queue (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-encode-with-coder (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-end-gesture-with-event! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-flags-changed (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
@@ -102,6 +107,7 @@
   [nswindowcontroller-insert-tab-ignoring-field-editor! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-insert-text! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-interpret-key-events (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-invalidate-restorable-state (c-> nswindowcontroller? void?)]
   [nswindowcontroller-is-window-loaded (c-> nswindowcontroller? boolean?)]
   [nswindowcontroller-key-down (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-key-up (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
@@ -114,6 +120,7 @@
   [nswindowcontroller-make-text-writing-direction-left-to-right (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-make-text-writing-direction-natural (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-make-text-writing-direction-right-to-left (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-make-touch-bar (c-> nswindowcontroller? (or/c nstouchbar? objc-nil?))]
   [nswindowcontroller-mouse-cancelled (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-mouse-down (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-mouse-dragged (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
@@ -159,6 +166,7 @@
   [nswindowcontroller-move-word-left-and-modify-selection! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-move-word-right! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-move-word-right-and-modify-selection! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-new-window-for-tab (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-no-responder-for (c-> nswindowcontroller? string? void?)]
   [nswindowcontroller-other-mouse-down (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-other-mouse-dragged (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
@@ -169,11 +177,15 @@
   [nswindowcontroller-page-up-and-modify-selection (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-perform-key-equivalent! (c-> nswindowcontroller? (or/c string? objc-object? #f) boolean?)]
   [nswindowcontroller-perform-segue-with-identifier-sender! (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-perform-text-finder-action! (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-prepare-for-segue-sender (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-present-error (c-> nswindowcontroller? (or/c string? objc-object? #f) boolean?)]
+  [nswindowcontroller-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nswindowcontroller-pressure-change-with-event (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-quick-look-preview-items (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-quick-look-with-event (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-resign-first-responder (c-> nswindowcontroller? boolean?)]
+  [nswindowcontroller-restore-state-with-coder (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-restore-user-activity-state (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-right-mouse-down (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-right-mouse-dragged (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
@@ -198,6 +210,7 @@
   [nswindowcontroller-show-context-help (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-show-context-menu-for-selection (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-show-window (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-show-writing-tools (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-smart-magnify-with-event (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-supplemental-target-for-action-sender (c-> nswindowcontroller? string? (or/c string? objc-object? #f) any/c)]
   [nswindowcontroller-swap-with-mark (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
@@ -212,14 +225,18 @@
   [nswindowcontroller-transpose (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-transpose-words (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-try-to-perform-with (c-> nswindowcontroller? string? (or/c string? objc-object? #f) boolean?)]
+  [nswindowcontroller-update-user-activity-state (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-uppercase-word (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
   [nswindowcontroller-valid-requestor-for-send-type-return-type (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nswindowcontroller-validate-proposed-first-responder-for-event (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nswindowcontroller-wants-forwarded-scroll-events-for-axis (c-> nswindowcontroller? exact-integer? boolean?)]
   [nswindowcontroller-wants-scroll-events-for-swipe-tracking-on-axis (c-> nswindowcontroller? exact-integer? boolean?)]
+  [nswindowcontroller-will-present-error (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nswindowcontroller-window-did-load (c-> nswindowcontroller? void?)]
   [nswindowcontroller-window-title-for-document-display-name (c-> nswindowcontroller? (or/c string? objc-object? #f) (or/c nsstring? objc-nil?))]
   [nswindowcontroller-window-will-load (c-> nswindowcontroller? void?)]
   [nswindowcontroller-yank (c-> nswindowcontroller? (or/c string? objc-object? #f) void?)]
+  [nswindowcontroller-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   )
 
 ;; --- Class reference ---
@@ -235,6 +252,7 @@
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
 
@@ -390,8 +408,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteWordBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-delete-word-forward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteWordForward:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindowcontroller-dismiss-controller self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dismissController:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-do-command-by-selector self selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "doCommandBySelector:")) (id->ffi2-ptr (sel_registerName selector))))
+(define (nswindowcontroller-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nswindowcontroller-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nswindowcontroller-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nswindowcontroller-end-gesture-with-event! self event)
@@ -428,6 +452,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
 (define (nswindowcontroller-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nswindowcontroller-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nswindowcontroller-is-window-loaded self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isWindowLoaded"))))
 (define (nswindowcontroller-key-down self event)
@@ -452,6 +478,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindowcontroller-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nswindowcontroller-mouse-cancelled self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mouseCancelled:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindowcontroller-mouse-down self event)
@@ -542,6 +572,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRight:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-move-word-right-and-modify-selection! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindowcontroller-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
 (define (nswindowcontroller-other-mouse-down self event)
@@ -562,8 +594,15 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindowcontroller-perform-segue-with-identifier-sender! self identifier sender)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performSegueWithIdentifier:sender:")) (id->ffi2-ptr (coerce-arg identifier)) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindowcontroller-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-prepare-for-segue-sender self segue sender)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForSegue:sender:")) (id->ffi2-ptr (coerce-arg segue)) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindowcontroller-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nswindowcontroller-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nswindowcontroller-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindowcontroller-quick-look-preview-items self sender)
@@ -572,6 +611,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindowcontroller-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
+(define (nswindowcontroller-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nswindowcontroller-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nswindowcontroller-right-mouse-down self event)
@@ -620,6 +661,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-show-window self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWindow:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindowcontroller-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-smart-magnify-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "smartMagnifyWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindowcontroller-supplemental-target-for-action-sender self action sender)
@@ -650,16 +693,24 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "transposeWords:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-try-to-perform-with self action object)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryToPerform:with:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg object))))
+(define (nswindowcontroller-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nswindowcontroller-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindowcontroller-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
+(define (nswindowcontroller-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindowcontroller-wants-forwarded-scroll-events-for-axis self axis)
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsForwardedScrollEventsForAxis:")) axis))
 (define (nswindowcontroller-wants-scroll-events-for-swipe-tracking-on-axis self axis)
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
+(define (nswindowcontroller-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nswindowcontroller-window-did-load self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "windowDidLoad"))))
 (define (nswindowcontroller-window-title-for-document-display-name self display-name)
@@ -670,3 +721,9 @@
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "windowWillLoad"))))
 (define (nswindowcontroller-yank self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yank:")) (id->ffi2-ptr (coerce-arg sender))))
+
+;; --- Class methods ---
+(define (nswindowcontroller-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSWindowController) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))

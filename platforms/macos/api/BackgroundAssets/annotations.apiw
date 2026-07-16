@@ -48,10 +48,6 @@ framework BackgroundAssets {
             block-param 1 invocation=async_copied
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class BAAssetPackManifest {
         method initFromData:applicationGroupIdentifier:error: is-instance=#true {
@@ -86,10 +82,6 @@ framework BackgroundAssets {
         }
         method scheduleDownload:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
         method startForegroundDownload:error: is-instance=#true {

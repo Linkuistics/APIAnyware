@@ -1,0 +1,24 @@
+# THROWAWAY spike addon (libuv-runloop-primacy-spike-k6). napi-rs N-API addon that links
+# the Swift bridge dylib and surfaces the runloop-integration mechanisms (b)/(c) to JS.
+# Standalone: keep this throwaway spike out of the repo's Cargo workspace.
+[workspace]
+
+[package]
+name = "tsrlspike"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", default-features = false, features = ["napi8"] }
+napi-derive = "2"
+
+[build-dependencies]
+napi-build = "2"
+cc = "1"
+
+[profile.release]
+opt-level = 2

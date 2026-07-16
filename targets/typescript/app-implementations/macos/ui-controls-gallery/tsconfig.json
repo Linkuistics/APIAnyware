@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023", "esnext.disposable"],
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "sourceMap": false,
+    "rootDir": "../../..",
+    "outDir": "build/js",
+    "baseUrl": ".",
+    "paths": {
+      "@apianyware/runtime": ["../../../bindings/node/runtime/src/index.ts"],
+      "@apianyware/*": ["../../../bindings/macos/generated/*/index.ts"]
+    }
+  },
+  "files": ["app.ts", "globals.d.ts"]
+}

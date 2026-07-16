@@ -47,18 +47,19 @@ ascent! {
     relation class(String);
 
     /// class_selector(class, selector) — one tuple per selector reachable on a
-    /// class via its **direct** methods or category methods (the legacy
-    /// `collect_all_selectors` set: direct `methods` + `category_methods`, *not*
-    /// the inheritance-flattened `all_methods`). The four selector-shaped
-    /// detectors (observer / paired-state / delegate / bracket) key on this; none
-    /// needs the `class_method` / `init_method` flags.
+    /// class via its **direct** methods (which already carries its category
+    /// methods, extraction merges them in — the legacy `collect_all_selectors`
+    /// set; *not* the inheritance-flattened `all_methods`). The four
+    /// selector-shaped detectors (observer / paired-state / delegate / bracket)
+    /// key on this; none needs the `class_method` / `init_method` flags.
     relation class_selector(String, String);
 
-    /// class_factory_op(class, selector) — one tuple per **direct class method**
-    /// that is not an initializer (`class_method && !init_method`), the factory
-    /// operations the factory-cluster's `factory` role binds. Loaded separately
-    /// from `class_selector` because (a) only this detector consults the method
-    /// kind and (b) the legacy `detect_factory_clusters` scanned the immutable
+    /// class_factory_op(class, selector) — one tuple per **direct, non-category
+    /// class method** that is not an initializer (`class_method && !init_method
+    /// && method.category.is_none()`), the factory operations the
+    /// factory-cluster's `factory` role binds. Loaded separately from
+    /// `class_selector` because (a) only this detector consults the method kind
+    /// and (b) the legacy `detect_factory_clusters` scanned the immutable
     /// class's **direct** `methods` only, never its category methods.
     relation class_factory_op(String, String);
 

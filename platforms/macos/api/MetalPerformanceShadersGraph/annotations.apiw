@@ -25,31 +25,26 @@ framework MetalPerformanceShadersGraph {
     }
     class MPSGraphCompilationDescriptor {
         method setCompilationCompletionHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=async_copied
             source llm
         }
     }
     class MPSGraphExecutableExecutionDescriptor {
         method setCompletionHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=async_copied
             source llm
         }
         method setScheduledHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=async_copied
             source llm
         }
     }
     class MPSGraphExecutionDescriptor {
         method setCompletionHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=async_copied
             source llm
         }
         method setScheduledHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=async_copied
             source llm
         }

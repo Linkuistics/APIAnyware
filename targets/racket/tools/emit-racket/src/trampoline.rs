@@ -766,7 +766,7 @@ fn type_shape(t: &TypeRef) -> String {
         TypeRefKind::Class { name, .. } => format!("c:{name}"),
         TypeRefKind::Alias { name, .. } => format!("a:{name}"),
         TypeRefKind::Struct { name } => format!("s:{name}"),
-        TypeRefKind::Id => "id".into(),
+        TypeRefKind::Id { .. } => "id".into(),
         TypeRefKind::Instancetype => "instancetype".into(),
         TypeRefKind::CString => "cstr".into(),
         TypeRefKind::Pointer => "ptr".into(),
@@ -2747,7 +2747,9 @@ mod tests {
                     "_",
                     TypeRef {
                         nullable: false,
-                        kind: TypeRefKind::Id,
+                        kind: TypeRefKind::Id {
+                            protocols: Vec::new(),
+                        },
                     },
                 ),
             ],
@@ -2819,7 +2821,9 @@ mod tests {
         ));
         let any = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         let with_any = plain("accept", vec![param("value", any)], prim("void"));
         assert!(matches!(
@@ -2893,6 +2897,7 @@ mod tests {
         let c = Constant {
             name: "sharedToken".into(),
             constant_type: nsstring(),
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -2920,6 +2925,7 @@ mod tests {
         let c = Constant {
             name: "defaultConfig".into(),
             constant_type: swift_class("Config", "TestKit"),
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

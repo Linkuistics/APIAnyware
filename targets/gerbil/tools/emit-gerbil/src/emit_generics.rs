@@ -304,7 +304,9 @@ mod tests {
             name: "action".into(),
             param_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
         }];
         cls.all_methods = vec![run_action];

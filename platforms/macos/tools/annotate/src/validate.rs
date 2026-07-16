@@ -3,18 +3,31 @@
 //! Per `(receiver, selector)` fact-slot — each [`ParamOwnership`], each
 //! [`BlockParamAnnotation`], the method-level threading and error-pattern — the
 //! audit gathers every producing tier, applies §28 precedence
-//! (`manual > accepted-LLM > convention > extraction > unknown`), **stamps the
+//! (`manual > extraction > accepted-LLM > convention > unknown`), **stamps the
 //! winner's source** on the resolved fact, and records each *disagreeing* loser
 //! as a [`SupersededFact`]. A slot with no producer gets no provenance entry
 //! (its unknown-ness is the absence); a method with no producing fact at all
 //! carries the method-level `source = Unknown` rather than a silent `Convention`.
 //!
-//! **Golden-neutral by construction.** The audit stamps *provenance* only — the
-//! winning *value* of every slot is byte-identical to the legacy
-//! `llm`-over-convention merge it replaces (overlay wins a contested slot;
-//! convention fills the gaps; block invocations are all-or-nothing). Emit reads
-//! fact *values* (via the enrichment pass), never `source`, so provenance is
-//! emit-invisible and the goldens cannot move (ADR-0050 D4).
+//! The convention side's own tier is **not** assumed to be `Convention`: a
+//! declaration-premised rule (the declared-property-attribute ownership rule,
+//! `block-copy-property-setter`) already stamps `Extraction` in `convention`'s
+//! own `fact_provenance` (crate root `tier_for_rules`, `declared-fact-
+//! precedence-k87`, ADR-0047 §4), and `resolve_slot` reads that tier back
+//! rather than hardcoding it, so an `Extraction`-tier convention fact now
+//! outranks the LLM tier exactly as §28 requires.
+//!
+//! **Golden-neutral, measured — not by construction.** The audit stamps
+//! *provenance* only; for the overwhelming majority of slots the winning
+//! *value* is byte-identical to the legacy `llm`-over-convention merge it
+//! replaces (overlay wins a contested slot; convention fills the gaps; block
+//! invocations are all-or-nothing). The k87 re-rank is the one documented
+//! exception — a declared fact now wins a slot an LLM fact used to — and it is
+//! golden-neutral only because it was *measured*: every corpus contradiction is
+//! intra-retain-axis (`weak` vs `assign`, both non-retaining) and no target
+//! consumes that distinction today. Emit reads fact *values* (via the
+//! enrichment pass), never `source`, so provenance itself is always
+//! emit-invisible (ADR-0050 D4).
 
 use apianyware_types::annotation::{
     AnnotationOverride, AnnotationSource, BlockInvocationStyle, BlockParamAnnotation, ErrorPattern,
@@ -89,21 +102,25 @@ pub fn audit_annotations(
     }
 }
 
-/// Resolve one fact-slot by §28 precedence. `conv` is the convention candidate
-/// (tier [`AnnotationSource::Convention`]); `over` the authored-overlay candidate
-/// carried with its own tier. The lower [`AnnotationSource::precedence`] rank
-/// wins; the *other* producing tier becomes a [`SupersededFact`] **iff its value
-/// differs** (an agreeing tier is redundant, not superseded — ADR-0050 §3).
-/// Returns the winning value and its [`SlotProvenance`], or `None` when neither
-/// tier produced the slot.
+/// Resolve one fact-slot by §28 precedence. `conv` is the convention candidate,
+/// carried with its own producing tier `conv_source` — `Convention`, or
+/// `Extraction` when the winning rule is declaration-premised (ADR-0047 §4,
+/// k87); `over` the authored-overlay candidate carried with its own tier. The
+/// lower [`AnnotationSource::precedence`] rank wins; the *other* producing tier
+/// becomes a [`SupersededFact`] **iff its value differs** (an agreeing tier is
+/// redundant, not superseded — ADR-0050 §3). Returns the winning value and its
+/// [`SlotProvenance`], or `None` when neither tier produced the slot.
 ///
-/// For the `{llm, manual}` overlay vocabulary (ADR-0050 D3) the overlay always
-/// outranks convention, so this reproduces the legacy `overlay-over-convention`
-/// merge exactly (golden-neutral); the rank comparison only changes the outcome
-/// for a hypothetical sub-convention overlay tier, which §28 says must lose.
+/// For the `{llm, manual}` overlay vocabulary (ADR-0050 D3), a plain
+/// (name-sniffed) convention candidate still always loses to the overlay,
+/// reproducing the legacy `overlay-over-convention` merge exactly
+/// (golden-neutral); an **`Extraction`**-sourced convention candidate now beats
+/// `Llm` — the real case `declared-fact-precedence-k87` wires, not merely a
+/// hypothetical the rank comparison guards against.
 fn resolve_slot<T: Copy + PartialEq>(
     param_index: Option<usize>,
     conv: Option<T>,
+    conv_source: AnnotationSource,
     conv_rules: Vec<String>,
     over: Option<(T, AnnotationSource)>,
     render: impl Fn(&T) -> String,
@@ -114,7 +131,7 @@ fn resolve_slot<T: Copy + PartialEq>(
             c,
             SlotProvenance {
                 param_index,
-                source: AnnotationSource::Convention,
+                source: conv_source,
                 rules: conv_rules,
                 superseded_by: Vec::new(),
             },
@@ -129,13 +146,13 @@ fn resolve_slot<T: Copy + PartialEq>(
             },
         )),
         (Some(c), Some((o, tier))) => {
-            let overlay_wins = tier.precedence() <= AnnotationSource::Convention.precedence();
+            let overlay_wins = tier.precedence() <= conv_source.precedence();
             let disagrees = c != o;
             if overlay_wins {
                 // Overlay wins; convention is the loser, recorded iff it differs.
                 let superseded = if disagrees {
                     vec![SupersededFact {
-                        source: AnnotationSource::Convention,
+                        source: conv_source,
                         value: render(&c),
                     }]
                 } else {
@@ -164,7 +181,7 @@ fn resolve_slot<T: Copy + PartialEq>(
                     c,
                     SlotProvenance {
                         param_index,
-                        source: AnnotationSource::Convention,
+                        source: conv_source,
                         rules: conv_rules,
                         superseded_by: superseded,
                     },
@@ -176,8 +193,10 @@ fn resolve_slot<T: Copy + PartialEq>(
 
 /// Ownership is a **per-`param_index` union**: every param either source
 /// annotates survives; the higher-precedence tier wins a param both annotate
-/// (§28). Mirrors the legacy merge's per-param union exactly (overlay wins for
-/// the `{llm, manual}` vocabulary).
+/// (§28). Mirrors the legacy merge's per-param union exactly for a plain
+/// (name-sniffed) convention candidate — overlay always wins for the
+/// `{llm, manual}` vocabulary; a **declared-attribute** candidate now stamps
+/// `Extraction` in `conv_prov` and outranks `Llm` (`declared-fact-precedence-k87`).
 fn audit_ownership(
     convention: &MethodAnnotation,
     overlay: Option<&MethodAnnotation>,
@@ -192,6 +211,14 @@ fn audit_ownership(
             .find(|s| s.param_index == Some(i))
             .map(|s| s.rules.clone())
             .unwrap_or_default()
+    };
+    let conv_source = |i: usize| {
+        conv_prov
+            .parameter_ownership
+            .iter()
+            .find(|s| s.param_index == Some(i))
+            .map(|s| s.source)
+            .unwrap_or(AnnotationSource::Convention)
     };
     let overlay_params = overlay
         .map(|o| o.parameter_ownership.as_slice())
@@ -220,7 +247,9 @@ fn audit_ownership(
             .zip(overlay_tier)
             .map(|(p, tier)| (p.ownership, tier));
 
-        if let Some((ownership, slot)) = resolve_slot(Some(i), conv, conv_rules(i), over, token) {
+        if let Some((ownership, slot)) =
+            resolve_slot(Some(i), conv, conv_source(i), conv_rules(i), over, token)
+        {
             result.push(ParamOwnership {
                 param_index: i,
                 ownership,
@@ -252,13 +281,25 @@ fn audit_blocks(
             .map(|s| s.rules.clone())
             .unwrap_or_default()
     };
+    let conv_source = |i: usize| {
+        conv_prov
+            .block_parameters
+            .iter()
+            .find(|s| s.param_index == Some(i))
+            .map(|s| s.source)
+            .unwrap_or(AnnotationSource::Convention)
+    };
 
     let overlay_blocks = overlay
         .map(|o| o.block_parameters.as_slice())
         .filter(|b| !b.is_empty());
 
     match (overlay_blocks, overlay_tier) {
-        // Overlay wins the block slot-group wholesale.
+        // Overlay wins the block slot-group wholesale — the all-or-nothing
+        // selection is untouched by k87 (deferred: see the leaf's notes on
+        // measuring a live `block-copy-property-setter` contradiction). Only
+        // the *reported* loser's tier is corrected here, to whatever the
+        // convention side actually produced it at.
         (Some(blocks), Some(tier)) => {
             for b in blocks {
                 let superseded = convention
@@ -267,7 +308,7 @@ fn audit_blocks(
                     .find(|c| c.param_index == b.param_index && c.invocation != b.invocation)
                     .map(|c| {
                         vec![SupersededFact {
-                            source: AnnotationSource::Convention,
+                            source: conv_source(b.param_index),
                             value: token(&c.invocation),
                         }]
                     })
@@ -286,7 +327,7 @@ fn audit_blocks(
             for c in &convention.block_parameters {
                 prov.block_parameters.push(SlotProvenance {
                     param_index: Some(c.param_index),
-                    source: AnnotationSource::Convention,
+                    source: conv_source(c.param_index),
                     rules: conv_rules(c.param_index),
                     superseded_by: Vec::new(),
                 });
@@ -310,8 +351,20 @@ fn audit_threading(
         .as_ref()
         .map(|s| s.rules.clone())
         .unwrap_or_default();
+    let conv_source = conv_prov
+        .threading
+        .as_ref()
+        .map(|s| s.source)
+        .unwrap_or(AnnotationSource::Convention);
     let over = overlay.and_then(|o| o.threading).zip(overlay_tier);
-    let resolved = resolve_slot(None, convention.threading, conv_rules, over, token);
+    let resolved = resolve_slot(
+        None,
+        convention.threading,
+        conv_source,
+        conv_rules,
+        over,
+        token,
+    );
     let (value, slot) = split(resolved);
     prov.threading = slot;
     value
@@ -331,8 +384,20 @@ fn audit_error(
         .as_ref()
         .map(|s| s.rules.clone())
         .unwrap_or_default();
+    let conv_source = conv_prov
+        .error_pattern
+        .as_ref()
+        .map(|s| s.source)
+        .unwrap_or(AnnotationSource::Convention);
     let over = overlay.and_then(|o| o.error_pattern).zip(overlay_tier);
-    let resolved = resolve_slot(None, convention.error_pattern, conv_rules, over, token);
+    let resolved = resolve_slot(
+        None,
+        convention.error_pattern,
+        conv_source,
+        conv_rules,
+        over,
+        token,
+    );
     let (value, slot) = split(resolved);
     prov.error_pattern = slot;
     value
@@ -437,8 +502,11 @@ mod tests {
     use super::*;
 
     /// A convention-tier annotation as `annotate::ConventionFacets::annotation_for`
-    /// hands it to the audit: facts plus a `fact_provenance` whose every slot is
-    /// `Convention` with the given rule stamps.
+    /// hands it to the audit: facts plus a `fact_provenance` whose ownership/block
+    /// slots are tagged by `crate::tier_for_rules` — `Extraction` for a
+    /// declaration-premised rule stamp, `Convention` otherwise (mirrors production
+    /// exactly, `declared-fact-precedence-k87`); threading/error stay `Convention`
+    /// (no declaration-premised rule exists for them).
     fn convention(
         selector: &str,
         param_ownership: Vec<(usize, OwnershipKind, Vec<&str>)>,
@@ -450,10 +518,11 @@ mod tests {
         let parameter_ownership = param_ownership
             .into_iter()
             .map(|(i, k, rules)| {
+                let rules: Vec<String> = rules.into_iter().map(String::from).collect();
                 prov.parameter_ownership.push(SlotProvenance {
                     param_index: Some(i),
-                    source: AnnotationSource::Convention,
-                    rules: rules.into_iter().map(String::from).collect(),
+                    source: crate::tier_for_rules(&rules),
+                    rules,
                     superseded_by: vec![],
                 });
                 ParamOwnership {
@@ -465,10 +534,11 @@ mod tests {
         let block_parameters = block_params
             .into_iter()
             .map(|(i, inv, rules)| {
+                let rules: Vec<String> = rules.into_iter().map(String::from).collect();
                 prov.block_parameters.push(SlotProvenance {
                     param_index: Some(i),
-                    source: AnnotationSource::Convention,
-                    rules: rules.into_iter().map(String::from).collect(),
+                    source: crate::tier_for_rules(&rules),
+                    rules,
                     superseded_by: vec![],
                 });
                 BlockParamAnnotation {
@@ -844,12 +914,14 @@ mod tests {
     }
 
     #[test]
-    fn sub_convention_overlay_tier_loses_to_convention() {
-        // The §28 ladder is *enforced by rank*, not assumed: an overlay fact
-        // sourced below convention (here `Extraction`, rank 3 > convention's 2)
-        // must LOSE — convention wins the value and the overlay becomes the
-        // disagreeing loser. (Real overlays are `{llm, manual}`, both of which
-        // outrank convention; this guards the ladder against a future tier.)
+    fn extraction_overlay_tier_now_beats_convention() {
+        // The §28 ladder is *enforced by rank*, not assumed: post-k87 an overlay
+        // fact sourced at `Extraction` (rank 1) now WINS over a plain `Convention`
+        // candidate (rank 3) — the exact inversion `declared-fact-precedence-k87`
+        // closes (pre-k87, `Extraction` ranked below `Convention` and this same
+        // scenario asserted the opposite winner). Real overlays are `{llm,
+        // manual}`; this guards the ladder against a hypothetical/future
+        // `Extraction`-sourced overlay by rank, not by a special case.
         let conv = convention(
             "display",
             vec![],
@@ -872,14 +944,86 @@ mod tests {
         let r = audit_annotations(&conv, Some(&ov));
         assert_eq!(
             r.threading,
-            Some(ThreadingConstraint::MainThreadOnly),
-            "convention outranks a sub-convention overlay tier"
+            Some(ThreadingConstraint::AnyThread),
+            "extraction now outranks a plain convention candidate"
         );
         let slot = r.fact_provenance.unwrap().threading.unwrap();
-        assert_eq!(slot.source, AnnotationSource::Convention);
+        assert_eq!(slot.source, AnnotationSource::Extraction);
         assert_eq!(slot.superseded_by.len(), 1);
-        assert_eq!(slot.superseded_by[0].source, AnnotationSource::Extraction);
-        assert_eq!(slot.superseded_by[0].value, "any_thread");
+        assert_eq!(slot.superseded_by[0].source, AnnotationSource::Convention);
+        assert_eq!(slot.superseded_by[0].value, "main_thread_only");
+    }
+
+    #[test]
+    fn declared_attribute_beats_llm_the_k87_measurement() {
+        // The real bug `declared-fact-precedence-k87` fixes: a declared header
+        // attribute (here `assign` — `unsafe-unretained-property-attribute`,
+        // priority 0, ADR-0047 §4) now beats an LLM annotation that read Apple's
+        // prose as `weak` — exactly the shape of all 17 measured corpus
+        // contradictions (`NSXMLParser`, `NSStream`, `NSFileManager`, …).
+        // `weak`/`assign` are both non-retaining (the *retain axis*), so this is
+        // a provenance fix, not a behavioural one for any current consumer.
+        let conv = convention(
+            "setDelegate:",
+            vec![(
+                0,
+                OwnershipKind::UnsafeUnretained,
+                vec!["convention:unsafe-unretained-property-attribute"],
+            )],
+            vec![],
+            None,
+            None,
+        );
+        let ov = overlay(
+            "setDelegate:",
+            AnnotationSource::Llm,
+            vec![(0, OwnershipKind::Weak)],
+            vec![],
+            None,
+            None,
+        );
+
+        let r = audit_annotations(&conv, Some(&ov));
+        assert_eq!(
+            r.parameter_ownership[0].ownership,
+            OwnershipKind::UnsafeUnretained,
+            "the declared attribute wins, not the LLM's prose reading"
+        );
+        let prov = r.fact_provenance.unwrap();
+        let slot = owned(&prov, 0);
+        assert_eq!(slot.source, AnnotationSource::Extraction);
+        assert_eq!(
+            slot.rules,
+            vec!["convention:unsafe-unretained-property-attribute".to_string()]
+        );
+        assert_eq!(slot.superseded_by.len(), 1);
+        assert_eq!(slot.superseded_by[0].source, AnnotationSource::Llm);
+        assert_eq!(slot.superseded_by[0].value, "weak");
+    }
+
+    #[test]
+    fn declared_attribute_still_fills_the_gap_when_overlay_silent() {
+        // No overlay at all: a declared-attribute convention candidate still
+        // wins its slot, now correctly stamped `Extraction` rather than
+        // `Convention` — the pure "reaches the audit as an Extraction-tier
+        // producer" case, no contest involved.
+        let conv = convention(
+            "setDelegate:",
+            vec![(
+                0,
+                OwnershipKind::Weak,
+                vec!["convention:weak-property-attribute"],
+            )],
+            vec![],
+            None,
+            None,
+        );
+
+        let r = audit_annotations(&conv, None);
+        let prov = r.fact_provenance.unwrap();
+        let slot = owned(&prov, 0);
+        assert_eq!(slot.source, AnnotationSource::Extraction);
+        assert!(slot.superseded_by.is_empty());
     }
 
     // ---- Method-level source: explicit unknown, never silent convention -----

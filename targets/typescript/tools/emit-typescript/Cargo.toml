@@ -1,0 +1,18 @@
+[package]
+name = "apianyware-emit-typescript"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "TypeScript code generation: ObjC projected as real ES6 classes over an N-API generated-dispatch addon, with a co-generated .d.ts type surface (ADR-0055); the Node TypeScript target's emitter"
+
+[dependencies]
+apianyware-types.workspace = true
+apianyware-emit.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+apianyware-spec-format.workspace = true
+apianyware-datalog.workspace = true
+
+[lints]
+workspace = true

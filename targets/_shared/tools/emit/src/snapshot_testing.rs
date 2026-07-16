@@ -19,6 +19,8 @@ use std::fmt::Write as FmtWrite;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
+use similar::TextDiff;
+
 /// Golden-file test runner.
 ///
 /// Compares a directory of generated files against a directory of golden
@@ -215,52 +217,21 @@ fn compare_directories(
     }
 }
 
-/// Produce a simple unified-style diff between two strings.
+/// Produce a minimal unified line diff (Myers/LCS, via the `similar` crate) between
+/// two strings, so a pure insertion or deletion renders as a `+`-only or `-`-only
+/// hunk rather than an offset-induced mix of both.
 fn append_unified_diff(golden: &str, generated: &str, path: &Path, out: &mut String) {
-    let golden_lines: Vec<&str> = golden.lines().collect();
-    let generated_lines: Vec<&str> = generated.lines().collect();
-
-    writeln!(out, "--- golden/{}", path.display()).unwrap();
-    writeln!(out, "+++ generated/{}", path.display()).unwrap();
-
-    // Simple line-by-line diff (not a true LCS diff, but clear enough for test output)
-    let max_lines = golden_lines.len().max(generated_lines.len());
-    let context = 3;
-    let mut in_hunk = false;
-    let mut hunk_start = 0;
-
-    for i in 0..max_lines {
-        let g = golden_lines.get(i).copied();
-        let n = generated_lines.get(i).copied();
-
-        if g != n {
-            if !in_hunk {
-                hunk_start = i.saturating_sub(context);
-                writeln!(out, "@@ line {} @@", hunk_start + 1).unwrap();
-                // Print context before
-                for j in hunk_start..i {
-                    if let Some(line) = golden_lines.get(j) {
-                        writeln!(out, " {line}").unwrap();
-                    }
-                }
-                in_hunk = true;
-            }
-            if let Some(line) = g {
-                writeln!(out, "-{line}").unwrap();
-            }
-            if let Some(line) = n {
-                writeln!(out, "+{line}").unwrap();
-            }
-        } else if in_hunk {
-            // Print trailing context
-            if let Some(line) = g {
-                writeln!(out, " {line}").unwrap();
-            }
-            if i >= hunk_start + context * 2 {
-                in_hunk = false;
-            }
-        }
-    }
+    let old_header = format!("golden/{}", path.display());
+    let new_header = format!("generated/{}", path.display());
+    let diff = TextDiff::from_lines(golden, generated);
+    write!(
+        out,
+        "{}",
+        diff.unified_diff()
+            .context_radius(3)
+            .header(&old_header, &new_header)
+    )
+    .unwrap();
 }
 
 /// Ensure trailing newline for clean diff output.
@@ -520,6 +491,61 @@ mod tests {
             fs::read_to_string(golden_target.join("sub/nested.rkt")).unwrap(),
             "nested"
         );
+    }
+
+    #[test]
+    fn test_unified_diff_pure_insertion_has_no_spurious_deletions() {
+        let golden = "a\nb\nc\nd\ne\n";
+        let generated = "a\nb\nX\nY\nc\nd\ne\n";
+        let mut out = String::new();
+        append_unified_diff(golden, generated, Path::new("file.rkt"), &mut out);
+
+        let deleted_lines: Vec<&str> = out
+            .lines()
+            .filter(|l| l.starts_with('-') && !l.starts_with("---"))
+            .collect();
+        assert!(
+            deleted_lines.is_empty(),
+            "pure insertion must not render deletions, got: {deleted_lines:?}\nfull diff:\n{out}"
+        );
+
+        let inserted_lines: Vec<&str> = out
+            .lines()
+            .filter(|l| l.starts_with('+') && !l.starts_with("+++"))
+            .collect();
+        assert_eq!(inserted_lines, vec!["+X", "+Y"]);
+
+        let hunk_header = out
+            .lines()
+            .find(|l| l.starts_with("@@"))
+            .unwrap_or_else(|| panic!("expected a hunk header, got:\n{out}"));
+        assert!(
+            hunk_header.contains('-') && hunk_header.contains('+'),
+            "expected dual (old, new) line numbers in hunk header, got: {hunk_header}"
+        );
+    }
+
+    #[test]
+    fn test_unified_diff_pure_deletion_has_no_spurious_insertions() {
+        let golden = "a\nb\nX\nY\nc\n";
+        let generated = "a\nb\nc\n";
+        let mut out = String::new();
+        append_unified_diff(golden, generated, Path::new("file.rkt"), &mut out);
+
+        let inserted_lines: Vec<&str> = out
+            .lines()
+            .filter(|l| l.starts_with('+') && !l.starts_with("+++"))
+            .collect();
+        assert!(
+            inserted_lines.is_empty(),
+            "pure deletion must not render insertions, got: {inserted_lines:?}\nfull diff:\n{out}"
+        );
+
+        let deleted_lines: Vec<&str> = out
+            .lines()
+            .filter(|l| l.starts_with('-') && !l.starts_with("---"))
+            .collect();
+        assert_eq!(deleted_lines, vec!["-X", "-Y"]);
     }
 
     #[test]

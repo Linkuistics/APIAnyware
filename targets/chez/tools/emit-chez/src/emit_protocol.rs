@@ -38,7 +38,7 @@ fn return_type_sym(t: &TypeRef) -> &'static str {
             "uint64" | "nsuinteger" => "unsigned-64",
             _ => "void*",
         },
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => "void*",
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => "void*",
         _ => "void*",
     }
 }

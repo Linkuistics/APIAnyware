@@ -64,7 +64,7 @@ pub fn param_at_is_block(method: &Method, index: usize) -> bool {
 pub fn param_at_is_object(method: &Method, index: usize) -> bool {
     matches!(
         method.params.get(index).map(|p| &p.param_type.kind),
-        Some(TypeRefKind::Id | TypeRefKind::Class { .. } | TypeRefKind::Instancetype)
+        Some(TypeRefKind::Id { .. } | TypeRefKind::Class { .. } | TypeRefKind::Instancetype)
     )
 }
 
@@ -133,7 +133,12 @@ mod tests {
         let m = method(
             "writeToURL:error:",
             vec![
-                param("url", TypeRefKind::Id),
+                param(
+                    "url",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                ),
                 param("error", TypeRefKind::Pointer),
             ],
         );
@@ -147,7 +152,15 @@ mod tests {
     #[test]
     fn non_pointer_error_name_is_not_error_out_param() {
         // A param named `error` but not pointer-typed is not an out-param shape.
-        let m = method("setError:", vec![param("error", TypeRefKind::Id)]);
+        let m = method(
+            "setError:",
+            vec![param(
+                "error",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+        );
         assert!(!has_error_out_param(&m));
         assert!(!is_annotatable(&m));
     }
@@ -168,7 +181,12 @@ mod tests {
         let m = method(
             "do:with:and:",
             vec![
-                param("a", TypeRefKind::Id),
+                param(
+                    "a",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                ),
                 param("b", TypeRefKind::Instancetype),
                 param("c", TypeRefKind::Primitive { name: "int".into() }),
             ],

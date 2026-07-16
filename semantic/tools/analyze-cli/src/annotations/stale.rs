@@ -123,7 +123,8 @@ pub fn compute_staleness(overlay: &FrameworkAnnotations, resolved: &Framework) -
     // its `swift_name` (the overlay may key either — `FileManager` vs
     // `NSFileManager`), and under each protocol's name. Classes use the
     // inheritance-flattened `all_methods` (falling back to direct `methods`
-    // pre-resolve) plus category methods.
+    // pre-resolve — both already carry the class's category methods, extraction
+    // merges them in, `text-undo-surface-gap-k121`).
     let mut surface: HashMap<(&str, &str, bool), &Method> = HashMap::new();
     for class in &resolved.classes {
         let methods = if class.all_methods.is_empty() {
@@ -131,8 +132,7 @@ pub fn compute_staleness(overlay: &FrameworkAnnotations, resolved: &Framework) -
         } else {
             &class.all_methods
         };
-        let extra = class.category_methods.iter().flat_map(|g| &g.methods);
-        for m in methods.iter().chain(extra) {
+        for m in methods {
             let inst = !m.class_method;
             surface.insert((class.name.as_str(), m.selector.as_str(), inst), m);
             if let Some(sw) = &class.swift_name {
@@ -216,15 +216,16 @@ pub fn compute_staleness(overlay: &FrameworkAnnotations, resolved: &Framework) -
         }
     }
 
-    // new-surface: walk declared-here methods (direct + category for classes,
-    // required + optional for protocols — *not* the flattened `all_methods`, so
-    // an inherited method is reported once, under its declaring receiver), keep
-    // the structurally-annotatable ones with no overlay fact.
+    // new-surface: walk declared-here methods (`class.methods`, which already
+    // carries a class's category methods — extraction merges them in,
+    // `text-undo-surface-gap-k121`; required + optional for protocols — *not*
+    // the flattened `all_methods`, so an inherited method is reported once,
+    // under its declaring receiver), keep the structurally-annotatable ones
+    // with no overlay fact.
     let mut new_surface = Vec::new();
     let mut seen: HashSet<(&str, &str, bool)> = HashSet::new();
     for class in &resolved.classes {
-        let extra = class.category_methods.iter().flat_map(|g| &g.methods);
-        for m in class.methods.iter().chain(extra) {
+        for m in &class.methods {
             consider_new_surface(
                 &class.name,
                 class.swift_name.as_deref(),
@@ -641,7 +642,12 @@ mod tests {
                 vec![ir_method(
                     "doThing:error:",
                     vec![
-                        param("thing", TypeRefKind::Id),
+                        param(
+                            "thing",
+                            TypeRefKind::Id {
+                                protocols: Vec::new(),
+                            },
+                        ),
                         param("error", TypeRefKind::Pointer),
                     ],
                 )],

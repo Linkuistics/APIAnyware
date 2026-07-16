@@ -33,13 +33,11 @@ framework CoreHaptics {
             source llm
         }
         method setResetHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm
         }
         method setStoppedHandler: is-instance=#true {
-            param-ownership 0 ownership=copy
             block-param 0 invocation=stored
             threading any_thread
             source llm

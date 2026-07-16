@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023", "esnext.disposable"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+
+    "strict": true,
+    // Deliberately OFF (the coding-style baseline sets it on): the runtime's defining type is
+    // the `__dispatch` FFI seam — an open string index of code-generator-guaranteed entries the
+    // FROZEN emitted call sites invoke unguarded (`__dispatch.aw_ts_msg_P_P(…)`). This flag would
+    // force `| undefined` onto every such entry and break the generated consumers. It weakens
+    // nothing else here: this package accesses Maps only via `.get()` (already `| undefined`,
+    // guarded) and has no unchecked array/tuple indexing.
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}

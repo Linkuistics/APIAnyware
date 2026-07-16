@@ -116,14 +116,6 @@ framework SceneKit {
             block-param 3 invocation=async_copied
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class SCNMaterial {
         method handleBindingOfSymbol:usingBlock: is-instance=#true {
@@ -187,12 +179,6 @@ framework SceneKit {
             source llm
         }
     }
-    class SCNPhysicsWorld {
-        method setContactDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class SCNPlane {
         method handleBindingOfSymbol:usingBlock: is-instance=#true {
             block-param 1 invocation=stored
@@ -252,10 +238,6 @@ framework SceneKit {
         }
         method presentScene:withTransition:incomingPointOfView:completionHandler: is-instance=#true {
             block-param 3 invocation=async_copied
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -373,7 +355,6 @@ framework SceneKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

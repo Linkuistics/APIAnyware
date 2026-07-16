@@ -8,6 +8,7 @@
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
+         "../../runtime/block.rkt"
          "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
@@ -17,6 +18,7 @@
 ;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
+(define (cadisplaylink? v) (objc-instance-of? v "CADisplayLink"))
 (define (calayer? v) (objc-instance-of? v "CALayer"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -25,9 +27,14 @@
 (define (nsbitmapimagerep? v) (objc-instance-of? v "NSBitmapImageRep"))
 (define (nsbutton? v) (objc-instance-of? v "NSButton"))
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
+(define (nscell? v) (objc-instance-of? v "NSCell"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
+(define (nsdraggingsession? v) (objc-instance-of? v "NSDraggingSession"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsfont? v) (objc-instance-of? v "NSFont"))
+(define (nsformatter? v) (objc-instance-of? v "NSFormatter"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
 (define (nsimagesymbolconfiguration? v) (objc-instance-of? v "NSImageSymbolConfiguration"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
@@ -42,6 +49,7 @@
 (define (nsshadow? v) (objc-instance-of? v "NSShadow"))
 (define (nssound? v) (objc-instance-of? v "NSSound"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (nstext? v) (objc-instance-of? v "NSText"))
 (define (nstextinputcontext? v) (objc-instance-of? v "NSTextInputContext"))
 (define (nstouchbar? v) (objc-instance-of? v "NSTouchBar"))
 (define (nsurl? v) (objc-instance-of? v "NSURL"))
@@ -89,7 +97,7 @@
   [nsbutton-set-autoresizes-subviews! (c-> nsbutton? boolean? void?)]
   [nsbutton-autoresizing-mask (c-> nsbutton? exact-nonnegative-integer?)]
   [nsbutton-set-autoresizing-mask! (c-> nsbutton? exact-nonnegative-integer? void?)]
-  [nsbutton-background-filters (c-> nsbutton? any/c)]
+  [nsbutton-background-filters (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-set-background-filters! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-base-writing-direction (c-> nsbutton? exact-integer?)]
   [nsbutton-set-base-writing-direction! (c-> nsbutton? exact-integer? void?)]
@@ -114,7 +122,7 @@
   [nsbutton-can-draw-subviews-into-layer (c-> nsbutton? boolean?)]
   [nsbutton-set-can-draw-subviews-into-layer! (c-> nsbutton? boolean? void?)]
   [nsbutton-candidate-list-touch-bar-item (c-> nsbutton? (or/c nscandidatelisttouchbaritem? objc-nil?))]
-  [nsbutton-cell (c-> nsbutton? any/c)]
+  [nsbutton-cell (c-> nsbutton? (or/c nscell? objc-nil?))]
   [nsbutton-set-cell! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-cell-class (c-> cpointer?)]
   [nsbutton-set-cell-class! (c-> cpointer? void?)]
@@ -125,8 +133,8 @@
   [nsbutton-compatible-with-responsive-scrolling (c-> boolean?)]
   [nsbutton-compositing-filter (c-> nsbutton? (or/c cifilter? objc-nil?))]
   [nsbutton-set-compositing-filter! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
-  [nsbutton-constraints (c-> nsbutton? any/c)]
-  [nsbutton-content-filters (c-> nsbutton? any/c)]
+  [nsbutton-constraints (c-> nsbutton? (or/c nsarray? objc-nil?))]
+  [nsbutton-content-filters (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-set-content-filters! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-content-tint-color (c-> nsbutton? (or/c nscolor? objc-nil?))]
   [nsbutton-set-content-tint-color! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
@@ -155,7 +163,7 @@
   [nsbutton-focus-view (c-> (or/c nsview? objc-nil?))]
   [nsbutton-font (c-> nsbutton? (or/c nsfont? objc-nil?))]
   [nsbutton-set-font! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
-  [nsbutton-formatter (c-> nsbutton? any/c)]
+  [nsbutton-formatter (c-> nsbutton? (or/c nsformatter? objc-nil?))]
   [nsbutton-set-formatter! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-frame (c-> nsbutton? any/c)]
   [nsbutton-set-frame! (c-> nsbutton? any/c void?)]
@@ -163,7 +171,7 @@
   [nsbutton-set-frame-center-rotation! (c-> nsbutton? real? void?)]
   [nsbutton-frame-rotation (c-> nsbutton? real?)]
   [nsbutton-set-frame-rotation! (c-> nsbutton? real? void?)]
-  [nsbutton-gesture-recognizers (c-> nsbutton? any/c)]
+  [nsbutton-gesture-recognizers (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-set-gesture-recognizers! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-has-ambiguous-layout (c-> nsbutton? boolean?)]
   [nsbutton-has-destructive-action (c-> nsbutton? boolean?)]
@@ -209,7 +217,7 @@
   [nsbutton-set-layer-contents-redraw-policy! (c-> nsbutton? exact-integer? void?)]
   [nsbutton-layer-uses-core-image-filters (c-> nsbutton? boolean?)]
   [nsbutton-set-layer-uses-core-image-filters! (c-> nsbutton? boolean? void?)]
-  [nsbutton-layout-guides (c-> nsbutton? any/c)]
+  [nsbutton-layout-guides (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-layout-margins-guide (c-> nsbutton? (or/c nslayoutguide? objc-nil?))]
   [nsbutton-leading-anchor (c-> nsbutton? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsbutton-left-anchor (c-> nsbutton? (or/c nslayoutxaxisanchor? objc-nil?))]
@@ -255,9 +263,9 @@
   [nsbutton-rect-preserved-during-live-resize (c-> nsbutton? any/c)]
   [nsbutton-refuses-first-responder (c-> nsbutton? boolean?)]
   [nsbutton-set-refuses-first-responder! (c-> nsbutton? boolean? void?)]
-  [nsbutton-registered-dragged-types (c-> nsbutton? any/c)]
+  [nsbutton-registered-dragged-types (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-requires-constraint-based-layout (c-> boolean?)]
-  [nsbutton-restorable-state-key-paths (c-> any/c)]
+  [nsbutton-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nsbutton-right-anchor (c-> nsbutton? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsbutton-rotated-from-base (c-> nsbutton? boolean?)]
   [nsbutton-rotated-or-scaled-from-base (c-> nsbutton? boolean?)]
@@ -276,7 +284,7 @@
   [nsbutton-set-state! (c-> nsbutton? exact-integer? void?)]
   [nsbutton-string-value (c-> nsbutton? (or/c nsstring? objc-nil?))]
   [nsbutton-set-string-value! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
-  [nsbutton-subviews (c-> nsbutton? any/c)]
+  [nsbutton-subviews (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-set-subviews! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-superview (c-> nsbutton? (or/c nsview? objc-nil?))]
   [nsbutton-symbol-configuration (c-> nsbutton? (or/c nsimagesymbolconfiguration? objc-nil?))]
@@ -294,7 +302,7 @@
   [nsbutton-top-anchor (c-> nsbutton? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nsbutton-touch-bar (c-> nsbutton? (or/c nstouchbar? objc-nil?))]
   [nsbutton-set-touch-bar! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
-  [nsbutton-tracking-areas (c-> nsbutton? any/c)]
+  [nsbutton-tracking-areas (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-trailing-anchor (c-> nsbutton? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsbutton-translates-autoresizing-mask-into-constraints (c-> nsbutton? boolean?)]
   [nsbutton-set-translates-autoresizing-mask-into-constraints! (c-> nsbutton? boolean? void?)]
@@ -325,16 +333,17 @@
   [nsbutton-window (c-> nsbutton? (or/c nswindow? objc-nil?))]
   [nsbutton-writing-tools-coordinator (c-> nsbutton? (or/c nswritingtoolscoordinator? objc-nil?))]
   [nsbutton-set-writing-tools-coordinator! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-abort-editing (c-> nsbutton? boolean?)]
   [nsbutton-accepts-first-mouse (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
   [nsbutton-accessibility-activation-point (c-> nsbutton? any/c)]
-  [nsbutton-accessibility-allowed-values (c-> nsbutton? any/c)]
+  [nsbutton-accessibility-allowed-values (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-application-focused-ui-element (c-> nsbutton? any/c)]
   [nsbutton-accessibility-attributed-string-for-range (c-> nsbutton? any/c (or/c nsattributedstring? objc-nil?))]
-  [nsbutton-accessibility-attributed-user-input-labels (c-> nsbutton? any/c)]
+  [nsbutton-accessibility-attributed-user-input-labels (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-cancel-button (c-> nsbutton? any/c)]
   [nsbutton-accessibility-cell-for-column-row (c-> nsbutton? exact-integer? exact-integer? any/c)]
   [nsbutton-accessibility-children (c-> nsbutton? (or/c nsarray? objc-nil?))]
-  [nsbutton-accessibility-children-in-navigation-order (c-> nsbutton? any/c)]
+  [nsbutton-accessibility-children-in-navigation-order (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-clear-button (c-> nsbutton? any/c)]
   [nsbutton-accessibility-close-button (c-> nsbutton? any/c)]
   [nsbutton-accessibility-column-count (c-> nsbutton? exact-integer?)]
@@ -344,8 +353,8 @@
   [nsbutton-accessibility-columns (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-contents (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-critical-value (c-> nsbutton? any/c)]
-  [nsbutton-accessibility-custom-actions (c-> nsbutton? any/c)]
-  [nsbutton-accessibility-custom-rotors (c-> nsbutton? any/c)]
+  [nsbutton-accessibility-custom-actions (c-> nsbutton? (or/c nsarray? objc-nil?))]
+  [nsbutton-accessibility-custom-rotors (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-decrement-button (c-> nsbutton? any/c)]
   [nsbutton-accessibility-default-button (c-> nsbutton? any/c)]
   [nsbutton-accessibility-disclosed-by-row (c-> nsbutton? any/c)]
@@ -425,7 +434,7 @@
   [nsbutton-accessibility-selected-rows (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-selected-text (c-> nsbutton? (or/c nsstring? objc-nil?))]
   [nsbutton-accessibility-selected-text-range (c-> nsbutton? any/c)]
-  [nsbutton-accessibility-selected-text-ranges (c-> nsbutton? any/c)]
+  [nsbutton-accessibility-selected-text-ranges (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-serves-as-title-for-ui-elements (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-shared-character-range (c-> nsbutton? any/c)]
   [nsbutton-accessibility-shared-focus-elements (c-> nsbutton? (or/c nsarray? objc-nil?))]
@@ -444,7 +453,7 @@
   [nsbutton-accessibility-url (c-> nsbutton? (or/c nsurl? objc-nil?))]
   [nsbutton-accessibility-unit-description (c-> nsbutton? (or/c nsstring? objc-nil?))]
   [nsbutton-accessibility-units (c-> nsbutton? exact-integer?)]
-  [nsbutton-accessibility-user-input-labels (c-> nsbutton? any/c)]
+  [nsbutton-accessibility-user-input-labels (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-value (c-> nsbutton? any/c)]
   [nsbutton-accessibility-value-description (c-> nsbutton? (or/c nsstring? objc-nil?))]
   [nsbutton-accessibility-vertical-scroll-bar (c-> nsbutton? any/c)]
@@ -459,30 +468,49 @@
   [nsbutton-accessibility-window (c-> nsbutton? any/c)]
   [nsbutton-accessibility-windows (c-> nsbutton? (or/c nsarray? objc-nil?))]
   [nsbutton-accessibility-zoom-button (c-> nsbutton? any/c)]
+  [nsbutton-add-constraint! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-add-constraints! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-add-cursor-rect-cursor! (c-> nsbutton? any/c (or/c string? objc-object? #f) void?)]
+  [nsbutton-add-gesture-recognizer! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-add-layout-guide! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-add-subview! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-add-subview-positioned-relative-to! (c-> nsbutton? (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) void?)]
   [nsbutton-add-tool-tip-rect-owner-user-data! (c-> nsbutton? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) exact-integer?)]
+  [nsbutton-add-tracking-area! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-add-tracking-rect-owner-user-data-assume-inside! (c-> nsbutton? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) boolean? exact-integer?)]
+  [nsbutton-additional-safe-area-insets! (c-> nsbutton? any/c)]
+  [nsbutton-adjust-page-height-new-top-bottom-limit (c-> nsbutton? (or/c cpointer? #f) real? real? real? void?)]
+  [nsbutton-adjust-page-width-new-left-right-limit (c-> nsbutton? (or/c cpointer? #f) real? real? real? void?)]
   [nsbutton-adjust-scroll (c-> nsbutton? any/c any/c)]
+  [nsbutton-alignment-rect-for-frame (c-> nsbutton? any/c any/c)]
   [nsbutton-ancestor-shared-with-view (c-> nsbutton? (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
   [nsbutton-animation-for-key (c-> nsbutton? (or/c string? objc-object? #f) any/c)]
-  [nsbutton-animations (c-> nsbutton? any/c)]
+  [nsbutton-animations (c-> nsbutton? (or/c nsdictionary? objc-nil?))]
   [nsbutton-animator (c-> nsbutton? any/c)]
   [nsbutton-appearance (c-> nsbutton? (or/c nsappearance? objc-nil?))]
   [nsbutton-autoscroll (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
   [nsbutton-backing-aligned-rect-options (c-> nsbutton? any/c exact-nonnegative-integer? any/c)]
   [nsbutton-become-first-responder (c-> nsbutton? boolean?)]
+  [nsbutton-begin-document! (c-> nsbutton? void?)]
+  [nsbutton-begin-dragging-session-with-items-event-source! (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdraggingsession? objc-nil?))]
   [nsbutton-begin-gesture-with-event! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-begin-page-in-rect-at-placement! (c-> nsbutton? any/c any/c void?)]
   [nsbutton-bitmap-image-rep-for-caching-display-in-rect (c-> nsbutton? any/c (or/c nsbitmapimagerep? objc-nil?))]
   [nsbutton-cache-display-in-rect-to-bitmap-image-rep (c-> nsbutton? any/c (or/c string? objc-object? #f) void?)]
   [nsbutton-cancel-operation (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-capitalize-word (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-center-scan-rect! (c-> nsbutton? any/c any/c)]
   [nsbutton-center-selection-in-visible-area! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-center-x-anchor! (c-> nsbutton? (or/c nslayoutxaxisanchor? objc-nil?))]
+  [nsbutton-center-y-anchor! (c-> nsbutton? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nsbutton-change-case-of-letter (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-change-mode-with-event (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-complete (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-compress-with-prioritized-compression-options (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-conclude-drag-operation (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-constraints-affecting-layout-for-orientation (c-> nsbutton? exact-integer? (or/c nsarray? objc-nil?))]
+  [nsbutton-content-compression-resistance-priority-for-orientation (c-> nsbutton? exact-integer? real?)]
+  [nsbutton-content-hugging-priority-for-orientation (c-> nsbutton? exact-integer? real?)]
   [nsbutton-context-menu-key-down (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-convert-point-from-view (c-> nsbutton? any/c (or/c string? objc-object? #f) any/c)]
   [nsbutton-convert-point-to-view (c-> nsbutton? any/c (or/c string? objc-object? #f) any/c)]
@@ -502,7 +530,10 @@
   [nsbutton-convert-size-from-layer (c-> nsbutton? any/c any/c)]
   [nsbutton-convert-size-to-backing (c-> nsbutton? any/c any/c)]
   [nsbutton-convert-size-to-layer (c-> nsbutton? any/c any/c)]
+  [nsbutton-current-editor (c-> nsbutton? (or/c nstext? objc-nil?))]
   [nsbutton-cursor-update (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-data-with-eps-inside-rect (c-> nsbutton? any/c (or/c nsdata? objc-nil?))]
+  [nsbutton-data-with-pdf-inside-rect (c-> nsbutton? any/c (or/c nsdata? objc-nil?))]
   [nsbutton-delete-backward (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-delete-backward-by-decomposing-previous-character (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-delete-forward (c-> nsbutton? (or/c string? objc-object? #f) void?)]
@@ -515,11 +546,13 @@
   [nsbutton-delete-word-forward (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-did-add-subview (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-did-close-menu-with-event (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsbutton-discard-cursor-rects (c-> nsbutton? void?)]
   [nsbutton-display! (c-> nsbutton? void?)]
   [nsbutton-display-if-needed! (c-> nsbutton? void?)]
   [nsbutton-display-if-needed-ignoring-opacity! (c-> nsbutton? void?)]
   [nsbutton-display-if-needed-in-rect! (c-> nsbutton? any/c void?)]
   [nsbutton-display-if-needed-in-rect-ignoring-opacity! (c-> nsbutton? any/c void?)]
+  [nsbutton-display-link-with-target-selector! (c-> nsbutton? (or/c string? objc-object? #f) string? (or/c cadisplaylink? objc-nil?))]
   [nsbutton-display-rect! (c-> nsbutton? any/c void?)]
   [nsbutton-display-rect-ignoring-opacity! (c-> nsbutton? any/c void?)]
   [nsbutton-display-rect-ignoring-opacity-in-context! (c-> nsbutton? any/c (or/c string? objc-object? #f) void?)]
@@ -528,14 +561,29 @@
   [nsbutton-dragging-entered (c-> nsbutton? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsbutton-dragging-exited (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-dragging-updated (c-> nsbutton? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsbutton-draw-cell (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-draw-cell-inside (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-draw-focus-ring-mask (c-> nsbutton? void?)]
+  [nsbutton-draw-page-border-with-size (c-> nsbutton? any/c void?)]
   [nsbutton-draw-rect (c-> nsbutton? any/c void?)]
   [nsbutton-draw-with-expansion-frame-in-view (c-> nsbutton? any/c (or/c string? objc-object? #f) void?)]
+  [nsbutton-edge-insets-for-layout-region (c-> nsbutton? (or/c string? objc-object? #f) any/c)]
+  [nsbutton-edit-with-frame-editor-delegate-event (c-> nsbutton? any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsbutton-effective-appearance (c-> nsbutton? (or/c nsappearance? objc-nil?))]
+  [nsbutton-encode-restorable-state-with-coder (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-encode-restorable-state-with-coder-background-queue (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsbutton-encode-with-coder (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-end-document! (c-> nsbutton? void?)]
+  [nsbutton-end-editing! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-end-gesture-with-event! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-end-page! (c-> nsbutton? void?)]
+  [nsbutton-enter-full-screen-mode-with-options (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-exercise-ambiguity-in-layout (c-> nsbutton? void?)]
+  [nsbutton-exit-full-screen-mode-with-options (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-expansion-frame-with-frame (c-> nsbutton? any/c any/c)]
   [nsbutton-flags-changed (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-flush-buffered-key-events (c-> nsbutton? void?)]
+  [nsbutton-frame-for-alignment-rect (c-> nsbutton? any/c any/c)]
   [nsbutton-get-periodic-delay-interval (c-> nsbutton? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsbutton-get-rects-being-drawn-count (c-> nsbutton? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsbutton-get-rects-exposed-during-live-resize-count (c-> nsbutton? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
@@ -556,6 +604,9 @@
   [nsbutton-insert-tab-ignoring-field-editor! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-insert-text! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-interpret-key-events (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-invalidate-intrinsic-content-size (c-> nsbutton? void?)]
+  [nsbutton-invalidate-intrinsic-content-size-for-cell (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-invalidate-restorable-state (c-> nsbutton? void?)]
   [nsbutton-is-accessibility-alternate-ui-visible (c-> nsbutton? boolean?)]
   [nsbutton-is-accessibility-disclosed (c-> nsbutton? boolean?)]
   [nsbutton-is-accessibility-edited (c-> nsbutton? boolean?)]
@@ -576,20 +627,27 @@
   [nsbutton-is-bordered (c-> nsbutton? boolean?)]
   [nsbutton-is-continuous (c-> nsbutton? boolean?)]
   [nsbutton-is-descendant-of (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-is-drawing-find-indicator (c-> nsbutton? boolean?)]
   [nsbutton-is-enabled (c-> nsbutton? boolean?)]
   [nsbutton-is-flipped (c-> nsbutton? boolean?)]
   [nsbutton-is-hidden (c-> nsbutton? boolean?)]
   [nsbutton-is-hidden-or-has-hidden-ancestor (c-> nsbutton? boolean?)]
   [nsbutton-is-highlighted (c-> nsbutton? boolean?)]
+  [nsbutton-is-horizontal-content-size-constraint-active (c-> nsbutton? boolean?)]
+  [nsbutton-is-in-full-screen-mode (c-> nsbutton? boolean?)]
   [nsbutton-is-opaque (c-> nsbutton? boolean?)]
   [nsbutton-is-rotated-from-base (c-> nsbutton? boolean?)]
   [nsbutton-is-rotated-or-scaled-from-base (c-> nsbutton? boolean?)]
   [nsbutton-is-spring-loaded (c-> nsbutton? boolean?)]
   [nsbutton-is-transparent (c-> nsbutton? boolean?)]
+  [nsbutton-is-vertical-content-size-constraint-active (c-> nsbutton? boolean?)]
   [nsbutton-key-down (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-key-up (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-knows-page-range (c-> nsbutton? (or/c cpointer? #f) boolean?)]
   [nsbutton-layout (c-> nsbutton? void?)]
+  [nsbutton-layout-guide-for-layout-region (c-> nsbutton? (or/c string? objc-object? #f) (or/c nslayoutguide? objc-nil?))]
   [nsbutton-layout-subtree-if-needed (c-> nsbutton? void?)]
+  [nsbutton-location-of-print-rect (c-> nsbutton? any/c any/c)]
   [nsbutton-lowercase-word (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-magnify-with-event (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-make-backing-layer (c-> nsbutton? (or/c calayer? objc-nil?))]
@@ -599,6 +657,7 @@
   [nsbutton-make-text-writing-direction-left-to-right (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-make-text-writing-direction-natural (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-make-text-writing-direction-right-to-left (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-make-touch-bar (c-> nsbutton? (or/c nstouchbar? objc-nil?))]
   [nsbutton-menu-for-event (c-> nsbutton? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nsbutton-minimum-size-with-prioritized-compression-options (c-> nsbutton? (or/c string? objc-object? #f) any/c)]
   [nsbutton-mouse-in-rect (c-> nsbutton? any/c any/c boolean?)]
@@ -648,7 +707,9 @@
   [nsbutton-move-word-right! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-move-word-right-and-modify-selection! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-needs-to-draw-rect (c-> nsbutton? any/c boolean?)]
+  [nsbutton-new-window-for-tab (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-no-responder-for (c-> nsbutton? string? void?)]
+  [nsbutton-note-focus-ring-mask-changed (c-> nsbutton? void?)]
   [nsbutton-other-mouse-down (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-other-mouse-dragged (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-other-mouse-up (c-> nsbutton? (or/c string? objc-object? #f) void?)]
@@ -659,28 +720,58 @@
   [nsbutton-perform-click! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-perform-drag-operation! (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
   [nsbutton-perform-key-equivalent! (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-perform-text-finder-action! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-prepare-content-in-rect (c-> nsbutton? any/c void?)]
   [nsbutton-prepare-for-drag-operation (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
   [nsbutton-prepare-for-reuse (c-> nsbutton? void?)]
+  [nsbutton-present-error (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nsbutton-pressure-change-with-event (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-print (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-quick-look-preview-items (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-quick-look-with-event (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-rect-for-layout-region (c-> nsbutton? (or/c string? objc-object? #f) any/c)]
+  [nsbutton-rect-for-page (c-> nsbutton? exact-integer? any/c)]
   [nsbutton-rect-for-smart-magnification-at-point-in-rect (c-> nsbutton? any/c any/c any/c)]
+  [nsbutton-reflect-scrolled-clip-view (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-register-for-dragged-types (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-remove-all-tool-tips! (c-> nsbutton? void?)]
+  [nsbutton-remove-constraint! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-remove-constraints! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-remove-cursor-rect-cursor! (c-> nsbutton? any/c (or/c string? objc-object? #f) void?)]
   [nsbutton-remove-from-superview! (c-> nsbutton? void?)]
   [nsbutton-remove-from-superview-without-needing-display! (c-> nsbutton? void?)]
+  [nsbutton-remove-gesture-recognizer! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-remove-layout-guide! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-remove-tool-tip! (c-> nsbutton? exact-integer? void?)]
+  [nsbutton-remove-tracking-area! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-remove-tracking-rect! (c-> nsbutton? exact-integer? void?)]
   [nsbutton-replace-subview-with! (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsbutton-reset-cursor-rects! (c-> nsbutton? void?)]
   [nsbutton-resign-first-responder (c-> nsbutton? boolean?)]
   [nsbutton-resize-subviews-with-old-size (c-> nsbutton? any/c void?)]
   [nsbutton-resize-with-old-superview-size (c-> nsbutton? any/c void?)]
+  [nsbutton-restore-state-with-coder (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-restore-user-activity-state (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-right-mouse-down (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-right-mouse-dragged (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-right-mouse-up (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-rotate-by-angle (c-> nsbutton? real? void?)]
   [nsbutton-rotate-with-event (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-ruler-view-did-add-marker (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsbutton-ruler-view-did-move-marker (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsbutton-ruler-view-did-remove-marker (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsbutton-ruler-view-handle-mouse-down (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsbutton-ruler-view-location-for-point (c-> nsbutton? (or/c string? objc-object? #f) any/c real?)]
+  [nsbutton-ruler-view-point-for-location (c-> nsbutton? (or/c string? objc-object? #f) real? any/c)]
+  [nsbutton-ruler-view-should-add-marker (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-ruler-view-should-move-marker (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-ruler-view-should-remove-marker (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-ruler-view-will-add-marker-at-location (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nsbutton-ruler-view-will-move-marker-to-location (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nsbutton-ruler-view-will-set-client-view (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsbutton-scale-unit-square-to-size (c-> nsbutton? any/c void?)]
+  [nsbutton-scroll-clip-view-to-point (c-> nsbutton? (or/c string? objc-object? #f) any/c void?)]
   [nsbutton-scroll-line-down (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-scroll-line-up (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-scroll-page-down (c-> nsbutton? (or/c string? objc-object? #f) void?)]
@@ -691,10 +782,14 @@
   [nsbutton-scroll-to-end-of-document (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-scroll-wheel (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-select-all (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-select-cell (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-select-line (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-select-paragraph (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-select-to-mark (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-select-with-frame-editor-delegate-start-length (c-> nsbutton? any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-integer? exact-integer? void?)]
   [nsbutton-select-word (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-selected-cell (c-> nsbutton? (or/c nscell? objc-nil?))]
+  [nsbutton-selected-tag (c-> nsbutton? exact-integer?)]
   [nsbutton-send-action-to (c-> nsbutton? string? (or/c string? objc-object? #f) boolean?)]
   [nsbutton-send-action-on (c-> nsbutton? exact-nonnegative-integer? exact-integer?)]
   [nsbutton-set-accessibility-activation-point! (c-> nsbutton? any/c void?)]
@@ -826,9 +921,12 @@
   [nsbutton-set-bounds-origin! (c-> nsbutton? any/c void?)]
   [nsbutton-set-bounds-size! (c-> nsbutton? any/c void?)]
   [nsbutton-set-button-type! (c-> nsbutton? exact-nonnegative-integer? void?)]
+  [nsbutton-set-content-compression-resistance-priority-for-orientation! (c-> nsbutton? real? exact-integer? void?)]
+  [nsbutton-set-content-hugging-priority-for-orientation! (c-> nsbutton? real? exact-integer? void?)]
   [nsbutton-set-frame-origin! (c-> nsbutton? any/c void?)]
   [nsbutton-set-frame-size! (c-> nsbutton? any/c void?)]
   [nsbutton-set-identifier! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-set-keyboard-focus-ring-needs-display-in-rect! (c-> nsbutton? any/c void?)]
   [nsbutton-set-mark! (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-set-needs-display-in-rect! (c-> nsbutton? any/c void?)]
   [nsbutton-set-next-state! (c-> nsbutton? void?)]
@@ -837,6 +935,9 @@
   [nsbutton-should-delay-window-ordering-for-event (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
   [nsbutton-show-context-help (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-show-context-menu-for-selection (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-show-definition-for-attributed-string-at-point (c-> nsbutton? (or/c string? objc-object? #f) any/c void?)]
+  [nsbutton-show-definition-for-attributed-string-range-options-baseline-origin-provider (c-> nsbutton? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nsbutton-show-writing-tools (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-size-that-fits (c-> nsbutton? any/c any/c)]
   [nsbutton-size-to-fit (c-> nsbutton? void?)]
   [nsbutton-smart-magnify-with-event (c-> nsbutton? (or/c string? objc-object? #f) void?)]
@@ -861,10 +962,19 @@
   [nsbutton-transpose (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-transpose-words (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-try-to-perform-with (c-> nsbutton? string? (or/c string? objc-object? #f) boolean?)]
+  [nsbutton-unregister-dragged-types (c-> nsbutton? void?)]
+  [nsbutton-update-cell (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-update-cell-inside (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-update-constraints (c-> nsbutton? void?)]
+  [nsbutton-update-constraints-for-subtree-if-needed (c-> nsbutton? void?)]
   [nsbutton-update-dragging-items-for-drag (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-update-layer (c-> nsbutton? void?)]
+  [nsbutton-update-tracking-areas (c-> nsbutton? void?)]
+  [nsbutton-update-user-activity-state (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-uppercase-word (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-valid-requestor-for-send-type-return-type (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nsbutton-validate-editing (c-> nsbutton? void?)]
+  [nsbutton-validate-proposed-first-responder-for-event (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nsbutton-validate-user-interface-item (c-> nsbutton? (or/c string? objc-object? #f) boolean?)]
   [nsbutton-view-did-change-backing-properties (c-> nsbutton? void?)]
   [nsbutton-view-did-change-effective-appearance (c-> nsbutton? void?)]
@@ -877,13 +987,17 @@
   [nsbutton-view-will-move-to-superview (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-view-will-move-to-window (c-> nsbutton? (or/c string? objc-object? #f) void?)]
   [nsbutton-view-will-start-live-resize (c-> nsbutton? void?)]
-  [nsbutton-view-with-tag (c-> nsbutton? exact-integer? any/c)]
+  [nsbutton-view-with-tag (c-> nsbutton? exact-integer? (or/c nsview? objc-nil?))]
   [nsbutton-wants-forwarded-scroll-events-for-axis (c-> nsbutton? exact-integer? boolean?)]
   [nsbutton-wants-periodic-dragging-updates (c-> nsbutton? boolean?)]
   [nsbutton-wants-scroll-events-for-swipe-tracking-on-axis (c-> nsbutton? exact-integer? boolean?)]
   [nsbutton-will-open-menu-with-event (c-> nsbutton? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsbutton-will-present-error (c-> nsbutton? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nsbutton-will-remove-subview (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-write-eps-inside-rect-to-pasteboard (c-> nsbutton? any/c (or/c string? objc-object? #f) void?)]
+  [nsbutton-write-pdf-inside-rect-to-pasteboard (c-> nsbutton? any/c (or/c string? objc-object? #f) void?)]
   [nsbutton-yank (c-> nsbutton? (or/c string? objc-object? #f) void?)]
+  [nsbutton-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsbutton-button-with-image-target-action (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? any/c)]
   [nsbutton-button-with-title-image-target-action (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? any/c)]
   [nsbutton-button-with-title-target-action (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? any/c)]
@@ -913,35 +1027,52 @@
 (define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_P_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_P_Q (-> ptr_t ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_P_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_Z (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_E (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PPPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPd_d (-> ptr_t ptr_t ptr_t ptr_t double_t double_t))
 (define-aw-msg aw_racket_msg_PqP_v (-> ptr_t ptr_t ptr_t int64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pd_O (-> ptr_t ptr_t ptr_t double_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pddd_v (-> ptr_t ptr_t ptr_t double_t double_t double_t void_t))
+(define-aw-msg aw_racket_msg_PO_d (-> ptr_t ptr_t ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_PO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PGPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_i_v (-> ptr_t ptr_t int32_t void_t))
 (define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
 (define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))
+(define-aw-msg aw_racket_msg_q_f (-> ptr_t ptr_t int64_t float_t))
+(define-aw-msg aw_racket_msg_q_R (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_G (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_qq_P (-> ptr_t ptr_t int64_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_Q_q (-> ptr_t ptr_t uint64_t int64_t))
 (define-aw-msg aw_racket_msg_Q_v (-> ptr_t ptr_t uint64_t void_t))
 (define-aw-msg aw_racket_msg_f_v (-> ptr_t ptr_t float_t void_t))
+(define-aw-msg aw_racket_msg_fq_v (-> ptr_t ptr_t float_t int64_t void_t))
 (define-aw-msg aw_racket_msg_ff_v (-> ptr_t ptr_t float_t float_t void_t))
 (define-aw-msg aw_racket_msg_d_v (-> ptr_t ptr_t double_t void_t))
 (define-aw-msg aw_racket_msg_R_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_R_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_R_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_R_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_R (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RPP_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_RPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RPPb_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t int64_t))
+(define-aw-msg aw_racket_msg_RPPqq_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t int64_t void_t))
 (define-aw-msg aw_racket_msg_RQ_R (-> ptr_t ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RZ_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_O_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_O_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
@@ -1607,6 +1738,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setWritingToolsCoordinator:")) (id->ffi2-ptr (coerce-arg value))))
 
 ;; --- Instance methods ---
+(define (nsbutton-abort-editing self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "abortEditing"))))
 (define (nsbutton-accepts-first-mouse self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "acceptsFirstMouse:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-accessibility-activation-point self)
@@ -2091,15 +2224,41 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityZoomButton"))))
    ))
+(define (nsbutton-add-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nsbutton-add-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nsbutton-add-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
+(define (nsbutton-add-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nsbutton-add-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nsbutton-add-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nsbutton-add-subview-positioned-relative-to! self view place other-view)
   (aw_racket_msg_PqP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:positioned:relativeTo:")) (id->ffi2-ptr (coerce-arg view)) place (id->ffi2-ptr (coerce-arg other-view))))
 (define (nsbutton-add-tool-tip-rect-owner-user-data! self rect owner data)
   (aw_racket_msg_RPP_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addToolTipRect:owner:userData:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data)))
+(define (nsbutton-add-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nsbutton-add-tracking-rect-owner-user-data-assume-inside! self rect owner data flag)
+  (aw_racket_msg_RPPb_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingRect:owner:userData:assumeInside:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data) flag))
+(define (nsbutton-additional-safe-area-insets! self)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_0_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "additionalSafeAreaInsets")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+(define (nsbutton-adjust-page-height-new-top-bottom-limit self new-bottom old-top old-bottom bottom-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageHeightNew:top:bottom:limit:")) (id->ffi2-ptr new-bottom) old-top old-bottom bottom-limit))
+(define (nsbutton-adjust-page-width-new-left-right-limit self new-right old-left old-right right-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageWidthNew:left:right:limit:")) (id->ffi2-ptr new-right) old-left old-right right-limit))
 (define (nsbutton-adjust-scroll self new-visible)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustScroll:")) (id->ffi2-ptr new-visible) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nsbutton-alignment-rect-for-frame self frame)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "alignmentRectForFrame:")) (id->ffi2-ptr frame) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
 (define (nsbutton-ancestor-shared-with-view self view)
   (wrap-objc-object
@@ -2129,8 +2288,16 @@
     (ptr-ref buf _NSRect)))
 (define (nsbutton-become-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "becomeFirstResponder"))))
+(define (nsbutton-begin-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDocument"))))
+(define (nsbutton-begin-dragging-session-with-items-event-source! self items event source)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDraggingSessionWithItems:event:source:")) (id->ffi2-ptr (coerce-arg items)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg source))))
+   ))
 (define (nsbutton-begin-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-begin-page-in-rect-at-placement! self rect location)
+  (aw_racket_msg_RO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginPageInRect:atPlacement:")) (id->ffi2-ptr rect) (id->ffi2-ptr location)))
 (define (nsbutton-bitmap-image-rep-for-caching-display-in-rect self rect)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "bitmapImageRepForCachingDisplayInRect:")) (id->ffi2-ptr rect)))
@@ -2147,6 +2314,14 @@
     (ptr-ref buf _NSRect)))
 (define (nsbutton-center-selection-in-visible-area! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerSelectionInVisibleArea:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsbutton-center-x-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerXAnchor"))))
+   ))
+(define (nsbutton-center-y-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerYAnchor"))))
+   ))
 (define (nsbutton-change-case-of-letter self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCaseOfLetter:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-change-mode-with-event self event)
@@ -2157,6 +2332,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "compressWithPrioritizedCompressionOptions:")) (id->ffi2-ptr (coerce-arg prioritized-options))))
 (define (nsbutton-conclude-drag-operation self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "concludeDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsbutton-constraints-affecting-layout-for-orientation self orientation)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "constraintsAffectingLayoutForOrientation:")) orientation))
+   ))
+(define (nsbutton-content-compression-resistance-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentCompressionResistancePriorityForOrientation:")) orientation))
+(define (nsbutton-content-hugging-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentHuggingPriorityForOrientation:")) orientation))
 (define (nsbutton-context-menu-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contextMenuKeyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-convert-point-from-view self point view)
@@ -2231,8 +2414,20 @@
   (let ([buf (malloc _NSSize)])
     (aw_racket_msg_Z_Z (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "convertSizeToLayer:")) (id->ffi2-ptr size) (cpointer->ptr_t buf))
     (ptr-ref buf _NSSize)))
+(define (nsbutton-current-editor self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "currentEditor"))))
+   ))
 (define (nsbutton-cursor-update self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "cursorUpdate:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-data-with-eps-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithEPSInsideRect:")) (id->ffi2-ptr rect)))
+   ))
+(define (nsbutton-data-with-pdf-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithPDFInsideRect:")) (id->ffi2-ptr rect)))
+   ))
 (define (nsbutton-delete-backward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-delete-backward-by-decomposing-previous-character self sender)
@@ -2257,6 +2452,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didAddSubview:")) (id->ffi2-ptr (coerce-arg subview))))
 (define (nsbutton-did-close-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didCloseMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-discard-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardCursorRects"))))
 (define (nsbutton-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "display"))))
 (define (nsbutton-display-if-needed! self)
@@ -2267,6 +2464,10 @@
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRect:")) (id->ffi2-ptr rect)))
 (define (nsbutton-display-if-needed-in-rect-ignoring-opacity! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRectIgnoringOpacity:")) (id->ffi2-ptr rect)))
+(define (nsbutton-display-link-with-target-selector! self target selector)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayLinkWithTarget:selector:")) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName selector))))
+   ))
 (define (nsbutton-display-rect! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRect:")) (id->ffi2-ptr rect)))
 (define (nsbutton-display-rect-ignoring-opacity! self rect)
@@ -2283,18 +2484,49 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingExited:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-dragging-updated self sender)
   (aw_racket_msg_P_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingUpdated:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsbutton-draw-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nsbutton-draw-cell-inside self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawCellInside:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nsbutton-draw-focus-ring-mask self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawFocusRingMask"))))
+(define (nsbutton-draw-page-border-with-size self border-size)
+  (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawPageBorderWithSize:")) (id->ffi2-ptr border-size)))
 (define (nsbutton-draw-rect self dirty-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawRect:")) (id->ffi2-ptr dirty-rect)))
 (define (nsbutton-draw-with-expansion-frame-in-view self content-frame view)
   (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawWithExpansionFrame:inView:")) (id->ffi2-ptr content-frame) (id->ffi2-ptr (coerce-arg view))))
+(define (nsbutton-edge-insets-for-layout-region self layout-region)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_P_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "edgeInsetsForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+;; param 2: weak reference
+(define (nsbutton-edit-with-frame-editor-delegate-event self rect text-obj delegate event)
+  (aw_racket_msg_RPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "editWithFrame:editor:delegate:event:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg text-obj)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-effective-appearance self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "effectiveAppearance"))))
    ))
+(define (nsbutton-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nsbutton-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nsbutton-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nsbutton-end-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endDocument"))))
+(define (nsbutton-end-editing! self text-obj)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endEditing:")) (id->ffi2-ptr (coerce-arg text-obj))))
 (define (nsbutton-end-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-end-page! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endPage"))))
+(define (nsbutton-enter-full-screen-mode-with-options self screen options)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enterFullScreenMode:withOptions:")) (id->ffi2-ptr (coerce-arg screen)) (id->ffi2-ptr (coerce-arg options))))
+(define (nsbutton-exercise-ambiguity-in-layout self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exerciseAmbiguityInLayout"))))
+(define (nsbutton-exit-full-screen-mode-with-options self options)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exitFullScreenModeWithOptions:")) (id->ffi2-ptr (coerce-arg options))))
 (define (nsbutton-expansion-frame-with-frame self content-frame)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "expansionFrameWithFrame:")) (id->ffi2-ptr content-frame) (cpointer->ptr_t buf))
@@ -2303,6 +2535,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flagsChanged:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-flush-buffered-key-events self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flushBufferedKeyEvents"))))
+(define (nsbutton-frame-for-alignment-rect self alignment-rect)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameForAlignmentRect:")) (id->ffi2-ptr alignment-rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nsbutton-get-periodic-delay-interval self delay interval)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getPeriodicDelay:interval:")) (id->ffi2-ptr delay) (id->ffi2-ptr interval)))
 (define (nsbutton-get-rects-being-drawn-count self rects count)
@@ -2347,6 +2583,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
 (define (nsbutton-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nsbutton-invalidate-intrinsic-content-size self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSize"))))
+(define (nsbutton-invalidate-intrinsic-content-size-for-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSizeForCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nsbutton-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nsbutton-is-accessibility-alternate-ui-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilityAlternateUIVisible"))))
 (define (nsbutton-is-accessibility-disclosed self)
@@ -2387,6 +2629,8 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isContinuous"))))
 (define (nsbutton-is-descendant-of self view)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDescendantOf:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nsbutton-is-drawing-find-indicator self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDrawingFindIndicator"))))
 (define (nsbutton-is-enabled self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isEnabled"))))
 (define (nsbutton-is-flipped self)
@@ -2397,6 +2641,10 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHiddenOrHasHiddenAncestor"))))
 (define (nsbutton-is-highlighted self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHighlighted"))))
+(define (nsbutton-is-horizontal-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHorizontalContentSizeConstraintActive"))))
+(define (nsbutton-is-in-full-screen-mode self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isInFullScreenMode"))))
 (define (nsbutton-is-opaque self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isOpaque"))))
 (define (nsbutton-is-rotated-from-base self)
@@ -2407,14 +2655,26 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isSpringLoaded"))))
 (define (nsbutton-is-transparent self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isTransparent"))))
+(define (nsbutton-is-vertical-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVerticalContentSizeConstraintActive"))))
 (define (nsbutton-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-key-up self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyUp:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-knows-page-range self range)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "knowsPageRange:")) (id->ffi2-ptr range)))
 (define (nsbutton-layout self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layout"))))
+(define (nsbutton-layout-guide-for-layout-region self layout-region)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutGuideForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region))))
+   ))
 (define (nsbutton-layout-subtree-if-needed self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutSubtreeIfNeeded"))))
+(define (nsbutton-location-of-print-rect self rect)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_R_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "locationOfPrintRect:")) (id->ffi2-ptr rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
 (define (nsbutton-lowercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lowercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-magnify-with-event self event)
@@ -2435,6 +2695,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsbutton-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nsbutton-menu-for-event self event)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "menuForEvent:")) (id->ffi2-ptr (coerce-arg event))))
@@ -2537,8 +2801,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-needs-to-draw-rect self rect)
   (aw_racket_msg_R_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "needsToDrawRect:")) (id->ffi2-ptr rect)))
+(define (nsbutton-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
+(define (nsbutton-note-focus-ring-mask-changed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noteFocusRingMaskChanged"))))
 (define (nsbutton-other-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "otherMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-other-mouse-dragged self event)
@@ -2559,38 +2827,77 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-perform-key-equivalent! self key)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg key))))
+(define (nsbutton-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-prepare-content-in-rect self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareContentInRect:")) (id->ffi2-ptr rect)))
 (define (nsbutton-prepare-for-drag-operation self sender)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-prepare-for-reuse self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForReuse"))))
+(define (nsbutton-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nsbutton-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nsbutton-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-print self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "print:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-quick-look-preview-items self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookPreviewItems:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-quick-look-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-rect-for-layout-region self layout-region)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_P_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nsbutton-rect-for-page self page)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_q_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForPage:")) page (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nsbutton-rect-for-smart-magnification-at-point-in-rect self location visible-rect)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_OR_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForSmartMagnificationAtPoint:inRect:")) (id->ffi2-ptr location) (id->ffi2-ptr visible-rect) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nsbutton-reflect-scrolled-clip-view self clip-view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "reflectScrolledClipView:")) (id->ffi2-ptr (coerce-arg clip-view))))
+(define (nsbutton-register-for-dragged-types self new-types)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForDraggedTypes:")) (id->ffi2-ptr (coerce-arg new-types))))
 (define (nsbutton-remove-all-tool-tips! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeAllToolTips"))))
+(define (nsbutton-remove-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nsbutton-remove-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nsbutton-remove-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
 (define (nsbutton-remove-from-superview! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperview"))))
 (define (nsbutton-remove-from-superview-without-needing-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperviewWithoutNeedingDisplay"))))
+(define (nsbutton-remove-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nsbutton-remove-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nsbutton-remove-tool-tip! self tag)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeToolTip:")) tag))
+(define (nsbutton-remove-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nsbutton-remove-tracking-rect! self tag)
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingRect:")) tag))
 (define (nsbutton-replace-subview-with! self old-view new-view)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replaceSubview:with:")) (id->ffi2-ptr (coerce-arg old-view)) (id->ffi2-ptr (coerce-arg new-view))))
+(define (nsbutton-reset-cursor-rects! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resetCursorRects"))))
 (define (nsbutton-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
 (define (nsbutton-resize-subviews-with-old-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeSubviewsWithOldSize:")) (id->ffi2-ptr old-size)))
 (define (nsbutton-resize-with-old-superview-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeWithOldSuperviewSize:")) (id->ffi2-ptr old-size)))
+(define (nsbutton-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsbutton-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nsbutton-right-mouse-down self event)
@@ -2603,8 +2910,36 @@
   (aw_racket_msg_d_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateByAngle:")) angle))
 (define (nsbutton-rotate-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-ruler-view-did-add-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsbutton-ruler-view-did-move-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsbutton-ruler-view-did-remove-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsbutton-ruler-view-handle-mouse-down self ruler event)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:handleMouseDown:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-ruler-view-location-for-point self ruler point)
+  (aw_racket_msg_PO_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:locationForPoint:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr point)))
+(define (nsbutton-ruler-view-point-for-location self ruler point)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_Pd_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:pointForLocation:")) (id->ffi2-ptr (coerce-arg ruler)) point (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
+(define (nsbutton-ruler-view-should-add-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsbutton-ruler-view-should-move-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsbutton-ruler-view-should-remove-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsbutton-ruler-view-will-add-marker-at-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willAddMarker:atLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nsbutton-ruler-view-will-move-marker-to-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willMoveMarker:toLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nsbutton-ruler-view-will-set-client-view self ruler new-client)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willSetClientView:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg new-client))))
 (define (nsbutton-scale-unit-square-to-size self new-unit-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scaleUnitSquareToSize:")) (id->ffi2-ptr new-unit-size)))
+(define (nsbutton-scroll-clip-view-to-point self clip-view point)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollClipView:toPoint:")) (id->ffi2-ptr (coerce-arg clip-view)) (id->ffi2-ptr point)))
 (define (nsbutton-scroll-line-down self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollLineDown:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-scroll-line-up self sender)
@@ -2625,14 +2960,25 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollWheel:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-select-all self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectAll:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsbutton-select-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectCell:")) (id->ffi2-ptr (coerce-arg cell))))
 (define (nsbutton-select-line self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectLine:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-select-paragraph self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectParagraph:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-select-to-mark self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectToMark:")) (id->ffi2-ptr (coerce-arg sender))))
+;; param 2: weak reference
+(define (nsbutton-select-with-frame-editor-delegate-start-length self rect text-obj delegate sel-start sel-length)
+  (aw_racket_msg_RPPqq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectWithFrame:editor:delegate:start:length:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg text-obj)) (id->ffi2-ptr (coerce-arg delegate)) sel-start sel-length))
 (define (nsbutton-select-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectWord:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsbutton-selected-cell self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectedCell"))))
+   ))
+(define (nsbutton-selected-tag self)
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectedTag"))))
 (define (nsbutton-send-action-to self action target)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sendAction:to:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg target))))
 (define (nsbutton-send-action-on self mask)
@@ -2895,12 +3241,18 @@
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsSize:")) (id->ffi2-ptr new-size)))
 (define (nsbutton-set-button-type! self type)
   (aw_racket_msg_Q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setButtonType:")) type))
+(define (nsbutton-set-content-compression-resistance-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentCompressionResistancePriority:forOrientation:")) priority orientation))
+(define (nsbutton-set-content-hugging-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentHuggingPriority:forOrientation:")) priority orientation))
 (define (nsbutton-set-frame-origin! self new-origin)
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrameOrigin:")) (id->ffi2-ptr new-origin)))
 (define (nsbutton-set-frame-size! self new-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrameSize:")) (id->ffi2-ptr new-size)))
 (define (nsbutton-set-identifier! self identifier)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
+(define (nsbutton-set-keyboard-focus-ring-needs-display-in-rect! self rect)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setKeyboardFocusRingNeedsDisplayInRect:")) (id->ffi2-ptr rect)))
 (define (nsbutton-set-mark! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setMark:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-set-needs-display-in-rect! self invalid-rect)
@@ -2917,6 +3269,15 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-show-context-menu-for-selection self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsbutton-show-definition-for-attributed-string-at-point self attr-string text-baseline-origin)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:atPoint:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr text-baseline-origin)))
+;; block param 3: async-copied (runtime-managed)
+(define (nsbutton-show-definition-for-attributed-string-range-options-baseline-origin-provider self attr-string target-range options origin-provider)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block origin-provider (list _NSRange) _NSPoint))
+  (aw_racket_msg_PGPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:range:options:baselineOriginProvider:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr target-range) (id->ffi2-ptr (coerce-arg options)) (id->ffi2-ptr _blk3)))
+(define (nsbutton-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-size-that-fits self size)
   (let ([buf (malloc _NSSize)])
     (aw_racket_msg_Z_Z (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sizeThatFits:")) (id->ffi2-ptr size) (cpointer->ptr_t buf))
@@ -2969,16 +3330,34 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "transposeWords:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-try-to-perform-with self action object)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryToPerform:with:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg object))))
+(define (nsbutton-unregister-dragged-types self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterDraggedTypes"))))
+(define (nsbutton-update-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nsbutton-update-cell-inside self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateCellInside:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nsbutton-update-constraints self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraints"))))
+(define (nsbutton-update-constraints-for-subtree-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraintsForSubtreeIfNeeded"))))
 (define (nsbutton-update-dragging-items-for-drag self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateDraggingItemsForDrag:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-update-layer self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateLayer"))))
+(define (nsbutton-update-tracking-areas self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateTrackingAreas"))))
+(define (nsbutton-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nsbutton-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsbutton-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
+(define (nsbutton-validate-editing self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateEditing"))))
+(define (nsbutton-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nsbutton-validate-user-interface-item self item)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateUserInterfaceItem:")) (id->ffi2-ptr (coerce-arg item))))
 (define (nsbutton-view-did-change-backing-properties self)
@@ -3015,12 +3394,24 @@
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
 (define (nsbutton-will-open-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willOpenMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsbutton-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nsbutton-will-remove-subview self subview)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willRemoveSubview:")) (id->ffi2-ptr (coerce-arg subview))))
+(define (nsbutton-write-eps-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writeEPSInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
+(define (nsbutton-write-pdf-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writePDFInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nsbutton-yank self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yank:")) (id->ffi2-ptr (coerce-arg sender))))
 
 ;; --- Class methods ---
+(define (nsbutton-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSButton) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nsbutton-button-with-image-target-action image target action)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr NSButton) (id->ffi2-ptr (sel_registerName "buttonWithImage:target:action:")) (id->ffi2-ptr (coerce-arg image)) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName action))))

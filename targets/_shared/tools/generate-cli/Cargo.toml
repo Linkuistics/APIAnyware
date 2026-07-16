@@ -13,6 +13,7 @@ apianyware-emit-racket.workspace = true
 apianyware-emit-chez.workspace = true
 apianyware-emit-gerbil.workspace = true
 apianyware-emit-sbcl.workspace = true
+apianyware-emit-typescript.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 tracing.workspace = true

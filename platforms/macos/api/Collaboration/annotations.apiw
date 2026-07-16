@@ -4,10 +4,6 @@ framework Collaboration {
             block-param 1 invocation=async_copied
             source llm
         }
-        method runModalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
-            source llm
-        }
     }
     subagent-report {
         block-synchronous 0

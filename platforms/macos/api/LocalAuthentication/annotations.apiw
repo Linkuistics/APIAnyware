@@ -15,12 +15,6 @@ framework LocalAuthentication {
             source llm
         }
     }
-    class LAEnvironment {
-        method addObserver: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class LAPersistedRight {
         method authorizeWithLocalizedReason:completion: is-instance=#true {
             block-param 1 invocation=async_copied

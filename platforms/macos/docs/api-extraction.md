@@ -44,8 +44,9 @@ in-process, not on disk; `pipeline-cutover-k20`):
    recorded in [`collection.md`](collection.md).
 2. **analyze** — `apianyware-analyze` runs the in-process passes (`linked` datalog
    cross-reference → annotate-merge → enrich), **folding in** the authored
-   `annotations.apiw` overlay by the §28 precedence (`manual > accepted-LLM >
-   convention > extraction`), and writes `resolved.kdl`. The convention tier is
+   `annotations.apiw` overlay by the §28 precedence (`manual > extraction >
+   accepted-LLM > convention`, re-ranked by `declared-fact-precedence-k87`), and
+   writes `resolved.kdl`. The convention tier is
    now `ascent` datalog rules (ADR-0047), not the retired imperative
    `heuristics.rs`.
 3. **generate** — `apianyware-generate` consumes `resolved.kdl` to emit each

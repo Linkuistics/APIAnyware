@@ -255,8 +255,11 @@ fn swift_native_fn_and_const_residual_is_bound_and_exported() {
         name: "MLErrorDomain".into(),
         constant_type: TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         },
+        array_element: None,
         source: None,
         provenance: None,
         doc_refs: None,

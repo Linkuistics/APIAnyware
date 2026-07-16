@@ -22,10 +22,6 @@ framework ScreenTime {
             error-pattern error_out_param
             source llm
         }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method setBundleIdentifier:error: is-instance=#true {
             error-pattern error_out_param
             source llm

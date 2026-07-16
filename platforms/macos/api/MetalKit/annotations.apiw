@@ -77,7 +77,6 @@ framework MetalKit {
     }
     class MTKView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

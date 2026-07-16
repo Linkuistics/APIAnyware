@@ -185,7 +185,14 @@ mod tests {
     #[test]
     fn plain_method_supported() {
         let m = SbclFfiTypeMapper;
-        let meth = method("length", false, false, ty(TypeRefKind::Id));
+        let meth = method(
+            "length",
+            false,
+            false,
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+        );
         assert!(is_supported_method(&meth, &m));
     }
 
@@ -193,15 +200,36 @@ mod tests {
     fn variadic_deprecated_and_swift_paren_deferred() {
         let m = SbclFfiTypeMapper;
         assert!(!is_supported_method(
-            &method("foo:", true, false, ty(TypeRefKind::Id)),
+            &method(
+                "foo:",
+                true,
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                })
+            ),
             &m
         ));
         assert!(!is_supported_method(
-            &method("foo:", false, true, ty(TypeRefKind::Id)),
+            &method(
+                "foo:",
+                false,
+                true,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                })
+            ),
             &m
         ));
         assert!(!is_supported_method(
-            &method("data(from:)", false, false, ty(TypeRefKind::Id)),
+            &method(
+                "data(from:)",
+                false,
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                })
+            ),
             &m
         ));
     }
@@ -253,7 +281,9 @@ mod tests {
         meth.params = vec![Param {
             name: "block".into(),
             param_type: ty(TypeRefKind::Block {
-                params: vec![ty(TypeRefKind::Id)],
+                params: vec![ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                })],
                 return_type: Box::new(TypeRef::void()),
             }),
         }];
@@ -285,7 +315,12 @@ mod tests {
             }),
         );
         meth.params = vec![
-            param("path", TypeRefKind::Id),
+            param(
+                "path",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            ),
             param("error", TypeRefKind::Pointer),
         ];
         assert!(is_error_out_method(&meth, &errs));
@@ -321,7 +356,14 @@ mod tests {
     fn return_classifiers() {
         let m = SbclFfiTypeMapper;
         assert!(returns_object_type(
-            &method("self", false, false, ty(TypeRefKind::Id)),
+            &method(
+                "self",
+                false,
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                })
+            ),
             &m
         ));
         assert!(returns_void(

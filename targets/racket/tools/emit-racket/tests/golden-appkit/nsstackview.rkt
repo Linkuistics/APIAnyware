@@ -8,6 +8,7 @@
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
+         "../../runtime/block.rkt"
          "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
@@ -17,6 +18,7 @@
 ;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
+(define (cadisplaylink? v) (objc-instance-of? v "CADisplayLink"))
 (define (calayer? v) (objc-instance-of? v "CALayer"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -25,6 +27,9 @@
 (define (nsbitmapimagerep? v) (objc-instance-of? v "NSBitmapImageRep"))
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
+(define (nsdraggingsession? v) (objc-instance-of? v "NSDraggingSession"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
 (define (nslayoutguide? v) (objc-instance-of? v "NSLayoutGuide"))
 (define (nslayoutxaxisanchor? v) (objc-instance-of? v "NSLayoutXAxisAnchor"))
@@ -62,12 +67,12 @@
   [nsstackview-allows-vibrancy (c-> nsstackview? boolean?)]
   [nsstackview-alpha-value (c-> nsstackview? real?)]
   [nsstackview-set-alpha-value! (c-> nsstackview? real? void?)]
-  [nsstackview-arranged-subviews (c-> nsstackview? any/c)]
+  [nsstackview-arranged-subviews (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-autoresizes-subviews (c-> nsstackview? boolean?)]
   [nsstackview-set-autoresizes-subviews! (c-> nsstackview? boolean? void?)]
   [nsstackview-autoresizing-mask (c-> nsstackview? exact-nonnegative-integer?)]
   [nsstackview-set-autoresizing-mask! (c-> nsstackview? exact-nonnegative-integer? void?)]
-  [nsstackview-background-filters (c-> nsstackview? any/c)]
+  [nsstackview-background-filters (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-set-background-filters! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-baseline-offset-from-bottom (c-> nsstackview? real?)]
   [nsstackview-bottom-anchor (c-> nsstackview? (or/c nslayoutyaxisanchor? objc-nil?))]
@@ -89,14 +94,14 @@
   [nsstackview-compatible-with-responsive-scrolling (c-> boolean?)]
   [nsstackview-compositing-filter (c-> nsstackview? (or/c cifilter? objc-nil?))]
   [nsstackview-set-compositing-filter! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
-  [nsstackview-constraints (c-> nsstackview? any/c)]
-  [nsstackview-content-filters (c-> nsstackview? any/c)]
+  [nsstackview-constraints (c-> nsstackview? (or/c nsarray? objc-nil?))]
+  [nsstackview-content-filters (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-set-content-filters! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-default-focus-ring-type (c-> exact-nonnegative-integer?)]
   [nsstackview-default-menu (c-> (or/c nsmenu? objc-nil?))]
   [nsstackview-delegate (c-> nsstackview? any/c)]
   [nsstackview-set-delegate! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
-  [nsstackview-detached-views (c-> nsstackview? any/c)]
+  [nsstackview-detached-views (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-detaches-hidden-views (c-> nsstackview? boolean?)]
   [nsstackview-set-detaches-hidden-views! (c-> nsstackview? boolean? void?)]
   [nsstackview-distribution (c-> nsstackview? exact-integer?)]
@@ -120,7 +125,7 @@
   [nsstackview-set-frame-center-rotation! (c-> nsstackview? real? void?)]
   [nsstackview-frame-rotation (c-> nsstackview? real?)]
   [nsstackview-set-frame-rotation! (c-> nsstackview? real? void?)]
-  [nsstackview-gesture-recognizers (c-> nsstackview? any/c)]
+  [nsstackview-gesture-recognizers (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-set-gesture-recognizers! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-has-ambiguous-layout (c-> nsstackview? boolean?)]
   [nsstackview-has-equal-spacing (c-> nsstackview? boolean?)]
@@ -146,7 +151,7 @@
   [nsstackview-set-layer-contents-redraw-policy! (c-> nsstackview? exact-integer? void?)]
   [nsstackview-layer-uses-core-image-filters (c-> nsstackview? boolean?)]
   [nsstackview-set-layer-uses-core-image-filters! (c-> nsstackview? boolean? void?)]
-  [nsstackview-layout-guides (c-> nsstackview? any/c)]
+  [nsstackview-layout-guides (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-layout-margins-guide (c-> nsstackview? (or/c nslayoutguide? objc-nil?))]
   [nsstackview-leading-anchor (c-> nsstackview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsstackview-left-anchor (c-> nsstackview? (or/c nslayoutxaxisanchor? objc-nil?))]
@@ -186,9 +191,9 @@
   [nsstackview-previous-valid-key-view (c-> nsstackview? (or/c nsview? objc-nil?))]
   [nsstackview-print-job-title (c-> nsstackview? (or/c nsstring? objc-nil?))]
   [nsstackview-rect-preserved-during-live-resize (c-> nsstackview? any/c)]
-  [nsstackview-registered-dragged-types (c-> nsstackview? any/c)]
+  [nsstackview-registered-dragged-types (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-requires-constraint-based-layout (c-> boolean?)]
-  [nsstackview-restorable-state-key-paths (c-> any/c)]
+  [nsstackview-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nsstackview-right-anchor (c-> nsstackview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsstackview-rotated-from-base (c-> nsstackview? boolean?)]
   [nsstackview-rotated-or-scaled-from-base (c-> nsstackview? boolean?)]
@@ -199,7 +204,7 @@
   [nsstackview-set-shadow! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-spacing (c-> nsstackview? real?)]
   [nsstackview-set-spacing! (c-> nsstackview? real? void?)]
-  [nsstackview-subviews (c-> nsstackview? any/c)]
+  [nsstackview-subviews (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-set-subviews! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-superview (c-> nsstackview? (or/c nsview? objc-nil?))]
   [nsstackview-tag (c-> nsstackview? exact-integer?)]
@@ -208,7 +213,7 @@
   [nsstackview-top-anchor (c-> nsstackview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nsstackview-touch-bar (c-> nsstackview? (or/c nstouchbar? objc-nil?))]
   [nsstackview-set-touch-bar! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
-  [nsstackview-tracking-areas (c-> nsstackview? any/c)]
+  [nsstackview-tracking-areas (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-trailing-anchor (c-> nsstackview? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nsstackview-translates-autoresizing-mask-into-constraints (c-> nsstackview? boolean?)]
   [nsstackview-set-translates-autoresizing-mask-into-constraints! (c-> nsstackview? boolean? void?)]
@@ -219,7 +224,7 @@
   [nsstackview-set-user-interface-layout-direction! (c-> nsstackview? exact-integer? void?)]
   [nsstackview-vertical-content-size-constraint-active (c-> nsstackview? boolean?)]
   [nsstackview-set-vertical-content-size-constraint-active! (c-> nsstackview? boolean? void?)]
-  [nsstackview-views (c-> nsstackview? any/c)]
+  [nsstackview-views (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-visible-rect (c-> nsstackview? any/c)]
   [nsstackview-wants-best-resolution-open-gl-surface (c-> nsstackview? boolean?)]
   [nsstackview-set-wants-best-resolution-open-gl-surface! (c-> nsstackview? boolean? void?)]
@@ -238,14 +243,14 @@
   [nsstackview-set-writing-tools-coordinator! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-accepts-first-mouse (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
   [nsstackview-accessibility-activation-point (c-> nsstackview? any/c)]
-  [nsstackview-accessibility-allowed-values (c-> nsstackview? any/c)]
+  [nsstackview-accessibility-allowed-values (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-application-focused-ui-element (c-> nsstackview? any/c)]
   [nsstackview-accessibility-attributed-string-for-range (c-> nsstackview? any/c (or/c nsattributedstring? objc-nil?))]
-  [nsstackview-accessibility-attributed-user-input-labels (c-> nsstackview? any/c)]
+  [nsstackview-accessibility-attributed-user-input-labels (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-cancel-button (c-> nsstackview? any/c)]
   [nsstackview-accessibility-cell-for-column-row (c-> nsstackview? exact-integer? exact-integer? any/c)]
   [nsstackview-accessibility-children (c-> nsstackview? (or/c nsarray? objc-nil?))]
-  [nsstackview-accessibility-children-in-navigation-order (c-> nsstackview? any/c)]
+  [nsstackview-accessibility-children-in-navigation-order (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-clear-button (c-> nsstackview? any/c)]
   [nsstackview-accessibility-close-button (c-> nsstackview? any/c)]
   [nsstackview-accessibility-column-count (c-> nsstackview? exact-integer?)]
@@ -255,8 +260,8 @@
   [nsstackview-accessibility-columns (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-contents (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-critical-value (c-> nsstackview? any/c)]
-  [nsstackview-accessibility-custom-actions (c-> nsstackview? any/c)]
-  [nsstackview-accessibility-custom-rotors (c-> nsstackview? any/c)]
+  [nsstackview-accessibility-custom-actions (c-> nsstackview? (or/c nsarray? objc-nil?))]
+  [nsstackview-accessibility-custom-rotors (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-decrement-button (c-> nsstackview? any/c)]
   [nsstackview-accessibility-default-button (c-> nsstackview? any/c)]
   [nsstackview-accessibility-disclosed-by-row (c-> nsstackview? any/c)]
@@ -336,7 +341,7 @@
   [nsstackview-accessibility-selected-rows (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-selected-text (c-> nsstackview? (or/c nsstring? objc-nil?))]
   [nsstackview-accessibility-selected-text-range (c-> nsstackview? any/c)]
-  [nsstackview-accessibility-selected-text-ranges (c-> nsstackview? any/c)]
+  [nsstackview-accessibility-selected-text-ranges (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-serves-as-title-for-ui-elements (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-shared-character-range (c-> nsstackview? any/c)]
   [nsstackview-accessibility-shared-focus-elements (c-> nsstackview? (or/c nsarray? objc-nil?))]
@@ -355,7 +360,7 @@
   [nsstackview-accessibility-url (c-> nsstackview? (or/c nsurl? objc-nil?))]
   [nsstackview-accessibility-unit-description (c-> nsstackview? (or/c nsstring? objc-nil?))]
   [nsstackview-accessibility-units (c-> nsstackview? exact-integer?)]
-  [nsstackview-accessibility-user-input-labels (c-> nsstackview? any/c)]
+  [nsstackview-accessibility-user-input-labels (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-value (c-> nsstackview? any/c)]
   [nsstackview-accessibility-value-description (c-> nsstackview? (or/c nsstring? objc-nil?))]
   [nsstackview-accessibility-vertical-scroll-bar (c-> nsstackview? any/c)]
@@ -371,30 +376,50 @@
   [nsstackview-accessibility-windows (c-> nsstackview? (or/c nsarray? objc-nil?))]
   [nsstackview-accessibility-zoom-button (c-> nsstackview? any/c)]
   [nsstackview-add-arranged-subview! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-add-constraint! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-add-constraints! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-add-cursor-rect-cursor! (c-> nsstackview? any/c (or/c string? objc-object? #f) void?)]
+  [nsstackview-add-gesture-recognizer! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-add-layout-guide! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-add-subview! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-add-subview-positioned-relative-to! (c-> nsstackview? (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) void?)]
   [nsstackview-add-tool-tip-rect-owner-user-data! (c-> nsstackview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) exact-integer?)]
+  [nsstackview-add-tracking-area! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-add-tracking-rect-owner-user-data-assume-inside! (c-> nsstackview? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) boolean? exact-integer?)]
+  [nsstackview-add-view-in-gravity! (c-> nsstackview? (or/c string? objc-object? #f) exact-integer? void?)]
+  [nsstackview-additional-safe-area-insets! (c-> nsstackview? any/c)]
+  [nsstackview-adjust-page-height-new-top-bottom-limit (c-> nsstackview? (or/c cpointer? #f) real? real? real? void?)]
+  [nsstackview-adjust-page-width-new-left-right-limit (c-> nsstackview? (or/c cpointer? #f) real? real? real? void?)]
   [nsstackview-adjust-scroll (c-> nsstackview? any/c any/c)]
+  [nsstackview-alignment-rect-for-frame (c-> nsstackview? any/c any/c)]
   [nsstackview-ancestor-shared-with-view (c-> nsstackview? (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
   [nsstackview-animation-for-key (c-> nsstackview? (or/c string? objc-object? #f) any/c)]
-  [nsstackview-animations (c-> nsstackview? any/c)]
+  [nsstackview-animations (c-> nsstackview? (or/c nsdictionary? objc-nil?))]
   [nsstackview-animator (c-> nsstackview? any/c)]
   [nsstackview-appearance (c-> nsstackview? (or/c nsappearance? objc-nil?))]
   [nsstackview-autoscroll (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
   [nsstackview-backing-aligned-rect-options (c-> nsstackview? any/c exact-nonnegative-integer? any/c)]
   [nsstackview-become-first-responder (c-> nsstackview? boolean?)]
+  [nsstackview-begin-document! (c-> nsstackview? void?)]
+  [nsstackview-begin-dragging-session-with-items-event-source! (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdraggingsession? objc-nil?))]
   [nsstackview-begin-gesture-with-event! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-begin-page-in-rect-at-placement! (c-> nsstackview? any/c any/c void?)]
   [nsstackview-bitmap-image-rep-for-caching-display-in-rect (c-> nsstackview? any/c (or/c nsbitmapimagerep? objc-nil?))]
   [nsstackview-cache-display-in-rect-to-bitmap-image-rep (c-> nsstackview? any/c (or/c string? objc-object? #f) void?)]
   [nsstackview-cancel-operation (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-capitalize-word (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-center-scan-rect! (c-> nsstackview? any/c any/c)]
   [nsstackview-center-selection-in-visible-area! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-center-x-anchor! (c-> nsstackview? (or/c nslayoutxaxisanchor? objc-nil?))]
+  [nsstackview-center-y-anchor! (c-> nsstackview? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nsstackview-change-case-of-letter (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-change-mode-with-event (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-clipping-resistance-priority-for-orientation (c-> nsstackview? exact-integer? real?)]
   [nsstackview-complete (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-conclude-drag-operation (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-constraints-affecting-layout-for-orientation (c-> nsstackview? exact-integer? (or/c nsarray? objc-nil?))]
+  [nsstackview-content-compression-resistance-priority-for-orientation (c-> nsstackview? exact-integer? real?)]
+  [nsstackview-content-hugging-priority-for-orientation (c-> nsstackview? exact-integer? real?)]
   [nsstackview-context-menu-key-down (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-convert-point-from-view (c-> nsstackview? any/c (or/c string? objc-object? #f) any/c)]
   [nsstackview-convert-point-to-view (c-> nsstackview? any/c (or/c string? objc-object? #f) any/c)]
@@ -416,6 +441,8 @@
   [nsstackview-convert-size-to-layer (c-> nsstackview? any/c any/c)]
   [nsstackview-cursor-update (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-custom-spacing-after-view (c-> nsstackview? (or/c string? objc-object? #f) real?)]
+  [nsstackview-data-with-eps-inside-rect (c-> nsstackview? any/c (or/c nsdata? objc-nil?))]
+  [nsstackview-data-with-pdf-inside-rect (c-> nsstackview? any/c (or/c nsdata? objc-nil?))]
   [nsstackview-delete-backward (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-delete-backward-by-decomposing-previous-character (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-delete-forward (c-> nsstackview? (or/c string? objc-object? #f) void?)]
@@ -428,11 +455,13 @@
   [nsstackview-delete-word-forward (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-did-add-subview (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-did-close-menu-with-event (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsstackview-discard-cursor-rects (c-> nsstackview? void?)]
   [nsstackview-display! (c-> nsstackview? void?)]
   [nsstackview-display-if-needed! (c-> nsstackview? void?)]
   [nsstackview-display-if-needed-ignoring-opacity! (c-> nsstackview? void?)]
   [nsstackview-display-if-needed-in-rect! (c-> nsstackview? any/c void?)]
   [nsstackview-display-if-needed-in-rect-ignoring-opacity! (c-> nsstackview? any/c void?)]
+  [nsstackview-display-link-with-target-selector! (c-> nsstackview? (or/c string? objc-object? #f) string? (or/c cadisplaylink? objc-nil?))]
   [nsstackview-display-rect! (c-> nsstackview? any/c void?)]
   [nsstackview-display-rect-ignoring-opacity! (c-> nsstackview? any/c void?)]
   [nsstackview-display-rect-ignoring-opacity-in-context! (c-> nsstackview? any/c (or/c string? objc-object? #f) void?)]
@@ -441,12 +470,23 @@
   [nsstackview-dragging-entered (c-> nsstackview? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsstackview-dragging-exited (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-dragging-updated (c-> nsstackview? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nsstackview-draw-focus-ring-mask (c-> nsstackview? void?)]
+  [nsstackview-draw-page-border-with-size (c-> nsstackview? any/c void?)]
   [nsstackview-draw-rect (c-> nsstackview? any/c void?)]
+  [nsstackview-edge-insets-for-layout-region (c-> nsstackview? (or/c string? objc-object? #f) any/c)]
   [nsstackview-effective-appearance (c-> nsstackview? (or/c nsappearance? objc-nil?))]
+  [nsstackview-encode-restorable-state-with-coder (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-encode-restorable-state-with-coder-background-queue (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsstackview-encode-with-coder (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-end-document! (c-> nsstackview? void?)]
   [nsstackview-end-gesture-with-event! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-end-page! (c-> nsstackview? void?)]
+  [nsstackview-enter-full-screen-mode-with-options (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-exercise-ambiguity-in-layout (c-> nsstackview? void?)]
+  [nsstackview-exit-full-screen-mode-with-options (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-flags-changed (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-flush-buffered-key-events (c-> nsstackview? void?)]
+  [nsstackview-frame-for-alignment-rect (c-> nsstackview? any/c any/c)]
   [nsstackview-get-rects-being-drawn-count (c-> nsstackview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsstackview-get-rects-exposed-during-live-resize-count (c-> nsstackview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsstackview-help-requested (c-> nsstackview? (or/c string? objc-object? #f) void?)]
@@ -466,7 +506,10 @@
   [nsstackview-insert-tab! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-insert-tab-ignoring-field-editor! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-insert-text! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-insert-view-at-index-in-gravity! (c-> nsstackview? (or/c string? objc-object? #f) exact-nonnegative-integer? exact-integer? void?)]
   [nsstackview-interpret-key-events (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-invalidate-intrinsic-content-size (c-> nsstackview? void?)]
+  [nsstackview-invalidate-restorable-state (c-> nsstackview? void?)]
   [nsstackview-is-accessibility-alternate-ui-visible (c-> nsstackview? boolean?)]
   [nsstackview-is-accessibility-disclosed (c-> nsstackview? boolean?)]
   [nsstackview-is-accessibility-edited (c-> nsstackview? boolean?)]
@@ -485,16 +528,23 @@
   [nsstackview-is-accessibility-selected (c-> nsstackview? boolean?)]
   [nsstackview-is-accessibility-selector-allowed (c-> nsstackview? string? boolean?)]
   [nsstackview-is-descendant-of (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-is-drawing-find-indicator (c-> nsstackview? boolean?)]
   [nsstackview-is-flipped (c-> nsstackview? boolean?)]
   [nsstackview-is-hidden (c-> nsstackview? boolean?)]
   [nsstackview-is-hidden-or-has-hidden-ancestor (c-> nsstackview? boolean?)]
+  [nsstackview-is-horizontal-content-size-constraint-active (c-> nsstackview? boolean?)]
+  [nsstackview-is-in-full-screen-mode (c-> nsstackview? boolean?)]
   [nsstackview-is-opaque (c-> nsstackview? boolean?)]
   [nsstackview-is-rotated-from-base (c-> nsstackview? boolean?)]
   [nsstackview-is-rotated-or-scaled-from-base (c-> nsstackview? boolean?)]
+  [nsstackview-is-vertical-content-size-constraint-active (c-> nsstackview? boolean?)]
   [nsstackview-key-down (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-key-up (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-knows-page-range (c-> nsstackview? (or/c cpointer? #f) boolean?)]
   [nsstackview-layout (c-> nsstackview? void?)]
+  [nsstackview-layout-guide-for-layout-region (c-> nsstackview? (or/c string? objc-object? #f) (or/c nslayoutguide? objc-nil?))]
   [nsstackview-layout-subtree-if-needed (c-> nsstackview? void?)]
+  [nsstackview-location-of-print-rect (c-> nsstackview? any/c any/c)]
   [nsstackview-lowercase-word (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-magnify-with-event (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-make-backing-layer (c-> nsstackview? (or/c calayer? objc-nil?))]
@@ -504,6 +554,7 @@
   [nsstackview-make-text-writing-direction-left-to-right (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-make-text-writing-direction-natural (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-make-text-writing-direction-right-to-left (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-make-touch-bar (c-> nsstackview? (or/c nstouchbar? objc-nil?))]
   [nsstackview-menu-for-event (c-> nsstackview? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nsstackview-mouse-in-rect (c-> nsstackview? any/c any/c boolean?)]
   [nsstackview-mouse-cancelled (c-> nsstackview? (or/c string? objc-object? #f) void?)]
@@ -552,7 +603,9 @@
   [nsstackview-move-word-right! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-move-word-right-and-modify-selection! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-needs-to-draw-rect (c-> nsstackview? any/c boolean?)]
+  [nsstackview-new-window-for-tab (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-no-responder-for (c-> nsstackview? string? void?)]
+  [nsstackview-note-focus-ring-mask-changed (c-> nsstackview? void?)]
   [nsstackview-other-mouse-down (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-other-mouse-dragged (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-other-mouse-up (c-> nsstackview? (or/c string? objc-object? #f) void?)]
@@ -562,29 +615,60 @@
   [nsstackview-page-up-and-modify-selection (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-perform-drag-operation! (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
   [nsstackview-perform-key-equivalent! (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-perform-text-finder-action! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-prepare-content-in-rect (c-> nsstackview? any/c void?)]
   [nsstackview-prepare-for-drag-operation (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
   [nsstackview-prepare-for-reuse (c-> nsstackview? void?)]
+  [nsstackview-present-error (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nsstackview-pressure-change-with-event (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-print (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-quick-look-preview-items (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-quick-look-with-event (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-rect-for-layout-region (c-> nsstackview? (or/c string? objc-object? #f) any/c)]
+  [nsstackview-rect-for-page (c-> nsstackview? exact-integer? any/c)]
   [nsstackview-rect-for-smart-magnification-at-point-in-rect (c-> nsstackview? any/c any/c any/c)]
+  [nsstackview-reflect-scrolled-clip-view (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-register-for-dragged-types (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-remove-all-tool-tips! (c-> nsstackview? void?)]
   [nsstackview-remove-arranged-subview! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-remove-constraint! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-remove-constraints! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-remove-cursor-rect-cursor! (c-> nsstackview? any/c (or/c string? objc-object? #f) void?)]
   [nsstackview-remove-from-superview! (c-> nsstackview? void?)]
   [nsstackview-remove-from-superview-without-needing-display! (c-> nsstackview? void?)]
+  [nsstackview-remove-gesture-recognizer! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-remove-layout-guide! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-remove-tool-tip! (c-> nsstackview? exact-integer? void?)]
+  [nsstackview-remove-tracking-area! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-remove-tracking-rect! (c-> nsstackview? exact-integer? void?)]
+  [nsstackview-remove-view! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-replace-subview-with! (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsstackview-reset-cursor-rects! (c-> nsstackview? void?)]
   [nsstackview-resign-first-responder (c-> nsstackview? boolean?)]
   [nsstackview-resize-subviews-with-old-size (c-> nsstackview? any/c void?)]
   [nsstackview-resize-with-old-superview-size (c-> nsstackview? any/c void?)]
+  [nsstackview-restore-state-with-coder (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-restore-user-activity-state (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-right-mouse-down (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-right-mouse-dragged (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-right-mouse-up (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-rotate-by-angle (c-> nsstackview? real? void?)]
   [nsstackview-rotate-with-event (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-ruler-view-did-add-marker (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsstackview-ruler-view-did-move-marker (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsstackview-ruler-view-did-remove-marker (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsstackview-ruler-view-handle-mouse-down (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsstackview-ruler-view-location-for-point (c-> nsstackview? (or/c string? objc-object? #f) any/c real?)]
+  [nsstackview-ruler-view-point-for-location (c-> nsstackview? (or/c string? objc-object? #f) real? any/c)]
+  [nsstackview-ruler-view-should-add-marker (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-ruler-view-should-move-marker (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-ruler-view-should-remove-marker (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-ruler-view-will-add-marker-at-location (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nsstackview-ruler-view-will-move-marker-to-location (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nsstackview-ruler-view-will-set-client-view (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsstackview-scale-unit-square-to-size (c-> nsstackview? any/c void?)]
+  [nsstackview-scroll-clip-view-to-point (c-> nsstackview? (or/c string? objc-object? #f) any/c void?)]
   [nsstackview-scroll-line-down (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-scroll-line-up (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-scroll-page-down (c-> nsstackview? (or/c string? objc-object? #f) void?)]
@@ -728,18 +812,25 @@
   [nsstackview-set-bounds-origin! (c-> nsstackview? any/c void?)]
   [nsstackview-set-bounds-size! (c-> nsstackview? any/c void?)]
   [nsstackview-set-clipping-resistance-priority-for-orientation! (c-> nsstackview? real? exact-integer? void?)]
+  [nsstackview-set-content-compression-resistance-priority-for-orientation! (c-> nsstackview? real? exact-integer? void?)]
+  [nsstackview-set-content-hugging-priority-for-orientation! (c-> nsstackview? real? exact-integer? void?)]
   [nsstackview-set-custom-spacing-after-view! (c-> nsstackview? real? (or/c string? objc-object? #f) void?)]
   [nsstackview-set-frame-origin! (c-> nsstackview? any/c void?)]
   [nsstackview-set-frame-size! (c-> nsstackview? any/c void?)]
   [nsstackview-set-hugging-priority-for-orientation! (c-> nsstackview? real? exact-integer? void?)]
   [nsstackview-set-identifier! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-set-keyboard-focus-ring-needs-display-in-rect! (c-> nsstackview? any/c void?)]
   [nsstackview-set-mark! (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-set-needs-display-in-rect! (c-> nsstackview? any/c void?)]
+  [nsstackview-set-views-in-gravity! (c-> nsstackview? (or/c string? objc-object? #f) exact-integer? void?)]
   [nsstackview-set-visibility-priority-for-view! (c-> nsstackview? real? (or/c string? objc-object? #f) void?)]
   [nsstackview-should-be-treated-as-ink-event (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
   [nsstackview-should-delay-window-ordering-for-event (c-> nsstackview? (or/c string? objc-object? #f) boolean?)]
   [nsstackview-show-context-help (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-show-context-menu-for-selection (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-show-definition-for-attributed-string-at-point (c-> nsstackview? (or/c string? objc-object? #f) any/c void?)]
+  [nsstackview-show-definition-for-attributed-string-range-options-baseline-origin-provider (c-> nsstackview? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nsstackview-show-writing-tools (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-smart-magnify-with-event (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-sort-subviews-using-function-context (c-> nsstackview? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nsstackview-supplemental-target-for-action-sender (c-> nsstackview? string? (or/c string? objc-object? #f) any/c)]
@@ -756,10 +847,16 @@
   [nsstackview-transpose (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-transpose-words (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-try-to-perform-with (c-> nsstackview? string? (or/c string? objc-object? #f) boolean?)]
+  [nsstackview-unregister-dragged-types (c-> nsstackview? void?)]
+  [nsstackview-update-constraints (c-> nsstackview? void?)]
+  [nsstackview-update-constraints-for-subtree-if-needed (c-> nsstackview? void?)]
   [nsstackview-update-dragging-items-for-drag (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-update-layer (c-> nsstackview? void?)]
+  [nsstackview-update-tracking-areas (c-> nsstackview? void?)]
+  [nsstackview-update-user-activity-state (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-uppercase-word (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-valid-requestor-for-send-type-return-type (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nsstackview-validate-proposed-first-responder-for-event (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nsstackview-view-did-change-backing-properties (c-> nsstackview? void?)]
   [nsstackview-view-did-change-effective-appearance (c-> nsstackview? void?)]
   [nsstackview-view-did-end-live-resize (c-> nsstackview? void?)]
@@ -771,14 +868,19 @@
   [nsstackview-view-will-move-to-superview (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-view-will-move-to-window (c-> nsstackview? (or/c string? objc-object? #f) void?)]
   [nsstackview-view-will-start-live-resize (c-> nsstackview? void?)]
-  [nsstackview-view-with-tag (c-> nsstackview? exact-integer? any/c)]
+  [nsstackview-view-with-tag (c-> nsstackview? exact-integer? (or/c nsview? objc-nil?))]
+  [nsstackview-views-in-gravity (c-> nsstackview? exact-integer? (or/c nsarray? objc-nil?))]
   [nsstackview-visibility-priority-for-view (c-> nsstackview? (or/c string? objc-object? #f) real?)]
   [nsstackview-wants-forwarded-scroll-events-for-axis (c-> nsstackview? exact-integer? boolean?)]
   [nsstackview-wants-periodic-dragging-updates (c-> nsstackview? boolean?)]
   [nsstackview-wants-scroll-events-for-swipe-tracking-on-axis (c-> nsstackview? exact-integer? boolean?)]
   [nsstackview-will-open-menu-with-event (c-> nsstackview? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsstackview-will-present-error (c-> nsstackview? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nsstackview-will-remove-subview (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-write-eps-inside-rect-to-pasteboard (c-> nsstackview? any/c (or/c string? objc-object? #f) void?)]
+  [nsstackview-write-pdf-inside-rect-to-pasteboard (c-> nsstackview? any/c (or/c string? objc-object? #f) void?)]
   [nsstackview-yank (c-> nsstackview? (or/c string? objc-object? #f) void?)]
+  [nsstackview-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsstackview-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
   [nsstackview-is-compatible-with-responsive-scrolling (c-> boolean?)]
   [nsstackview-stack-view-with-views (c-> (or/c string? objc-object? #f) any/c)]
@@ -805,17 +907,29 @@
 (define-aw-msg aw_racket_msg_P_Q (-> ptr_t ptr_t ptr_t uint64_t))
 (define-aw-msg aw_racket_msg_P_f (-> ptr_t ptr_t ptr_t float_t))
 (define-aw-msg aw_racket_msg_P_d (-> ptr_t ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_P_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_E (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPd_d (-> ptr_t ptr_t ptr_t ptr_t double_t double_t))
 (define-aw-msg aw_racket_msg_Pq_v (-> ptr_t ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_PqP_v (-> ptr_t ptr_t ptr_t int64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PQq_v (-> ptr_t ptr_t ptr_t uint64_t int64_t void_t))
+(define-aw-msg aw_racket_msg_Pd_O (-> ptr_t ptr_t ptr_t double_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pddd_v (-> ptr_t ptr_t ptr_t double_t double_t double_t void_t))
+(define-aw-msg aw_racket_msg_PO_d (-> ptr_t ptr_t ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_PO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PGPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
 (define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))
 (define-aw-msg aw_racket_msg_q_f (-> ptr_t ptr_t int64_t float_t))
+(define-aw-msg aw_racket_msg_q_R (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_G (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_qq_P (-> ptr_t ptr_t int64_t int64_t ptr_t))
@@ -828,11 +942,14 @@
 (define-aw-msg aw_racket_msg_R_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_R_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_R_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_R_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_R (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RPP_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_RPPb_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t int64_t))
 (define-aw-msg aw_racket_msg_RQ_R (-> ptr_t ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RZ_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_O_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_O_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
@@ -1805,15 +1922,43 @@
    ))
 (define (nsstackview-add-arranged-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addArrangedSubview:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nsstackview-add-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nsstackview-add-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nsstackview-add-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
+(define (nsstackview-add-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nsstackview-add-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nsstackview-add-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nsstackview-add-subview-positioned-relative-to! self view place other-view)
   (aw_racket_msg_PqP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:positioned:relativeTo:")) (id->ffi2-ptr (coerce-arg view)) place (id->ffi2-ptr (coerce-arg other-view))))
 (define (nsstackview-add-tool-tip-rect-owner-user-data! self rect owner data)
   (aw_racket_msg_RPP_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addToolTipRect:owner:userData:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data)))
+(define (nsstackview-add-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nsstackview-add-tracking-rect-owner-user-data-assume-inside! self rect owner data flag)
+  (aw_racket_msg_RPPb_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingRect:owner:userData:assumeInside:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data) flag))
+(define (nsstackview-add-view-in-gravity! self view gravity)
+  (aw_racket_msg_Pq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addView:inGravity:")) (id->ffi2-ptr (coerce-arg view)) gravity))
+(define (nsstackview-additional-safe-area-insets! self)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_0_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "additionalSafeAreaInsets")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+(define (nsstackview-adjust-page-height-new-top-bottom-limit self new-bottom old-top old-bottom bottom-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageHeightNew:top:bottom:limit:")) (id->ffi2-ptr new-bottom) old-top old-bottom bottom-limit))
+(define (nsstackview-adjust-page-width-new-left-right-limit self new-right old-left old-right right-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageWidthNew:left:right:limit:")) (id->ffi2-ptr new-right) old-left old-right right-limit))
 (define (nsstackview-adjust-scroll self new-visible)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustScroll:")) (id->ffi2-ptr new-visible) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nsstackview-alignment-rect-for-frame self frame)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "alignmentRectForFrame:")) (id->ffi2-ptr frame) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
 (define (nsstackview-ancestor-shared-with-view self view)
   (wrap-objc-object
@@ -1843,8 +1988,16 @@
     (ptr-ref buf _NSRect)))
 (define (nsstackview-become-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "becomeFirstResponder"))))
+(define (nsstackview-begin-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDocument"))))
+(define (nsstackview-begin-dragging-session-with-items-event-source! self items event source)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDraggingSessionWithItems:event:source:")) (id->ffi2-ptr (coerce-arg items)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg source))))
+   ))
 (define (nsstackview-begin-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-begin-page-in-rect-at-placement! self rect location)
+  (aw_racket_msg_RO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginPageInRect:atPlacement:")) (id->ffi2-ptr rect) (id->ffi2-ptr location)))
 (define (nsstackview-bitmap-image-rep-for-caching-display-in-rect self rect)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "bitmapImageRepForCachingDisplayInRect:")) (id->ffi2-ptr rect)))
@@ -1861,6 +2014,14 @@
     (ptr-ref buf _NSRect)))
 (define (nsstackview-center-selection-in-visible-area! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerSelectionInVisibleArea:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsstackview-center-x-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerXAnchor"))))
+   ))
+(define (nsstackview-center-y-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerYAnchor"))))
+   ))
 (define (nsstackview-change-case-of-letter self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCaseOfLetter:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-change-mode-with-event self event)
@@ -1871,6 +2032,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "complete:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-conclude-drag-operation self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "concludeDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsstackview-constraints-affecting-layout-for-orientation self orientation)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "constraintsAffectingLayoutForOrientation:")) orientation))
+   ))
+(define (nsstackview-content-compression-resistance-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentCompressionResistancePriorityForOrientation:")) orientation))
+(define (nsstackview-content-hugging-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentHuggingPriorityForOrientation:")) orientation))
 (define (nsstackview-context-menu-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contextMenuKeyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsstackview-convert-point-from-view self point view)
@@ -1949,6 +2118,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "cursorUpdate:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsstackview-custom-spacing-after-view self view)
   (aw_racket_msg_P_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "customSpacingAfterView:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nsstackview-data-with-eps-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithEPSInsideRect:")) (id->ffi2-ptr rect)))
+   ))
+(define (nsstackview-data-with-pdf-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithPDFInsideRect:")) (id->ffi2-ptr rect)))
+   ))
 (define (nsstackview-delete-backward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-delete-backward-by-decomposing-previous-character self sender)
@@ -1973,6 +2150,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didAddSubview:")) (id->ffi2-ptr (coerce-arg subview))))
 (define (nsstackview-did-close-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didCloseMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-discard-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardCursorRects"))))
 (define (nsstackview-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "display"))))
 (define (nsstackview-display-if-needed! self)
@@ -1983,6 +2162,10 @@
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRect:")) (id->ffi2-ptr rect)))
 (define (nsstackview-display-if-needed-in-rect-ignoring-opacity! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRectIgnoringOpacity:")) (id->ffi2-ptr rect)))
+(define (nsstackview-display-link-with-target-selector! self target selector)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayLinkWithTarget:selector:")) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName selector))))
+   ))
 (define (nsstackview-display-rect! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRect:")) (id->ffi2-ptr rect)))
 (define (nsstackview-display-rect-ignoring-opacity! self rect)
@@ -1999,20 +2182,46 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingExited:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-dragging-updated self sender)
   (aw_racket_msg_P_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingUpdated:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsstackview-draw-focus-ring-mask self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawFocusRingMask"))))
+(define (nsstackview-draw-page-border-with-size self border-size)
+  (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawPageBorderWithSize:")) (id->ffi2-ptr border-size)))
 (define (nsstackview-draw-rect self dirty-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawRect:")) (id->ffi2-ptr dirty-rect)))
+(define (nsstackview-edge-insets-for-layout-region self layout-region)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_P_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "edgeInsetsForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
 (define (nsstackview-effective-appearance self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "effectiveAppearance"))))
    ))
+(define (nsstackview-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nsstackview-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nsstackview-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nsstackview-end-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endDocument"))))
 (define (nsstackview-end-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-end-page! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endPage"))))
+(define (nsstackview-enter-full-screen-mode-with-options self screen options)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enterFullScreenMode:withOptions:")) (id->ffi2-ptr (coerce-arg screen)) (id->ffi2-ptr (coerce-arg options))))
+(define (nsstackview-exercise-ambiguity-in-layout self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exerciseAmbiguityInLayout"))))
+(define (nsstackview-exit-full-screen-mode-with-options self options)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exitFullScreenModeWithOptions:")) (id->ffi2-ptr (coerce-arg options))))
 (define (nsstackview-flags-changed self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flagsChanged:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsstackview-flush-buffered-key-events self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flushBufferedKeyEvents"))))
+(define (nsstackview-frame-for-alignment-rect self alignment-rect)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameForAlignmentRect:")) (id->ffi2-ptr alignment-rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nsstackview-get-rects-being-drawn-count self rects count)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRectsBeingDrawn:count:")) (id->ffi2-ptr rects) (id->ffi2-ptr count)))
 (define (nsstackview-get-rects-exposed-during-live-resize-count self exposed-rects count)
@@ -2055,8 +2264,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertTabIgnoringFieldEditor:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-insert-text! self insert-string)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
+(define (nsstackview-insert-view-at-index-in-gravity! self view index gravity)
+  (aw_racket_msg_PQq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertView:atIndex:inGravity:")) (id->ffi2-ptr (coerce-arg view)) index gravity))
 (define (nsstackview-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nsstackview-invalidate-intrinsic-content-size self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSize"))))
+(define (nsstackview-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nsstackview-is-accessibility-alternate-ui-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilityAlternateUIVisible"))))
 (define (nsstackview-is-accessibility-disclosed self)
@@ -2093,26 +2308,44 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilitySelectorAllowed:")) (id->ffi2-ptr (sel_registerName selector))))
 (define (nsstackview-is-descendant-of self view)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDescendantOf:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nsstackview-is-drawing-find-indicator self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDrawingFindIndicator"))))
 (define (nsstackview-is-flipped self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isFlipped"))))
 (define (nsstackview-is-hidden self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHidden"))))
 (define (nsstackview-is-hidden-or-has-hidden-ancestor self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHiddenOrHasHiddenAncestor"))))
+(define (nsstackview-is-horizontal-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHorizontalContentSizeConstraintActive"))))
+(define (nsstackview-is-in-full-screen-mode self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isInFullScreenMode"))))
 (define (nsstackview-is-opaque self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isOpaque"))))
 (define (nsstackview-is-rotated-from-base self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRotatedFromBase"))))
 (define (nsstackview-is-rotated-or-scaled-from-base self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRotatedOrScaledFromBase"))))
+(define (nsstackview-is-vertical-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVerticalContentSizeConstraintActive"))))
 (define (nsstackview-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsstackview-key-up self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyUp:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-knows-page-range self range)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "knowsPageRange:")) (id->ffi2-ptr range)))
 (define (nsstackview-layout self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layout"))))
+(define (nsstackview-layout-guide-for-layout-region self layout-region)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutGuideForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region))))
+   ))
 (define (nsstackview-layout-subtree-if-needed self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutSubtreeIfNeeded"))))
+(define (nsstackview-location-of-print-rect self rect)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_R_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "locationOfPrintRect:")) (id->ffi2-ptr rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
 (define (nsstackview-lowercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lowercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-magnify-with-event self event)
@@ -2133,6 +2366,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsstackview-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nsstackview-menu-for-event self event)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "menuForEvent:")) (id->ffi2-ptr (coerce-arg event))))
@@ -2231,8 +2468,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-needs-to-draw-rect self rect)
   (aw_racket_msg_R_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "needsToDrawRect:")) (id->ffi2-ptr rect)))
+(define (nsstackview-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
+(define (nsstackview-note-focus-ring-mask-changed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noteFocusRingMaskChanged"))))
 (define (nsstackview-other-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "otherMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsstackview-other-mouse-dragged self event)
@@ -2251,40 +2492,81 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-perform-key-equivalent! self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-prepare-content-in-rect self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareContentInRect:")) (id->ffi2-ptr rect)))
 (define (nsstackview-prepare-for-drag-operation self sender)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-prepare-for-reuse self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForReuse"))))
+(define (nsstackview-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nsstackview-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nsstackview-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-print self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "print:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-quick-look-preview-items self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookPreviewItems:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-quick-look-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-rect-for-layout-region self layout-region)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_P_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nsstackview-rect-for-page self page)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_q_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForPage:")) page (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nsstackview-rect-for-smart-magnification-at-point-in-rect self location visible-rect)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_OR_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForSmartMagnificationAtPoint:inRect:")) (id->ffi2-ptr location) (id->ffi2-ptr visible-rect) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nsstackview-reflect-scrolled-clip-view self clip-view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "reflectScrolledClipView:")) (id->ffi2-ptr (coerce-arg clip-view))))
+(define (nsstackview-register-for-dragged-types self new-types)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForDraggedTypes:")) (id->ffi2-ptr (coerce-arg new-types))))
 (define (nsstackview-remove-all-tool-tips! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeAllToolTips"))))
 (define (nsstackview-remove-arranged-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeArrangedSubview:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nsstackview-remove-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nsstackview-remove-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nsstackview-remove-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
 (define (nsstackview-remove-from-superview! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperview"))))
 (define (nsstackview-remove-from-superview-without-needing-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperviewWithoutNeedingDisplay"))))
+(define (nsstackview-remove-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nsstackview-remove-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nsstackview-remove-tool-tip! self tag)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeToolTip:")) tag))
+(define (nsstackview-remove-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nsstackview-remove-tracking-rect! self tag)
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingRect:")) tag))
+(define (nsstackview-remove-view! self view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeView:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nsstackview-replace-subview-with! self old-view new-view)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replaceSubview:with:")) (id->ffi2-ptr (coerce-arg old-view)) (id->ffi2-ptr (coerce-arg new-view))))
+(define (nsstackview-reset-cursor-rects! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resetCursorRects"))))
 (define (nsstackview-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
 (define (nsstackview-resize-subviews-with-old-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeSubviewsWithOldSize:")) (id->ffi2-ptr old-size)))
 (define (nsstackview-resize-with-old-superview-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeWithOldSuperviewSize:")) (id->ffi2-ptr old-size)))
+(define (nsstackview-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsstackview-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nsstackview-right-mouse-down self event)
@@ -2297,8 +2579,36 @@
   (aw_racket_msg_d_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateByAngle:")) angle))
 (define (nsstackview-rotate-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-ruler-view-did-add-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsstackview-ruler-view-did-move-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsstackview-ruler-view-did-remove-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsstackview-ruler-view-handle-mouse-down self ruler event)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:handleMouseDown:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-ruler-view-location-for-point self ruler point)
+  (aw_racket_msg_PO_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:locationForPoint:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr point)))
+(define (nsstackview-ruler-view-point-for-location self ruler point)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_Pd_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:pointForLocation:")) (id->ffi2-ptr (coerce-arg ruler)) point (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
+(define (nsstackview-ruler-view-should-add-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsstackview-ruler-view-should-move-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsstackview-ruler-view-should-remove-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nsstackview-ruler-view-will-add-marker-at-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willAddMarker:atLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nsstackview-ruler-view-will-move-marker-to-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willMoveMarker:toLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nsstackview-ruler-view-will-set-client-view self ruler new-client)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willSetClientView:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg new-client))))
 (define (nsstackview-scale-unit-square-to-size self new-unit-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scaleUnitSquareToSize:")) (id->ffi2-ptr new-unit-size)))
+(define (nsstackview-scroll-clip-view-to-point self clip-view point)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollClipView:toPoint:")) (id->ffi2-ptr (coerce-arg clip-view)) (id->ffi2-ptr point)))
 (define (nsstackview-scroll-line-down self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollLineDown:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-scroll-line-up self sender)
@@ -2585,6 +2895,10 @@
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsSize:")) (id->ffi2-ptr new-size)))
 (define (nsstackview-set-clipping-resistance-priority-for-orientation! self clipping-resistance-priority orientation)
   (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setClippingResistancePriority:forOrientation:")) clipping-resistance-priority orientation))
+(define (nsstackview-set-content-compression-resistance-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentCompressionResistancePriority:forOrientation:")) priority orientation))
+(define (nsstackview-set-content-hugging-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentHuggingPriority:forOrientation:")) priority orientation))
 (define (nsstackview-set-custom-spacing-after-view! self spacing view)
   (aw_racket_msg_dP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setCustomSpacing:afterView:")) spacing (id->ffi2-ptr (coerce-arg view))))
 (define (nsstackview-set-frame-origin! self new-origin)
@@ -2595,10 +2909,14 @@
   (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setHuggingPriority:forOrientation:")) hugging-priority orientation))
 (define (nsstackview-set-identifier! self identifier)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
+(define (nsstackview-set-keyboard-focus-ring-needs-display-in-rect! self rect)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setKeyboardFocusRingNeedsDisplayInRect:")) (id->ffi2-ptr rect)))
 (define (nsstackview-set-mark! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setMark:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-set-needs-display-in-rect! self invalid-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setNeedsDisplayInRect:")) (id->ffi2-ptr invalid-rect)))
+(define (nsstackview-set-views-in-gravity! self views gravity)
+  (aw_racket_msg_Pq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setViews:inGravity:")) (id->ffi2-ptr (coerce-arg views)) gravity))
 (define (nsstackview-set-visibility-priority-for-view! self priority view)
   (aw_racket_msg_fP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setVisibilityPriority:forView:")) priority (id->ffi2-ptr (coerce-arg view))))
 (define (nsstackview-should-be-treated-as-ink-event self event)
@@ -2609,6 +2927,15 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-show-context-menu-for-selection self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsstackview-show-definition-for-attributed-string-at-point self attr-string text-baseline-origin)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:atPoint:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr text-baseline-origin)))
+;; block param 3: async-copied (runtime-managed)
+(define (nsstackview-show-definition-for-attributed-string-range-options-baseline-origin-provider self attr-string target-range options origin-provider)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block origin-provider (list _NSRange) _NSPoint))
+  (aw_racket_msg_PGPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:range:options:baselineOriginProvider:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr target-range) (id->ffi2-ptr (coerce-arg options)) (id->ffi2-ptr _blk3)))
+(define (nsstackview-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-smart-magnify-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "smartMagnifyWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsstackview-sort-subviews-using-function-context self compare context)
@@ -2643,16 +2970,28 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "transposeWords:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-try-to-perform-with self action object)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryToPerform:with:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg object))))
+(define (nsstackview-unregister-dragged-types self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterDraggedTypes"))))
+(define (nsstackview-update-constraints self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraints"))))
+(define (nsstackview-update-constraints-for-subtree-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraintsForSubtreeIfNeeded"))))
 (define (nsstackview-update-dragging-items-for-drag self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateDraggingItemsForDrag:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-update-layer self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateLayer"))))
+(define (nsstackview-update-tracking-areas self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateTrackingAreas"))))
+(define (nsstackview-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nsstackview-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsstackview-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
+(define (nsstackview-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nsstackview-view-did-change-backing-properties self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "viewDidChangeBackingProperties"))))
 (define (nsstackview-view-did-change-effective-appearance self)
@@ -2679,6 +3018,10 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "viewWithTag:")) tag))
    ))
+(define (nsstackview-views-in-gravity self gravity)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "viewsInGravity:")) gravity))
+   ))
 (define (nsstackview-visibility-priority-for-view self view)
   (aw_racket_msg_P_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "visibilityPriorityForView:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nsstackview-wants-forwarded-scroll-events-for-axis self axis)
@@ -2689,12 +3032,24 @@
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
 (define (nsstackview-will-open-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willOpenMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nsstackview-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nsstackview-will-remove-subview self subview)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willRemoveSubview:")) (id->ffi2-ptr (coerce-arg subview))))
+(define (nsstackview-write-eps-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writeEPSInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
+(define (nsstackview-write-pdf-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writePDFInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nsstackview-yank self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yank:")) (id->ffi2-ptr (coerce-arg sender))))
 
 ;; --- Class methods ---
+(define (nsstackview-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSStackView) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nsstackview-default-animation-for-key key)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSStackView) (id->ffi2-ptr (sel_registerName "defaultAnimationForKey:")) (id->ffi2-ptr (coerce-arg key))))

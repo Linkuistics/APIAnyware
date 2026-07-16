@@ -47,7 +47,9 @@ impl FfiTypeMapper for SbclFfiTypeMapper {
                 }
                 sbcl_alien_for_primitive(&n).unwrap_or_else(|| SAP.to_string())
             }
-            TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => SAP.into(),
+            TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
+                SAP.into()
+            }
             TypeRefKind::Selector => SAP.into(),
             TypeRefKind::ClassRef => SAP.into(),
             TypeRefKind::Block { .. } => SAP.into(),
@@ -234,7 +236,15 @@ mod tests {
     #[test]
     fn object_and_pointer_types_are_sap() {
         let m = SbclFfiTypeMapper;
-        assert_eq!(m.map_type(&ty(TypeRefKind::Id), false), SAP);
+        assert_eq!(
+            m.map_type(
+                &ty(TypeRefKind::Id {
+                    protocols: Vec::new()
+                }),
+                false
+            ),
+            SAP
+        );
         assert_eq!(m.map_type(&ty(TypeRefKind::Instancetype), true), SAP);
         assert_eq!(m.map_type(&ty(TypeRefKind::Selector), false), SAP);
         assert_eq!(m.map_type(&ty(TypeRefKind::ClassRef), false), SAP);
@@ -374,7 +384,9 @@ mod tests {
         let void_ret = ty(TypeRefKind::Primitive {
             name: "void".into(),
         });
-        let id_param = ty(TypeRefKind::Id);
+        let id_param = ty(TypeRefKind::Id {
+            protocols: Vec::new(),
+        });
         // void (^)(id) — all slots reduce to scalar/pointer → bridgeable.
         assert!(is_bridgeable_block(
             std::slice::from_ref(&id_param),
@@ -394,7 +406,9 @@ mod tests {
     #[test]
     fn trait_helpers_work() {
         let m = SbclFfiTypeMapper;
-        assert!(m.is_object_type(&ty(TypeRefKind::Id)));
+        assert!(m.is_object_type(&ty(TypeRefKind::Id {
+            protocols: Vec::new()
+        })));
         assert!(m.is_void(&TypeRef::void()));
         assert!(m.is_struct_type(&ty(TypeRefKind::Struct {
             name: "NSRect".into()

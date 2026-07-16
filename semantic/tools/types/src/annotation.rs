@@ -206,7 +206,14 @@ pub struct ParamOwnership {
 }
 
 /// How a receiver treats a parameter's reference.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+///
+/// Also the vocabulary of the **declared** ownership qualifier on
+/// [`crate::ir::Property`] — `@property (weak)`/`(copy)`/`(strong)`/`(assign)` map
+/// onto exactly these four (ADR-0047 §4), so the convention tier's
+/// declared-attribute rules carry the extracted value straight to the annotation
+/// slot with no token table in between. `Hash` is derived so the value can key an
+/// `ascent` relation column.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OwnershipKind {
     /// Receiver retains (strong reference). Default for most object params.
@@ -276,26 +283,38 @@ pub enum ErrorPattern {
 /// rides per fact-slot on [`SlotProvenance::rules`], not on this enum, so the one
 /// enum serves both the method-level tag and the per-fact stamp.
 ///
-/// Precedence, high → low: `Manual > Llm (accepted) > Convention > Extraction >
-/// Unknown` (see [`AnnotationSource::precedence`]).
+/// Precedence, high → low: `Manual > Extraction > Llm (accepted) > Convention >
+/// Unknown` (see [`AnnotationSource::precedence`]) — evidence classes
+/// strongest-first: a human, the compiler, accepted prose, a naming pattern.
+/// Re-ranked by `declared-fact-precedence-k87` (2026-07-13, ADR-0047 §4): a
+/// declared fact now outranks accepted prose, closing the inversion where the
+/// LLM tier silently superseded a fact the compiler already stated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnnotationSource {
     /// Authored/resolved by a human directly (the highest-precedence tier).
     Manual,
+    /// Mechanically extracted from the SDK headers (the datalog fact base) —
+    /// **including** a convention rule whose *sole* premises are compiler
+    /// declarations (ADR-0047 §4, k87): membership is the *evidence class*, not
+    /// the producing mechanism, so such a rule produces here even though it
+    /// runs in the same `apianyware-conventions` datalog engine as
+    /// [`AnnotationSource::Convention`]. Membership test: could the rule fire on
+    /// a corpus with all names stripped? Producers today: the
+    /// declared-property-attribute ownership rule (one per [`OwnershipKind`])
+    /// and `block-copy-property-setter`. Outranks `Llm` — a declared fact beats
+    /// accepted prose.
+    Extraction,
     /// Derived from LLM analysis of Apple documentation. `accepted-LLM` ≡ a
     /// committed `source llm` fact (ADR-0050 D2 — git is the accept boundary).
     Llm,
     /// Derived from a platform convention rule (`apianyware-conventions`
     /// datalog). The backing `convention:<rule>` stamp(s) ride per-slot on
-    /// [`SlotProvenance::rules`].
+    /// [`SlotProvenance::rules`]. Rules here are the **fallback for the
+    /// undeclared case** — a name sniff, a positional default — never a
+    /// substitute for reading a declaration the compiler already hands us; a
+    /// declaration-premised rule belongs to `Extraction` instead (ADR-0047 §4).
     Convention,
-    /// Mechanically extracted from the SDK headers (the datalog fact base).
-    /// Lowest *producing* tier. No producer wires these four fact-slots
-    /// (ownership/block/threading/error) today — reserved for the §4 ladder's
-    /// completeness; ownership-family extraction (`returns_retained`) is carried
-    /// elsewhere on the IR, not as an annotation fact-slot.
-    Extraction,
     /// No tier produced the fact-slot. Carried as the method-level `source` of a
     /// method with no producing facts, so a fact-less method is *explicitly*
     /// unknown rather than silently defaulted to `Convention` (ADR-0050 §3).
@@ -305,12 +324,14 @@ pub enum AnnotationSource {
 impl AnnotationSource {
     /// The §28 precedence rank — **lower is higher precedence** (`Manual` = 0).
     /// The audit picks the minimum rank among a fact-slot's producing tiers.
+    /// Re-ranked by `declared-fact-precedence-k87`: `Extraction` moved above
+    /// `Llm` — a declared fact now outranks accepted prose.
     pub fn precedence(self) -> u8 {
         match self {
             AnnotationSource::Manual => 0,
-            AnnotationSource::Llm => 1,
-            AnnotationSource::Convention => 2,
-            AnnotationSource::Extraction => 3,
+            AnnotationSource::Extraction => 1,
+            AnnotationSource::Llm => 2,
+            AnnotationSource::Convention => 3,
             AnnotationSource::Unknown => 4,
         }
     }

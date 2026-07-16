@@ -17,6 +17,7 @@
 
 
 ;; --- Class predicates ---
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nscolorspace? v) (objc-instance-of? v "NSColorSpace"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
@@ -30,7 +31,7 @@
   [nscolor-alpha-component (c-> nscolor? real?)]
   [nscolor-alternate-selected-control-color (c-> (or/c nscolor? objc-nil?))]
   [nscolor-alternate-selected-control-text-color (c-> (or/c nscolor? objc-nil?))]
-  [nscolor-alternating-content-background-colors (c-> any/c)]
+  [nscolor-alternating-content-background-colors (c-> (or/c nsarray? objc-nil?))]
   [nscolor-black-color (c-> (or/c nscolor? objc-nil?))]
   [nscolor-black-component (c-> nscolor? real?)]
   [nscolor-blue-color (c-> (or/c nscolor? objc-nil?))]
@@ -43,7 +44,7 @@
   [nscolor-color-space (c-> nscolor? (or/c nscolorspace? objc-nil?))]
   [nscolor-color-space-name (c-> nscolor? (or/c nsstring? objc-nil?))]
   [nscolor-control-accent-color (c-> (or/c nscolor? objc-nil?))]
-  [nscolor-control-alternating-row-background-colors (c-> any/c)]
+  [nscolor-control-alternating-row-background-colors (c-> (or/c nsarray? objc-nil?))]
   [nscolor-control-background-color (c-> (or/c nscolor? objc-nil?))]
   [nscolor-control-color (c-> (or/c nscolor? objc-nil?))]
   [nscolor-control-dark-shadow-color (c-> (or/c nscolor? objc-nil?))]
@@ -158,7 +159,7 @@
   [nscolor-set-fill! (c-> nscolor? void?)]
   [nscolor-set-stroke! (c-> nscolor? void?)]
   [nscolor-shadow-with-level (c-> nscolor? real? (or/c nscolor? objc-nil?))]
-  [nscolor-writable-types-for-pasteboard (c-> nscolor? (or/c string? objc-object? #f) any/c)]
+  [nscolor-writable-types-for-pasteboard (c-> nscolor? (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nscolor-write-to-pasteboard (c-> nscolor? (or/c string? objc-object? #f) void?)]
   [nscolor-writing-options-for-type-pasteboard (c-> nscolor? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nscolor-color-for-control-tint (c-> exact-nonnegative-integer? (or/c nscolor? objc-nil?))]
@@ -166,6 +167,7 @@
   [nscolor-color-named (c-> (or/c string? objc-object? #f) (or/c nscolor? objc-nil?))]
   [nscolor-color-named-bundle (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nscolor? objc-nil?))]
   [nscolor-color-with-cg-color (c-> (or/c cpointer? #f) (or/c nscolor? objc-nil?))]
+  [nscolor-color-with-ci-color (c-> (or/c string? objc-object? #f) (or/c nscolor? objc-nil?))]
   [nscolor-color-with-calibrated-hue-saturation-brightness-alpha (c-> real? real? real? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-calibrated-red-green-blue-alpha (c-> real? real? real? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-calibrated-white-alpha (c-> real? real? (or/c nscolor? objc-nil?))]
@@ -186,7 +188,7 @@
   [nscolor-color-with-red-green-blue-alpha-linear-exposure (c-> real? real? real? real? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-srgb-red-green-blue-alpha (c-> real? real? real? real? (or/c nscolor? objc-nil?))]
   [nscolor-color-with-white-alpha (c-> real? real? (or/c nscolor? objc-nil?))]
-  [nscolor-readable-types-for-pasteboard (c-> (or/c string? objc-object? #f) any/c)]
+  [nscolor-readable-types-for-pasteboard (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nscolor-reading-options-for-type-pasteboard (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nscolor-supports-secure-coding (c-> boolean?)]
   )
@@ -644,6 +646,10 @@
 (define (nscolor-color-with-cg-color cg-color)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithCGColor:")) (id->ffi2-ptr cg-color)))
+   ))
+(define (nscolor-color-with-ci-color color)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSColor) (id->ffi2-ptr (sel_registerName "colorWithCIColor:")) (id->ffi2-ptr (coerce-arg color))))
    ))
 (define (nscolor-color-with-calibrated-hue-saturation-brightness-alpha hue saturation brightness alpha)
   (wrap-objc-object

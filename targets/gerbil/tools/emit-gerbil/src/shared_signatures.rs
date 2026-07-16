@@ -146,12 +146,22 @@ mod tests {
     #[test]
     fn differing_params_differ() {
         let m = GerbilFfiTypeMapper;
-        let one = msgsend_signature_key(&[param(TypeRefKind::Id)], &ty(TypeRefKind::Id), &m);
+        let one = msgsend_signature_key(
+            &[param(TypeRefKind::Id {
+                protocols: Vec::new(),
+            })],
+            &ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+            &m,
+        );
         let two = msgsend_signature_key(
             &[param(TypeRefKind::Primitive {
                 name: "double".into(),
             })],
-            &ty(TypeRefKind::Id),
+            &ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
             &m,
         );
         assert_ne!(one, two);

@@ -193,8 +193,11 @@ ascent! {
         returns_retained_from_resolve(class, sel, is_cm),
         !returns_retained_by_naming(class, sel, is_cm);
     // Naming says retained but resolve explicitly says not retained
-    // (only for methods that resolve actually processed — avoids false
-    // positives on category methods that resolve never saw)
+    // (only for methods that resolve actually processed — a category method
+    // is included here too, since extraction merges it into `class.methods`
+    // and resolve now computes a real retained-fact for it,
+    // `text-undo-surface-gap-k121`; this guard still excludes any method
+    // resolve genuinely never derived a fact for)
     violation_flag_mismatch(class.clone(), sel.clone()) <--
         returns_retained_by_naming(class, sel, is_cm),
         resolve_processed_method(class, sel, is_cm),

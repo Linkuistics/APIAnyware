@@ -16,6 +16,8 @@
 
 
 ;; --- Class predicates ---
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
 (define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
 (provide NSError)
@@ -27,11 +29,11 @@
   [nserror-help-anchor (c-> nserror? (or/c nsstring? objc-nil?))]
   [nserror-localized-description (c-> nserror? (or/c nsstring? objc-nil?))]
   [nserror-localized-failure-reason (c-> nserror? (or/c nsstring? objc-nil?))]
-  [nserror-localized-recovery-options (c-> nserror? any/c)]
+  [nserror-localized-recovery-options (c-> nserror? (or/c nsarray? objc-nil?))]
   [nserror-localized-recovery-suggestion (c-> nserror? (or/c nsstring? objc-nil?))]
   [nserror-recovery-attempter (c-> nserror? any/c)]
-  [nserror-underlying-errors (c-> nserror? any/c)]
-  [nserror-user-info (c-> nserror? any/c)]
+  [nserror-underlying-errors (c-> nserror? (or/c nsarray? objc-nil?))]
+  [nserror-user-info (c-> nserror? (or/c nsdictionary? objc-nil?))]
   [nserror-copy-with-zone (c-> nserror? (or/c cpointer? #f) any/c)]
   [nserror-encode-with-coder (c-> nserror? (or/c string? objc-object? #f) void?)]
   [nserror-error-with-domain-code-user-info (c-> (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) any/c)]

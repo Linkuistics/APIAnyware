@@ -137,7 +137,12 @@ fn fixture() -> Framework {
         vec![method(
             "copyWithZone:",
             ty(TypeRefKind::Instancetype),
-            vec![param("zone", TypeRefKind::Id)],
+            vec![param(
+                "zone",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
         )],
         vec![],
     );
@@ -160,12 +165,25 @@ fn fixture() -> Framework {
     let tkdocument = class(
         "TKDocument",
         vec!["TKCopying".into()],
-        vec![method("title", ty(TypeRefKind::Id), vec![])],
+        vec![method(
+            "title",
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+            vec![],
+        )],
         vec![flattened(
             "copyWithZone:",
             "TKCopying",
-            ty(TypeRefKind::Id),
-            vec![param("zone", TypeRefKind::Id)],
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+            vec![param(
+                "zone",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
         )],
     );
     fw("TestKit", vec![tkdocument], vec![tkcopying, tkdelegate])

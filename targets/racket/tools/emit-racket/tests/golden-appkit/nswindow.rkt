@@ -18,6 +18,7 @@
 ;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
+(define (cadisplaylink? v) (objc-instance-of? v "CADisplayLink"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
 (define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nsattributedstring? v) (objc-instance-of? v "NSAttributedString"))
@@ -26,11 +27,15 @@
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nscolorspace? v) (objc-instance-of? v "NSColorSpace"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
 (define (nsdocktile? v) (objc-instance-of? v "NSDockTile"))
+(define (nsdraggingsession? v) (objc-instance-of? v "NSDraggingSession"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsevent? v) (objc-instance-of? v "NSEvent"))
 (define (nsgraphicscontext? v) (objc-instance-of? v "NSGraphicsContext"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
 (define (nsmenu? v) (objc-instance-of? v "NSMenu"))
+(define (nsobject? v) (objc-instance-of? v "NSObject"))
 (define (nsresponder? v) (objc-instance-of? v "NSResponder"))
 (define (nsscreen? v) (objc-instance-of? v "NSScreen"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
@@ -43,6 +48,7 @@
 (define (nsview? v) (objc-instance-of? v "NSView"))
 (define (nsviewcontroller? v) (objc-instance-of? v "NSViewController"))
 (define (nswindow? v) (objc-instance-of? v "NSWindow"))
+(define (nswindowcontroller? v) (objc-instance-of? v "NSWindowController"))
 (define (nswindowtab? v) (objc-instance-of? v "NSWindowTab"))
 (define (nswindowtabgroup? v) (objc-instance-of? v "NSWindowTabGroup"))
 (provide NSWindow)
@@ -50,6 +56,7 @@
   [make-nswindow-init-with-coder (c-> (or/c string? objc-object? #f) any/c)]
   [make-nswindow-init-with-content-rect-style-mask-backing-defer (c-> any/c exact-nonnegative-integer? exact-nonnegative-integer? boolean? any/c)]
   [make-nswindow-init-with-content-rect-style-mask-backing-defer-screen (c-> any/c exact-nonnegative-integer? exact-nonnegative-integer? boolean? (or/c string? objc-object? #f) any/c)]
+  [make-nswindow-init-with-window-ref (c-> (or/c cpointer? #f) any/c)]
   [nswindow-accepts-first-responder (c-> nswindow? boolean?)]
   [nswindow-accepts-mouse-moved-events (c-> nswindow? boolean?)]
   [nswindow-set-accepts-mouse-moved-events! (c-> nswindow? boolean? void?)]
@@ -63,7 +70,7 @@
   [nswindow-set-alpha-value! (c-> nswindow? real? void?)]
   [nswindow-animation-behavior (c-> nswindow? exact-integer?)]
   [nswindow-set-animation-behavior! (c-> nswindow? exact-integer? void?)]
-  [nswindow-appearance-source (c-> nswindow? any/c)]
+  [nswindow-appearance-source (c-> nswindow? (or/c nsobject? objc-nil?))]
   [nswindow-set-appearance-source! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-are-cursor-rects-enabled (c-> nswindow? boolean?)]
   [nswindow-aspect-ratio (c-> nswindow? any/c)]
@@ -86,7 +93,7 @@
   [nswindow-can-hide (c-> nswindow? boolean?)]
   [nswindow-set-can-hide! (c-> nswindow? boolean? void?)]
   [nswindow-cascading-reference-frame (c-> nswindow? any/c)]
-  [nswindow-child-windows (c-> nswindow? any/c)]
+  [nswindow-child-windows (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-collection-behavior (c-> nswindow? exact-nonnegative-integer?)]
   [nswindow-set-collection-behavior! (c-> nswindow? exact-nonnegative-integer? void?)]
   [nswindow-color-space (c-> nswindow? (or/c nscolorspace? objc-nil?))]
@@ -101,7 +108,7 @@
   [nswindow-set-content-min-size! (c-> nswindow? any/c void?)]
   [nswindow-content-resize-increments (c-> nswindow? any/c)]
   [nswindow-set-content-resize-increments! (c-> nswindow? any/c void?)]
-  [nswindow-content-view (c-> nswindow? any/c)]
+  [nswindow-content-view (c-> nswindow? (or/c nsview? objc-nil?))]
   [nswindow-set-content-view! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-content-view-controller (c-> nswindow? (or/c nsviewcontroller? objc-nil?))]
   [nswindow-set-content-view-controller! (c-> nswindow? (or/c string? objc-object? #f) void?)]
@@ -114,13 +121,13 @@
   [nswindow-set-delegate! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-depth-limit (c-> nswindow? exact-integer?)]
   [nswindow-set-depth-limit! (c-> nswindow? exact-integer? void?)]
-  [nswindow-device-description (c-> nswindow? any/c)]
+  [nswindow-device-description (c-> nswindow? (or/c nsdictionary? objc-nil?))]
   [nswindow-displays-when-screen-profile-changes (c-> nswindow? boolean?)]
   [nswindow-set-displays-when-screen-profile-changes! (c-> nswindow? boolean? void?)]
   [nswindow-dock-tile (c-> nswindow? (or/c nsdocktile? objc-nil?))]
   [nswindow-document-edited (c-> nswindow? boolean?)]
   [nswindow-set-document-edited! (c-> nswindow? boolean? void?)]
-  [nswindow-drawers (c-> nswindow? any/c)]
+  [nswindow-drawers (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-excluded-from-windows-menu (c-> nswindow? boolean?)]
   [nswindow-set-excluded-from-windows-menu! (c-> nswindow? boolean? void?)]
   [nswindow-first-responder (c-> nswindow? (or/c nsresponder? objc-nil?))]
@@ -199,15 +206,15 @@
   [nswindow-set-resize-increments! (c-> nswindow? any/c void?)]
   [nswindow-restorable (c-> nswindow? boolean?)]
   [nswindow-set-restorable! (c-> nswindow? boolean? void?)]
-  [nswindow-restorable-state-key-paths (c-> any/c)]
-  [nswindow-restoration-class (c-> nswindow? any/c)]
-  [nswindow-set-restoration-class! (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
+  [nswindow-restoration-class (c-> nswindow? cpointer?)]
+  [nswindow-set-restoration-class! (c-> nswindow? cpointer? void?)]
   [nswindow-screen (c-> nswindow? (or/c nsscreen? objc-nil?))]
   [nswindow-sharing-type (c-> nswindow? exact-nonnegative-integer?)]
   [nswindow-set-sharing-type! (c-> nswindow? exact-nonnegative-integer? void?)]
   [nswindow-sheet (c-> nswindow? boolean?)]
   [nswindow-sheet-parent (c-> nswindow? (or/c nswindow? objc-nil?))]
-  [nswindow-sheets (c-> nswindow? any/c)]
+  [nswindow-sheets (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-shows-resize-indicator (c-> nswindow? boolean?)]
   [nswindow-set-shows-resize-indicator! (c-> nswindow? boolean? void?)]
   [nswindow-shows-toolbar-button (c-> nswindow? boolean?)]
@@ -219,7 +226,7 @@
   [nswindow-set-subtitle! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-tab (c-> nswindow? (or/c nswindowtab? objc-nil?))]
   [nswindow-tab-group (c-> nswindow? (or/c nswindowtabgroup? objc-nil?))]
-  [nswindow-tabbed-windows (c-> nswindow? any/c)]
+  [nswindow-tabbed-windows (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-tabbing-identifier (c-> nswindow? (or/c nsstring? objc-nil?))]
   [nswindow-set-tabbing-identifier! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-tabbing-mode (c-> nswindow? exact-integer?)]
@@ -228,7 +235,7 @@
   [nswindow-set-title! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-title-visibility (c-> nswindow? exact-integer?)]
   [nswindow-set-title-visibility! (c-> nswindow? exact-integer? void?)]
-  [nswindow-titlebar-accessory-view-controllers (c-> nswindow? any/c)]
+  [nswindow-titlebar-accessory-view-controllers (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-set-titlebar-accessory-view-controllers! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-titlebar-appears-transparent (c-> nswindow? boolean?)]
   [nswindow-set-titlebar-appears-transparent! (c-> nswindow? boolean? void?)]
@@ -247,7 +254,7 @@
   [nswindow-views-need-display (c-> nswindow? boolean?)]
   [nswindow-set-views-need-display! (c-> nswindow? boolean? void?)]
   [nswindow-visible (c-> nswindow? boolean?)]
-  [nswindow-window-controller (c-> nswindow? any/c)]
+  [nswindow-window-controller (c-> nswindow? (or/c nswindowcontroller? objc-nil?))]
   [nswindow-set-window-controller! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-window-number (c-> nswindow? exact-integer?)]
   [nswindow-window-ref (c-> nswindow? (or/c cpointer? #f))]
@@ -256,14 +263,14 @@
   [nswindow-zoomable (c-> nswindow? boolean?)]
   [nswindow-zoomed (c-> nswindow? boolean?)]
   [nswindow-accessibility-activation-point (c-> nswindow? any/c)]
-  [nswindow-accessibility-allowed-values (c-> nswindow? any/c)]
+  [nswindow-accessibility-allowed-values (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-application-focused-ui-element (c-> nswindow? any/c)]
   [nswindow-accessibility-attributed-string-for-range (c-> nswindow? any/c (or/c nsattributedstring? objc-nil?))]
-  [nswindow-accessibility-attributed-user-input-labels (c-> nswindow? any/c)]
+  [nswindow-accessibility-attributed-user-input-labels (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-cancel-button (c-> nswindow? any/c)]
   [nswindow-accessibility-cell-for-column-row (c-> nswindow? exact-integer? exact-integer? any/c)]
   [nswindow-accessibility-children (c-> nswindow? (or/c nsarray? objc-nil?))]
-  [nswindow-accessibility-children-in-navigation-order (c-> nswindow? any/c)]
+  [nswindow-accessibility-children-in-navigation-order (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-clear-button (c-> nswindow? any/c)]
   [nswindow-accessibility-close-button (c-> nswindow? any/c)]
   [nswindow-accessibility-column-count (c-> nswindow? exact-integer?)]
@@ -273,8 +280,8 @@
   [nswindow-accessibility-columns (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-contents (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-critical-value (c-> nswindow? any/c)]
-  [nswindow-accessibility-custom-actions (c-> nswindow? any/c)]
-  [nswindow-accessibility-custom-rotors (c-> nswindow? any/c)]
+  [nswindow-accessibility-custom-actions (c-> nswindow? (or/c nsarray? objc-nil?))]
+  [nswindow-accessibility-custom-rotors (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-decrement-button (c-> nswindow? any/c)]
   [nswindow-accessibility-default-button (c-> nswindow? any/c)]
   [nswindow-accessibility-disclosed-by-row (c-> nswindow? any/c)]
@@ -354,7 +361,7 @@
   [nswindow-accessibility-selected-rows (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-selected-text (c-> nswindow? (or/c nsstring? objc-nil?))]
   [nswindow-accessibility-selected-text-range (c-> nswindow? any/c)]
-  [nswindow-accessibility-selected-text-ranges (c-> nswindow? any/c)]
+  [nswindow-accessibility-selected-text-ranges (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-serves-as-title-for-ui-elements (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-shared-character-range (c-> nswindow? any/c)]
   [nswindow-accessibility-shared-focus-elements (c-> nswindow? (or/c nsarray? objc-nil?))]
@@ -373,7 +380,7 @@
   [nswindow-accessibility-url (c-> nswindow? (or/c nsurl? objc-nil?))]
   [nswindow-accessibility-unit-description (c-> nswindow? (or/c nsstring? objc-nil?))]
   [nswindow-accessibility-units (c-> nswindow? exact-integer?)]
-  [nswindow-accessibility-user-input-labels (c-> nswindow? any/c)]
+  [nswindow-accessibility-user-input-labels (c-> nswindow? (or/c nsarray? objc-nil?))]
   [nswindow-accessibility-value (c-> nswindow? any/c)]
   [nswindow-accessibility-value-description (c-> nswindow? (or/c nsstring? objc-nil?))]
   [nswindow-accessibility-vertical-scroll-bar (c-> nswindow? any/c)]
@@ -391,9 +398,10 @@
   [nswindow-add-child-window-ordered! (c-> nswindow? (or/c string? objc-object? #f) exact-integer? void?)]
   [nswindow-add-tabbed-window-ordered! (c-> nswindow? (or/c string? objc-object? #f) exact-integer? void?)]
   [nswindow-add-titlebar-accessory-view-controller! (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-anchor-attribute-for-orientation (c-> nswindow? exact-integer? exact-integer?)]
   [nswindow-animation-for-key (c-> nswindow? (or/c string? objc-object? #f) any/c)]
   [nswindow-animation-resize-time (c-> nswindow? any/c real?)]
-  [nswindow-animations (c-> nswindow? any/c)]
+  [nswindow-animations (c-> nswindow? (or/c nsdictionary? objc-nil?))]
   [nswindow-animator (c-> nswindow? any/c)]
   [nswindow-appearance (c-> nswindow? (or/c nsappearance? objc-nil?))]
   [nswindow-autorecalculates-content-border-thickness-for-edge (c-> nswindow? exact-nonnegative-integer? boolean?)]
@@ -402,6 +410,7 @@
   [nswindow-become-key-window (c-> nswindow? void?)]
   [nswindow-become-main-window (c-> nswindow? void?)]
   [nswindow-begin-critical-sheet-completion-handler! (c-> nswindow? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nswindow-begin-dragging-session-with-items-event-source! (c-> nswindow? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdraggingsession? objc-nil?))]
   [nswindow-begin-gesture-with-event! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-begin-sheet-completion-handler! (c-> nswindow? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
   [nswindow-can-represent-display-gamut (c-> nswindow? exact-integer? boolean?)]
@@ -425,12 +434,23 @@
   [nswindow-data-with-eps-inside-rect (c-> nswindow? any/c (or/c nsdata? objc-nil?))]
   [nswindow-data-with-pdf-inside-rect (c-> nswindow? any/c (or/c nsdata? objc-nil?))]
   [nswindow-deminiaturize (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-disable-cursor-rects (c-> nswindow? void?)]
   [nswindow-disable-key-equivalent-for-default-button-cell (c-> nswindow? void?)]
+  [nswindow-disable-screen-updates-until-flush (c-> nswindow? void?)]
+  [nswindow-disable-snapshot-restoration (c-> nswindow? void?)]
+  [nswindow-discard-cursor-rects (c-> nswindow? void?)]
+  [nswindow-discard-events-matching-mask-before-event (c-> nswindow? exact-nonnegative-integer? (or/c string? objc-object? #f) void?)]
   [nswindow-display! (c-> nswindow? void?)]
   [nswindow-display-if-needed! (c-> nswindow? void?)]
+  [nswindow-display-link-with-target-selector! (c-> nswindow? (or/c string? objc-object? #f) string? (or/c cadisplaylink? objc-nil?))]
   [nswindow-displays-when-screen-profile-changes! (c-> nswindow? boolean?)]
+  [nswindow-drag-image-at-offset-event-pasteboard-source-slide-back (c-> nswindow? (or/c string? objc-object? #f) any/c any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean? void?)]
   [nswindow-effective-appearance (c-> nswindow? (or/c nsappearance? objc-nil?))]
+  [nswindow-enable-cursor-rects (c-> nswindow? void?)]
   [nswindow-enable-key-equivalent-for-default-button-cell (c-> nswindow? void?)]
+  [nswindow-enable-snapshot-restoration (c-> nswindow? void?)]
+  [nswindow-encode-restorable-state-with-coder (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-encode-restorable-state-with-coder-background-queue (c-> nswindow? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nswindow-encode-with-coder (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-end-editing-for! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-end-gesture-with-event! (c-> nswindow? (or/c string? objc-object? #f) void?)]
@@ -440,10 +460,15 @@
   [nswindow-flags-changed (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-flush-buffered-key-events (c-> nswindow? void?)]
   [nswindow-frame-rect-for-content-rect (c-> nswindow? any/c any/c)]
+  [nswindow-handle-close-script-command (c-> nswindow? (or/c string? objc-object? #f) any/c)]
+  [nswindow-handle-print-script-command (c-> nswindow? (or/c string? objc-object? #f) any/c)]
+  [nswindow-handle-save-script-command (c-> nswindow? (or/c string? objc-object? #f) any/c)]
   [nswindow-help-requested (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-identifier (c-> nswindow? (or/c nsstring? objc-nil?))]
   [nswindow-insert-titlebar-accessory-view-controller-at-index! (c-> nswindow? (or/c string? objc-object? #f) exact-integer? void?)]
   [nswindow-interpret-key-events (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-invalidate-cursor-rects-for-view (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-invalidate-restorable-state (c-> nswindow? void?)]
   [nswindow-invalidate-shadow (c-> nswindow? void?)]
   [nswindow-is-accessibility-alternate-ui-visible (c-> nswindow? boolean?)]
   [nswindow-is-accessibility-disclosed (c-> nswindow? boolean?)]
@@ -464,24 +489,32 @@
   [nswindow-is-accessibility-selector-allowed (c-> nswindow? string? boolean?)]
   [nswindow-is-document-edited (c-> nswindow? boolean?)]
   [nswindow-is-excluded-from-windows-menu (c-> nswindow? boolean?)]
+  [nswindow-is-floating-panel (c-> nswindow? boolean?)]
   [nswindow-is-key-window (c-> nswindow? boolean?)]
   [nswindow-is-main-window (c-> nswindow? boolean?)]
+  [nswindow-is-miniaturizable (c-> nswindow? boolean?)]
   [nswindow-is-miniaturized (c-> nswindow? boolean?)]
+  [nswindow-is-modal-panel (c-> nswindow? boolean?)]
   [nswindow-is-movable (c-> nswindow? boolean?)]
   [nswindow-is-movable-by-window-background (c-> nswindow? boolean?)]
   [nswindow-is-on-active-space (c-> nswindow? boolean?)]
   [nswindow-is-opaque (c-> nswindow? boolean?)]
   [nswindow-is-released-when-closed (c-> nswindow? boolean?)]
+  [nswindow-is-resizable (c-> nswindow? boolean?)]
+  [nswindow-is-restorable (c-> nswindow? boolean?)]
   [nswindow-is-sheet (c-> nswindow? boolean?)]
   [nswindow-is-visible (c-> nswindow? boolean?)]
+  [nswindow-is-zoomable (c-> nswindow? boolean?)]
   [nswindow-is-zoomed (c-> nswindow? boolean?)]
   [nswindow-key-down (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-key-up (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-layout-if-needed (c-> nswindow? void?)]
   [nswindow-magnify-with-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-make-first-responder (c-> nswindow? (or/c string? objc-object? #f) boolean?)]
   [nswindow-make-key-and-order-front (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-make-key-window (c-> nswindow? void?)]
   [nswindow-make-main-window (c-> nswindow? void?)]
+  [nswindow-make-touch-bar (c-> nswindow? (or/c nstouchbar? objc-nil?))]
   [nswindow-merge-all-windows (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-miniaturize (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-mouse-cancelled (c-> nswindow? (or/c string? objc-object? #f) void?)]
@@ -492,31 +525,42 @@
   [nswindow-mouse-moved (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-mouse-up (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-move-tab-to-new-window! (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-new-window-for-tab (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-next-event-matching-mask (c-> nswindow? exact-nonnegative-integer? (or/c nsevent? objc-nil?))]
+  [nswindow-next-event-matching-mask-until-date-in-mode-dequeue (c-> nswindow? exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean? (or/c nsevent? objc-nil?))]
   [nswindow-no-responder-for (c-> nswindow? string? void?)]
   [nswindow-order-back! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-order-front! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-order-front-regardless! (c-> nswindow? void?)]
   [nswindow-order-out! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-order-window-relative-to! (c-> nswindow? exact-integer? exact-integer? void?)]
+  [nswindow-ordered-index! (c-> nswindow? exact-integer?)]
   [nswindow-other-mouse-down (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-other-mouse-dragged (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-other-mouse-up (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-perform-close! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-perform-key-equivalent! (c-> nswindow? (or/c string? objc-object? #f) boolean?)]
   [nswindow-perform-miniaturize! (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-perform-text-finder-action! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-perform-window-drag-with-event! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-perform-zoom! (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-post-event-at-start (c-> nswindow? (or/c string? objc-object? #f) boolean? void?)]
+  [nswindow-present-error (c-> nswindow? (or/c string? objc-object? #f) boolean?)]
+  [nswindow-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nswindow? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nswindow-pressure-change-with-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-print (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-quick-look-with-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-recalculate-key-view-loop (c-> nswindow? void?)]
+  [nswindow-register-for-dragged-types (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-remove-child-window! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-remove-titlebar-accessory-view-controller-at-index! (c-> nswindow? exact-integer? void?)]
   [nswindow-request-sharing-of-window-completion-handler (c-> nswindow? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
   [nswindow-request-sharing-of-window-using-preview-title-completion-handler (c-> nswindow? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nswindow-reset-cursor-rects! (c-> nswindow? void?)]
   [nswindow-resign-first-responder (c-> nswindow? boolean?)]
   [nswindow-resign-key-window (c-> nswindow? void?)]
   [nswindow-resign-main-window (c-> nswindow? void?)]
+  [nswindow-restore-state-with-coder (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-right-mouse-down (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-right-mouse-dragged (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-right-mouse-up (c-> nswindow? (or/c string? objc-object? #f) void?)]
@@ -530,6 +574,7 @@
   [nswindow-select-next-tab (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-select-previous-key-view (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-select-previous-tab (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-send-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-set-accessibility-activation-point! (c-> nswindow? any/c void?)]
   [nswindow-set-accessibility-allowed-values! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-set-accessibility-alternate-ui-visible! (c-> nswindow? boolean? void?)]
@@ -654,6 +699,7 @@
   [nswindow-set-accessibility-window! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-set-accessibility-windows! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-set-accessibility-zoom-button! (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-set-anchor-attribute-for-orientation! (c-> nswindow? exact-integer? exact-integer? void?)]
   [nswindow-set-animations! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-set-appearance! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-set-autorecalculates-content-border-thickness-for-edge! (c-> nswindow? boolean? exact-nonnegative-integer? void?)]
@@ -669,9 +715,13 @@
   [nswindow-set-frame-using-name! (c-> nswindow? (or/c string? objc-object? #f) boolean?)]
   [nswindow-set-frame-using-name-force! (c-> nswindow? (or/c string? objc-object? #f) boolean? boolean?)]
   [nswindow-set-identifier! (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-set-is-miniaturized! (c-> nswindow? boolean? void?)]
+  [nswindow-set-is-visible! (c-> nswindow? boolean? void?)]
+  [nswindow-set-is-zoomed! (c-> nswindow? boolean? void?)]
   [nswindow-set-title-with-represented-filename! (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-should-be-treated-as-ink-event (c-> nswindow? (or/c string? objc-object? #f) boolean?)]
   [nswindow-show-context-help (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-show-writing-tools (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-smart-magnify-with-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-standard-window-button (c-> nswindow? exact-nonnegative-integer? (or/c nsbutton? objc-nil?))]
   [nswindow-supplemental-target-for-action-sender (c-> nswindow? string? (or/c string? objc-object? #f) any/c)]
@@ -686,15 +736,23 @@
   [nswindow-touches-cancelled-with-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-touches-ended-with-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-touches-moved-with-event (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-track-events-matching-mask-timeout-mode-handler (c-> nswindow? exact-nonnegative-integer? real? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
   [nswindow-transfer-window-sharing-to-window-completion-handler (c-> nswindow? (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
   [nswindow-try-to-perform-with (c-> nswindow? string? (or/c string? objc-object? #f) boolean?)]
+  [nswindow-unregister-dragged-types (c-> nswindow? void?)]
   [nswindow-update (c-> nswindow? void?)]
+  [nswindow-update-constraints-if-needed (c-> nswindow? void?)]
+  [nswindow-update-user-activity-state (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-valid-requestor-for-send-type-return-type (c-> nswindow? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nswindow-validate-menu-item (c-> nswindow? (or/c string? objc-object? #f) boolean?)]
+  [nswindow-validate-proposed-first-responder-for-event (c-> nswindow? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nswindow-validate-user-interface-item (c-> nswindow? (or/c string? objc-object? #f) boolean?)]
+  [nswindow-visualize-constraints (c-> nswindow? (or/c string? objc-object? #f) void?)]
   [nswindow-wants-forwarded-scroll-events-for-axis (c-> nswindow? exact-integer? boolean?)]
   [nswindow-wants-scroll-events-for-swipe-tracking-on-axis (c-> nswindow? exact-integer? boolean?)]
+  [nswindow-will-present-error (c-> nswindow? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nswindow-zoom (c-> nswindow? (or/c string? objc-object? #f) void?)]
+  [nswindow-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nswindow-content-rect-for-frame-rect-style-mask (c-> any/c exact-nonnegative-integer? any/c)]
   [nswindow-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
   [nswindow-frame-rect-for-content-rect-style-mask (c-> any/c exact-nonnegative-integer? any/c)]
@@ -702,7 +760,7 @@
   [nswindow-remove-frame-using-name! (c-> (or/c string? objc-object? #f) void?)]
   [nswindow-standard-window-button-for-style-mask (c-> exact-nonnegative-integer? exact-nonnegative-integer? (or/c nsbutton? objc-nil?))]
   [nswindow-window-number-at-point-below-window-with-window-number (c-> any/c exact-integer? exact-integer?)]
-  [nswindow-window-numbers-with-options (c-> exact-nonnegative-integer? any/c)]
+  [nswindow-window-numbers-with-options (c-> exact-nonnegative-integer? (or/c nsarray? objc-nil?))]
   [nswindow-window-with-content-view-controller (c-> (or/c string? objc-object? #f) any/c)]
   )
 
@@ -728,10 +786,14 @@
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_Pb_b (-> ptr_t ptr_t ptr_t bool_t bool_t))
+(define-aw-msg aw_racket_msg_Pb_v (-> ptr_t ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_Pq_v (-> ptr_t ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_PQ_d (-> ptr_t ptr_t ptr_t uint64_t double_t))
+(define-aw-msg aw_racket_msg_POZPPPb_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_bP_P (-> ptr_t ptr_t bool_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_bQ_v (-> ptr_t ptr_t bool_t uint64_t void_t))
@@ -746,7 +808,10 @@
 (define-aw-msg aw_racket_msg_Q_b (-> ptr_t ptr_t uint64_t bool_t))
 (define-aw-msg aw_racket_msg_Q_d (-> ptr_t ptr_t uint64_t double_t))
 (define-aw-msg aw_racket_msg_Q_v (-> ptr_t ptr_t uint64_t void_t))
+(define-aw-msg aw_racket_msg_QP_v (-> ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_QPPb_P (-> ptr_t ptr_t uint64_t ptr_t ptr_t bool_t ptr_t))
 (define-aw-msg aw_racket_msg_QQ_P (-> ptr_t ptr_t uint64_t uint64_t ptr_t))
+(define-aw-msg aw_racket_msg_QdPP_v (-> ptr_t ptr_t uint64_t double_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_f_v (-> ptr_t ptr_t float_t void_t))
 (define-aw-msg aw_racket_msg_d_v (-> ptr_t ptr_t double_t void_t))
 (define-aw-msg aw_racket_msg_dQ_v (-> ptr_t ptr_t double_t uint64_t void_t))
@@ -785,6 +850,11 @@
 (define (make-nswindow-init-with-content-rect-style-mask-backing-defer-screen content-rect style backing-store-type flag screen)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_RQQbP_P (id->ffi2-ptr (tell NSWindow alloc)) (id->ffi2-ptr (sel_registerName "initWithContentRect:styleMask:backing:defer:screen:")) (id->ffi2-ptr content-rect) style backing-store-type flag (id->ffi2-ptr (coerce-arg screen))))
+   #:retained #t))
+
+(define (make-nswindow-init-with-window-ref window-ref)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (tell NSWindow alloc)) (id->ffi2-ptr (sel_registerName "initWithWindowRef:")) (id->ffi2-ptr window-ref)))
    #:retained #t))
 
 
@@ -1145,10 +1215,9 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr NSWindow) (id->ffi2-ptr (sel_registerName "restorableStateKeyPaths"))))))
 (define (nswindow-restoration-class self)
-  (wrap-objc-object
-   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restorationClass"))))))
+  (ptr_t->cpointer (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restorationClass")))))
 (define (nswindow-set-restoration-class! self value)
-  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setRestorationClass:")) (id->ffi2-ptr (coerce-arg value))))
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setRestorationClass:")) (id->ffi2-ptr value)))
 (define (nswindow-screen self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "screen"))))))
@@ -1761,6 +1830,8 @@
   (aw_racket_msg_Pq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTabbedWindow:ordered:")) (id->ffi2-ptr (coerce-arg window)) ordered))
 (define (nswindow-add-titlebar-accessory-view-controller! self child-view-controller)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTitlebarAccessoryViewController:")) (id->ffi2-ptr (coerce-arg child-view-controller))))
+(define (nswindow-anchor-attribute-for-orientation self orientation)
+  (aw_racket_msg_q_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "anchorAttributeForOrientation:")) orientation))
 (define (nswindow-animation-for-key self key)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "animationForKey:")) (id->ffi2-ptr (coerce-arg key))))
@@ -1796,6 +1867,10 @@
   (define-values (_blk1 _blk1-id)
     (make-objc-block handler (list _int64) _void))
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginCriticalSheet:completionHandler:")) (id->ffi2-ptr (coerce-arg sheet-window)) (id->ffi2-ptr _blk1)))
+(define (nswindow-begin-dragging-session-with-items-event-source! self items event source)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDraggingSessionWithItems:event:source:")) (id->ffi2-ptr (coerce-arg items)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg source))))
+   ))
 (define (nswindow-begin-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 ;; block param 1: async-copied (runtime-managed)
@@ -1871,20 +1946,44 @@
    ))
 (define (nswindow-deminiaturize self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deminiaturize:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindow-disable-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "disableCursorRects"))))
 (define (nswindow-disable-key-equivalent-for-default-button-cell self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "disableKeyEquivalentForDefaultButtonCell"))))
+(define (nswindow-disable-screen-updates-until-flush self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "disableScreenUpdatesUntilFlush"))))
+(define (nswindow-disable-snapshot-restoration self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "disableSnapshotRestoration"))))
+(define (nswindow-discard-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardCursorRects"))))
+(define (nswindow-discard-events-matching-mask-before-event self mask last-event)
+  (aw_racket_msg_QP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardEventsMatchingMask:beforeEvent:")) mask (id->ffi2-ptr (coerce-arg last-event))))
 (define (nswindow-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "display"))))
 (define (nswindow-display-if-needed! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeeded"))))
+(define (nswindow-display-link-with-target-selector! self target selector)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayLinkWithTarget:selector:")) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName selector))))
+   ))
 (define (nswindow-displays-when-screen-profile-changes! self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displaysWhenScreenProfileChanges"))))
+(define (nswindow-drag-image-at-offset-event-pasteboard-source-slide-back self image base-location initial-offset event pboard source-obj slide-flag)
+  (aw_racket_msg_POZPPPb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dragImage:at:offset:event:pasteboard:source:slideBack:")) (id->ffi2-ptr (coerce-arg image)) (id->ffi2-ptr base-location) (id->ffi2-ptr initial-offset) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg pboard)) (id->ffi2-ptr (coerce-arg source-obj)) slide-flag))
 (define (nswindow-effective-appearance self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "effectiveAppearance"))))
    ))
+(define (nswindow-enable-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enableCursorRects"))))
 (define (nswindow-enable-key-equivalent-for-default-button-cell self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enableKeyEquivalentForDefaultButtonCell"))))
+(define (nswindow-enable-snapshot-restoration self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enableSnapshotRestoration"))))
+(define (nswindow-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nswindow-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nswindow-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nswindow-end-editing-for! self object)
@@ -1907,6 +2006,18 @@
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameRectForContentRect:")) (id->ffi2-ptr content-rect) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nswindow-handle-close-script-command self command)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "handleCloseScriptCommand:")) (id->ffi2-ptr (coerce-arg command))))
+   ))
+(define (nswindow-handle-print-script-command self command)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "handlePrintScriptCommand:")) (id->ffi2-ptr (coerce-arg command))))
+   ))
+(define (nswindow-handle-save-script-command self command)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "handleSaveScriptCommand:")) (id->ffi2-ptr (coerce-arg command))))
+   ))
 (define (nswindow-help-requested self event-ptr)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "helpRequested:")) (id->ffi2-ptr (coerce-arg event-ptr))))
 (define (nswindow-identifier self)
@@ -1917,6 +2028,10 @@
   (aw_racket_msg_Pq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertTitlebarAccessoryViewController:atIndex:")) (id->ffi2-ptr (coerce-arg child-view-controller)) index))
 (define (nswindow-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nswindow-invalidate-cursor-rects-for-view self view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateCursorRectsForView:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nswindow-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nswindow-invalidate-shadow self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateShadow"))))
 (define (nswindow-is-accessibility-alternate-ui-visible self)
@@ -1957,12 +2072,18 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDocumentEdited"))))
 (define (nswindow-is-excluded-from-windows-menu self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isExcludedFromWindowsMenu"))))
+(define (nswindow-is-floating-panel self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isFloatingPanel"))))
 (define (nswindow-is-key-window self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isKeyWindow"))))
 (define (nswindow-is-main-window self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isMainWindow"))))
+(define (nswindow-is-miniaturizable self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isMiniaturizable"))))
 (define (nswindow-is-miniaturized self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isMiniaturized"))))
+(define (nswindow-is-modal-panel self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isModalPanel"))))
 (define (nswindow-is-movable self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isMovable"))))
 (define (nswindow-is-movable-by-window-background self)
@@ -1973,16 +2094,24 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isOpaque"))))
 (define (nswindow-is-released-when-closed self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isReleasedWhenClosed"))))
+(define (nswindow-is-resizable self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isResizable"))))
+(define (nswindow-is-restorable self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRestorable"))))
 (define (nswindow-is-sheet self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isSheet"))))
 (define (nswindow-is-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVisible"))))
+(define (nswindow-is-zoomable self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isZoomable"))))
 (define (nswindow-is-zoomed self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isZoomed"))))
 (define (nswindow-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-key-up self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyUp:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nswindow-layout-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutIfNeeded"))))
 (define (nswindow-magnify-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "magnifyWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-make-first-responder self responder)
@@ -1993,6 +2122,10 @@
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeKeyWindow"))))
 (define (nswindow-make-main-window self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeMainWindow"))))
+(define (nswindow-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nswindow-merge-all-windows self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mergeAllWindows:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindow-miniaturize self sender)
@@ -2013,6 +2146,16 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mouseUp:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-move-tab-to-new-window! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveTabToNewWindow:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindow-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindow-next-event-matching-mask self mask)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_Q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "nextEventMatchingMask:")) mask))
+   ))
+(define (nswindow-next-event-matching-mask-until-date-in-mode-dequeue self mask expiration mode deq-flag)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_QPPb_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "nextEventMatchingMask:untilDate:inMode:dequeue:")) mask (id->ffi2-ptr (coerce-arg expiration)) (id->ffi2-ptr (coerce-arg mode)) deq-flag))
+   ))
 (define (nswindow-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
 (define (nswindow-order-back! self sender)
@@ -2025,6 +2168,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderOut:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindow-order-window-relative-to! self place other-win)
   (aw_racket_msg_qq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderWindow:relativeTo:")) place other-win))
+(define (nswindow-ordered-index! self)
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderedIndex"))))
 (define (nswindow-other-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "otherMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-other-mouse-dragged self event)
@@ -2037,10 +2182,19 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-perform-miniaturize! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performMiniaturize:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindow-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindow-perform-window-drag-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performWindowDragWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-perform-zoom! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performZoom:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindow-post-event-at-start self event flag)
+  (aw_racket_msg_Pb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "postEvent:atStart:")) (id->ffi2-ptr (coerce-arg event)) flag))
+(define (nswindow-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nswindow-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nswindow-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-print self sender)
@@ -2049,6 +2203,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-recalculate-key-view-loop self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "recalculateKeyViewLoop"))))
+(define (nswindow-register-for-dragged-types self new-types)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForDraggedTypes:")) (id->ffi2-ptr (coerce-arg new-types))))
 (define (nswindow-remove-child-window! self child-win)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeChildWindow:")) (id->ffi2-ptr (coerce-arg child-win))))
 (define (nswindow-remove-titlebar-accessory-view-controller-at-index! self index)
@@ -2063,12 +2219,16 @@
   (define-values (_blk2 _blk2-id)
     (make-objc-block completion-handler (list _id) _void))
   (aw_racket_msg_PPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "requestSharingOfWindowUsingPreview:title:completionHandler:")) (id->ffi2-ptr (coerce-arg image)) (id->ffi2-ptr (coerce-arg title)) (id->ffi2-ptr _blk2)))
+(define (nswindow-reset-cursor-rects! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resetCursorRects"))))
 (define (nswindow-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
 (define (nswindow-resign-key-window self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignKeyWindow"))))
 (define (nswindow-resign-main-window self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignMainWindow"))))
+(define (nswindow-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nswindow-right-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rightMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-right-mouse-dragged self event)
@@ -2095,6 +2255,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectPreviousKeyView:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindow-select-previous-tab self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectPreviousTab:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindow-send-event self event)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sendEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-set-accessibility-activation-point! self accessibility-activation-point)
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilityActivationPoint:")) (id->ffi2-ptr accessibility-activation-point)))
 (define (nswindow-set-accessibility-allowed-values! self accessibility-allowed-values)
@@ -2343,6 +2505,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilityWindows:")) (id->ffi2-ptr (coerce-arg accessibility-windows))))
 (define (nswindow-set-accessibility-zoom-button! self accessibility-zoom-button)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilityZoomButton:")) (id->ffi2-ptr (coerce-arg accessibility-zoom-button))))
+(define (nswindow-set-anchor-attribute-for-orientation! self attr orientation)
+  (aw_racket_msg_qq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAnchorAttribute:forOrientation:")) attr orientation))
 (define (nswindow-set-animations! self animations)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAnimations:")) (id->ffi2-ptr (coerce-arg animations))))
 (define (nswindow-set-appearance! self appearance)
@@ -2373,12 +2537,20 @@
   (aw_racket_msg_Pb_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrameUsingName:force:")) (id->ffi2-ptr (coerce-arg name)) force))
 (define (nswindow-set-identifier! self identifier)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
+(define (nswindow-set-is-miniaturized! self flag)
+  (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIsMiniaturized:")) flag))
+(define (nswindow-set-is-visible! self flag)
+  (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIsVisible:")) flag))
+(define (nswindow-set-is-zoomed! self flag)
+  (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIsZoomed:")) flag))
 (define (nswindow-set-title-with-represented-filename! self filename)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setTitleWithRepresentedFilename:")) (id->ffi2-ptr (coerce-arg filename))))
 (define (nswindow-should-be-treated-as-ink-event self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "shouldBeTreatedAsInkEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-show-context-help self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nswindow-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nswindow-smart-magnify-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "smartMagnifyWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-standard-window-button self b)
@@ -2411,6 +2583,11 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "touchesEndedWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-touches-moved-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "touchesMovedWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+;; block param 3: synchronous (caller frees)
+(define (nswindow-track-events-matching-mask-timeout-mode-handler self mask timeout mode tracking-handler)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block tracking-handler (list _id _pointer) _void))
+  (aw_racket_msg_QdPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "trackEventsMatchingMask:timeout:mode:handler:")) mask timeout (id->ffi2-ptr (coerce-arg mode)) (id->ffi2-ptr _blk3)))
 ;; block param 1: async-copied (runtime-managed)
 (define (nswindow-transfer-window-sharing-to-window-completion-handler self window completion-handler)
   (define-values (_blk1 _blk1-id)
@@ -2418,24 +2595,42 @@
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "transferWindowSharingToWindow:completionHandler:")) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr _blk1)))
 (define (nswindow-try-to-perform-with self action object)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryToPerform:with:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg object))))
+(define (nswindow-unregister-dragged-types self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterDraggedTypes"))))
 (define (nswindow-update self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "update"))))
+(define (nswindow-update-constraints-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraintsIfNeeded"))))
+(define (nswindow-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nswindow-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
 (define (nswindow-validate-menu-item self menu-item)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateMenuItem:")) (id->ffi2-ptr (coerce-arg menu-item))))
+(define (nswindow-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nswindow-validate-user-interface-item self item)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateUserInterfaceItem:")) (id->ffi2-ptr (coerce-arg item))))
+(define (nswindow-visualize-constraints self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "visualizeConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
 (define (nswindow-wants-forwarded-scroll-events-for-axis self axis)
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsForwardedScrollEventsForAxis:")) axis))
 (define (nswindow-wants-scroll-events-for-swipe-tracking-on-axis self axis)
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
+(define (nswindow-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nswindow-zoom self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "zoom:")) (id->ffi2-ptr (coerce-arg sender))))
 
 ;; --- Class methods ---
+(define (nswindow-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSWindow) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nswindow-content-rect-for-frame-rect-style-mask f-rect style)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_RQ_R (id->ffi2-ptr NSWindow) (id->ffi2-ptr (sel_registerName "contentRectForFrameRect:styleMask:")) (id->ffi2-ptr f-rect) style (cpointer->ptr_t buf))

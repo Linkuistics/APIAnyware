@@ -7,7 +7,6 @@ framework AuthenticationServices {
     }
     class ASAuthorizationController {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -187,10 +186,6 @@ framework AuthenticationServices {
             error-pattern error_out_param
             source llm
         }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class ASSettingsHelper {
         method openCredentialProviderAppSettingsWithCompletionHandler: is-instance=#false {
@@ -213,12 +208,6 @@ framework AuthenticationServices {
         }
         method initWithURL:callbackURLScheme:completionHandler: is-instance=#true {
             block-param 2 invocation=async_copied
-            source llm
-        }
-    }
-    class ASWebAuthenticationSessionRequest {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

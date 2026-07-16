@@ -689,7 +689,7 @@ fn map_param_contract(type_ref: &TypeRef) -> String {
         // Object params always accept #f (nil) — ObjC nil messaging is a
         // no-op, and many APIs accept nil even without explicit _Nullable.
         // coerce-arg passes #f through as the nil pointer.
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             "(or/c string? objc-object? #f)".to_string()
         }
         // Block params receive Racket procedures (or #f for nil)
@@ -715,7 +715,7 @@ fn map_return_contract(type_ref: &TypeRef) -> String {
             let pred = format!("{}?", class_name_to_lowercase(name));
             format!("(or/c {pred} objc-nil?)")
         }
-        TypeRefKind::Id | TypeRefKind::Instancetype => "any/c".to_string(),
+        TypeRefKind::Id { .. } | TypeRefKind::Instancetype => "any/c".to_string(),
         _ => map_contract(type_ref, true),
     }
 }
@@ -1761,7 +1761,7 @@ fn format_tell_args(selector: &str, param_names: &[String], params: &[Param]) ->
         let needs_coerce = i < params.len()
             && matches!(
                 params[i].param_type.kind,
-                TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype
+                TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype
             );
         if needs_coerce {
             parts.push(format!("{kw}: (coerce-arg {pn})"));
@@ -1955,7 +1955,9 @@ mod tests {
             name: "object".into(),
             param_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
         }];
         assert_eq!(
@@ -2002,7 +2004,9 @@ mod tests {
             params: vec![],
             return_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
             deprecated: false,
             variadic: false,
@@ -2064,7 +2068,9 @@ mod tests {
                 params: vec![],
                 return_type: TypeRef {
                     nullable: false,
-                    kind: TypeRefKind::Id,
+                    kind: TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
                 },
                 deprecated: false,
                 variadic: false,
@@ -2317,7 +2323,7 @@ mod tests {
             },
             readonly,
             class_property: false,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: None,
             provenance: None,
@@ -2336,7 +2342,7 @@ mod tests {
             },
             readonly,
             class_property: true,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: None,
             provenance: None,
@@ -2349,7 +2355,9 @@ mod tests {
     fn type_id() -> TypeRef {
         TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         }
     }
 
@@ -2450,7 +2458,13 @@ mod tests {
             superclass: String::new(),
             protocols: vec![],
             properties: vec![
-                make_test_property("title", TypeRefKind::Id, false),
+                make_test_property(
+                    "title",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                    false,
+                ),
                 make_test_property(
                     "hidden",
                     TypeRefKind::Primitive {
@@ -2491,7 +2505,13 @@ mod tests {
             name: "TKView".to_string(),
             superclass: String::new(),
             protocols: vec![],
-            properties: vec![make_test_property("title", TypeRefKind::Id, false)],
+            properties: vec![make_test_property(
+                "title",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+                false,
+            )],
             methods: vec![],
             category_methods: vec![],
             swift_attributes: vec![],
@@ -2599,7 +2619,13 @@ mod tests {
             superclass: String::new(),
             protocols: vec![],
             properties: vec![
-                make_test_property("title", TypeRefKind::Id, false),
+                make_test_property(
+                    "title",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                    false,
+                ),
                 make_test_property(
                     "tag",
                     TypeRefKind::Primitive {
@@ -2652,7 +2678,13 @@ mod tests {
                     false,
                 ),
                 // `_id` class property: native-dispatch setter path (050/010).
-                make_test_class_property("defaultTitle", TypeRefKind::Id, false),
+                make_test_class_property(
+                    "defaultTitle",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                    false,
+                ),
             ],
             methods: vec![],
             category_methods: vec![],
@@ -2720,7 +2752,13 @@ mod tests {
                     },
                     true,
                 ),
-                make_test_class_property("defaultTitle", TypeRefKind::Id, true),
+                make_test_class_property(
+                    "defaultTitle",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                    true,
+                ),
             ],
             methods: vec![],
             category_methods: vec![],
@@ -3081,7 +3119,9 @@ mod tests {
     fn test_map_param_contract_nullable_id() {
         let nullable_id = TypeRef {
             nullable: true,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         assert_eq!(
             map_param_contract(&nullable_id),
@@ -3741,7 +3781,7 @@ mod tests {
                 property_type: type_nsrect(),
                 readonly: false,
                 class_property: false,
-                is_copy: false,
+                ownership: None,
                 deprecated: false,
                 source: None,
                 provenance: None,

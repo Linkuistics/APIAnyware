@@ -1,0 +1,4 @@
+# Throwaway spike build artifacts — reproducible from source via build.sh.
+swift/libtsbridge.dylib
+addon/target/
+addon.node

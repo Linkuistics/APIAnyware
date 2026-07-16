@@ -42,25 +42,9 @@ framework CryptoTokenKit {
             source llm
         }
     }
-    class TKSmartCardToken {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class TKSmartCardTokenDriver {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class TKSmartCardTokenSession {
         method getSmartCardWithError: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -69,18 +53,10 @@ framework CryptoTokenKit {
             block-param 0 invocation=async_copied
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class TKSmartCardUserInteractionForPINOperation {
         method runWithReply: is-instance=#true {
             block-param 0 invocation=async_copied
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -89,24 +65,10 @@ framework CryptoTokenKit {
             block-param 0 invocation=async_copied
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class TKSmartCardUserInteractionForSecurePINVerification {
         method runWithReply: is-instance=#true {
             block-param 0 invocation=async_copied
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class TKToken {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -126,12 +88,6 @@ framework CryptoTokenKit {
             source llm
         }
     }
-    class TKTokenDriver {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class TKTokenKeychainContents {
         method certificateForObjectID:error: is-instance=#true {
             error-pattern error_out_param
@@ -145,12 +101,6 @@ framework CryptoTokenKit {
     class TKTokenPasswordAuthOperation {
         method finishWithError: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-    }
-    class TKTokenSession {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

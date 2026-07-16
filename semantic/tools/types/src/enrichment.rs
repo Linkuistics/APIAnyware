@@ -96,7 +96,7 @@ pub struct BlockMethodEntry {
 /// The `class` field holds a class name when the entry comes from the
 /// class-keyed `weak_param_methods`, or a protocol name when it comes from
 /// `protocol_weak_param_methods`.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WeakParamEntry {
     /// Class or protocol name.
     pub class: String,

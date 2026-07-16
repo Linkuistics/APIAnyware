@@ -188,10 +188,6 @@ framework SpriteKit {
             block-param 1 invocation=synchronous
             source llm
         }
-        method setContactDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class SKReferenceNode {
         method enumerateChildNodesWithName:usingBlock: is-instance=#true {
@@ -221,7 +217,6 @@ framework SpriteKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -322,7 +317,6 @@ framework SpriteKit {
     }
     class SKView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

@@ -41,10 +41,6 @@ framework AudioVideoBridging {
             error-pattern error_out_param
             source llm
         }
-        method setDiscoveryDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     subagent-report {
         block-synchronous 0

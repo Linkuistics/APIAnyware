@@ -800,7 +800,7 @@ fn emit_selector_cache(w: &mut CodeWriter, class_name: &str, selector: &str) -> 
 
 fn coerce_arg_expr(param: &Param, var: &str, mapper: &dyn FfiTypeMapper) -> String {
     match &param.param_type.kind {
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             format!("(coerce-arg {})", var)
         }
         TypeRefKind::Selector => format!("(sel-register {})", var),
@@ -1130,7 +1130,7 @@ fn emit_property(
         write_line!(w, "  (define ({} {})", setter_name, setter_arglist);
 
         let value_expr = match &prop.property_type.kind {
-            TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+            TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
                 "(coerce-arg value)".to_string()
             }
             TypeRefKind::Selector => "(sel-register value)".to_string(),
@@ -1420,7 +1420,9 @@ mod tests {
                 vec![
                     Param {
                         name: "window".into(),
-                        param_type: ty(TypeRefKind::Id),
+                        param_type: ty(TypeRefKind::Id {
+                            protocols: Vec::new(),
+                        }),
                     },
                     Param {
                         name: "handler".into(),
@@ -1530,7 +1532,14 @@ mod tests {
             superclass: String::new(),
             protocols: vec![],
             properties: vec![],
-            methods: vec![make_method("string", true, false, ty(TypeRefKind::Id))],
+            methods: vec![make_method(
+                "string",
+                true,
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
+            )],
             category_methods: vec![],
             swift_attributes: vec![],
             ancestors: vec![],

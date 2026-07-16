@@ -459,7 +459,15 @@ mod tests {
 
     #[test]
     fn function_returning_id_maps_to_raw_pointer() {
-        let fs = vec![func("TKMakeWidget", vec![], TypeRefKind::Id, false, false)];
+        let fs = vec![func(
+            "TKMakeWidget",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+            false,
+            false,
+        )];
         let out = generate_functions_file(&fs, "TestKit", &[]);
         // ObjC pointer return collapses to `void *` in the synthesized prototype.
         assert!(out.contains("(c-declare \"extern void * TKMakeWidget(void);\")"));
@@ -536,7 +544,12 @@ mod tests {
             func(
                 "dispatch_async",
                 vec![
-                    param("q", TypeRefKind::Id),
+                    param(
+                        "q",
+                        TypeRefKind::Id {
+                            protocols: Vec::new(),
+                        },
+                    ),
                     param("blk", TypeRefKind::Pointer),
                 ],
                 TypeRefKind::Primitive {
@@ -547,7 +560,12 @@ mod tests {
             ),
             func(
                 "dispatch_cancel",
-                vec![param("q", TypeRefKind::Id)],
+                vec![param(
+                    "q",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
                 TypeRefKind::Primitive {
                     name: "void".into(),
                 },

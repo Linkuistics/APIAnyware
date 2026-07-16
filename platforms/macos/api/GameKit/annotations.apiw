@@ -141,7 +141,6 @@ framework GameKit {
             source llm
         }
         method setAchievementDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -166,12 +165,6 @@ framework GameKit {
             source llm
         }
     }
-    class GKChallengeEventHandler {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class GKChallengesViewController {
         method commitEditingAndReturnError: is-instance=#true {
             threading main_thread_only
@@ -183,7 +176,6 @@ framework GameKit {
             source llm
         }
         method setChallengeDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -205,7 +197,6 @@ framework GameKit {
             source llm
         }
         method setComposeViewDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -265,7 +256,6 @@ framework GameKit {
             source llm
         }
         method setGameCenterDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -401,7 +391,6 @@ framework GameKit {
             source llm
         }
         method setLeaderboardDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -505,10 +494,6 @@ framework GameKit {
             error-pattern error_out_param
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
         method chooseBestHostPlayerWithCompletionHandler: is-instance=#true {
             block-param 0 invocation=async_copied
             source llm
@@ -593,7 +578,6 @@ framework GameKit {
             source llm
         }
         method setMatchmakerDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -669,16 +653,6 @@ framework GameKit {
         }
         method sendDataToAllPeers:withDataMode:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class GKTurnBasedEventHandler {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -785,7 +759,6 @@ framework GameKit {
             source llm
         }
         method setTurnBasedMatchmakerDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

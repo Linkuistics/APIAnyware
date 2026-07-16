@@ -195,8 +195,22 @@ fn build_effective_methods_for_class(
 
             if let Some(original) = resolved_method {
                 let mut method = (*original).clone();
-                // Set resolved-phase fields
-                if origin != class {
+                // Set resolved-phase fields. `origin` is a **plain name string** shared by two
+                // namespaces (a class or a protocol) — comparing it against `class` by string
+                // equality alone is the same lossy-map-as-key species ADR-0055 §4c already named
+                // for the render layer (`protocol-class-name-collapse-k90`), reaching the IR here:
+                // a class whose own declaration is genuinely empty but which conforms to a
+                // same-named protocol (`NSTextAttachmentCell : NSCell <NSTextAttachmentCell>`, 5
+                // corpus occurrences) gets an `effective_method` row whose `origin` STRING equals
+                // `class` even though the row came from the *protocol's* propagation rule, not the
+                // class's own `method_decl` — `typecheck-gate-post-k86-residuals-k110`. The
+                // disambiguator already exists: `method_index` is keyed on the same
+                // `(class, selector, is_class_method)` triple `method_decl` populates, so a row is a
+                // genuine own declaration iff *that* exact key (class, not origin) is present there
+                // — not iff the name strings happen to match.
+                let is_own_declaration =
+                    method_index.contains_key(&(class.as_str(), sel.as_str(), *is_cm));
+                if !is_own_declaration {
                     method.origin = Some(origin.clone());
                 }
                 method.returns_retained =
@@ -248,14 +262,74 @@ fn build_effective_methods_for_class(
         })
         .collect();
 
-    // Sort for deterministic output
+    // Sort for deterministic output. `origin` breaks ties on content (not
+    // Datalog derivation order) so the dedup below is independent of ascent's
+    // internal relation iteration order, which shifts with unrelated fact
+    // volume (e.g. how many other frameworks share the run) — see
+    // `has_nondeprecated_protocol_method` in program.rs for the common case
+    // (a deprecated vs. non-deprecated protocol declaring the same selector),
+    // already resolved before this point.
     methods.sort_by(|a, b| {
         a.selector
             .cmp(&b.selector)
             .then(a.class_method.cmp(&b.class_method))
+            .then(a.origin.cmp(&b.origin))
     });
 
-    methods
+    // Residual same-selector collision: two conformed protocols of matching
+    // deprecation status both declare it (the Datalog precedence above only
+    // orders deprecated vs. non-deprecated), and — unlike `NSSecureCoding`/
+    // `NSCoding` — carry no `protocol_inherits` edge between them either (the
+    // real-corpus shape: `NSAccessibility`, a wide informal protocol declaring
+    // `accessibilityValue` as a bare `id`, alongside an unrelated specific sibling
+    // like `NSAccessibilityProgressIndicator` narrowing it to `NSNumber` —
+    // `typecheck-gate-post-k86-residuals-k110`, ADR-0055 §4b). When exactly one
+    // side declares a bare, unqualified `id` return and the other does not, the
+    // non-bare declaration is strictly more informative — an untyped `id` return
+    // is never a *better* fact than a typed one, only a less specific one — so it
+    // wins regardless of alphabetical origin. Otherwise (including when BOTH or
+    // NEITHER declare a bare `id`) fall back to the deterministic
+    // alphabetically-first origin — and count what was dropped rather than losing
+    // it silently (k57 discipline).
+    let mut deduped: Vec<Method> = Vec::with_capacity(methods.len());
+    let mut collisions = 0usize;
+    for method in methods {
+        let collides = deduped.last().is_some_and(|kept: &Method| {
+            kept.selector == method.selector && kept.class_method == method.class_method
+        });
+        if !collides {
+            deduped.push(method);
+            continue;
+        }
+        collisions += 1;
+        let kept = deduped.last_mut().expect("just checked collides");
+        if is_bare_id_return(&kept.return_type) && !is_bare_id_return(&method.return_type) {
+            *kept = method;
+        }
+    }
+    if collisions > 0 {
+        tracing::warn!(
+            class = class_name,
+            collisions,
+            "resolved residual same-selector effective_method collisions (matching deprecation status, distinct protocol origins) — preferred a typed return over a bare `id` where exactly one side had one, else kept the alphabetically-first origin"
+        );
+    }
+
+    deduped
+}
+
+/// A bare, unqualified `id` return (`TypeRefKind::Id` with no protocol qualifiers) — the least
+/// specific object return a method can declare. The only signal [`build_effective_methods_for_class`]'s
+/// residual-collision dedup uses to prefer one same-deprecation-status protocol declaration over
+/// another with no `inherits` relation between them: a concrete class or a protocol-qualified `id`
+/// is strictly more informative than the untyped case, in every target this IR feeds (ADR-0011) —
+/// not a TypeScript-specific judgment, even though TypeScript's static types are what first made
+/// the ambiguity observable (`corpus-typecheck-gate-k75`).
+fn is_bare_id_return(t: &apianyware_types::TypeRef) -> bool {
+    matches!(
+        &t.kind,
+        apianyware_types::TypeRefKind::Id { protocols } if protocols.is_empty()
+    )
 }
 
 /// Build the `all_properties` list for a class from effective_property Datalog results.
@@ -283,7 +357,7 @@ fn build_effective_properties_for_class(
                     property_type: apianyware_types::TypeRef::void(),
                     readonly: *ro,
                     class_property: *cp,
-                    is_copy: false,
+                    ownership: None,
                     deprecated: *dep,
                     source: None,
                     provenance: None,

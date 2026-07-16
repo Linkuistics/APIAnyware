@@ -111,11 +111,18 @@ fn map_type_nominal(node: &AbiNode) -> TypeRef {
         };
     }
 
-    // ObjC-bridged protocol: USR starts with "c:objc(pl)"
+    // ObjC-bridged protocol: USR starts with "c:objc(pl)".
+    //
+    // The protocol's name is right here and is *not* carried onto the `id` — the Swift
+    // dual of the ObjC qualifier gap `protocol-qualifier-ir-k81` closed. Filling it moves
+    // the Swift-sourced IR and every target's goldens, so it belongs with the other
+    // analysis-phase lowering repairs (`objc-object-type-lowering-k85`), not here.
     if usr.starts_with("c:objc(pl)") {
         return TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
     }
 
@@ -123,7 +130,9 @@ fn map_type_nominal(node: &AbiNode) -> TypeRef {
     if name == "GenericTypeParam" {
         return TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
     }
 
@@ -143,6 +152,22 @@ fn map_type_nominal(node: &AbiNode) -> TypeRef {
                 name: bridged.to_string(),
                 framework: Some("Foundation".to_string()),
                 params: vec![],
+            },
+        };
+    }
+
+    // Known POD/geometry struct (`swift-interface-nominal-lowering-k77`).
+    // Framework-agnostic — CGRect belongs to CoreGraphics but is referenced
+    // everywhere, so no local declaration can prove it; the name itself is
+    // the proof, exactly as extract-objc's typedef expansion treats it (kept
+    // in sync with `emit-typescript`'s `ffi_type_mapping::pod_struct_type`;
+    // duplicated rather than shared since extract-swift is analysis-level and
+    // must not depend on a target crate — ADR-0011).
+    if is_pod_struct_name(name) {
+        return TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Struct {
+                name: name.to_string(),
             },
         };
     }
@@ -251,6 +276,26 @@ fn map_foundation_bridged_type(swift_name: &str) -> Option<&'static str> {
         "Notification" => Some("NSNotification"),
         _ => None,
     }
+}
+
+/// The closed set of nine POD/geometry C struct names every target must
+/// recognise identically (ADR-0055 §5a; `pod-struct-types-k73`).
+fn is_pod_struct_name(name: &str) -> bool {
+    matches!(
+        name,
+        "NSRect"
+            | "CGRect"
+            | "NSPoint"
+            | "CGPoint"
+            | "NSSize"
+            | "CGSize"
+            | "NSRange"
+            | "NSEdgeInsets"
+            | "NSDirectionalEdgeInsets"
+            | "NSAffineTransformStruct"
+            | "CGAffineTransform"
+            | "CGVector"
+    )
 }
 
 /// Extract framework name from a printed name like `"Foundation.URL"` → `Some("Foundation")`.
@@ -383,10 +428,25 @@ mod tests {
     }
 
     #[test]
+    fn map_pod_geometry_struct_lowers_to_struct_not_class() {
+        // CGRect crosses the .swiftinterface digester with no ObjC-class USR —
+        // the same shape a genuine Swift-native class arrives with — so it must
+        // be recognised by name, not by USR prefix
+        // (swift-interface-nominal-lowering-k77).
+        let node = nominal("CGRect", "", "CoreGraphics.CGRect", vec![]);
+        let result = map_swift_type(&node);
+        assert!(
+            matches!(result.kind, TypeRefKind::Struct { ref name } if name == "CGRect"),
+            "CGRect should lower to Struct, not Class, got {:?}",
+            result.kind
+        );
+    }
+
+    #[test]
     fn map_generic_type_param() {
         let node = nominal("GenericTypeParam", "", "Subject", vec![]);
         let result = map_swift_type(&node);
-        assert!(matches!(result.kind, TypeRefKind::Id));
+        assert!(matches!(result.kind, TypeRefKind::Id { .. }));
     }
 
     fn type_name_alias(name: &str, printed: &str, children: Vec<AbiNode>) -> AbiNode {

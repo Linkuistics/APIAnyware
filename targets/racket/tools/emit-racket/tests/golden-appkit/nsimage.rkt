@@ -19,6 +19,7 @@
 
 
 ;; --- Class predicates ---
+(define (nsarray? v) (objc-instance-of? v "NSArray"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
@@ -36,6 +37,7 @@
   [make-nsimage-init-with-contents-of-url (c-> (or/c string? objc-object? #f) any/c)]
   [make-nsimage-init-with-data (c-> (or/c string? objc-object? #f) any/c)]
   [make-nsimage-init-with-data-ignoring-orientation (c-> (or/c string? objc-object? #f) any/c)]
+  [make-nsimage-init-with-icon-ref (c-> (or/c cpointer? #f) any/c)]
   [make-nsimage-init-with-pasteboard (c-> (or/c string? objc-object? #f) any/c)]
   [make-nsimage-init-with-pasteboard-property-list-of-type (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [make-nsimage-init-with-size (c-> any/c any/c)]
@@ -52,8 +54,8 @@
   [nsimage-set-cap-insets! (c-> nsimage? any/c void?)]
   [nsimage-delegate (c-> nsimage? any/c)]
   [nsimage-set-delegate! (c-> nsimage? (or/c string? objc-object? #f) void?)]
-  [nsimage-image-types (c-> any/c)]
-  [nsimage-image-unfiltered-types (c-> any/c)]
+  [nsimage-image-types (c-> (or/c nsarray? objc-nil?))]
+  [nsimage-image-unfiltered-types (c-> (or/c nsarray? objc-nil?))]
   [nsimage-locale (c-> nsimage? (or/c nslocale? objc-nil?))]
   [nsimage-matches-on-multiple-resolution (c-> nsimage? boolean?)]
   [nsimage-set-matches-on-multiple-resolution! (c-> nsimage? boolean? void?)]
@@ -61,7 +63,7 @@
   [nsimage-set-matches-only-on-best-fitting-axis! (c-> nsimage? boolean? void?)]
   [nsimage-prefers-color-match (c-> nsimage? boolean?)]
   [nsimage-set-prefers-color-match! (c-> nsimage? boolean? void?)]
-  [nsimage-representations (c-> nsimage? any/c)]
+  [nsimage-representations (c-> nsimage? (or/c nsarray? objc-nil?))]
   [nsimage-resizing-mode (c-> nsimage? exact-integer?)]
   [nsimage-set-resizing-mode! (c-> nsimage? exact-integer? void?)]
   [nsimage-size (c-> nsimage? any/c)]
@@ -95,14 +97,17 @@
   [nsimage-item-provider-visibility-for-representation-with-type-identifier (c-> nsimage? (or/c string? objc-object? #f) exact-integer?)]
   [nsimage-layer-contents-for-contents-scale (c-> nsimage? real? any/c)]
   [nsimage-load-data-with-type-identifier-for-item-provider-completion-handler (c-> nsimage? (or/c string? objc-object? #f) (or/c procedure? #f) (or/c nsprogress? objc-nil?))]
+  [nsimage-lock-focus (c-> nsimage? void?)]
+  [nsimage-lock-focus-flipped (c-> nsimage? boolean? void?)]
   [nsimage-name (c-> nsimage? (or/c nsstring? objc-nil?))]
   [nsimage-pasteboard-property-list-for-type (c-> nsimage? (or/c string? objc-object? #f) any/c)]
   [nsimage-recache (c-> nsimage? void?)]
   [nsimage-recommended-layer-contents-scale (c-> nsimage? real? real?)]
   [nsimage-remove-representation! (c-> nsimage? (or/c string? objc-object? #f) void?)]
   [nsimage-set-name! (c-> nsimage? (or/c string? objc-object? #f) boolean?)]
-  [nsimage-writable-type-identifiers-for-item-provider (c-> nsimage? any/c)]
-  [nsimage-writable-types-for-pasteboard (c-> nsimage? (or/c string? objc-object? #f) any/c)]
+  [nsimage-unlock-focus (c-> nsimage? void?)]
+  [nsimage-writable-type-identifiers-for-item-provider (c-> nsimage? (or/c nsarray? objc-nil?))]
+  [nsimage-writable-types-for-pasteboard (c-> nsimage? (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsimage-writing-options-for-type-pasteboard (c-> nsimage? (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsimage-can-init-with-pasteboard (c-> (or/c string? objc-object? #f) boolean?)]
   [nsimage-image-named (c-> (or/c string? objc-object? #f) (or/c nsimage? objc-nil?))]
@@ -112,8 +117,8 @@
   [nsimage-image-with-system-symbol-name-accessibility-description (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nsimage-image-with-system-symbol-name-variable-value-accessibility-description (c-> (or/c string? objc-object? #f) real? (or/c string? objc-object? #f) any/c)]
   [nsimage-object-with-item-provider-data-type-identifier-error (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) (values any/c (or/c objc-object? #f)))]
-  [nsimage-readable-type-identifiers-for-item-provider (c-> any/c)]
-  [nsimage-readable-types-for-pasteboard (c-> (or/c string? objc-object? #f) any/c)]
+  [nsimage-readable-type-identifiers-for-item-provider (c-> (or/c nsarray? objc-nil?))]
+  [nsimage-readable-types-for-pasteboard (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsimage-reading-options-for-type-pasteboard (c-> (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nsimage-supports-secure-coding (c-> boolean?)]
   )
@@ -198,6 +203,11 @@
   (wrap-objc-object
    (tell (tell NSImage alloc)
          initWithDataIgnoringOrientation: (coerce-arg data))
+   #:retained #t))
+
+(define (make-nsimage-init-with-icon-ref icon-ref)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (tell NSImage alloc)) (id->ffi2-ptr (sel_registerName "initWithIconRef:")) (id->ffi2-ptr icon-ref)))
    #:retained #t))
 
 (define (make-nsimage-init-with-pasteboard pasteboard)
@@ -370,6 +380,10 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:")) (id->ffi2-ptr (coerce-arg type-identifier)) (id->ffi2-ptr _blk1)))
    ))
+(define (nsimage-lock-focus self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lockFocus"))))
+(define (nsimage-lock-focus-flipped self flipped)
+  (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lockFocusFlipped:")) flipped))
 (define (nsimage-name self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "name"))))
@@ -386,6 +400,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeRepresentation:")) (id->ffi2-ptr (coerce-arg image-rep))))
 (define (nsimage-set-name! self string)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setName:")) (id->ffi2-ptr (coerce-arg string))))
+(define (nsimage-unlock-focus self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unlockFocus"))))
 (define (nsimage-writable-type-identifiers-for-item-provider self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writableTypeIdentifiersForItemProvider"))))

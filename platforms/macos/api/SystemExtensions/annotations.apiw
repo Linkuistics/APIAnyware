@@ -1,10 +1,4 @@
 framework SystemExtensions {
-    class OSSystemExtensionRequest {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class OSSystemExtensionsWorkspace {
         method addObserver:error: is-instance=#true {
             error-pattern error_out_param

@@ -60,8 +60,11 @@ flowchart LR
 parameter's ownership or a method's threading — under the precedence ladder
 
 ```
-manual  >  accepted-LLM  >  convention  >  extraction  >  unknown
+manual  >  extraction  >  accepted-LLM  >  convention  >  unknown
 ```
+
+(re-ranked by `declared-fact-precedence-k87`, 2026-07-13 — a declaration-premised
+fact now outranks a prose-derived LLM one.)
 
 `accepted-LLM` is simply a `source llm` fact in the *committed* overlay (see
 [Git is the accept boundary](#git-is-the-accept-boundary)). The **convention**
@@ -156,9 +159,19 @@ Regeneration runs **inside Claude Code** — never an external paid API (the
 economic constraint, [[llm_annotation_constraint]]). The `/analyze` command is
 the orchestration skill: it runs `annotations stale --json`, then dispatches one
 **Claude Code subagent per stale family**. Each subagent reads its family's
-resolved surface + Apple headers/docs, classifies the four fact kinds, and writes
-its `annotations.apiw` **directly** with `source llm` (+ optional `confidence` /
-`provenance`), scoped to the annotatable shape.
+resolved surface + Apple headers/docs, classifies the three fact kinds (block
+invocation, threading, error pattern), and writes its `annotations.apiw`
+**directly** with `source llm` (+ optional `confidence` / `provenance`), scoped
+to the annotatable shape.
+
+Parameter ownership is **not** a fact kind the LLM authors going forward
+(`llm-ownership-prune-k94`, 2026-07-13): it is a compiler-declared fact first
+(`@property (weak)/(copy)/(strong)/(assign)`, ADR-0047 §4) and a
+naming-convention fact second (delegate/observer/block-param patterns); measured
+against the committed overlay's ~725 LLM-authored ownership facts, 719 were
+redundant with one of those two producers and only 6 carried information neither
+could derive. The 6 survivors stay in the overlay as authored facts; no new ones
+are solicited.
 
 The per-family subagent prompt is
 [`annotation-subagent-prompt.md`](annotation-subagent-prompt.md). To drive the

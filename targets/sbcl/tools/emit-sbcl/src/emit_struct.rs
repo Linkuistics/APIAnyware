@@ -122,7 +122,9 @@ mod tests {
     fn idty() -> TypeRef {
         TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         }
     }
     fn param(name: &str, t: TypeRef) -> Param {

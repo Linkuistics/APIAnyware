@@ -8,6 +8,7 @@
 use std::collections::HashMap;
 
 use apianyware_types::ir;
+use apianyware_types::type_ref::{TypeRef, TypeRefKind};
 
 /// Merge Swift-extracted declarations into an ObjC-extracted framework.
 ///
@@ -74,6 +75,146 @@ pub fn merge_swift_into_objc(objc: &mut ir::Framework, swift: ir::Framework) {
         if !existing_deps.contains(&dep) {
             objc.depends_on.push(dep);
         }
+    }
+
+    normalize_swift_native_enum_refs(objc);
+}
+
+/// Recover `.swiftinterface`-sourced type references the extractor could not
+/// classify at the reference site and defaulted to `Class{…}`
+/// (`swift-interface-nominal-lowering-k77`): a reference naming an enum the
+/// merge above just proved has a real, ObjC-verified integer width becomes
+/// `Alias{name, underlying_primitive}` — the exact shape `extract-objc`
+/// already produces for the same enum reached through its ObjC header.
+///
+/// Must run **after** the enum merge above: a Swift-native enum node alone
+/// never carries a real width (`map_enum`'s `swift_enum` sentinel — Swift
+/// enums don't expose one in ABIRoot), so only a merged, ObjC-backed entry is
+/// trustworthy enough to convert without lying about the ABI. Skips any name
+/// that is *also* a declared class in this framework (the enum/class
+/// namespaces never collide in practice, but a stray same-named class must
+/// win, not be silently reclassified as an enum — the k66/k76/k90 "lossy map
+/// used as a key" lesson). Everything else stays `Class{…}` and keeps
+/// deferring — this is a targeted recovery, not a general Class-reference
+/// solver.
+fn normalize_swift_native_enum_refs(framework: &mut ir::Framework) {
+    let declared_class_names: std::collections::HashSet<&str> =
+        framework.classes.iter().map(|c| c.name.as_str()).collect();
+    let enum_widths: HashMap<String, String> = framework
+        .enums
+        .iter()
+        .filter_map(|e| match &e.enum_type.kind {
+            TypeRefKind::Primitive { name } if name != "swift_enum" => {
+                if declared_class_names.contains(e.name.as_str()) {
+                    None
+                } else {
+                    Some((e.name.clone(), name.clone()))
+                }
+            }
+            _ => None,
+        })
+        .collect();
+    if enum_widths.is_empty() {
+        return;
+    }
+
+    for class in &mut framework.classes {
+        for method in &mut class.methods {
+            normalize_method(method, &enum_widths);
+        }
+        for property in &mut class.properties {
+            normalize_type_ref(&mut property.property_type, &enum_widths);
+        }
+        for category in &mut class.category_methods {
+            for method in &mut category.methods {
+                normalize_method(method, &enum_widths);
+            }
+        }
+    }
+    for protocol in &mut framework.protocols {
+        for method in protocol
+            .required_methods
+            .iter_mut()
+            .chain(protocol.optional_methods.iter_mut())
+        {
+            normalize_method(method, &enum_widths);
+        }
+        for property in &mut protocol.properties {
+            normalize_type_ref(&mut property.property_type, &enum_widths);
+        }
+    }
+    for s in &mut framework.structs {
+        for field in &mut s.fields {
+            normalize_type_ref(&mut field.field_type, &enum_widths);
+        }
+        for method in &mut s.methods {
+            normalize_method(method, &enum_widths);
+        }
+    }
+    for function in &mut framework.functions {
+        for param in &mut function.params {
+            normalize_type_ref(&mut param.param_type, &enum_widths);
+        }
+        normalize_type_ref(&mut function.return_type, &enum_widths);
+    }
+    for constant in &mut framework.constants {
+        normalize_type_ref(&mut constant.constant_type, &enum_widths);
+    }
+}
+
+fn normalize_method(method: &mut ir::Method, enum_widths: &HashMap<String, String>) {
+    for param in &mut method.params {
+        normalize_type_ref(&mut param.param_type, enum_widths);
+    }
+    normalize_type_ref(&mut method.return_type, enum_widths);
+}
+
+/// Rewrite `type_ref` in place — and any `TypeRef` it nests (a block's
+/// params/return, a function pointer's params/return, a class ref's generic
+/// params) — wherever it is a `Class{name}` naming a known-width merged enum.
+fn normalize_type_ref(type_ref: &mut TypeRef, enum_widths: &HashMap<String, String>) {
+    match &mut type_ref.kind {
+        TypeRefKind::Block {
+            params,
+            return_type,
+        } => {
+            for p in params.iter_mut() {
+                normalize_type_ref(p, enum_widths);
+            }
+            normalize_type_ref(return_type, enum_widths);
+            return;
+        }
+        TypeRefKind::FunctionPointer {
+            params,
+            return_type,
+            ..
+        } => {
+            for p in params.iter_mut() {
+                normalize_type_ref(p, enum_widths);
+            }
+            normalize_type_ref(return_type, enum_widths);
+            return;
+        }
+        TypeRefKind::Class { params, .. } => {
+            for p in params.iter_mut() {
+                normalize_type_ref(p, enum_widths);
+            }
+        }
+        _ => return,
+    }
+
+    let TypeRefKind::Class { name, params, .. } = &type_ref.kind else {
+        return;
+    };
+    if !params.is_empty() {
+        return;
+    }
+    if let Some(underlying) = enum_widths.get(name) {
+        type_ref.kind = TypeRefKind::Alias {
+            name: name.clone(),
+            framework: None,
+            underlying_primitive: Some(underlying.clone()),
+        };
     }
 }
 
@@ -186,7 +327,7 @@ mod tests {
             property_type: void_type(),
             readonly: false,
             class_property: false,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: Some(source),
             provenance: None,
@@ -390,5 +531,135 @@ mod tests {
         assert_eq!(objc.depends_on.len(), 2);
         assert!(objc.depends_on.contains(&"Foundation".to_string()));
         assert!(objc.depends_on.contains(&"Combine".to_string()));
+    }
+
+    fn empty_class(name: &str, methods: Vec<ir::Method>) -> ir::Class {
+        ir::Class {
+            name: name.to_string(),
+            superclass: "NSObject".to_string(),
+            protocols: vec![],
+            properties: vec![],
+            methods,
+            category_methods: vec![],
+            swift_attributes: vec![],
+            ancestors: vec![],
+            all_methods: vec![],
+            all_properties: vec![],
+            objc_exposed: true,
+            swift_name: None,
+        }
+    }
+
+    fn class_ref_type(name: &str, framework: Option<&str>) -> TypeRef {
+        TypeRef {
+            nullable: false,
+            kind: TypeRefKind::Class {
+                name: name.to_string(),
+                framework: framework.map(str::to_string),
+                params: vec![],
+            },
+        }
+    }
+
+    #[test]
+    fn merge_recovers_swift_native_enum_reference_to_alias() {
+        // NEProviderStopReason-shaped: extract-objc already resolved the enum
+        // itself (real int64 width), but a Swift-native method signature in
+        // the same framework still names it via the extractor's `Class{…}`
+        // fallback (swift-interface-nominal-lowering-k77).
+        let mut objc = empty_framework("NetworkExtension");
+        objc.enums.push(ir::Enum {
+            name: "NEProviderStopReason".to_string(),
+            enum_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "int64".to_string(),
+                },
+            },
+            values: vec![],
+            source: Some(DeclarationSource::ObjcHeader),
+            provenance: None,
+            doc_refs: None,
+            objc_exposed: true,
+        });
+        objc.classes.push(empty_class("NEAppProxyProvider", vec![]));
+
+        let mut swift_method = make_method(
+            "stopProxyWithReason:completionHandler:",
+            DeclarationSource::SwiftInterface,
+        );
+        swift_method.params.push(ir::Param {
+            name: "with".to_string(),
+            param_type: class_ref_type("NEProviderStopReason", Some("NetworkExtension")),
+        });
+        let mut swift = empty_framework("NetworkExtension");
+        swift
+            .classes
+            .push(empty_class("NEAppProxyProvider", vec![swift_method]));
+
+        merge_swift_into_objc(&mut objc, swift);
+
+        let class = &objc.classes[0];
+        let method = class
+            .methods
+            .iter()
+            .find(|m| m.selector == "stopProxyWithReason:completionHandler:")
+            .expect("swift-native method merged in");
+        match &method.params[0].param_type.kind {
+            TypeRefKind::Alias {
+                name,
+                underlying_primitive,
+                ..
+            } => {
+                assert_eq!(name, "NEProviderStopReason");
+                assert_eq!(underlying_primitive.as_deref(), Some("int64"));
+            }
+            other => panic!("expected Alias, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn merge_does_not_reclassify_a_class_that_collides_with_an_enum_name() {
+        // A stray same-named declared class must win over the enum recovery —
+        // never silently reclassified (the k66/k76/k90 "lossy map used as a
+        // key" lesson).
+        let mut objc = empty_framework("TestKit");
+        objc.enums.push(ir::Enum {
+            name: "Ambiguous".to_string(),
+            enum_type: TypeRef {
+                nullable: false,
+                kind: TypeRefKind::Primitive {
+                    name: "int64".to_string(),
+                },
+            },
+            values: vec![],
+            source: Some(DeclarationSource::ObjcHeader),
+            provenance: None,
+            doc_refs: None,
+            objc_exposed: true,
+        });
+        objc.classes.push(empty_class("Ambiguous", vec![]));
+        objc.classes.push(empty_class("Holder", vec![]));
+
+        let mut swift_method = make_method("take:", DeclarationSource::SwiftInterface);
+        swift_method.params.push(ir::Param {
+            name: "value".to_string(),
+            param_type: class_ref_type("Ambiguous", None),
+        });
+        let mut swift = empty_framework("TestKit");
+        swift
+            .classes
+            .push(empty_class("Holder", vec![swift_method]));
+
+        merge_swift_into_objc(&mut objc, swift);
+
+        let holder = objc.classes.iter().find(|c| c.name == "Holder").unwrap();
+        assert!(
+            matches!(
+                holder.methods[0].params[0].param_type.kind,
+                TypeRefKind::Class { ref name, .. } if name == "Ambiguous"
+            ),
+            "a name that is also a declared class must stay Class"
+        );
     }
 }

@@ -19,6 +19,8 @@
      ns::absolute-string
      ns::absolute-url
      ns::absolute-url-with-data-representation_relative-to-url_
+     ns::accept-connection-in-background-and-notify
+     ns::accept-connection-in-background-and-notify-for-modes_
      ns::accept-input-for-mode_before-date_
      ns::accommodate-presented-item-deletion-with-completion-handler_
      ns::accommodate-presented-item-eviction-with-completion-handler_
@@ -35,12 +37,15 @@
      ns::actual-delivery-date
      ns::adaptive
      ns::add-attribute_
+     ns::add-attribute_value_range_
+     ns::add-attributes_range_
      ns::add-barrier-block_
      ns::add-characters-in-range_
      ns::add-characters-in-string_
      ns::add-child_
      ns::add-child_with-pending-unit-count_
      ns::add-dependency_
+     ns::add-entries-from-dictionary_
      ns::add-execution-block_
      ns::add-file-presenter_
      ns::add-file-wrapper_
@@ -49,6 +54,7 @@
      ns::add-indexes_
      ns::add-namespace_
      ns::add-object_
+     ns::add-objects-from-array_
      ns::add-observer-for-name_object_queue_using-block_
      ns::add-observer_selector_name_object_
      ns::add-observer_selector_name_object_suspension-behavior_
@@ -65,11 +71,13 @@
      ns::add-timer_for-mode_
      ns::add-user-info-entries-from-dictionary_
      ns::add-value-for-http-header-field
+     ns::add-value_for-http-header-field_
      ns::add-version-of-item-at-url_with-contents-of-url_options_error_
      ns::adding-time-interval
      ns::additional-actions
      ns::additional-activation-action
      ns::address
+     ns::address-checking-result-with-range_components_
      ns::address-components
      ns::addresses
      ns::advanced-by
@@ -83,6 +91,7 @@
      ns::all-header-fields
      ns::all-http-header-fields
      ns::all-keys
+     ns::all-keys-for-object_
      ns::all-languages
      ns::all-objects
      ns::all-scripts
@@ -119,9 +128,12 @@
      ns::any-object
      ns::app-store-receipt-url
      ns::append
+     ns::append-attributed-string_
+     ns::append-data_
      ns::append-path-component
      ns::append-path-component-is-directory
      ns::append-path-extension
+     ns::append-string_
      ns::append-transform_
      ns::appending
      ns::appending-path-component
@@ -136,6 +148,7 @@
      ns::apple-event-code-for-suite_
      ns::apple-event-with-event-class_event-id_target-descriptor_return-id_transaction-id_
      ns::applies-source-position-attributes
+     ns::apply-difference_
      ns::arc-minutes
      ns::arc-seconds
      ns::archive-root-object_to-file_
@@ -152,7 +165,16 @@
      ns::arguments
      ns::arguments-retained
      ns::array
+     ns::array-by-adding-object_
+     ns::array-by-adding-objects-from-array_
+     ns::array-by-applying-difference_
      ns::array-for-key_
+     ns::array-with-array_
+     ns::array-with-capacity_
+     ns::array-with-contents-of-file_
+     ns::array-with-contents-of-url_
+     ns::array-with-contents-of-url_error_
+     ns::array-with-object_
      ns::ascending
      ns::associated-index
      ns::assumes-http3-capable
@@ -171,11 +193,13 @@
      ns::attribute-with-name_uri_string-value_
      ns::attributed-content-text
      ns::attributed-string
+     ns::attributed-string-by-inflecting-string
      ns::attributed-string-for-nil
      ns::attributed-string-for-not-a-number
      ns::attributed-string-for-object-value_with-default-attributes_
      ns::attributed-string-for-zero
      ns::attributed-substring
+     ns::attributed-substring-from-range_
      ns::attributed-title
      ns::attributes
      ns::attributes-of-file-system-for-path_error_
@@ -201,9 +225,13 @@
      ns::base-unit
      ns::base-unit-value-from-value_
      ns::base-url
+     ns::base64-encoded-data-with-options_
+     ns::base64-encoded-string-with-options_
      ns::become-current
      ns::become-current-with-pending-unit-count_
+     ns::begin-activity-with-options_reason_
      ns::begin-content-access
+     ns::begin-editing
      ns::begin-request-with-extension-context_
      ns::begin-undo-grouping
      ns::bitmap-representation
@@ -229,6 +257,7 @@
      ns::bundle-with-url_
      ns::bushels
      ns::bytes
+     ns::c-string-using-encoding_
      ns::cache-policy
      ns::cache_will-evict-object_
      ns::cached-response
@@ -239,10 +268,13 @@
      ns::call-stack-return-addresses
      ns::call-stack-symbols
      ns::calories
+     ns::can-be-converted-to-encoding_
      ns::can-be-converted-to-unit_
      ns::can-handle-request_
+     ns::can-inflect-language_
      ns::can-inflect-preferred-localization
      ns::can-init-with-request_
+     ns::can-init-with-task_
      ns::can-load-object-of-class_
      ns::can-redo
      ns::can-resume-download-decoded-with-encoding-mime-type_
@@ -251,17 +283,23 @@
      ns::cancel-all-operations
      ns::cancel-authentication-challenge_
      ns::cancel-by-producing-resume-data_
+     ns::cancel-perform-selector_target_argument_
+     ns::cancel-perform-selectors-with-target_
      ns::cancel-request-with-error_
      ns::cancel-with-close-code_reason_
      ns::cancellable
      ns::cancellation-handler
      ns::cancelled
+     ns::canonical-language-identifier-from-string_
+     ns::canonical-locale-identifier-from-string_
      ns::canonical-request-for-request_
      ns::canonical-xml-string-preserving-comments_
      ns::capitalized-letter-character-set
      ns::capitalized-string
+     ns::capitalized-string-with-locale_
      ns::capture-streams
      ns::carats
+     ns::case-insensitive-compare_
      ns::case-sensitive
      ns::cellular
      ns::celsius
@@ -275,6 +313,7 @@
      ns::change-with-object_type_index_associated-index_
      ns::char-value
      ns::character-at-index_
+     ns::character-direction-for-language_
      ns::character-encoding
      ns::character-is-member_
      ns::character-set
@@ -284,7 +323,9 @@
      ns::character-set-with-range_
      ns::characters-to-be-skipped
      ns::check-promised-item-is-reachable
+     ns::check-promised-item-is-reachable-and-return-error_
      ns::check-resource-is-reachable
+     ns::check-resource-is-reachable-and-return-error_
      ns::checking-types
      ns::child-at-index_
      ns::child-count
@@ -306,6 +347,7 @@
      ns::close
      ns::close-and-return-error_
      ns::close-code
+     ns::close-file
      ns::close-read
      ns::close-reason
      ns::close-write
@@ -333,11 +375,15 @@
      ns::comment-url
      ns::comment-with-string-value_
      ns::common-iso-currency-codes
+     ns::common-prefix-with-string_options_
      ns::compact
      ns::comparator
      ns::compare-date_to-date_to-unit-granularity_
      ns::compare-object_to-object_
      ns::compare_
+     ns::compare_options_
+     ns::compare_options_range_
+     ns::compare_options_range_locale_
      ns::comparison-predicate-modifier
      ns::compiled
      ns::complete-request-returning-items_completion-handler_
@@ -345,7 +391,11 @@
      ns::completion-block
      ns::component_from-date_
      ns::components
+     ns::components-from-locale-identifier_
      ns::components-in-time-zone_from-date_
+     ns::components-joined-by-string_
+     ns::components-separated-by-characters-in-set_
+     ns::components-separated-by-string_
      ns::components-to-display-for-path_
      ns::components-with-string_
      ns::components-with-string_encoding-invalid-characters_
@@ -354,6 +404,8 @@
      ns::components_from-date_
      ns::components_from-date_to-date_options_
      ns::compound-predicate-type
+     ns::compress-using-algorithm_error_
+     ns::compressed-data-using-algorithm_error_
      ns::concurrent
      ns::condition
      ns::configuration
@@ -398,6 +450,7 @@
      ns::contains-indexes-in-range_
      ns::contains-indexes_
      ns::contains-object_
+     ns::contains-string_
      ns::contains-value-for-key_
      ns::content-image
      ns::contents-at-path_
@@ -418,6 +471,8 @@
      ns::copy-item-at-path_to-path_error_
      ns::copy-item-at-url_to-url_error_
      ns::copy-with-zone_
+     ns::correction-checking-result-with-range_replacement-string_
+     ns::correction-checking-result-with-range_replacement-string_alternative-strings_
      ns::coulombs
      ns::count
      ns::count-by-enumerating-with-state_objects_count_
@@ -446,6 +501,7 @@
      ns::create-file-at-path_contents_attributes_
      ns::create-symbolic-link-at-path_with-destination-path_error_
      ns::create-symbolic-link-at-url_with-destination-url_error_
+     ns::credential-with-user_password_persistence_
      ns::credentials-for-protection-space_
      ns::cubic-centimeters
      ns::cubic-decimeters
@@ -484,7 +540,9 @@
      ns::current-user
      ns::current-version-of-item-at-url_
      ns::custom-pronoun-for-language
+     ns::custom-pronoun-for-language_
      ns::custom-selector
+     ns::dash-checking-result-with-range_replacement-string_
      ns::data
      ns::data-detector-with-types_error_
      ns::data-for-key_
@@ -492,14 +550,26 @@
      ns::data-representation
      ns::data-task-publisher-for
      ns::data-task-with-request_
+     ns::data-task-with-request_completion-handler_
      ns::data-task-with-url_
+     ns::data-task-with-url_completion-handler_
+     ns::data-using-encoding_
+     ns::data-using-encoding_allow-lossy-conversion_
+     ns::data-with-capacity_
+     ns::data-with-contents-of-file_
+     ns::data-with-contents-of-url_
+     ns::data-with-data_
      ns::data-with-json-object_options_error_
+     ns::data-with-length_
      ns::data-with-property-list_format_options_error_
      ns::date
      ns::date-by-adding-components_to-date_options_
+     ns::date-by-adding-time-interval_
      ns::date-by-adding-unit_value_to-date_options_
      ns::date-by-setting-hour_minute_second_of-date_options_
      ns::date-by-setting-unit_value_of-date_options_
+     ns::date-checking-result-with-range_date_
+     ns::date-checking-result-with-range_date_time-zone_duration_
      ns::date-format
      ns::date-format-from-template_options_locale_
      ns::date-from-components_
@@ -511,6 +581,10 @@
      ns::date-value
      ns::date-with-era_year-for-week-of-year_week-of-year_weekday_hour_minute_second_nanosecond_
      ns::date-with-era_year_month_day_hour_minute_second_nanosecond_
+     ns::date-with-time-interval-since-now_
+     ns::date-with-time-interval-since-reference-date_
+     ns::date-with-time-interval-since1970_
+     ns::date-with-time-interval_since-date_
      ns::date_matches-components_
      ns::day
      ns::day-of-year
@@ -544,22 +618,44 @@
      ns::decimal-separator
      ns::decimal-value
      ns::decimeters
+     ns::decode-array-of-objects-of-class_for-key_
+     ns::decode-array-of-objects-of-classes_for-key_
      ns::decode-bool-for-key_
      ns::decode-class-name_as-class-name_
      ns::decode-data-object
+     ns::decode-dictionary-with-keys-of-class_objects-of-class_for-key_
+     ns::decode-dictionary-with-keys-of-classes_objects-of-classes_for-key_
      ns::decode-double-for-key_
      ns::decode-float-for-key_
      ns::decode-int-for-key_
      ns::decode-int32-for-key_
      ns::decode-int64-for-key_
+     ns::decode-integer-for-key_
+     ns::decode-object
      ns::decode-object-for-key_
+     ns::decode-object-of-class_for-key_
+     ns::decode-object-of-classes_for-key_
+     ns::decode-point
+     ns::decode-point-for-key_
      ns::decode-port-object
+     ns::decode-property-list
+     ns::decode-property-list-for-key_
+     ns::decode-rect
+     ns::decode-rect-for-key_
+     ns::decode-size
+     ns::decode-size-for-key_
      ns::decode-top-level-object
+     ns::decode-top-level-object-and-return-error_
      ns::decode-top-level-object-for-key
+     ns::decode-top-level-object-for-key_error_
+     ns::decode-top-level-object-of-class_for-key_error_
+     ns::decode-top-level-object-of-classes_for-key_error_
      ns::decoding-failure-policy
      ns::decomposable-character-set
      ns::decomposed-string-with-canonical-mapping
      ns::decomposed-string-with-compatibility-mapping
+     ns::decompress-using-algorithm_error_
+     ns::decompressed-data-using-algorithm_error_
      ns::default-behavior
      ns::default-c-string-encoding
      ns::default-center
@@ -570,6 +666,7 @@
      ns::default-formatter-behavior
      ns::default-manager
      ns::default-name-server-port-number
+     ns::default-orthography-for-language_
      ns::default-queue
      ns::default-session-configuration
      ns::default-store
@@ -581,6 +678,7 @@
      ns::delegate
      ns::delegate-queue
      ns::delete-all-saved-user-activities-with-completion-handler_
+     ns::delete-characters-in-range_
      ns::delete-cookie_
      ns::delete-last-path-component
      ns::delete-path-extension
@@ -600,6 +698,7 @@
      ns::description-function
      ns::description-in-strings-file-format
      ns::description-with-locale_
+     ns::description-with-locale_indent_
      ns::descriptor
      ns::descriptor-at-index_
      ns::descriptor-for-keyword_
@@ -622,10 +721,25 @@
      ns::detach-new-thread-with-block_
      ns::determination
      ns::development-localization
+     ns::dictionary
      ns::dictionary-for-key_
      ns::dictionary-from-txt-record-data_
      ns::dictionary-representation
+     ns::dictionary-with-capacity_
+     ns::dictionary-with-contents-of-file_
+     ns::dictionary-with-contents-of-url_
+     ns::dictionary-with-contents-of-url_error_
+     ns::dictionary-with-dictionary_
+     ns::dictionary-with-object_for-key_
+     ns::dictionary-with-objects_for-keys_
+     ns::dictionary-with-shared-key-set_
      ns::difference-by-transforming-changes-with-block_
+     ns::difference-from-array_
+     ns::difference-from-array_with-options_
+     ns::difference-from-array_with-options_using-equivalence-test_
+     ns::difference-from-ordered-set_
+     ns::difference-from-ordered-set_with-options_
+     ns::difference-from-ordered-set_with-options_using-equivalence-test_
      ns::direct-parameter
      ns::directory
      ns::directory-attributes
@@ -654,6 +768,7 @@
      ns::domain-lookup-start-date
      ns::domain-resolution-protocol
      ns::dominant-language
+     ns::dominant-language-for-script_
      ns::dominant-language-for-string_
      ns::dominant-script
      ns::double-for-key_
@@ -662,8 +777,11 @@
      ns::download-did-finish_
      ns::download-should-use-credential-storage_
      ns::download-task-with-request_
+     ns::download-task-with-request_completion-handler_
      ns::download-task-with-resume-data_
+     ns::download-task-with-resume-data_completion-handler_
      ns::download-task-with-url_
+     ns::download-task-with-url_completion-handler_
      ns::download_can-authenticate-against-protection-space_
      ns::download_decide-destination-with-suggested-filename_
      ns::download_did-cancel-authentication-challenge_
@@ -681,6 +799,7 @@
      ns::dtd-kind
      ns::dtd-node-with-xml-string_
      ns::duration
+     ns::earlier-date_
      ns::earliest-begin-date
      ns::edge-insets-value
      ns::editing-string-for-object-value_
@@ -704,6 +823,8 @@
      ns::enable-updates
      ns::enables-early-data
      ns::encode-bool_for-key_
+     ns::encode-bycopy-object_
+     ns::encode-byref-object_
      ns::encode-class-name_into-class-name_
      ns::encode-conditional-object_
      ns::encode-conditional-object_for-key_
@@ -713,16 +834,27 @@
      ns::encode-int32_for-key_
      ns::encode-int64_for-key_
      ns::encode-int_for-key_
+     ns::encode-integer_for-key_
+     ns::encode-object_
      ns::encode-object_for-key_
+     ns::encode-point_
+     ns::encode-point_for-key_
      ns::encode-port-object_
+     ns::encode-property-list_
+     ns::encode-rect_
+     ns::encode-rect_for-key_
      ns::encode-root-object_
+     ns::encode-size_
+     ns::encode-size_for-key_
      ns::encode-with-coder_
      ns::encode-xpc-object_for-key_
      ns::encoded-data
      ns::encoded-host
+     ns::end-activity_
      ns::end-column
      ns::end-content-access
      ns::end-date
+     ns::end-editing
      ns::end-line
      ns::end-specifier
      ns::end-subelement-identifier
@@ -737,6 +869,13 @@
      ns::enumerate-indexes-in-range_options_using-block_
      ns::enumerate-indexes-using-block_
      ns::enumerate-indexes-with-options_using-block_
+     ns::enumerate-keys-and-objects-using-block_
+     ns::enumerate-keys-and-objects-with-options_using-block_
+     ns::enumerate-lines-using-block_
+     ns::enumerate-matches-in-string_options_range_using-block_
+     ns::enumerate-objects-at-indexes_options_using-block_
+     ns::enumerate-objects-using-block_
+     ns::enumerate-objects-with-options_using-block_
      ns::enumerate-results-using-block_
      ns::enumerate-results-with-options_using-block_
      ns::enumerator-at-path_
@@ -749,6 +888,7 @@
      ns::error-user-info-key
      ns::error-with-domain_code_user-info_
      ns::escaped-pattern-for-string_
+     ns::escaped-template-for-string_
      ns::estimated-time-remaining
      ns::evaluate
      ns::evaluate-with-object_
@@ -767,6 +907,7 @@
      ns::exbibytes
      ns::exception-during-operation_error_left-operand_right-operand_
      ns::exception-with-name_reason_user-info_
+     ns::exchange-object-at-index_with-object-at-index_
      ns::executable-architectures
      ns::executable-path
      ns::executable-url
@@ -808,6 +949,7 @@
      ns::external
      ns::external-entity-resolving-policy
      ns::fahrenheit
+     ns::fail-with-error_
      ns::failure-policy
      ns::failure-response
      ns::false-expression
@@ -821,14 +963,28 @@
      ns::fetch-start-date
      ns::file-attributes
      ns::file-completed-count
+     ns::file-creation-date
      ns::file-descriptor
      ns::file-exists-at-path_
+     ns::file-extension-hidden
+     ns::file-group-owner-account-id
+     ns::file-group-owner-account-name
      ns::file-handle-for-reading
+     ns::file-handle-for-reading-at-path_
+     ns::file-handle-for-reading-from-url_error_
+     ns::file-handle-for-updating-at-path_
+     ns::file-handle-for-updating-url_error_
      ns::file-handle-for-writing
+     ns::file-handle-for-writing-at-path_
+     ns::file-handle-for-writing-to-url_error_
      ns::file-handle-with-null-device
      ns::file-handle-with-standard-error
      ns::file-handle-with-standard-input
      ns::file-handle-with-standard-output
+     ns::file-hfs-creator-code
+     ns::file-hfs-type-code
+     ns::file-is-append-only
+     ns::file-is-immutable
      ns::file-manager_should-copy-item-at-path_to-path_
      ns::file-manager_should-copy-item-at-url_to-url_
      ns::file-manager_should-link-item-at-path_to-path_
@@ -845,16 +1001,25 @@
      ns::file-manager_should-proceed-after-error_removing-item-at-url_
      ns::file-manager_should-remove-item-at-path_
      ns::file-manager_should-remove-item-at-url_
+     ns::file-modification-date
      ns::file-operation-kind
+     ns::file-owner-account-id
+     ns::file-owner-account-name
      ns::file-path-url
+     ns::file-posix-permissions
      ns::file-presenters
      ns::file-reference-url
+     ns::file-size
+     ns::file-system-file-number
+     ns::file-system-number
      ns::file-system-representation
      ns::file-system-representation-with-path_
      ns::file-total-count
+     ns::file-type
      ns::file-url
      ns::file-url-value
      ns::file-url-with-file-system-representation_is-directory_relative-to-url_
+     ns::file-url-with-path-components_
      ns::file-url-with-path_
      ns::file-url-with-path_is-directory_
      ns::file-url-with-path_is-directory_relative-to-url_
@@ -862,6 +1027,10 @@
      ns::file-wrappers
      ns::filename
      ns::filter-inherited-by-added-text
+     ns::filter-using-predicate_
+     ns::filtered-array-using-predicate_
+     ns::filtered-ordered-set-using-predicate_
+     ns::filtered-set-using-predicate_
      ns::finalize
      ns::finish-decoding
      ns::finish-encoding
@@ -870,7 +1039,9 @@
      ns::fire
      ns::fire-date
      ns::first-index
+     ns::first-match-in-string_options_range_
      ns::first-object
+     ns::first-object-common-with-array_
      ns::first-weekday
      ns::float-for-key_
      ns::float-value
@@ -903,7 +1074,11 @@
      ns::generates-decimal-numbers
      ns::get-all-tasks-with-completion-handler_
      ns::get-argument-type-at-index_
+     ns::get-cached-response-for-data-task_completion-handler_
      ns::get-continuation-streams-with-completion-handler_
+     ns::get-cookies-for-task_completion-handler_
+     ns::get-credentials-for-protection-space_task_completion-handler_
+     ns::get-default-credential-for-protection-space_task_completion-handler_
      ns::get-file-provider-connection-with-completion-handler_
      ns::get-file-provider-services-for-item-at-url_completion-handler_
      ns::get-nonlocal-versions-of-item-at-url_completion-handler_
@@ -918,6 +1093,7 @@
      ns::given-name
      ns::globally-unique-string
      ns::gradians
+     ns::grammar-checking-result-with-range_details_
      ns::grammar-details
      ns::grammatical-case
      ns::grammatical-gender
@@ -944,11 +1120,13 @@
      ns::has-member-in-plane_
      ns::has-ordered-to-many-relationship-for-key_
      ns::has-password
+     ns::has-prefix_
      ns::has-property-for-key_
      ns::has-readable-property-for-key_
      ns::has-reply-button
      ns::has-representation-conforming-to-type-identifier_file-options_
      ns::has-space-available
+     ns::has-suffix_
      ns::has-thousand-separators
      ns::has-thumbnail
      ns::has-writable-property-for-key_
@@ -963,6 +1141,7 @@
      ns::help-anchor
      ns::hertz
      ns::home-directory-for-current-user
+     ns::home-directory-for-user_
      ns::horsepower
      ns::host
      ns::host-name
@@ -1002,6 +1181,7 @@
      ns::includes-peer-to-peer
      ns::includes-time-remaining-phrase
      ns::includes-unit
+     ns::increase-length-by_
      ns::indentation-level
      ns::independent-conversation-queueing
      ns::indeterminate
@@ -1014,7 +1194,14 @@
      ns::index-in-range_options_passing-test_
      ns::index-less-than-index_
      ns::index-less-than-or-equal-to-index_
+     ns::index-of-object-at-indexes_options_passing-test_
+     ns::index-of-object-identical-to_
+     ns::index-of-object-identical-to_in-range_
+     ns::index-of-object-passing-test_
+     ns::index-of-object-with-options_passing-test_
      ns::index-of-object_
+     ns::index-of-object_in-range_
+     ns::index-of-object_in-sorted-range_options_using-comparator_
      ns::index-of-result_
      ns::index-passing-test_
      ns::index-path
@@ -1026,6 +1213,9 @@
      ns::index-set-with-indexes-in-range_
      ns::index-with-options_passing-test_
      ns::indexes-in-range_options_passing-test_
+     ns::indexes-of-objects-at-indexes_options_passing-test_
+     ns::indexes-of-objects-passing-test_
+     ns::indexes-of-objects-with-options_passing-test_
      ns::indexes-passing-test_
      ns::indexes-with-options_passing-test_
      ns::inflected
@@ -1051,15 +1241,22 @@
      ns::init-remote-with-tcp-port_host_
      ns::init-requiring-secure-coding_
      ns::init-symbolic-link-with-destination-url_
+     ns::init-to-file-at-path_append_
      ns::init-to-memory
      ns::init-with-coder_
      ns::input-items
+     ns::input-stream-with-data_
+     ns::input-stream-with-file-at-path_
+     ns::input-stream-with-url_
      ns::insert
+     ns::insert-attributed-string_at-index_
      ns::insert-characters-in
      ns::insert-child_at-index_
      ns::insert-children_at-index_
      ns::insert-descriptor_at-index_
      ns::insert-object_at-index_
+     ns::insert-objects_at-indexes_
+     ns::insert-string_at-index_
      ns::insertion-container
      ns::insertion-index
      ns::insertion-key
@@ -1077,10 +1274,14 @@
      ns::interrupt
      ns::interruption-handler
      ns::intersect-hash-table_
+     ns::intersect-ordered-set_
+     ns::intersect-set_
      ns::intersection-with-date-interval_
      ns::intersects-date-interval_
      ns::intersects-hash-table_
      ns::intersects-indexes-in-range_
+     ns::intersects-ordered-set_
+     ns::intersects-set_
      ns::interval
      ns::invalidate
      ns::invalidate-and-cancel
@@ -1095,6 +1296,7 @@
      ns::invocation-with-method-signature_
      ns::invoke
      ns::invoke-with-target_
+     ns::is-absolute-path
      ns::is-adaptive
      ns::is-asynchronous
      ns::is-at-end
@@ -1114,6 +1316,7 @@
      ns::is-date-in-yesterday_
      ns::is-date_equal-to-date_to-unit-granularity_
      ns::is-date_in-same-day-as-date_
+     ns::is-daylight-saving-time
      ns::is-daylight-saving-time-for-date_
      ns::is-deletable-file-at-path_
      ns::is-directory
@@ -1125,11 +1328,21 @@
      ns::is-enabled
      ns::is-enumerating-directory-post-order
      ns::is-equal-function
+     ns::is-equal-to-array_
+     ns::is-equal-to-attributed-string_
+     ns::is-equal-to-data_
      ns::is-equal-to-date-interval_
+     ns::is-equal-to-date_
+     ns::is-equal-to-dictionary_
      ns::is-equal-to-hash-table_
      ns::is-equal-to-host_
      ns::is-equal-to-index-set_
      ns::is-equal-to-number_
+     ns::is-equal-to-ordered-set_
+     ns::is-equal-to-set_
+     ns::is-equal-to-string_
+     ns::is-equal-to-time-zone_
+     ns::is-equal-to-value_
      ns::is-equivalent-to-presentation-intent_
      ns::is-executable-file-at-path_
      ns::is-executing
@@ -1148,6 +1361,8 @@
      ns::is-lenient
      ns::is-loaded
      ns::is-location-required-to-create-for-key_
+     ns::is-low-power-mode-enabled
+     ns::is-mac-catalyst-app
      ns::is-main-thread
      ns::is-multi-threaded
      ns::is-multipath
@@ -1177,6 +1392,8 @@
      ns::is-started
      ns::is-stopped
      ns::is-subset-of-hash-table_
+     ns::is-subset-of-ordered-set_
+     ns::is-subset-of-set_
      ns::is-superset-of-set_
      ns::is-supported-for-language_
      ns::is-suspended
@@ -1185,6 +1402,7 @@
      ns::is-ubiquitous-item-at-url_
      ns::is-undo-registration-enabled
      ns::is-undoing
+     ns::is-unspecified
      ns::is-valid
      ns::is-valid-date
      ns::is-valid-date-in-calendar_
@@ -1192,6 +1410,8 @@
      ns::is-well-formed
      ns::is-word-in-user-dictionaries_case-sensitive_
      ns::is-writable-file-at-path_
+     ns::isi-os-app-on-mac
+     ns::isi-os-app-on-vision
      ns::iso-country-codes
      ns::iso-currency-codes
      ns::iso-language-codes
@@ -1215,6 +1435,11 @@
      ns::key-pointer-functions
      ns::key-specifier
      ns::key-with-apple-event-code_
+     ns::keys-of-entries-passing-test_
+     ns::keys-of-entries-with-options_passing-test_
+     ns::keys-sorted-by-value-using-comparator_
+     ns::keys-sorted-by-value-using-selector_
+     ns::keys-sorted-by-value-with-options_using-comparator_
      ns::keyword-for-descriptor-at-index_
      ns::keywords
      ns::kibibits
@@ -1242,22 +1467,30 @@
      ns::language-hint
      ns::language-identifier
      ns::language-map
+     ns::languages-for-script_
      ns::last-index
      ns::last-object
      ns::last-path-component
+     ns::later-date_
+     ns::launch
      ns::launch-and-return-error_
      ns::launch-path
      ns::launch-requirement-data
+     ns::launched-task-with-launch-path_arguments_
      ns::leap-month
      ns::left-expression
      ns::length
+     ns::length-of-bytes-using-encoding_
      ns::lenient
      ns::letter-character-set
      ns::level
      ns::levels-of-undo
      ns::lightyears
      ns::limit-date-for-mode_
+     ns::line-direction-for-language_
      ns::line-number
+     ns::line-range-for-range_
+     ns::link-checking-result-with-range_url_
      ns::link-item-at-path_to-path_error_
      ns::link-item-at-url_to-url_error_
      ns::list-descriptor
@@ -1273,6 +1506,7 @@
      ns::load-in-place-file-representation-for-type-identifier_completion-handler_
      ns::load-item-for-type-identifier_options_completion-handler_
      ns::load-object-of-class_completion-handler_
+     ns::load-preview-image-with-options_completion-handler_
      ns::load-suite-with-dictionary_from-bundle_
      ns::load-suites-from-bundle_
      ns::loaded
@@ -1284,10 +1518,16 @@
      ns::local-time-zone
      ns::locale
      ns::locale-identifier
+     ns::locale-identifier-from-components_
+     ns::locale-identifier-from-windows-locale-code_
+     ns::locale-with-locale-identifier_
      ns::localizations
      ns::localized-additional-description
      ns::localized-attributed-string-for-key_value_table_
      ns::localized-capitalized-string
+     ns::localized-case-insensitive-compare_
+     ns::localized-case-insensitive-contains-string_
+     ns::localized-compare_
      ns::localized-description
      ns::localized-failure-reason
      ns::localized-for-language-identifier_with-pronouns_
@@ -1295,22 +1535,37 @@
      ns::localized-lowercase-string
      ns::localized-name
      ns::localized-name-of-saving-computer
+     ns::localized-name-of-string-encoding_
+     ns::localized-name_locale_
      ns::localized-phrase
      ns::localized-recovery-options
      ns::localized-recovery-suggestion
+     ns::localized-scanner-with-string_
+     ns::localized-standard-compare_
+     ns::localized-standard-contains-string_
+     ns::localized-standard-range-of-string_
      ns::localized-string-by-joining-strings_
+     ns::localized-string-for-calendar-identifier_
      ns::localized-string-for-collation-identifier
+     ns::localized-string-for-collation-identifier_
      ns::localized-string-for-collator-identifier
+     ns::localized-string-for-collator-identifier_
+     ns::localized-string-for-country-code_
      ns::localized-string-for-currency-code
+     ns::localized-string-for-currency-code_
      ns::localized-string-for-date_relative-to-date_
      ns::localized-string-for-identifier
      ns::localized-string-for-key_value_table_
      ns::localized-string-for-key_value_table_localizations_
      ns::localized-string-for-language-code
+     ns::localized-string-for-language-code_
+     ns::localized-string-for-locale-identifier_
      ns::localized-string-for-region-code
      ns::localized-string-for-script-code
+     ns::localized-string-for-script-code_
      ns::localized-string-for-status-code_
      ns::localized-string-for-variant-code
+     ns::localized-string-for-variant-code_
      ns::localized-string-from-date-components_
      ns::localized-string-from-date-components_units-style_
      ns::localized-string-from-date_date-style_time-style_
@@ -1334,6 +1589,7 @@
      ns::low-power-mode-enabled
      ns::lowercase-letter-character-set
      ns::lowercase-string
+     ns::lowercase-string-with-locale_
      ns::lux
      ns::mac-catalyst-app
      ns::mach-port
@@ -1385,6 +1641,8 @@
      ns::make-ns-number-float-literal
      ns::make-ns-number-integer-literal
      ns::make-ns-string-string
+     ns::make-objects-perform-selector_
+     ns::make-objects-perform-selector_with-object_
      ns::make-person-name-components
      ns::make-predicate-codable-configuration
      ns::make-property-list-decoder
@@ -1408,11 +1666,13 @@
      ns::masculine
      ns::matches-apple-event-code_
      ns::matches-contents-of-url_
+     ns::matches-in-string_options_range_
      ns::max-concurrent-operation-count
      ns::maximum
      ns::maximum-decimal-number
      ns::maximum-fraction-digits
      ns::maximum-integer-digits
+     ns::maximum-length-of-bytes-using-encoding_
      ns::maximum-message-size
      ns::maximum-range-of-unit_
      ns::maximum-significant-digits
@@ -1484,6 +1744,8 @@
      ns::minimum-range-of-unit_
      ns::minimum-significant-digits
      ns::minus-hash-table_
+     ns::minus-ordered-set_
+     ns::minus-set_
      ns::minus-sign
      ns::minute
      ns::minutes
@@ -1494,6 +1756,7 @@
      ns::mounted-volume-ur-ls-including-resource-values-for-keys_options_
      ns::move-item-at-path_to-path_error_
      ns::move-item-at-url_to-url_error_
+     ns::move-objects-at-indexes_to-index_
      ns::msgid
      ns::multipath
      ns::multiple-threads-enabled
@@ -1568,6 +1831,8 @@
      ns::notation-name
      ns::notification-batching-interval
      ns::notification-center-for-type_
+     ns::notification-with-name_object_
+     ns::notification-with-name_object_user-info_
      ns::now
      ns::ns-activity-animation-tracking-enabled
      ns::ns-activity-automatic-termination-disabled
@@ -3916,12 +4181,29 @@
      ns::number-of-arguments
      ns::number-of-capture-groups
      ns::number-of-items
+     ns::number-of-matches-in-string_options_range_
      ns::number-of-ranges
      ns::number-style
+     ns::number-with-bool_
+     ns::number-with-char_
+     ns::number-with-double_
+     ns::number-with-float_
+     ns::number-with-int_
+     ns::number-with-integer_
+     ns::number-with-long-long_
+     ns::number-with-long_
+     ns::number-with-short_
+     ns::number-with-unsigned-char_
+     ns::number-with-unsigned-int_
+     ns::number-with-unsigned-integer_
+     ns::number-with-unsigned-long-long_
+     ns::number-with-unsigned-long_
+     ns::number-with-unsigned-short_
      ns::nx-read-ns-object-from-coder
      ns::obj-c-type
      ns::object
      ns::object-at-index_
+     ns::object-at-indexed-subscript_
      ns::object-being-tested
      ns::object-by-applying-xslt-at-url_arguments_error_
      ns::object-by-applying-xslt-string_arguments_error_
@@ -3929,6 +4211,7 @@
      ns::object-enumerator
      ns::object-for-info-dictionary-key_
      ns::object-for-key_
+     ns::object-for-keyed-subscript_
      ns::object-form
      ns::object-is-forced-for-key_
      ns::object-is-forced-for-key_in-domain_
@@ -3936,10 +4219,14 @@
      ns::object-specifier-with-descriptor_
      ns::object-value
      ns::object-with-item-provider-data_type-identifier_error_
+     ns::objects-at-indexes_
      ns::objects-by-evaluating-specifier
      ns::objects-by-evaluating-with-containers_
+     ns::objects-for-keys_not-found-marker_
      ns::objects-for-x-query_constants_error_
      ns::objects-for-x-query_error_
+     ns::objects-passing-test_
+     ns::objects-with-options_passing-test_
      ns::observed-presented-item-ubiquity-attributes
      ns::offset
      ns::offset-in-file
@@ -3957,19 +4244,35 @@
      ns::options
      ns::or-predicate-with-subpredicates_
      ns::ordered-list-intent-with-identity_nested-inside-intent_
+     ns::ordered-set
+     ns::ordered-set-by-applying-difference_
+     ns::ordered-set-with-array_
+     ns::ordered-set-with-array_range_copy-items_
+     ns::ordered-set-with-capacity_
+     ns::ordered-set-with-object_
+     ns::ordered-set-with-ordered-set_
+     ns::ordered-set-with-ordered-set_range_copy-items_
+     ns::ordered-set-with-set_
+     ns::ordered-set-with-set_copy-items_
      ns::ordinal
      ns::ordinality-of-unit_in-unit_for-date_
      ns::original-request
      ns::originator-name-components
      ns::orthography
+     ns::orthography-checking-result-with-range_orthography_
+     ns::orthography-with-dominant-script_language-map_
      ns::other-button-title
      ns::other-versions-of-item-at-url_
      ns::ounces
      ns::ounces-troy
      ns::output-format
+     ns::output-stream-to-file-at-path_append_
+     ns::output-stream-to-memory
+     ns::output-stream-with-url_append_
      ns::padding-character
      ns::padding-position
      ns::paragraph-intent-with-identity_nested-inside-intent_
+     ns::paragraph-range-for-range_
      ns::param-descriptor-for-keyword_
      ns::parameter-string
      ns::parent
@@ -4010,8 +4313,10 @@
      ns::path-for-resource_of-type_in-directory_
      ns::path-for-resource_of-type_in-directory_for-localization_
      ns::path-percent-encoded
+     ns::path-with-components_
      ns::paths-for-resources-of-type_in-directory_
      ns::paths-for-resources-of-type_in-directory_for-localization_
+     ns::paths-matching-extensions_
      ns::pattern
      ns::pausable
      ns::pause
@@ -4029,9 +4334,13 @@
      ns::percent-encoded-query-items
      ns::percent-encoded-user
      ns::percent-symbol
+     ns::perform-activity-with-options_reason_using-block_
      ns::perform-as-current-with-pending-unit-count_using-block_
+     ns::perform-block_
      ns::perform-default-handling-for-authentication-challenge_
      ns::perform-default-implementation
+     ns::perform-in-modes_block_
+     ns::perform-selector_target_argument_order_modes_
      ns::persistence
      ns::persistent-domain-for-name_
      ns::persistent-identifier
@@ -4040,6 +4349,7 @@
      ns::petabits
      ns::petabytes
      ns::phone-number
+     ns::phone-number-checking-result-with-range_phone-number_
      ns::phonetic
      ns::phonetic-representation
      ns::physical-memory
@@ -4137,18 +4447,22 @@
      ns::progress
      ns::progress-with-total-unit-count_
      ns::progress-with-total-unit-count_parent_pending-unit-count_
+     ns::promised-item-resource-values-for-keys_error_
      ns::pronoun
      ns::pronoun-type
      ns::pronouns
      ns::properties
      ns::property-for-key_
      ns::property-for-key_in-request_
+     ns::property-list
      ns::property-list-decoder
      ns::property-list-encoder
+     ns::property-list-from-strings-file-format
      ns::property-list_is-valid-for-format_
      ns::proposed-credential
      ns::protection-space
      ns::protocol
+     ns::protocol-checker-with-target_protocol_
      ns::protocol-classes
      ns::protocol-family
      ns::proxy-connection
@@ -4171,11 +4485,20 @@
      ns::queue-priority
      ns::quotation-begin-delimiter
      ns::quotation-end-delimiter
+     ns::quote-checking-result-with-range_replacement-string_
      ns::radians
      ns::raise
      ns::range
+     ns::range-at-index_
      ns::range-container-object
      ns::range-in-string_
+     ns::range-of-character-from-set_
+     ns::range-of-character-from-set_options_
+     ns::range-of-character-from-set_options_range_
+     ns::range-of-composed-character-sequence-at-index_
+     ns::range-of-composed-character-sequences-for-range_
+     ns::range-of-data_options_range_
+     ns::range-of-first-match-in-string_options_range_
      ns::range-of-fragment
      ns::range-of-host
      ns::range-of-password
@@ -4183,14 +4506,25 @@
      ns::range-of-port
      ns::range-of-query
      ns::range-of-scheme
+     ns::range-of-string_
+     ns::range-of-string_options_
+     ns::range-of-string_options_range_
+     ns::range-of-string_options_range_locale_
      ns::range-of-unit_in-unit_for-date_
      ns::range-of-user
      ns::range-value
+     ns::range-with-name_
+     ns::read-data-of-length_
      ns::read-data-of-min-length_max-length_timeout_completion-handler_
+     ns::read-data-to-end-of-file
      ns::read-data-to-end-of-file-and-return-error_
      ns::read-data-up-to-length_error_
      ns::read-from-url_options_error_
+     ns::read-in-background-and-notify
+     ns::read-in-background-and-notify-for-modes_
      ns::read-to-end
+     ns::read-to-end-of-file-in-background-and-notify
+     ns::read-to-end-of-file-in-background-and-notify-for-modes_
      ns::read-up-to-count
      ns::readability-handler
      ns::readable-type-identifiers-for-item-provider
@@ -4267,7 +4601,9 @@
      ns::remove-all-objects
      ns::remove-and-return-error_
      ns::remove-attribute-for-name_
+     ns::remove-attribute_range_
      ns::remove-cached-resource-value-for-key_
+     ns::remove-cached-response-for-data-task_
      ns::remove-cached-response-for-request_
      ns::remove-cached-responses-since-date_
      ns::remove-characters-in
@@ -4277,6 +4613,7 @@
      ns::remove-cookies-since-date_
      ns::remove-credential_for-protection-space_
      ns::remove-credential_for-protection-space_options_
+     ns::remove-credential_for-protection-space_options_task_
      ns::remove-delivered-notification_
      ns::remove-dependency_
      ns::remove-descriptor-at-index_
@@ -4294,8 +4631,17 @@
      ns::remove-namespace-for-prefix_
      ns::remove-object-at-index_
      ns::remove-object-for-key_
+     ns::remove-object-identical-to_
+     ns::remove-object-identical-to_in-range_
      ns::remove-object_
+     ns::remove-object_in-range_
+     ns::remove-objects-at-indexes_
+     ns::remove-objects-for-keys_
+     ns::remove-objects-in-array_
+     ns::remove-objects-in-range_
      ns::remove-observer_
+     ns::remove-observer_for-key-path_
+     ns::remove-observer_from-objects-at-indexes_for-key-path_
      ns::remove-observer_name_object_
      ns::remove-other-versions-of-item-at-url_error_
      ns::remove-param-descriptor-with-keyword_
@@ -4312,13 +4658,21 @@
      ns::remove-volatile-domain-for-name_
      ns::repeated-day
      ns::repeats
+     ns::replace-characters-in-range_with-attributed-string_
      ns::replace-characters-in-range_with-string_
      ns::replace-child-at-index_with-node_
      ns::replace-item-at-url_options_error_
+     ns::replace-matches-in-string_options_range_with-template_
      ns::replace-object-at-index_with-object_
      ns::replace-object_with-object_
+     ns::replace-objects-at-indexes_with-objects_
+     ns::replace-objects-in-range_with-objects-from-array_
+     ns::replace-objects-in-range_with-objects-from-array_range_
+     ns::replace-occurrences-of-string_with-string_options_range_
+     ns::replacement-checking-result-with-range_replacement-string_
      ns::replacement-class-for-class_
      ns::replacement-string
+     ns::replacement-string-for-result_in-string_offset_template_
      ns::reply-timeout
      ns::reply-with-exception_
      ns::request
@@ -4337,7 +4691,9 @@
      ns::requires-secure-coding
      ns::reserve-capacity
      ns::reserved-space-length
+     ns::reset-bytes-in-range_
      ns::reset-standard-user-defaults
+     ns::reset-system-time-zone
      ns::reset-with-completion-handler_
      ns::resign-current
      ns::resolve-namespace-for-name_
@@ -4360,6 +4716,7 @@
      ns::response-start-date
      ns::result
      ns::result-at-index_
+     ns::result-by-adjusting-ranges-with-offset_
      ns::result-count
      ns::result-type
      ns::results
@@ -4373,6 +4730,7 @@
      ns::return-type
      ns::reused-connection
      ns::reverse
+     ns::reverse-object-enumerator
      ns::reverse-transformed-value_
      ns::reversed-ordered-set
      ns::reversed-sort-descriptor
@@ -4395,6 +4753,8 @@
      ns::run
      ns::run-in-new-thread
      ns::run-loop-modes
+     ns::run-mode_before-date_
+     ns::run-until-date_
      ns::running
      ns::same-site-policy
      ns::save-options
@@ -4409,6 +4769,7 @@
      ns::scan-string
      ns::scan-up-to-string
      ns::scandinavian-miles
+     ns::scanner-with-string_
      ns::schedule-in-run-loop_for-mode_
      ns::schedule-notification_
      ns::schedule-send-barrier-block_
@@ -4438,6 +4799,8 @@
      ns::secure-connection-end-date
      ns::secure-connection-start-date
      ns::seek-to-end
+     ns::seek-to-end-of-file
+     ns::seek-to-file-offset_
      ns::seek-to-offset_error_
      ns::selector
      ns::selector-for-command_
@@ -4487,6 +4850,7 @@
      ns::set-am-symbol_
      ns::set-applies-source-position-attributes_
      ns::set-arguments_
+     ns::set-array_
      ns::set-array_for-key_
      ns::set-assumes-http3-capable_
      ns::set-attachments_
@@ -4495,7 +4859,9 @@
      ns::set-attributed-string-for-nil_
      ns::set-attributed-string-for-not-a-number_
      ns::set-attributed-string-for-zero_
+     ns::set-attributed-string_
      ns::set-attributed-title_
+     ns::set-attributes-as-dictionary_
      ns::set-attributes-with-dictionary_
      ns::set-attributes_
      ns::set-attributes_of-item-at-path_error_
@@ -4504,6 +4870,9 @@
      ns::set-automatic-termination-support-enabled_
      ns::set-base-specifier_
      ns::set-bool_for-key_
+     ns::set-by-adding-object_
+     ns::set-by-adding-objects-from-array_
+     ns::set-by-adding-objects-from-set_
      ns::set-cache-policy_
      ns::set-calendar_
      ns::set-cancellable_
@@ -4537,12 +4906,15 @@
      ns::set-count-style_
      ns::set-count_
      ns::set-credential_for-protection-space_
+     ns::set-credential_for-protection-space_task_
      ns::set-currency-code_
      ns::set-currency-decimal-separator_
      ns::set-currency-grouping-separator_
      ns::set-currency-symbol_
      ns::set-current-directory-path_
      ns::set-current-directory-url_
+     ns::set-custom-pronoun_for-language_error_
+     ns::set-data_
      ns::set-data_for-key_
      ns::set-date-format_
      ns::set-date-style_
@@ -4554,6 +4926,7 @@
      ns::set-decoding-failure-policy_
      ns::set-default-behavior_
      ns::set-default-credential_for-protection-space_
+     ns::set-default-credential_for-protection-space_task_
      ns::set-default-date_
      ns::set-default-formatter-behavior_
      ns::set-default-name-server-port-number_
@@ -4569,6 +4942,7 @@
      ns::set-descriptor_for-keyword_
      ns::set-destination_allow-overwrite_
      ns::set-determination_
+     ns::set-dictionary_
      ns::set-dictionary_for-key_
      ns::set-direct-parameter_
      ns::set-discardable_
@@ -4730,8 +5104,11 @@
      ns::set-object-being-tested_
      ns::set-object-form_
      ns::set-object-value_
+     ns::set-object_at-index_
+     ns::set-object_at-indexed-subscript_
      ns::set-object_for-key_
      ns::set-object_for-key_cost_
+     ns::set-object_for-keyed-subscript_
      ns::set-operation-queue_
      ns::set-orthography_range_
      ns::set-other-button-title_
@@ -4830,6 +5207,7 @@
      ns::set-selector_
      ns::set-session-description_
      ns::set-session-sends-launch-events_
+     ns::set-set_
      ns::set-shared-container-identifier_
      ns::set-shared-script-suite-registry_
      ns::set-shared-url-cache_
@@ -4925,6 +5303,8 @@
      ns::set-value-list-attributes_
      ns::set-value-transformer_for-name_
      ns::set-value_for-component_
+     ns::set-value_for-http-header-field_
+     ns::set-value_for-key_
      ns::set-variables_
      ns::set-version_
      ns::set-very-short-month-symbols_
@@ -4939,6 +5319,10 @@
      ns::set-weekday-ordinal_
      ns::set-weekday-symbols_
      ns::set-weekday_
+     ns::set-with-array_
+     ns::set-with-capacity_
+     ns::set-with-object_
+     ns::set-with-set_
      ns::set-writeability-handler_
      ns::set-year-for-week-of-year_
      ns::set-year_
@@ -4954,6 +5338,7 @@
      ns::shared-frameworks-url
      ns::shared-http-cookie-storage
      ns::shared-instance
+     ns::shared-key-set-for-keys_
      ns::shared-script-execution-context
      ns::shared-script-suite-registry
      ns::shared-session
@@ -4992,10 +5377,20 @@
      ns::sort-descriptor-with-key_ascending_comparator_
      ns::sort-descriptor-with-key_ascending_selector_
      ns::sort-descriptors
+     ns::sort-range_options_using-comparator_
+     ns::sort-using-comparator_
+     ns::sort-using-descriptors_
+     ns::sort-using-selector_
+     ns::sort-with-options_using-comparator_
      ns::sorted-array-hint
+     ns::sorted-array-using-comparator_
+     ns::sorted-array-using-descriptors_
+     ns::sorted-array-using-selector_
+     ns::sorted-array-with-options_using-comparator_
      ns::sorted-cookies-using-descriptors_
      ns::sound-name
      ns::source
+     ns::spell-checking-result-with-range_
      ns::spell-server_check-grammar-in-string_language_details_
      ns::spell-server_check-string_offset_types_options_orthography_word-count_
      ns::spell-server_did-forget-word_in-language_
@@ -5052,7 +5447,9 @@
      ns::stop-query
      ns::stopped
      ns::storage-policy
+     ns::store-cached-response_for-data-task_
      ns::store-cached-response_for-request_
+     ns::store-cookies_for-task_
      ns::stream-error
      ns::stream-status
      ns::stream-task-with-host-name_port_
@@ -5061,12 +5458,24 @@
      ns::string
      ns::string-array-for-key_
      ns::string-by-abbreviating-with-tilde-in-path
+     ns::string-by-adding-percent-encoding-with-allowed-characters_
+     ns::string-by-appending-path-component_
+     ns::string-by-appending-path-extension_
+     ns::string-by-appending-string_
+     ns::string-by-applying-transform_reverse_
      ns::string-by-deleting-last-path-component
      ns::string-by-deleting-path-extension
      ns::string-by-expanding-tilde-in-path
+     ns::string-by-folding-with-options_locale_
+     ns::string-by-padding-to-length_with-string_starting-at-index_
      ns::string-by-removing-percent-encoding
+     ns::string-by-replacing-characters-in-range_with-string_
+     ns::string-by-replacing-matches-in-string_options_range_with-template_
+     ns::string-by-replacing-occurrences-of-string_with-string_
+     ns::string-by-replacing-occurrences-of-string_with-string_options_range_
      ns::string-by-resolving-symlinks-in-path
      ns::string-by-standardizing-path
+     ns::string-by-trimming-characters-in-set_
      ns::string-edited-in-range_change-in-length_
      ns::string-for-key_
      ns::string-for-object-value_
@@ -5089,15 +5498,28 @@
      ns::string-from-unit_
      ns::string-from-value_unit_
      ns::string-value
+     ns::string-with-c-string_encoding_
+     ns::string-with-capacity_
+     ns::string-with-contents-of-file_encoding_error_
+     ns::string-with-contents-of-url_encoding_error_
      ns::string-with-file-system-representation_length_
+     ns::string-with-string_
+     ns::string-with-utf8-string_
+     ns::strings-by-appending-paths_
+     ns::strong-objects-pointer-array
      ns::strong-to-strong-objects-map-table
      ns::strong-to-weak-objects-map-table
      ns::style
+     ns::subarray-with-range_
+     ns::subdata-with-range_
      ns::subgroups
      ns::subject-form
      ns::subpaths-at-path_
      ns::subpaths-of-directory-at-path_error_
      ns::subpredicates
+     ns::substring-from-index_
+     ns::substring-to-index_
+     ns::substring-with-range_
      ns::subtitle
      ns::suggested-filename
      ns::suggested-name
@@ -5117,6 +5539,7 @@
      ns::symbolic-link-destination-url
      ns::synchronize
      ns::synchronize-and-return-error_
+     ns::synchronize-file
      ns::synchronous-remote-object-proxy-with-error-handler_
      ns::system-default-port-name-server
      ns::system-id
@@ -5167,12 +5590,17 @@
      ns::thread-priority
      ns::throughput
      ns::time-interval
+     ns::time-interval-since-date_
      ns::time-interval-since-now
      ns::time-interval-since-reference-date
      ns::time-interval-since1970
      ns::time-style
      ns::time-zone
      ns::time-zone-data-version
+     ns::time-zone-for-seconds-from-gmt_
+     ns::time-zone-with-abbreviation_
+     ns::time-zone-with-name_
+     ns::time-zone-with-name_data_
      ns::timeout-interval
      ns::timeout-interval-for-request
      ns::timeout-interval-for-resource
@@ -5199,10 +5627,12 @@
      ns::transform-struct
      ns::transformed-value-class
      ns::transformed-value_
+     ns::transit-information-checking-result-with-range_components_
      ns::translate-x-by_y-by_
      ns::translate-x-y
      ns::true-expression
      ns::truncate-at-offset_error_
+     ns::truncate-file-at-offset_
      ns::try-lock
      ns::try-lock-when-condition_
      ns::two-digit-start-date
@@ -5238,6 +5668,8 @@
      ns::undo-registration-enabled
      ns::undoing
      ns::union-hash-table_
+     ns::union-ordered-set_
+     ns::union-set_
      ns::unique-id
      ns::unit
      ns::unit-options
@@ -5262,17 +5694,24 @@
      ns::unspecified
      ns::upload-local-version-of-ubiquitous-item-at-url_with-conflict-resolution-policy_completion-handler_
      ns::upload-task-with-request_from-data_
+     ns::upload-task-with-request_from-data_completion-handler_
      ns::upload-task-with-request_from-file_
+     ns::upload-task-with-request_from-file_completion-handler_
      ns::upload-task-with-resume-data_
+     ns::upload-task-with-resume-data_completion-handler_
      ns::upload-task-with-streamed-request_
      ns::uppercase-letter-character-set
      ns::uppercase-string
+     ns::uppercase-string-with-locale_
      ns::ur-ls-for-directory_in-domains_
      ns::ur-ls-for-resources-with-extension_subdirectory_
      ns::ur-ls-for-resources-with-extension_subdirectory_in-bundle-with-url_
      ns::ur-ls-for-resources-with-extension_subdirectory_localization_
      ns::uri
      ns::url
+     ns::url-by-appending-path-component_
+     ns::url-by-appending-path-component_is-directory_
+     ns::url-by-appending-path-extension_
      ns::url-by-deleting-last-path-component
      ns::url-by-deleting-path-extension
      ns::url-by-resolving-alias-file-at-url_options_error_
@@ -5374,6 +5813,7 @@
      ns::value-for-component_
      ns::value-for-http-header-field
      ns::value-for-http-header-field_
+     ns::value-for-key_
      ns::value-from-base-unit-value_
      ns::value-list-attributes
      ns::value-lists
@@ -5381,10 +5821,17 @@
      ns::value-pointer-functions
      ns::value-transformer-for-name_
      ns::value-transformer-names
+     ns::value-with-edge-insets_
+     ns::value-with-nonretained-object_
+     ns::value-with-point_
+     ns::value-with-range_
+     ns::value-with-rect_
+     ns::value-with-size_
      ns::values-for-attributes_
      ns::variable
      ns::variables
      ns::variant-code
+     ns::variant-fitting-presentation-width_
      ns::version
      ns::version-for-class-name_
      ns::version-of-item-at-url_for-persistent-identifier_
@@ -5400,12 +5847,16 @@
      ns::volatile-domain-names
      ns::volts
      ns::wait
+     ns::wait-for-data-in-background-and-notify
+     ns::wait-for-data-in-background-and-notify-for-modes_
      ns::wait-until-all-operations-are-finished
      ns::wait-until-date_
+     ns::wait-until-exit
      ns::wait-until-finished
      ns::waits-for-connectivity
      ns::watts
      ns::weak-objects-hash-table
+     ns::weak-objects-pointer-array
      ns::weak-to-strong-objects-map-table
      ns::weak-to-weak-objects-map-table
      ns::web-socket-task-with-request_
@@ -5420,12 +5871,19 @@
      ns::well-formed
      ns::whitespace-and-newline-character-set
      ns::whitespace-character-set
+     ns::windows-locale-code-from-locale-identifier_
      ns::writable-type-identifiers-for-item-provider
      ns::write-bookmark-data_to-url_options_error_
+     ns::write-data_
      ns::write-data_error_
      ns::write-data_timeout_completion-handler_
      ns::write-json-object_to-stream_options_error_
      ns::write-property-list_to-stream_format_options_error_
+     ns::write-to-file_atomically_
+     ns::write-to-file_atomically_encoding_error_
+     ns::write-to-url_atomically_
+     ns::write-to-url_atomically_encoding_error_
+     ns::write-to-url_error_
      ns::write-to-url_options_original-contents-url_error_
      ns::writeability-handler
      ns::writing-intent-with-url_options_

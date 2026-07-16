@@ -122,8 +122,24 @@ mod tests {
             false,
             false,
         );
-        let variadic = make_method("format:", vec![], TypeRefKind::Id, true, false);
-        let deprecated = make_method("old:", vec![], TypeRefKind::Id, false, true);
+        let variadic = make_method(
+            "format:",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+            true,
+            false,
+        );
+        let deprecated = make_method(
+            "old:",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+            false,
+            true,
+        );
 
         assert!(is_supported_method(&normal));
         assert!(!is_supported_method(&variadic));
@@ -135,8 +151,15 @@ mod tests {
         let mapper = RacketFfiTypeMapper;
         let m = make_method(
             "objectAtIndex:",
-            vec![make_param("index", TypeRefKind::Id)],
-            TypeRefKind::Id,
+            vec![make_param(
+                "index",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
             false,
             false,
         );
@@ -154,7 +177,9 @@ mod tests {
                     name: "uint64".into(),
                 },
             )],
-            TypeRefKind::Id,
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
             false,
             false,
         );
@@ -169,7 +194,12 @@ mod tests {
         let mapper = RacketFfiTypeMapper;
         let m = make_method(
             "addObject:",
-            vec![make_param("obj", TypeRefKind::Id)],
+            vec![make_param(
+                "obj",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
             TypeRefKind::Primitive {
                 name: "void".into(),
             },

@@ -47,7 +47,13 @@ fn main() {
     // Real exported Foundation functions (FOUNDATION_EXPORT, non-inline):
     let fs = vec![
         // id NSHomeDirectory(void) — object return, raw (pointer void).
-        func("NSHomeDirectory", vec![], TypeRefKind::Id),
+        func(
+            "NSHomeDirectory",
+            vec![],
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
+        ),
         // NSString *NSStringFromRange(NSRange) — NS-geometry struct by-value ARG.
         func(
             "NSStringFromRange",
@@ -57,12 +63,19 @@ fn main() {
                     name: "NSRange".into(),
                 },
             )],
-            TypeRefKind::Id,
+            TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         ),
         // NSRange NSRangeFromString(NSString *) — NS-geometry struct by-value RETURN.
         func(
             "NSRangeFromString",
-            vec![param("s", TypeRefKind::Id)],
+            vec![param(
+                "s",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
             TypeRefKind::Struct {
                 name: "NSRange".into(),
             },

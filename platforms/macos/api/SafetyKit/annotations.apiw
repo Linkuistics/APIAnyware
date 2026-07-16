@@ -4,18 +4,10 @@ framework SafetyKit {
             block-param 0 invocation=async_copied
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class SAEmergencyResponseManager {
         method dialVoiceCallToPhoneNumber:completionHandler: is-instance=#true {
             block-param 1 invocation=async_copied
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

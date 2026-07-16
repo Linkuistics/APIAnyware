@@ -683,7 +683,7 @@ fn type_shape(t: &TypeRef) -> String {
         TypeRefKind::Class { name, .. } => format!("c:{name}"),
         TypeRefKind::Alias { name, .. } => format!("a:{name}"),
         TypeRefKind::Struct { name } => format!("s:{name}"),
-        TypeRefKind::Id => "id".into(),
+        TypeRefKind::Id { .. } => "id".into(),
         TypeRefKind::Instancetype => "instancetype".into(),
         TypeRefKind::CString => "cstr".into(),
         TypeRefKind::Pointer => "ptr".into(),
@@ -2467,6 +2467,7 @@ mod tests {
         let c = Constant {
             name: "MLCreateErrorDomain".into(),
             constant_type: nsstring(),
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

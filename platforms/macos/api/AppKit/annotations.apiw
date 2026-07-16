@@ -9,32 +9,12 @@ framework AppKit {
             source llm
         }
     }
-    class NSAccessibilityCustomRotor {
-        method initWithLabel:itemSearchDelegate: is-instance=#true {
-            param-ownership 1 ownership=weak
-            source llm
-        }
-        method initWithRotorType:itemSearchDelegate: is-instance=#true {
-            param-ownership 1 ownership=weak
-            source llm
-        }
-        method setItemLoadingDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setItemSearchDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSActionCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -46,19 +26,11 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method beginSheetModalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
-            source llm
-        }
-    }
-    class NSAnimation {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -90,7 +62,6 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -109,63 +80,45 @@ framework AppKit {
             error-pattern error_out_param
             source llm
         }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSBrowser {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSBrowserCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSButtonCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
-            source llm
-        }
-    }
-    class NSCandidateListTouchBarItem {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
     class NSCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSClickGestureRecognizer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -191,17 +144,14 @@ framework AppKit {
             source llm
         }
         method setDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setPrefetchDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -244,7 +194,6 @@ framework AppKit {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -283,7 +232,6 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -301,12 +249,10 @@ framework AppKit {
     }
     class NSComboBox {
         method setDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -317,17 +263,14 @@ framework AppKit {
     }
     class NSComboBoxCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -338,12 +281,10 @@ framework AppKit {
     }
     class NSControl {
         method editWithFrame:editor:delegate:event: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:editor:delegate:start:length: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -353,16 +294,8 @@ framework AppKit {
             error-pattern error_out_param
             source llm
         }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSCustomImageRep {
-        method initWithDrawSelector:delegate: is-instance=#true {
-            param-ownership 1 ownership=weak
-            source llm
-        }
         method initWithSize:flipped:drawingHandler: is-instance=#true {
             block-param 2 invocation=stored
             source llm
@@ -370,24 +303,20 @@ framework AppKit {
     }
     class NSDatePicker {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSDatePickerCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -395,10 +324,6 @@ framework AppKit {
     class NSDictionaryController {
         method commitEditingAndReturnError: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -418,7 +343,6 @@ framework AppKit {
             source llm
         }
         method autosaveDocumentWithDelegate:didAutosaveSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -428,7 +352,6 @@ framework AppKit {
             source llm
         }
         method canCloseDocumentWithDelegate:shouldCloseSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -452,7 +375,6 @@ framework AppKit {
             source llm
         }
         method duplicateDocumentWithDelegate:didDuplicateSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -510,12 +432,10 @@ framework AppKit {
             source llm
         }
         method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
         method printDocumentWithSettings:showPrintPanel:delegate:didPrintSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -542,22 +462,18 @@ framework AppKit {
             source llm
         }
         method runModalPageLayoutWithPrintInfo:delegate:didRunSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method runModalPrintOperation:delegate:didRunSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method runModalSavePanelForSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method saveDocumentWithDelegate:didSaveSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -571,7 +487,6 @@ framework AppKit {
             source llm
         }
         method saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -581,7 +496,6 @@ framework AppKit {
             source llm
         }
         method shouldCloseWindowController:delegate:shouldCloseSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -618,7 +532,6 @@ framework AppKit {
             source llm
         }
         method saveToFile:saveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -640,7 +553,6 @@ framework AppKit {
             source llm
         }
         method closeAllDocumentsWithDelegate:didCloseAllSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -675,7 +587,6 @@ framework AppKit {
             source llm
         }
         method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -685,7 +596,6 @@ framework AppKit {
             source llm
         }
         method reviewUnsavedDocumentsWithAlertTitle:cancellable:delegate:didReviewAllSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -719,7 +629,6 @@ framework AppKit {
     }
     class NSDrawer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -731,16 +640,6 @@ framework AppKit {
         }
         method addLocalMonitorForEventsMatchingMask:handler: is-instance=#false {
             block-param 1 invocation=stored
-            source llm
-        }
-    }
-    class NSFilePromiseProvider {
-        method initWithFileType:delegate: is-instance=#true {
-            param-ownership 1 ownership=weak
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -770,12 +669,6 @@ framework AppKit {
             source llm
         }
     }
-    class NSFontManager {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSFontPanel {
         method beginCriticalSheet:completionHandler: is-instance=#true {
             block-param 1 invocation=async_copied
@@ -798,7 +691,6 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -810,26 +702,22 @@ framework AppKit {
     }
     class NSForm {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSFormCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSGestureRecognizer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -847,75 +735,45 @@ framework AppKit {
             error-pattern error_out_param
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSImageCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
-            source llm
-        }
-    }
-    class NSInputServer {
-        method initWithDelegate:name: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSLayoutManager {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
     class NSLevelIndicatorCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSMagnificationGestureRecognizer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSMatrix {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
-            source llm
-        }
-    }
-    class NSMenu {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
     class NSMenuItemCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -937,10 +795,6 @@ framework AppKit {
     class NSObjectController {
         method commitEditingAndReturnError: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
         method fetchWithRequest:merge:error: is-instance=#true {
@@ -980,7 +834,6 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -990,12 +843,10 @@ framework AppKit {
             source llm
         }
         method beginSheetForDirectory:file:types:modalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 4 ownership=weak
             threading main_thread_only
             source llm
         }
         method beginForDirectory:file:types:modelessDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1007,12 +858,10 @@ framework AppKit {
             source llm
         }
         method setDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1031,12 +880,10 @@ framework AppKit {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1048,14 +895,12 @@ framework AppKit {
             source llm
         }
         method beginSheetWithPrintInfo:modalForWindow:delegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSPanGestureRecognizer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1082,7 +927,6 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1122,7 +966,6 @@ framework AppKit {
     }
     class NSPathCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1132,31 +975,26 @@ framework AppKit {
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSPathComponentCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSPathControl {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1177,7 +1015,6 @@ framework AppKit {
             source llm
         }
         method autosaveDocumentWithDelegate:didAutosaveSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1187,7 +1024,6 @@ framework AppKit {
             source llm
         }
         method canCloseDocumentWithDelegate:shouldCloseSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1216,7 +1052,6 @@ framework AppKit {
             source llm
         }
         method duplicateDocumentWithDelegate:didDuplicateSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1274,12 +1109,10 @@ framework AppKit {
             source llm
         }
         method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
         method printDocumentWithSettings:showPrintPanel:delegate:didPrintSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1307,22 +1140,18 @@ framework AppKit {
             source llm
         }
         method runModalPageLayoutWithPrintInfo:delegate:didRunSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method runModalPrintOperation:delegate:didRunSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method runModalSavePanelForSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method saveDocumentWithDelegate:didSaveSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1336,7 +1165,6 @@ framework AppKit {
             source llm
         }
         method saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1346,7 +1174,6 @@ framework AppKit {
             source llm
         }
         method shouldCloseWindowController:delegate:shouldCloseSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1387,40 +1214,34 @@ framework AppKit {
     }
     class NSPopUpButtonCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSPopover {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSPredicateEditor {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSPressGestureRecognizer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSPrintOperation {
         method runOperationModalForWindow:delegate:didRunSelector:contextInfo: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1432,28 +1253,24 @@ framework AppKit {
             source llm
         }
         method beginSheetWithPrintInfo:modalForWindow:delegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSResponder {
         method presentError:modalForWindow:delegate:didPresentSelector:contextInfo: is-instance=#true {
-            param-ownership 2 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSRotationGestureRecognizer {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSRuleEditor {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1490,7 +1307,6 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1500,7 +1316,6 @@ framework AppKit {
             source llm
         }
         method beginSheetForDirectory:file:modalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1512,62 +1327,52 @@ framework AppKit {
             source llm
         }
         method setDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSSearchField {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSSearchFieldCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSSecureTextField {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSSecureTextFieldCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSSegmentedCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1577,27 +1382,15 @@ framework AppKit {
             block-param 3 invocation=stored
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSSharingServicePicker {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSSharingServicePickerToolbarItem {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSSharingServicePickerTouchBarItem {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1610,35 +1403,17 @@ framework AppKit {
     }
     class NSSliderCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
-            source llm
-        }
-    }
-    class NSSound {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSSpeechRecognizer {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
     class NSSpeechSynthesizer {
         method objectForProperty:error: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
         method setObject:forProperty:error: is-instance=#true {
@@ -1662,7 +1437,6 @@ framework AppKit {
     }
     class NSSplitView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1674,7 +1448,6 @@ framework AppKit {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1686,26 +1459,22 @@ framework AppKit {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSStackView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSStepperCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1735,7 +1504,6 @@ framework AppKit {
     }
     class NSTabView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1747,19 +1515,16 @@ framework AppKit {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSTableHeaderCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1771,12 +1536,10 @@ framework AppKit {
             source llm
         }
         method setDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1807,19 +1570,16 @@ framework AppKit {
     }
     class NSText {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSTextAttachmentCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1831,10 +1591,6 @@ framework AppKit {
         }
         method performEditingTransactionUsingBlock: is-instance=#true {
             block-param 0 invocation=synchronous
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -1851,26 +1607,19 @@ framework AppKit {
             block-param 0 invocation=synchronous
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSTextField {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSTextFieldCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -1907,42 +1656,14 @@ framework AppKit {
             block-param 3 invocation=synchronous
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSTextSelectionNavigation {
-        method initWithDataSource: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
-    class NSTextStorage {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-        method setTextStorageObserver: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSTextView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
-            source llm
-        }
-    }
-    class NSTextViewportLayoutController {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -1953,45 +1674,38 @@ framework AppKit {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSTokenField {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSTokenFieldCell {
         method editWithFrame:inView:editor:delegate:event: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method selectWithFrame:inView:editor:delegate:start:length: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSToolbar {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
     }
     class NSTouchBar {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -2001,18 +1715,10 @@ framework AppKit {
             error-pattern error_out_param
             source llm
         }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class NSUserDefaultsController {
         method commitEditingAndReturnError: is-instance=#true {
             error-pattern error_out_param
-            source llm
-        }
-        method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }
@@ -2023,12 +1729,6 @@ framework AppKit {
             source llm
         }
     }
-    class NSViewAnimation {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class NSViewController {
         method commitEditingAndReturnError: is-instance=#true {
             threading main_thread_only
@@ -2036,7 +1736,6 @@ framework AppKit {
             source llm
         }
         method commitEditingWithDelegate:didCommitSelector:contextInfo: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -2068,7 +1767,6 @@ framework AppKit {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -2155,7 +1853,6 @@ framework AppKit {
             source llm
         }
         method initWithDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

@@ -614,7 +614,7 @@ fn property_getter_dispatch(p: &Property) -> Dispatch {
         ret_alien: m.map_type(&p.property_type, true),
         ret_object: m.is_object_type(&p.property_type),
         // A `copy` property hands back a +1 object (acts like a copy family).
-        ret_retained: p.is_copy,
+        ret_retained: p.is_copy(),
         error_out: false,
     }
 }
@@ -637,7 +637,9 @@ fn property_setter_dispatch(p: &Property) -> Dispatch {
 fn lower_arg(name: &str, ty: &TypeRef) -> DispatchArg {
     let m = mapper();
     let role = match &ty.kind {
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => ArgRole::Object,
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
+            ArgRole::Object
+        }
         TypeRefKind::Selector => ArgRole::Selector,
         TypeRefKind::Block { .. } => ArgRole::Block,
         _ => ArgRole::Plain,
@@ -919,7 +921,7 @@ mod tests {
             property_type: ty(kind),
             readonly,
             class_property: false,
-            is_copy: false,
+            ownership: None,
             deprecated: false,
             source: None,
             provenance: None,
@@ -997,7 +999,9 @@ mod tests {
             vec![method(
                 "objectAtIndex:",
                 false,
-                ty(TypeRefKind::Id),
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
                 vec![param(
                     "index",
                     TypeRefKind::Primitive {
@@ -1022,7 +1026,12 @@ mod tests {
                 "addObject:",
                 false,
                 TypeRef::void(),
-                vec![param("anObject", TypeRefKind::Id)],
+                vec![param(
+                    "anObject",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
             )],
             vec![],
         );
@@ -1038,7 +1047,14 @@ mod tests {
         // copy -> id is a +1 copy family → aw-wrap … t.
         let cls = class_with(
             "NSObject2",
-            vec![method("copy", false, ty(TypeRefKind::Id), vec![])],
+            vec![method(
+                "copy",
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
+                vec![],
+            )],
             vec![],
         );
         let out = render_class_dispatch(&cls, "Foundation");
@@ -1056,7 +1072,12 @@ mod tests {
                 "stringWithString:",
                 true,
                 ty(TypeRefKind::Instancetype),
-                vec![param("aString", TypeRefKind::Id)],
+                vec![param(
+                    "aString",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
             )],
             vec![],
         );
@@ -1075,7 +1096,13 @@ mod tests {
         let cls = class_with(
             "NSWindow",
             vec![],
-            vec![prop("title", TypeRefKind::Id, false)],
+            vec![prop(
+                "title",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+                false,
+            )],
         );
         let out = render_class_dispatch(&cls, "AppKit");
         assert!(out.contains("(defmethod ns:title ((self ns:ns-window))"));
@@ -1106,7 +1133,14 @@ mod tests {
 
     #[test]
     fn objc_exposed_false_method_is_residual_not_emitted() {
-        let mut swift_native = method("nativeThing", false, ty(TypeRefKind::Id), vec![]);
+        let mut swift_native = method(
+            "nativeThing",
+            false,
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
+            vec![],
+        );
         swift_native.objc_exposed = false;
         let cls = class_with("NSThing", vec![swift_native], vec![]);
 
@@ -1127,7 +1161,12 @@ mod tests {
             "initNative:",
             false,
             ty(TypeRefKind::Instancetype),
-            vec![param("x", TypeRefKind::Id)],
+            vec![param(
+                "x",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
         );
         swift_init.objc_exposed = false;
         swift_init.init_method = true;
@@ -1178,7 +1217,12 @@ mod tests {
                 false,
                 prim("bool"),
                 vec![
-                    param("path", TypeRefKind::Id),
+                    param(
+                        "path",
+                        TypeRefKind::Id {
+                            protocols: Vec::new(),
+                        },
+                    ),
                     param("error", TypeRefKind::Pointer),
                 ],
             )],
@@ -1209,7 +1253,9 @@ mod tests {
                 vec![param(
                     "block",
                     TypeRefKind::Block {
-                        params: vec![ty(TypeRefKind::Id)],
+                        params: vec![ty(TypeRefKind::Id {
+                            protocols: Vec::new(),
+                        })],
                         return_type: Box::new(TypeRef::void()),
                     },
                 )],
@@ -1226,8 +1272,21 @@ mod tests {
         // ns:title defmethod (the property), no duplicate.
         let cls = class_with(
             "NSDoc",
-            vec![method("title", false, ty(TypeRefKind::Id), vec![])],
-            vec![prop("title", TypeRefKind::Id, true)],
+            vec![method(
+                "title",
+                false,
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
+                vec![],
+            )],
+            vec![prop(
+                "title",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+                true,
+            )],
         );
         let out = render_class_dispatch(&cls, "AppKit");
         assert_eq!(out.matches("(defmethod ns:title ").count(), 1);
@@ -1345,7 +1404,9 @@ mod tests {
                 vec![method(
                     "objectAtIndex:",
                     false,
-                    ty(TypeRefKind::Id),
+                    ty(TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    }),
                     vec![param(
                         "index",
                         TypeRefKind::Primitive {
@@ -1400,15 +1461,27 @@ mod tests {
             flattened(
                 "copyWithZone:",
                 "NSCopying",
-                vec![param("zone", TypeRefKind::Id)],
-                ty(TypeRefKind::Id),
+                vec![param(
+                    "zone",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
             ),
             // A superclass-inherited entry (class origin) must NOT flatten — the
             // CLOS graph carries it.
             flattened(
                 "isEqual:",
                 "NSObject",
-                vec![param("other", TypeRefKind::Id)],
+                vec![param(
+                    "other",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
                 prim("bool"),
             ),
         ];
@@ -1430,8 +1503,15 @@ mod tests {
         cls.all_methods = vec![flattened(
             "copyWithZone:",
             "NSCopying",
-            vec![param("zone", TypeRefKind::Id)],
-            ty(TypeRefKind::Id),
+            vec![param(
+                "zone",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
         )];
         let out = render_class_dispatch_with(&cls, "Foundation", &ProtocolRegistry::new());
         assert!(!out.contains("copy-with-zone"));
@@ -1446,8 +1526,15 @@ mod tests {
             vec![method(
                 "copyWithZone:",
                 false,
-                ty(TypeRefKind::Id),
-                vec![param("zone", TypeRefKind::Id)],
+                ty(TypeRefKind::Id {
+                    protocols: Vec::new(),
+                }),
+                vec![param(
+                    "zone",
+                    TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
+                )],
             )],
             vec![],
         );
@@ -1455,8 +1542,15 @@ mod tests {
         cls.all_methods = vec![flattened(
             "copyWithZone:",
             "NSCopying",
-            vec![param("zone", TypeRefKind::Id)],
-            ty(TypeRefKind::Id),
+            vec![param(
+                "zone",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
         )];
         let mut reg = ProtocolRegistry::new();
         reg.insert("NSCopying", vec![]);
@@ -1473,8 +1567,15 @@ mod tests {
         cls.all_methods = vec![flattened(
             "copyWithZone:",
             "NSCopying",
-            vec![param("zone", TypeRefKind::Id)],
-            ty(TypeRefKind::Id),
+            vec![param(
+                "zone",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
+            ty(TypeRefKind::Id {
+                protocols: Vec::new(),
+            }),
         )];
         let f = fw("Foundation", vec![cls]);
         let mut reg = ProtocolRegistry::new();
@@ -1494,7 +1595,12 @@ mod tests {
         cls.all_methods = vec![flattened(
             "mysteryMethod:",
             "SomeUnloadedProtocol",
-            vec![param("x", TypeRefKind::Id)],
+            vec![param(
+                "x",
+                TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            )],
             TypeRef::void(),
         )];
         let out = render_class_dispatch_with(&cls, "Foundation", &ProtocolRegistry::new());

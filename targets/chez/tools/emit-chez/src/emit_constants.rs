@@ -48,7 +48,7 @@ fn foreign_ref_type(t: &TypeRef, mapper: &dyn FfiTypeMapper) -> &'static str {
             _ => "uptr",
         },
         TypeRefKind::Class { .. }
-        | TypeRefKind::Id
+        | TypeRefKind::Id { .. }
         | TypeRefKind::Instancetype
         | TypeRefKind::Selector
         | TypeRefKind::ClassRef
@@ -228,6 +228,7 @@ mod tests {
                 nullable: false,
                 kind,
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -241,8 +242,11 @@ mod tests {
             name: name.into(),
             constant_type: TypeRef {
                 nullable: true,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -359,6 +363,7 @@ mod tests {
                 nullable: false,
                 kind,
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

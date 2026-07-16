@@ -164,10 +164,6 @@ framework OpenDirectory {
             error-pattern error_out_param
             source llm
         }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
     }
     class ODRecord {
         method accountPoliciesAndReturnError: is-instance=#true {

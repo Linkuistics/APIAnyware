@@ -10,6 +10,8 @@
   absolute-url
   base-url
   bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
+  check-promised-item-is-reachable-and-return-error
+  check-resource-is-reachable-and-return-error
   custom-playground-quick-look
   data-representation
   encode-with-coder
@@ -42,6 +44,8 @@
   nsurl-base-url
   nsurl-bookmark-data-with-contents-of-url-error
   nsurl-bookmark-data-with-options-including-resource-values-for-keys-relative-to-url-error
+  nsurl-check-promised-item-is-reachable-and-return-error
+  nsurl-check-resource-is-reachable-and-return-error
   nsurl-custom-playground-quick-look
   nsurl-data-representation
   nsurl-encode-with-coder
@@ -51,6 +55,7 @@
   nsurl-file-url
   nsurl-file-url-with-file-system-representation-is-directory-relative-to-url
   nsurl-file-url-with-path
+  nsurl-file-url-with-path-components
   nsurl-file-url-with-path-is-directory
   nsurl-file-url-with-path-is-directory-relative-to-url
   nsurl-file-url-with-path-relative-to-url
@@ -75,6 +80,7 @@
   nsurl-path-components
   nsurl-path-extension
   nsurl-port
+  nsurl-promised-item-resource-values-for-keys-error
   nsurl-query
   nsurl-readable-type-identifiers-for-item-provider
   nsurl-relative-path
@@ -92,6 +98,9 @@
   nsurl-start-accessing-security-scoped-resource
   nsurl-stop-accessing-security-scoped-resource
   nsurl-supports-secure-coding
+  nsurl-url-by-appending-path-component
+  nsurl-url-by-appending-path-component-is-directory
+  nsurl-url-by-appending-path-extension
   nsurl-url-by-deleting-last-path-component
   nsurl-url-by-deleting-path-extension
   nsurl-url-by-resolving-alias-file-at-url-options-error
@@ -110,6 +119,7 @@
   path-components
   path-extension
   port
+  promised-item-resource-values-for-keys-error
   query
   relative-path
   relative-string
@@ -124,6 +134,9 @@
   standardized-url
   start-accessing-security-scoped-resource
   stop-accessing-security-scoped-resource
+  url-by-appending-path-component
+  url-by-appending-path-component-is-directory
+  url-by-appending-path-extension
   url-by-deleting-last-path-component
   url-by-deleting-path-extension
   url-by-resolving-symlinks-in-path
@@ -150,6 +163,7 @@
             %msg-p-pp->b-e
             %msg-p-pp->p-e
             %msg-p-u64-pp->p-e
+            %msg-pp->b-e
             %msg-str-b-p->p
             %msg-u64-p-p-pp->p-e
             %msg-v->b
@@ -189,6 +203,8 @@
     "___return( ((id (*)(id, SEL, id, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, (id*)___arg4) );")
   (define-c-lambda %msg-p-u64-pp->p-e ((pointer void) (pointer void) (pointer void) unsigned-int64 (pointer (pointer void))) (pointer void)
     "___return( ((id (*)(id, SEL, id, uint64_t, id*))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, (id*)___arg5) );")
+  (define-c-lambda %msg-pp->b-e ((pointer void) (pointer void) (pointer (pointer void))) bool
+    "___return( ((BOOL (*)(id, SEL, id*))objc_msgSend)(___arg1, (SEL)___arg2, (id*)___arg3) );")
   (define-c-lambda %msg-str-b-p->p ((pointer void) (pointer void) char-string bool (pointer void)) (pointer void)
     "___return( ((id (*)(id, SEL, const char*, BOOL, id))objc_msgSend)(___arg1, (SEL)___arg2, ___arg3, ___arg4, ___arg5) );")
   (define-c-lambda %msg-u64-p-p-pp->p-e ((pointer void) (pointer void) unsigned-int64 (pointer void) (pointer void) (pointer (pointer void))) (pointer void)
@@ -226,6 +242,12 @@
 (define %sel-nsurl-start-accessing-security-scoped-resource (sel_registerName "startAccessingSecurityScopedResource"))
 (define %sel-nsurl-stop-accessing-security-scoped-resource (sel_registerName "stopAccessingSecurityScopedResource"))
 (define %sel-nsurl-is-file-url (sel_registerName "isFileURL"))
+(define %sel-nsurl-promised-item-resource-values-for-keys-error (sel_registerName "promisedItemResourceValuesForKeys:error:"))
+(define %sel-nsurl-check-promised-item-is-reachable-and-return-error (sel_registerName "checkPromisedItemIsReachableAndReturnError:"))
+(define %sel-nsurl-url-by-appending-path-component (sel_registerName "URLByAppendingPathComponent:"))
+(define %sel-nsurl-url-by-appending-path-component-is-directory (sel_registerName "URLByAppendingPathComponent:isDirectory:"))
+(define %sel-nsurl-url-by-appending-path-extension (sel_registerName "URLByAppendingPathExtension:"))
+(define %sel-nsurl-check-resource-is-reachable-and-return-error (sel_registerName "checkResourceIsReachableAndReturnError:"))
 (define %sel-nsurl-encode-with-coder (sel_registerName "encodeWithCoder:"))
 (define %sel-nsurl-item-provider-visibility-for-representation-with-type-identifier (sel_registerName "itemProviderVisibilityForRepresentationWithTypeIdentifier:"))
 (define %sel-nsurl-load-data-with-type-identifier-for-item-provider-completion-handler (sel_registerName "loadDataWithTypeIdentifier:forItemProviderCompletionHandler:"))
@@ -244,6 +266,7 @@
 (define %sel-nsurl-write-bookmark-data-to-url-options-error (sel_registerName "writeBookmarkData:toURL:options:error:"))
 (define %sel-nsurl-bookmark-data-with-contents-of-url-error (sel_registerName "bookmarkDataWithContentsOfURL:error:"))
 (define %sel-nsurl-url-by-resolving-alias-file-at-url-options-error (sel_registerName "URLByResolvingAliasFileAtURL:options:error:"))
+(define %sel-nsurl-file-url-with-path-components (sel_registerName "fileURLWithPathComponents:"))
 (define %sel-nsurl-object-with-item-provider-data-type-identifier-error (sel_registerName "objectWithItemProviderData:typeIdentifier:error:"))
 (define %sel-nsurl-readable-type-identifiers-for-item-provider (sel_registerName "readableTypeIdentifiersForItemProvider"))
 (define %sel-nsurl-supports-secure-coding (sel_registerName "supportsSecureCoding"))
@@ -530,6 +553,38 @@
 (defmethod {is-file-url NSURL} (lambda (self) (nsurl-is-file-url self)))
 (g:defmethod (is-file-url (o NSURL)) (nsurl-is-file-url o))
 
+(define (nsurl-promised-item-resource-values-for-keys-error self keys)
+  (call-with-nserror-out
+    (lambda (%err-cell)
+      (wrap (%msg-p-pp->p-e (NSObject-ptr self) %sel-nsurl-promised-item-resource-values-for-keys-error (->ptr keys) %err-cell)))))
+(defmethod {promised-item-resource-values-for-keys-error NSURL} (lambda (self keys) (nsurl-promised-item-resource-values-for-keys-error self keys)))
+
+(define (nsurl-check-promised-item-is-reachable-and-return-error self)
+  (call-with-nserror-out
+    (lambda (%err-cell)
+      (%msg-pp->b-e (NSObject-ptr self) %sel-nsurl-check-promised-item-is-reachable-and-return-error %err-cell))))
+(defmethod {check-promised-item-is-reachable-and-return-error NSURL} (lambda (self) (nsurl-check-promised-item-is-reachable-and-return-error self)))
+(g:defmethod (check-promised-item-is-reachable-and-return-error (o NSURL)) (nsurl-check-promised-item-is-reachable-and-return-error o))
+
+(define (nsurl-url-by-appending-path-component self path-component)
+  (wrap (%msg-p->p (NSObject-ptr self) %sel-nsurl-url-by-appending-path-component (->ptr path-component))))
+(defmethod {url-by-appending-path-component NSURL} (lambda (self path-component) (nsurl-url-by-appending-path-component self path-component)))
+
+(define (nsurl-url-by-appending-path-component-is-directory self path-component is-directory)
+  (wrap (%msg-p-b->p (NSObject-ptr self) %sel-nsurl-url-by-appending-path-component-is-directory (->ptr path-component) is-directory)))
+(defmethod {url-by-appending-path-component-is-directory NSURL} (lambda (self path-component is-directory) (nsurl-url-by-appending-path-component-is-directory self path-component is-directory)))
+
+(define (nsurl-url-by-appending-path-extension self path-extension)
+  (wrap (%msg-p->p (NSObject-ptr self) %sel-nsurl-url-by-appending-path-extension (->ptr path-extension))))
+(defmethod {url-by-appending-path-extension NSURL} (lambda (self path-extension) (nsurl-url-by-appending-path-extension self path-extension)))
+
+(define (nsurl-check-resource-is-reachable-and-return-error self)
+  (call-with-nserror-out
+    (lambda (%err-cell)
+      (%msg-pp->b-e (NSObject-ptr self) %sel-nsurl-check-resource-is-reachable-and-return-error %err-cell))))
+(defmethod {check-resource-is-reachable-and-return-error NSURL} (lambda (self) (nsurl-check-resource-is-reachable-and-return-error self)))
+(g:defmethod (check-resource-is-reachable-and-return-error (o NSURL)) (nsurl-check-resource-is-reachable-and-return-error o))
+
 (define (nsurl-encode-with-coder self coder)
   (%msg-p->v (NSObject-ptr self) %sel-nsurl-encode-with-coder (->ptr coder)))
 (defmethod {encode-with-coder NSURL} (lambda (self coder) (nsurl-encode-with-coder self coder)))
@@ -595,6 +650,9 @@
   (call-with-nserror-out
     (lambda (%err-cell)
       (wrap (%msg-p-u64-pp->p-e (objc_getClass "NSURL") %sel-nsurl-url-by-resolving-alias-file-at-url-options-error (->ptr url) options %err-cell)))))
+
+(define (nsurl-file-url-with-path-components components)
+  (wrap (%msg-p->p (objc_getClass "NSURL") %sel-nsurl-file-url-with-path-components (->ptr components))))
 
 (define (nsurl-object-with-item-provider-data-type-identifier-error data type-identifier)
   (call-with-nserror-out

@@ -153,7 +153,7 @@ fn read_form(c: &Constant, mapper: &dyn FfiTypeMapper) -> String {
     }
     match &c.constant_type.kind {
         // Object pointer global: read the pointer value, wrap borrowed.
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             format!("({WRAP_FN} (sb-alien:extern-alien \"{}\" {SAP}))", c.name)
         }
         // Struct global: the symbol's address is the handle — take it raw.
@@ -195,6 +195,7 @@ mod tests {
                 nullable: false,
                 kind,
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -208,8 +209,11 @@ mod tests {
             name: name.into(),
             constant_type: TypeRef {
                 nullable: true,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,
@@ -225,6 +229,7 @@ mod tests {
                 nullable: false,
                 kind,
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

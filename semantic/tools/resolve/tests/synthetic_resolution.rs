@@ -82,7 +82,9 @@ fn make_method_with_params(selector: &str, params: Vec<Param>) -> Method {
         params,
         return_type: TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         },
         deprecated: false,
         variadic: false,
@@ -104,11 +106,13 @@ fn make_property(name: &str) -> Property {
         name: name.to_string(),
         property_type: TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         },
         readonly: false,
         class_property: false,
-        is_copy: false,
+        ownership: None,
         deprecated: false,
         source: None,
         provenance: None,
@@ -491,7 +495,9 @@ fn init_method_returns_retained() {
             name: "name".to_string(),
             param_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
         }],
     )];
@@ -518,7 +524,9 @@ fn new_class_method_returns_retained() {
         let mut m = make_method("new", true);
         m.return_type = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         m
     }];
@@ -565,7 +573,9 @@ fn copy_method_returns_retained() {
         let mut m = make_method("copy", false);
         m.return_type = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         m
     }];
@@ -599,7 +609,9 @@ fn protocol_method_satisfaction_detected() {
             name: "coder".to_string(),
             param_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
         }],
     )];
@@ -613,7 +625,9 @@ fn protocol_method_satisfaction_detected() {
                 name: "coder".to_string(),
                 param_type: TypeRef {
                     nullable: false,
-                    kind: TypeRefKind::Id,
+                    kind: TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
                 },
             }],
         )],
@@ -702,7 +716,9 @@ fn class_inherits_protocol_method_when_not_declared() {
                 name: "action".to_string(),
                 param_type: TypeRef {
                     nullable: false,
-                    kind: TypeRefKind::Id,
+                    kind: TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
                 },
             }],
         )],
@@ -751,7 +767,9 @@ fn class_does_not_duplicate_protocol_method_already_declared() {
             name: "action".to_string(),
             param_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
         }],
     )];
@@ -765,7 +783,9 @@ fn class_does_not_duplicate_protocol_method_already_declared() {
                 name: "action".to_string(),
                 param_type: TypeRef {
                     nullable: false,
-                    kind: TypeRefKind::Id,
+                    kind: TypeRefKind::Id {
+                        protocols: Vec::new(),
+                    },
                 },
             }],
         )],
@@ -1115,7 +1135,9 @@ fn cross_framework_inherited_method_preserves_params() {
             name: "name".to_string(),
             param_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
         }],
     )];
@@ -1150,7 +1172,9 @@ fn cross_framework_inherited_method_preserves_return_type() {
         let mut m = make_method("description", false);
         m.return_type = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         m
     }];
@@ -1183,11 +1207,13 @@ fn cross_framework_inherited_property_preserves_type() {
         name: "title".to_string(),
         property_type: TypeRef {
             nullable: true,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         },
         readonly: true,
         class_property: false,
-        is_copy: false,
+        ownership: None,
         deprecated: false,
         source: None,
         provenance: None,
@@ -1218,5 +1244,326 @@ fn cross_framework_inherited_property_preserves_type() {
     assert!(
         title.readonly,
         "cross-framework inherited property should preserve readonly flag"
+    );
+}
+
+#[test]
+fn nondeprecated_protocol_method_wins_over_deprecated_collision() {
+    // A class can transitively conform to two protocols that both declare the
+    // same selector (e.g. real-world NSTextView satisfies both the modern
+    // NSTextInputClient and the legacy NSTextInput, which both declare
+    // `characterIndexForPoint:`). The ObjC runtime has exactly one method
+    // implementation for a given (class, selector) — resolve must collapse
+    // this to a single `effective_method`, preferring the non-deprecated
+    // declaration, not carry both forward as two ambiguous entries whose
+    // relative order is an implementation detail of Datalog derivation.
+    let mut cls = make_class("MyView", "");
+    cls.protocols = vec!["LegacyInput".to_string(), "ModernInput".to_string()];
+
+    let legacy = Protocol {
+        name: "LegacyInput".to_string(),
+        inherits: vec![],
+        required_methods: vec![Method {
+            deprecated: true,
+            ..make_method("characterIndexForPoint:", false)
+        }],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+    let modern = Protocol {
+        name: "ModernInput".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method("characterIndexForPoint:", false)],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![legacy, modern];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyView");
+
+    let matches: Vec<&Method> = cls
+        .all_methods
+        .iter()
+        .filter(|m| m.selector == "characterIndexForPoint:")
+        .collect();
+
+    assert_eq!(
+        matches.len(),
+        1,
+        "expected exactly one effective_method for a selector declared by two \
+         colliding protocols, got {matches:?}"
+    );
+    assert_eq!(matches[0].origin.as_deref(), Some("ModernInput"));
+    assert!(!matches[0].deprecated);
+}
+
+#[test]
+fn same_deprecation_protocol_collision_deduplicates_deterministically() {
+    // Two conformed protocols of *matching* deprecation status declaring the
+    // same selector is a residual ambiguity the Datalog precedence in
+    // program.rs cannot order (neither is more authoritative than the
+    // other). checkpoint.rs must still collapse it to one entry — chosen by
+    // a content-based tiebreak (alphabetically-first origin), not whichever
+    // happened to be discovered first during resolution — so the result
+    // does not depend on which other frameworks share the run.
+    let mut cls = make_class("MyView", "");
+    cls.protocols = vec!["AlphaKit".to_string(), "BetaKit".to_string()];
+
+    let alpha = Protocol {
+        name: "AlphaKit".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method("doThing:", false)],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+    let beta = Protocol {
+        name: "BetaKit".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method("doThing:", false)],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![alpha, beta];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyView");
+
+    let matches: Vec<&Method> = cls
+        .all_methods
+        .iter()
+        .filter(|m| m.selector == "doThing:")
+        .collect();
+
+    assert_eq!(
+        matches.len(),
+        1,
+        "residual same-deprecation collision must still collapse to one entry"
+    );
+    assert_eq!(matches[0].origin.as_deref(), Some("AlphaKit"));
+}
+
+#[test]
+fn same_deprecation_collision_prefers_a_typed_return_over_a_bare_id() {
+    // typecheck-gate-post-k86-residuals-k110 / ADR-0055 §4b: the real-corpus shape is
+    // `NSAccessibility` (a wide informal protocol declaring `accessibilityValue` as a bare
+    // `id`) alongside an unrelated, more specific sibling like `NSAccessibilityProgressIndicator`
+    // (narrowing it to `NSNumber`) — no deprecation difference, no `inherits` edge between
+    // them, so the Datalog precedence in program.rs cannot order them and this falls to
+    // checkpoint.rs's residual dedup. The alphabetically-first origin
+    // ("NSAccessibility" < "NSAccessibilityProgressIndicator") is the BARE-ID one — proving
+    // this can't just be the pre-existing alphabetical tiebreak coincidentally doing the
+    // right thing; the typed declaration must win on its own merits.
+    let mut cls = make_class("MyProgressIndicator", "");
+    cls.protocols = vec![
+        "NSAccessibility".to_string(),
+        "NSAccessibilityProgressIndicator".to_string(),
+    ];
+
+    let general = Protocol {
+        name: "NSAccessibility".to_string(),
+        inherits: vec![],
+        required_methods: vec![Method {
+            return_type: TypeRef {
+                nullable: true,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
+            },
+            ..make_method("accessibilityValue", false)
+        }],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+    let specific = Protocol {
+        name: "NSAccessibilityProgressIndicator".to_string(),
+        inherits: vec![],
+        required_methods: vec![Method {
+            return_type: TypeRef {
+                nullable: true,
+                kind: TypeRefKind::Class {
+                    name: "NSNumber".to_string(),
+                    framework: None,
+                    params: vec![],
+                },
+            },
+            ..make_method("accessibilityValue", false)
+        }],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![general, specific];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyProgressIndicator");
+
+    let matches: Vec<&Method> = cls
+        .all_methods
+        .iter()
+        .filter(|m| m.selector == "accessibilityValue")
+        .collect();
+
+    assert_eq!(
+        matches.len(),
+        1,
+        "residual same-deprecation collision must still collapse to one entry"
+    );
+    assert_eq!(
+        matches[0].origin.as_deref(),
+        Some("NSAccessibilityProgressIndicator"),
+        "the typed (NSNumber) declaration must win over the bare-`id` one, even though the \
+         bare-`id` origin sorts first alphabetically"
+    );
+    assert!(matches!(
+        matches[0].return_type.kind,
+        TypeRefKind::Class { ref name, .. } if name == "NSNumber"
+    ));
+}
+
+#[test]
+fn same_deprecation_collision_falls_back_to_alphabetical_when_both_sides_are_typed() {
+    // The narrowing rule only breaks the tie when exactly one side is a bare `id` — with two
+    // differently-typed, equally-specific declarations (no measured real-corpus instance),
+    // the deterministic alphabetical fallback must still apply unchanged.
+    let mut cls = make_class("MyView", "");
+    cls.protocols = vec!["AlphaKit".to_string(), "BetaKit".to_string()];
+
+    fn typed_method(name: &str, class_name: &str) -> Method {
+        Method {
+            return_type: TypeRef {
+                nullable: true,
+                kind: TypeRefKind::Class {
+                    name: class_name.to_string(),
+                    framework: None,
+                    params: vec![],
+                },
+            },
+            ..make_method(name, false)
+        }
+    }
+
+    let alpha = Protocol {
+        name: "AlphaKit".to_string(),
+        inherits: vec![],
+        required_methods: vec![typed_method("doThing:", "NSString")],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+    let beta = Protocol {
+        name: "BetaKit".to_string(),
+        inherits: vec![],
+        required_methods: vec![typed_method("doThing:", "NSNumber")],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![alpha, beta];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "MyView");
+
+    let matches: Vec<&Method> = cls
+        .all_methods
+        .iter()
+        .filter(|m| m.selector == "doThing:")
+        .collect();
+
+    assert_eq!(matches.len(), 1);
+    assert_eq!(matches[0].origin.as_deref(), Some("AlphaKit"));
+}
+
+#[test]
+fn a_flattened_protocol_method_gets_an_origin_even_when_the_protocol_shares_the_classs_name() {
+    // typecheck-gate-post-k86-residuals-k110 item (3) / ADR-0055 §4c: the k90 namespace-collision
+    // shape (`@interface NSTextAttachmentCell : NSCell <NSTextAttachmentCell>` — a class and the
+    // protocol it conforms to declared under the *same* raw ObjC name, 5 corpus occurrences)
+    // reaches all the way into `checkpoint.rs`'s origin-tracking, not just TS's render layer k90
+    // already fixed. `Foo`'s own `cls.methods` is empty — `requiredThing` can only ever be a
+    // protocol-flattened member — but before the fix, `origin != class` compared the ambiguous
+    // name STRING ("Foo" == "Foo") rather than checking whether `Foo` genuinely declares the
+    // selector itself, so the flattened entry's `origin` was wrongly left `None` — indistinguishable
+    // from a real own declaration to every downstream reader (e.g. TS's `class_surface::bound_methods`
+    // treats `origin: None` as "already covered by the class's own methods" and never re-adds it,
+    // silently dropping the member from the emitted class body even though it never existed on the
+    // class at all).
+    let mut cls = make_class("Foo", "");
+    cls.protocols = vec!["Foo".to_string()];
+    assert!(
+        cls.methods.is_empty(),
+        "the class must declare nothing itself — every member has to come from the protocol"
+    );
+
+    let proto = Protocol {
+        name: "Foo".to_string(),
+        inherits: vec![],
+        required_methods: vec![make_method("requiredThing", false)],
+        optional_methods: vec![],
+        properties: vec![],
+        source: None,
+        provenance: None,
+        doc_refs: None,
+        objc_exposed: true,
+    };
+
+    let mut fw = empty_framework("TestKit");
+    fw.classes = vec![cls];
+    fw.protocols = vec![proto];
+
+    let resolved = resolve(&[fw]);
+    let cls = find_class(&resolved, "Foo");
+
+    let found = cls
+        .all_methods
+        .iter()
+        .find(|m| m.selector == "requiredThing")
+        .expect("the protocol-flattened method must still appear in all_methods");
+    assert_eq!(
+        found.origin.as_deref(),
+        Some("Foo"),
+        "a genuinely flattened method must carry an origin (even though it happens to equal the \
+         class's own name here) so a reader can tell it apart from a true own declaration"
     );
 }

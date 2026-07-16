@@ -24,6 +24,7 @@
 (define (nsattributedstring? v) (objc-instance-of? v "NSAttributedString"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
 (define (nsdocktile? v) (objc-instance-of? v "NSDockTile"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsevent? v) (objc-instance-of? v "NSEvent"))
 (define (nsgraphicscontext? v) (objc-instance-of? v "NSGraphicsContext"))
 (define (nsimage? v) (objc-instance-of? v "NSImage"))
@@ -69,38 +70,38 @@
   [nsapplication-next-responder (c-> nsapplication? (or/c nsresponder? objc-nil?))]
   [nsapplication-set-next-responder! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-occlusion-state (c-> nsapplication? exact-nonnegative-integer?)]
-  [nsapplication-ordered-documents (c-> nsapplication? any/c)]
-  [nsapplication-ordered-windows (c-> nsapplication? any/c)]
+  [nsapplication-ordered-documents (c-> nsapplication? (or/c nsarray? objc-nil?))]
+  [nsapplication-ordered-windows (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-presentation-options (c-> nsapplication? exact-nonnegative-integer?)]
   [nsapplication-set-presentation-options! (c-> nsapplication? exact-nonnegative-integer? void?)]
   [nsapplication-protected-data-available (c-> nsapplication? boolean?)]
   [nsapplication-registered-for-remote-notifications (c-> nsapplication? boolean?)]
-  [nsapplication-restorable-state-key-paths (c-> any/c)]
+  [nsapplication-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nsapplication-running (c-> nsapplication? boolean?)]
   [nsapplication-services-menu (c-> nsapplication? (or/c nsmenu? objc-nil?))]
   [nsapplication-set-services-menu! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-services-provider (c-> nsapplication? any/c)]
   [nsapplication-set-services-provider! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
-  [nsapplication-shared-application (c-> any/c)]
+  [nsapplication-shared-application (c-> (or/c nsapplication? objc-nil?))]
   [nsapplication-touch-bar (c-> nsapplication? (or/c nstouchbar? objc-nil?))]
   [nsapplication-set-touch-bar! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-undo-manager (c-> nsapplication? (or/c nsundomanager? objc-nil?))]
   [nsapplication-user-activity (c-> nsapplication? (or/c nsuseractivity? objc-nil?))]
   [nsapplication-set-user-activity! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-user-interface-layout-direction (c-> nsapplication? exact-integer?)]
-  [nsapplication-windows (c-> nsapplication? any/c)]
+  [nsapplication-windows (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-windows-menu (c-> nsapplication? (or/c nsmenu? objc-nil?))]
   [nsapplication-set-windows-menu! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-abort-modal (c-> nsapplication? void?)]
   [nsapplication-accessibility-activation-point (c-> nsapplication? any/c)]
-  [nsapplication-accessibility-allowed-values (c-> nsapplication? any/c)]
+  [nsapplication-accessibility-allowed-values (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-application-focused-ui-element (c-> nsapplication? any/c)]
   [nsapplication-accessibility-attributed-string-for-range (c-> nsapplication? any/c (or/c nsattributedstring? objc-nil?))]
-  [nsapplication-accessibility-attributed-user-input-labels (c-> nsapplication? any/c)]
+  [nsapplication-accessibility-attributed-user-input-labels (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-cancel-button (c-> nsapplication? any/c)]
   [nsapplication-accessibility-cell-for-column-row (c-> nsapplication? exact-integer? exact-integer? any/c)]
   [nsapplication-accessibility-children (c-> nsapplication? (or/c nsarray? objc-nil?))]
-  [nsapplication-accessibility-children-in-navigation-order (c-> nsapplication? any/c)]
+  [nsapplication-accessibility-children-in-navigation-order (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-clear-button (c-> nsapplication? any/c)]
   [nsapplication-accessibility-close-button (c-> nsapplication? any/c)]
   [nsapplication-accessibility-column-count (c-> nsapplication? exact-integer?)]
@@ -110,8 +111,8 @@
   [nsapplication-accessibility-columns (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-contents (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-critical-value (c-> nsapplication? any/c)]
-  [nsapplication-accessibility-custom-actions (c-> nsapplication? any/c)]
-  [nsapplication-accessibility-custom-rotors (c-> nsapplication? any/c)]
+  [nsapplication-accessibility-custom-actions (c-> nsapplication? (or/c nsarray? objc-nil?))]
+  [nsapplication-accessibility-custom-rotors (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-decrement-button (c-> nsapplication? any/c)]
   [nsapplication-accessibility-default-button (c-> nsapplication? any/c)]
   [nsapplication-accessibility-disclosed-by-row (c-> nsapplication? any/c)]
@@ -191,7 +192,7 @@
   [nsapplication-accessibility-selected-rows (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-selected-text (c-> nsapplication? (or/c nsstring? objc-nil?))]
   [nsapplication-accessibility-selected-text-range (c-> nsapplication? any/c)]
-  [nsapplication-accessibility-selected-text-ranges (c-> nsapplication? any/c)]
+  [nsapplication-accessibility-selected-text-ranges (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-serves-as-title-for-ui-elements (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-shared-character-range (c-> nsapplication? any/c)]
   [nsapplication-accessibility-shared-focus-elements (c-> nsapplication? (or/c nsarray? objc-nil?))]
@@ -210,7 +211,7 @@
   [nsapplication-accessibility-url (c-> nsapplication? (or/c nsurl? objc-nil?))]
   [nsapplication-accessibility-unit-description (c-> nsapplication? (or/c nsstring? objc-nil?))]
   [nsapplication-accessibility-units (c-> nsapplication? exact-integer?)]
-  [nsapplication-accessibility-user-input-labels (c-> nsapplication? any/c)]
+  [nsapplication-accessibility-user-input-labels (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-value (c-> nsapplication? any/c)]
   [nsapplication-accessibility-value-description (c-> nsapplication? (or/c nsstring? objc-nil?))]
   [nsapplication-accessibility-vertical-scroll-bar (c-> nsapplication? any/c)]
@@ -226,8 +227,11 @@
   [nsapplication-accessibility-windows (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-accessibility-zoom-button (c-> nsapplication? any/c)]
   [nsapplication-activate (c-> nsapplication? void?)]
+  [nsapplication-activate-context-help-mode (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-activate-ignoring-other-apps (c-> nsapplication? boolean? void?)]
   [nsapplication-activation-policy (c-> nsapplication? exact-integer?)]
+  [nsapplication-add-windows-item-title-filename! (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean? void?)]
+  [nsapplication-arrange-in-front (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-become-first-responder (c-> nsapplication? boolean?)]
   [nsapplication-begin-gesture-with-event! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-begin-modal-session-for-window! (c-> nsapplication? (or/c string? objc-object? #f) (or/c cpointer? #f))]
@@ -237,7 +241,9 @@
   [nsapplication-center-selection-in-visible-area! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-change-case-of-letter (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-change-mode-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-change-windows-item-title-filename (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean? void?)]
   [nsapplication-complete (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-complete-state-restoration (c-> nsapplication? void?)]
   [nsapplication-context-menu-key-down (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-cursor-update (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-deactivate (c-> nsapplication? void?)]
@@ -251,11 +257,17 @@
   [nsapplication-delete-to-mark (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-delete-word-backward (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-delete-word-forward (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-disable-relaunch-on-login (c-> nsapplication? void?)]
+  [nsapplication-discard-events-matching-mask-before-event (c-> nsapplication? exact-nonnegative-integer? (or/c string? objc-object? #f) void?)]
   [nsapplication-do-command-by-selector (c-> nsapplication? string? void?)]
+  [nsapplication-enable-relaunch-on-login (c-> nsapplication? void?)]
+  [nsapplication-encode-restorable-state-with-coder (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-encode-restorable-state-with-coder-background-queue (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nsapplication-encode-with-coder (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-end-gesture-with-event! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-end-modal-session! (c-> nsapplication? (or/c cpointer? #f) void?)]
   [nsapplication-enumerate-windows-with-options-using-block (c-> nsapplication? exact-integer? (or/c procedure? #f) void?)]
+  [nsapplication-extend-state-restoration (c-> nsapplication? void?)]
   [nsapplication-finish-launching (c-> nsapplication? void?)]
   [nsapplication-flags-changed (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-flush-buffered-key-events (c-> nsapplication? void?)]
@@ -275,6 +287,7 @@
   [nsapplication-insert-tab-ignoring-field-editor! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-insert-text! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-interpret-key-events (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-invalidate-restorable-state (c-> nsapplication? void?)]
   [nsapplication-is-accessibility-alternate-ui-visible (c-> nsapplication? boolean?)]
   [nsapplication-is-accessibility-disclosed (c-> nsapplication? boolean?)]
   [nsapplication-is-accessibility-edited (c-> nsapplication? boolean?)]
@@ -293,8 +306,11 @@
   [nsapplication-is-accessibility-selected (c-> nsapplication? boolean?)]
   [nsapplication-is-accessibility-selector-allowed (c-> nsapplication? string? boolean?)]
   [nsapplication-is-active (c-> nsapplication? boolean?)]
+  [nsapplication-is-automatic-customize-touch-bar-menu-item-enabled (c-> nsapplication? boolean?)]
+  [nsapplication-is-full-keyboard-access-enabled (c-> nsapplication? boolean?)]
   [nsapplication-is-hidden (c-> nsapplication? boolean?)]
   [nsapplication-is-protected-data-available (c-> nsapplication? boolean?)]
+  [nsapplication-is-registered-for-remote-notifications (c-> nsapplication? boolean?)]
   [nsapplication-is-running (c-> nsapplication? boolean?)]
   [nsapplication-key-down (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-key-up (c-> nsapplication? (or/c string? objc-object? #f) void?)]
@@ -306,6 +322,8 @@
   [nsapplication-make-text-writing-direction-left-to-right (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-make-text-writing-direction-natural (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-make-text-writing-direction-right-to-left (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-make-touch-bar (c-> nsapplication? (or/c nstouchbar? objc-nil?))]
+  [nsapplication-miniaturize-all (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-mouse-cancelled (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-mouse-down (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-mouse-dragged (c-> nsapplication? (or/c string? objc-object? #f) void?)]
@@ -351,8 +369,15 @@
   [nsapplication-move-word-left-and-modify-selection! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-move-word-right! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-move-word-right-and-modify-selection! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-new-window-for-tab (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-next-event-matching-mask-until-date-in-mode-dequeue (c-> nsapplication? exact-nonnegative-integer? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean? (or/c nsevent? objc-nil?))]
   [nsapplication-no-responder-for (c-> nsapplication? string? void?)]
   [nsapplication-order-front-character-palette! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-order-front-color-panel! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-order-front-standard-about-panel! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-order-front-standard-about-panel-with-options! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-ordered-documents! (c-> nsapplication? (or/c nsarray? objc-nil?))]
+  [nsapplication-ordered-windows! (c-> nsapplication? (or/c nsarray? objc-nil?))]
   [nsapplication-other-mouse-down (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-other-mouse-dragged (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-other-mouse-up (c-> nsapplication? (or/c string? objc-object? #f) void?)]
@@ -361,16 +386,27 @@
   [nsapplication-page-up (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-page-up-and-modify-selection (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-perform-key-equivalent! (c-> nsapplication? (or/c string? objc-object? #f) boolean?)]
+  [nsapplication-perform-text-finder-action! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-post-event-at-start (c-> nsapplication? (or/c string? objc-object? #f) boolean? void?)]
+  [nsapplication-present-error (c-> nsapplication? (or/c string? objc-object? #f) boolean?)]
+  [nsapplication-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nsapplication-pressure-change-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-prevent-window-ordering (c-> nsapplication? void?)]
   [nsapplication-quick-look-preview-items (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-quick-look-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-register-for-remote-notification-types (c-> nsapplication? exact-nonnegative-integer? void?)]
+  [nsapplication-register-for-remote-notifications (c-> nsapplication? void?)]
+  [nsapplication-register-services-menu-send-types-return-types (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nsapplication-register-user-interface-item-search-handler (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-remove-windows-item! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-reply-to-application-should-terminate (c-> nsapplication? boolean? void?)]
   [nsapplication-reply-to-open-or-print (c-> nsapplication? exact-nonnegative-integer? void?)]
   [nsapplication-report-exception (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-request-user-attention (c-> nsapplication? exact-nonnegative-integer? exact-integer?)]
   [nsapplication-resign-first-responder (c-> nsapplication? boolean?)]
+  [nsapplication-restore-state-with-coder (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-restore-user-activity-state (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-restore-window-with-identifier-state-completion-handler (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c procedure? #f) boolean?)]
   [nsapplication-right-mouse-down (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-right-mouse-dragged (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-right-mouse-up (c-> nsapplication? (or/c string? objc-object? #f) void?)]
@@ -378,6 +414,7 @@
   [nsapplication-run (c-> nsapplication? void?)]
   [nsapplication-run-modal-for-window (c-> nsapplication? (or/c string? objc-object? #f) exact-integer?)]
   [nsapplication-run-modal-session (c-> nsapplication? (or/c cpointer? #f) exact-integer?)]
+  [nsapplication-run-page-layout (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-scroll-line-down (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-scroll-line-up (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-scroll-page-down (c-> nsapplication? (or/c string? objc-object? #f) void?)]
@@ -385,11 +422,14 @@
   [nsapplication-scroll-to-beginning-of-document (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-scroll-to-end-of-document (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-scroll-wheel (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-search-string-in-user-interface-item-string-search-range-found-range (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c (or/c cpointer? #f) boolean?)]
   [nsapplication-select-all (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-select-line (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-select-paragraph (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-select-to-mark (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-select-word (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-send-action-to-from (c-> nsapplication? string? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nsapplication-send-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-set-accessibility-activation-point! (c-> nsapplication? any/c void?)]
   [nsapplication-set-accessibility-allowed-values! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-set-accessibility-alternate-ui-visible! (c-> nsapplication? boolean? void?)]
@@ -520,6 +560,8 @@
   [nsapplication-should-be-treated-as-ink-event (c-> nsapplication? (or/c string? objc-object? #f) boolean?)]
   [nsapplication-show-context-help (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-show-context-menu-for-selection (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-show-help (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-show-writing-tools (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-smart-magnify-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-stop (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-stop-modal (c-> nsapplication? void?)]
@@ -529,7 +571,10 @@
   [nsapplication-swipe-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-tablet-point (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-tablet-proximity (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-target-for-action (c-> nsapplication? string? any/c)]
+  [nsapplication-target-for-action-to-from (c-> nsapplication? string? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nsapplication-terminate (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-toggle-touch-bar-customization-palette! (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-touches-began-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-touches-cancelled-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-touches-ended-with-event (c-> nsapplication? (or/c string? objc-object? #f) void?)]
@@ -540,17 +585,24 @@
   [nsapplication-unhide (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-unhide-all-applications (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-unhide-without-activation (c-> nsapplication? void?)]
+  [nsapplication-unregister-for-remote-notifications (c-> nsapplication? void?)]
+  [nsapplication-unregister-user-interface-item-search-handler (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-update-user-activity-state (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-update-windows (c-> nsapplication? void?)]
+  [nsapplication-update-windows-item (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-uppercase-word (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-valid-requestor-for-send-type-return-type (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
   [nsapplication-validate-menu-item (c-> nsapplication? (or/c string? objc-object? #f) boolean?)]
+  [nsapplication-validate-proposed-first-responder-for-event (c-> nsapplication? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nsapplication-validate-user-interface-item (c-> nsapplication? (or/c string? objc-object? #f) boolean?)]
   [nsapplication-wants-forwarded-scroll-events-for-axis (c-> nsapplication? exact-integer? boolean?)]
   [nsapplication-wants-scroll-events-for-swipe-tracking-on-axis (c-> nsapplication? exact-integer? boolean?)]
+  [nsapplication-will-present-error (c-> nsapplication? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nsapplication-window-with-window-number (c-> nsapplication? exact-integer? (or/c nswindow? objc-nil?))]
   [nsapplication-yank (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-yield-activation-to-application (c-> nsapplication? (or/c string? objc-object? #f) void?)]
   [nsapplication-yield-activation-to-application-with-bundle-identifier (c-> nsapplication? (or/c string? objc-object? #f) void?)]
+  [nsapplication-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nsapplication-detach-drawing-thread-to-target-with-object (c-> string? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   )
 
@@ -573,7 +625,14 @@
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPP_b (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPb_v (-> ptr_t ptr_t ptr_t ptr_t bool_t void_t))
+(define-aw-msg aw_racket_msg_PPGP_b (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t bool_t))
+(define-aw-msg aw_racket_msg_Pb_v (-> ptr_t ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
@@ -584,6 +643,8 @@
 (define-aw-msg aw_racket_msg_qq_P (-> ptr_t ptr_t int64_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_Q_q (-> ptr_t ptr_t uint64_t int64_t))
 (define-aw-msg aw_racket_msg_Q_v (-> ptr_t ptr_t uint64_t void_t))
+(define-aw-msg aw_racket_msg_QP_v (-> ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_QPPb_P (-> ptr_t ptr_t uint64_t ptr_t ptr_t bool_t ptr_t))
 (define-aw-msg aw_racket_msg_f_v (-> ptr_t ptr_t float_t void_t))
 (define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_O_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
@@ -1222,10 +1283,16 @@
    ))
 (define (nsapplication-activate self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "activate"))))
+(define (nsapplication-activate-context-help-mode self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "activateContextHelpMode:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-activate-ignoring-other-apps self ignore-other-apps)
   (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "activateIgnoringOtherApps:")) ignore-other-apps))
 (define (nsapplication-activation-policy self)
   (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "activationPolicy"))))
+(define (nsapplication-add-windows-item-title-filename! self win string is-filename)
+  (aw_racket_msg_PPb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addWindowsItem:title:filename:")) (id->ffi2-ptr (coerce-arg win)) (id->ffi2-ptr (coerce-arg string)) is-filename))
+(define (nsapplication-arrange-in-front self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "arrangeInFront:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-become-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "becomeFirstResponder"))))
 (define (nsapplication-begin-gesture-with-event! self event)
@@ -1244,8 +1311,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCaseOfLetter:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-change-mode-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeModeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsapplication-change-windows-item-title-filename self win string is-filename)
+  (aw_racket_msg_PPb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeWindowsItem:title:filename:")) (id->ffi2-ptr (coerce-arg win)) (id->ffi2-ptr (coerce-arg string)) is-filename))
 (define (nsapplication-complete self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "complete:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-complete-state-restoration self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "completeStateRestoration"))))
 (define (nsapplication-context-menu-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contextMenuKeyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-cursor-update self event)
@@ -1272,8 +1343,18 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteWordBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-delete-word-forward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteWordForward:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-disable-relaunch-on-login self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "disableRelaunchOnLogin"))))
+(define (nsapplication-discard-events-matching-mask-before-event self mask last-event)
+  (aw_racket_msg_QP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardEventsMatchingMask:beforeEvent:")) mask (id->ffi2-ptr (coerce-arg last-event))))
 (define (nsapplication-do-command-by-selector self selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "doCommandBySelector:")) (id->ffi2-ptr (sel_registerName selector))))
+(define (nsapplication-enable-relaunch-on-login self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enableRelaunchOnLogin"))))
+(define (nsapplication-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nsapplication-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nsapplication-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsapplication-end-gesture-with-event! self event)
@@ -1285,6 +1366,8 @@
   (define-values (_blk1 _blk1-id)
     (make-objc-block block (list _id _pointer) _void))
   (aw_racket_msg_qP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enumerateWindowsWithOptions:usingBlock:")) options (id->ffi2-ptr _blk1)))
+(define (nsapplication-extend-state-restoration self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "extendStateRestoration"))))
 (define (nsapplication-finish-launching self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "finishLaunching"))))
 (define (nsapplication-flags-changed self event)
@@ -1323,6 +1406,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
 (define (nsapplication-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nsapplication-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nsapplication-is-accessibility-alternate-ui-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilityAlternateUIVisible"))))
 (define (nsapplication-is-accessibility-disclosed self)
@@ -1359,10 +1444,16 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilitySelectorAllowed:")) (id->ffi2-ptr (sel_registerName selector))))
 (define (nsapplication-is-active self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isActive"))))
+(define (nsapplication-is-automatic-customize-touch-bar-menu-item-enabled self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAutomaticCustomizeTouchBarMenuItemEnabled"))))
+(define (nsapplication-is-full-keyboard-access-enabled self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isFullKeyboardAccessEnabled"))))
 (define (nsapplication-is-hidden self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHidden"))))
 (define (nsapplication-is-protected-data-available self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isProtectedDataAvailable"))))
+(define (nsapplication-is-registered-for-remote-notifications self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRegisteredForRemoteNotifications"))))
 (define (nsapplication-is-running self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRunning"))))
 (define (nsapplication-key-down self event)
@@ -1385,6 +1476,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
+(define (nsapplication-miniaturize-all self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "miniaturizeAll:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-mouse-cancelled self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "mouseCancelled:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-mouse-down self event)
@@ -1475,10 +1572,30 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRight:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-move-word-right-and-modify-selection! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-next-event-matching-mask-until-date-in-mode-dequeue self mask expiration mode deq-flag)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_QPPb_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "nextEventMatchingMask:untilDate:inMode:dequeue:")) mask (id->ffi2-ptr (coerce-arg expiration)) (id->ffi2-ptr (coerce-arg mode)) deq-flag))
+   ))
 (define (nsapplication-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
 (define (nsapplication-order-front-character-palette! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderFrontCharacterPalette:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-order-front-color-panel! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderFrontColorPanel:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-order-front-standard-about-panel! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderFrontStandardAboutPanel:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-order-front-standard-about-panel-with-options! self options-dictionary)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderFrontStandardAboutPanelWithOptions:")) (id->ffi2-ptr (coerce-arg options-dictionary))))
+(define (nsapplication-ordered-documents! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderedDocuments"))))
+   ))
+(define (nsapplication-ordered-windows! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "orderedWindows"))))
+   ))
 (define (nsapplication-other-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "otherMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-other-mouse-dragged self event)
@@ -1495,6 +1612,15 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pageUpAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-perform-key-equivalent! self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsapplication-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-post-event-at-start self event at-start)
+  (aw_racket_msg_Pb_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "postEvent:atStart:")) (id->ffi2-ptr (coerce-arg event)) at-start))
+(define (nsapplication-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nsapplication-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nsapplication-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-prevent-window-ordering self)
@@ -1503,6 +1629,16 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookPreviewItems:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-quick-look-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsapplication-register-for-remote-notification-types self types)
+  (aw_racket_msg_Q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForRemoteNotificationTypes:")) types))
+(define (nsapplication-register-for-remote-notifications self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForRemoteNotifications"))))
+(define (nsapplication-register-services-menu-send-types-return-types self send-types return-types)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerServicesMenuSendTypes:returnTypes:")) (id->ffi2-ptr (coerce-arg send-types)) (id->ffi2-ptr (coerce-arg return-types))))
+(define (nsapplication-register-user-interface-item-search-handler self handler)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerUserInterfaceItemSearchHandler:")) (id->ffi2-ptr (coerce-arg handler))))
+(define (nsapplication-remove-windows-item! self win)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeWindowsItem:")) (id->ffi2-ptr (coerce-arg win))))
 (define (nsapplication-reply-to-application-should-terminate self should-terminate)
   (aw_racket_msg_b_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replyToApplicationShouldTerminate:")) should-terminate))
 (define (nsapplication-reply-to-open-or-print self reply)
@@ -1513,8 +1649,15 @@
   (aw_racket_msg_Q_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "requestUserAttention:")) request-type))
 (define (nsapplication-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
+(define (nsapplication-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nsapplication-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
+;; block param 2: async-copied (runtime-managed)
+(define (nsapplication-restore-window-with-identifier-state-completion-handler self identifier state completion-handler)
+  (define-values (_blk2 _blk2-id)
+    (make-objc-block completion-handler (list _id _id) _void))
+  (aw_racket_msg_PPP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreWindowWithIdentifier:state:completionHandler:")) (id->ffi2-ptr (coerce-arg identifier)) (id->ffi2-ptr (coerce-arg state)) (id->ffi2-ptr _blk2)))
 (define (nsapplication-right-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rightMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-right-mouse-dragged self event)
@@ -1529,6 +1672,8 @@
   (aw_racket_msg_P_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "runModalForWindow:")) (id->ffi2-ptr (coerce-arg window))))
 (define (nsapplication-run-modal-session self session)
   (aw_racket_msg_P_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "runModalSession:")) (id->ffi2-ptr session)))
+(define (nsapplication-run-page-layout self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "runPageLayout:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-scroll-line-down self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollLineDown:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-scroll-line-up self sender)
@@ -1543,6 +1688,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollToEndOfDocument:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-scroll-wheel self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollWheel:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsapplication-search-string-in-user-interface-item-string-search-range-found-range self search-string string-to-search search-range found-range)
+  (aw_racket_msg_PPGP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "searchString:inUserInterfaceItemString:searchRange:foundRange:")) (id->ffi2-ptr (coerce-arg search-string)) (id->ffi2-ptr (coerce-arg string-to-search)) (id->ffi2-ptr search-range) (id->ffi2-ptr found-range)))
 (define (nsapplication-select-all self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectAll:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-select-line self sender)
@@ -1553,6 +1700,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectToMark:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-select-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectWord:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-send-action-to-from self action target sender)
+  (aw_racket_msg_PPP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sendAction:to:from:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-send-event self event)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sendEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-set-accessibility-activation-point! self accessibility-activation-point)
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setAccessibilityActivationPoint:")) (id->ffi2-ptr accessibility-activation-point)))
 (define (nsapplication-set-accessibility-allowed-values! self accessibility-allowed-values)
@@ -1813,6 +1964,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-show-context-menu-for-selection self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-show-help self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showHelp:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-smart-magnify-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "smartMagnifyWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-stop self sender)
@@ -1833,8 +1988,18 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tabletPoint:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-tablet-proximity self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tabletProximity:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nsapplication-target-for-action self action)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "targetForAction:")) (id->ffi2-ptr (sel_registerName action))))
+   ))
+(define (nsapplication-target-for-action-to-from self action target sender)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "targetForAction:to:from:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (coerce-arg sender))))
+   ))
 (define (nsapplication-terminate self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "terminate:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nsapplication-toggle-touch-bar-customization-palette! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "toggleTouchBarCustomizationPalette:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-touches-began-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "touchesBeganWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-touches-cancelled-with-event self event)
@@ -1855,8 +2020,16 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unhideAllApplications:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-unhide-without-activation self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unhideWithoutActivation"))))
+(define (nsapplication-unregister-for-remote-notifications self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterForRemoteNotifications"))))
+(define (nsapplication-unregister-user-interface-item-search-handler self handler)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterUserInterfaceItemSearchHandler:")) (id->ffi2-ptr (coerce-arg handler))))
+(define (nsapplication-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nsapplication-update-windows self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateWindows"))))
+(define (nsapplication-update-windows-item self win)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateWindowsItem:")) (id->ffi2-ptr (coerce-arg win))))
 (define (nsapplication-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nsapplication-valid-requestor-for-send-type-return-type self send-type return-type)
@@ -1865,12 +2038,18 @@
    ))
 (define (nsapplication-validate-menu-item self menu-item)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateMenuItem:")) (id->ffi2-ptr (coerce-arg menu-item))))
+(define (nsapplication-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nsapplication-validate-user-interface-item self item)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateUserInterfaceItem:")) (id->ffi2-ptr (coerce-arg item))))
 (define (nsapplication-wants-forwarded-scroll-events-for-axis self axis)
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsForwardedScrollEventsForAxis:")) axis))
 (define (nsapplication-wants-scroll-events-for-swipe-tracking-on-axis self axis)
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
+(define (nsapplication-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nsapplication-window-with-window-number self window-num)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "windowWithWindowNumber:")) window-num))
@@ -1883,5 +2062,9 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yieldActivationToApplicationWithBundleIdentifier:")) (id->ffi2-ptr (coerce-arg bundle-identifier))))
 
 ;; --- Class methods ---
+(define (nsapplication-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSApplication) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nsapplication-detach-drawing-thread-to-target-with-object selector target argument)
   (aw_racket_msg_PPP_v (id->ffi2-ptr NSApplication) (id->ffi2-ptr (sel_registerName "detachDrawingThread:toTarget:withObject:")) (id->ffi2-ptr (sel_registerName selector)) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (coerce-arg argument))))

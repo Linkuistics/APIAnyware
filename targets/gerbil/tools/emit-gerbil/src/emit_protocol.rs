@@ -67,7 +67,7 @@ const RUNTIME_OBJC_IMPORT: &str = ":gerbil-bindings/runtime/objc";
 /// the shared [`GerbilFfiTypeMapper`] exactly as the crossings do.
 fn spec_token(t: &TypeRef, is_return: bool, mapper: &GerbilFfiTypeMapper) -> String {
     match &t.kind {
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => {
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => {
             "object".to_string()
         }
         _ => mapper.map_type(t, is_return),

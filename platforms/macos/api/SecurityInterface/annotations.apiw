@@ -1,7 +1,6 @@
 framework SecurityInterface {
     class SFAuthorizationView {
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -18,12 +17,10 @@ framework SecurityInterface {
             source llm
         }
         method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:certificates:showGroup: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:trust:showGroup: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -38,7 +35,6 @@ framework SecurityInterface {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -60,17 +56,14 @@ framework SecurityInterface {
             source llm
         }
         method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:certificates:showGroup: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:trust:message: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
         method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:trust:showGroup: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -85,7 +78,6 @@ framework SecurityInterface {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -107,7 +99,6 @@ framework SecurityInterface {
             source llm
         }
         method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:identities:message: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -122,7 +113,6 @@ framework SecurityInterface {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -144,7 +134,6 @@ framework SecurityInterface {
             source llm
         }
         method beginSheetForDirectory:file:modalForWindow:modalDelegate:didEndSelector:contextInfo: is-instance=#true {
-            param-ownership 3 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -169,7 +158,6 @@ framework SecurityInterface {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -191,7 +179,6 @@ framework SecurityInterface {
             source llm
         }
         method beginSheetForWindow:modalDelegate:didEndSelector:contextInfo:settings:keychain: is-instance=#true {
-            param-ownership 1 ownership=weak
             threading main_thread_only
             source llm
         }
@@ -206,7 +193,6 @@ framework SecurityInterface {
             source llm
         }
         method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             threading main_thread_only
             source llm
         }

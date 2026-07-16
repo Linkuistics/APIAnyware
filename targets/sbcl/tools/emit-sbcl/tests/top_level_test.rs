@@ -56,6 +56,7 @@ fn constant(name: &str, kind: TypeRefKind, objc_exposed: bool) -> Constant {
     Constant {
         name: name.into(),
         constant_type: ty(kind),
+        array_element: None,
         source: None,
         provenance: None,
         doc_refs: None,
@@ -101,7 +102,9 @@ fn whole_top_level_surface_lives_in_the_ns_package() {
     let functions = vec![function(
         "NSStringFromClass",
         vec![param("cls", TypeRefKind::ClassRef)],
-        TypeRefKind::Id,
+        TypeRefKind::Id {
+            protocols: Vec::new(),
+        },
         true,
     )];
 

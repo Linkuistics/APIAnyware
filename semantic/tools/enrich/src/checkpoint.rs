@@ -150,6 +150,13 @@ fn filter_results_for_framework(
             .then(a.selector.cmp(&b.selector))
             .then(a.param_index.cmp(&b.param_index))
     });
+    // Deduplicate, as `main_thread_classes` above already does. `weak_param` is a
+    // base relation the loader pushes into directly, so it is a Vec and keeps
+    // duplicates: a receiver name declared as **both** a class and a protocol
+    // (AppKit's `NSTextAttachmentCell` is both, and both declare `attachment`)
+    // contributes the same tuple twice, and the emitters would render the note
+    // twice.
+    weak_param_methods.dedup();
 
     // --- Protocol-keyed enrichment relations ---
 
@@ -220,6 +227,7 @@ fn filter_results_for_framework(
             .then(a.selector.cmp(&b.selector))
             .then(a.param_index.cmp(&b.param_index))
     });
+    protocol_weak_param_methods.dedup();
 
     let mut protocol_main_thread_protocols: Vec<String> = prog
         .main_thread_class

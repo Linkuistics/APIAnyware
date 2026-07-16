@@ -18,20 +18,12 @@ framework Speech {
         }
     }
     class SFSpeechRecognizer {
-        method recognitionTaskWithRequest:delegate: is-instance=#true {
-            param-ownership 1 ownership=weak
-            source llm
-        }
         method recognitionTaskWithRequest:resultHandler: is-instance=#true {
             block-param 1 invocation=stored
             source llm
         }
         method requestAuthorization: is-instance=#false {
             block-param 0 invocation=async_copied
-            source llm
-        }
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
             source llm
         }
     }

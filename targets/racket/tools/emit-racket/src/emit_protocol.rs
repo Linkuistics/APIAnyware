@@ -219,7 +219,7 @@ fn method_return_kind(method: &Method) -> &'static str {
             "int"
         }
         TypeRefKind::Primitive { name } if matches!(name.as_str(), "int64" | "uint64") => "long",
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => "id",
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => "id",
         _ => "void", // default for unhandled types (structs/aliases)
     }
 }
@@ -227,7 +227,7 @@ fn method_return_kind(method: &Method) -> &'static str {
 /// Map an IR param type to the delegate param-type symbol for `#:param-types`.
 fn param_type_symbol(type_ref: &TypeRef) -> &'static str {
     match &type_ref.kind {
-        TypeRefKind::Class { .. } | TypeRefKind::Id | TypeRefKind::Instancetype => "object",
+        TypeRefKind::Class { .. } | TypeRefKind::Id { .. } | TypeRefKind::Instancetype => "object",
         TypeRefKind::Primitive { name } if name == "bool" => "bool",
         TypeRefKind::Primitive { name }
             if matches!(
@@ -278,7 +278,7 @@ fn format_method_params(method: &Method) -> String {
         .map(|p| {
             let type_desc = match &p.param_type.kind {
                 TypeRefKind::Class { name, .. } => name.clone(),
-                TypeRefKind::Id => "id".to_string(),
+                TypeRefKind::Id { .. } => "id".to_string(),
                 TypeRefKind::Instancetype => "instancetype".to_string(),
                 TypeRefKind::Struct { name } => name.clone(),
                 TypeRefKind::Alias { name, .. } => name.clone(),
@@ -583,7 +583,9 @@ mod tests {
     fn test_param_type_symbol_object() {
         let tr = TypeRef {
             nullable: false,
-            kind: TypeRefKind::Id,
+            kind: TypeRefKind::Id {
+                protocols: Vec::new(),
+            },
         };
         assert_eq!(param_type_symbol(&tr), "object");
     }

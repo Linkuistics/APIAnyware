@@ -1,10 +1,4 @@
 framework VideoSubscriberAccount {
-    class VSAccountManager {
-        method setDelegate: is-instance=#true {
-            param-ownership 0 ownership=weak
-            source llm
-        }
-    }
     class VSUserAccountManager {
         method deleteAutoSignInTokenWithCompletionHandler: is-instance=#true {
             block-param 0 invocation=async_copied

@@ -695,8 +695,11 @@ mod tests {
             name: "TKVersionKey".into(),
             constant_type: TypeRef {
                 nullable: false,
-                kind: TypeRefKind::Id,
+                kind: TypeRefKind::Id {
+                    protocols: Vec::new(),
+                },
             },
+            array_element: None,
             source: None,
             provenance: None,
             doc_refs: None,

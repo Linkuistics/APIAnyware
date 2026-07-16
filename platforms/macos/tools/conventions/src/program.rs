@@ -21,6 +21,8 @@
 
 use ascent::ascent;
 
+use apianyware_types::annotation::OwnershipKind;
+
 ascent! {
     pub struct ConventionProgram;
 
@@ -53,15 +55,19 @@ ascent! {
     /// every pointer parameter (not just the last) and stays logic-free.
     relation pointer_param(String, String, u32);
 
-    /// property(receiver, name, is_copy, is_block)
+    /// property(receiver, name, ownership, is_object, is_block)
     ///
     /// One tuple per **instance** property the receiver declares directly
     /// (class properties are excluded at load — the legacy block-setter rule
-    /// requires `!p.class_property`). `is_copy` is the ObjC `(copy)` attribute;
-    /// `is_block` is true when the property's declared type is a block. Consumed
-    /// by the copy-block-property-setter rule below; classes **and** protocols
-    /// contribute (a protocol may declare a `@property (copy)` block property).
-    relation property(String, String, bool, bool);
+    /// requires `!p.class_property`). `ownership` is the **declared** ObjC
+    /// ownership qualifier (`@property (weak)`/`(copy)`/`(strong)`/`(assign)`),
+    /// `None` when the declaration states none; `is_object` is true when the
+    /// declared type is an object pointer (`Class` / `Id` / `instancetype`);
+    /// `is_block` is true when it is an ObjC block. Consumed by the
+    /// declared-attribute ownership rules and the copy-block-property-setter rule
+    /// below; classes **and** protocols contribute (a protocol may declare a
+    /// `@property (copy)` block property).
+    relation property(String, String, Option<OwnershipKind>, bool, bool);
 
     /// receiver_method(receiver, selector, is_class)
     ///
@@ -89,53 +95,94 @@ ascent! {
 
     // =======================================================================
     // Parameter-ownership facet
+    //
+    // Every parameter that gets an ownership fact resolves to exactly one
+    // `OwnershipKind` by a **3-level precedence cascade** (lower priority number
+    // wins), the same candidate/readback shape the block-invocation facet uses:
+    //
+    //   0  declared property attribute (weak / strong / copy / assign)
+    //   1  delegate-ish / observer name sniff                  → weak
+    //   2  block-typed parameter                               → copy
+    //
+    // Level 0 is the **extraction floor** (ADR-0047 §4): where the header
+    // *declares* the ownership of the property a setter writes, that declaration
+    // is the fact, and it **outranks** every rule whose premise is a *name* —
+    // exactly as `block-copy-property-setter` (premise: `@property (copy)`)
+    // already takes priority 0 over the block-invocation substring tables.
+    // Levels 1–2 are the fallback for the undeclared case, and reproduce the
+    // legacy `if is_delegate … else if is_block …` ladder (weak dominated copy,
+    // which the priority order now states directly instead of by stratified
+    // negation).
     // =======================================================================
 
-    /// weak_param(receiver, selector, param_index, rule)
+    /// ownership_candidate(receiver, selector, param_index, priority, kind, rule)
     ///
-    /// A parameter the receiver holds *weakly* (does not retain). Mirrors
-    /// `heuristics::is_delegate_param` + `is_observer_param`.
-    relation weak_param(String, String, u32, &'static str);
+    /// One candidate ownership classification for a parameter; the readback keeps
+    /// the lowest-`priority` candidate per `(receiver, selector, param_index)`.
+    /// `kind` is the resolved [`OwnershipKind`] — carried as the enum, not a
+    /// token, so there is no code→value table to drift. `rule` becomes the
+    /// `convention:<rule>` provenance stamp.
+    relation ownership_candidate(String, String, u32, u32, OwnershipKind, &'static str);
+
+    // -- Priority 0: the declared property attribute (ADR-0047 §4) ------------
+
+    // The synthesised single-argument setter for an **object-typed** property
+    // whose declaration carries an ownership qualifier: the sole argument
+    // (index 0) is owned exactly as the property declares. The join is the same
+    // `is_setter_for_property` the block facet already uses; the `is_object` gate
+    // keeps a scalar `@property (assign) BOOL` — where "ownership" is a category
+    // error — from stamping its setter's argument.
+    ownership_candidate(r.clone(), s.clone(), 0, 0, *kind, rule_for_declared(*kind)) <--
+        param(r, s, 0, _name, _is_block),
+        property(r, pname, declared, is_object, _prop_is_block),
+        if *is_object,
+        if let Some(kind) = declared,
+        if is_setter_for_property(s, pname);
+
+    /// declared_on_non_object(receiver, property, kind)
+    ///
+    /// A declared ownership qualifier on a property that is neither an object nor
+    /// a block — `@property (assign) NSInteger tag;`, where "ownership" of the
+    /// value is a category error. The rule above deliberately does not stamp its
+    /// setter's argument; this relation exists so the exclusion is **counted** in
+    /// the pass log rather than silently dropped.
+    relation declared_on_non_object(String, String, OwnershipKind);
+    declared_on_non_object(r.clone(), p.clone(), *kind) <--
+        property(r, p, declared, is_object, is_block),
+        if !*is_object,
+        if !*is_block,
+        if let Some(kind) = declared;
+
+    // -- Priority 1: the delegate / observer name sniff (the undeclared case) --
 
     // Delegate / data-source by parameter name (`delegate`, `dataSource`).
-    weak_param(r.clone(), s.clone(), *i, "weak-delegate-param") <--
+    ownership_candidate(r.clone(), s.clone(), *i, 1, OwnershipKind::Weak, "weak-delegate-param") <--
         param(r, s, i, name, _is_block),
         if name_is_delegateish(name);
 
     // Delegate / data-source by the selector segment at the parameter index
     // (e.g. `setDelegate:` segment 0 is "setDelegate").
-    weak_param(r.clone(), s.clone(), *i, "weak-delegate-param") <--
+    ownership_candidate(r.clone(), s.clone(), *i, 1, OwnershipKind::Weak, "weak-delegate-param") <--
         param(r, s, i, _name, _is_block),
         if segment_is_delegateish(s, *i);
 
     // The canonical single-arg `setDelegate:` / `setDataSource:` setters: the
     // sole argument (index 0) is weak.
-    weak_param(r.clone(), s.clone(), 0, "weak-delegate-param") <--
+    ownership_candidate(r.clone(), s.clone(), 0, 1, OwnershipKind::Weak, "weak-delegate-param") <--
         param(r, s, 0, _name, _is_block),
         if is_set_delegate_selector(s);
 
     // KVO / notification `add…Observer:` — the first argument is the observer,
     // held weakly. Mirrors `heuristics::is_observer_param`.
-    weak_param(r.clone(), s.clone(), 0, "weak-observer-param") <--
+    ownership_candidate(r.clone(), s.clone(), 0, 1, OwnershipKind::Weak, "weak-observer-param") <--
         param(r, s, 0, name, _is_block),
         if is_observer_first_param(s, name);
 
-    /// is_weak(receiver, selector, param_index) — rule-erased projection of
-    /// `weak_param`, so `copy_param`'s negation has all variables bound (the
-    /// stratified-negation pattern used by the enrich program).
-    relation is_weak(String, String, u32);
-    is_weak(r.clone(), s.clone(), *i) <-- weak_param(r, s, i, _rule);
+    // -- Priority 2: a block-typed parameter is copied (`Block_copy`) ---------
 
-    /// copy_param(receiver, selector, param_index, rule)
-    ///
-    /// A block-typed parameter the receiver copies (`Block_copy`). Weak takes
-    /// precedence (a block that is also a delegate stays weak), exactly as the
-    /// legacy `if is_delegate … else if is_block …` ladder did.
-    relation copy_param(String, String, u32, &'static str);
-    copy_param(r.clone(), s.clone(), *i, "block-param-copy") <--
+    ownership_candidate(r.clone(), s.clone(), *i, 2, OwnershipKind::Copy, "block-param-copy") <--
         param(r, s, i, _name, is_block),
-        if *is_block,
-        !is_weak(r, s, i);
+        if *is_block;
 
     // =======================================================================
     // Block-invocation facet
@@ -172,8 +219,8 @@ ascent! {
     block_copy_property_setter(r.clone(), s.clone()) <--
         param(r, s, 0, _name, is_block),
         if *is_block,
-        property(r, pname, is_copy, prop_is_block),
-        if *is_copy,
+        property(r, pname, declared, _is_object, prop_is_block),
+        if *declared == Some(OwnershipKind::Copy),
         if *prop_is_block,
         if is_setter_for_property(s, pname);
 
@@ -313,6 +360,22 @@ ascent! {
 // rule set reproduces the current classifications. Kept as free functions
 // (rather than inlined into the guards) to keep each rule legible.
 // ---------------------------------------------------------------------------
+
+/// The `convention:<rule>` name for a declared-attribute ownership fact.
+///
+/// One rule per declared qualifier, so a reader of `resolved.kdl` sees *which*
+/// attribute the header carried — `convention:weak-property-attribute` reads as
+/// "derived from the declaration", not as a guess. The mapping is total: every
+/// [`OwnershipKind`] the extractor can lower from `ObjCAttributes` has a rule
+/// name, so a new qualifier cannot slip through unnamed.
+fn rule_for_declared(kind: OwnershipKind) -> &'static str {
+    match kind {
+        OwnershipKind::Weak => "weak-property-attribute",
+        OwnershipKind::Strong => "strong-property-attribute",
+        OwnershipKind::Copy => "copy-property-attribute",
+        OwnershipKind::UnsafeUnretained => "unsafe-unretained-property-attribute",
+    }
+}
 
 /// A parameter name that names a delegate or data source.
 /// Mirrors `is_delegate_param`'s direct-name branch.
@@ -501,9 +564,18 @@ fn name_is_errorish(name: &str) -> bool {
 mod tests {
     use super::*;
 
-    /// Run the program over a single method's parameters and collect the
-    /// derived ownership facts as `(index, kind, rule)` for assertion.
-    fn run(selector: &str, params: &[(&str, bool)]) -> ConventionProgram {
+    /// A receiver property, as the fact loader pushes it:
+    /// `(name, declared_ownership, is_object, is_block)`.
+    type Prop = (
+        &'static str,
+        Option<OwnershipKind>,
+        /* is_object */ bool,
+        /* is_block */ bool,
+    );
+
+    /// Load one method's parameters (`(name, is_block)`) and the receiver's
+    /// properties, run the program, and return it.
+    fn run_with(selector: &str, params: &[(&str, bool)], properties: &[Prop]) -> ConventionProgram {
         let mut prog = ConventionProgram::default();
         for (i, (name, is_block)) in params.iter().enumerate() {
             prog.param.push((
@@ -514,23 +586,47 @@ mod tests {
                 *is_block,
             ));
         }
+        prog.param_count
+            .push(("R".to_string(), selector.to_string(), params.len() as u32));
+        for (name, ownership, is_object, is_block) in properties {
+            prog.property.push((
+                "R".to_string(),
+                name.to_string(),
+                *ownership,
+                *is_object,
+                *is_block,
+            ));
+        }
         prog.run();
         prog
     }
 
+    /// The winning ownership candidate for `index` — the lowest-priority one, as
+    /// the readback resolves it — as `(kind, rule)`.
+    fn winning_ownership(
+        selector: &str,
+        params: &[(&str, bool)],
+        properties: &[Prop],
+        index: u32,
+    ) -> Option<(OwnershipKind, &'static str)> {
+        let prog = run_with(selector, params, properties);
+        prog.ownership_candidate
+            .iter()
+            .filter(|(_, _, i, _, _, _)| *i == index)
+            .min_by_key(|(_, _, _, prio, _, _)| *prio)
+            .map(|(_, _, _, _, kind, rule)| (*kind, *rule))
+    }
+
     #[test]
     fn set_delegate_first_param_is_weak() {
-        let prog = run("setDelegate:", &[("delegate", false)]);
-        assert!(prog
-            .weak_param
-            .iter()
-            .any(|(_, s, i, _)| s == "setDelegate:" && *i == 0));
-        assert!(prog.copy_param.is_empty());
+        // No property declared: the name sniff is the fallback, as it always was.
+        let win = winning_ownership("setDelegate:", &[("delegate", false)], &[], 0);
+        assert_eq!(win, Some((OwnershipKind::Weak, "weak-delegate-param")));
     }
 
     #[test]
     fn observer_first_param_is_weak() {
-        let prog = run(
+        let win = winning_ownership(
             "addObserver:forKeyPath:options:context:",
             &[
                 ("observer", false),
@@ -538,36 +634,165 @@ mod tests {
                 ("options", false),
                 ("context", false),
             ],
+            &[],
+            0,
         );
-        let observer = prog.weak_param.iter().find(|(_, _, i, _)| *i == 0);
-        assert!(matches!(observer, Some((_, _, _, "weak-observer-param"))));
+        assert_eq!(win, Some((OwnershipKind::Weak, "weak-observer-param")));
     }
 
     #[test]
     fn block_param_is_copy_not_weak() {
-        let prog = run("sortedArrayUsingComparator:", &[("cmptr", true)]);
-        assert!(prog
-            .copy_param
-            .iter()
-            .any(|(_, _, i, rule)| *i == 0 && *rule == "block-param-copy"));
-        assert!(prog.weak_param.is_empty());
+        let win = winning_ownership("sortedArrayUsingComparator:", &[("cmptr", true)], &[], 0);
+        assert_eq!(win, Some((OwnershipKind::Copy, "block-param-copy")));
     }
 
     #[test]
     fn observer_block_form_does_not_match() {
         // `addObserverForName:…` first segment ends in "Name" — not an observer.
-        let prog = run(
-            "addObserverForName:object:queue:usingBlock:",
-            &[
-                ("name", false),
-                ("obj", false),
-                ("queue", false),
-                ("block", true),
-            ],
+        let params = [
+            ("name", false),
+            ("obj", false),
+            ("queue", false),
+            ("block", true),
+        ];
+        // Param 0 (name) gets no ownership fact; param 3 (block) is copy.
+        assert_eq!(
+            winning_ownership(
+                "addObserverForName:object:queue:usingBlock:",
+                &params,
+                &[],
+                0
+            ),
+            None
         );
-        // Param 0 (name) must not be weak; param 3 (block) is copy.
-        assert!(!prog.weak_param.iter().any(|(_, _, i, _)| *i == 0));
-        assert!(prog.copy_param.iter().any(|(_, _, i, _)| *i == 3));
+        assert_eq!(
+            winning_ownership(
+                "addObserverForName:object:queue:usingBlock:",
+                &params,
+                &[],
+                3
+            ),
+            Some((OwnershipKind::Copy, "block-param-copy"))
+        );
+    }
+
+    // -----------------------------------------------------------------
+    // The extraction floor — a declared attribute beats the name sniff
+    // (ADR-0047 §4)
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn declared_weak_property_beats_the_name_sniff() {
+        // The case the whole cascade exists for: the header declares it, so the
+        // fact is the declaration — not "is the parameter called `delegate`?".
+        let win = winning_ownership(
+            "setDelegate:",
+            &[("delegate", false)],
+            &[("delegate", Some(OwnershipKind::Weak), true, false)],
+            0,
+        );
+        assert_eq!(win, Some((OwnershipKind::Weak, "weak-property-attribute")));
+    }
+
+    #[test]
+    fn declared_strong_property_overrides_a_contradicting_name_sniff() {
+        // A `delegate`-named slot the framework actually *retains*. The sniff says
+        // weak; the header says strong; the header wins, and the value flips.
+        let win = winning_ownership(
+            "setDelegate:",
+            &[("delegate", false)],
+            &[("delegate", Some(OwnershipKind::Strong), true, false)],
+            0,
+        );
+        assert_eq!(
+            win,
+            Some((OwnershipKind::Strong, "strong-property-attribute"))
+        );
+    }
+
+    #[test]
+    fn declared_assign_object_property_is_unsafe_unretained() {
+        // Pre-ARC delegate slots spell "does not retain" as `assign`. ADR-0059 §6
+        // needs it: `weak`/`assign` → associate the forwarder; `strong` → skip.
+        let win = winning_ownership(
+            "setTarget:",
+            &[("target", false)],
+            &[("target", Some(OwnershipKind::UnsafeUnretained), true, false)],
+            0,
+        );
+        assert_eq!(
+            win,
+            Some((
+                OwnershipKind::UnsafeUnretained,
+                "unsafe-unretained-property-attribute"
+            ))
+        );
+    }
+
+    #[test]
+    fn scalar_assign_property_stamps_nothing() {
+        // `@property (assign) BOOL enabled;` declares `assign`, but "ownership" of
+        // a `BOOL` is a category error — the `is_object` gate keeps the thousands
+        // of scalar setters out of the ownership facet entirely.
+        let win = winning_ownership(
+            "setEnabled:",
+            &[("enabled", false)],
+            &[(
+                "enabled",
+                Some(OwnershipKind::UnsafeUnretained),
+                /* is_object */ false,
+                false,
+            )],
+            0,
+        );
+        assert_eq!(win, None);
+    }
+
+    #[test]
+    fn undeclared_property_falls_back_to_the_name_sniff() {
+        // The convention tier's actual job: derive what the header does *not*
+        // declare. A property with no qualifier leaves the sniff in charge.
+        let win = winning_ownership(
+            "setDelegate:",
+            &[("delegate", false)],
+            &[("delegate", None, true, false)],
+            0,
+        );
+        assert_eq!(win, Some((OwnershipKind::Weak, "weak-delegate-param")));
+    }
+
+    #[test]
+    fn declared_attribute_only_reaches_its_own_setter() {
+        // The join is on the property the selector sets. A two-argument
+        // "setter" is not a synthesised setter, so the declaration does not
+        // reach it (and the name sniff still does).
+        let win = winning_ownership(
+            "setDelegate:options:",
+            &[("delegate", false), ("options", false)],
+            &[("delegate", Some(OwnershipKind::Strong), true, false)],
+            0,
+        );
+        assert_eq!(win, Some((OwnershipKind::Weak, "weak-delegate-param")));
+    }
+
+    #[test]
+    fn block_copy_property_setter_keeps_its_block_param_copy_stamp() {
+        // A `@property (copy)` *block* is not an object type, so the priority-0
+        // rule does not fire on it: its setter's param stays `block-param-copy`
+        // (and the *block-invocation* facet still reads the `(copy)` attribute —
+        // the two facets ask different questions of the same declaration).
+        let win = winning_ownership(
+            "setCompletionHandler:",
+            &[("completionHandler", true)],
+            &[(
+                "completionHandler",
+                Some(OwnershipKind::Copy),
+                /* is_object */ false,
+                /* is_block */ true,
+            )],
+            0,
+        );
+        assert_eq!(win, Some((OwnershipKind::Copy, "block-param-copy")));
     }
 
     // -----------------------------------------------------------------
@@ -577,6 +802,10 @@ mod tests {
     /// Run the program over one method's parameters (with `param_count`) and
     /// optional `(property_name, is_copy, is_block)` receiver properties, then
     /// return the lowest-priority block candidate for `index` as `(style, rule)`.
+    ///
+    /// `is_copy` is spelled as a bool here because the block facet asks exactly
+    /// that of the declaration; the loader lowers it from the declared
+    /// [`OwnershipKind`], which is what the `property` relation carries.
     fn winning_block(
         selector: &str,
         params: &[(&str, bool)],
@@ -596,8 +825,15 @@ mod tests {
         prog.param_count
             .push(("R".to_string(), selector.to_string(), params.len() as u32));
         for (name, is_copy, is_block) in properties {
-            prog.property
-                .push(("R".to_string(), name.to_string(), *is_copy, *is_block));
+            let ownership = is_copy.then_some(OwnershipKind::Copy);
+            let is_object = false; // block/scalar properties in these cases
+            prog.property.push((
+                "R".to_string(),
+                name.to_string(),
+                ownership,
+                is_object,
+                *is_block,
+            ));
         }
         prog.run();
         prog.block_candidate

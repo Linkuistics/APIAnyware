@@ -22,14 +22,6 @@ framework NetworkExtension {
         }
     }
     class NEAppProxyProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -265,14 +257,6 @@ framework NetworkExtension {
         }
     }
     class NEDNSProxyProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -347,22 +331,6 @@ framework NetworkExtension {
         }
     }
     class NEEthernetTunnelProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method "createTCPConnectionThroughTunnel(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionThroughTunnelToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -433,14 +401,6 @@ framework NetworkExtension {
         method applySettings:completionHandler: is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
-            source llm
-        }
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
             source llm
         }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
@@ -517,14 +477,6 @@ framework NetworkExtension {
         }
     }
     class NEFilterPacketProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -572,14 +524,6 @@ framework NetworkExtension {
         }
     }
     class NEFilterProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -644,22 +588,6 @@ framework NetworkExtension {
         }
     }
     class NEPacketTunnelProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method "createTCPConnectionThroughTunnel(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionThroughTunnelToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -722,14 +650,6 @@ framework NetworkExtension {
         }
     }
     class NEProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -846,14 +766,6 @@ framework NetworkExtension {
         }
     }
     class NETransparentProxyProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread
@@ -916,14 +828,6 @@ framework NetworkExtension {
         }
     }
     class NETunnelProvider {
-        method "createTCPConnection(to:enableTLS:tlsParameters:delegate:)" is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
-        method createTCPConnectionToEndpoint:enableTLS:TLSParameters:delegate: is-instance=#true {
-            param-ownership 3 ownership=weak
-            source llm
-        }
         method "displayMessage(_:completionHandler:)" is-instance=#true {
             block-param 1 invocation=async_copied
             threading any_thread

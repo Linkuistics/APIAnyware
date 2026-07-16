@@ -8,6 +8,7 @@
          (rename-in racket/contract [-> c->])
          "../../runtime/objc-base.rkt"
          "../../runtime/coerce.rkt"
+         "../../runtime/block.rkt"
          "../../runtime/type-mapping.rkt")
 
 ;; Load framework and ObjC runtime
@@ -17,6 +18,7 @@
 ;; Threading: this class has main-thread-only methods.
 
 ;; --- Class predicates ---
+(define (cadisplaylink? v) (objc-instance-of? v "CADisplayLink"))
 (define (calayer? v) (objc-instance-of? v "CALayer"))
 (define (cifilter? v) (objc-instance-of? v "CIFilter"))
 (define (nsappearance? v) (objc-instance-of? v "NSAppearance"))
@@ -24,9 +26,14 @@
 (define (nsattributedstring? v) (objc-instance-of? v "NSAttributedString"))
 (define (nsbitmapimagerep? v) (objc-instance-of? v "NSBitmapImageRep"))
 (define (nscandidatelisttouchbaritem? v) (objc-instance-of? v "NSCandidateListTouchBarItem"))
+(define (nscell? v) (objc-instance-of? v "NSCell"))
 (define (nscolor? v) (objc-instance-of? v "NSColor"))
 (define (nsdata? v) (objc-instance-of? v "NSData"))
+(define (nsdictionary? v) (objc-instance-of? v "NSDictionary"))
+(define (nsdraggingsession? v) (objc-instance-of? v "NSDraggingSession"))
+(define (nserror? v) (objc-instance-of? v "NSError"))
 (define (nsfont? v) (objc-instance-of? v "NSFont"))
+(define (nsformatter? v) (objc-instance-of? v "NSFormatter"))
 (define (nslayoutdimension? v) (objc-instance-of? v "NSLayoutDimension"))
 (define (nslayoutguide? v) (objc-instance-of? v "NSLayoutGuide"))
 (define (nslayoutxaxisanchor? v) (objc-instance-of? v "NSLayoutXAxisAnchor"))
@@ -38,6 +45,7 @@
 (define (nsscrollview? v) (objc-instance-of? v "NSScrollView"))
 (define (nsshadow? v) (objc-instance-of? v "NSShadow"))
 (define (nsstring? v) (objc-instance-of? v "NSString"))
+(define (nstext? v) (objc-instance-of? v "NSText"))
 (define (nstextfield? v) (objc-instance-of? v "NSTextField"))
 (define (nstextinputcontext? v) (objc-instance-of? v "NSTextInputContext"))
 (define (nstouchbar? v) (objc-instance-of? v "NSTouchBar"))
@@ -89,7 +97,7 @@
   [nstextfield-set-autoresizing-mask! (c-> nstextfield? exact-nonnegative-integer? void?)]
   [nstextfield-background-color (c-> nstextfield? (or/c nscolor? objc-nil?))]
   [nstextfield-set-background-color! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
-  [nstextfield-background-filters (c-> nstextfield? any/c)]
+  [nstextfield-background-filters (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-set-background-filters! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-base-writing-direction (c-> nstextfield? exact-integer?)]
   [nstextfield-set-base-writing-direction! (c-> nstextfield? exact-integer? void?)]
@@ -112,7 +120,7 @@
   [nstextfield-can-draw-subviews-into-layer (c-> nstextfield? boolean?)]
   [nstextfield-set-can-draw-subviews-into-layer! (c-> nstextfield? boolean? void?)]
   [nstextfield-candidate-list-touch-bar-item (c-> nstextfield? (or/c nscandidatelisttouchbaritem? objc-nil?))]
-  [nstextfield-cell (c-> nstextfield? any/c)]
+  [nstextfield-cell (c-> nstextfield? (or/c nscell? objc-nil?))]
   [nstextfield-set-cell! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-cell-class (c-> cpointer?)]
   [nstextfield-set-cell-class! (c-> cpointer? void?)]
@@ -123,8 +131,8 @@
   [nstextfield-compatible-with-responsive-scrolling (c-> boolean?)]
   [nstextfield-compositing-filter (c-> nstextfield? (or/c cifilter? objc-nil?))]
   [nstextfield-set-compositing-filter! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
-  [nstextfield-constraints (c-> nstextfield? any/c)]
-  [nstextfield-content-filters (c-> nstextfield? any/c)]
+  [nstextfield-constraints (c-> nstextfield? (or/c nsarray? objc-nil?))]
+  [nstextfield-content-filters (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-set-content-filters! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-continuous (c-> nstextfield? boolean?)]
   [nstextfield-set-continuous! (c-> nstextfield? boolean? void?)]
@@ -157,7 +165,7 @@
   [nstextfield-focus-view (c-> (or/c nsview? objc-nil?))]
   [nstextfield-font (c-> nstextfield? (or/c nsfont? objc-nil?))]
   [nstextfield-set-font! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
-  [nstextfield-formatter (c-> nstextfield? any/c)]
+  [nstextfield-formatter (c-> nstextfield? (or/c nsformatter? objc-nil?))]
   [nstextfield-set-formatter! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-frame (c-> nstextfield? any/c)]
   [nstextfield-set-frame! (c-> nstextfield? any/c void?)]
@@ -165,7 +173,7 @@
   [nstextfield-set-frame-center-rotation! (c-> nstextfield? real? void?)]
   [nstextfield-frame-rotation (c-> nstextfield? real?)]
   [nstextfield-set-frame-rotation! (c-> nstextfield? real? void?)]
-  [nstextfield-gesture-recognizers (c-> nstextfield? any/c)]
+  [nstextfield-gesture-recognizers (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-set-gesture-recognizers! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-has-ambiguous-layout (c-> nstextfield? boolean?)]
   [nstextfield-height-adjust-limit (c-> nstextfield? real?)]
@@ -199,7 +207,7 @@
   [nstextfield-set-layer-contents-redraw-policy! (c-> nstextfield? exact-integer? void?)]
   [nstextfield-layer-uses-core-image-filters (c-> nstextfield? boolean?)]
   [nstextfield-set-layer-uses-core-image-filters! (c-> nstextfield? boolean? void?)]
-  [nstextfield-layout-guides (c-> nstextfield? any/c)]
+  [nstextfield-layout-guides (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-layout-margins-guide (c-> nstextfield? (or/c nslayoutguide? objc-nil?))]
   [nstextfield-leading-anchor (c-> nstextfield? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nstextfield-left-anchor (c-> nstextfield? (or/c nslayoutxaxisanchor? objc-nil?))]
@@ -232,11 +240,11 @@
   [nstextfield-page-header (c-> nstextfield? (or/c nsattributedstring? objc-nil?))]
   [nstextfield-placeholder-attributed-string (c-> nstextfield? (or/c nsattributedstring? objc-nil?))]
   [nstextfield-set-placeholder-attributed-string! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
-  [nstextfield-placeholder-attributed-strings (c-> nstextfield? any/c)]
+  [nstextfield-placeholder-attributed-strings (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-set-placeholder-attributed-strings! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-placeholder-string (c-> nstextfield? (or/c nsstring? objc-nil?))]
   [nstextfield-set-placeholder-string! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
-  [nstextfield-placeholder-strings (c-> nstextfield? any/c)]
+  [nstextfield-placeholder-strings (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-set-placeholder-strings! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-posts-bounds-changed-notifications (c-> nstextfield? boolean?)]
   [nstextfield-set-posts-bounds-changed-notifications! (c-> nstextfield? boolean? void?)]
@@ -257,11 +265,11 @@
   [nstextfield-rect-preserved-during-live-resize (c-> nstextfield? any/c)]
   [nstextfield-refuses-first-responder (c-> nstextfield? boolean?)]
   [nstextfield-set-refuses-first-responder! (c-> nstextfield? boolean? void?)]
-  [nstextfield-registered-dragged-types (c-> nstextfield? any/c)]
+  [nstextfield-registered-dragged-types (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-requires-constraint-based-layout (c-> boolean?)]
   [nstextfield-resolves-natural-alignment-with-base-writing-direction (c-> nstextfield? boolean?)]
   [nstextfield-set-resolves-natural-alignment-with-base-writing-direction! (c-> nstextfield? boolean? void?)]
-  [nstextfield-restorable-state-key-paths (c-> any/c)]
+  [nstextfield-restorable-state-key-paths (c-> (or/c nsarray? objc-nil?))]
   [nstextfield-right-anchor (c-> nstextfield? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nstextfield-rotated-from-base (c-> nstextfield? boolean?)]
   [nstextfield-rotated-or-scaled-from-base (c-> nstextfield? boolean?)]
@@ -274,7 +282,7 @@
   [nstextfield-set-shadow! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-string-value (c-> nstextfield? (or/c nsstring? objc-nil?))]
   [nstextfield-set-string-value! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
-  [nstextfield-subviews (c-> nstextfield? any/c)]
+  [nstextfield-subviews (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-set-subviews! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-suggestions-delegate (c-> nstextfield? (or/c weakstorage? objc-nil?))]
   [nstextfield-set-suggestions-delegate! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
@@ -290,7 +298,7 @@
   [nstextfield-top-anchor (c-> nstextfield? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nstextfield-touch-bar (c-> nstextfield? (or/c nstouchbar? objc-nil?))]
   [nstextfield-set-touch-bar! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
-  [nstextfield-tracking-areas (c-> nstextfield? any/c)]
+  [nstextfield-tracking-areas (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-trailing-anchor (c-> nstextfield? (or/c nslayoutxaxisanchor? objc-nil?))]
   [nstextfield-translates-autoresizing-mask-into-constraints (c-> nstextfield? boolean?)]
   [nstextfield-set-translates-autoresizing-mask-into-constraints! (c-> nstextfield? boolean? void?)]
@@ -319,16 +327,17 @@
   [nstextfield-window (c-> nstextfield? (or/c nswindow? objc-nil?))]
   [nstextfield-writing-tools-coordinator (c-> nstextfield? (or/c nswritingtoolscoordinator? objc-nil?))]
   [nstextfield-set-writing-tools-coordinator! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-abort-editing (c-> nstextfield? boolean?)]
   [nstextfield-accepts-first-mouse (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-accessibility-activation-point (c-> nstextfield? any/c)]
-  [nstextfield-accessibility-allowed-values (c-> nstextfield? any/c)]
+  [nstextfield-accessibility-allowed-values (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-application-focused-ui-element (c-> nstextfield? any/c)]
   [nstextfield-accessibility-attributed-string-for-range (c-> nstextfield? any/c (or/c nsattributedstring? objc-nil?))]
-  [nstextfield-accessibility-attributed-user-input-labels (c-> nstextfield? any/c)]
+  [nstextfield-accessibility-attributed-user-input-labels (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-cancel-button (c-> nstextfield? any/c)]
   [nstextfield-accessibility-cell-for-column-row (c-> nstextfield? exact-integer? exact-integer? any/c)]
   [nstextfield-accessibility-children (c-> nstextfield? (or/c nsarray? objc-nil?))]
-  [nstextfield-accessibility-children-in-navigation-order (c-> nstextfield? any/c)]
+  [nstextfield-accessibility-children-in-navigation-order (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-clear-button (c-> nstextfield? any/c)]
   [nstextfield-accessibility-close-button (c-> nstextfield? any/c)]
   [nstextfield-accessibility-column-count (c-> nstextfield? exact-integer?)]
@@ -338,8 +347,8 @@
   [nstextfield-accessibility-columns (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-contents (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-critical-value (c-> nstextfield? any/c)]
-  [nstextfield-accessibility-custom-actions (c-> nstextfield? any/c)]
-  [nstextfield-accessibility-custom-rotors (c-> nstextfield? any/c)]
+  [nstextfield-accessibility-custom-actions (c-> nstextfield? (or/c nsarray? objc-nil?))]
+  [nstextfield-accessibility-custom-rotors (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-decrement-button (c-> nstextfield? any/c)]
   [nstextfield-accessibility-default-button (c-> nstextfield? any/c)]
   [nstextfield-accessibility-disclosed-by-row (c-> nstextfield? any/c)]
@@ -419,7 +428,7 @@
   [nstextfield-accessibility-selected-rows (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-selected-text (c-> nstextfield? (or/c nsstring? objc-nil?))]
   [nstextfield-accessibility-selected-text-range (c-> nstextfield? any/c)]
-  [nstextfield-accessibility-selected-text-ranges (c-> nstextfield? any/c)]
+  [nstextfield-accessibility-selected-text-ranges (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-serves-as-title-for-ui-elements (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-shared-character-range (c-> nstextfield? any/c)]
   [nstextfield-accessibility-shared-focus-elements (c-> nstextfield? (or/c nsarray? objc-nil?))]
@@ -438,7 +447,7 @@
   [nstextfield-accessibility-url (c-> nstextfield? (or/c nsurl? objc-nil?))]
   [nstextfield-accessibility-unit-description (c-> nstextfield? (or/c nsstring? objc-nil?))]
   [nstextfield-accessibility-units (c-> nstextfield? exact-integer?)]
-  [nstextfield-accessibility-user-input-labels (c-> nstextfield? any/c)]
+  [nstextfield-accessibility-user-input-labels (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-value (c-> nstextfield? (or/c nsstring? objc-nil?))]
   [nstextfield-accessibility-value-description (c-> nstextfield? (or/c nsstring? objc-nil?))]
   [nstextfield-accessibility-vertical-scroll-bar (c-> nstextfield? any/c)]
@@ -453,29 +462,48 @@
   [nstextfield-accessibility-window (c-> nstextfield? any/c)]
   [nstextfield-accessibility-windows (c-> nstextfield? (or/c nsarray? objc-nil?))]
   [nstextfield-accessibility-zoom-button (c-> nstextfield? any/c)]
+  [nstextfield-add-constraint! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-add-constraints! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-add-cursor-rect-cursor! (c-> nstextfield? any/c (or/c string? objc-object? #f) void?)]
+  [nstextfield-add-gesture-recognizer! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-add-layout-guide! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-add-subview! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-add-subview-positioned-relative-to! (c-> nstextfield? (or/c string? objc-object? #f) exact-integer? (or/c string? objc-object? #f) void?)]
   [nstextfield-add-tool-tip-rect-owner-user-data! (c-> nstextfield? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) exact-integer?)]
+  [nstextfield-add-tracking-area! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-add-tracking-rect-owner-user-data-assume-inside! (c-> nstextfield? any/c (or/c string? objc-object? #f) (or/c cpointer? #f) boolean? exact-integer?)]
+  [nstextfield-additional-safe-area-insets! (c-> nstextfield? any/c)]
+  [nstextfield-adjust-page-height-new-top-bottom-limit (c-> nstextfield? (or/c cpointer? #f) real? real? real? void?)]
+  [nstextfield-adjust-page-width-new-left-right-limit (c-> nstextfield? (or/c cpointer? #f) real? real? real? void?)]
   [nstextfield-adjust-scroll (c-> nstextfield? any/c any/c)]
+  [nstextfield-alignment-rect-for-frame (c-> nstextfield? any/c any/c)]
   [nstextfield-ancestor-shared-with-view (c-> nstextfield? (or/c string? objc-object? #f) (or/c nsview? objc-nil?))]
   [nstextfield-animation-for-key (c-> nstextfield? (or/c string? objc-object? #f) any/c)]
-  [nstextfield-animations (c-> nstextfield? any/c)]
+  [nstextfield-animations (c-> nstextfield? (or/c nsdictionary? objc-nil?))]
   [nstextfield-animator (c-> nstextfield? any/c)]
   [nstextfield-appearance (c-> nstextfield? (or/c nsappearance? objc-nil?))]
   [nstextfield-autoscroll (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-backing-aligned-rect-options (c-> nstextfield? any/c exact-nonnegative-integer? any/c)]
   [nstextfield-become-first-responder (c-> nstextfield? boolean?)]
+  [nstextfield-begin-document! (c-> nstextfield? void?)]
+  [nstextfield-begin-dragging-session-with-items-event-source! (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c nsdraggingsession? objc-nil?))]
   [nstextfield-begin-gesture-with-event! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-begin-page-in-rect-at-placement! (c-> nstextfield? any/c any/c void?)]
   [nstextfield-bitmap-image-rep-for-caching-display-in-rect (c-> nstextfield? any/c (or/c nsbitmapimagerep? objc-nil?))]
   [nstextfield-cache-display-in-rect-to-bitmap-image-rep (c-> nstextfield? any/c (or/c string? objc-object? #f) void?)]
   [nstextfield-cancel-operation (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-capitalize-word (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-center-scan-rect! (c-> nstextfield? any/c any/c)]
   [nstextfield-center-selection-in-visible-area! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-center-x-anchor! (c-> nstextfield? (or/c nslayoutxaxisanchor? objc-nil?))]
+  [nstextfield-center-y-anchor! (c-> nstextfield? (or/c nslayoutyaxisanchor? objc-nil?))]
   [nstextfield-change-case-of-letter (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-change-mode-with-event (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-complete (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-conclude-drag-operation (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-constraints-affecting-layout-for-orientation (c-> nstextfield? exact-integer? (or/c nsarray? objc-nil?))]
+  [nstextfield-content-compression-resistance-priority-for-orientation (c-> nstextfield? exact-integer? real?)]
+  [nstextfield-content-hugging-priority-for-orientation (c-> nstextfield? exact-integer? real?)]
   [nstextfield-content-type (c-> nstextfield? (or/c nsstring? objc-nil?))]
   [nstextfield-context-menu-key-down (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-convert-point-from-view (c-> nstextfield? any/c (or/c string? objc-object? #f) any/c)]
@@ -496,7 +524,10 @@
   [nstextfield-convert-size-from-layer (c-> nstextfield? any/c any/c)]
   [nstextfield-convert-size-to-backing (c-> nstextfield? any/c any/c)]
   [nstextfield-convert-size-to-layer (c-> nstextfield? any/c any/c)]
+  [nstextfield-current-editor (c-> nstextfield? (or/c nstext? objc-nil?))]
   [nstextfield-cursor-update (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-data-with-eps-inside-rect (c-> nstextfield? any/c (or/c nsdata? objc-nil?))]
+  [nstextfield-data-with-pdf-inside-rect (c-> nstextfield? any/c (or/c nsdata? objc-nil?))]
   [nstextfield-delete-backward (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-delete-backward-by-decomposing-previous-character (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-delete-forward (c-> nstextfield? (or/c string? objc-object? #f) void?)]
@@ -509,11 +540,13 @@
   [nstextfield-delete-word-forward (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-did-add-subview (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-did-close-menu-with-event (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstextfield-discard-cursor-rects (c-> nstextfield? void?)]
   [nstextfield-display! (c-> nstextfield? void?)]
   [nstextfield-display-if-needed! (c-> nstextfield? void?)]
   [nstextfield-display-if-needed-ignoring-opacity! (c-> nstextfield? void?)]
   [nstextfield-display-if-needed-in-rect! (c-> nstextfield? any/c void?)]
   [nstextfield-display-if-needed-in-rect-ignoring-opacity! (c-> nstextfield? any/c void?)]
+  [nstextfield-display-link-with-target-selector! (c-> nstextfield? (or/c string? objc-object? #f) string? (or/c cadisplaylink? objc-nil?))]
   [nstextfield-display-rect! (c-> nstextfield? any/c void?)]
   [nstextfield-display-rect-ignoring-opacity! (c-> nstextfield? any/c void?)]
   [nstextfield-display-rect-ignoring-opacity-in-context! (c-> nstextfield? any/c (or/c string? objc-object? #f) void?)]
@@ -522,14 +555,29 @@
   [nstextfield-dragging-entered (c-> nstextfield? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
   [nstextfield-dragging-exited (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-dragging-updated (c-> nstextfield? (or/c string? objc-object? #f) exact-nonnegative-integer?)]
+  [nstextfield-draw-cell (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-draw-cell-inside (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-draw-focus-ring-mask (c-> nstextfield? void?)]
+  [nstextfield-draw-page-border-with-size (c-> nstextfield? any/c void?)]
   [nstextfield-draw-rect (c-> nstextfield? any/c void?)]
   [nstextfield-draw-with-expansion-frame-in-view (c-> nstextfield? any/c (or/c string? objc-object? #f) void?)]
+  [nstextfield-edge-insets-for-layout-region (c-> nstextfield? (or/c string? objc-object? #f) any/c)]
+  [nstextfield-edit-with-frame-editor-delegate-event (c-> nstextfield? any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstextfield-effective-appearance (c-> nstextfield? (or/c nsappearance? objc-nil?))]
+  [nstextfield-encode-restorable-state-with-coder (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-encode-restorable-state-with-coder-background-queue (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstextfield-encode-with-coder (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-end-document! (c-> nstextfield? void?)]
+  [nstextfield-end-editing! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-end-gesture-with-event! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-end-page! (c-> nstextfield? void?)]
+  [nstextfield-enter-full-screen-mode-with-options (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-exercise-ambiguity-in-layout (c-> nstextfield? void?)]
+  [nstextfield-exit-full-screen-mode-with-options (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-expansion-frame-with-frame (c-> nstextfield? any/c any/c)]
   [nstextfield-flags-changed (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-flush-buffered-key-events (c-> nstextfield? void?)]
+  [nstextfield-frame-for-alignment-rect (c-> nstextfield? any/c any/c)]
   [nstextfield-get-rects-being-drawn-count (c-> nstextfield? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nstextfield-get-rects-exposed-during-live-resize-count (c-> nstextfield? (or/c cpointer? #f) (or/c cpointer? #f) void?)]
   [nstextfield-help-requested (c-> nstextfield? (or/c string? objc-object? #f) void?)]
@@ -548,6 +596,9 @@
   [nstextfield-insert-tab-ignoring-field-editor! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-insert-text! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-interpret-key-events (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-invalidate-intrinsic-content-size (c-> nstextfield? void?)]
+  [nstextfield-invalidate-intrinsic-content-size-for-cell (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-invalidate-restorable-state (c-> nstextfield? void?)]
   [nstextfield-is-accessibility-alternate-ui-visible (c-> nstextfield? boolean?)]
   [nstextfield-is-accessibility-disclosed (c-> nstextfield? boolean?)]
   [nstextfield-is-accessibility-edited (c-> nstextfield? boolean?)]
@@ -565,24 +616,32 @@
   [nstextfield-is-accessibility-required (c-> nstextfield? boolean?)]
   [nstextfield-is-accessibility-selected (c-> nstextfield? boolean?)]
   [nstextfield-is-accessibility-selector-allowed (c-> nstextfield? string? boolean?)]
+  [nstextfield-is-automatic-text-completion-enabled (c-> nstextfield? boolean?)]
   [nstextfield-is-bezeled (c-> nstextfield? boolean?)]
   [nstextfield-is-bordered (c-> nstextfield? boolean?)]
   [nstextfield-is-continuous (c-> nstextfield? boolean?)]
   [nstextfield-is-descendant-of (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-is-drawing-find-indicator (c-> nstextfield? boolean?)]
   [nstextfield-is-editable (c-> nstextfield? boolean?)]
   [nstextfield-is-enabled (c-> nstextfield? boolean?)]
   [nstextfield-is-flipped (c-> nstextfield? boolean?)]
   [nstextfield-is-hidden (c-> nstextfield? boolean?)]
   [nstextfield-is-hidden-or-has-hidden-ancestor (c-> nstextfield? boolean?)]
   [nstextfield-is-highlighted (c-> nstextfield? boolean?)]
+  [nstextfield-is-horizontal-content-size-constraint-active (c-> nstextfield? boolean?)]
+  [nstextfield-is-in-full-screen-mode (c-> nstextfield? boolean?)]
   [nstextfield-is-opaque (c-> nstextfield? boolean?)]
   [nstextfield-is-rotated-from-base (c-> nstextfield? boolean?)]
   [nstextfield-is-rotated-or-scaled-from-base (c-> nstextfield? boolean?)]
   [nstextfield-is-selectable (c-> nstextfield? boolean?)]
+  [nstextfield-is-vertical-content-size-constraint-active (c-> nstextfield? boolean?)]
   [nstextfield-key-down (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-key-up (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-knows-page-range (c-> nstextfield? (or/c cpointer? #f) boolean?)]
   [nstextfield-layout (c-> nstextfield? void?)]
+  [nstextfield-layout-guide-for-layout-region (c-> nstextfield? (or/c string? objc-object? #f) (or/c nslayoutguide? objc-nil?))]
   [nstextfield-layout-subtree-if-needed (c-> nstextfield? void?)]
+  [nstextfield-location-of-print-rect (c-> nstextfield? any/c any/c)]
   [nstextfield-lowercase-word (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-magnify-with-event (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-make-backing-layer (c-> nstextfield? (or/c calayer? objc-nil?))]
@@ -592,6 +651,7 @@
   [nstextfield-make-text-writing-direction-left-to-right (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-make-text-writing-direction-natural (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-make-text-writing-direction-right-to-left (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-make-touch-bar (c-> nstextfield? (or/c nstouchbar? objc-nil?))]
   [nstextfield-menu-for-event (c-> nstextfield? (or/c string? objc-object? #f) (or/c nsmenu? objc-nil?))]
   [nstextfield-mouse-in-rect (c-> nstextfield? any/c any/c boolean?)]
   [nstextfield-mouse-cancelled (c-> nstextfield? (or/c string? objc-object? #f) void?)]
@@ -640,7 +700,9 @@
   [nstextfield-move-word-right! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-move-word-right-and-modify-selection! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-needs-to-draw-rect (c-> nstextfield? any/c boolean?)]
+  [nstextfield-new-window-for-tab (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-no-responder-for (c-> nstextfield? string? void?)]
+  [nstextfield-note-focus-ring-mask-changed (c-> nstextfield? void?)]
   [nstextfield-other-mouse-down (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-other-mouse-dragged (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-other-mouse-up (c-> nstextfield? (or/c string? objc-object? #f) void?)]
@@ -651,28 +713,58 @@
   [nstextfield-perform-click! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-perform-drag-operation! (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-perform-key-equivalent! (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-perform-text-finder-action! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-prepare-content-in-rect (c-> nstextfield? any/c void?)]
   [nstextfield-prepare-for-drag-operation (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-prepare-for-reuse (c-> nstextfield? void?)]
+  [nstextfield-present-error (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-present-error-modal-for-window-delegate-did-present-selector-context-info (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) (or/c string? objc-object? #f) string? (or/c cpointer? #f) void?)]
   [nstextfield-pressure-change-with-event (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-print (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-quick-look-preview-items (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-quick-look-with-event (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-rect-for-layout-region (c-> nstextfield? (or/c string? objc-object? #f) any/c)]
+  [nstextfield-rect-for-page (c-> nstextfield? exact-integer? any/c)]
   [nstextfield-rect-for-smart-magnification-at-point-in-rect (c-> nstextfield? any/c any/c any/c)]
+  [nstextfield-reflect-scrolled-clip-view (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-register-for-dragged-types (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-remove-all-tool-tips! (c-> nstextfield? void?)]
+  [nstextfield-remove-constraint! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-remove-constraints! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-remove-cursor-rect-cursor! (c-> nstextfield? any/c (or/c string? objc-object? #f) void?)]
   [nstextfield-remove-from-superview! (c-> nstextfield? void?)]
   [nstextfield-remove-from-superview-without-needing-display! (c-> nstextfield? void?)]
+  [nstextfield-remove-gesture-recognizer! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-remove-layout-guide! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-remove-tool-tip! (c-> nstextfield? exact-integer? void?)]
+  [nstextfield-remove-tracking-area! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-remove-tracking-rect! (c-> nstextfield? exact-integer? void?)]
   [nstextfield-replace-subview-with! (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstextfield-reset-cursor-rects! (c-> nstextfield? void?)]
   [nstextfield-resign-first-responder (c-> nstextfield? boolean?)]
   [nstextfield-resize-subviews-with-old-size (c-> nstextfield? any/c void?)]
   [nstextfield-resize-with-old-superview-size (c-> nstextfield? any/c void?)]
+  [nstextfield-restore-state-with-coder (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-restore-user-activity-state (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-right-mouse-down (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-right-mouse-dragged (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-right-mouse-up (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-rotate-by-angle (c-> nstextfield? real? void?)]
   [nstextfield-rotate-with-event (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-ruler-view-did-add-marker (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstextfield-ruler-view-did-move-marker (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstextfield-ruler-view-did-remove-marker (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstextfield-ruler-view-handle-mouse-down (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstextfield-ruler-view-location-for-point (c-> nstextfield? (or/c string? objc-object? #f) any/c real?)]
+  [nstextfield-ruler-view-point-for-location (c-> nstextfield? (or/c string? objc-object? #f) real? any/c)]
+  [nstextfield-ruler-view-should-add-marker (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-ruler-view-should-move-marker (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-ruler-view-should-remove-marker (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-ruler-view-will-add-marker-at-location (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nstextfield-ruler-view-will-move-marker-to-location (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) real? real?)]
+  [nstextfield-ruler-view-will-set-client-view (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
   [nstextfield-scale-unit-square-to-size (c-> nstextfield? any/c void?)]
+  [nstextfield-scroll-clip-view-to-point (c-> nstextfield? (or/c string? objc-object? #f) any/c void?)]
   [nstextfield-scroll-line-down (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-scroll-line-up (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-scroll-page-down (c-> nstextfield? (or/c string? objc-object? #f) void?)]
@@ -683,11 +775,15 @@
   [nstextfield-scroll-to-end-of-document (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-scroll-wheel (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-select-all (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-select-cell (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-select-line (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-select-paragraph (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-select-text (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-select-to-mark (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-select-with-frame-editor-delegate-start-length (c-> nstextfield? any/c (or/c string? objc-object? #f) (or/c string? objc-object? #f) exact-integer? exact-integer? void?)]
   [nstextfield-select-word (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-selected-cell (c-> nstextfield? (or/c nscell? objc-nil?))]
+  [nstextfield-selected-tag (c-> nstextfield? exact-integer?)]
   [nstextfield-send-action-to (c-> nstextfield? string? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-send-action-on (c-> nstextfield? exact-nonnegative-integer? exact-integer?)]
   [nstextfield-set-accessibility-activation-point! (c-> nstextfield? any/c void?)]
@@ -818,16 +914,22 @@
   [nstextfield-set-appearance! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-set-bounds-origin! (c-> nstextfield? any/c void?)]
   [nstextfield-set-bounds-size! (c-> nstextfield? any/c void?)]
+  [nstextfield-set-content-compression-resistance-priority-for-orientation! (c-> nstextfield? real? exact-integer? void?)]
+  [nstextfield-set-content-hugging-priority-for-orientation! (c-> nstextfield? real? exact-integer? void?)]
   [nstextfield-set-content-type! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-set-frame-origin! (c-> nstextfield? any/c void?)]
   [nstextfield-set-frame-size! (c-> nstextfield? any/c void?)]
   [nstextfield-set-identifier! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-set-keyboard-focus-ring-needs-display-in-rect! (c-> nstextfield? any/c void?)]
   [nstextfield-set-mark! (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-set-needs-display-in-rect! (c-> nstextfield? any/c void?)]
   [nstextfield-should-be-treated-as-ink-event (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-should-delay-window-ordering-for-event (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-show-context-help (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-show-context-menu-for-selection (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-show-definition-for-attributed-string-at-point (c-> nstextfield? (or/c string? objc-object? #f) any/c void?)]
+  [nstextfield-show-definition-for-attributed-string-range-options-baseline-origin-provider (c-> nstextfield? (or/c string? objc-object? #f) any/c (or/c string? objc-object? #f) (or/c procedure? #f) void?)]
+  [nstextfield-show-writing-tools (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-size-that-fits (c-> nstextfield? any/c any/c)]
   [nstextfield-size-to-fit (c-> nstextfield? void?)]
   [nstextfield-smart-magnify-with-event (c-> nstextfield? (or/c string? objc-object? #f) void?)]
@@ -857,10 +959,19 @@
   [nstextfield-transpose (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-transpose-words (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-try-to-perform-with (c-> nstextfield? string? (or/c string? objc-object? #f) boolean?)]
+  [nstextfield-unregister-dragged-types (c-> nstextfield? void?)]
+  [nstextfield-update-cell (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-update-cell-inside (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-update-constraints (c-> nstextfield? void?)]
+  [nstextfield-update-constraints-for-subtree-if-needed (c-> nstextfield? void?)]
   [nstextfield-update-dragging-items-for-drag (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-update-layer (c-> nstextfield? void?)]
+  [nstextfield-update-tracking-areas (c-> nstextfield? void?)]
+  [nstextfield-update-user-activity-state (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-uppercase-word (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-valid-requestor-for-send-type-return-type (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) any/c)]
+  [nstextfield-validate-editing (c-> nstextfield? void?)]
+  [nstextfield-validate-proposed-first-responder-for-event (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) boolean?)]
   [nstextfield-validate-user-interface-item (c-> nstextfield? (or/c string? objc-object? #f) boolean?)]
   [nstextfield-view-did-change-backing-properties (c-> nstextfield? void?)]
   [nstextfield-view-did-change-effective-appearance (c-> nstextfield? void?)]
@@ -873,15 +984,23 @@
   [nstextfield-view-will-move-to-superview (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-view-will-move-to-window (c-> nstextfield? (or/c string? objc-object? #f) void?)]
   [nstextfield-view-will-start-live-resize (c-> nstextfield? void?)]
-  [nstextfield-view-with-tag (c-> nstextfield? exact-integer? any/c)]
+  [nstextfield-view-with-tag (c-> nstextfield? exact-integer? (or/c nsview? objc-nil?))]
   [nstextfield-wants-forwarded-scroll-events-for-axis (c-> nstextfield? exact-integer? boolean?)]
   [nstextfield-wants-periodic-dragging-updates (c-> nstextfield? boolean?)]
   [nstextfield-wants-scroll-events-for-swipe-tracking-on-axis (c-> nstextfield? exact-integer? boolean?)]
   [nstextfield-will-open-menu-with-event (c-> nstextfield? (or/c string? objc-object? #f) (or/c string? objc-object? #f) void?)]
+  [nstextfield-will-present-error (c-> nstextfield? (or/c string? objc-object? #f) (or/c nserror? objc-nil?))]
   [nstextfield-will-remove-subview (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-write-eps-inside-rect-to-pasteboard (c-> nstextfield? any/c (or/c string? objc-object? #f) void?)]
+  [nstextfield-write-pdf-inside-rect-to-pasteboard (c-> nstextfield? any/c (or/c string? objc-object? #f) void?)]
   [nstextfield-yank (c-> nstextfield? (or/c string? objc-object? #f) void?)]
+  [nstextfield-allowed-classes-for-restorable-state-key-path (c-> (or/c string? objc-object? #f) (or/c nsarray? objc-nil?))]
   [nstextfield-default-animation-for-key (c-> (or/c string? objc-object? #f) any/c)]
   [nstextfield-is-compatible-with-responsive-scrolling (c-> boolean?)]
+  [nstextfield-label-with-attributed-string (c-> (or/c string? objc-object? #f) any/c)]
+  [nstextfield-label-with-string (c-> (or/c string? objc-object? #f) any/c)]
+  [nstextfield-text-field-with-string (c-> (or/c string? objc-object? #f) any/c)]
+  [nstextfield-wrapping-label-with-string (c-> (or/c string? objc-object? #f) any/c)]
   )
 
 ;; --- Class reference ---
@@ -904,31 +1023,49 @@
 (define-aw-msg aw_racket_msg_P_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_P_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_P_Q (-> ptr_t ptr_t ptr_t uint64_t))
+(define-aw-msg aw_racket_msg_P_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_P_E (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_P_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_PP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_PP_b (-> ptr_t ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_PP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPP_P (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t))
+(define-aw-msg aw_racket_msg_PPPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PPd_d (-> ptr_t ptr_t ptr_t ptr_t double_t double_t))
 (define-aw-msg aw_racket_msg_PqP_v (-> ptr_t ptr_t ptr_t int64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pd_O (-> ptr_t ptr_t ptr_t double_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_Pddd_v (-> ptr_t ptr_t ptr_t double_t double_t double_t void_t))
+(define-aw-msg aw_racket_msg_PO_d (-> ptr_t ptr_t ptr_t ptr_t double_t))
+(define-aw-msg aw_racket_msg_PO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_PGPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_b_v (-> ptr_t ptr_t bool_t void_t))
 (define-aw-msg aw_racket_msg_i_v (-> ptr_t ptr_t int32_t void_t))
 (define-aw-msg aw_racket_msg_q_P (-> ptr_t ptr_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_q_b (-> ptr_t ptr_t int64_t bool_t))
 (define-aw-msg aw_racket_msg_q_q (-> ptr_t ptr_t int64_t int64_t))
+(define-aw-msg aw_racket_msg_q_f (-> ptr_t ptr_t int64_t float_t))
+(define-aw-msg aw_racket_msg_q_R (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_G (-> ptr_t ptr_t int64_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_q_v (-> ptr_t ptr_t int64_t void_t))
 (define-aw-msg aw_racket_msg_qq_P (-> ptr_t ptr_t int64_t int64_t ptr_t))
 (define-aw-msg aw_racket_msg_Q_q (-> ptr_t ptr_t uint64_t int64_t))
 (define-aw-msg aw_racket_msg_Q_v (-> ptr_t ptr_t uint64_t void_t))
 (define-aw-msg aw_racket_msg_f_v (-> ptr_t ptr_t float_t void_t))
+(define-aw-msg aw_racket_msg_fq_v (-> ptr_t ptr_t float_t int64_t void_t))
 (define-aw-msg aw_racket_msg_d_v (-> ptr_t ptr_t double_t void_t))
 (define-aw-msg aw_racket_msg_R_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_R_b (-> ptr_t ptr_t ptr_t bool_t))
 (define-aw-msg aw_racket_msg_R_R (-> ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_R_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_R_v (-> ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_R (-> ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RP_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RPP_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t))
+(define-aw-msg aw_racket_msg_RPPP_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RPPb_q (-> ptr_t ptr_t ptr_t ptr_t ptr_t bool_t int64_t))
+(define-aw-msg aw_racket_msg_RPPqq_v (-> ptr_t ptr_t ptr_t ptr_t ptr_t int64_t int64_t void_t))
 (define-aw-msg aw_racket_msg_RQ_R (-> ptr_t ptr_t ptr_t uint64_t ptr_t void_t))
+(define-aw-msg aw_racket_msg_RO_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_RZ_v (-> ptr_t ptr_t ptr_t ptr_t void_t))
 (define-aw-msg aw_racket_msg_O_P (-> ptr_t ptr_t ptr_t ptr_t))
 (define-aw-msg aw_racket_msg_O_O (-> ptr_t ptr_t ptr_t ptr_t void_t))
@@ -1584,6 +1721,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setWritingToolsCoordinator:")) (id->ffi2-ptr (coerce-arg value))))
 
 ;; --- Instance methods ---
+(define (nstextfield-abort-editing self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "abortEditing"))))
 (define (nstextfield-accepts-first-mouse self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "acceptsFirstMouse:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstextfield-accessibility-activation-point self)
@@ -1866,9 +2005,9 @@
   (let ([buf (malloc _NSRange)])
     (aw_racket_msg_q_G (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityRangeForIndex:")) index (cpointer->ptr_t buf))
     (ptr-ref buf _NSRange)))
-(define (nstextfield-accessibility-range-for-line self line-number)
+(define (nstextfield-accessibility-range-for-line self line)
   (let ([buf (malloc _NSRange)])
-    (aw_racket_msg_q_G (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityRangeForLine:")) line-number (cpointer->ptr_t buf))
+    (aw_racket_msg_q_G (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityRangeForLine:")) line (cpointer->ptr_t buf))
     (ptr-ref buf _NSRange)))
 (define (nstextfield-accessibility-range-for-position self point)
   (let ([buf (malloc _NSRange)])
@@ -2068,15 +2207,41 @@
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "accessibilityZoomButton"))))
    ))
+(define (nstextfield-add-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nstextfield-add-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nstextfield-add-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
+(define (nstextfield-add-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nstextfield-add-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nstextfield-add-subview! self view)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:")) (id->ffi2-ptr (coerce-arg view))))
 (define (nstextfield-add-subview-positioned-relative-to! self view place other-view)
   (aw_racket_msg_PqP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addSubview:positioned:relativeTo:")) (id->ffi2-ptr (coerce-arg view)) place (id->ffi2-ptr (coerce-arg other-view))))
 (define (nstextfield-add-tool-tip-rect-owner-user-data! self rect owner data)
   (aw_racket_msg_RPP_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addToolTipRect:owner:userData:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data)))
+(define (nstextfield-add-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nstextfield-add-tracking-rect-owner-user-data-assume-inside! self rect owner data flag)
+  (aw_racket_msg_RPPb_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "addTrackingRect:owner:userData:assumeInside:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg owner)) (id->ffi2-ptr data) flag))
+(define (nstextfield-additional-safe-area-insets! self)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_0_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "additionalSafeAreaInsets")) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+(define (nstextfield-adjust-page-height-new-top-bottom-limit self new-bottom old-top old-bottom bottom-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageHeightNew:top:bottom:limit:")) (id->ffi2-ptr new-bottom) old-top old-bottom bottom-limit))
+(define (nstextfield-adjust-page-width-new-left-right-limit self new-right old-left old-right right-limit)
+  (aw_racket_msg_Pddd_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustPageWidthNew:left:right:limit:")) (id->ffi2-ptr new-right) old-left old-right right-limit))
 (define (nstextfield-adjust-scroll self new-visible)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "adjustScroll:")) (id->ffi2-ptr new-visible) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nstextfield-alignment-rect-for-frame self frame)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "alignmentRectForFrame:")) (id->ffi2-ptr frame) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
 (define (nstextfield-ancestor-shared-with-view self view)
   (wrap-objc-object
@@ -2106,8 +2271,16 @@
     (ptr-ref buf _NSRect)))
 (define (nstextfield-become-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "becomeFirstResponder"))))
+(define (nstextfield-begin-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDocument"))))
+(define (nstextfield-begin-dragging-session-with-items-event-source! self items event source)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PPP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginDraggingSessionWithItems:event:source:")) (id->ffi2-ptr (coerce-arg items)) (id->ffi2-ptr (coerce-arg event)) (id->ffi2-ptr (coerce-arg source))))
+   ))
 (define (nstextfield-begin-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-begin-page-in-rect-at-placement! self rect location)
+  (aw_racket_msg_RO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "beginPageInRect:atPlacement:")) (id->ffi2-ptr rect) (id->ffi2-ptr location)))
 (define (nstextfield-bitmap-image-rep-for-caching-display-in-rect self rect)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "bitmapImageRepForCachingDisplayInRect:")) (id->ffi2-ptr rect)))
@@ -2124,6 +2297,14 @@
     (ptr-ref buf _NSRect)))
 (define (nstextfield-center-selection-in-visible-area! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerSelectionInVisibleArea:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextfield-center-x-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerXAnchor"))))
+   ))
+(define (nstextfield-center-y-anchor! self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "centerYAnchor"))))
+   ))
 (define (nstextfield-change-case-of-letter self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "changeCaseOfLetter:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-change-mode-with-event self event)
@@ -2132,6 +2313,14 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "complete:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-conclude-drag-operation self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "concludeDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextfield-constraints-affecting-layout-for-orientation self orientation)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_q_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "constraintsAffectingLayoutForOrientation:")) orientation))
+   ))
+(define (nstextfield-content-compression-resistance-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentCompressionResistancePriorityForOrientation:")) orientation))
+(define (nstextfield-content-hugging-priority-for-orientation self orientation)
+  (aw_racket_msg_q_f (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentHuggingPriorityForOrientation:")) orientation))
 (define (nstextfield-content-type self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "contentType"))))
@@ -2210,8 +2399,20 @@
   (let ([buf (malloc _NSSize)])
     (aw_racket_msg_Z_Z (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "convertSizeToLayer:")) (id->ffi2-ptr size) (cpointer->ptr_t buf))
     (ptr-ref buf _NSSize)))
+(define (nstextfield-current-editor self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "currentEditor"))))
+   ))
 (define (nstextfield-cursor-update self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "cursorUpdate:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-data-with-eps-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithEPSInsideRect:")) (id->ffi2-ptr rect)))
+   ))
+(define (nstextfield-data-with-pdf-inside-rect self rect)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_R_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "dataWithPDFInsideRect:")) (id->ffi2-ptr rect)))
+   ))
 (define (nstextfield-delete-backward self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "deleteBackward:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-delete-backward-by-decomposing-previous-character self sender)
@@ -2236,6 +2437,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didAddSubview:")) (id->ffi2-ptr (coerce-arg subview))))
 (define (nstextfield-did-close-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "didCloseMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-discard-cursor-rects self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "discardCursorRects"))))
 (define (nstextfield-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "display"))))
 (define (nstextfield-display-if-needed! self)
@@ -2246,6 +2449,10 @@
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRect:")) (id->ffi2-ptr rect)))
 (define (nstextfield-display-if-needed-in-rect-ignoring-opacity! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayIfNeededInRectIgnoringOpacity:")) (id->ffi2-ptr rect)))
+(define (nstextfield-display-link-with-target-selector! self target selector)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayLinkWithTarget:selector:")) (id->ffi2-ptr (coerce-arg target)) (id->ffi2-ptr (sel_registerName selector))))
+   ))
 (define (nstextfield-display-rect! self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "displayRect:")) (id->ffi2-ptr rect)))
 (define (nstextfield-display-rect-ignoring-opacity! self rect)
@@ -2262,18 +2469,49 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingExited:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-dragging-updated self sender)
   (aw_racket_msg_P_Q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "draggingUpdated:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextfield-draw-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstextfield-draw-cell-inside self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawCellInside:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstextfield-draw-focus-ring-mask self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawFocusRingMask"))))
+(define (nstextfield-draw-page-border-with-size self border-size)
+  (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawPageBorderWithSize:")) (id->ffi2-ptr border-size)))
 (define (nstextfield-draw-rect self dirty-rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawRect:")) (id->ffi2-ptr dirty-rect)))
 (define (nstextfield-draw-with-expansion-frame-in-view self content-frame view)
   (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "drawWithExpansionFrame:inView:")) (id->ffi2-ptr content-frame) (id->ffi2-ptr (coerce-arg view))))
+(define (nstextfield-edge-insets-for-layout-region self layout-region)
+  (let ([buf (malloc _NSEdgeInsets)])
+    (aw_racket_msg_P_E (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "edgeInsetsForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSEdgeInsets)))
+;; param 2: weak reference
+(define (nstextfield-edit-with-frame-editor-delegate-event self rect text-obj delegate event)
+  (aw_racket_msg_RPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "editWithFrame:editor:delegate:event:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg text-obj)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (coerce-arg event))))
 (define (nstextfield-effective-appearance self)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "effectiveAppearance"))))
    ))
+(define (nstextfield-encode-restorable-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nstextfield-encode-restorable-state-with-coder-background-queue self coder queue)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeRestorableStateWithCoder:backgroundQueue:")) (id->ffi2-ptr (coerce-arg coder)) (id->ffi2-ptr (coerce-arg queue))))
 (define (nstextfield-encode-with-coder self coder)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "encodeWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
+(define (nstextfield-end-document! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endDocument"))))
+(define (nstextfield-end-editing! self text-obj)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endEditing:")) (id->ffi2-ptr (coerce-arg text-obj))))
 (define (nstextfield-end-gesture-with-event! self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endGestureWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-end-page! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "endPage"))))
+(define (nstextfield-enter-full-screen-mode-with-options self screen options)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "enterFullScreenMode:withOptions:")) (id->ffi2-ptr (coerce-arg screen)) (id->ffi2-ptr (coerce-arg options))))
+(define (nstextfield-exercise-ambiguity-in-layout self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exerciseAmbiguityInLayout"))))
+(define (nstextfield-exit-full-screen-mode-with-options self options)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "exitFullScreenModeWithOptions:")) (id->ffi2-ptr (coerce-arg options))))
 (define (nstextfield-expansion-frame-with-frame self content-frame)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "expansionFrameWithFrame:")) (id->ffi2-ptr content-frame) (cpointer->ptr_t buf))
@@ -2282,6 +2520,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flagsChanged:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstextfield-flush-buffered-key-events self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "flushBufferedKeyEvents"))))
+(define (nstextfield-frame-for-alignment-rect self alignment-rect)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_R_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "frameForAlignmentRect:")) (id->ffi2-ptr alignment-rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nstextfield-get-rects-being-drawn-count self rects count)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "getRectsBeingDrawn:count:")) (id->ffi2-ptr rects) (id->ffi2-ptr count)))
 (define (nstextfield-get-rects-exposed-during-live-resize-count self exposed-rects count)
@@ -2322,6 +2564,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "insertText:")) (id->ffi2-ptr (coerce-arg insert-string))))
 (define (nstextfield-interpret-key-events self event-array)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "interpretKeyEvents:")) (id->ffi2-ptr (coerce-arg event-array))))
+(define (nstextfield-invalidate-intrinsic-content-size self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSize"))))
+(define (nstextfield-invalidate-intrinsic-content-size-for-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateIntrinsicContentSizeForCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstextfield-invalidate-restorable-state self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "invalidateRestorableState"))))
 (define (nstextfield-is-accessibility-alternate-ui-visible self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilityAlternateUIVisible"))))
 (define (nstextfield-is-accessibility-disclosed self)
@@ -2356,6 +2604,8 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilitySelected"))))
 (define (nstextfield-is-accessibility-selector-allowed self selector)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAccessibilitySelectorAllowed:")) (id->ffi2-ptr (sel_registerName selector))))
+(define (nstextfield-is-automatic-text-completion-enabled self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isAutomaticTextCompletionEnabled"))))
 (define (nstextfield-is-bezeled self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isBezeled"))))
 (define (nstextfield-is-bordered self)
@@ -2364,6 +2614,8 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isContinuous"))))
 (define (nstextfield-is-descendant-of self view)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDescendantOf:")) (id->ffi2-ptr (coerce-arg view))))
+(define (nstextfield-is-drawing-find-indicator self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isDrawingFindIndicator"))))
 (define (nstextfield-is-editable self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isEditable"))))
 (define (nstextfield-is-enabled self)
@@ -2376,6 +2628,10 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHiddenOrHasHiddenAncestor"))))
 (define (nstextfield-is-highlighted self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHighlighted"))))
+(define (nstextfield-is-horizontal-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isHorizontalContentSizeConstraintActive"))))
+(define (nstextfield-is-in-full-screen-mode self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isInFullScreenMode"))))
 (define (nstextfield-is-opaque self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isOpaque"))))
 (define (nstextfield-is-rotated-from-base self)
@@ -2384,14 +2640,26 @@
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isRotatedOrScaledFromBase"))))
 (define (nstextfield-is-selectable self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isSelectable"))))
+(define (nstextfield-is-vertical-content-size-constraint-active self)
+  (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "isVerticalContentSizeConstraintActive"))))
 (define (nstextfield-key-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstextfield-key-up self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "keyUp:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-knows-page-range self range)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "knowsPageRange:")) (id->ffi2-ptr range)))
 (define (nstextfield-layout self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layout"))))
+(define (nstextfield-layout-guide-for-layout-region self layout-region)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutGuideForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region))))
+   ))
 (define (nstextfield-layout-subtree-if-needed self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "layoutSubtreeIfNeeded"))))
+(define (nstextfield-location-of-print-rect self rect)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_R_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "locationOfPrintRect:")) (id->ffi2-ptr rect) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
 (define (nstextfield-lowercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "lowercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-magnify-with-event self event)
@@ -2412,6 +2680,10 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionNatural:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-make-text-writing-direction-right-to-left self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTextWritingDirectionRightToLeft:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextfield-make-touch-bar self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "makeTouchBar"))))
+   ))
 (define (nstextfield-menu-for-event self event)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "menuForEvent:")) (id->ffi2-ptr (coerce-arg event))))
@@ -2510,8 +2782,12 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "moveWordRightAndModifySelection:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-needs-to-draw-rect self rect)
   (aw_racket_msg_R_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "needsToDrawRect:")) (id->ffi2-ptr rect)))
+(define (nstextfield-new-window-for-tab self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "newWindowForTab:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-no-responder-for self event-selector)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noResponderFor:")) (id->ffi2-ptr (sel_registerName event-selector))))
+(define (nstextfield-note-focus-ring-mask-changed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "noteFocusRingMaskChanged"))))
 (define (nstextfield-other-mouse-down self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "otherMouseDown:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstextfield-other-mouse-dragged self event)
@@ -2532,38 +2808,77 @@
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-perform-key-equivalent! self event)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performKeyEquivalent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-perform-text-finder-action! self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "performTextFinderAction:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-prepare-content-in-rect self rect)
   (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareContentInRect:")) (id->ffi2-ptr rect)))
 (define (nstextfield-prepare-for-drag-operation self sender)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForDragOperation:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-prepare-for-reuse self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "prepareForReuse"))))
+(define (nstextfield-present-error self error)
+  (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:")) (id->ffi2-ptr (coerce-arg error))))
+;; param 2: weak reference
+(define (nstextfield-present-error-modal-for-window-delegate-did-present-selector-context-info self error window delegate did-present-selector context-info)
+  (aw_racket_msg_PPPPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:")) (id->ffi2-ptr (coerce-arg error)) (id->ffi2-ptr (coerce-arg window)) (id->ffi2-ptr (coerce-arg delegate)) (id->ffi2-ptr (sel_registerName did-present-selector)) (id->ffi2-ptr context-info)))
 (define (nstextfield-pressure-change-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "pressureChangeWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-print self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "print:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-quick-look-preview-items self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookPreviewItems:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-quick-look-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "quickLookWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-rect-for-layout-region self layout-region)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_P_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForLayoutRegion:")) (id->ffi2-ptr (coerce-arg layout-region)) (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
+(define (nstextfield-rect-for-page self page)
+  (let ([buf (malloc _NSRect)])
+    (aw_racket_msg_q_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForPage:")) page (cpointer->ptr_t buf))
+    (ptr-ref buf _NSRect)))
 (define (nstextfield-rect-for-smart-magnification-at-point-in-rect self location visible-rect)
   (let ([buf (malloc _NSRect)])
     (aw_racket_msg_OR_R (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rectForSmartMagnificationAtPoint:inRect:")) (id->ffi2-ptr location) (id->ffi2-ptr visible-rect) (cpointer->ptr_t buf))
     (ptr-ref buf _NSRect)))
+(define (nstextfield-reflect-scrolled-clip-view self clip-view)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "reflectScrolledClipView:")) (id->ffi2-ptr (coerce-arg clip-view))))
+(define (nstextfield-register-for-dragged-types self new-types)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "registerForDraggedTypes:")) (id->ffi2-ptr (coerce-arg new-types))))
 (define (nstextfield-remove-all-tool-tips! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeAllToolTips"))))
+(define (nstextfield-remove-constraint! self constraint)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraint:")) (id->ffi2-ptr (coerce-arg constraint))))
+(define (nstextfield-remove-constraints! self constraints)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeConstraints:")) (id->ffi2-ptr (coerce-arg constraints))))
+(define (nstextfield-remove-cursor-rect-cursor! self rect object)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeCursorRect:cursor:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg object))))
 (define (nstextfield-remove-from-superview! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperview"))))
 (define (nstextfield-remove-from-superview-without-needing-display! self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeFromSuperviewWithoutNeedingDisplay"))))
+(define (nstextfield-remove-gesture-recognizer! self gesture-recognizer)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeGestureRecognizer:")) (id->ffi2-ptr (coerce-arg gesture-recognizer))))
+(define (nstextfield-remove-layout-guide! self guide)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeLayoutGuide:")) (id->ffi2-ptr (coerce-arg guide))))
 (define (nstextfield-remove-tool-tip! self tag)
   (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeToolTip:")) tag))
+(define (nstextfield-remove-tracking-area! self tracking-area)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingArea:")) (id->ffi2-ptr (coerce-arg tracking-area))))
+(define (nstextfield-remove-tracking-rect! self tag)
+  (aw_racket_msg_q_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "removeTrackingRect:")) tag))
 (define (nstextfield-replace-subview-with! self old-view new-view)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "replaceSubview:with:")) (id->ffi2-ptr (coerce-arg old-view)) (id->ffi2-ptr (coerce-arg new-view))))
+(define (nstextfield-reset-cursor-rects! self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resetCursorRects"))))
 (define (nstextfield-resign-first-responder self)
   (aw_racket_msg_0_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resignFirstResponder"))))
 (define (nstextfield-resize-subviews-with-old-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeSubviewsWithOldSize:")) (id->ffi2-ptr old-size)))
 (define (nstextfield-resize-with-old-superview-size self old-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "resizeWithOldSuperviewSize:")) (id->ffi2-ptr old-size)))
+(define (nstextfield-restore-state-with-coder self coder)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreStateWithCoder:")) (id->ffi2-ptr (coerce-arg coder))))
 (define (nstextfield-restore-user-activity-state self user-activity)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "restoreUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nstextfield-right-mouse-down self event)
@@ -2576,8 +2891,36 @@
   (aw_racket_msg_d_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateByAngle:")) angle))
 (define (nstextfield-rotate-with-event self event)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rotateWithEvent:")) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-ruler-view-did-add-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstextfield-ruler-view-did-move-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstextfield-ruler-view-did-remove-marker self ruler marker)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:didRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstextfield-ruler-view-handle-mouse-down self ruler event)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:handleMouseDown:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-ruler-view-location-for-point self ruler point)
+  (aw_racket_msg_PO_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:locationForPoint:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr point)))
+(define (nstextfield-ruler-view-point-for-location self ruler point)
+  (let ([buf (malloc _NSPoint)])
+    (aw_racket_msg_Pd_O (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:pointForLocation:")) (id->ffi2-ptr (coerce-arg ruler)) point (cpointer->ptr_t buf))
+    (ptr-ref buf _NSPoint)))
+(define (nstextfield-ruler-view-should-add-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldAddMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstextfield-ruler-view-should-move-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldMoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstextfield-ruler-view-should-remove-marker self ruler marker)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:shouldRemoveMarker:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker))))
+(define (nstextfield-ruler-view-will-add-marker-at-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willAddMarker:atLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nstextfield-ruler-view-will-move-marker-to-location self ruler marker location)
+  (aw_racket_msg_PPd_d (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willMoveMarker:toLocation:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg marker)) location))
+(define (nstextfield-ruler-view-will-set-client-view self ruler new-client)
+  (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "rulerView:willSetClientView:")) (id->ffi2-ptr (coerce-arg ruler)) (id->ffi2-ptr (coerce-arg new-client))))
 (define (nstextfield-scale-unit-square-to-size self new-unit-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scaleUnitSquareToSize:")) (id->ffi2-ptr new-unit-size)))
+(define (nstextfield-scroll-clip-view-to-point self clip-view point)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollClipView:toPoint:")) (id->ffi2-ptr (coerce-arg clip-view)) (id->ffi2-ptr point)))
 (define (nstextfield-scroll-line-down self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollLineDown:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-scroll-line-up self sender)
@@ -2598,6 +2941,8 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "scrollWheel:")) (id->ffi2-ptr (coerce-arg event))))
 (define (nstextfield-select-all self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectAll:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextfield-select-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectCell:")) (id->ffi2-ptr (coerce-arg cell))))
 (define (nstextfield-select-line self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectLine:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-select-paragraph self sender)
@@ -2606,8 +2951,17 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectText:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-select-to-mark self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectToMark:")) (id->ffi2-ptr (coerce-arg sender))))
+;; param 2: weak reference
+(define (nstextfield-select-with-frame-editor-delegate-start-length self rect text-obj delegate sel-start sel-length)
+  (aw_racket_msg_RPPqq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectWithFrame:editor:delegate:start:length:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg text-obj)) (id->ffi2-ptr (coerce-arg delegate)) sel-start sel-length))
 (define (nstextfield-select-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectWord:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextfield-selected-cell self)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_0_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectedCell"))))
+   ))
+(define (nstextfield-selected-tag self)
+  (aw_racket_msg_0_q (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "selectedTag"))))
 (define (nstextfield-send-action-to self action target)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sendAction:to:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg target))))
 (define (nstextfield-send-action-on self mask)
@@ -2868,6 +3222,10 @@
   (aw_racket_msg_O_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsOrigin:")) (id->ffi2-ptr new-origin)))
 (define (nstextfield-set-bounds-size! self new-size)
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setBoundsSize:")) (id->ffi2-ptr new-size)))
+(define (nstextfield-set-content-compression-resistance-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentCompressionResistancePriority:forOrientation:")) priority orientation))
+(define (nstextfield-set-content-hugging-priority-for-orientation! self priority orientation)
+  (aw_racket_msg_fq_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentHuggingPriority:forOrientation:")) priority orientation))
 (define (nstextfield-set-content-type! self content-type)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setContentType:")) (id->ffi2-ptr (coerce-arg content-type))))
 (define (nstextfield-set-frame-origin! self new-origin)
@@ -2876,6 +3234,8 @@
   (aw_racket_msg_Z_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setFrameSize:")) (id->ffi2-ptr new-size)))
 (define (nstextfield-set-identifier! self identifier)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setIdentifier:")) (id->ffi2-ptr (coerce-arg identifier))))
+(define (nstextfield-set-keyboard-focus-ring-needs-display-in-rect! self rect)
+  (aw_racket_msg_R_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setKeyboardFocusRingNeedsDisplayInRect:")) (id->ffi2-ptr rect)))
 (define (nstextfield-set-mark! self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "setMark:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-set-needs-display-in-rect! self invalid-rect)
@@ -2888,6 +3248,15 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextHelp:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-show-context-menu-for-selection self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showContextMenuForSelection:")) (id->ffi2-ptr (coerce-arg sender))))
+(define (nstextfield-show-definition-for-attributed-string-at-point self attr-string text-baseline-origin)
+  (aw_racket_msg_PO_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:atPoint:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr text-baseline-origin)))
+;; block param 3: async-copied (runtime-managed)
+(define (nstextfield-show-definition-for-attributed-string-range-options-baseline-origin-provider self attr-string target-range options origin-provider)
+  (define-values (_blk3 _blk3-id)
+    (make-objc-block origin-provider (list _NSRange) _NSPoint))
+  (aw_racket_msg_PGPP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showDefinitionForAttributedString:range:options:baselineOriginProvider:")) (id->ffi2-ptr (coerce-arg attr-string)) (id->ffi2-ptr target-range) (id->ffi2-ptr (coerce-arg options)) (id->ffi2-ptr _blk3)))
+(define (nstextfield-show-writing-tools self sender)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "showWritingTools:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-size-that-fits self size)
   (let ([buf (malloc _NSSize)])
     (aw_racket_msg_Z_Z (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "sizeThatFits:")) (id->ffi2-ptr size) (cpointer->ptr_t buf))
@@ -2950,16 +3319,34 @@
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "transposeWords:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-try-to-perform-with self action object)
   (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "tryToPerform:with:")) (id->ffi2-ptr (sel_registerName action)) (id->ffi2-ptr (coerce-arg object))))
+(define (nstextfield-unregister-dragged-types self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "unregisterDraggedTypes"))))
+(define (nstextfield-update-cell self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateCell:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstextfield-update-cell-inside self cell)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateCellInside:")) (id->ffi2-ptr (coerce-arg cell))))
+(define (nstextfield-update-constraints self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraints"))))
+(define (nstextfield-update-constraints-for-subtree-if-needed self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateConstraintsForSubtreeIfNeeded"))))
 (define (nstextfield-update-dragging-items-for-drag self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateDraggingItemsForDrag:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-update-layer self)
   (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateLayer"))))
+(define (nstextfield-update-tracking-areas self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateTrackingAreas"))))
+(define (nstextfield-update-user-activity-state self user-activity)
+  (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "updateUserActivityState:")) (id->ffi2-ptr (coerce-arg user-activity))))
 (define (nstextfield-uppercase-word self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "uppercaseWord:")) (id->ffi2-ptr (coerce-arg sender))))
 (define (nstextfield-valid-requestor-for-send-type-return-type self send-type return-type)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_PP_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validRequestorForSendType:returnType:")) (id->ffi2-ptr (coerce-arg send-type)) (id->ffi2-ptr (coerce-arg return-type))))
    ))
+(define (nstextfield-validate-editing self)
+  (aw_racket_msg_0_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateEditing"))))
+(define (nstextfield-validate-proposed-first-responder-for-event self responder event)
+  (aw_racket_msg_PP_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateProposedFirstResponder:forEvent:")) (id->ffi2-ptr (coerce-arg responder)) (id->ffi2-ptr (coerce-arg event))))
 (define (nstextfield-validate-user-interface-item self item)
   (aw_racket_msg_P_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "validateUserInterfaceItem:")) (id->ffi2-ptr (coerce-arg item))))
 (define (nstextfield-view-did-change-backing-properties self)
@@ -2996,15 +3383,43 @@
   (aw_racket_msg_q_b (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "wantsScrollEventsForSwipeTrackingOnAxis:")) axis))
 (define (nstextfield-will-open-menu-with-event self menu event)
   (aw_racket_msg_PP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willOpenMenu:withEvent:")) (id->ffi2-ptr (coerce-arg menu)) (id->ffi2-ptr (coerce-arg event))))
+(define (nstextfield-will-present-error self error)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willPresentError:")) (id->ffi2-ptr (coerce-arg error))))
+   ))
 (define (nstextfield-will-remove-subview self subview)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "willRemoveSubview:")) (id->ffi2-ptr (coerce-arg subview))))
+(define (nstextfield-write-eps-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writeEPSInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
+(define (nstextfield-write-pdf-inside-rect-to-pasteboard self rect pasteboard)
+  (aw_racket_msg_RP_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "writePDFInsideRect:toPasteboard:")) (id->ffi2-ptr rect) (id->ffi2-ptr (coerce-arg pasteboard))))
 (define (nstextfield-yank self sender)
   (aw_racket_msg_P_v (id->ffi2-ptr (coerce-arg self)) (id->ffi2-ptr (sel_registerName "yank:")) (id->ffi2-ptr (coerce-arg sender))))
 
 ;; --- Class methods ---
+(define (nstextfield-allowed-classes-for-restorable-state-key-path key-path)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTextField) (id->ffi2-ptr (sel_registerName "allowedClassesForRestorableStateKeyPath:")) (id->ffi2-ptr (coerce-arg key-path))))
+   ))
 (define (nstextfield-default-animation-for-key key)
   (wrap-objc-object
    (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTextField) (id->ffi2-ptr (sel_registerName "defaultAnimationForKey:")) (id->ffi2-ptr (coerce-arg key))))
    ))
 (define (nstextfield-is-compatible-with-responsive-scrolling)
   (aw_racket_msg_0_b (id->ffi2-ptr NSTextField) (id->ffi2-ptr (sel_registerName "isCompatibleWithResponsiveScrolling"))))
+(define (nstextfield-label-with-attributed-string attributed-string-value)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTextField) (id->ffi2-ptr (sel_registerName "labelWithAttributedString:")) (id->ffi2-ptr (coerce-arg attributed-string-value))))
+   ))
+(define (nstextfield-label-with-string string-value)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTextField) (id->ffi2-ptr (sel_registerName "labelWithString:")) (id->ffi2-ptr (coerce-arg string-value))))
+   ))
+(define (nstextfield-text-field-with-string string-value)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTextField) (id->ffi2-ptr (sel_registerName "textFieldWithString:")) (id->ffi2-ptr (coerce-arg string-value))))
+   ))
+(define (nstextfield-wrapping-label-with-string string-value)
+  (wrap-objc-object
+   (ffi2-ptr->id (aw_racket_msg_P_P (id->ffi2-ptr NSTextField) (id->ffi2-ptr (sel_registerName "wrappingLabelWithString:")) (id->ffi2-ptr (coerce-arg string-value))))
+   ))
