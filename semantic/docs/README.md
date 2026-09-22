@@ -21,16 +21,17 @@ The terse vocabulary is in `CONTEXT.md → "Semantic model"`; the decisions are
 [ADR-0048](../../adr/0048-first-class-semantic-pattern-kind-model.md) and the PRD
 [`prd/2026-06-25-semantic-pattern-kind-model.md`](../../prd/2026-06-25-semantic-pattern-kind-model.md).
 
-The [authoritative interface-language proposal](design/2026-09-22-interface-language.md)
-and its [initial research](research/2026-09-22-interface-language-a.md) explore a
-dedicated, independently authorable specification language for bindings,
-documentation and LLM consumers. They are design work, not the current format
-contract.
+The [API Interface Language draft](../specification/interface-language/README.md)
+specifies a dedicated syntax and authoritative contracts for bindings,
+documentation and LLM consumers. Its
+[approved architecture](design/2026-09-22-interface-language.md) and
+[initial research](research/2026-09-22-interface-language-a.md) provide the design
+basis. This draft is not yet the current pipeline's implemented format.
 
 This directory also holds existing semantic-pipeline docs
 ([`analysis.md`](analysis.md), [`enrich-rules.md`](enrich-rules.md),
-[`memory-architecture.md`](memory-architecture.md)), design notes under
-[`design/`](design/), and the testing docs under [`testing/`](testing/).
+[`memory-architecture.md`](memory-architecture.md)) and design notes under
+[`design/`](design/).
 
 > The representability model (REFACTOR §7.7) — what each target *can* express —
 > is a per-target capability concern owned by ws6 (`targets/`), not part of this

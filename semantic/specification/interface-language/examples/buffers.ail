@@ -1,0 +1,149 @@
+language "0.1";
+package example::buffers version "1" {
+  surface("A synthetic immutable sixteen-byte store and its complete lifetime API.");
+  exports([@Store, @create, @destroy, @view, @copy_bytes, @store_lifetime]);
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  resource Store {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @destroy);
+    sharing(transferable);
+    isolation(none);
+    doc("Owns sixteen immutable bytes. Moving sole ownership between executors is allowed.");
+  }
+  fn create() -> nullable<Store> {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(parallel);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    outcome created {
+      when(returned, nonnull($result));
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    outcome allocation_failed {
+      when(returned, null($result));
+      meaning(failure);
+      state($result, valid);
+      give($result, owned);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_store_create");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn destroy(store: Store) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($store, consume);
+    retain($store, none);
+    outcome done {
+      when(returned, any);
+      meaning(success);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_store_destroy");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn view(store: Store) -> ptr<u8> {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(none);
+    variadic(false);
+    input($store, borrow);
+    retain($store, none);
+    valid($store, call);
+    extent($result, buffer(16, 16, elements));
+    contents($result, binary);
+    outcome viewed {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, borrow(owner($store)));
+      invalidated_by($result, []);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_store_view");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn copy_bytes(store: Store, destination: mutptr<u8>) -> bool {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(allowed);
+    mutation(arguments);
+    variadic(false);
+    input($store, borrow);
+    retain($store, none);
+    valid($store, call);
+    input($destination, borrow);
+    retain($destination, none);
+    valid($destination, call);
+    direction($destination, out);
+    aliasing($destination, disjoint);
+    extent($destination, buffer(16, 16, elements));
+    contents($destination, binary);
+    outcome copied {
+      when(returned, equal($result, true));
+      meaning(success);
+      state($result, valid);
+      state($destination[], valid);
+    }
+    outcome failed {
+      when(returned, equal($result, false));
+      meaning(failure);
+      state($result, valid);
+      state($destination[], invalid);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_store_copy");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  pattern lifetime {
+    role resource_type: type one;
+    role release: operation one;
+    law(releases, release, resource_type);
+  }
+  instance store_lifetime: lifetime {
+    bind(resource_type, [@Store]);
+    bind(release, [@destroy]);
+  }
+}

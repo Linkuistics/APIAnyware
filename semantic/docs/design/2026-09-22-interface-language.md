@@ -9,6 +9,11 @@ deliberately not selected here.
 Evidence and current implementation links are in the
 [initial research](../research/2026-09-22-interface-language-a.md).
 
+The subsequent [draft 0.1 specification](../../specification/interface-language/README.md)
+now defines the first grammar, contract rules, baseline mapping and conformance
+examples. Its stated scope and publication blockers qualify its coverage;
+the illustrative syntax in this proposal is not that draft's grammar.
+
 ## 1. Purpose and settled requirements
 
 Describe an existing API sufficiently precisely that independent consumers can

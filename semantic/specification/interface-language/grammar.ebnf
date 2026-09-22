@@ -1,0 +1,49 @@
+(* AIL draft 0.1. Lexical rules and scope restrictions: language.md.
+   EBNF: comma concatenates, | alternates, [] is optional, {} repeats.
+   Quoted strings below are terminals. Named lexical tokens are defined in prose. *)
+document       = "language", string, ";", "package", name, "version", string,
+                 "{", { item }, "}" ;
+item           = import | dependency | environment | declaration | clause ;
+import         = "import", name, "version", string, "digest", string,
+                 "as", identifier, ";" ;
+dependency     = "use", ("profile" | "abi"), identifier, "=", string,
+                 "version", string, "digest", string, ";" ;
+environment    = "environment", identifier, "{", { clause }, "}" ;
+declaration    = nominal | alias | enumeration | callable | property | constant
+               | global | pattern | instance ;
+nominal        = ("record" | "resource" | "object" | "interface"), identifier,
+                 "{", { field | clause }, "}" ;
+field          = "field", identifier, ":", type, ";" ;
+alias          = "alias", identifier, "=", type, "{", { clause }, "}" ;
+enumeration    = ("enum" | "flags"), identifier, ":", type,
+                 "{", { enum_case | clause }, "}" ;
+enum_case      = "case", identifier, "=", integer, ";" ;
+callable       = ("fn" | "callback"), identifier, "(", [ parameters ], ")",
+                 "->", type, [ "throws", type ],
+                 "{", { clause | outcome | callback_use | access }, "}" ;
+parameters     = parameter, { ",", parameter } ;
+parameter      = identifier, ":", type ;
+property       = "property", identifier, ":", type, "{", { clause }, "}" ;
+constant       = "constant", identifier, ":", type, "{", { clause | access }, "}" ;
+global         = "global", identifier, ":", type, "{", { clause | access }, "}" ;
+outcome        = "outcome", identifier, "{", { clause }, "}" ;
+callback_use   = "callback", place, "{", { clause }, "}" ;
+access         = "access", identifier, "in", "[", identifier,
+                 { ",", identifier }, "]", "{", { clause }, "}" ;
+pattern        = "pattern", identifier, "{", { role | clause }, "}" ;
+role           = "role", identifier, ":", ("type" | "operation" | "slot" | "pattern"),
+                 ("one" | "optional" | "many" | "some"), ";" ;
+instance       = "instance", identifier, ":", name, "{", { clause }, "}" ;
+clause         = name, "(", [ arguments ], ")", ";" ;
+arguments      = value, { ",", value } ;
+value          = string | integer | "true" | "false" | reference | place | list
+               | constructor | name ;
+constructor    = name, "(", [ arguments ], ")" ;
+list           = "[", [ arguments ], "]" ;
+reference      = "@", name ;
+place          = "$", identifier, { ".", identifier | ".*" | "[", "]" } ;
+type           = name, [ "<", type_argument, { ",", type_argument }, ">" ] ;
+type_argument  = type | unsigned_integer ;
+name           = identifier, { "::", identifier } ;
+integer        = [ "-" ], unsigned_integer ;
+(* identifier, unsigned_integer, string, whitespace and comments are lexical. *)

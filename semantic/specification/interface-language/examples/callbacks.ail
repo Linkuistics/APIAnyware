@@ -1,0 +1,98 @@
+language "0.1";
+package example::callbacks version "1" {
+  surface("A synthetic subscription delivering integer notifications until quiescent destruction.");
+  exports([@Subscription, @Handler, @subscribe, @unsubscribe]);
+  use profile fixture = "example.fixture" version "1" digest "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  use abi native = "example.fixture-abi" version "1" digest "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  environment test {
+    target("fixture64");
+    platform("fixture", "1");
+  }
+  resource Subscription {
+    available([test]);
+    deprecated(no);
+    implements([]);
+    lifecycle(unique, @unsubscribe);
+    sharing(transferable);
+    isolation(none);
+  }
+  callback Handler(value: u64) -> unit {
+    available([test]);
+    deprecated(no);
+    sharing(shared);
+    isolation(none);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    callback_abi(native, "c");
+    representation(fixture, "closure");
+    outcome handled {
+      when(returned, any);
+      meaning(success);
+    }
+  }
+  fn subscribe(handler: Handler) -> Subscription {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($handler, borrow);
+    retain($handler, strong(owner($result)));
+    valid($handler, call);
+    callback $handler {
+      timing(after_return);
+      count(0, many);
+      scope(owner($result));
+      executor(any);
+      concurrency(serial);
+      reentrancy(forbidden);
+      quiescence(@unsubscribe);
+    }
+    outcome registered {
+      when(returned, any);
+      meaning(success);
+      state($result, valid);
+      give($result, owned);
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_subscribe");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+  fn unsubscribe(subscription: Subscription) -> unit {
+    available([test]);
+    deprecated(no);
+    execution(sync);
+    completions([returned]);
+    executor(any);
+    concurrency(serial);
+    reentrancy(forbidden);
+    mutation(none);
+    variadic(false);
+    input($subscription, consume);
+    retain($subscription, none);
+    requires(outside_callback(@subscribe::handler));
+    outcome stopped {
+      when(returned, any);
+      meaning(success);
+      doc("No callback is running or can start after this completion.");
+    }
+    access direct in [test] {
+      abi(native, "c");
+      via(fixture, "symbol", "fixture_unsubscribe");
+      mapping(identity);
+      compatibility(stable);
+    }
+  }
+}

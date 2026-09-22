@@ -8,6 +8,12 @@
 
 **Tech Stack:** Markdown specification, EBNF grammar, textual language examples. Existing Rust code is evidence only.
 
+**Result:** First normative draft delivered under
+[`semantic/specification/interface-language`](../../specification/interface-language/README.md).
+This completes the bounded specification-writing plan. Production profiles,
+full-baseline representability, independent-producer exercises and executable
+semantic conformance remain adoption gates, as stated in the draft.
+
 ## Global Constraints
 
 - The language contains **complete, authoritative specifications only**.
@@ -22,10 +28,10 @@
 
 **Interfaces:** Consumes the approved design and research. Produces grammar productions and named semantic rules referenced by every example and baseline mapping.
 
-- [ ] Define tokens, identities, packages, imports, environment selection, types, declarations and contract syntax.
-- [ ] Define the type/contract vocabulary, applicability, defaults, contradictions and required facts on every outcome.
-- [ ] Define access paths, representation dependencies, ABI selection, compatibility domains and consumer refusal rules.
-- [ ] Read the grammar and clause catalogue against each other; resolve unmatched constructs and duplicate semantic authorities.
+- [x] Define tokens, identities, packages, imports, environment selection, types, declarations and contract syntax.
+- [x] Define the type/contract vocabulary, applicability, defaults, contradictions and required facts on every outcome.
+- [x] Define access paths, representation dependencies, ABI selection, compatibility domains and consumer refusal rules.
+- [x] Read the grammar and clause catalogue against each other; resolve unmatched constructs and duplicate semantic authorities.
 
 ## Task 2: Map the existing model
 
@@ -33,10 +39,10 @@
 
 **Interfaces:** Consumes the bounded source corpus in `semantic/tools/types/src/{ir,type_ref,annotation,provenance,pattern_instance,enrichment}.rs` and `semantic/tools/patterns/src/kind.rs` in the OCaml workspace, with main-workspace differences recorded. Produces a field/variant disposition inventory: represented, upstream evidence, derived view, consumer policy or explicit publication blocker.
 
-- [ ] Enumerate source structs/fields/variants before classifying them.
-- [ ] Check current-main and OCaml-specific differences, including sendability and actor facts.
-- [ ] Map every enumerated item to a specific language rule or a stated external responsibility.
-- [ ] State where the current IR cannot supply a complete contract and publication therefore needs additional analysis.
+- [x] Enumerate source structs/fields/variants before classifying them.
+- [x] Check current-main and OCaml-specific differences, including sendability and actor facts.
+- [x] Map every enumerated item to a specific language rule or a stated external responsibility.
+- [x] State where the current IR cannot supply a complete contract and publication therefore needs additional analysis.
 
 ## Task 3: Exercise the specification
 
@@ -44,10 +50,10 @@
 
 **Interfaces:** Consumes Tasks 1–2. Produces complete synthetic fixture specifications, rejection mutations, documentation/LLM views and a consumer-independent conformance checklist.
 
-- [ ] Cover resource ownership, dependent borrows, buffers, callbacks, outcomes, concurrency, objects/properties and multiple access mechanisms.
-- [ ] Provide invalid variants that isolate unresolved facts, reference errors, conflicting clauses, lifetime gaps and ABI-selection failures.
-- [ ] Check each example against grammar and mandatory-clause rules; identify the fixture catalogue dependencies without claiming live native invocation.
-- [ ] Define exact round-trip, closure, diagnostic and consumer obligations for future implementations.
+- [x] Cover resource ownership, dependent borrows, buffers, callbacks, outcomes, concurrency, objects/properties and multiple access mechanisms.
+- [x] Provide invalid variants that isolate unresolved facts, reference errors, conflicting clauses, lifetime gaps and ABI-selection failures.
+- [x] Check each example against grammar and mandatory-clause rules; identify the fixture catalogue dependencies without claiming live native invocation.
+- [x] Define exact round-trip, closure, diagnostic and consumer obligations for future implementations.
 
 ## Task 4: Review and publish the draft
 
@@ -55,7 +61,7 @@
 
 **Interfaces:** Consumes the draft and its evidence. Produces a cross-linked specification with explicit version/status and checked local links.
 
-- [ ] Obtain focused independent review of the grammar/semantics and publication/ABI boundary; classify and resolve material findings.
-- [ ] Check local links, code fences, source-inventory disposition coverage and specification/fixture consistency.
-- [ ] Record exact verification limits; do not claim a parser, executable conformance implementation or APIAnyware adoption exists.
-- [ ] Describe the documentation change in Jujutsu and report the resulting artifacts.
+- [x] Obtain focused independent review of the grammar/semantics and publication/ABI boundary; classify and resolve material findings.
+- [x] Check local links, code fences, source-inventory disposition coverage and specification/fixture consistency.
+- [x] Record exact verification limits; do not claim a parser, executable conformance implementation or APIAnyware adoption exists.
+- [x] Describe the documentation change in Jujutsu and report the resulting artifacts.
