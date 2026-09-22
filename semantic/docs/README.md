@@ -21,6 +21,12 @@ The terse vocabulary is in `CONTEXT.md → "Semantic model"`; the decisions are
 [ADR-0048](../../adr/0048-first-class-semantic-pattern-kind-model.md) and the PRD
 [`prd/2026-06-25-semantic-pattern-kind-model.md`](../../prd/2026-06-25-semantic-pattern-kind-model.md).
 
+The [authoritative interface-language proposal](design/2026-09-22-interface-language.md)
+and its [initial research](research/2026-09-22-interface-language-a.md) explore a
+dedicated, independently authorable specification language for bindings,
+documentation and LLM consumers. They are design work, not the current format
+contract.
+
 This directory also holds existing semantic-pipeline docs
 ([`analysis.md`](analysis.md), [`enrich-rules.md`](enrich-rules.md),
 [`memory-architecture.md`](memory-architecture.md)), design notes under
