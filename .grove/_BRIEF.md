@@ -117,9 +117,21 @@ obligations, constraints and errors as applicable to a declaration language.
 Do not dilute a normative distinction to satisfy a mechanical style metric.
 
 Work in repository Markdown, with tables and accessible diagrams when a
-relationship needs them. Mermaid or fenced text diagrams are permitted; provide
-adjacent explanatory text and do not require a new publishing site or graphical
-tool to read the core content. No deployment or website redesign is requested.
+relationship needs them. Provide adjacent explanatory text and do not require a
+new publishing site or graphical tool to read the core content. No deployment
+or website redesign is requested.
+
+Diagrams (human decision, 2026-09-23): PlantUML, D2 and Mermaid are equal
+notations, alongside fenced text. Each diagram commits its source and a
+tool-generated SVG. Order diagrams by C4-style abstraction level, from context
+down to detail, and let the relation being shown choose the notation.
+
+Format (open, human-raised 2026-09-23): the human suggested AsciiDoc or DocBook
+might suit this richer documentation better than Markdown, and named Typst as
+another possible production target. The documentation-basis survey
+(`semantic/docs/research/documentation-basis-a.md`) compares them. Planning
+must settle the format with the human before any drafting leaf runs. Until
+then, Markdown remains the working assumption.
 
 ## Technical scope and verification
 

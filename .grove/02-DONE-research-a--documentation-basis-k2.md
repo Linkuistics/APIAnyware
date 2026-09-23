@@ -91,3 +91,77 @@ Information Architecture for the World Wide Web, The Design of Everyday Things
 and Web Style Guide. Triage them explicitly; their presence in a list is not
 itself evidence for an editorial rule. Separate the author's reviewed titles
 from books the author says they have not read and reader-comment suggestions.
+
+## Decisions (running log)
+
+D1. The inventory is built from the article's own text (downloaded and
+converted locally, 2026-09-23), not from a fetch summary. A read status is
+recorded only where the article states one; section placement is otherwise the
+only claim made. The article never mentions Diátaxis or Google's guide, lists
+Docs for Developers under books its author has not read, and mentions only the
+print Microsoft Manual of Style.
+
+D2. The survey adds sources beyond the article: proposal genres addressed to
+expert reviewers (RFC, PEP, Swift Evolution, W3C TAG explainers, TC39),
+language documentation self-descriptions, and empirical work on notations, API
+documentation, minimalism, examples and readability formulas. The article's
+scope is communicators documenting products; this reader's task is evaluating a
+notation, which that corpus does not address.
+
+D3. The human's verbatim editing prompt is not in the repository or in a
+readable local transcript. The prompt assessment works from the brief chain's
+record of it (root brief and plan-k1) and says so.
+
+D4. Diátaxis's "complex hierarchies" page, which held its landing-page and
+"not four boxes" guidance, was removed from the live site on 2026-08-03. The
+survey cites the current pages first and that page only as history, pinned to
+its source commit.
+
+D5. Mid-session, the human asked for a benefit-ranked list of books to buy in a
+usable electronic form (preferably PDF). They also stated an eventual aim:
+codify this knowledge into grove skills scoped to editorial stages (draft,
+copy-edit, art, proof) in the grove repository, rather than one large
+documentation skill, noting that much of it concerns prose, expression,
+pedagogic structure and reader psychology. The survey therefore organises its
+quality criteria by the stage that applies them and gives pedagogy and
+psychology evidence equal standing with technical accuracy. It also records
+access gaps with legitimate e-format sources. Writing those skills is separate
+work in another repository, so no leaf is added here.
+
+D6. The human widened the diagram medium: PlantUML, D2 and Mermaid are equal
+notations for this documentation set. Every diagram commits its source and a
+tool-generated SVG, and C4-style levels order diagrams from high to low
+abstraction. The human also wants grove's requirements and design skills to
+gain C4 and hierarchical decomposition, and wants the documentation practice
+applied to requirements-gathering and design conversations. Both belong to the
+grove repository; the human approved filing a GitHub issue there.
+
+D7. The human approved reading targeted chapters through their O'Reilly
+account in their logged-in browser, quoting briefly with citations.
+
+D8. The human suggested that AsciiDoc or DocBook might suit this richer
+documentation better than Markdown, and named Typst, with its diagram
+packages, as another possible production target. They also noted that C4 has
+its own diagram tooling and workflow. The format changes the root brief, so it
+stays open. The survey evaluates Markdown, AsciiDoc, DocBook and Typst, plus
+the C4 and diagram toolchains, with walk-away checks. Planning must settle the
+format with the human before any draft.
+
+D9. With the human's O'Reilly session connected, selected sections (not whole
+chapters) were read in full text from DQTI chapters 7, 8, 9 and 13, *Docs for
+Developers* chapters 5, 6 and 9, and Clark and Mayer's *e-Learning and the
+Science of Instruction* (5th ed.) chapters 6, 9 and 13. *Every Page Is Page One* is not on O'Reilly. The human's
+Zotero library supplied full PDFs of Clements et al., *Documenting Software
+Architectures* (2nd ed.), and Rozanski and Woods (2005); both were read in
+targeted sections. Johnson, *Designing with the Mind in Mind* (2010), was
+checked for its chapter list only. The Obsidian vault held no
+technical-writing books. The survey records each depth separately, and
+purchase priorities favour titles no accessible channel provides in full.
+
+D10. At the human's request, the evidence was filed in the grove repository as
+Linkuistics/grove #14 (overview of stage-scoped documentation knowledge) with
+#15 `draft`, #16 `copy-edit`, #17 `art`, #18 `proof` and reader testing, and
+#19 document format, plus comments on #9 (C4, hierarchical decomposition and
+conversation practice) and #12 (writing-for-understanding). The diagram-medium
+decision stays in the root brief rather than an ADR until planning settles the
+format with the human; both conventions can then be recorded together.
