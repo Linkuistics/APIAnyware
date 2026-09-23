@@ -14,10 +14,17 @@ Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` wit
 
 ## Done when
 
-- `task docs:coverage` builds the inventory from the sources: productions,
-  clause names from the normative tables' first columns, rule identifiers and
-  mutation IDs. It has been seen to fail on a missing entry, and it lists
-  which entries the next three sessions own.
+- `task docs:coverage` extracts candidates from every normative source and
+  checks them against a committed disposition list, as the plan's §7
+  specifies. The extraction covers running prose as well as tables. Every
+  prose-defined clause named in audit F5 appears as a candidate, and the list
+  classifies all of them.
+- It has been seen to fail on an unclassified candidate, on a missing entry
+  in a landed file, and on a disposition naming nothing in the sources. It
+  lists by name which entries the next three sessions own, as pending.
+- Under the staging rule in the plan's §3, the landing map links
+  `reference/README.md`, which links every reference page that exists and
+  names the clause files as plain text until they land.
 - Declaration and type entries use the §9.4 fields that apply.
 - Page-one blocks are the only change to the normative files.
 - The plan's §2 clause-file split is confirmed or amended against the entry

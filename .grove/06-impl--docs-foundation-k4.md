@@ -35,6 +35,10 @@ the repository. Change no rule text.
    for the target file. Links that leave the repository fail. External URLs
    are listed, not fetched. Code spans and fenced blocks are not links; this
    includes code spans that wrap across lines, which the plan's §4 uses.
+   Also check reachability: every Markdown page under the specification
+   directory is reachable from the landing `README.md` by following relative links,
+   so an orphaned page fails (plan §3, *Staging*). The current pages are all
+   linked from `README.md`; confirm that on the tree before relying on it.
 4. **`docs:examples`.** Every fenced block has an info string. Every `ail`
    fence is preceded by an example or fragment marker, in the HTML-comment
    syntax you define and document in the plan's §7. An example marker names a
@@ -50,7 +54,7 @@ the repository. Change no rule text.
 
 - `task docs:check` exits 0 on the current tree. It has been seen to fail
   against a deliberately broken link, a broken anchor, an out-of-repository
-  link, an untagged fence and a mismatched example.
+  link, an orphaned page, an untagged fence and a mismatched example.
 - Every rule identifier resolves as `<file>#<lower-case id>`. `git diff` (or
   `jj diff`) of the three normative files shows only added anchor lines.
 - The plan's §7 describes the marker syntax and the task names exactly as

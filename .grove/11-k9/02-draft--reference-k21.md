@@ -16,10 +16,12 @@ Draft the clause entries for package, environment and common declaration scope.
 
 - Every clause assigned to this file has an entry with the §9.4 fields in
   order, and each fact matches its rule text.
+- `reference/README.md` links this clause file, replacing its plain-text
+  mention (plan §3, *Staging*).
 - `task docs:check` passes.
 
 ## Notes
 
-The inventory from `reference-k16` decides the entry list. Do not add or drop clauses by memory.
+The classified inventory from `reference-k16` decides the entry list. Do not add or drop clauses by memory.
 
 A later draft sibling finishes this document, so do not cut `copy-edit` here: the last draft session does.

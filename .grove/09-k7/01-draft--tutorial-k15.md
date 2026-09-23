@@ -21,6 +21,12 @@ Design the tutorial's synthetic API and draft `tutorial/README.md` and parts 1�
   part has an invalid variant that cites its rule.
 - For each checkpoint, a note in this leaf's decision log records its
   inspection against the grammar and each applicable rule.
+- Every checkpoint, from part 1 on, carries the `access` blocks A2 requires
+  on its functions, with their provider dependencies (plan §9.3).
+- Under the staging rule in the plan's §3: the landing page's map and the concept pages link
+  `tutorial/README.md`; the index links parts 1–3 and names parts 4–5 as
+  plain text; each part has a return route and a next route to an existing
+  page.
 - `task docs:check` passes.
 
 ## Notes

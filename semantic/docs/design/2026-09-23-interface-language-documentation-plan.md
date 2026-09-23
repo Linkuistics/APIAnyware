@@ -105,6 +105,28 @@ A reader who lands anywhere must learn, within the first screen, what the page
 is for, what it assumes, the draft's status, and where the canonical rules are
 (§5).
 
+**Staging.** The set lands over several increments, and every landed page must
+be reachable and usable on the day it lands, not only after cross-set
+navigation. One rule serves every increment, including a document split
+across several draft sessions and the reference's clause files:
+
+- The session that lands a page links it from the landing page's map, or from
+  a parent index that the map already links. The page is then reachable from
+  `README.md`, and `docs:links` checks that (§7).
+- The same session gives the page a return route and a next route, both to
+  pages that already exist. Where the guided route's true next page is not yet
+  written, the next route points to the nearest existing page on the route.
+- A route to a page that does not exist yet is written as plain text naming
+  the page, not as a link. The session that lands that page converts every
+  such mention into a link, and replaces the interim next route that pointed
+  past it.
+- Where a document's index lands after its pages (the review guide's
+  `review/README.md`), the map links the earlier pages directly until the
+  index lands and takes over.
+
+Cross-set navigation (§9.6) then completes the map, the back-links and the
+footers. It is never the first point at which a page becomes reachable.
+
 ## 4. Prose contract
 
 One contract serves the whole set. It is the charter for `copy-edit` and the
@@ -228,7 +250,10 @@ standard library. The documentation-foundation increment writes the first two:
 - `docs:links`: every relative link and `#fragment` in the set's Markdown
   (the directory above, this plan and the audit) resolves. A fragment must
   match an explicit anchor or a GitHub heading slug. Links that leave the
-  repository fail, and external URLs are listed, not fetched.
+  repository fail, and external URLs are listed, not fetched. Every Markdown
+  page in the directory above must also be reachable from the landing
+  `README.md` by
+  following relative links, so an orphaned page fails (§3, *Staging*).
 - `docs:examples`: every `ail` fence has an example or fragment marker. An
   example marker names a file and either a region (`// region: name` …
   `// endregion` comments in new `.ail` files) or a line range (for the
@@ -241,9 +266,29 @@ Later increments add tasks when they first need them:
 - `docs:diagrams` (first `art`): regenerate every SVG from its source with the
   pinned renderers and fail on a difference.
 - `docs:coverage` (reference): build the inventory from the sources and
-  confirm each item has a reference entry. The inventory is the grammar's
-  productions, clause names from the normative tables' first columns, rule
-  identifiers and the mutation IDs.
+  confirm each item is accounted for. The grammar cannot supply the clause
+  vocabulary, because its generic `clause` production admits any name. Many
+  clauses are defined in running prose rather than in tables, among them
+  `surface`, `exports`, `values`, `extent`, `contents`, `callback_abi` and
+  `representation` (audit F5). So the check enumerates, then classifies:
+  - *Candidates* are extracted mechanically from every normative source: the
+    grammar's productions and literal keywords; every `name(` token in code
+    spans and table cells of `language.md`, `contracts.md` and `profiles.md`,
+    including qualified profile names such as `fixture::actor`; the clause
+    heads used in `examples/*.ail`; the rule identifiers; and the mutation IDs.
+  - A committed *disposition list* classifies every candidate. A candidate is
+    a reference entry, with the file that owns it; covered by a named entry
+    (a value constructor such as `owner(…)`, documented under its clause); or
+    not vocabulary, with a one-line reason.
+  - The check fails on an unclassified candidate, on an entry-class item with
+    no entry in its file, and on a disposition naming nothing the sources
+    contain. An entry owned by a reference session that has not yet run is
+    reported as pending, by name, and a pending item in a file that has landed
+    is a failure.
+
+  The candidate extraction is a lexical sweep. It does not parse AIL and does
+  not decide what is a clause; the disposition list records that judgement,
+  and it is reviewed against the rule text like any entry.
 
 None of these checks parses AIL or validates contracts. The EBNF recognizer
 from the draft's verification record was disposable and is not a documentation
@@ -380,7 +425,8 @@ audit's F1, F2 and F4.
 **Verification.** `docs:check` passes. Every obligation named maps to a rule
 identifier, even where the page shows no AIL. Every domain term in the root
 brief has a defining location. The landing page's links cover every page that
-exists when this increment lands; pages that do not exist yet are not linked.
+exists when this increment lands. Later pages are named as plain text, not
+linked, under the staging rule in §3.
 
 ### 9.2 Concepts
 
@@ -490,7 +536,10 @@ surface from the conformance examples, so each concept gets a second example
 profile settle. If a design hits an unclear rule, the draft picks a supported
 alternative and records the question in `explanation/choices.md`. Every
 checkpoint is a complete package for a narrower declared `surface`, as the L3
-subset rule allows.
+subset rule allows. The subset narrows which APIs are described, never which
+required clauses a described declaration carries. A2 requires `access` blocks
+on every function, so every checkpoint from part 1 onward has them, with their
+provider dependencies. Part 5 explains them; it does not introduce them.
 
 **Ordered sections**
 
@@ -571,8 +620,11 @@ type entries use the subset that applies.
   canonical; the rule-identifier index; the mutation-to-rule index; and the
   alphabetical clause index.
 - `notation.md`: the EBNF dialect; how the generic `clause` production
-  defers vocabulary to prose; the BCP 14 convention and its current scope
-  (audit Q1); and how to read an entry.
+  defers vocabulary to prose; the BCP 14 convention as `language.md` states it,
+  that `README.md` names all three rule files and the grammar as normative, and
+  that lowercase wording keeps its ordinary meaning and can still state a
+  requirement. The page does not say lowercase text lacks force; it links the
+  presentation question Q1 (audit F10). Then how to read an entry.
 - `types.md`: the core types and type constructors; value against reference
   types; and profile types.
 - `declarations.md`: one entry per declaration kind and block, including
@@ -594,8 +646,10 @@ resolution of open questions. No tutorials inside entries.
 the survey's §4.5.
 
 **Verification.** `docs:check` passes. `docs:coverage` (added here) passes
-against the inventory. Every "rejected when" field cites a rule. A sample of
-entries is spot-checked against its rule text.
+against the inventory, with every candidate classified (§7). Every "rejected
+when" field cites a rule. A sample of entries is spot-checked against its rule
+text, and every prose-defined clause named in audit F5 is confirmed to have an
+entry.
 
 ### 9.5 Review guide
 

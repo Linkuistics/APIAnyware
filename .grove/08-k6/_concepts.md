@@ -32,12 +32,17 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
   plus any question drafting found. None is resolved by the text.
 - Figures G2–G7 that these pages need are committed as source plus SVG, under
   the shared visual vocabulary.
-- The landing page and glossary link the new pages and terms.
+- The landing page and glossary link the new pages and terms. Each page was
+  linked from the landing map in the session that landed it (plan §3,
+  *Staging*).
 
 ## Decomposition
 
 Two draft sessions, in order. The first drafts `explanation/contracts.md`, the
-largest page and the one the other two lean on. The second drafts
-`explanation/packages.md` and `explanation/choices.md`, and updates the
-landing page's map and the glossary. Only the second draft's last act cuts
-`copy-edit`. The first finds its later sibling live and cuts nothing.
+largest page and the one the other two lean on, and links it from the
+landing page's map with its return and next routes. The second drafts
+`explanation/packages.md` and `explanation/choices.md`, links them the same
+way, and completes the glossary for all three pages. Each session converts
+the plain-text mentions of the pages it lands into links. Only the second
+draft's last act cuts `copy-edit`. The first finds its later sibling live and
+cuts nothing.

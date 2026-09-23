@@ -21,6 +21,11 @@ Draft `explanation/contracts.md`, the explanation of AIL's semantic core, owning
   in step by `docs:examples` or marked as a fragment.
 - Any ambiguity met is added to a `## Questions found` note in the node brief,
   for the next session to place in the register.
+- Under the staging rule in the plan's §3: the landing page's map links
+  `explanation/contracts.md`; the page has a return route and a next route to
+  existing pages; and plain-text mentions of it on landed pages are now links.
+  The glossary gains entries for terms this page defines that it does not yet
+  hold.
 - `task docs:check` passes.
 
 ## Notes

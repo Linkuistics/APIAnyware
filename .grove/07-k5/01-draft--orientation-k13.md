@@ -21,6 +21,9 @@ Draft `README.md` (a rewrite as the landing page), `explanation/unsaid.md` and `
   defining location.
 - The existing README's status and scope statements survive with their
   meaning intact.
+- Pages that do not exist yet (the concept pages, tutorial, reference and
+  review guide) are named as plain text, not linked, under the staging rule in the plan's §3.
+  Each page's next route points to an existing page.
 - Figure slots G1 and G4 are recorded under `## Handed forward` in the node
   brief for `art`.
 - `task docs:check` passes.

@@ -17,7 +17,10 @@ Draft `review/README.md` (the six dimensions and the feedback template) and `rev
 - Both pages follow §9.5. Every task has a goal, conditions, steps, expected
   observations and a feedback prompt. Every prompt cites a rule, example or
   page and invites criticism.
-- The landing page links the review guide as the end of the guided route.
+- The landing page links the review guide as the end of the guided route,
+  with `review/README.md` as its entry. The index links the walkthroughs and
+  the tasks, and the map's interim direct link to the walkthroughs is
+  replaced (plan §3, *Staging*).
 - `task docs:check` passes.
 
 ## Notes

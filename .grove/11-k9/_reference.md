@@ -26,9 +26,14 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
 
 ## Done when
 
-- Every item in the enumerated inventory has an entry: grammar productions,
-  clause names from the normative tables' first columns, rule identifiers and
-  mutations N01–N33. `task docs:coverage` (added by this node) passes.
+- Every candidate in the enumerated inventory is classified, and every
+  entry-class item has an entry. The candidates come from every normative
+  source — grammar, tables, running prose, example clause heads, rule
+  identifiers and mutations N01–N33 — as the plan's §7 specifies; the
+  prose-defined clauses listed in audit F5 are among them. `task
+  docs:coverage` (added by this node) passes with nothing pending.
+- The landing map links `reference/README.md`, and every clause file is
+  linked from it, in the session that lands it (plan §3, *Staging*).
 - Entries use the §9.4 fields in order. Every "rejected when" field cites a
   rule, and every meaning is a labelled non-normative summary.
 - The normative files' rule text is unchanged apart from page-one blocks.
@@ -41,8 +46,9 @@ Four draft sessions, in order. Only the last cuts `copy-edit`.
 
 1. `reference/README.md`, `notation.md`, `types.md` and `declarations.md`,
    with the applicability table, the page-one blocks on the normative and
-   supporting files, and `task docs:coverage`. Its inventory fixes the entry
-   list for the remaining sessions.
+   supporting files, and `task docs:coverage` with its candidate extraction
+   and disposition list. Its classified inventory fixes the entry list for the
+   remaining sessions.
 2. Clauses for package, environment and common declaration scope.
 3. Clauses for callable effects and input obligations, including buffers and
    strings.

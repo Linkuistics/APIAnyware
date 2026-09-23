@@ -32,7 +32,7 @@ first observations, and this audit extends and checks them.
   APIAnyware's Rust structs to rules, and it is fourth in the reviewer's
   reading order (F4).
 - **Reference lookup needs cross-file assembly.** The grammar leaves the whole
-  clause vocabulary to prose tables in three files. A minimal function needs
+  clause vocabulary to tables and running prose in three files. A minimal function needs
   clauses from five sections across three files, and nothing lists them
   together (F5).
 - **Density is high where the concepts are newest.** Single table cells in
@@ -41,10 +41,12 @@ first observations, and this audit extends and checks them.
 - **The examples are complete but unannotated.** Their meanings live in a
   separate table. Of the documentation forms, only failure cases already
   exist, as the rejection mutations (F7).
-- **Normative force is ambiguous in two ways.** Lowercase *must* appears 64
-  times across the three normative files, and only `language.md` states the
-  keyword convention. The audit surfaces this as a question for the language,
-  not a presentation fix (F10, Q1).
+- **Normative-force signals are presented inconsistently.** Lowercase *must*
+  appears 64 times across the three normative files, beside uppercase
+  keywords, and only `language.md` states the keyword convention. That is a
+  presentation inconsistency, not evidence that lowercase requirements lack
+  force. The audit asks the authors to confirm their intent and does not edit
+  the wording (F10, Q1).
 - **Much is worth keeping.** The honest status statements, the synthetic
   labelling, the stable rule identifiers, the mutation table, the pressure
   cases and the "Two views of one contract" passage are what reviewers need,
@@ -150,8 +152,14 @@ document that resolves it.
 ### F5. Lookup requires assembling rules across files (presentation)
 
 - **Evidence.** `grammar.ebnf:37` admits any `name(...)` as a clause, so the
-  closed vocabulary exists only in prose tables in `language.md` L5,
-  `contracts.md` C2–C7 and `profiles.md` A2 and F1. Consider what a minimal
+  closed vocabulary is defined only in the rule files' prose. Some of it is in
+  tables (`language.md` L5, `contracts.md` C2–C7, `profiles.md` F1). Much is
+  in running text: `surface`, `exports`, `target`, `platform`, `toolchain`,
+  `runtime`, `feature` and `available` in L3; `values` in L4; `bind`, `law`
+  and `subject` in L6; `extent` and `contents` in C4; `when` and `meaning` in
+  C5's opening paragraph; `callback_abi` and `representation` in A2; and the
+  fixture vocabulary in F1's closing paragraph. These are examples, not an
+  inventory. Consider what a minimal
   public function requires:
   - `available` (L3) and `deprecated` (L5);
   - seven effect clauses (C3), plus `input`, `retain` and `valid` per
@@ -172,8 +180,10 @@ document that resolves it.
   as a burden.
 - **Disposition.** A reference with fixed-field entries for each clause and
   declaration kind, a clause-by-declaration applicability table, and indexes
-  (rules, mutations to rules, alphabetical clauses). Rule identifiers get
-  explicit anchors. The need for a single applicability table is itself
+  (rules, mutations to rules, alphabetical clauses). The reference's entry
+  list comes from an inventory of every normative definition, in tables and in
+  running prose, with an explicit disposition for each item (plan §7). Rule
+  identifiers get explicit anchors. The need for a single applicability table is itself
   reported to reviewers as evidence about the language's discoverability.
 
 ### F6. Density at the point of highest novelty (presentation)
@@ -238,19 +248,27 @@ document that resolves it.
   with plain-text paths that name the workspace holding the files, so no link
   leaves the repository. It does not reproduce the source files.
 
-### F10. Normative-force signals are inconsistent (language question)
+### F10. Normative-force signals are presented inconsistently (presentation, with an author question)
 
 - **Evidence.** `language.md:3–4` defines **MUST**, **MUST NOT**, **SHOULD**
   and **MAY** for "this draft". `contracts.md` and `profiles.md` do not
   restate the convention. The three normative files use uppercase keywords
   25, 10 and 5 times, and lowercase *must* or *should* 9, 32 and 23 times.
   Many of the lowercase uses are plainly requirements, as in "All referenced
-  declarations must exist" (`language.md:72`). Under RFC 8174, only
-  uppercase keywords carry the defined meaning.
-- **Disposition.** This is not rewritten under an editorial mandate: changing
-  the case of a word changes its normative force. It is recorded as Q1 for
-  the language's authors. Until they answer, explanation pages cite the rule
-  and do not restate its force.
+  declarations must exist" (`language.md:72`). Under
+  [RFC 8174 §2](https://www.rfc-editor.org/rfc/rfc8174.html#section-2), only
+  uppercase keywords carry the BCP 14 meanings, but lowercase words keep their
+  ordinary English meaning, and normative text need not use the keywords at
+  all. `README.md:25–26` names all three rule files and the grammar as
+  normative. So a lowercase *must* can already impose an obligation, and case
+  alone does not show a rule to be weaker or uncertain. This audit found no
+  rule whose obligation is uncertain because of its case.
+- **Disposition.** The defect is inconsistent presentation of force, which a
+  reader must interpret; it is not an established semantic gap. The keywords
+  are not normalized under an editorial mandate, because the normative wording
+  is outside this rework's scope. Q1 asks the authors to confirm their intent.
+  Explanation pages cite the rule and do not restate its force, and the
+  notation reference describes the convention as the files state it.
 
 ### F11. No figures where relations are hardest (presentation)
 
@@ -294,9 +312,13 @@ document that resolves it.
 These came up while reading for presentation. They are review questions, not
 defects this rework may fix. The audit is not a semantic review of draft 0.1.
 
-- **Q1. Normative force of lowercase *must*.** See F10. Is every lowercase
-  *must* in `contracts.md` and `profiles.md` intended as a requirement? Does
-  the keyword convention apply to all three normative files?
+- **Q1. Uniform keyword convention.** See F10. The premise is limited: the
+  mix of uppercase keywords and lowercase *must* is inconsistent presentation,
+  and no rule was found whose obligation is uncertain because of its case. Do
+  the authors intend the `language.md` keyword convention to cover
+  `contracts.md` and `profiles.md` too, and would they accept uniform
+  keywords? A reader who finds a specific rule whose force is unclear should
+  raise that rule, not the convention in general.
 - **Q2. One word for two concepts.** *Closure* names both a dependency closure
   and a callback's captures. Is the overlap acceptable in a language whose
   readers include binding authors, for whom both senses are live?

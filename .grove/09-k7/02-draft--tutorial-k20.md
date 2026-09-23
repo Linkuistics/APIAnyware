@@ -19,7 +19,9 @@ Draft tutorial parts 4 and 5: callbacks and teardown, access paths, the finished
   leaf's decision log.
 - The guided change lists every clause and rule it touches, as observations
   that can be checked by inspection.
-- The landing page and the concept pages link to the tutorial.
+- The landing page and the concept pages link to the tutorial, and the
+  tutorial index links parts 4 and 5, replacing its plain-text entries and
+  part 3's interim next route (plan §3, *Staging*).
 - `task docs:check` passes.
 
 ## Notes

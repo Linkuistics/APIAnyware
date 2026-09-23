@@ -29,9 +29,14 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
   concrete and invites criticism.
 - The walkthroughs cover all three conformance examples clause by clause.
 - The landing page links the guide as the destination of the guided route.
+  Each page was reachable from the landing map in the session that landed it
+  (plan §3, *Staging*).
 
 ## Decomposition
 
 Two draft sessions, in order. The first drafts `review/walkthroughs.md`,
-which the tasks build on. The second drafts `review/README.md` and
-`review/tasks.md`. Only the second cuts `copy-edit`.
+which the tasks build on, and links it directly from the landing map,
+because the guide's index does not exist yet. The second drafts
+`review/README.md` and `review/tasks.md`, makes the index the map's entry to
+the guide, and links the walkthroughs from it. Only the second cuts
+`copy-edit`.

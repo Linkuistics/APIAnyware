@@ -19,8 +19,10 @@ Draft `explanation/packages.md` and `explanation/choices.md`, and add the concep
 - The open-question register holds audit Q1–Q6 and every item from the node
   brief's `## Questions found`, each with where it arises and why it matters;
   that note is then cleared.
-- The landing page links all three concept pages, and the glossary covers
-  their terms.
+- Under the staging rule in the plan's §3: the landing page's map links the two new pages;
+  each has a return route and a next route to existing pages; and plain-text
+  mentions of them on landed pages are now links. The landing page links all
+  three concept pages, and the glossary covers their terms.
 - `task docs:check` passes.
 
 ## Notes

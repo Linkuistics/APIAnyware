@@ -32,11 +32,14 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
   applicable rule, and the check notes are recorded in the draft leaves.
 - Any unclear rule met while designing the API is in the open-question
   register, and the tutorial uses a supported alternative.
-- The landing page and concept pages link the tutorial.
+- The landing page and concept pages link the tutorial. The landing map
+  linked `tutorial/README.md` in the session that landed it, and every landed
+  part was reachable from that index (plan §3, *Staging*).
 
 ## Decomposition
 
 Two draft sessions, in order. The first designs the synthetic API and drafts
-`tutorial/README.md` and parts 1–3 with their checkpoints. The second drafts
-parts 4–5, the final package and the guided change. Only the second cuts
-`copy-edit`.
+`tutorial/README.md` and parts 1–3 with their checkpoints, and links the
+index from the landing map and the concept pages. The second drafts parts
+4–5, the final package and the guided change, and turns the index's
+plain-text entries for them into links. Only the second cuts `copy-edit`.

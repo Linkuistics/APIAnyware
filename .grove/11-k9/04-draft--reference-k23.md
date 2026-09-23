@@ -18,10 +18,12 @@ Draft the clause entries for outcomes, callback use, access paths, patterns and 
   nothing pending.
 - The indexes in `reference/README.md` are complete, and the concept pages,
   tutorial and glossary link to entries where they name a clause.
+- `reference/README.md` links this clause file, replacing its plain-text
+  mention (plan §3, *Staging*).
 - `task docs:check` passes.
 
 ## Notes
 
-The inventory from `reference-k16` decides the entry list. Do not add or drop clauses by memory.
+The classified inventory from `reference-k16` decides the entry list. Do not add or drop clauses by memory.
 
 This is the node's last draft session, so its last act is `leaf-add` of the `copy-edit` leaf, unless a live later sibling already holds one.

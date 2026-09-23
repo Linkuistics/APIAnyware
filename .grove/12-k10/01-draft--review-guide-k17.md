@@ -18,6 +18,9 @@ Draft `review/walkthroughs.md`, a clause-by-clause reading of `buffers.ail`, `ca
   is quoted by line range through `docs:examples`.
 - Trace questions have expected observations after them, checked against the
   rules.
+- Under the staging rule in the plan's §3: the landing page's map links
+  `review/walkthroughs.md` directly, since `review/README.md` does not exist
+  yet; the page has a return route and a next route to existing pages.
 - `task docs:check` passes.
 
 ## Notes
