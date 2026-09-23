@@ -53,6 +53,15 @@ requirements leaf does not perform those stages.
 3. Produce and verify the documentation through the editorial stages. Integrate
    navigation across the set and check the complete reviewer journey.
 
+Planning (`reviewer-documentation-k3`) cut the entries after it in dependency
+order. First, `review-planning` reads the plan before anything executes. Then
+come `docs-foundation` (rule anchors and repeatable checks); the document nodes
+`orientation`, `concepts` and `tutorial`; the first human reading checkpoint;
+the `reference` and `review-guide` nodes; `reviewer-journey` (cross-set
+navigation and the Step 2 index); and the full-set reading checkpoint. Each
+document node runs the editorial pipeline lazily, and its structure brief is
+a named section of the documentation plan.
+
 One literature survey is sufficient initially. No paired survey or implementation
 work is justified by the settled requirements.
 
@@ -126,12 +135,11 @@ notations, alongside fenced text. Each diagram commits its source and a
 tool-generated SVG. Order diagrams by C4-style abstraction level, from context
 down to detail, and let the relation being shown choose the notation.
 
-Format (open, human-raised 2026-09-23): the human suggested AsciiDoc or DocBook
-might suit this richer documentation better than Markdown, and named Typst as
-another possible production target. The documentation-basis survey
-(`semantic/docs/research/documentation-basis-a.md`) compares them. Planning
-must settle the format with the human before any drafting leaf runs. Until
-then, Markdown remains the working assumption.
+Format (human decision, 2026-09-23, settled at planning): GitHub-flavoured
+Markdown. AsciiDoc, DocBook and Typst are not used. Code on pages is kept in
+step with committed `.ail` files by a repeatable check. The diagram and format
+conventions are recorded in the documentation plan (see Pointers), not in an
+ADR, because neither passes the ADR test.
 
 ## Technical scope and verification
 
@@ -177,8 +185,23 @@ semantic validator or general build-system migration.
 - Documentation placement: `adr/0024-per-language-docs-co-locate-adrs-stay-central.md`
   and CONTEXT.md's documentation-structure terms. Keep subject material in
   `semantic/`; do not create a new top-level `docs/` tree.
+- Step 1 audit: `semantic/docs/research/interface-language-documentation-audit.md`
+  (findings F1–F12; review questions Q1–Q6).
+- Documentation plan, including the page architecture, prose contract,
+  figure inventory, checks, reader checkpoints and the structure brief for
+  every document (§9):
+  `semantic/docs/design/2026-09-23-interface-language-documentation-plan.md`.
+- Research basis and stage criteria (§9 there):
+  `semantic/docs/research/documentation-basis-a.md`.
 - Human-supplied reading list:
   [Richard Rabil's technical-writing books](https://richardrabil.com/2024/08/18/the-best-books-on-technical-writing-an-in-depth-analysis/).
+
+## On the horizon
+
+- A published edition (HTML or PDF) is not scheduled. If the human wants one,
+  the survey's §8 favours AsciiDoc output generated from the Markdown set.
+- Revision after the second reading checkpoint depends on its findings. It
+  cannot be stated until that checkpoint runs.
 
 ## Notes
 

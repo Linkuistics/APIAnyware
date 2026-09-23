@@ -75,3 +75,80 @@ This is a documentation workstream already authorised as a multi-step Grove.
 Keep it coherent in this tree; split document work into bounded editorial nodes
 as needed. No new runtime seam is requested. Consult the root brief's Taskfile
 recommendation only if a concrete repeatable documentation check earns one.
+
+## Decisions (running log)
+
+D1. Format (human, 2026-09-23): the documentation set is GitHub-flavoured
+Markdown, consistent with the rest of the repository. Code shown on pages is
+kept in step with committed `.ail` files by a repeatable check, not by an
+include mechanism. This settles the root brief's open format question (P7).
+AsciiDoc, DocBook and Typst are not used now; a published edition would be new
+work that this tree does not schedule.
+
+D2. Reader testing (human, 2026-09-23): "There is only me (and I am an
+experienced language designer)." No cold readers new to the domain are
+available, so survey criteria T1, T3 and T5 cannot be run as written. The plan
+uses the human's own review read at two checkpoints plus a model-based reader
+that is labelled as a proxy (T4), and states this limit wherever reader
+outcomes are claimed. The human knows the domain, so the curse-of-knowledge
+evidence (Hinds 1999; Camerer et al. 1989) means their read cannot certify
+newcomer comprehension. The proxy reader is briefed as a language designer new
+to binding. It does not replace human evidence either.
+
+D3. Placement: the whole reader-facing set lives with its subject in
+`semantic/specification/interface-language/` (ADR-0024). New pages go in
+`explanation/`, `tutorial/`, `review/`, `reference/` and `figures/`
+subdirectories, with the README as the landing page. The normative files
+(`language.md`, `contracts.md`, `profiles.md`, `grammar.ebnf`) and the
+supporting files (`baseline.md`, `conformance.md`, `examples/`) keep their
+paths, because the design proposal, its plan and `semantic/docs/README.md`
+link to them. No new top-level `docs/` tree is created.
+
+D4. One canonical rule source: the normative L, C, A and F text. Reference
+entries are a lookup layer. They are labelled non-normative, link each fact to
+its rule identifier, and yield to the rule when the two disagree. Explanation
+pages state no rule force of their own; they cite the rule. This follows the
+survey's §4.2 application. The AARM-style alternative, with annotations beside
+the rules, is rejected because it would rewrite the normative files.
+
+D5. The audit's F10 (lowercase *must* in normative files) is a language
+question (Q1), not an editorial fix. The rework neither changes case nor
+restates force.
+
+D6. The L3 subset rule (L3; README lines 48–51) permits a package that
+describes a named subset with its whole dependency closure. Each tutorial
+checkpoint can therefore be a complete package for a narrower declared
+`surface`. This confirms the survey's §4.3 assumption.
+
+D7. No ADR. Markdown is the repository's default format, so recording it
+fails the "surprising without context" test. The diagram-medium convention is
+recorded in the documentation plan, which outlives the grove, and cited from
+the root brief.
+
+D8. Increments, in dependency order. Each one leaves every landed page
+navigable:
+- documentation foundation (explicit rule anchors, link and example checks);
+- orientation (landing page, domain explanation, glossary);
+- concepts (the contract model, packages and access, design choices);
+- tutorial;
+- a first human reading of that path, with a labelled proxy reader;
+- reference;
+- review guide;
+- cross-set navigation and the Step 2 index;
+- a second reading of the whole set.
+The reference precedes the review guide, which is the capstone that uses
+every other document.
+
+D9. Step 2 presentation: the landing README is the entry to the rewritten
+Markdown. The cross-set navigation increment appends a "Step 2: refactored
+output" section to the audit. It maps each finding F1–F12 to the pages that
+resolve it and gives the status of Q1–Q6. No reader page carries process
+narration.
+
+D10. Review chain: this decomposition drives about thirty sessions, so a
+`review-planning` leaf (`reviewer-documentation-k25`) sits immediately after
+this leaf and ahead of all execution. It carries seven specific doubts. With a
+scheduled review beside it, this session spent no in-session reviewer. The
+tree holds 12 `draft` sessions across six document nodes, one `impl` leaf and
+two `requirements` reading checkpoints. The 12 are orientation 1, concepts 2,
+tutorial 2, reference 4, review guide 2 and reviewer journey 1.

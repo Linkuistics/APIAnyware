@@ -1,0 +1,37 @@
+# orientation-k5 — brief
+
+## Goal
+
+Land the orientation document: the landing `README.md`,
+`explanation/unsaid.md` and `glossary.md`. A language designer new to API
+binding can then state what AIL is and its status, name the obligations a
+signature leaves unstated and the failure each prevents, and choose a path
+through the documentation (plan outcome 1).
+
+## Contract
+
+The structure brief is the documentation plan's §9.1, at `semantic/docs/design/2026-09-23-interface-language-documentation-plan.md`. It states
+the reader and their outcome, the ordered sections and the purpose of each,
+and the emphasis and non-goals. The same plan's §4 (prose contract), §5
+(page-one block and example labels), §6 (figures) and §7 (checks) govern
+every stage. The gate is `task docs:check`, plus any task this document adds.
+
+## Pipeline
+
+`draft` → `copy-edit` → `art` → `proof`, cut lazily: each stage's last act
+adds the next unless a live later sibling already holds it. Stage leaves carry
+this document's bare stem as their slug. Defects a later stage owns go under
+`## Handed forward` in this brief; the list is created by the first stage that
+needs it. Figure slots that `draft` leaves for `art` go there too.
+
+## Done when
+
+- The three pages exist and meet §9.1. Every domain term in the root brief
+  has a defining location and a glossary entry with a familiar-meaning warning
+  where one applies.
+- The landing page links every page that exists when this lands, and the
+  existing normative and supporting pages remain reachable from it.
+- Figure G1 (context) is committed as source plus SVG and reused as the map;
+  the page's G4 slot is drawn or explicitly handed on to `concepts`.
+- `proof` has walked the landing page to the domain explanation to the
+  normative files, from a cold start and from a direct entry.

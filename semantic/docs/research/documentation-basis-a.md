@@ -1241,6 +1241,17 @@ edition, online) and the Microsoft Writing Style Guide are free. So is the
 C4 model: its site and example diagrams are licensed CC BY 4.0, which also
 allows adapting them with attribution.
 
+## 11. Where these findings were applied
+
+The [documentation audit](interface-language-documentation-audit.md) applies
+§7 and the planning criteria in §9. The
+[documentation plan](../design/2026-09-23-interface-language-documentation-plan.md)
+applies §4 (page architecture, reference entries and figures), §5 and §6 (its
+prose contract), §8 (the human chose Markdown on 2026-09-23) and §9 (its stage
+checks and reader checkpoints). The plan records one departure from §9: no
+cold readers new to the domain are available, so T1, T3 and T5 become a
+labelled proxy reader plus the human's own reading.
+
 [ail]: ../../specification/interface-language/README.md
 [ail-language]: ../../specification/interface-language/language.md
 [ail-contracts]: ../../specification/interface-language/contracts.md
