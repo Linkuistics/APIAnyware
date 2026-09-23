@@ -8,11 +8,12 @@
 
 ## How to read this page
 
-A binding that uses a view after its storage dies has violated a domain
-constraint. Expressing the lifetime with `give($result, borrow(owner($store)))`
+A [binding](../glossary.md#binding) that uses a view after its storage is released
+has violated a domain constraint. Expressing the lifetime with `give($result, borrow(owner($store)))`
 is a language choice. Likewise, a [callback](../glossary.md#callback) needs its
-captures while an invocation can still run; expressing safe teardown through
-`quiescence(@unsubscribe)` is AIL's chosen form
+[captures](../glossary.md#callback-captures) while an invocation can still run;
+expressing safe teardown through [`quiescence(@unsubscribe)`](../glossary.md#quiescence)
+is AIL's chosen form
 ([`C1`](../contracts.md#c1), [`C5–C6`](../contracts.md#c5)).
 
 This page keeps those two levels distinct. Where the
@@ -23,20 +24,24 @@ describe possible designs; none changes draft 0.1. The register at the end
 preserves open questions without answering them.
 
 All conformance examples mentioned here use the synthetic fixture
-[profile](../glossary.md#profile), catalogue and
+[profile](../glossary.md#profile) (a semantic extension, not a preferences preset),
+catalogue and
 [digest tokens](../glossary.md#digest-pin) defined by [`F1`](../profiles.md#f1).
 They describe invented APIs rather than actual platform contracts.
 
 ## A dedicated syntax
 
-Compare the synthetic store's uniquely owned handle with the synthetic counter's
+Compare the synthetic store's uniquely [owned](../glossary.md#owned)
+[handle](../glossary.md#handle) with the synthetic counter's
 reference-counted object and message/source access alternatives. A common format
 needs to describe both lifetime disciplines and both ways of reaching code
 ([`C2`](../contracts.md#c2), [`A2`](../profiles.md#a2);
 [buffers](../examples/buffers.ail), [objects](../examples/objects.ail)).
+Owned means one release obligation, not necessarily exclusive access: several
+owned references can refer to the same reference-counted object.
 
 The [proposal's alternatives table](../../../docs/design/2026-09-22-interface-language.md#2-recommended-shape-and-alternatives)
-chooses a common semantic core with explicit profiles and ABI references.
+chooses a common semantic core with explicit profiles and [ABI](../glossary.md#abi) references.
 It considers extending WIT and extending Swift interface syntax. The recorded
 cost for the WIT option is demonstrating that native lifetime, dispatch and
 representation fit without conflicting meanings or opaque annotation bags.
@@ -44,24 +49,25 @@ The recorded cost for the Swift option is making other source languages and
 independent consumers depend on Swift-shaped semantics. These are the proposal's
 design assessments, not a finding that either extension is impossible.
 
-Dedicated syntax avoids inheriting either notation's whole semantic frame.
+Dedicated syntax avoids inheriting all the meanings and assumptions of either notation.
 Its cost is a new vocabulary, a conformance corpus and future tooling to learn
 and maintain. Familiar braces and function arrows do not remove that cost:
-`Store` already denotes a handle, while ownership lives in separate clauses
+`Store` already denotes a handle, while ownership is stated in separate
+[clauses](../glossary.md#clause)
 ([`L4`](../language.md#l4)). Familiar syntax alone cannot supply the missing
 contract.
 
 ## Complete contracts only
 
-The synthetic buffer package is complete for an immutable sixteen-byte store;
+The synthetic buffer [package](../glossary.md#package) is complete for an immutable sixteen-byte store;
 it makes no claim to cover a general storage library. Deleting its returned
 view's ownership clause would instead leave an obligation of that declared
-surface missing ([`L3`](../language.md#l3), [`C5`](../contracts.md#c5)).
+[surface](../glossary.md#surface) missing ([`L3`](../language.md#l3), [`C5`](../contracts.md#c5)).
 
 In summary (non-normative), a producer can publish a declared subset with its
 whole [dependency closure](../glossary.md#dependency-closure), but cannot publish
 required facts as `unknown`, confidence scores or promises of later inference.
-The producer resolves conflicting evidence before publication. Validation checks
+The producer resolves conflicting evidence before publication. [Validation](../glossary.md#validation) checks
 completeness and internal consistency; it cannot prove that an implementation
 honours the assertions ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8)).
 
@@ -80,15 +86,16 @@ cannot be disguised by that permission ([`C6`](../contracts.md#c6),
 ## Everything explicit
 
 A binding needs to distinguish known absence from a fact nobody checked. The
-synthetic `Store` states `isolation(none)`; `Counter` states `isolation(main)`.
+synthetic `Store` states [`isolation(none)`](../glossary.md#isolation); `Counter` states `isolation(main)`.
 An omitted required isolation clause supplies neither answer. Likewise,
-`retain($store, none)` in `view` promises no retention, whereas the synthetic
-subscription explicitly retains its handler for an owner region
+`retain($store, none)` in `view` promises no [retention](../glossary.md#retention), whereas the synthetic
+subscription explicitly retains its handler for an owner [region](../glossary.md#region)
 ([`L3`](../language.md#l3), [`C2–C3`](../contracts.md#c2)).
 
 The authoring cost is visible in this entire synthetic `view` declaration.
 
-Fragment — omits the containing package, `Store` and its destructor, environment,
+Fragment — omits the containing package, `Store` and its destructor,
+[environment](../glossary.md#environment),
 and synthetic fixture profile, catalogue and digest tokens; not a publishable
 package.
 
@@ -127,7 +134,8 @@ package.
 
 Counting each `name(...);` clause once, including nested blocks but excluding
 constructors inside arguments, this declaration has 23 clauses: 14 directly in
-the function body, five in the outcome and four in the access path. That count
+the function body, five in the [outcome](../glossary.md#outcome) and four in the
+[access path](../glossary.md#access-path). That count
 excludes all surrounding package and dependency declarations. It measures this
 example's written burden, not average authoring effort. The rules behind these
 groups are [`L3`](../language.md#l3), [`L5`](../language.md#l5),
@@ -149,7 +157,7 @@ into an authoritative default ([`L5`](../language.md#l5), [`A1`](../profiles.md#
 The [historical design sketch](../../../docs/design/2026-09-22-interface-language.md#7-dedicated-syntax-direction)
 placed some ownership information in signatures. Its `read` is useful to compare
 with the synthetic draft 0.1 `view` above, but it is not the same declared API:
-the sketch names `replace` as an earlier invalidator, while the frozen store
+the sketch names `replace` as an earlier [invalidator](../glossary.md#invalidation), while the frozen store
 example is immutable.
 
 Historical fragment — selected lines from the design proposal's syntax sketch;
@@ -169,7 +177,9 @@ The pointer type constructors carry neither ownership nor extent
 ([`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 Compare `destroy(store: Store)` with `view(store: Store)`: the parameter type
-stays the same, while `input` changes from `consume` to `borrow`. A reviewer
+stays the same, while `input` changes from [`consume`](../glossary.md#consume)
+(transfer at entry, including on failure) to [`borrow`](../glossary.md#borrow)
+(access without transfer, with no implied Rust-style checking). A reviewer
 has to read the body to see that difference. The alternative illustrated by
 the sketch makes transfer visible in the signature, while owner relationships
 and invalidation still need expression somewhere.
@@ -191,7 +201,8 @@ shape but names no defined fixture clause and is rejected
 
 The [grammar](../grammar.ebnf) defines `clause` as a name, parenthesized
 arguments and a semicolon. Its `value` production handles nested constructors,
-places, references and lists. The rule files close and type the vocabulary.
+[places](../glossary.md#place), references and lists. The rule files enumerate
+the accepted vocabulary and specify its argument types.
 In summary (non-normative), parseability establishes neither a recognized clause
 nor a valid use of it ([`L1`](../language.md#l1), [`L5`](../language.md#l5)).
 
@@ -214,13 +225,13 @@ configurations the exact list has not named ([`L3`](../language.md#l3),
 
 In summary (non-normative), draft 0.1 interprets environments as exact values,
 not ranges. Unlisted configurations lie outside the claim. Changed signatures
-or contracts require distinct declarations with disjoint availability or distinct
+or contracts require distinct declarations with disjoint [availability](../glossary.md#availability) or distinct
 identities ([`L3`](../language.md#l3)).
 
 Version-range algebra is the alternative. Exactness makes the claimed cases
 explicit, but costs a potentially large matrix and repeated declarations when
 contracts vary. These are consequences of the rule, not a recorded scaling
-study. Provider interpretation still matters: an exact toolchain version alone
+study. [Provider](../glossary.md#provider) interpretation still matters: an exact toolchain version alone
 does not establish artifact compatibility ([`A1`](../profiles.md#a1),
 [`A4`](../profiles.md#a4)).
 
@@ -324,7 +335,7 @@ no rationale is recorded. The comparison above does not fill that gap.
 
 ### Q4
 
-**Question:** Is the double spelling for slots, with an overloaded `::`,
+**Question:** Is the double spelling for [slots](../glossary.md#slot), with an overloaded `::`,
 the intended trade-off?
 **Where:** local `$result` or `$handler` in [`C1`](../contracts.md#c1), external
 `@operation::result` or `@subscribe::handler` and imported `@Alias::name` in

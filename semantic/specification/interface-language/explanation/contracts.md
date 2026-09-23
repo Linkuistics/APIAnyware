@@ -1,7 +1,7 @@
 # How AIL states a contract
 
-> **Purpose:** explanation — read AIL's semantic clauses as obligations between callers and callees.
-> **Reader:** language designers who have met the API binding domain and want to understand the notation.
+> **Purpose:** explanation — read AIL's semantic [clauses](../glossary.md#clause) as obligations between [callers and callees](../glossary.md#caller-and-callee).
+> **Reader:** language designers who have met the API [binding](../glossary.md#binding) domain and want to understand the notation.
 > **Before this:** [What a signature leaves unsaid](unsaid.md).
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L4–L6`](../language.md#l4), [`C1–C8`](../contracts.md#c1) and [`A1–A5`](../profiles.md#a1) are canonical; the explanations here are non-normative.
@@ -12,10 +12,12 @@ you should be able to follow the obligations in the three
 [conformance examples](../conformance.md#positive-specifications).
 
 Those examples describe invented APIs using a synthetic fixture
-[profile](../glossary.md#profile),
-catalogue and digest tokens ([`F1`](../profiles.md#f1)). They are not contracts
+[profile](../glossary.md#profile) (a semantic extension, not a preferences preset),
+catalogue and [digest tokens](../glossary.md#digest-pin)
+([`F1`](../profiles.md#f1)). They are not contracts
 for real operating-system APIs. Extracts below are labelled fragments because
-the surrounding declarations and package still matter. The alternatives
+the surrounding declarations and [package](../glossary.md#package) still matter.
+The alternatives
 compare design possibilities; they do not change draft 0.1 or claim to be its
 authors' recorded rationale.
 
@@ -24,11 +26,15 @@ authors' recorded rationale.
 A [caller](../glossary.md#caller-and-callee) needs to know whether closing a
 watch gives up its obligation to release it. The C header in the domain page
 does not answer that. For this first example, assume `watch_close` is the unique
-destructor of `Watch`: it consumes the handle and completes successfully.
+destructor of `Watch`: it [consumes](../glossary.md#consume) the
+[handle](../glossary.md#handle), taking the caller's release obligation at entry,
+and completes successfully.
 This is an illustrative contract choice, not a fact inferred from the header.
 
-Fragment — omits the package, `Watch` declaration, availability, other effects,
-retention and access path; not a publishable package.
+Fragment — omits the package, `Watch` declaration,
+[availability](../glossary.md#availability), other effects,
+[retention](../glossary.md#retention) and [access path](../glossary.md#access-path);
+not a publishable package.
 
 <!-- ail-fragment -->
 ```ail
@@ -68,7 +74,8 @@ fn view(store: Store) -> ptr<u8> {
 
 The principle is that the signature and clauses answer different questions.
 In summary (non-normative), a resource type identifies a handle; `input` says
-whether entry transfers an obligation, and an outcome describes completion and
+whether entry transfers an obligation, and an [outcome](../glossary.md#outcome)
+describes [completion](../glossary.md#completion) and
 outputs. AIL uses the same `name(arguments);` clause syntax for these facts,
 with a closed vocabulary specified by the rules. Merely parsing that shape
 does not establish a valid contract ([`L1`](../language.md#l1),
@@ -206,7 +213,7 @@ clauses; not a publishable package.
 In summary (non-normative), `input(consume)` transfers an existing obligation,
 `retain(strong(...))` creates an independent one, and `give(owned)` supplies one
 to the caller. `retain(none)` promises no retention. A unique resource cannot be
-strongly retained or copied without an explicit clone profile
+strongly retained or [copied](../glossary.md#copy) without an explicit clone profile
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 The diagram tracks borrowing, consumption and owned delivery separately;
@@ -266,7 +273,7 @@ In summary (non-normative), the three regions name different boundaries:
 |---|---|---|
 | `call` | Completion of this invocation, including synchronous callbacks | `valid($store, call)` on `view` entry |
 | `owner($store)` | Destruction of the owner or release of its final reference | The `view` result |
-| `static` | End of the loaded API instance, with provider-defined shutdown | `give($result, borrow(static))` on synthetic `fixed_bytes` |
+| `static` | End of the loaded API instance, with [provider](../glossary.md#provider)-defined shutdown | `give($result, borrow(static))` on synthetic `fixed_bytes` |
 
 These meanings come from [`C1`](../contracts.md#c1); synthetic `static` ends at
 provider unload ([`F1`](../profiles.md#f1)). An escaping borrow needs a region
@@ -418,11 +425,13 @@ scalar slots as lengths and capacities.
 Storing a callback creates two questions: what does an invocation do, and when
 can the API invoke it? A binding that knows the first alone can release
 [callback captures](../glossary.md#callback-captures) while later invocations
-still need them. Here captures means callback state, not a dependency closure.
+still need them. Here captures means callback state, not a
+[dependency closure](../glossary.md#dependency-closure).
 
 The synthetic `Handler` declaration describes one invocation. Its
 `execution(sync)` says that invocation completes before returning to its caller;
-its `concurrency(serial)` and `reentrancy(forbidden)` constrain uses of that
+its [`concurrency(serial)`](../glossary.md#concurrency) and
+[`reentrancy(forbidden)`](../glossary.md#re-entrancy) constrain uses of that
 callback type ([`C2–C3`](../contracts.md#c2)). Compare two schedules for using
 such a handler: the synthetic subscription stores it, while a constructed
 call-scoped operation invokes it once before completing.
@@ -462,8 +471,9 @@ callback $handler {
 }
 ```
 
-For the subscription, notification starts after registration returns and may
-happen zero or arbitrarily many times over its owner scope. `many` means
+For the subscription, the API starts notifications after registration returns
+and may invoke the handler zero or arbitrarily many times over its owner scope.
+`many` means
 unbounded permission, not an unknown count. `subscribe` itself still completes
 synchronously. For the second case, invocations start during the call and all
 finish before it completes; the count is exactly one conditional on eventual
@@ -475,7 +485,8 @@ invocation is running or can start. In the subscription, its unique owner's
 `unsubscribe` destructor establishes that boundary before returning. Its
 `requires(outside_callback(@subscribe::handler))` prevents calling this blocking
 teardown from within the very callback it waits for. The retained callback is
-stored for the owner region; the provider defines its representation and
+stored for the owner region; the [provider](../glossary.md#provider) defines its
+[representation](../glossary.md#representation) and
 release ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6),
 [`F1`](../profiles.md#f1)).
 
@@ -527,15 +538,16 @@ concurrency(serial);
 reentrancy(allowed);
 ```
 
-The first permits entry on any executor, with independent calls using the same
-store serialized. The second also requires main-thread entry. Both permit the
+In the first case, callers may enter on any executor but serialize independent
+calls using the same store. In the second, callers also enter on the main thread.
+Both permit the
 specified nested re-entry, which is distinct from independent overlap. A lock
 alone does not satisfy the counter's executor restriction
 ([`C2–C3`](../contracts.md#c2)).
 
 In summary (non-normative), nominal `sharing` and
 [isolation](../glossary.md#isolation) describe the type, while per-call clauses
-describe operations. `sharing(shared)` permits references to cross executors
+describe operations. [`sharing(shared)`](../glossary.md#shared) permits references to cross executors
 without promising safe concurrent mutation; `isolation(none)` records known
 absence of nominal isolation without making every operation callable anywhere.
 Confinement also covers release and destruction. Callback sharing and isolation
@@ -673,8 +685,9 @@ unfinished contract ([`C3`](../contracts.md#c3), [`F1`](../profiles.md#f1);
 N30 in the [conformance corpus](../conformance.md#rejection-mutations)).
 
 In summary (non-normative), profiles define additional typed vocabulary and
-obligations without weakening the core. ABI entries and access providers also
-supply representations and call mechanisms: a core integer width or record
+obligations without weakening the core. [ABI entries](../glossary.md#abi-entry)
+and access providers also supply [representations](../glossary.md#representation)
+and call mechanisms: a core integer width or record
 field order is not a complete native layout. Consumers identify unsupported
 dependencies before claiming complete validation
 ([`A1–A3`](../profiles.md#a1)).

@@ -1,14 +1,15 @@
 # Packages, environments and access paths
 
-> **Purpose:** explanation — understand what a package claims and how its operations reach code.
-> **Reader:** language designers who have met binding obligations and AIL's contract clauses.
+> **Purpose:** explanation — understand what a [package](../glossary.md#package) claims and how its operations reach code.
+> **Reader:** language designers who have met [binding](../glossary.md#binding) obligations and AIL's contract [clauses](../glossary.md#clause).
 > **Before this:** [What a signature leaves unsaid](unsaid.md) and [How AIL states a contract](contracts.md).
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L2–L5`](../language.md#l2) and [`A1–A5`](../profiles.md#a1) are canonical; this page gives non-normative explanations.
 
 A [package](../glossary.md#package) brings a contract together with the scope
 in which it holds and the definitions needed to interpret it. The examples here
-use the synthetic fixture [profile](../glossary.md#profile), catalogue and
+use the synthetic fixture [profile](../glossary.md#profile) (a semantic extension,
+not a preferences preset), catalogue and
 [digest tokens](../glossary.md#digest-pin) from [`F1`](../profiles.md#f1).
 They describe invented APIs, not real Objective-C or Swift implementations.
 
@@ -26,9 +27,9 @@ The getter separates four kinds of identity:
 | Identity | What it identifies | Synthetic example |
 |---|---|---|
 | Semantic declaration | The operation or type in the contract | `example::objects`, version `1`, declaration `read_count` |
-| Source declaration | A declaration as a source profile names it | `source(fixture, "Outer.Counter")` on `Counter` |
-| Access path | A named way to reach code, with its access identity | `objc_like` uses selector `currentCount`; `swift_like` uses source callable `Outer.Counter.currentCount.get` |
-| ABI or profile selection | The versioned definition that interprets a path or source fact | `native` selects `example.fixture-abi` version `1`; `fixture` selects `example.fixture` version `1`, each with a synthetic digest token |
+| [Source declaration](../glossary.md#source-identity) | A declaration as a source profile names it | `source(fixture, "Outer.Counter")` on `Counter` |
+| [Access path](../glossary.md#access-path) | A named way to reach code, with its access identity | `objc_like` uses selector `currentCount`; `swift_like` uses source callable `Outer.Counter.currentCount.get` |
+| [ABI](../glossary.md#abi) or profile selection | The versioned definition that interprets a path or source fact | `native` selects `example.fixture-abi` version `1`; `fixture` selects `example.fixture` version `1`, each with a synthetic digest token |
 
 In summary (non-normative), [canonical declaration identity](../glossary.md#canonical-identity) is the package name,
 package version and declaration name. A `source` clause records a
@@ -52,7 +53,8 @@ complete lifetime API. The object package instead claims a reference-counted
 object, a property and two faithful call paths. Each states its own
 [surface](../glossary.md#surface), the subset and release it covers.
 
-Fragment — omits the containing package, declarations, environment and synthetic
+Fragment — omits the containing package, declarations,
+[environment](../glossary.md#environment) and synthetic
 fixture profile, catalogue and digest tokens; not a publishable package.
 
 <!-- ail-example: ../examples/buffers.ail lines=3-4 -->
@@ -66,7 +68,7 @@ In summary (non-normative), `surface` describes the coverage claim and
 [dependency closure](../glossary.md#dependency-closure) includes the referenced
 declarations and pinned dependencies needed to interpret and use those roots;
 private support declarations remain authoritative. Following `view` reaches
-`Store`, whose lifecycle refers to `destroy`. Omitting that destructor is not
+`Store`, whose [lifecycle](../glossary.md#lifecycle) refers to `destroy`. Omitting that destructor is not
 equivalent to excluding an unrelated API from the surface
 ([`L2–L3`](../language.md#l2), [`C2`](../contracts.md#c2)).
 
@@ -74,7 +76,7 @@ The publication unit is therefore a complete declared subset. A signature-only
 extract is useful as a view, but does not become a complete package merely by
 listing fewer exports. Compared with requiring an entire library at once, this
 choice permits bounded publication; its cost is stating the boundary honestly
-and retaining everything it depends on. Validation checks the declared scope,
+and retaining everything it depends on. [Validation](../glossary.md#validation) checks the declared scope,
 not its truth against a library's implementation ([`L3`](../language.md#l3)).
 
 ## Where it holds
@@ -145,7 +147,7 @@ Validation neither fetches them nor executes provider code implicitly
 Compare two aliases for the same package name/version and digest with two
 aliases that pin different digests for that name/version. Renaming the second
 alias cannot repair the latter conflict: one identity needs one digest
-throughout the full resolution closure. The same consistency rule applies
+throughout the full dependency closure. The same consistency rule applies
 separately to profile and ABI identities, and imports form an acyclic graph
 ([`L2`](../language.md#l2); mutations N28–N29 in the
 [conformance corpus](../conformance.md#rejection-mutations)).
@@ -160,7 +162,9 @@ and trust remain tooling decisions ([`L2`](../language.md#l2)).
 
 Knowing a contract does not tell a consumer how to call it. The synthetic getter
 can receive an object message, or be called through source compilation. Its two
-paths keep the same main-thread, borrowed-receiver and result obligations.
+paths keep the same main-thread, [borrowed](../glossary.md#borrow)-receiver and
+result obligations. Borrowing grants access without transferring ownership;
+it does not imply Rust's static borrow checking.
 
 Fragment — omits the containing `read_count` declaration, package and synthetic
 fixture profile, catalogue and digest tokens; not a publishable package.
@@ -186,13 +190,13 @@ In summary (non-normative), each access path supplies four facts
 
 | Clause | Question answered | Difference between these paths |
 |---|---|---|
-| `abi` | Which [ABI](../glossary.md#abi) entry and calling convention govern the call? | `object-message` versus `source`, within the synthetic `native` entry |
+| `abi` | Which [ABI entry](../glossary.md#abi-entry) and [calling convention](../glossary.md#calling-convention) govern the call? | `object-message` versus `source`, within the synthetic `native` entry |
 | `via` | Which profile mechanism and identity reach the code? | An exact selector versus a source callable spelling |
-| `mapping` | How does the semantic signature become that call? | Both use the provider's faithful identity mapping; message dispatch makes the receiver implicit |
-| `compatibility` | In which [compatibility domain](../glossary.md#compatibility-domain) can the representation be used? | The synthetic ABI's stable domain versus the pinned `fixture-build` source recipe |
+| `mapping` | How does the semantic signature become that call? | Both use the [provider](../glossary.md#provider)'s faithful identity [mapping](../glossary.md#mapping); message dispatch makes the receiver implicit |
+| `compatibility` | In which [compatibility domain](../glossary.md#compatibility-domain) can the [representation](../glossary.md#representation) be used? | The synthetic ABI's stable domain versus the pinned `fixture-build` source recipe |
 
 A [mapping](../glossary.md#mapping) accounts for parameters, results, auxiliary
-native arguments and completion modes exactly once. `identity` relies on a
+native arguments and [completion](../glossary.md#completion) modes exactly once. `identity` relies on a
 total, faithful provider-defined lowering; it does not promise identical
 physical argument lists. Moving a receiver into implicit dispatch preserves
 the semantic operation. Hiding an observable success status would change the
@@ -200,9 +204,9 @@ operation and needs a different declaration ([`A2`](../profiles.md#a2)).
 
 Path order supplies no preference. A consumer chooses explicitly or uses a
 configuration policy, and every chosen path implements the whole contract.
-Every available environment needs at least one path. This costs selection
-policy compared with a single inferred route, but permits alternatives without
-silently choosing one ([`A2`](../profiles.md#a2)).
+Every available environment needs at least one path. Compared with a single
+inferred route, this requires a choice or configuration policy from the consumer,
+but lets it use alternatives ([`A2`](../profiles.md#a2)).
 
 Compatibility is similarly specific. `stable` refers to the ABI entry's
 guaranteed domain. `artifact` instead refers to a resolved built artifact set;
@@ -233,7 +237,7 @@ arity, scope, applicability, defaults if any, conflicts and companion clauses.
 It also defines source and environment interpretation, obligations, validation,
 dependencies, access mappings, representation requirements, a canonical machine
 view and lossless printing rules. An ABI manifest defines accepted environments,
-type and call lowering, aggregate layout, callback entry, runtime prerequisites
+type and call lowering, aggregate layout, [callback](../glossary.md#callback) entry, runtime prerequisites
 and compatibility conditions ([`A1`](../profiles.md#a1)).
 
 The package references these definitions. It does not implement register or
@@ -259,9 +263,9 @@ this synthetic profile does not supply ([`C3`](../contracts.md#c3),
 [`F1`](../profiles.md#f1); mutation N30).
 
 The synthetic fixture supports `fixture64`, platform `fixture` version `1`,
-and optionally `fixture-compiler` version `1`. Its pointers, handles and object
+and optionally `fixture-compiler` version `1`. Its pointers, [handles](../glossary.md#handle) and object
 references are 64 bits; these facts describe an abstract test provider, not the
-host machine. Its callback representation supports retention without a separately
+host machine. Its callback representation supports [retention](../glossary.md#retention) without a separately
 visible context argument. Owner-scoped callbacks may start after registration
 returns even though callable entry itself is synchronous
 ([`F1`](../profiles.md#f1), [`C6`](../contracts.md#c6)).
@@ -288,7 +292,7 @@ keeps a reference to the complete declaration.
 
 In summary (non-normative), a [projection](../glossary.md#projection) retains
 access to the full contract: identity, types, access alternatives, pins,
-availability, outcomes, callback schedules and other obligations. An excerpt
+[availability](../glossary.md#availability), [outcomes](../glossary.md#outcome), callback schedules and other obligations. An excerpt
 does not become an authoritative package by changing its format. A scoped
 target-language wrapper may add restrictions, but labels them as its own and
 preserves the original contract in its view ([`A5`](../profiles.md#a5),

@@ -45,3 +45,24 @@ The preceding drafts completed structure and technical-truth inspection without
 claiming parser, validator, runtime or reader-test results. All three concept
 pages now have landing-map links and existing next/return routes. The tutorial
 and review guide are still forthcoming.
+
+## Decisions (running log)
+
+- Keep the section order, examples, rule citations and Q1–Q6 unchanged. The
+  copy-edit addresses first-use glossary links, familiar-term warnings,
+  explicit actors and sentence-level clarity. No structural or technical
+  correction run is indicated by the whole-set read.
+- Retain the existing art handoff for G2/G3/G5–G7 and the reused G4. The next
+  stage remains `art`; no later live sibling currently holds it.
+
+## Validation
+
+- Read the three concept pages, glossary and navigation additions against the
+  plan's prose contract and survey C1–C10. Navigation already routes to all
+  three concepts and back; no navigation edit was needed.
+- `task docs:check` passed: links checked 13 files with 11 pages reachable;
+  example checks passed for 13 files; G1 and G4 SVG regeneration matched.
+  Code blocks, section order and fixture files remain unchanged. These checks
+  do not establish semantic conformance or reader comprehension.
+- Added `concepts-k31` (`art`), carrying the existing figure handoff forward.
+  The concept node remains live; no parent close or ADR change is needed.

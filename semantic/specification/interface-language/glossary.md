@@ -31,8 +31,8 @@ A language name or compiler version alone is not a compatibility guarantee.
 
 An access path describes how a consumer reaches a declaration's code or data in
 specified [environments](#environment), with its ABI, access mechanism,
-[mapping](#mapping) and compatibility
-domain. Defined in [Reaching the code](explanation/packages.md#reaching-the-code);
+[mapping](#mapping) and [compatibility domain](#compatibility-domain).
+Defined in [Reaching the code](explanation/packages.md#reaching-the-code);
 rule: [`A2`](profiles.md#a2). A source name alone does not supply a path.
 
 ## Availability
@@ -351,7 +351,7 @@ usual call order.
 
 ## Pattern instance
 
-A pattern instance binds every role of a named pattern to concrete participants,
+A pattern instance binds every [role](#role) of a named pattern to concrete participants,
 including empty bindings where the role permits them. Defined in
 [Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns);
 rule: [`L6`](language.md#l6). It applies the pattern's laws; it does not invent
