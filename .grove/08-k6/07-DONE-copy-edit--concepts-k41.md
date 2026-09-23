@@ -43,3 +43,31 @@ requires escalation. The human requested corrections before further feedback;
 `first-path-reading-k48` follows all three corrected documents and precedes
 reference drafting. Keep the synthetic examples and proposed-language status
 explicit throughout.
+
+## Decisions (running log)
+
+- D1: Keep the corrected section order, examples and Q1–Q6. This pass
+  expands residual compressed sentences and supplies first-use glossary
+  links. Figure captions, alt text and labels remain with the queued art
+  stage under the existing node-brief handoff.
+- D2: Use direct Markdown reads as evidence. Graph coverage generation
+  `2026-09-23T09:55:55Z` reports changed metadata for these pages and excludes
+  the documentation-plan subtree; it is not evidence of their current prose.
+- D3: The headings and opening sentences introduce concrete subjects; the
+  whole-document read found no further structural handback. Existing figure
+  findings remain owned by `concepts-k42`, with `concepts-k43` after it.
+  Both siblings are live, so this correction adds no duplicate stage.
+
+## Verification
+
+- `task docs:check` passed: links checked across 19 files with 17 pages
+  reachable; example checks passed for 19 files; all 11 diagram SVGs matched
+  regeneration. The external RFC link was listed without fetching.
+- SHA-256 manifests before and after the gate matched for the documentation
+  and example files, diagram sources/SVGs/styles, documentation-check scripts,
+  design/research Markdown and root Taskfile. No checked input changed during
+  the run.
+- Read all three pages, then checked headings and opening sentences together.
+  Reviewed the final diff for unchanged examples, rule citations and Q1–Q6.
+  These are editorial and static checks; human comprehension remains for
+  `first-path-reading-k48`.

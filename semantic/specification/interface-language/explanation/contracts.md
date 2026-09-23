@@ -70,7 +70,7 @@ buffer example below. The parameter list and arrow describe the values passed
 and returned; the clauses connect those values to their obligations
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-Fragment — shows the input and returned borrow of `view`. The complete
+Fragment — shows the input and returned [borrow](../glossary.md#borrow) of `view`. The complete
 [buffer package](../examples/buffers.ail) also supplies `Store`, availability,
 effects, retention, buffer facts and access paths.
 
@@ -96,8 +96,9 @@ returned pointer: the caller borrows access for the store's lifetime.
 `invalidated_by($result, [])` says that no operation ends this access earlier
 ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-Thus the same resource type can participate in different transfers. AIL states
-the transfer in `input` and describes the returned values in an
+The caller therefore keeps responsibility for the store across `view`, while
+`watch_close` takes responsibility for the watch. AIL states what happens to
+an input's ownership in `input` and describes the returned values in an
 [outcome](../glossary.md#outcome). Each outcome identifies a way the invocation
 can finish, its [completion](../glossary.md#completion), and the values the
 caller can use afterwards. AIL writes these facts as `name(arguments);`
@@ -105,7 +106,7 @@ clauses. The rule files define the permitted names and their meanings
 ([`L1`](../language.md#l1),
 [`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-The choice makes obligations individually addressable, at the cost of a longer
+Each clause lets the reader locate one obligation, at the cost of a longer
 body and several rule lookups. Putting ownership in types is an alternative;
 [Expressing ownership](choices.md#expressing-ownership) compares the forms, and
 [Q3](choices.md#q3) records the missing rationale for draft 0.1's choice.
@@ -157,8 +158,10 @@ In the first case, `$length` is the pointer and `$length.*` is one integer.
 In the second, `$destination[]` describes the buffer's initialized elements.
 The principle is to address the object of each obligation explicitly. In
 summary (non-normative), `.*` goes with extent `one`, `[]` with buffer extent,
-and `.field` selects a record field. Paths type-check; the two pointer selectors
-are not interchangeable spellings ([`C1`](../contracts.md#c1)).
+and `.field` selects a record field. A validator checks each path against the
+type and extent it follows. Selecting one pointee with `.*` therefore requires
+a different extent from selecting buffer elements with `[]`
+([`C1`](../contracts.md#c1)).
 
 The selector table keeps the pointer value distinct from the storage addressed
 through it.
@@ -222,7 +225,7 @@ input($store, consume);
 retain($store, none);
 ```
 
-The caller keeps its obligation across `view`. With
+The caller remains responsible for destroying the store after `view`. With
 [consumption](../glossary.md#consume), the callee takes over at entry on every
 outcome. In this example `destroy` discharges it by destruction. Consumption
 itself does not mean mutation of live contents, so its `mutation(none)` in the
@@ -380,8 +383,9 @@ The three regions therefore name different boundaries (non-normative summary):
 | `static` | End of the loaded API instance, with [provider](../glossary.md#provider)-defined shutdown | `give($result, borrow(static))` on synthetic `fixed_bytes` |
 
 These meanings come from [`C1`](../contracts.md#c1); synthetic `static` ends at
-provider unload ([`F1`](../profiles.md#f1)). An escaping borrow needs a region
-that survives delivery: `borrow(call)` cannot describe a returned view
+provider unload ([`F1`](../profiles.md#f1)). To use a borrow after the call
+returns, the caller needs a region that lasts beyond that call. The `call`
+region ends too soon to describe a returned view with `borrow(call)`
 ([`C1`](../contracts.md#c1); mutation N07 in the
 [conformance corpus](../conformance.md#rejection-mutations)).
 
@@ -449,7 +453,8 @@ and its other contracts.
 The constructor's null is a valid, observable result representing failure. It
 creates no ownership obligation. The copy's Boolean result is valid on both
 outcomes, but on failure the destination elements are unreadable. The caller
-can test the status and cannot inspect failed output to find out what happened
+finds out what happened by testing the status. After failure, it leaves the
+destination elements unread
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 The partition table shows why observable failure and unreadable output are
@@ -472,9 +477,10 @@ returned outcome. `meaning` then labels the case as success or failure, and
 Every possible result needs exactly one case. Null and non-null cover
 `create`; true and false cover `copy_bytes`. For a signed integer status,
 cases covering zero and positive values would leave negative values unanswered.
-In summary (non-normative), each completion uses outcomes that are exhaustive
-and mutually exclusive over one valid discriminator's full domain, or one
-`any` outcome covering the whole completion ([`C5`](../contracts.md#c5)).
+In summary (non-normative), outcomes for a completion can test one valid
+discriminator. Together, those tests cover every possible value, and each
+value selects exactly one outcome. Alternatively, one `any` outcome covers
+the whole completion ([`C5`](../contracts.md#c5)).
 
 A caller can also pass storage whose contents the library may read and replace.
 AIL calls that direction `inout`. An outcome can promise to leave those
@@ -631,8 +637,8 @@ callback $handler {
 For the subscription, `timing(after_return)` allows the API to start a
 notification only after `subscribe` returns. `count(0, many)` permits zero
 notifications and places no finite upper bound on how many may occur during
-the subscription. This is an established permission. The registration call
-itself still completes synchronously ([`C3`](../contracts.md#c3),
+the subscription. The author is stating that the API permits this range of
+counts. The registration call itself still completes synchronously ([`C3`](../contracts.md#c3),
 [`C6`](../contracts.md#c6)).
 
 For the constructed case, the handler starts during the call and finishes
@@ -725,7 +731,8 @@ reentrancy(allowed);
 ```
 
 In the first case, callers may enter on any executor but serialize independent
-calls using the same store. In the second, callers also enter on the main thread.
+calls using the same store. In the second, callers serialize independent calls
+using the same counter and make those calls on the main thread.
 Both permit the
 specified nested re-entry, which is distinct from independent overlap. A lock
 alone does not satisfy the counter's executor restriction
@@ -793,8 +800,9 @@ lifecycle(refcounted, runtime(fixture, "retain"), runtime(fixture, "release"));
 ```
 
 The store's owned handle carries one destruction obligation. The counter can
-have several owned references, each carrying its own release obligation; retain
-creates another and final release destroys it. In the unique case, destruction
+have several owned references, each carrying its own release obligation.
+Retaining creates another owned reference; releasing the final reference
+destroys the counter. In the unique case, destruction
 consumes the handle at entry and invalidates dependent borrows before returning
 ([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
 

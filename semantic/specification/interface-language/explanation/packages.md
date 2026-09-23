@@ -17,7 +17,7 @@ it covers ([`L2–L3`](../language.md#l2), [`A2`](../profiles.md#a2)).
 
 This page follows those connections. Its examples describe invented APIs using
 the synthetic fixture [profile](../glossary.md#profile), a versioned language
-extension. The profile, ABI catalogue and [digest tokens](../glossary.md#digest-pin)
+extension. The profile, [ABI](../glossary.md#abi) catalogue and [digest tokens](../glossary.md#digest-pin)
 come from [`F1`](../profiles.md#f1). Names resembling Objective-C or Swift
 illustrate possible mechanisms within this fixture; production support for
 those languages remains future work.
@@ -29,7 +29,7 @@ package, then follows how a tool identifies and reaches an API operation.
 ## Four identities
 
 Suppose a binding generator is preparing a call to the synthetic counter's
-`read_count`. The contract tells it to borrow a `Counter` receiver and return
+`read_count`. The contract tells it to [borrow](../glossary.md#borrow) a `Counter` receiver and return
 an unsigned integer. The generator identifies that operation by its package,
 version and declaration name. Together these form its
 [canonical declaration identity](../glossary.md#canonical-identity)
@@ -76,8 +76,8 @@ establish actual Swift or Objective-C support ([`F1`](../profiles.md#f1)).
 
 An API author can begin with a small, usable part of a library. The synthetic
 buffer package describes an immutable sixteen-byte store: creating it, viewing
-or copying its bytes, and destroying it. The object package covers a different
-particular API: a reference-counted counter and its property. Each package's
+or copying its bytes, and destroying it. The object package covers another
+API: a reference-counted counter and its property. Each package's
 [surface](../glossary.md#surface) says which subset and release the author
 claims to describe ([`L3`](../language.md#l3)).
 
@@ -233,7 +233,7 @@ that every consumer resolves.
 Two importing packages can use different aliases for the same store package
 and select the same bytes. Their local spelling differs while their dependency
 agrees. If they instead select different digests for that same package name
-and version, a consumer would receive two competing definitions of one
+and version, a [consumer](../glossary.md#consumer) would receive two competing definitions of one
 identity. Renaming an alias leaves that conflict in place.
 
 In summary (non-normative), each package name and version resolves to one
@@ -289,8 +289,9 @@ Read the first block as instructions to the consumer about the call. `abi`
 selects the `object-message` [calling convention](../glossary.md#calling-convention)
 within the `native` [ABI entry](../glossary.md#abi-entry). `via` selects the
 fixture's message mechanism and the selector `currentCount`. The `mapping`
-clause connects the AIL signature to that mechanism, and `compatibility`
-states where the chosen representations can be used together
+clause connects the AIL signature to that mechanism. The `compatibility`
+clause states where the chosen [representations](../glossary.md#representation)
+can be used together
 ([`A2`](../profiles.md#a2), [`A4`](../profiles.md#a4)).
 
 The second block selects a source call instead. Its compatibility clause
@@ -473,11 +474,13 @@ obligations while leaving canonical byte serialization unspecified
 ([`A5`](../profiles.md#a5);
 [round-trip obligations](../conformance.md#parser-validator-and-round-trip-obligations)).
 
-One authority avoids separately maintained binding and prose contracts, at the
-cost of retaining connections from each convenient view to the complete facts.
-Validation remains consumer-independent. A binding generator may still refuse a
-valid package when it cannot preserve the contract for its selected target,
-environment and path; that limitation is distinct from invalid AIL
+Using one description lets binding generators and documentation tools work
+from the same API facts. Each tool then keeps its presentation connected to
+that complete description. Validation checks the description against the
+language rules, regardless of which tool will use it. A binding generator may
+still be unable to preserve a valid contract for its selected target,
+environment and path. In that case it refuses to generate a binding; the
+package remains valid AIL
 ([`A5`](../profiles.md#a5)).
 
 Next: [Design choices, limits and open questions](choices.md).

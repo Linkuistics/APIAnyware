@@ -1,6 +1,6 @@
 # Design choices, limits and open questions
 
-> **Purpose:** explanation — distinguish binding constraints from AIL's choices and inspect their costs and limits.
+> **Purpose:** explanation — distinguish [binding](../glossary.md#binding) constraints from AIL's choices and inspect their costs and limits.
 > **Reader:** language designers evaluating the notation after orientation and the concept explanations.
 > **Before this:** [How AIL states a contract](contracts.md) and [Packages, environments and access paths](packages.md).
 > **Status:** Draft 0.1 is a proposal under review through its specification
@@ -17,7 +17,7 @@ The API author then decides what the library promises. An immutable store
 might keep the bytes usable until destruction; a mutable store might replace
 them sooner.
 
-AIL's design determines how an author writes that promise. The clause
+AIL's design determines how an author writes that promise. The [clause](../glossary.md#clause)
 `give($result, borrow(owner($store)))` relates the returned pointer to the
 store's lifetime. `invalidated_by` names operations that end access earlier.
 Those spellings, and the decision to separate the two facts, are language
@@ -128,9 +128,9 @@ confidence scores or promises of later inference fail the publication rules
 ([`L3`](../language.md#l3), [`C8`](../contracts.md#c8)).
 
 An alternative is a partial model that preserves unresolved candidates for
-consumers to interpret. Each consumer would then decide how to handle a missing
+consumers to interpret. Each [consumer](../glossary.md#consumer) would then decide how to handle a missing
 fact or choose among competing candidates. AIL places that investigation with
-the producer, before the transition to a published contract — its
+the [producer](../glossary.md#producer), before the transition to a published contract — its
 [publication boundary](../glossary.md#publication-boundary). This gives consumers
 settled answers to work from, but a producer can have most of an API described
 and still need substantial investigation before publishing it.
@@ -146,7 +146,8 @@ cannot be disguised by that permission ([`C6`](../contracts.md#c6),
 ## Stating the applicable facts
 
 For the synthetic store, the author has established that the type adds no
-executor restriction. `isolation(none)` records that fact. For the counter,
+restriction on which [executor](../glossary.md#executor) may use it.
+`isolation(none)` records that fact. For the counter,
 the author has established that use belongs on the main thread and writes
 `isolation(main)`. Both clauses answer the same question about
 [isolation](../glossary.md#isolation). Omitting a required clause leaves the
@@ -294,8 +295,9 @@ The [grammar](../grammar.ebnf) defines `clause` as a name, parenthesized
 arguments and a semicolon. Its `value` production handles nested constructors,
 [places](../glossary.md#place), references and lists. The rule files enumerate
 the accepted vocabulary and specify its argument types.
-In summary (non-normative), parseability establishes neither a recognized clause
-nor a valid use of it ([`L1`](../language.md#l1), [`L5`](../language.md#l5)).
+In summary (non-normative), a parser can recognize the common clause shape.
+A validator also checks that the clause name is defined and that its arguments
+and location satisfy the rules ([`L1`](../language.md#l1), [`L5`](../language.md#l5)).
 
 Clause-specific grammar productions are an alternative. The uniform form gives
 core and profile clauses one outer syntax, but costs discoverability: reading
@@ -318,7 +320,7 @@ configuration it is examining ([`L3`](../language.md#l3),
 Now consider a consumer running on platform version `2`. An exact claim for
 version `1` supplies no answer about that configuration. A range such as
 “version 1 and later” would claim coverage for it. The choice therefore affects
-how much an author asserts about versions it has not listed
+how much an author asserts about versions they have not listed
 ([`L3`](../language.md#l3)).
 
 In summary (non-normative), draft 0.1 interprets environments as exact values,
@@ -326,11 +328,13 @@ not ranges. Unlisted configurations lie outside the claim. Changed signatures
 or contracts require distinct declarations with disjoint [availability](../glossary.md#availability) or distinct
 identities ([`L3`](../language.md#l3)).
 
-Version-range algebra is the alternative. Exactness makes the claimed cases
-explicit, but costs a potentially large matrix and repeated declarations when
-contracts vary. These are consequences of the rule, not a recorded scaling
-study. [Provider](../glossary.md#provider) interpretation still matters: an exact toolchain version alone
-does not establish artifact compatibility ([`A1`](../profiles.md#a1),
+An alternative would let authors describe and combine version ranges.
+Exactness makes the claimed cases explicit. Its cost is the work of listing
+each configuration and repeating declarations where contracts vary. The rule
+establishes that work; how it scales to a large API remains unmeasured.
+[Provider](../glossary.md#provider) interpretation still matters: a compiler
+version identifies only part of what tools need to determine whether separately
+built artifacts work together ([`A1`](../profiles.md#a1),
 [`A4`](../profiles.md#a4)).
 
 ## Profiles as the extension point
