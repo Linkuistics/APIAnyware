@@ -94,6 +94,18 @@ Here that domain is the synthetic fixture. A real library would need a
 provider guarantee covering its actual environments and representations
 ([`A4`](../profiles.md#a4), [`F1`](../profiles.md#f1)).
 
+Use this table to connect each clause in `current_label`'s `direct` path to
+the fact a tool needs when arranging the call. The rows summarize this
+synthetic example (non-normative; [`A2–A4`](../profiles.md#a2),
+[`F1`](../profiles.md#f1)).
+
+| Clause | What it tells the tool |
+|---|---|
+| `abi(native, "c")` | Use the `c` calling convention in the selected ABI definition. |
+| `via(fixture, "symbol", "fixture_current_label")` | Reach the function through this exact synthetic symbol. |
+| `mapping(identity)` | Pass the declared card and receive the label using the provider's identity mapping. |
+| `compatibility(stable)` | Rely on the provider's representation guarantee within its stated domain. |
+
 ### 4. Check the other declarations' access facts
 
 For every function, find a path covering `test` and read its four clauses:
@@ -441,19 +453,23 @@ result. Providing such a snapshot is an obligation of the imagined
 implementation; AIL itself supplies neither an allocation guarantee nor an
 eventual-return guarantee ([`C3`](../contracts.md#c3), [`C8`](../contracts.md#c8)).
 
-Use this comparison to trace how the same events affect the two caller
-obligations (non-normative; [`C1–C3`](../contracts.md#c1),
-[`C5`](../contracts.md#c5)). It compares each package independently;
-matching type spellings do not make their nominal types interchangeable
-([`L2`](../language.md#l2)).
+Read across each row to compare what the program can do with a borrowed
+label and an owned snapshot at the same event (non-normative;
+[`C1–C3`](../contracts.md#c1), [`C5`](../contracts.md#c5)). Each column
+describes its own package; the matching type spellings still identify
+distinct nominal types ([`L2`](../language.md#l2)).
 
 | Event or obligation | Borrow in `tutorial::finished` | Owned snapshot in `tutorial::owned` |
 |---|---|---|
 | During `current_label` | Keep the input card valid for the call. | Keep the input card valid for the call. |
-| Successful return | Receive a non-null `Label` borrow in `owner($card)`. | Receive a non-null `Label` with one destruction obligation. |
-| `refresh_card` entry | Stop using the old label; the card remains alive. | The independent snapshot remains usable; its destruction is still owed. |
-| Card destruction | The owner region ends; the label borrow is unusable. | The independent snapshot remains usable; its destruction is still owed. |
-| `destroy_label` | The caller cannot consume this borrowed label. | The caller transfers the owned obligation to the destructor exactly once. |
+| Successful return | Receive access to the card's non-null label. The card keeps ownership. | Receive a non-null snapshot and responsibility for destroying it. |
+| `refresh_card` entry | Stop using the old label; the card remains alive. | Keep using the snapshot until finished with it. |
+| Card destruction | Stop using the label because its card has been destroyed. | Keep using the snapshot until finished with it. |
+| Finishing with the label | Leave its destruction to the card; this borrow cannot be passed to `destroy_label`. | Call `destroy_label` once. The library takes responsibility at entry and destroys the snapshot before returning. |
+
+Refreshing or destroying the card leaves the snapshot's destruction with
+the program. Its independent lifetime permits longer use and carries that
+continuing responsibility.
 
 #### 2. Give the changed API a separate package
 

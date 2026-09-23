@@ -150,15 +150,23 @@ govern the call. Its `abi`, `via`, `mapping` and `compatibility` clauses are
 part of every complete function description. [Part 5](05-access-and-change.md)
 explains them individually ([`A2`](../profiles.md#a2)).
 
-The state diagram separates a valid null result, which leaves nothing to
-destroy, from a non-null result, which gives the caller one destruction
-obligation. `destroy_card` takes that obligation at entry and ends the card's
-lifetime before returning. As with all listed completions, return is not
-guaranteed to happen. This view covers only the lifetime subset; label borrows
-come in part 2 (non-normative; [`C2–C3`](../contracts.md#c2),
+Use the state diagram to follow who is responsible for destroying a card.
+Start at the top box and follow the labelled arrows. If `create_card` returns
+null, the program stays in the same state, with nothing to destroy. If it
+returns a card, the program owns that card and becomes responsible for its
+destruction. Both results are valid for the program to inspect.
+
+When the program calls `destroy_card`, responsibility passes to the library
+at entry. The library destroys the card before returning. The boxes separate
+these states so that transfer at entry and completed destruction remain
+visible as different events. The arrows describe changes of state.
+
+This is the invented API's card-lifetime view; part 2 adds label access.
+The contract describes what happens if a call returns and leaves eventual
+return unpromised (non-normative; [`C2–C3`](../contracts.md#c2),
 [`C5`](../contracts.md#c5)).
 
-![A null creation result leaves the caller with no owned Card. A non-null result gives one obligation, transferred to the callee at destroy_card entry and discharged by destruction.](../figures/tutorial-lifetime.svg)
+![From the top state, null creation loops back to no Card. Successful creation makes the program responsible for destruction. destroy_card takes responsibility at entry, then the library destroys the Card before returning.](../figures/tutorial-lifetime.svg)
 
 [Card lifecycle diagram source](../figures/tutorial-lifetime.puml) ·
 [How tools use the description](../README.md#who-writes-and-uses-an-ail-description)

@@ -1,37 +1,48 @@
 @startuml
 !include style/ail.puml
-title Tutorial 4 · Callback timing: synthetic Watch registration and teardown
+title Tutorial 4 · Timing: ending a synthetic Watch subscription
 hide footbox
-$caller(client, "Caller\nRegisters and destroys Watch")
-$callee(api, "Label-card API\nRetains and invokes handler")
-$callee(handler, "LabelChanged\nRuns one synchronous invocation")
-note over client, api : watch_labels enters: borrow handler; retain for owner($result).
-api -> client : watch_labels returns: give one owned Watch
-note over api, handler
-  Only now may invocations start: timing(after_return).
-  count(0, many): zero delivery is permitted over the whole owner scope.
+$caller(client, "Program\nStarts and ends a Watch")
+$callee(api, "Library\nStores and invokes the handler")
+$callee(handler, "Program's handler\nA LabelChanged callback")
+note over client, api
+  watch_labels begins: program lends the handler.
+  Library keeps its own reference
+  for the Watch's lifetime.
 end note
-api -[dotted]> handler : Start one permitted invocation with a scalar change number
+api -> client : watch_labels returns:\nprogram owns the Watch
+note over api, handler
+  Notifications may start after registration returns.
+  The library may also send none
+  throughout the subscription.
+end note
+api -[dotted]> handler : Invoke the handler\nwith a change number
 activate handler
 note over client, handler
-  Caller enters destroy_watch outside this callback use.
-  An invocation may still be in flight on another thread.
+  Program calls destroy_watch from outside this callback.
+  Here, the handler is still running on another thread.
 end note
-client -> api : destroy_watch entry: consume Watch
-note over handler : In-flight invocation completes during teardown.
+client -> api : destroy_watch begins:\nlibrary takes responsibility for Watch
+note over handler
+  Handler finishes while
+  destroy_watch is running.
+end note
 deactivate handler
-note over client, api : destroy_watch returns: no invocation running or able to start.
+note over client, handler
+  destroy_watch returns: this subscription has no handler invocation
+  running or able to start. This condition is quiescence.
+end note
 note over api, handler
-  Quiescence is at destructor return, not entry.
-  One permitted trace: no delivery or eventual-return guarantee.
-  Watch retains no Card and extends no borrowed Label's validity.
+  Responsibility moves at entry; quiescence holds at return.
+  Watch retains no Card.
+  Each Label still has its original borrow limits.
 end note
 legend bottom
-  Time runs downward; spacing is not duration. Native scheduling is omitted.
-  Actor = caller; rectangles = callees (API becomes caller when invoking LabelChanged).
-  Bar = active callback; dotted arrow = callback entry; solid arrow = ownership transfer.
-  Notes mark other entries and completions; no arrow denotes an ordinary return.
-  Non-normative: C3, C5, C6. scope(owner($result)); quiescence(@destroy_watch).
-  requires(outside_callback(@watch_labels::handler)) excludes self-waiting teardown.
+  Read top to bottom. This is one permitted sequence, not a delivery promise.
+  Person = program calling the library; rectangles = code that receives calls.
+  When the library invokes the handler, the library is caller and the handler is callee.
+  Bar = handler is running; dotted arrow = handler starts; solid arrow = ownership moves.
+  Notes mark other call boundaries. Vertical gaps show order, not elapsed time.
+  Non-normative: C3, C5, C6. Native scheduling is omitted; eventual return is not promised.
 endlegend
 @enduml

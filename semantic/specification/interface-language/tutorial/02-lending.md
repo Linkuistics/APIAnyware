@@ -132,16 +132,27 @@ dependencies, these form the [dependency closure](../glossary.md#dependency-clos
 needed to interpret this package. Keep the first checkpoint as its own
 smaller example ([`L3`](../language.md#l3)).
 
-Compare the two timelines to see why keeping `Card` alive is necessary but
-does not alone keep a returned `Label` usable. Refresh ends the old borrow at
-entry while the card lives on; without refresh, card destruction ends its
-owner region. In both cases the returned borrow outlives the input's call
-region and gives no permission to `destroy_label`. The figure omits access
-paths and shows ordering, not elapsed time (non-normative;
+Compare the two timelines to find when the program stops using a borrowed
+label. Read each case separately from top to bottom. Both begin with the
+program lending its card to `current_label` until that call finishes. The
+library then returns the card's current label, which the program can use
+after the call has finished. The card keeps ownership of the label.
+
+In the first case, the program refreshes the card. Access to the old label
+ends as soon as `refresh_card` begins, while the card remains alive. After
+refresh finishes, the program can ask for the new label. In the second case,
+there is no refresh: access lasts until the card is destroyed. In either
+case, the program has borrowed access only and cannot pass this label to
+`destroy_label`.
+
+Dashed arrows show the borrowed access; a cross marks its end. The bar shows
+when `current_label` is running. Vertical gaps show event order rather than
+elapsed time. This view covers the synthetic label's lifetime; the access
+paths remain in the checkpoint (non-normative;
 [`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
 [`C5`](../contracts.md#c5)).
 
-![Two independent cases begin with current_label borrowing Card for the call and returning an owner-scoped Label borrow. In one, refresh invalidates the Label while Card survives; in the other, Card destruction ends the borrow.](../figures/tutorial-borrow.svg)
+![Read each case downward. The program lends Card during current_label and receives borrowed Label access after return. Case 1 ends that access at refresh entry while Card lives on. Case 2 ends access when Card is destroyed.](../figures/tutorial-borrow.svg)
 
 [Label borrow diagram source](../figures/tutorial-borrow.puml) ·
 [How tools use the description](../README.md#who-writes-and-uses-an-ail-description)

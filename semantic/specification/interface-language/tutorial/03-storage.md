@@ -140,14 +140,22 @@ complete `copy_text` with its effects and synthetic
 [symbol access path](../glossary.md#access-path)
 ([`L3`](../language.md#l3), [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
 
-Use the layout to distinguish allocated capacity from readable text length.
-For the index's illustrative `READY!!`, success writes the seven text elements
-at indices 0–6 and the final zero at index 7. The spelling is not fixed by the
-contract. Failure still returns a valid status, but none of those output
-elements is readable; the `X` marks do not mean cleared or unchanged bytes.
-The caller allocates eight elements before entry without initializing them
-and retains that storage in both outcomes. This view omits calls and access
-paths (non-normative; [`C3–C5`](../contracts.md#c3)).
+Use the layout to see why seven text bytes need an eight-byte allocation.
+The program reserves all eight bytes before calling `copy_text`; it may
+leave them uninitialized. After the call returns, the program reads the
+status and chooses the matching grid. Read byte positions from left to right.
+
+On `copied` (`0`), the program can read the text. The success grid shows the
+illustrative `READY!!`: seven UTF-8 code units at indices 0–6, followed by
+zero at index 7. The contract permits other spellings with the same length.
+On `unavailable` (`1`), the program leaves all eight output bytes unread,
+including when looking for a terminator. Each `X` marks this restriction;
+earlier contents may have changed, and `X` is not a stored value.
+
+The program keeps its allocation in either case and can read either returned
+status. These are alternative results of one call in the synthetic API.
+The view focuses on storage; the call sequence and access paths are omitted
+(non-normative; [`C3–C5`](../contracts.md#c3)).
 
 ![An eight-element destination holds R E A D Y ! ! at indices 0 through 6 and zero at index 7 on success. On failure all eight output elements are invalid to read, while the returned status remains valid.](../figures/tutorial-storage.svg)
 

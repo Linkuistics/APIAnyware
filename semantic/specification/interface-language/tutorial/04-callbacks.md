@@ -186,17 +186,33 @@ the four declarations, and keep the earlier declarations. Complete both new
 functions with their effects and synthetic symbol paths. The callback uses
 the representation clauses from step 3 ([`L3`](../language.md#l3), [`A2`](../profiles.md#a2)).
 
-Follow the timeline to separate registration return, owner consumption and
-quiescence. It shows one permitted invocation starting after `watch_labels`
-returns. That invocation can still be running on another thread when an
-outside caller enters `destroy_watch`; it finishes during the shown teardown,
-before the destructor returns. Zero invocations would also satisfy the count.
-Neither delivery nor eventual return is promised. The `Watch` retains no
-`Card` and extends no label borrow. This G7 adaptation omits native scheduling
-and uses spacing only for event order (non-normative;
+Use the timeline to distinguish when the library takes responsibility for
+the watch from when the program knows all callback use has ended. Read from
+top to bottom. During `watch_labels`, the program lends its handler and the
+library keeps its own reference for the watch's lifetime. Registration then
+returns an owned watch to the program. Notifications may start after that
+return.
+
+The dotted arrow shows the library invoking the handler with a change number.
+For this call, the library is the caller and the handler is the callee. The
+bar shows the handler running. In this sequence the program starts
+`destroy_watch` from outside the callback while the handler is still running
+on another thread. At destruction entry the library takes responsibility for
+the watch; the solid arrow shows that ownership transfer.
+
+The handler finishes during the shown destruction call. When `destroy_watch`
+returns, no invocation is running or can start for this subscription. That
+is the promised quiescence. The program can rely on it at return, even though
+responsibility for the watch moved earlier, at entry.
+
+This is one permitted sequence for the synthetic subscription. The library
+may send no notifications, and the contract promises no eventual return.
+The watch retains no card, so a program using a borrowed label still obeys
+that label's original lifetime and refresh cutoff. Vertical gaps show order
+rather than elapsed time; native scheduling is omitted (non-normative;
 [`C3`](../contracts.md#c3), [`C5–C6`](../contracts.md#c5)).
 
-![Registration returns an owned Watch before any notification can start. One optional invocation is still active when an outside caller transfers Watch at destroy_watch entry. Quiescence holds at destructor return, when no invocation is running or can start.](../figures/tutorial-callbacks.svg)
+![Read downward: watch_labels returns a Watch before notifications may start. One handler invocation runs while the program calls destroy_watch from outside the callback. The library takes responsibility at entry. At return, all callback use for the subscription has ended.](../figures/tutorial-callbacks.svg)
 
 [Watch callback diagram source](../figures/tutorial-callbacks.puml) ·
 [How tools use the description](../README.md#who-writes-and-uses-an-ail-description)

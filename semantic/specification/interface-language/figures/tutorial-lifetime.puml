@@ -1,22 +1,23 @@
 @startuml
 !include style/ail.puml
-title Tutorial 1 · Resource states: one synthetic Card
+title Tutorial 1 · State diagram: who destroys one synthetic Card?
 top to bottom direction
 skinparam roundcorner 18
 hide empty description
-state "No owned Card\nCaller has no destruction obligation" as absent
-state "Live Card\nCaller holds one destruction obligation" as live
-state "destroy_card is active\nCallee has taken the obligation at entry" as destroying
-state "Destroyed Card\nObligation discharged; owner lifetime ended" as dead
-absent -[bold]-> absent : create_card returns null: valid failure, no obligation
-absent -[bold]-> live : create_card returns non-null: valid success, owned Card
-live -[bold]-> destroying : destroy_card consumes the owned Card at entry
-destroying -[bold]-> dead : destruction ends the lifetime before return
+state "Program has no Card\nNothing to destroy" as absent
+state "Program owns a live Card\nProgram is responsible for destroying it" as live
+state "Library is running destroy_card\nLibrary has taken responsibility" as destroying
+state "Library has destroyed the Card\nCard lifetime has ended" as dead
+absent -[bold]-> absent : create_card returns null:\nprogram sees allocation failure
+absent -[bold]-> live : create_card returns a Card:\nprogram receives ownership
+live -[bold]-> destroying : destroy_card begins:\nprogram transfers responsibility (consume)
+destroying -[bold]-> dead : library destroys the Card\nbefore returning
 legend bottom
-  Rounded box = resource/obligation state; bold arrow = labelled state transition.
-  Self-loop preserves the obligation state; arrows are not runtime messages.
-  Both creation results are valid to inspect. Null gives nothing to destroy.
-  Non-normative: C2, C3, C5. Synthetic lifetime subset; label borrows omitted.
-  Listed completions do not promise eventual return.
+  Start at the top and follow the labelled arrows.
+  Rounded box = Card state and who must destroy it; bold arrow = change of state.
+  The loop returns to the same state after allocation failure.
+  Program = caller; library = callee. Both creation results are valid to inspect.
+  Non-normative: C2, C3, C5. This view covers Card lifetime only.
+  Label access is shown in part 2. Eventual return is not promised.
 endlegend
 @enduml

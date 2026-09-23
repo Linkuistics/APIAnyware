@@ -77,17 +77,9 @@ introduction according to its usefulness. The historical G1 reuse described
 above is subject to that revised figure contract. The follow-up human checkpoint
 is `first-path-reading-k48`.
 
-## Handed forward
-
-- **Art — parts 1–4, the four `tutorial-` figures and their adjacent captions
-  and alt text.** Draft has developed the actor/action explanations in the
-  steps but retained these figure passages for their owning stage. Reconcile
-  their vocabulary and density with the new prose: in particular part 2's
-  “owner-scoped” and “input's call region” summary, part 4's “owner consumption”
-  and “quiescence” summary, and the dense timing limitations in each caption.
-  Replace part 4's unexplained “G7 adaptation” with reader-facing scope. Keep
-  refresh invalidation at entry, destruction responsibility at entry, and
-  callback quiescence at return. The surrounding steps already explain those
-  events and the absence of delivery or termination guarantees. Check part 5's
-  retained comparison table under the same charter. Each detail view now links
-  to the overview; no repeated full publication figure is needed for orientation.
+The corrected figures name the program, library and values before their AIL
+roles. Their captions explain reading order, each shown event and the scope
+limits. Part 5 maps access clauses to tool actions and compares the caller's
+actions with a borrow and an owned snapshot. The overview links remain the
+route to G1. Proof should read those figures and tables with their surrounding
+steps; the human checkpoint still owns the assessment of comprehension.
