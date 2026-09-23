@@ -359,14 +359,23 @@ even if that operation later fails. An empty list in the immutable case says
 there is no such earlier operation; the owner's destruction still ends access
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-The timing diagram separates input validity during `view` from later use of
-its result: owner destruction ends the immutable view, while `replace` entry
-ends the constructed mutable view sooner. It zooms into borrow validity and
-omits other call obligations and the mutable variant's full contracts.
+Use the timelines to locate the moment the program stops using returned bytes.
+In each case, it first keeps the input usable while `view` runs. The result's
+own contract then lets the program keep reading after the call completes.
+For the immutable store, destruction ends that access. In the constructed
+mutable case shown here, `replace` starts first and ends access to the old
+view, even if replacement later fails. The store itself remains alive.
 
-![Two separate timelines: view borrows its input through completion and delivers an owner-scoped result. The immutable result lasts until Store destruction; in the constructed mutable variant, replace entry invalidates the old result while Store remains alive.](../figures/g5-borrow.svg)
+Time runs downward within each separate case; the spacing measures no duration.
+The marked arrow ends mean that the view has become unusable. They do not
+depict destruction of the program. Other call obligations and the mutable
+variant's full operation contracts are outside this view.
 
-[Borrow timing source](../figures/g5-borrow.puml)
+![Two borrow timelines. The program keeps the input usable until view completes, then borrows the returned bytes. Destroying the immutable Store ends access. In the separate mutable case, replace starts first and ends access to the old view while Store is still alive.](../figures/g5-borrow.svg)
+
+[Borrow timing source](../figures/g5-borrow.puml) ·
+[Ownership cases](#who-owns-what) ·
+[How tools use these API facts](../README.md#who-writes-and-uses-an-ail-description)
 
 Another example, the synthetic `fixed_bytes` constant, lends bytes belonging
 to the loaded API instance. A caller can use them while that instance remains
@@ -662,16 +671,30 @@ are stored — their [representation](../glossary.md#representation) — and how
 that stored value is released ([`C3`](../contracts.md#c3),
 [`C6`](../contracts.md#c6), [`F1`](../profiles.md#f1)).
 
-The timing diagram places quiescence at completion of the enclosing call or
-the owner's destructor, so an in-flight callback during teardown cannot be
-mistaken for permission to run after teardown returns. The owner-scoped case
-shows one permitted trace after successful synthetic registration; zero
-invocations is also permitted. The constructed call-scoped case is separate.
-This view omits native scheduling and capture-release machinery.
+Use the callback timelines to find the point where the program knows the API
+has finished using the handler. In the constructed case, registration completes
+after the handler has finished, and that registration can start no further
+invocation. The API retains no handler after the call.
 
-![In the constructed call-scoped case, the handler starts and finishes before registration completes. In the synthetic owner-scoped case, starts follow subscribe return; an invocation can remain in flight when a client outside the callback enters unsubscribe, but none runs or can start after unsubscribe returns.](../figures/g7-callbacks.svg)
+The second case follows successful synthetic `subscribe`. The API keeps its
+own strong reference to the handler for the subscription. After registration
+returns, the picture shows one permitted notification. While that handler runs,
+the program enters `unsubscribe` from outside the callback and transfers
+responsibility for destroying the subscription. The handler finishes during
+teardown. When `unsubscribe` returns, every invocation has finished and that
+subscription can start no more.
 
-[Callback timing source](../figures/g7-callbacks.puml)
+Zero notifications are also permitted in the subscription case. The constructed
+call invokes once if its scope eventually ends. Neither case promises eventual
+completion of the enclosing operation. Read time downward within each case;
+spacing measures no duration. Native scheduling and the machinery that releases
+stored callback state are outside this view.
+
+![Two callback timelines. Constructed registration finishes after its handler has finished. Successful subscribe permits later notifications. Its handler may still run when unsubscribe starts, but all callback use has ended when unsubscribe returns. The subscription trace shows one permitted notification.](../figures/g7-callbacks.svg)
+
+[Callback timing source](../figures/g7-callbacks.puml) ·
+[Ownership cases](#who-owns-what) ·
+[How tools use these API facts](../README.md#who-writes-and-uses-an-ail-description)
 
 The principle is that invocation, schedule and teardown are separate contracts.
 AIL chooses explicit timing, count, scope and quiescence rather than one
@@ -806,14 +829,23 @@ destroys the counter. In the unique case, destruction
 consumes the handle at entry and invalidates dependent borrows before returning
 ([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
 
-The state diagram tracks the immutable store's single destruction obligation:
-creation supplies it, borrowing preserves it, and `destroy` takes it at entry
-and invalidates dependent borrows before returning. It omits reference counting
-and the separate constructed ordering pattern below.
+Use the state diagram to track who is responsible for destroying one synthetic
+immutable store. If `create` returns a store, the program receives that
+responsibility. If it returns null, the program has nothing to destroy.
+Calling `view` lends access to the bytes and leaves responsibility with the
+program. At `destroy` entry, responsibility passes to the library. The library
+destroys the store before returning, ending the program's use of its borrowed
+views and discharging the obligation.
 
-![A non-null create result moves from no owned handle to a live Store with one caller obligation; null leaves no obligation. Borrowing preserves the live state. destroy entry transfers the obligation to the callee, and destruction discharges it and invalidates dependent borrows before return.](../figures/g6-lifecycle.svg)
+Rounded boxes show states; arrows follow changes in responsibility. A loop
+returns to the same responsibility. This view follows a unique store;
+reference counting and the separate ordering pattern below are outside its scope.
 
-[Resource state source](../figures/g6-lifecycle.puml)
+![Store states: a returned store makes the program responsible for destruction; null leaves nothing to destroy. Calling view keeps that responsibility. Entering destroy passes it to the library, which destroys Store and ends use of borrowed views before returning.](../figures/g6-lifecycle.svg)
+
+[Resource state source](../figures/g6-lifecycle.puml) ·
+[Borrow timelines](#how-long-a-borrow-lasts) ·
+[How tools use these API facts](../README.md#who-writes-and-uses-an-ail-description)
 
 Tools may also need to recognize a relationship between declarations. The
 buffer example explicitly connects the resource type to its release operation.

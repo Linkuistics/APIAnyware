@@ -1,45 +1,64 @@
 @startuml
 !include style/ail.puml
-title G7 · Callback timing: call scope versus owner scope
+title G7 · Callback timelines: when the API has finished using the handler
 hide footbox
-$caller(client, "Client\nCalls registration and teardown")
-$callee(api, "API\nInvokes the handler")
-$callee(handler, "Handler\nRuns one callback invocation")
+$caller(client, "Program\nRegisters and ends callback use")
+$callee(api, "Library API\nInvokes the handler")
+$callee(handler, "Handler\nRuns the callback")
 == Constructed call-scoped operation ==
-note over client, api : Registration enters: borrow handler, retain none.
-api -[dotted]> handler : Start during the registration call
+note over client, handler
+  Program enters registration.
+  API borrows the handler for this call.
+end note
+api -[dotted]> handler : API starts the handler during registration
 activate handler
-note over handler : Invocation completes.
+note over handler : Handler finishes.
 deactivate handler
-note over client, api : Registration completes: no invocation running or able to start.
+note over client, handler
+  Registration completes. Every handler invocation has finished.
+  This registration can start no more. API retains no handler.
+end note
 note over api, handler
-  scope(call); count(1, 1); quiescence(return).
-  Exactly one invocation, conditional on eventual scope end.
+  count(1, 1): if this call eventually completes,
+  it has invoked the handler once.
+  scope(call) bounds use to this call.
+  quiescence(return) ends all use at completion.
 end note
 == Synthetic owner-scoped subscription: successful registration ==
-note over client, api : subscribe enters: borrow handler and retain for owner($result).
-api -> client : subscribe returns: give one owned Subscription
-note over api, handler : Only now may invocations start: timing(after_return).
-api -[dotted]> handler : One permitted start (zero or more over owner scope)
+note over client, handler
+  Program enters subscribe. API borrows the handler
+  and keeps its own strong reference for the returned subscription.
+end note
+api -> client : subscribe returns: give the program\na Subscription to destroy
+note over api, handler
+  After subscribe returns, API may start the handler:
+  timing(after_return).
+end note
+api -[dotted]> handler : API starts one permitted notification
 activate handler
 note over client, handler
-  Client enters unsubscribe outside this callback.
-  An invocation may still be in flight on another thread.
+  Program begins unsubscribe from outside this callback.
+  The handler can still be running on another thread.
 end note
-client -> api : unsubscribe entry: consume Subscription
-note over handler : In-flight invocation completes during teardown.
+client -> api : At unsubscribe entry: transfer\nresponsibility for Subscription
+note over handler : The running handler finishes\nduring teardown.
 deactivate handler
-note over client, api : unsubscribe returns: no invocation running or able to start.
+note over client, handler
+  unsubscribe returns. Every handler invocation has finished.
+  This subscription can start no more: quiescence(@unsubscribe).
+end note
 note over api, handler
-  scope(owner($result)); count(0, many); quiescence(@unsubscribe).
-  One permitted trace, not a promised delivery or termination guarantee.
+  scope(owner($result)) ties use to the subscription's lifetime.
+  count(0, many) permits zero or more notifications.
+  This trace shows one.
 end note
 legend bottom
   Time runs downward within separate cases; spacing is not duration.
-  Actor = caller; rectangles = callees (API becomes caller when invoking Handler).
+  Actor = program; rectangles = callees (API calls Handler in each dotted arrow).
   Bars = active handler invocations; dotted arrow = callback entry; solid arrow = ownership transfer.
   Notes mark completion; no arrow denotes an ordinary return. Non-normative: C3, C6, F1.
-  outside_callback prevents blocking teardown from the callback it waits for.
+  outside_callback keeps unsubscribe outside the callback it waits for.
+  Neither case promises that the enclosing operation will eventually finish.
   Native scheduling and capture-release machinery are omitted.
 endlegend
 @enduml

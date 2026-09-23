@@ -1,23 +1,24 @@
 @startuml
 !include style/ail.puml
-title G6 · Resource states: one synthetic immutable Store
+title G6 · Store states: who is responsible for destruction?
 top to bottom direction
 skinparam roundcorner 18
 hide empty description
-state "No owned handle\nCaller has no destruction obligation" as absent
-state "Live Store\nCaller holds one destruction obligation" as live
-state "destroy is active\nCallee has taken the obligation at entry" as destroying
-state "Destroyed Store\nObligation discharged; dependent borrows invalid" as dead
-absent -[bold]-> live : create returns non-null and gives owned result
-absent -[bold]-> absent : create returns null; creates no obligation
-live -[bold]-> live : view borrows; preserves the caller's obligation
-live -[bold]-> destroying : destroy consumes the handle at entry
-destroying -[bold]-> dead : destruction invalidates borrows before destroy returns
+state "No owned store\nProgram has nothing to destroy" as absent
+state "Live Store\nProgram is responsible for destroying it" as live
+state "destroy is running\nLibrary has taken responsibility" as destroying
+state "Store is destroyed\nLibrary has discharged the obligation\nProgram can no longer use its borrowed views" as dead
+absent -[bold]-> live : create returns a store\nand gives ownership to the program
+absent -[bold]-> absent : create returns null\nProgram has nothing to destroy
+live -[bold]-> live : view lends access to bytes\nProgram keeps responsibility
+live -[bold]-> destroying : Program enters destroy\nand transfers responsibility
+destroying -[bold]-> dead : Library destroys Store\nbefore destroy returns
 legend bottom
   Rounded box = resource/obligation state; bold arrow = labelled state transition.
-  Self-loop = the obligation state is preserved. Arrows are not runtime messages.
-  Borrowing grants access and creates no extra destruction obligation.
+  A loop returns to the same responsibility. Arrows follow states, not call messages.
+  Borrowing lets the program use bytes without adding another destruction obligation.
   Non-normative: C2, C3, C5; synthetic buffers example only.
-  No constructed prepare/read_prepared ordering and no reference-counted lifecycle.
+  This view follows one unique store. Reference counting and the separate
+  prepare/read_prepared ordering example are outside its scope.
 endlegend
 @enduml

@@ -37,6 +37,15 @@ they leave draft 0.1's rules in place. The register at the end keeps the open
 questions available for review, including the missing rationale for placing
 ownership in clauses.
 
+Use this comparison to keep the three decisions separate when assessing a
+borrowed view.
+
+| Level | What it establishes for the view |
+|---|---|
+| Binding domain | The caller needs usable storage for as long as it reads the bytes. |
+| API contract | The library promises how long storage stays usable: until store destruction, or until an earlier replacement. |
+| AIL notation | The author writes the owner lifetime in `give` and earlier cutoffs in `invalidated_by`. |
+
 All conformance examples mentioned here use the synthetic fixture
 [profile](../glossary.md#profile), a versioned semantic extension,
 catalogue and
@@ -275,6 +284,17 @@ outcome separately. The signature form makes the broad ownership distinction
 visible beside the type, while still needing somewhere to state the owner and
 earlier [invalidators](../glossary.md#invalidation). Comparing these forms
 requires examples with several outcomes as well as simple getters.
+
+The comparison shows where a reader looks for each ownership fact. The
+alternative illustrates a possible notation, with the mutable-store limits
+stated above.
+
+| Fact to find | Draft 0.1 clauses | Illustrated signature alternative |
+|---|---|---|
+| Entry borrowing | `input($store, borrow)` in the body | `borrow Store` beside the parameter |
+| Returned borrowing | `give($result, borrow(owner($store)))` in an outcome | `borrow bytes` beside the result |
+| Owner lifetime | `owner($store)` within `give` | `lifetime result within store` in the body |
+| Earlier invalidation | `invalidated_by` in an outcome | `replace(store)` in the body's `invalidated result by ...` statement |
 
 **No rationale for choosing clauses is recorded.** The design left ownership
 placement for a decision based on an example corpus, and draft 0.1 uses clauses.

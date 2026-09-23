@@ -3,45 +3,47 @@
 allowmixing
 hide circle
 hide empty methods
-title G3 · Access structure: two paths for one synthetic getter
+title G3 · Access alternatives: two ways to call the synthetic read_count getter
 top to bottom direction
-class "read_count\nSemantic declaration" as getter {
+class "read_count\nThe getter the caller wants to use" as getter {
   example::objects, version 1
-  Same whole getter contract on either path
+  Either path implements its whole contract
 }
-class "objc_like\nMessage access path" as message {
-  via: currentCount
-  convention: object-message
-  {field} mapping: identity (implicit receiver)
-  compatibility: stable fixture domain
+class "objc_like\nSend a message to the counter" as message {
+  Send currentCount
+  Use the object-message convention
+  {field} identity mapping: receiver becomes message target
+  stable: use the fixture's compatibility guarantee
 }
-class "swift_like\nSource-call access path" as source {
-  via: Outer.Counter.currentCount.get
-  convention: source
-  mapping: identity
-  compatibility: source, fixture-build
+class "swift_like\nCompile a call from source" as source {
+  Call Outer.Counter.currentCount.get
+  Use the source convention
+  identity mapping: preserve the declared operation
+  source: build with the fixture-build recipe
 }
 $catalogue(abi, "native · Synthetic ABI entry\nexample.fixture-abi, version 1\nSynthetic digest: sha256: + 64 b digits")
 $catalogue(profile, "fixture · Synthetic profile entry\nexample.fixture, version 1\nSynthetic digest: sha256: + 64 a digits")
-getter --> message : offers in test
-getter --> source : offers in test
-message --> abi : selects object-message
-source --> abi : selects source
-message --> profile : uses message mechanism
-source --> profile : uses source-call mechanism
+getter --> message : offers this path in test
+getter --> source : offers this path in test
+message --> abi : reads the object-message\ncalling rules here
+source --> abi : reads the source\ncalling rules here
+message --> profile : reads how to send\nthe message here
+source --> profile : reads how to compile\nthe source call here
 note top of getter
-  The consumer selects explicitly or by configuration policy.
-  Path order supplies no preference.
+  A tool chooses a path explicitly or through its configuration policy.
+  Listing a path first gives it no priority.
 end note
 note bottom of profile
-  test: fixture64; fixture 1; fixture-compiler 1.
-  fixture-build pins the source build recipe;
-  it does not promise independent binary interoperability.
+  test names target fixture64, platform fixture 1
+  and toolchain fixture-compiler 1.
+  fixture-build specifies how to build the source call.
+  Separately built binaries need their own compatibility guarantee.
 end note
 legend bottom
-  Synthetic fixture only, not real Objective-C or Swift support. Non-normative: A2, A4, F1.
+  Invented API and synthetic definitions. Non-normative: A2, A4, F1.
   Compartmented box = contract item; cylinder = catalogue definition.
-  Labelled arrows show path alternatives and definition selection, not runtime order.
-  Both paths preserve the whole contract; native calling algorithms are omitted.
+  Arrows connect each choice to the definitions a tool reads; they do not order calls.
+  Both paths select one ABI entry, choosing different conventions within it.
+  Native calling algorithms and real Objective-C or Swift support are outside this view.
 endlegend
 @enduml

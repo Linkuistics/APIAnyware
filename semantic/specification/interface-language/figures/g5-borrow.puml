@@ -1,37 +1,42 @@
 @startuml
 !include style/ail.puml
-title G5 · Borrow timing: region end versus earlier invalidation
+title G5 · Borrow timelines: when the program stops using returned bytes
 hide footbox
-$caller(caller, "Caller\nUses the returned view")
-$callee(view, "view\nBorrows its input during the call")
-$owner(store, "Store\nOwner of the viewed bytes")
+$caller(caller, "Program\n(caller)")
+$callee(view, "view\nLibrary function")
+$owner(store, "Store\nKeeps the bytes alive")
 == Synthetic immutable store ==
-caller --> view : Entry: lend store; valid($store, call)
+caller --> view : At entry: lend the store to view
 activate view
-note over view : Input validity lasts through completion.
-view --> caller : Completion: deliver borrow(owner($store))
+note over caller, view : Program keeps the input usable until view completes: valid($store, call).
+view --> caller : At completion: lend access to the store's bytes
 deactivate view
 note over caller, store
-  Caller may use the returned view while Store lives.
-  invalidated_by([]): no earlier operation invalidates it.
+  Program may keep reading the returned bytes while Store lives.
+  The result says borrow(owner($store)).
+  invalidated_by([]) names no earlier operation that ends this access.
 end note
-store ->x caller : Store destruction: returned view becomes invalid
+store ->x caller : Store is destroyed: program stops using the returned view
 == Constructed mutable variant, separate from the fixture ==
-caller --> view : Entry: lend store; valid($store, call)
+caller --> view : At entry: lend the store to view
 activate view
-view --> caller : Completion: deliver borrow(owner($store))
+note over caller, view : Program keeps the input usable until view completes: valid($store, call).
+view --> caller : At completion: lend access to the store's bytes
 deactivate view
-note over caller, store : Caller may use this view until an invalidator or owner destruction.
-store ->x caller : replace entry: old view becomes invalid
 note over caller, store
-  Store remains alive; the old view is already unusable.
-  Later Store destruction cannot restore that view.
+  Program may read until replace starts or Store is destroyed, whichever comes first.
+  Here replace starts first: invalidated_by($result, [@replace]).
+end note
+store ->x caller : replace starts: program stops using the old view
+note over caller, store
+  Store is still alive. The old view is already unusable,
+  even if replace later fails.
 end note
 legend bottom
   Time runs downward within each separate case; spacing is not duration.
   Actor = caller; rectangle = callee; circle on base = owner; bar = active view call.
   Dashed arrow = borrowed access; marked end = invalidation, not caller destruction.
-  Returned validity outlives the input call region. Non-normative: C1, C5.
+  The result's contract allows use after view completes. Non-normative: C1, C5.
   Other clauses and the mutable variant's full operation contracts are omitted.
 endlegend
 @enduml

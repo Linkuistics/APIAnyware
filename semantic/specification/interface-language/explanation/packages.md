@@ -121,16 +121,23 @@ accurately and supplying every fact that portion needs.
 and internally consistent. Comparing its scope and claims with the actual
 library requires separate evidence ([`L3`](../language.md#l3)).
 
-The package diagram makes export membership distinct from dependency
-membership: referenced private support remains authoritative without becoming
-a public root. It also locates exact environments and the package, profile and
-ABI pins explained below. This is a schematic structure, not an additional
-fixture package; the frozen examples define their types locally, and `destroy`
-is itself exported. The view omits individual declaration clauses.
+Use the package diagram to follow a tool's reading from the public declarations
+to the further definitions they need. A reference can lead to a private
+declaration; the tool still uses its contract, while the declaration stays
+private. The environment records the exact configuration where the contracts
+apply. The dependency
+selections tell the tool which package documents and definition manifests to
+read; tooling supplies these before validation.
 
-![A package contains a surface claim, exported roots, referenced private support and exact environments. Its pins select imported packages when needed and profile and ABI catalogue entries. Following references reaches the dependency closure without making every dependency an export.](../figures/g2-package.svg)
+This is a schematic package structure. The committed fixtures define their
+types locally, and the buffer fixture exports `destroy` itself. Boxes inside
+the folder belong to the package; the labelled arrows connect facts about
+them. Individual declaration clauses are outside this view.
 
-[Package structure source](../figures/g2-package.puml)
+![Start with the declarations listed in exports and follow their references to the definitions they need. Private support keeps its contract authority and stays private. Environments say where the contracts apply. Dependency selections identify other documents and manifests to read.](../figures/g2-package.svg)
+
+[Package structure source](../figures/g2-package.puml) ·
+[How tools use a published package](../README.md#who-writes-and-uses-an-ail-description)
 
 ## Where it holds
 
@@ -221,8 +228,8 @@ selection there and checks the digest. Missing documents or mismatching bytes
 prevent successful resolution; validation performs no implicit download or
 execution of provider code ([`L2`](../language.md#l2)).
 
-The pin table separates an author's local alias from the identity and bytes
-that every consumer resolves.
+The pin table identifies which document a tool reads for each kind of
+dependency and which bytes its digest fixes.
 
 | Dependency | Identity selected | Bytes fixed by its digest |
 |---|---|---|
@@ -339,17 +346,28 @@ the source dependencies, compiler, options, interfaces and build procedure.
 The compiler establishes compatibility for that build. Separately built
 binaries need their own compatibility guarantee ([`A4`](../profiles.md#a4)).
 
-The access diagram shows two alternatives converging on the same synthetic
-ABI entry while choosing different conventions. Both use the synthetic
-fixture profile and identity mapping, and both implement the whole getter
-contract. Their `test` environment is `fixture64`, platform `fixture` version
-`1`, with `fixture-compiler` version `1`; their catalogue selections use the
-synthetic digest tokens described below. This view zooms into access selection
-and omits native calling algorithms. Arrow order is not a selection policy.
+Use the access diagram to compare what a tool does to call the same getter.
+On the left it sends a message; on the right it compiles a source call.
+Following either branch reaches the same `native` ABI entry, where the tool
+reads the rules for that branch's calling convention. Both branches also use
+the `fixture` profile to interpret their chosen mechanism. Their identity
+mappings preserve the getter, including the conversion of its explicit
+receiver to a message target on the left.
 
-![Synthetic read_count offers objc_like via currentCount and swift_like via Outer.Counter.currentCount.get. Both select native, the synthetic example.fixture-abi version 1 entry, with object-message or source convention respectively; both use fixture profile mechanisms. The first uses the stable fixture domain, the second the fixture-build source recipe.](../figures/g3-access.svg)
+The message branch uses the fixture's stable compatibility guarantee. The
+source branch uses the `fixture-build` recipe; separately built binaries need
+their own guarantee. Both paths apply in `test`: target `fixture64`, platform
+`fixture` version `1`, and toolchain `fixture-compiler` version `1`. The two
+catalogues use the synthetic digest tokens explained below. Arrows connect
+choices to definitions a tool reads. Path selection follows the consumer's
+explicit choice or configuration policy; the picture gives neither branch
+priority. Native calling algorithms are outside this view.
 
-[Access structure source](../figures/g3-access.puml)
+![Two ways to call synthetic read_count: send currentCount to the counter, or compile Outer.Counter.currentCount.get. Each preserves the whole getter contract. Both paths read one ABI entry, selecting different calling conventions, and use the fixture profile's mechanism definitions.](../figures/g3-access.svg)
+
+[Access structure source](../figures/g3-access.puml) ·
+[Package context](#what-a-package-claims) ·
+[How tools use a published package](../README.md#who-writes-and-uses-an-ail-description)
 
 Data access needs an equally concrete action. The synthetic `fixed_bytes`
 names an array: a consumer obtains the address of that array's storage.
