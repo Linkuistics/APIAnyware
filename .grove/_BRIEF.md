@@ -255,7 +255,7 @@ orientation now supports understanding; these editorial observations establish
 neither human comprehension nor the effectiveness of a stage. Carry that limit
 into any process-issue update based on the reading.
 
-The initial concepts pipeline completed (`concepts-k6`). Its three explanations
+The concepts correction completed (`concepts-k43`, closing `concepts-k6`). Its three explanations
 and glossary routes cover contracts, packages/access and design trade-offs; Q1–Q6 remain open in
 `explanation/choices.md`. The tutorial can reuse G7's distinction between a
 constructed call-scoped operation and successful synthetic subscription, with
@@ -264,9 +264,17 @@ separates input call validity from the returned owner borrow; its mutable-store
 case is constructed, not part of the immutable fixture. G6 covers only the
 immutable unique-store lifecycle. G2 is schematic, not an additional fixture
 package; G3's two getter paths select one synthetic ABI entry with different
-conventions. Whole-document proof found no outstanding defect. Keep future
-examples explicit about these boundaries and replace forthcoming tutorial
-routes when that page lands.
+conventions. The correction develops tool and caller actions before naming
+abstractions, with figure text and comparison tables following the same cases.
+Whole-document proof found no further actionable defect or outstanding handoff;
+`task docs:check` passed. The landing map and direct-entry prerequisite/glossary
+routes lead through all three pages, whose footers now link the tutorial.
+At `first-path-reading-k48`, ask the human to follow contracts → packages →
+choices after orientation, and assess whether the ownership, dependency and
+access explanations now make sense. The proof's rule checks and figure read
+are editorial evidence only; human comprehension and the correction's effect
+remain unassessed. Keep future examples explicit about these boundaries and
+preserve the separation of domain requirements, API promises and AIL choices.
 
 The initial tutorial pipeline completed (`tutorial-k7`). The index and five
 parts lead through complete synthetic label-card packages to a borrowed-to-owned change. The
