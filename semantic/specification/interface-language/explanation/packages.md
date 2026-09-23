@@ -2,7 +2,7 @@
 
 > **Purpose:** explanation — understand what a [package](../glossary.md#package) claims and how its operations reach code.
 > **Reader:** language designers who have met [binding](../glossary.md#binding) obligations and AIL's contract [clauses](../glossary.md#clause).
-> **Before this:** [What a signature leaves unsaid](unsaid.md) and [How AIL states a contract](contracts.md).
+> **Before this:** [Using an API across languages](unsaid.md) and [How AIL states a contract](contracts.md).
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L2–L5`](../language.md#l2) and [`A1–A5`](../profiles.md#a1) are canonical; this page gives non-normative explanations.
 

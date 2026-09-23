@@ -2,7 +2,7 @@
 
 > **Purpose:** explanation — read AIL's semantic [clauses](../glossary.md#clause) as obligations between [callers and callees](../glossary.md#caller-and-callee).
 > **Reader:** language designers who have met the API [binding](../glossary.md#binding) domain and want to understand the notation.
-> **Before this:** [What a signature leaves unsaid](unsaid.md).
+> **Before this:** [Using an API across languages](unsaid.md).
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L4–L6`](../language.md#l4), [`C1–C8`](../contracts.md#c1) and [`A1–A5`](../profiles.md#a1) are canonical; the explanations here are non-normative.
 

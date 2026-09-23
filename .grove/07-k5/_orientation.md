@@ -58,3 +58,20 @@ compressed and requested positive framing. `orientation-k36` through
 the publication workflow through people, tools and actions before naming its
 abstractions. Apply that treatment across all three pages and shared figures.
 The follow-up human checkpoint is `first-path-reading-k48`.
+
+## Handed forward
+
+- **Art — G1, including README alt text.** The prose now teaches API authors
+  and analysis tools writing a description, a validator checking required facts
+  and consistency, and generators/renderers/LLM tools using the facts. The
+  unchanged figure still leads with “One publication boundary” and shorthand
+  such as “pins”. Revise its title, labels, limitation note, key and alt text
+  to use the actors and actions taught by the revised workflow. Preserve the
+  exact dependency selection and the limit on what validation establishes.
+- **Art — G4, including unsaid alt text and shared uses.** The revised ownership
+  section supplies concrete watch call cases before explaining transfer.
+  Reconcile the figure's labels and notes with that treatment, keeping the
+  three cases separate, transfer at entry on every outcome, the null-result
+  condition and retention as a separate event. Review the shared vocabulary
+  and all current embeds when changing the source/SVG. The prose already
+  supplies these facts; source, SVG and alt text remain for art to edit.

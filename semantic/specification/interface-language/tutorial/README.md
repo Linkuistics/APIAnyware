@@ -2,7 +2,7 @@
 
 > **Purpose:** tutorial — describe a synthetic API in complete AIL checkpoints, then change its contract.
 > **Reader:** language designers new to [API binding](../glossary.md#binding) who can read C signatures.
-> **Before this:** [What a signature leaves unsaid](../explanation/unsaid.md); the [contract explanation](../explanation/contracts.md) is available for deeper questions.
+> **Before this:** [Using an API across languages](../explanation/unsaid.md); the [contract explanation](../explanation/contracts.md) is available for deeper questions.
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [language and publication](../language.md#l1), [contracts](../contracts.md#c1), [access paths](../profiles.md#a2) and the [synthetic fixture catalogue](../profiles.md#f1) are canonical.
 
