@@ -46,3 +46,20 @@ way, and completes the glossary for all three pages. Each session converts
 the plain-text mentions of the pages it lands into links. Only the second
 draft's last act cuts `copy-edit`. The first finds its later sibling live and
 cuts nothing.
+
+## Handed forward
+
+- **art — G5:** `explanation/contracts.md`, “How long a borrow lasts”. Add the
+  borrow timeline comparing owner destruction with earlier invalidation at
+  `replace` entry. Keep `valid($store, call)` distinct from the returned borrow's
+  owner region; the prose and C1/C5 supply the facts.
+- **art — G6:** `explanation/contracts.md`, “Lifecycles and patterns”. Add the
+  unique-resource state diagram: successful creation supplies one obligation,
+  borrowing preserves it, destructor consumption takes it at entry, destruction
+  invalidates dependent borrows before return. Avoid treating the separate
+  constructed `before` pattern as part of the immutable store's lifecycle.
+- **art — G7:** `explanation/contracts.md`, “Callbacks”. Compare call-scoped
+  invocation ending at registration completion with owner-scoped starts after
+  return and quiescence at `unsubscribe` return. Show possible in-flight work
+  during teardown and the `outside_callback` precondition. All facts are in
+  the prose; use the shared figure vocabulary. G4 is already reused in ownership.

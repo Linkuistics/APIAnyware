@@ -104,6 +104,13 @@ arguments and results within an [ABI](#abi) definition. Defined in
 rules: [`A1–A2`](profiles.md#a1). Matching its name does not establish compatible
 type layout or runtime requirements.
 
+## Cardinality
+
+Cardinality states how many participants a pattern role accepts: exactly one,
+zero or one, zero or more, or one or more. Defined in
+[Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns);
+rule: [`L6`](language.md#l6). Callback invocation count is a separate contract.
+
 ## Closure
 
 The normative text uses “closure” for both a transitive dependency set and a
@@ -165,6 +172,13 @@ A digest pin selects exact dependency bytes alongside their identifier and
 version. Defined and governed by [`L2`](language.md#l2).
 The synthetic fixture's digest tokens are a testing exception, not hashes of
 the Markdown or usable production pins ([`F1`](profiles.md#f1)).
+
+## Discriminator
+
+A discriminator is the valid result, output scalar pointee or thrown value
+whose value separates outcomes for a completion. Defined in
+[Every way a call can end](explanation/contracts.md#every-way-a-call-can-end);
+rule: [`C5`](contracts.md#c5). Invalid output cannot serve as a discriminator.
 
 ## Environment
 
@@ -242,6 +256,14 @@ and its output states and obligations. Defined in
 [What can the caller read when a call fails?](explanation/unsaid.md#what-can-the-caller-read-when-a-call-fails);
 rule: [`C5`](contracts.md#c5). Nullability alone does not make null a failure.
 
+## Output state
+
+An output state says whether a result, thrown value or writable pointee is
+valid, invalid or, for eligible `inout` storage, unchanged from entry. Defined in
+[Every way a call can end](explanation/contracts.md#every-way-a-call-can-end);
+rules: [`C3`](contracts.md#c3), [`C5`](contracts.md#c5).
+A valid null result is observable; an invalid output cannot even be tested for null.
+
 ## Owned
 
 An owned reference carries one obligation to destroy a resource or release a
@@ -269,15 +291,26 @@ covers that subset's entire dependency closure and applicable obligations.
 ## Pattern
 
 A pattern declares typed roles and laws that bind concrete participants into
-reusable relationships. Defined and governed by [`L6`](language.md#l6).
+reusable relationships. Defined in
+[Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns);
+rule: [`L6`](language.md#l6).
 Its laws impose obligations; a pattern is not merely an informal recipe for
 usual call order.
+
+## Pattern instance
+
+A pattern instance binds every role of a named pattern to concrete participants,
+including empty bindings where the role permits them. Defined in
+[Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns);
+rule: [`L6`](language.md#l6). It applies the pattern's laws; it does not invent
+another release discipline.
 
 ## Place
 
 A place is a typed path from a callable [slot](#slot) to the value or storage a clause
-addresses. Defined by the slot and path rules in [`C1`](contracts.md#c1) and
-repeatability rules in [`L5`](language.md#l5). Dereferencing one pointee and
+addresses. Defined in
+[Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about);
+rules: [`C1`](contracts.md#c1), [`L5`](language.md#l5). Dereferencing one pointee and
 selecting buffer elements are distinct paths with different extent requirements.
 
 ## Profile
@@ -322,8 +355,9 @@ It is separate from independent overlapping calls.
 ## Reference leaf
 
 A reference leaf is a pointer, resource, object, interface or callback value,
-including one nested inside a by-value aggregate. Defined and governed by
-[`C1`](contracts.md#c1), with recursive type obligations in [`L4`](language.md#l4).
+including one nested inside a by-value aggregate. Defined in
+[Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about);
+rules: [`C1`](contracts.md#c1), [`L4`](language.md#l4).
 Aggregation does not erase the leaf's ownership or validity contract.
 
 ## Region
@@ -343,6 +377,14 @@ unretained reference. Defined and governed by [`C3`](contracts.md#c3);
 see the [ownership explanation](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Strong retention creates an independent obligation; it is not input consumption.
 
+## Role
+
+A role names a typed participant position in a pattern, with a declared
+cardinality. Defined in
+[Lifecycles and patterns](explanation/contracts.md#lifecycles-and-patterns);
+rule: [`L6`](language.md#l6). A slot participant's identity includes its
+operation, so equal parameter names do not imply equal participants.
+
 ## Shared
 
 Shared is the nominal permission for references to cross executors, with
@@ -354,8 +396,9 @@ assert a source language's compiler conformance.
 ## Slot
 
 A slot is a named parameter, result or declared thrown value of a callable to
-which a contract can refer. Defined and governed by [`C1`](contracts.md#c1), with
-cross-declaration identities in [`L2`](language.md#l2).
+which a contract can refer. Defined in
+[Naming what a contract talks about](explanation/contracts.md#naming-what-a-contract-talks-about);
+rules: [`C1`](contracts.md#c1), [`L2`](language.md#l2).
 A place can select a field, pointee or buffer elements within a slot.
 
 ## Surface
@@ -373,6 +416,6 @@ rules: [`L3`](language.md#l3), [`C8`](contracts.md#c8), [`A5`](profiles.md#a5).
 It neither proves a binary honours the assertions nor proves binding feasibility
 for a chosen target language.
 
-Next: [What a signature leaves unsaid](explanation/unsaid.md) for the concrete
-examples, or [the canonical contract rules](contracts.md) for exact obligations.
+Next: [How AIL states a contract](explanation/contracts.md) for paired AIL examples,
+or [the canonical contract rules](contracts.md) for exact obligations.
 Return to [the overview](README.md) for the document map.

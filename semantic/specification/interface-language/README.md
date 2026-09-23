@@ -48,13 +48,14 @@ you to read every route in order.
 | If you want to… | Start at… |
 |---|---|
 | Understand why the contract is needed | [What a signature leaves unsaid](explanation/unsaid.md) |
+| Understand how clauses express obligations | [How AIL states a contract](explanation/contracts.md) |
 | Learn to read the notation | [Synthetic buffer example](examples/buffers.ail) alongside [its conformance context](conformance.md); the tutorial *Describing a small API* is forthcoming |
 | Review the design | [Conformance examples and pressure cases](conformance.md); the review guide *Reviewing AIL* is forthcoming |
 | Look up a term or exact rule | [Glossary](glossary.md), then the canonical files below; the indexed *Reference* is forthcoming |
 
-The next explanations are *How AIL states a contract*, *Packages, environments
-and access paths*, and *Design choices, limits and open questions* (forthcoming).
-For now, the domain page leads directly to the canonical rules.
+Continue from the domain page to [How AIL states a contract](explanation/contracts.md).
+*Packages, environments and access paths* and *Design choices, limits and open
+questions* are forthcoming.
 
 ## What is normative
 

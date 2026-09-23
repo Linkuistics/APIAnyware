@@ -305,10 +305,10 @@ AIL does not make. These are non-normative reminders; the linked rules decide.
 
 ## Where next
 
-The forthcoming concept pages are *How AIL states a contract*, *Packages,
-environments and access paths*, and *Design choices, limits and open questions*;
-the tutorial is *Describing a small API*.
+Continue to [How AIL states a contract](contracts.md) to see these obligations
+in AIL, using the [glossary](../glossary.md) for terms. For exact obligations,
+see [the memory and behavioural rules](../contracts.md).
 
-For now, continue to [the memory and behavioural rules](../contracts.md), using
-the [glossary](../glossary.md) for terms. Return to [the overview](../README.md)
-for the full document map.
+*Packages, environments and access paths*, *Design choices, limits and open
+questions*, and the tutorial *Describing a small API* are forthcoming.
+Return to [the overview](../README.md) for the full document map.
