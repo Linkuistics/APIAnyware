@@ -53,8 +53,8 @@ value ([`L4`](../language.md#l4)).
 
 Write `language "0.1";` and the package header shown in the checkpoint.
 `tutorial::lifetime` names this description and `"1"` is its version.
-In `surface`, describe the lifetime operations of synthetic label-card
-release 1. In [exports](../glossary.md#exports), list `Card`, `create_card`
+In [`surface`](../glossary.md#surface), describe the lifetime operations of
+synthetic label-card release 1. In [exports](../glossary.md#exports), list `Card`, `create_card`
 and `destroy_card` as the public declarations ([`L2–L3`](../language.md#l2)).
 
 A tool reading `Card` needs to find its destructor. Include that operation
@@ -82,7 +82,7 @@ where they apply with `available([test])`. This describes that exact
 configuration; claims about other configurations require their own evidence
 and description ([`L3`](../language.md#l3), [`F1`](../profiles.md#f1)).
 
-### 4. Give Card its lifetime and sharing rules
+### 4. Give `Card` its lifetime and sharing rules
 
 In `resource Card`, write `lifecycle(unique, @destroy_card)`. This
 [lifecycle](../glossary.md#lifecycle) says that each owned card carries one
@@ -113,7 +113,7 @@ this gives the caller its destruction obligation. For null the same clause
 creates no obligation, because ownership applies only to a non-null
 reference ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-### 6. Describe destruction's transfer at entry
+### 6. Transfer responsibility when destruction begins
 
 Give `destroy_card` one `Card` parameter and a `unit` result. The caller
 supplies a valid, non-null card that it owns. Write
@@ -134,11 +134,14 @@ destruction itself is already described by consumption and lifecycle
 
 For both functions, copy the checkpoint's [availability](../glossary.md#availability),
 deprecation and seven effect [clauses](../glossary.md#clause). Read the effects
-as answers about execution: both calls complete synchronously and finish by
-returning. `executor(any)` permits entry from any executor. Creation permits
-independent parallel calls; destruction requires callers to serialize calls
-using the same resource and forbids nested [re-entry](../glossary.md#re-entrancy)
-on that resource. `variadic(false)` fixes the parameter list
+as answers about execution: both calls run synchronously, and returning is
+their only declared way to finish. `executor(any)` permits entry from any
+executor.
+
+Creation permits independent parallel calls. For destruction, callers make
+calls using the same resource one at a time. They also avoid nested
+[re-entry](../glossary.md#re-entrancy): starting another call on that resource
+from within a call that is still active. `variadic(false)` fixes the parameter list
 ([`L3`](../language.md#l3), [`L5`](../language.md#l5), [`C3`](../contracts.md#c3)).
 
 Copy each function's `access direct` block too. This [access path](../glossary.md#access-path)

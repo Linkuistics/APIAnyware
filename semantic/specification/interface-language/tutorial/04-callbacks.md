@@ -19,7 +19,7 @@ use has ended.
 Follow the [steps](#steps), compare the [complete checkpoint](#checkpoint-package),
 then [check yourself](#check-yourself). The subscription is a separate part
 of the synthetic label-card API: notifications carry change numbers, while
-the label lifetimes from Parts 2–3 still govern label access.
+the label lifetimes from parts 2–3 still govern label access.
 
 ## The domain obligation
 
@@ -54,13 +54,15 @@ context determines which of these can satisfy the callback type.
 
 For this example, add `sharing(shared)`, `isolation(none)` and
 `executor(any)`. [Shared](../glossary.md#shared) allows references to the
-callback to cross executors, and `executor(any)` permits invocation on any
-thread. Its captured state needs to permit those uses too. The immutable-state
-handler can satisfy that requirement; the main-thread-only handler cannot
+callback to cross [executors](../glossary.md#executor), and `executor(any)`
+permits invocation on any thread. Its captured state needs to permit those
+uses too. The immutable-state handler can satisfy that requirement; the
+main-thread-only handler cannot
 ([`C2–C3`](../contracts.md#c2)).
 
-Set `concurrency(serial)` and `reentrancy(forbidden)`. Independent invocations
-of the callback value run one at a time. Nested invocation while an earlier
+Set `concurrency(serial)` and `reentrancy(forbidden)`. The
+[concurrency](../glossary.md#concurrency) clause requires independent invocations
+of the callback value to run one at a time. Nested invocation while an earlier
 one is still active is also forbidden; that separate condition is
 [re-entrancy](../glossary.md#re-entrancy). The declaration applies even when
 the same callback value is registered more than once
@@ -69,8 +71,9 @@ the same callback value is registered more than once
 ### 3. Select the callback's synthetic representation
 
 Add `callback_abi(native, "c")` and `representation(fixture, "closure")`.
-These select the calling convention and the way the fixture stores the
-callback with its captures, its [representation](../glossary.md#representation).
+These select the [calling convention](../glossary.md#calling-convention) and
+the way the fixture stores the callback with its captures, its
+[representation](../glossary.md#representation).
 The synthetic [provider](../glossary.md#provider) defines how to retain and
 release that stored value. It has no separately visible context argument
 ([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
@@ -128,8 +131,9 @@ it ([`C6`](../contracts.md#c6)).
 
 Write `count(0, many)`. The library is permitted to send zero notifications,
 or any number during the registration's scope. `many` supplies an unbounded
-maximum. It states the API's permission; the author still needs to have
-established that permission ([`C6`](../contracts.md#c6)).
+maximum. The API author uses it when the API permits an unbounded number
+of notifications, based on knowledge of its behaviour
+([`C6`](../contracts.md#c6)).
 
 Write `scope(owner($result))` to relate the schedule to the watch. Add
 `executor(any)`, `concurrency(serial)` and `reentrancy(forbidden)` to keep
@@ -167,7 +171,7 @@ destruction outside an invocation of that callback use
 To see why, imagine the handler calling `destroy_watch` itself. The
 destructor waits for the handler to finish, while the handler waits for
 the destructor to return. Starting teardown outside the handler avoids
-this self-wait. The fixture defines no alternative protocol for reentrant
+this self-wait. The fixture defines no alternative protocol for re-entrant
 destruction. The precondition complements `reentrancy(forbidden)`; each
 states a separate restriction ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
 

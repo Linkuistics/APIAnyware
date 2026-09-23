@@ -1,6 +1,6 @@
 # 3. Caller-supplied storage and failure
 
-> **Purpose:** tutorial — describe text copying with separate status and output validity.
+> **Purpose:** tutorial — describe text copying and what the caller can read after success or failure.
 > **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [2. Lending access](02-lending.md).
 > **Status:** Draft 0.1 is a proposal under review through its specification
@@ -70,12 +70,12 @@ domain ([`C5`](../contracts.md#c5)).
 
 Give `copy_text` a `Label` input and a `mutptr<u8>` destination. For each
 parameter, write `input(..., borrow)`, `retain(..., none)` and
-`valid(..., call)` using the full places shown in the checkpoint. The call
+`valid(..., call)` using the full parameter names shown in the checkpoint. The call
 [borrows](../glossary.md#borrow) access while the caller keeps ownership,
 and the library promises no [retention](../glossary.md#retention) for later
 work ([`C3`](../contracts.md#c3)).
 
-For a label obtained in Part 2, keeping it valid means keeping its card alive
+For a label obtained in part 2, keeping it valid means keeping its card alive
 and preventing refresh throughout copying. Passing that label to another
 function preserves its earlier borrow conditions. AIL borrowing describes
 these obligations; it supplies no Rust-style static checking
@@ -110,8 +110,9 @@ profile supports this encoding ([`C4`](../contracts.md#c4), [`F1`](../profiles.m
 
 ### 5. State what the caller can read on each outcome
 
-Add two [outcomes](../glossary.md#outcome) for returned
-[completion](../glossary.md#completion). Use `equal($result, 0)` with
+Add two [outcomes](../glossary.md#outcome) describing what happens when the
+call returns. Returning is this function's declared
+[completion](../glossary.md#completion), or way to finish. Use `equal($result, 0)` with
 `meaning(success)` and `equal($result, 1)` with `meaning(failure)`.
 In both outcomes, mark `$result` valid so the caller can read the status
 that decides which case occurred ([`C5`](../contracts.md#c5)).
@@ -124,8 +125,9 @@ therefore describe the written bytes. The caller continues to own the
 allocation in both cases ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
 [`C5`](../contracts.md#c5)).
 
-On failure, the caller leaves the buffer unread, including any attempt to
-search for a terminator. It can still inspect the valid status.
+On failure, the caller leaves the buffer unread. Searching for a terminator
+would also read those bytes, so the caller skips that search. It can still
+inspect the valid status.
 `meaning(failure)` describes that status result; a thrown exception would
 need a different signature and completion contract ([`C5`](../contracts.md#c5)).
 
@@ -376,8 +378,8 @@ Use these non-normative summaries to check your reading of
 
 - Status `0` lets the caller read seven nonzero UTF-8 code units and their
   final zero within the eight-element allocation.
-- Status `1` remains readable, while the output buffer supplies no
-  initialized elements. The caller leaves those bytes unread.
+- Status `1` remains readable, while the output contract guarantees no
+  readable buffer elements. The caller leaves those bytes unread.
 - `state($destination[], invalid)` describes output elements. The caller
   still owns its allocation and supplied a pointer valid for the call.
 - The closed enum admits exactly two statuses, each covered by one outcome.

@@ -18,7 +18,7 @@ events that end that access.
 Follow the [steps](#steps), compare the [complete checkpoint](#checkpoint-package),
 then [check yourself](#check-yourself). The new relationship is between the
 returned label and its card; the creation and destruction functions from
-Part 1 keep their contracts.
+part 1 keep their contracts.
 
 ## The domain obligation
 
@@ -53,7 +53,7 @@ operation that makes it unusable earlier. AIL calls that earlier ending
 [invalidation](../glossary.md#invalidation). You will express both facts on
 the returned borrow ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-### 2. Describe Label and its destructor
+### 2. Describe `Label` and its destructor
 
 Declare `Label` as a resource. Like `Card`, its value is an opaque
 [handle](../glossary.md#handle); the library keeps the layout private.
@@ -70,7 +70,7 @@ borrow lifetime; it has no owned obligation to pass to the destructor
 ([`C2–C3`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
 
 Keep this distinction in mind as you add the getter. A resource's type
-describes its release discipline, while an individual operation says whether
+describes how an owner releases it, while an individual operation says whether
 the caller receives ownership or temporary access. Borrowing in AIL states
 that agreement; it implies no Rust-style static checking or exclusivity.
 
@@ -111,15 +111,18 @@ the owner region; the list names the additional, earlier cutoff
 Define `refresh_card(card: Card) -> unit` with a borrowed card input and
 `valid($card, call)`. Set `mutation(arguments)` because refresh replaces
 the card's live contents. Give it one successful returned outcome and the
-remaining clauses from the checkpoint. The borrow's named invalidator now
-resolves to an operation with the owner parameter and mutation that its
-contract requires ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+remaining clauses from the checkpoint. A reader can now follow
+`@refresh_card` from the borrowed result to the function that ends its use.
+That function takes the owning card as an argument and declares that it
+changes the card's contents, as the invalidation contract requires
+([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 ### 6. Include the new declarations in the package
 
 Use the checkpoint's new package name and expand its [surface](../glossary.md#surface)
-to include lending and refresh. Add the new declarations to `exports` and
-give each its availability, deprecation and other applicable clauses. Copy
+to include lending and refresh. Add the new declarations to
+[`exports`](../glossary.md#exports) and give each its
+[availability](../glossary.md#availability), deprecation and other applicable clauses. Copy
 the synthetic [access paths](../glossary.md#access-path) for each new function
 ([`L2–L5`](../language.md#l2), [`A2`](../profiles.md#a2)).
 

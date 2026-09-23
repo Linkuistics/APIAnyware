@@ -25,7 +25,7 @@ the [questions](#check-yourself) test their consequences.
 The examples use the invented label-card API and the synthetic fixture
 [profile](../glossary.md#profile), catalogue and [digest tokens](../glossary.md#digest-pin)
 defined by [`F1`](../profiles.md#f1). This part explains the access clauses
-already present in Parts 1–4, then creates a separate API variant for the
+already present in parts 1–4, then creates a separate API variant for the
 ownership exercise.
 
 ## The domain obligation
@@ -68,9 +68,10 @@ passed. For this fixture, resource handles have a specified 64-bit
 representation ([`A1`](../profiles.md#a1), [`F1`](../profiles.md#f1)).
 
 Read `via(fixture, "symbol", "fixture_current_label")` as asking the
-consumer to use the fixture's function-symbol mechanism with that exact
-name. The mechanism keeps all declared parameters explicit. Compare these
-facts with [`F1`](../profiles.md#f1), which defines the synthetic catalogue.
+[consumer](../glossary.md#consumer) to use the fixture's function-symbol
+mechanism with that exact name. The mechanism keeps all declared parameters
+explicit. Compare these facts with [`F1`](../profiles.md#f1), which defines
+the synthetic catalogue.
 
 ### 3. Check how the path preserves the contract
 
@@ -81,7 +82,8 @@ symbol mechanism and `c` convention. The consumer can pass the `Card` and
 receive the `Label` according to that definition ([`A2`](../profiles.md#a2),
 [`F1`](../profiles.md#f1)).
 
-The selected implementation also owes the semantic promises in the body.
+The selected implementation also fulfils the behaviour described in the
+function body.
 For this operation it lends the card's label, and refresh ends that borrow.
 Matching a parameter and result type is only part of fulfilling the whole
 operation ([`A2`](../profiles.md#a2)).
@@ -102,13 +104,14 @@ callable value for the library to invoke ([`A2`](../profiles.md#a2)).
 
 You have now followed a contract to the definitions needed to call its
 implementation. Continue to the [ownership exercise](#guided-change-an-owned-snapshot)
-to change both the returned obligation and the symbol supplying it.
+to change who destroys the returned label and select the implementation
+that supplies it.
 The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
 places this consumer task in the wider use of an AIL description.
 
 ## Checkpoint package
 
-The finished package collects the API from Parts 1–4 under the identity
+The finished package collects the API from parts 1–4 under the identity
 `tutorial::finished`. Compare the complete [finished file](../examples/tutorial/05-finished.ail)
 with your work, then continue to [the guided change](#guided-change-an-owned-snapshot).
 The synthetic fixture profile, catalogue and digest tokens remain those
@@ -465,7 +468,7 @@ identities. Read the variants separately: a `Label` declared by one belongs
 to that package, even though the other uses the same local spelling
 ([`L2`](../language.md#l2)).
 
-#### 3. Change the obligation delivered by current_label
+#### 3. Give the caller ownership of the `current_label` result
 
 In the returned [outcome](../glossary.md#outcome), replace
 `give($result, borrow(owner($card)))` with `give($result, owned)`.
@@ -493,8 +496,8 @@ original symbol's borrowing behaviour would leave the new contract
 unfulfilled, despite having the same signature ([`A2`](../profiles.md#a2)).
 
 Keep `abi`, `mapping` and `compatibility`. The fixture still represents the
-same types and passes the same signature. The implementation reached by
-the changed symbol owes the new ownership promise
+same types and uses the same parameter and result types. The implementation
+reached by the changed symbol supplies the independently owned snapshot
 ([`A2–A4`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
 
 #### 5. Compare your changed operation
@@ -576,8 +579,9 @@ availability and deprecation stay in their original scopes, and each
 resource keeps its sharing and isolation facts
 ([`L3`](../language.md#l3), [`L5`](../language.md#l5), [`C2–C6`](../contracts.md#c2)).
 
-**The new symbol owes the new behaviour.** The fixture provider and signature
-mapping stay the same, while `via` selects the snapshot implementation.
+**The new symbol selects the snapshot implementation.** The fixture provider
+and signature mapping stay the same, while `via` names the code that supplies
+the independently owned result.
 A documentation or machine view of this package likewise describes an owned
 result and its destruction responsibility ([`A2–A5`](../profiles.md#a2),
 [`F1`](../profiles.md#f1)).
