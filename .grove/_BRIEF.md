@@ -216,6 +216,19 @@ figure edits use `task docs:diagrams:write` and inspect the result. The proof
 found no outstanding hand-forward item; human comprehension remains for the
 scheduled reading checkpoint.
 
+Concepts is complete (`concepts-k6`). Its three explanations and glossary routes
+cover contracts, packages/access and design trade-offs; Q1–Q6 remain open in
+`explanation/choices.md`. The tutorial can reuse G7's distinction between a
+constructed call-scoped operation and successful synthetic subscription, with
+quiescence at destructor return and no delivery or termination promise. G5
+separates input call validity from the returned owner borrow; its mutable-store
+case is constructed, not part of the immutable fixture. G6 covers only the
+immutable unique-store lifecycle. G2 is schematic, not an additional fixture
+package; G3's two getter paths select one synthetic ABI entry with different
+conventions. Whole-document proof found no outstanding defect. Keep future
+examples explicit about these boundaries and replace forthcoming tutorial
+routes when that page lands.
+
 The root brief is the requirements authority for later sessions. There are no
 three unresolved interdependent decisions requiring a full grilling: the human
 has specified purpose, audience, forms, quality direction and the multi-step

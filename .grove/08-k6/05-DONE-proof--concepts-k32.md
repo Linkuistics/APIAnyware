@@ -45,3 +45,26 @@ contract, leaving the node ready for the tutorial and reader checkpoint.
   context the subsequent tutorial needs before sealing the focused jj commit.
   Add no successor in the ordinary case; use the editorial correction-run
   procedure only for a defect that actually requires it.
+
+## Decisions (running log)
+
+- The whole-document read found no correction requiring a text or figure
+  change. Retain the three concept pages, their examples and Q1–Q6 as written.
+  Cross-checked the explanations against L1–L6, C1–C8, A1–A5/F1, the grammar,
+  all three frozen examples, the conformance record and the cited design/audit
+  passages. Inspected the five new rendered figures against their source,
+  legends and adjacent prose, and checked the landing/glossary routes.
+- No handed-forward defect or correction run remains. The concept node's
+  deliverables meet its Done when; promote the reusable figure and example
+  distinctions to the root brief for the tutorial. Reference-inventory coverage
+  belongs to the pending reference increment; human comprehension remains for
+  the scheduled reader checkpoint. This proof does not establish native
+  behaviour or executable semantic conformance.
+- Final verification: `task docs:check` passed (13 files checked for links,
+  11 pages reachable, 13 files checked for examples, all seven SVGs regenerated
+  byte-for-byte). Before/after SHA-256 manifests matched for the specification
+  tree, documentation tools, semantic design/research documents and Taskfile.
+  No document bytes changed during the check. The gate checks documentation
+  mechanics, not semantic validity; the rule/example comparison above was
+  inspection. No ADR change is warranted by a proof that changes no rule or
+  design decision.
