@@ -289,12 +289,19 @@ scope eventually ends; they supply no deadline or promise that it will end
 ([`C6`](../contracts.md#c6)).
 
 In summary (non-normative): AIL describes a callback type separately from the
-schedule of each registration. The core supports callbacks confined to the
-registration call or to the lifetime of a returned unique owner with quiescent
-destruction. A blocking destructor requires a call from outside the callback
-unless a profile supplies a non-deadlocking protocol. Cancellation with a
-separate acknowledgement needs a profile that specifies the events and their
-ordering ([`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
+schedule of each registration. The type describes one invocation; the
+registration says when those invocations can occur. The core supports two
+lifetime arrangements. In the first, all invocations finish within the
+registration call. In the second, registration returns a unique owner, such as
+the watch, and its destructor establishes quiescence before returning
+([`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
+
+When the destructor waits for callbacks to finish, the caller invokes it from
+outside those callbacks. A profile can instead define a protocol that permits
+teardown from a callback without deadlocking. Cancellation with a separate
+acknowledgement also needs a profile: its rules specify the events and their
+ordering, so the caller can identify when state is safe to release
+([`C6`](../contracts.md#c6)).
 
 These possible contracts place the last use of callback state at different
 events. Use the table to decide which event the caller needs to wait for before

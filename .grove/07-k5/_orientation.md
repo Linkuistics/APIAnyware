@@ -59,17 +59,11 @@ the publication workflow through people, tools and actions before naming its
 abstractions. Apply that treatment across all three pages and shared figures.
 The follow-up human checkpoint is `first-path-reading-k48`.
 
-## Handed forward
+## Follow-up reading
 
-- **Proof — human clarification during art.** Assess all three pages for low
-  semantic density outside reference and independence from Grove, editorial
-  process, ADRs and planning artifacts. Art removed README's design-history
-  section and the domain page's external design-proposal dependency, and updated
-  the root brief and plan. The glossary remains a reference; short table cells
-  should summarize explanations the non-reference page has already developed.
-- **Proof — figure reconciliation.** G1 now uses concrete actors and actions;
-  G4 uses the domain page's three separate synthetic watch cases. Check the
-  captions and new domain comparison tables along with the whole document.
-  Concept and tutorial context embeds became links to the overview. The shared
-  G4 use explicitly returns to the domain watch example, keeping it distinct
-  from the concept page's synthetic Store and callback fixtures.
+Proof closed both art handoffs: the three pages supply their own context, and
+the captions, tables and G1/G4 figures agree with the explanations. Two remaining
+compressed summaries were expanded in proof: deployment/support limits and
+callback lifetimes/teardown. The glossary retains its reference form.
+The follow-up human checkpoint owns whether these explanations are now
+understandable; editorial inspection alone does not establish that outcome.

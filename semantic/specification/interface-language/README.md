@@ -182,13 +182,20 @@ every required extension and check its rules
 
 Draft 0.1 names a finite set of exact deployment
 [environments](glossary.md#environment), such as a particular target and
-platform version. Version-range algebra, arbitrary dependent types, generic
+platform version. A producer lists the configurations the package describes;
+tools check its declarations against those configurations.
+
+Version-range algebra, arbitrary dependent types, generic
 constraint solving, bitfield layout, unions and complete Swift/Rust/Zig/CLR/Wayland
 profiles remain beyond this draft's defined support. Describing an API that
 needs one of these features requires a fully specified profile or a later
-language version. Fully specified, profile-supported source-only access is
-legitimate: a compiler can build a call even when direct symbol access is
-unavailable ([`L3–L4`](language.md#l3), [`A1–A4`](profiles.md#a1);
+language version ([`L3–L4`](language.md#l3), [`A1`](profiles.md#a1)).
+
+An API can still be described when a compiler is needed to build calls to it.
+For example, an operation might be available through source code while having
+no symbol a binding can call directly. A profile supplies the rules for that
+source access, including a complete build recipe. The compiler then establishes
+compatibility for that build ([`A2`](profiles.md#a2), [`A4`](profiles.md#a4);
 [pressure cases](conformance.md#pressure-cases-outside-the-synthetic-profile)).
 
 A smaller surface can make the work manageable when all of that surface's

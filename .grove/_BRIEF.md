@@ -236,7 +236,8 @@ this process be added to the existing Grove GitHub issues: #14 (overview),
 (writing for understanding) in `Linkuistics/grove`, as applicable. Record actual
 observations and distinguish them from proposed remedies and general claims.
 
-The initial orientation pipeline completed (`orientation-k5`). Its three pages
+The orientation correction run completed (`orientation-k39`, node
+`orientation-k5`). Its three pages
 establish the domain vocabulary and link the existing normative/supporting set. Later increments
 must replace their plain-text forthcoming mentions and interim next routes as
 each page lands (plan §3). G1 is the publication map in `README.md`; G4 in
@@ -244,8 +245,15 @@ each page lands (plan §3). G1 is the publication map in `README.md`; G4 in
 and shared vocabulary live under `semantic/specification/interface-language/figures/`.
 `task docs:check` includes byte-for-byte diagram regeneration; after intentional
 figure edits use `task docs:diagrams:write` and inspect the result. The proof
-found no outstanding hand-forward item; human comprehension remains for the
-scheduled reading checkpoint.
+found no outstanding hand-forward item. The corrected pages explain actors,
+actions and consequences before abstractions and supply their own context.
+G4 now shows three separate watch cases; its concepts-page caption explicitly
+distinguishes them from the Store fixture. Proof expanded two residual dense
+summaries (deployment/support and callback lifetimes/teardown). The follow-up
+human checkpoint `first-path-reading-k48` should assess whether the whole
+orientation now supports understanding; these editorial observations establish
+neither human comprehension nor the effectiveness of a stage. Carry that limit
+into any process-issue update based on the reading.
 
 The initial concepts pipeline completed (`concepts-k6`). Its three explanations
 and glossary routes cover contracts, packages/access and design trade-offs; Q1–Q6 remain open in

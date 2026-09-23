@@ -43,3 +43,32 @@ requires escalation. The human requested corrections before further feedback;
 `first-path-reading-k48` follows all three corrected documents and precedes
 reference drafting. Keep the synthetic examples and proposed-language status
 explicit throughout.
+
+## Decisions (running log)
+
+- D1. The whole-page read found two remaining compressed summaries: README's
+  deployment/support paragraph and the domain page's callback-support summary.
+  Expand them into connected explanations of configurations, source-built calls,
+  callback lifetimes and teardown. Preserve L3–L4, A1–A4 and C2/C6 semantics.
+  These are bounded proof repairs; no second editorial correction run is needed.
+- D2. Read all three orientation pages and the canonical L1–L6, C1–C8 and
+  A1–A5/F1 rules directly. Graph generation 2026-09-23T09:55:55Z reports changed
+  Markdown metadata and untracked figure sources; source reads, not graph
+  completeness, establish the documentary evidence. G1/G4 captions, alt text,
+  sources and domain comparison tables agree on the separate synthetic cases.
+- D3. Walked README → domain explanation → canonical rules and direct entry
+  through the domain page and glossary. Inspected rendered G1/G4 and the shared
+  concepts caption. The non-reference pages develop the comparisons before
+  their tables; the glossary remains a reference. Both art handoffs are closed.
+  No language decision or ADR change follows from these prose repairs.
+- D4. `task docs:check` passes: 19 files checked for links and examples,
+  17 Markdown pages reachable, all 11 diagram SVGs reproduce byte-for-byte.
+  SHA-256 inventories before and after the final run match for all files under
+  `semantic/specification/interface-language/` and `semantic/specification/tools/`,
+  plus `Taskfile.yml`, the documentation plan and audit. External links were
+  reported, not fetched; these checks neither parse AIL nor validate semantics.
+- D5. The orientation node's done conditions hold: its pages, vocabulary,
+  canonical routes and figures are present and the entry routes were walked.
+  Promote the correction's scope and inspection limits into the root brief for
+  `first-path-reading-k48`. That human checkpoint remains the assessment of
+  comprehension. The root still has live concepts/tutorial and later work.
