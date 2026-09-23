@@ -261,6 +261,36 @@ standard library. The documentation-foundation increment writes the first two:
   with the marker lines removed. Every fence has an info string.
 - `docs:check` runs both.
 
+The scripts are in `semantic/specification/tools/` (`docs_links.py`,
+`docs_examples.py` and their shared scanner `mdscan.py`). Each script's
+docstring states its rules in full. A marker is an HTML comment on its own
+line. It is the nearest non-blank line before its `ail` fence, so it sits
+between the visible label (§5) and the fence:
+
+```text
+Complete package — admitted by the grammar and complete under draft 0.1,
+checked by inspection.
+
+<!-- ail-example: examples/buffers.ail region=create -->
+```
+
+The four marker forms are:
+
+| Marker | The fence body must equal |
+|---|---|
+| `<!-- ail-example: PATH -->` | the whole file |
+| `<!-- ail-example: PATH region=NAME -->` | the lines between `// region: NAME` and its matching `// endregion` |
+| `<!-- ail-example: PATH lines=A-B -->` | lines A to B of the file, inclusive |
+| `<!-- ail-fragment -->` | nothing; the fence is not compared |
+
+`PATH` is relative to the Markdown page. Every form removes `// region:` and
+`// endregion` lines before it compares. Regions may nest, and a region name
+is defined once per file. The fragment marker also serves invalid blocks,
+since neither shows a whole file. A marker with no `ail` fence after it
+fails. The anchors that rule citations use (`#l1`–`#l6`, `#c1`–`#c8`,
+`#a1`–`#a5`, `#f1`) are explicit `<a id>` lines before the rule headings.
+The heading slugs still resolve.
+
 Later increments add tasks when they first need them:
 
 - `docs:diagrams` (first `art`): regenerate every SVG from its source with the

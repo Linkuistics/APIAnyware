@@ -1,0 +1,27 @@
+# Repeatable development tasks (https://taskfile.dev). Run `task --list`.
+version: "3"
+
+vars:
+  SPEC: semantic/specification/interface-language
+  DOCS_TOOLS: semantic/specification/tools
+  # Checked with the specification directory: the documentation plan and audit.
+  DOCS_ALSO: >-
+    semantic/docs/design/2026-09-23-interface-language-documentation-plan.md
+    semantic/docs/research/interface-language-documentation-audit.md
+
+tasks:
+  docs:check:
+    desc: Run every interface-language documentation check
+    cmds:
+      - task: docs:links
+      - task: docs:examples
+
+  docs:links:
+    desc: Check relative links, #fragments and page reachability in the interface-language docs
+    cmds:
+      - python3 {{.DOCS_TOOLS}}/docs_links.py --root . --site {{.SPEC}} --also {{.DOCS_ALSO}}
+
+  docs:examples:
+    desc: Check fence info strings and that ail examples match their .ail source
+    cmds:
+      - python3 {{.DOCS_TOOLS}}/docs_examples.py {{.SPEC}} {{.DOCS_ALSO}}

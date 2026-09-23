@@ -5,6 +5,8 @@ not an analysis engine's confidence. A broad, authoritative permission such as
 zero-or-more invocations is valid; a producer MUST NOT use it to conceal a fact
 that it has not established. All clauses below are closed, typed vocabulary.
 
+<a id="c1"></a>
+
 ## C1. Slots and regions
 
 `$p` names a parameter of the enclosing callable; `$result` and `$exception`
@@ -35,6 +37,8 @@ cannot use `call`: every escaping borrow's region must survive delivery to its
 recipient. A shorter mutation lifetime is expressed by
 `invalidated_by`, not by pretending an owner dies.
 
+<a id="c2"></a>
+
 ## C2. Nominal lifetime and concurrency
 
 Resources, objects and interfaces require `lifecycle`. Nominal declarations
@@ -60,6 +64,8 @@ known absence of nominal isolation, not a claim that all methods run anywhere.
 Confinement covers retain/release, destruction and use through free functions as
 well as member calls. An operation using a confined reference must require its
 executor, unless a profile defines a specific legal transfer protocol.
+
+<a id="c3"></a>
 
 ## C3. Callable effects and input obligations
 
@@ -106,6 +112,8 @@ on outcomes returning that owner non-null and valid. Other outcomes permit only
 call-scoped temporary storage and must discharge temporary retained/copied
 references before completion. This does not undo any `consume` at entry.
 
+<a id="c4"></a>
+
 ## C4. Buffers and strings
 
 Every pointer leaf, including returned pointers and nested pointer leaves, requires
@@ -137,6 +145,8 @@ must be established. Strings whose extent is determined only by searching for
 a terminator require a profile-defined scanned-buffer contract; the core does
 not invent a maximum bound. Record layout, field offsets and array stride are
 representation facts supplied by an access provider under [A4](profiles.md#a4-representation-and-compatibility).
+
+<a id="c5"></a>
 
 ## C5. Outcomes and returned obligations
 
@@ -187,6 +197,8 @@ APIs keep their actual signatures and outcomes. A projected operation that loses
 observable success/status distinctions is a different declaration, related using
 an access profile, not an interchangeable path to the same operation.
 
+<a id="c6"></a>
+
 ## C6. Callback schedules and teardown
 
 Each callback-typed parameter MUST have one `callback $parameter { ... }` block,
@@ -218,6 +230,8 @@ cancellation with a separate acknowledgement or a callback destroy-notifier need
 a profile with explicit events and ordering. Such APIs MUST NOT be flattened into
 `quiescence(@cancel)` when cancellation return is not a quiescence boundary.
 
+<a id="c7"></a>
+
 ## C7. Global storage
 
 A global requires `sharing`, `isolation`, `extent`/`contents` if pointer-typed,
@@ -228,6 +242,8 @@ reads/writes need a profile or explicit accessor functions. Core mutable value
 globals require `sharing(confined)` and non-`none` isolation; atomics require a
 profile. Constants with access paths obey the same output rules, are immutable,
 and have no mutation contract. Literal scalar constants need no ownership clauses.
+
+<a id="c8"></a>
 
 ## C8. Obligation checking
 

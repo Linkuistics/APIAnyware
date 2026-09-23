@@ -8,13 +8,13 @@ contract distinctions required here.
 
 | Source | Scope |
 |---|---|
-| [ir.rs](../../../../APIAnyware.add-ocaml-target/semantic/tools/types/src/ir.rs) | Framework and declaration records, Swift attributes and ownership facts. |
-| [type_ref.rs](../../../../APIAnyware.add-ocaml-target/semantic/tools/types/src/type_ref.rs) | Type expressions and nullability. |
-| [annotation.rs](../../../../APIAnyware.add-ocaml-target/semantic/tools/types/src/annotation.rs) | Analysed memory, threading, callbacks and errors; evidence and overrides. |
-| [provenance.rs](../../../../APIAnyware.add-ocaml-target/semantic/tools/types/src/provenance.rs) | Availability, source location and documentation references. |
-| [pattern_instance.rs](../../../../APIAnyware.add-ocaml-target/semantic/tools/types/src/pattern_instance.rs) | Pattern identity and participants. |
-| [kind.rs](../../../../APIAnyware.add-ocaml-target/semantic/tools/patterns/src/kind.rs) | Authored role/law model, including types without serde derives. |
-| [enrichment.rs](../../../../APIAnyware.add-ocaml-target/semantic/tools/types/src/enrichment.rs) | Derived convenience indices and verification results. |
+| `APIAnyware.add-ocaml-target/semantic/tools/types/src/ir.rs` | Framework and declaration records, Swift attributes and ownership facts. |
+| `APIAnyware.add-ocaml-target/semantic/tools/types/src/type_ref.rs` | Type expressions and nullability. |
+| `APIAnyware.add-ocaml-target/semantic/tools/types/src/annotation.rs` | Analysed memory, threading, callbacks and errors; evidence and overrides. |
+| `APIAnyware.add-ocaml-target/semantic/tools/types/src/provenance.rs` | Availability, source location and documentation references. |
+| `APIAnyware.add-ocaml-target/semantic/tools/types/src/pattern_instance.rs` | Pattern identity and participants. |
+| `APIAnyware.add-ocaml-target/semantic/tools/patterns/src/kind.rs` | Authored role/law model, including types without serde derives. |
+| `APIAnyware.add-ocaml-target/semantic/tools/types/src/enrichment.rs` | Derived convenience indices and verification results. |
 
 Graph coverage: OCaml generation `2026-09-08T08:04:02Z` excludes all seven files,
 so all were read directly. Main generation `2026-09-22T11:21:03Z` reported current

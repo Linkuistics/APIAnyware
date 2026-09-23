@@ -65,3 +65,20 @@ the repository. Change no rule text.
 This leaf establishes checks; it does not validate AIL. Do not write a parser
 or grammar recognizer (root brief, *Technical scope and verification*). No
 review leaf follows: the checks are proven by their failing controls.
+
+## Decisions (running log)
+
+- **Anchor form.** `<a id="c3"></a>` on its own line, then a blank line, then
+  the unchanged heading. The blank line is needed: in GFM an HTML block runs
+  to the next blank line, so without it the heading would not render as a
+  heading.
+- **Script home.** `semantic/specification/tools/`, beside the specification
+  directory rather than inside it, so it adds no pages to the reachability
+  set. `mdscan.py` holds the Markdown scanning that both checks share.
+- **Marker syntax.** `<!-- ail-example: PATH [region=NAME|lines=A-B] -->` and
+  `<!-- ail-fragment -->`. The marker is the nearest non-blank line before
+  the fence. The plan's §5 label goes before the marker. The whole-file form
+  is added because §5 allows a complete package to be a whole file. Invalid
+  blocks use the fragment marker. §7 of the plan is updated to match.
+- **Scope of `docs:examples`.** It runs on the same files as `docs:links`:
+  the specification directory, the plan and the audit.

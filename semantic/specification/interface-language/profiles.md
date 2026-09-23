@@ -4,6 +4,8 @@ Normative draft 0.1. **A1–A5** specify the provider boundary. **F1** defines a
 synthetic catalogue used only by this draft's examples. No production provider
 is implemented by these documents.
 
+<a id="a1"></a>
+
 ## A1. Provider manifests
 
 A profile is a versioned, digest-pinned definition of additional source types,
@@ -34,6 +36,8 @@ Calling convention is selected within an ABI entry, never treated as the entire 
 Different consumers may support different providers. They must identify unsupported
 dependencies before claiming complete validation. A syntax reader may preserve an
 unsupported package as text, but MUST NOT label it a validated authoritative model.
+
+<a id="a2"></a>
 
 ## A2. Access paths
 
@@ -71,6 +75,8 @@ may have only source access. Macro expansion, inline source and empty/erasing
 macros require distinct provider mechanisms; none imply a linker symbol exists.
 The same applies to managed projections and wire protocols.
 
+<a id="a3"></a>
+
 ## A3. Type representations and data access
 
 A type needed at an access boundary must be representable by the selected provider
@@ -94,6 +100,8 @@ type spelling alone does not select the mechanism. A macro-created object may
 need source construction with ownership/effects supplied by the profile; it is
 not necessarily a literal or a linkable constant. Volatile/atomic storage and
 effectful evaluations require explicit profile semantics.
+
+<a id="a4"></a>
 
 ## A4. Representation and compatibility
 
@@ -121,6 +129,8 @@ Wayland must distinguish generated C wrappers from the versioned wire protocol.
 These are design requirements, not implemented providers. Primary research and
 its qualification are in the [survey](../../docs/research/2026-09-22-interface-language-a.md).
 
+<a id="a5"></a>
+
 ## A5. Consumer agreement
 
 The authoritative view includes declaration identity, full types, per-environment
@@ -142,6 +152,8 @@ Validation of the specification is consumer-independent. Binding feasibility is
 a later query over a selected environment, path and target language. A binding
 generator may refuse an otherwise valid package because it cannot preserve a
 contract. It must report that limitation separately from malformed/incomplete AIL.
+
+<a id="f1"></a>
 
 ## F1. Synthetic fixture catalogue
 

@@ -4,6 +4,8 @@ Normative draft 0.1. **MUST**, **MUST NOT**, **SHOULD** and **MAY** express
 requirements, prohibitions, recommendations and permissions in this draft.
 Rules have stable identifiers for diagnostics; wording can change during review.
 
+<a id="l1"></a>
+
 ## L1. Text and syntax
 
 A document MUST be valid UTF-8 without a byte-order mark. Identifiers contain
@@ -28,6 +30,8 @@ its vocabulary is closed and typed by this document, [contracts](contracts.md)
 and [profiles](profiles.md). Parseable does not imply valid. An unknown clause,
 constructor or enum value is an error, except inside a recognised profile's
 namespace. A profile's vocabulary MUST be equally closed and typed.
+
+<a id="l2"></a>
 
 ## L2. Identity and dependencies
 
@@ -65,6 +69,8 @@ identifier, version and digest. Their names share the local namespace with
 imports, environments and declarations. A provider reference always names its
 declared alias; an arbitrary string cannot masquerade as an installed provider.
 
+<a id="l3"></a>
+
 ## L3. Publication and environments
 
 Exactly one package clause `surface("description")` MUST describe what API
@@ -97,6 +103,8 @@ publication. Known absence is explicit where required. For example,
 `isolation(none)` does not mean isolation analysis was omitted. Validation checks
 internal consistency and completeness, not whether a binary actually honours
 the author's assertions.
+
+<a id="l4"></a>
 
 ## L4. Type expressions
 
@@ -138,6 +146,8 @@ Profile types use `profileAlias::Type<...>` and require a provider-defined type
 schema, representation and contract applicability rules. This is the extension
 point for generics, existential objects, metatypes, receiver-dependent types,
 selectors and other source constructs; no such type has an implicit core meaning.
+
+<a id="l5"></a>
 
 ## L5. Declarations and common clauses
 
@@ -182,6 +192,8 @@ Interface conformance requires an implementation of every required member;
 optional members may be absent. A profile must define external implementations
 that are not represented by local `satisfies` relations. A type name or source
 spelling alone does not establish conformance.
+
+<a id="l6"></a>
 
 ## L6. Patterns
 
