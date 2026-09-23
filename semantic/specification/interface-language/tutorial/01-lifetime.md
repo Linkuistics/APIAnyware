@@ -3,31 +3,34 @@
 > **Purpose:** tutorial — describe creation and destruction of a uniquely [owned](../glossary.md#owned) card.
 > **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [Describing a small API](README.md).
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [`L1–L5`](../language.md#l1), [`C1–C3`](../contracts.md#c1), [`C5`](../contracts.md#c5), [`A2–A4`](../profiles.md#a2) and [`F1`](../profiles.md#f1) are canonical.
-
-Here you write the rules for creating and destroying a card.
-For how tools use the description you are writing, see the
-[overview's workflow map](../README.md#who-writes-and-uses-an-ail-description).
 
 ## Goal
 
-Write the lifetime subset of the synthetic label-card API as a [package](../glossary.md#package): a card type,
-creation that can fail, and destruction. At the checkpoint, explain exactly
-what the [caller](../glossary.md#caller-and-callee) owns after either creation [outcome](../glossary.md#outcome).
+Write a [package](../glossary.md#package) containing `Card`, `create_card` and
+`destroy_card`. At the checkpoint, you will be able to explain who destroys
+the card after successful creation and what happens after allocation failure.
+
+Start with the [steps](#steps), compare your work with the
+[complete checkpoint](#checkpoint-package), then [check yourself](#check-yourself).
+This part covers the invented API's card lifetime; label access comes next.
 
 ## The domain obligation
 
-When creation returns a card, the caller owns one destruction obligation;
-when creation returns null, the caller has nothing to destroy
+When creation returns a card, the [caller](../glossary.md#caller-and-callee)
+takes responsibility for destroying it; when creation returns null, the
+caller has nothing to destroy
 ([ownership and lifecycles](../explanation/contracts.md#who-owns-what)).
 
 ## Steps
 
-1. **Start with the two C-shaped signatures.** Treat them as a sketch of the
-   API, not a host [ABI](../glossary.md#abi) definition. AIL's `Card` is already an [opaque resource](../glossary.md#opaque-resource)
-   [handle](../glossary.md#handle); it is not written `ptr<Card>`
-   ([`L4`](../language.md#l4)).
+### 1. Identify the values the caller receives
+
+Start from these C-shaped signatures for the invented API. They sketch the
+operations; the synthetic provider below supplies the calling rules.
 
    ```c
    typedef struct Card Card;
@@ -35,54 +38,114 @@ when creation returns null, the caller has nothing to destroy
    void destroy_card(Card *card);
    ```
 
-   A non-null creation result gives the caller a card to destroy. A null
-   result reports allocation failure. The pointer spelling alone does not
-   say either of those things.
+Suppose a program calls `create_card`. On success it receives a handle to a
+new card and eventually passes that handle to `destroy_card`. On allocation
+failure it receives null and has no card to destroy. You will write those
+two cases explicitly in AIL.
 
-2. **Before describing operations, declare the publication boundary.**
-   Write the language header and package identity shown below. Give
-   `surface` the synthetic release and lifetime subset; list `Card`,
-   `create_card` and `destroy_card` in
-   [`exports`](../glossary.md#exports). Add the synthetic [provider](../glossary.md#provider) pins and
-   exact `test` [environment](../glossary.md#environment). The package makes claims only for that
-   configuration ([`L2–L3`](../language.md#l2),
-   [`F1`](../profiles.md#f1)). The omitted label operations are unrelated
-   to using this lifetime subset; its destructor is an included dependency.
+In AIL, declare `Card` as an [opaque resource](../glossary.md#opaque-resource).
+Its value is already a [handle](../glossary.md#handle) identifying a card whose
+internal layout stays private. Write a `Card` parameter when passing that
+handle. `ptr<Card>` would describe storage containing a handle, a different
+value ([`L4`](../language.md#l4)).
 
-3. **For the card's one destruction obligation, declare a unique resource.**
-   Set `lifecycle(unique, @destroy_card)`, `implements([])`,
-   `sharing(transferable)` and `isolation(none)`. Here
-   [`sharing`](../contracts.md#c2) permits sole ownership to move between
-   [executors](../glossary.md#executor), without concurrent access. It does not mean shared ownership
-   ([`L5`](../language.md#l5), [`C2`](../contracts.md#c2)).
+### 2. Name the package and the API it covers
 
-4. **For creation's two possible results, write two outcomes.** Use
-   `nullable<Card>`, then pair `nonnull($result)` with success and
-   `null($result)` with failure. In both outcomes mark the result valid
-   and write `give($result, owned)`. A valid null is an observable
-   allocation failure; a non-null result carries the owned obligation.
-   Null carries none ([`C1`](../contracts.md#c1),
-   [`C5`](../contracts.md#c5)).
-   Owned names an obligation, not a C pointer property.
+Write `language "0.1";` and the package header shown in the checkpoint.
+`tutorial::lifetime` names this description and `"1"` is its version.
+In `surface`, describe the lifetime operations of synthetic label-card
+release 1. In [exports](../glossary.md#exports), list `Card`, `create_card`
+and `destroy_card` as the public declarations ([`L2–L3`](../language.md#l2)).
 
-5. **For destruction, transfer the obligation at entry.** Write
-   `input($card, consume)` and `retain($card, none)`, return `unit`,
-   and supply one successful returned outcome. The caller supplies a valid,
-   non-null owned card. The callee [consumes](../glossary.md#consume) that obligation at entry, on every
-   outcome. The card's [lifecycle](../glossary.md#lifecycle) specifies when its lifetime ends, so
-   `mutation(none)` is consistent with destruction
-   ([`C2–C3`](../contracts.md#c2)).
+A tool reading `Card` needs to find its destructor. Include that operation
+in this first package so the tool can follow the complete lifetime. The label
+operations can arrive in a later package because creating and destroying a
+card can be described fully on their own ([`L3`](../language.md#l3)).
 
-6. **Before finishing either function, fill its other required facts.**
-   Copy the explicit [availability](../glossary.md#availability), deprecation and seven effect [clauses](../glossary.md#clause)
-   from the checkpoint. Creation permits independent parallel calls;
-   destruction requires serial calls and forbids nested [re-entrancy](../glossary.md#re-entrancy).
-   Both are synchronous and non-throwing. Give each function its synthetic
-   symbol [access path](../glossary.md#access-path) block: `abi`, `via`, `mapping` and
-   `compatibility`. These facts are already part of a complete package
-   ([`L3`](../language.md#l3), [`L5`](../language.md#l5),
-   [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
-   [Part 5](05-access-and-change.md) explains access paths in detail.
+### 3. Select the synthetic definitions and configuration
+
+Copy the two `use` declarations and the `test` environment from the checkpoint.
+The `fixture` alias selects a [profile](../glossary.md#profile), the extension
+defining the example's calling mechanisms. The `native` alias selects an
+[ABI](../glossary.md#abi) definition, which specifies how values and calls
+cross the machine boundary. The [provider](../glossary.md#provider) supplies
+these definitions ([`A1`](../profiles.md#a1)).
+
+Each selection includes a [digest pin](../glossary.md#digest-pin) identifying
+the chosen definition. Here the repeated `a` and `b` digits are synthetic
+test tokens specified by [`F1`](../profiles.md#f1). They belong to the
+fixture catalogue, rather than identifying a production library.
+
+The [environment](../glossary.md#environment) names target `fixture64` and
+platform `fixture` version `1`. The local name `test` lets declarations say
+where they apply with `available([test])`. This describes that exact
+configuration; claims about other configurations require their own evidence
+and description ([`L3`](../language.md#l3), [`F1`](../profiles.md#f1)).
+
+### 4. Give Card its lifetime and sharing rules
+
+In `resource Card`, write `lifecycle(unique, @destroy_card)`. This
+[lifecycle](../glossary.md#lifecycle) says that each owned card carries one
+destruction obligation and names the function that discharges it. The `@`
+reference points to the local `destroy_card` declaration
+([`L2`](../language.md#l2), [`C2`](../contracts.md#c2)).
+
+Add `implements([])` to state that the resource implements no interfaces.
+Add `sharing(transferable)` so sole ownership can move between
+[executors](../glossary.md#executor), such as threads. A caller can hand the
+card to another thread, which then uses it; concurrent access is forbidden.
+Add `isolation(none)` to record that the type adds no executor restriction.
+The individual operations still state where and how callers enter them
+([`L5`](../language.md#l5), [`C2–C3`](../contracts.md#c2)).
+
+### 5. Describe creation's success and failure
+
+Give `create_card` the result type `nullable<Card>`. For each possible
+result, write an [outcome](../glossary.md#outcome): a named case explaining
+what happened and which value the caller can use. Pair `nonnull($result)`
+with `meaning(success)` and `null($result)` with `meaning(failure)`
+([`C5`](../contracts.md#c5)).
+
+In both outcomes write `state($result, valid)`. The caller can inspect the
+returned value in either case, including testing the valid null that reports
+failure. Also write `give($result, owned)` in both cases. For a non-null card
+this gives the caller its destruction obligation. For null the same clause
+creates no obligation, because ownership applies only to a non-null
+reference ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
+
+### 6. Describe destruction's transfer at entry
+
+Give `destroy_card` one `Card` parameter and a `unit` result. The caller
+supplies a valid, non-null card that it owns. Write
+`input($card, consume)` so responsibility passes to the library as soon as
+the call begins. This transfer is [consumption](../glossary.md#consume).
+Write `retain($card, none)` and one successful returned outcome, as in the
+checkpoint. The destructor finishes destroying the card before returning
+([`C2–C3`](../contracts.md#c2)).
+
+After that transfer, the caller has no second destruction to perform.
+Consumption transfers an obligation on every outcome, including failure in
+operations that admit it. This destructor has only a successful returned
+outcome. Its `mutation(none)` describes changes to live input contents;
+destruction itself is already described by consumption and lifecycle
+([`C2–C3`](../contracts.md#c2)).
+
+### 7. Complete the facts about each call
+
+For both functions, copy the checkpoint's [availability](../glossary.md#availability),
+deprecation and seven effect [clauses](../glossary.md#clause). Read the effects
+as answers about execution: both calls complete synchronously and finish by
+returning. `executor(any)` permits entry from any executor. Creation permits
+independent parallel calls; destruction requires callers to serialize calls
+using the same resource and forbids nested [re-entry](../glossary.md#re-entrancy)
+on that resource. `variadic(false)` fixes the parameter list
+([`L3`](../language.md#l3), [`L5`](../language.md#l5), [`C3`](../contracts.md#c3)).
+
+Copy each function's `access direct` block too. This [access path](../glossary.md#access-path)
+tells a tool which synthetic symbol implements the function and which rules
+govern the call. Its `abi`, `via`, `mapping` and `compatibility` clauses are
+part of every complete function description. [Part 5](05-access-and-change.md)
+explains them individually ([`A2`](../profiles.md#a2)).
 
 The state diagram separates a valid null result, which leaves nothing to
 destroy, from a non-null result, which gives the caller one destruction
@@ -94,13 +157,15 @@ come in part 2 (non-normative; [`C2–C3`](../contracts.md#c2),
 
 ![A null creation result leaves the caller with no owned Card. A non-null result gives one obligation, transferred to the callee at destroy_card entry and discharged by destruction.](../figures/tutorial-lifetime.svg)
 
-[Card lifecycle diagram source](../figures/tutorial-lifetime.puml)
+[Card lifecycle diagram source](../figures/tutorial-lifetime.puml) ·
+[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
 
 ## Checkpoint package
 
-The synthetic fixture [profile](../glossary.md#profile), catalogue and [digest tokens](../glossary.md#digest-pin) are defined by
-[`F1`](../profiles.md#f1). Read the complete [checkpoint file](../examples/tutorial/01-lifetime.ail)
-alongside your work.
+Compare your work with this complete [lifetime file](../examples/tutorial/01-lifetime.ail).
+It describes the invented card using the synthetic fixture profile, catalogue
+and digest tokens from [`F1`](../profiles.md#f1). After comparison, continue to
+[the observations](#expected-observations).
 
 Complete package — admitted by the grammar and complete under draft 0.1,
 checked by inspection.
@@ -183,41 +248,47 @@ package tutorial::lifetime version "1" {
 
 ## Expected observations
 
-In summary (non-normative; [`L3`](../language.md#l3),
-[`C1–C3`](../contracts.md#c1), [`C5`](../contracts.md#c5)):
+Use these non-normative summaries to check your reading of
+[`L3`](../language.md#l3), [`C1–C3`](../contracts.md#c1) and
+[`C5`](../contracts.md#c5):
 
-- Every exported declaration is available in `test`; every function has
-  an access path for `test`. The `@destroy_card` reference resolves locally.
-- The null/non-null split covers every value of `nullable<Card>`.
-  Both results are valid to inspect; the caller destroys only a non-null one.
-- The destructor has no result state because `unit` contains no value.
-  It consumes the card instead of lending access to it.
-- The document lists returned [completion](../glossary.md#completion) as possible; it does not promise eventual
-  termination. There is no runtime or validator result to inspect here.
+- Starting from `Card`, you can follow `@destroy_card` to its declaration.
+  Every public declaration applies in `test`, and both functions have an
+  access path for that configuration.
+- A result from `create_card` selects exactly one case: null or non-null.
+  The caller can inspect either result and destroys only a returned card.
+- `destroy_card` takes the caller's destruction responsibility at entry.
+  Its `unit` result contains no value needing an output-state clause.
+- The `returned` [completion](../glossary.md#completion) describes how a call
+  can finish. Eventual return remains a separate property: listing this
+  completion supplies no termination guarantee.
 
 ## Check yourself
 
 1. If creation reports allocation failure, does its `give(owned)` create a
    destruction obligation?
-2. Why does `destroy_card` not have `valid($card, call)`?
-3. Could you remove the destructor because it is only one dependency of the
-   resource?
+2. Which clause transfers responsibility to `destroy_card`, and why is
+   `valid($card, call)` unnecessary there?
+3. What would a reader lose if you removed the destructor from this package?
 
 ### Answers
 
-1. No. The clause is conditional on non-null; null carries no obligation
-   ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
-2. The caller transfers a valid owned input at entry. `valid` describes
-   the caller's continuing obligation for [borrowed inputs](../glossary.md#borrow)
-   ([`C3`](../contracts.md#c3)).
-3. No. The resource's declared lifecycle depends on it. A smaller surface
-   still includes its whole [dependency closure](../glossary.md#dependency-closure)
-   ([`L3`](../language.md#l3), [`C2`](../contracts.md#c2)).
+1. Null carries no obligation. For a nullable reference, `give(owned)`
+   applies only when the result is non-null ([`C1`](../contracts.md#c1),
+   [`C5`](../contracts.md#c5)).
+2. `input($card, consume)` transfers a valid owned input at entry. The
+   library then controls its lifetime. `valid` instead describes the
+   caller's continuing duty to keep a [borrowed input](../glossary.md#borrow)
+   usable for a region ([`C3`](../contracts.md#c3)).
+3. The reader would lose the operation that the card's lifecycle names.
+   A package includes every definition its public declarations depend on,
+   its [dependency closure](../glossary.md#dependency-closure), even when
+   the chosen API subset is small ([`L3`](../language.md#l3), [`C2`](../contracts.md#c2)).
 
 ## Invalid variant
 
-In `destroy_card`, replace its `input($card, consume)` clause with the
-following clause, leaving everything else as in the checkpoint.
+In `destroy_card`, replace `input($card, consume)` with this clause and keep
+the rest of the checkpoint unchanged.
 
 Invalid — rejected under [`C2`](../contracts.md#c2).
 
@@ -226,8 +297,10 @@ Invalid — rejected under [`C2`](../contracts.md#c2).
 input($card, borrow);
 ```
 
-The declared unique destructor no longer consumes its owned resource. Adding
-borrow validity would not repair that lifecycle mismatch.
+Borrowing leaves destruction with the caller. The unique lifecycle requires
+its destructor to take that responsibility, so this change contradicts the
+declared lifecycle. Adding a borrow-validity clause would still leave that
+contradiction in place.
 
 Return: [Describing a small API](README.md).
 Next: [2. Lending access](02-lending.md).

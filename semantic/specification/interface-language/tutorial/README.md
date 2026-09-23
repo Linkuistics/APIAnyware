@@ -3,98 +3,157 @@
 > **Purpose:** tutorial — describe a synthetic API in complete AIL checkpoints, then change its contract.
 > **Reader:** language designers new to [API binding](../glossary.md#binding) who can read C signatures.
 > **Before this:** [Using an API across languages](../explanation/unsaid.md); the [contract explanation](../explanation/contracts.md) is available for deeper questions.
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [language and publication](../language.md#l1), [contracts](../contracts.md#c1), [access paths](../profiles.md#a2) and the [synthetic fixture catalogue](../profiles.md#f1) are canonical.
 
-You will take the API author's role and write a description of an invented
-library. The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
-shows how checking and using that description fit around the writing task.
+You will take the API author's role and describe an invented library. First
+you will explain how a program creates and destroys a card. Then you will add
+operations for reading its label, copying text and receiving notifications.
+Finally, you will change who owns a returned label and trace what that change
+requires elsewhere in the description.
+
+Work through the [five parts](#the-five-parts) in order, starting with
+[a package and one resource](01-lifetime.md). Each part identifies its new
+material before presenting the complete example. If you are returning for the
+change exercise, go directly to [the owned snapshot](05-access-and-change.md#guided-change-an-owned-snapshot).
+The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
+shows how API authors and tools would use the descriptions you write.
 
 ## What you will describe
 
-Describe a small label-card API. A card owns a current label. You can [borrow](../glossary.md#borrow)
-that label, replace it by refreshing the card, or copy its text into your own
-storage. Comparing a live card with an [invalidated](../glossary.md#invalidation)
-label shows why a [handle](../glossary.md#handle)'s type alone cannot tell a
-[caller](../glossary.md#caller-and-callee) whether using it is safe.
+### A card and its current label
 
-The example is synthetic. Its names, seven-code-unit labels and possible copy
-failure are chosen for this exercise. The synthetic fixture [profile](../glossary.md#profile), catalogue
-and [digest tokens](../glossary.md#digest-pin) come from [`F1`](../profiles.md#f1); they do not identify
-a real library, host [ABI](../glossary.md#abi) or operating-system API.
+Imagine a card displaying a short label such as `READY!!`. A program creates
+the card, asks for its current label and eventually destroys the card. During
+these operations the program is the [caller](../glossary.md#caller-and-callee)
+and the library function is the callee.
 
-Use this table to connect each operation or value to the obligation its
-declaration will describe:
+If creation succeeds, the program receives a card and becomes responsible for
+destroying it. AIL calls that result [owned](../glossary.md#owned). If creation
+returns null, allocation failed and there is nothing to destroy. The first
+part records both results and names `destroy_card` as the operation that
+takes over and completes the destruction responsibility.
 
-| Operation or value | Contract you will describe |
-|---|---|
-| `Card` | A unique resource owning its current label. Sole ownership can move between [executors](../glossary.md#executor); callers do not use the card concurrently. |
-| `create_card` | Return an [owned](../glossary.md#owned) card, or null on allocation failure. |
-| `destroy_card` | [Consume](../glossary.md#consume) an owned card and end the validity of its dependent label borrows. |
-| `Label` | An [opaque resource](../glossary.md#opaque-resource) representing seven nonzero UTF-8 code units. A separately owned label is an independent snapshot. |
-| `current_label` | Lend the card's current label without transferring ownership. |
-| `refresh_card` | Replace the card's label; old label borrows become invalid at entry, even while the card remains alive. |
-| `destroy_label` | Consume an owned label. Borrowing a label never grants permission to call this destructor. |
-| `copy_text` | Borrow a valid label and write seven UTF-8 code units plus a final zero into disjoint caller storage. Return the `CopyStatus` case `copied` (`0`) or `unavailable` (`1`); failure leaves no readable output. |
-| `LabelChanged` | Receive a scalar change number in one synchronous [callback](../glossary.md#callback) invocation. |
-| `watch_labels` | [Retain](../glossary.md#retention) a callback for zero or more notifications after registration returns; return an owned `Watch`. |
-| `Watch` and `destroy_watch` | A separate unique subscription owner; destruction consumes it and returns only when no callback is running or can start. |
+The card owns its current label. `current_label` lends the program access to
+that label while the card keeps ownership. This is a [borrow](../glossary.md#borrow):
+the program may use the label for a stated period. AIL describes that agreement;
+it implies no Rust-style static checking or exclusivity.
 
-For a concrete label, imagine `READY!!`: seven one-byte code units followed
-by the zero terminator when copied. The length is measured in code units,
-not in user-perceived characters. A refresh may choose another seven-code-unit
-label. The exact spelling is not part of the contract.
+Two events end that access. Destroying the card ends the label's lifetime.
+Refreshing the card replaces its label, so the program stops using the old
+label as soon as `refresh_card` begins. Ending access while the card remains
+alive is [invalidation](../glossary.md#invalidation). Part 2 describes both
+boundaries. A `Label` value is a [handle](../glossary.md#handle) identifying
+the label; its type stays the same after refresh, so the caller also needs
+the lifetime contract to know when it can use that handle.
 
-The callback exercise adds a label-change notification subscription,
-with a callback and a separate unique `Watch` owner whose destruction waits
-for [quiescence](../glossary.md#quiescence). The subscription does not retain a `Card` or extend a borrowed `Label`'s
-lifetime. The ownership exercise changes `current_label` to return
-an independent owned `Label` snapshot. Its caller then uses `destroy_label`
-to discharge the new obligation.
+### Copying text into the program's storage
 
-These are the example's API choices. AIL provides the notation for stating them;
-another API could return binary bytes, use a different length or retain its
-inputs. [Design choices](../explanation/choices.md) separates AIL's choices
-from the domain obligations.
+To obtain text, the program reserves eight bytes and passes their address to
+`copy_text`. On success, the library writes seven nonzero UTF-8 code units
+followed by a zero terminator. For `READY!!`, each visible character occupies
+one code unit. Other UTF-8 text can use several code units for a character;
+the contract counts code units. A refresh can choose another label of the
+same length, and the exact spelling is left open.
+
+The function also returns a status. `copied` (`0`) means the program can read
+the text. `unavailable` (`1`) means the program reads the status and leaves
+the output bytes unread. Part 3 describes the storage required before the
+call and what the library promises on each result.
+
+### Receiving notifications and finishing with them
+
+The library also accepts a function to receive label-change numbers. A
+function supplied for the library to invoke is a [callback](../glossary.md#callback).
+`watch_labels` stores a reference to this callback and returns a separate
+`Watch` identifying the subscription. It may send notifications after
+registration returns, and it may send none.
+
+To end the subscription, the program calls `destroy_watch` from outside its
+notification callback. When destruction returns, every callback invocation
+has finished and that subscription can start no more. This condition is
+[quiescence](../glossary.md#quiescence). Part 4 describes the retained
+callback, the permitted notifications and that final boundary.
+
+Each notification contains only a number. The subscription takes no `Card`
+argument and retains no card. A program using a label still follows that
+label's borrow contract, including its refresh cutoff.
+
+### Changing the returned label
+
+Part 5 first explains how the description identifies code implementing each
+operation. It then introduces a separate API variant: `current_label` returns
+an independent owned snapshot. The program can keep that snapshot after
+refreshing or destroying its card. In exchange, it takes responsibility for
+calling `destroy_label` on the snapshot. You will change the description and
+follow every affected obligation.
+
+The names, text length and possible failures above are choices for this
+invented API. The examples use the synthetic fixture
+[profile](../glossary.md#profile), catalogue and
+[digest tokens](../glossary.md#digest-pin) defined by [`F1`](../profiles.md#f1).
+The profile supplies rules for interpreting the examples, including an
+abstract [ABI](../glossary.md#abi) for passing values and making calls.
+Applying AIL to a real library would require evidence about its behaviour
+and definitions of its actual calling mechanisms.
+
+AIL supplies notation for these promises. Another API could use binary data,
+different text lengths or a different notification protocol.
+[Design choices](../explanation/choices.md) explains the distinction between
+what an API promises and how AIL expresses it.
 
 ## The five parts
 
-Each checkpoint is a complete [package](../glossary.md#package) for a narrower
-declared subset of synthetic release 1. The package identities differ so you
-can read each file independently. Parts 2–4 add operations and types; they do not supply missing [clauses](../glossary.md#clause)
-in earlier declarations ([`L2–L3`](../language.md#l2)). Part 5 first assembles that release, then
-publishes an explicitly different owned-snapshot variant for the change exercise.
+Each part supplies a complete [package](../glossary.md#package): a named,
+versioned description of the operations included so far. The first package
+contains everything needed to create and destroy a card. Later packages add
+the label, copying and subscription operations with their own complete
+contracts. This lets you learn one group at a time while seeing all the facts
+that group requires ([`L2–L3`](../language.md#l2)).
 
-Use this map to choose a concept and open the complete package that teaches it.
+Use the map to open a part or its complete checkpoint file. The final row
+includes both the assembled example and the separate ownership exercise.
 
-| Part | New concept | Checkpoint |
+| Part | What you will describe | Complete checkpoint |
 |---|---|---|
-| [1. A package and one resource](01-lifetime.md) | Publication, ownership and nullable creation | [Card lifetime package](../examples/tutorial/01-lifetime.ail) |
-| [2. Lending access](02-lending.md) | Owner-dependent borrows and earlier invalidation | [Label lending package](../examples/tutorial/02-lending.ail) |
-| [3. Caller-supplied storage and failure](03-storage.md) | Text extent, writable output and a closed status domain | [Text copying package](../examples/tutorial/03-storage.ail) |
-| [4. Callbacks and teardown](04-callbacks.md) | Invocation schedule, owner scope and quiescent destruction | [Subscription package](../examples/tutorial/04-callbacks.ail) |
-| [5. Reaching the code, and changing the contract](05-access-and-change.md) | Access paths and the borrowed-to-owned change | [Finished package](../examples/tutorial/05-finished.ail) and [owned variant](../examples/tutorial/05-owned.ail) |
+| [1. A package and one resource](01-lifetime.md) | Create a card, handle allocation failure and destroy an owned card. | [Card lifetime](../examples/tutorial/01-lifetime.ail) |
+| [2. Lending access](02-lending.md) | Lend a label until card destruction or an earlier refresh. | [Label lending](../examples/tutorial/02-lending.ail) |
+| [3. Caller-supplied storage and failure](03-storage.md) | Copy text into eight bytes and say what is readable on each status. | [Text copying](../examples/tutorial/03-storage.ail) |
+| [4. Callbacks and teardown](04-callbacks.md) | Store a callback, permit later notifications and finish all callback use. | [Subscription](../examples/tutorial/04-callbacks.ail) |
+| [5. Reaching the code, and changing the contract](05-access-and-change.md) | Identify the implementation and give the caller an owned label snapshot. | [Finished package](../examples/tutorial/05-finished.ail) and [owned variant](../examples/tutorial/05-owned.ail) |
 
-Every function already has an [access path](../glossary.md#access-path) in
-part 1. For now, follow the existing synthetic symbol-path form;
-[part 5](05-access-and-change.md) explains its four clauses. Omitting those paths would make even the first
-checkpoint incomplete ([`A2`](../profiles.md#a2)).
+Each file has a different package name so it can be read independently.
+Part 5's owned variant describes a deliberately different API contract.
+Matching names such as `Card` in two packages remain distinct nominal types
+because their package identities differ ([`L2`](../language.md#l2)).
+
+Every function includes an [access path](../glossary.md#access-path) describing
+how a tool reaches its code. In the first four parts, copy the supplied
+synthetic symbol paths along with the other clauses. Part 5 develops their
+meaning. They belong in each complete description from the start
+([`A2`](../profiles.md#a2)).
 
 ## How to check your work
 
-Read a checkpoint as a document. Follow each reference, then compare the
-clauses with the expected observations. Before reading
-the answers, answer the check questions. Each part ends with an invalid variant that changes
-one fact; identify the cited rule's reason for rejecting that change.
+Read each checkpoint as a document. Compare it with your description and
+follow its references: for example, follow the card's `lifecycle` to its
+destructor. Use the expected observations to explain what a caller does at
+each step. Answer the questions before opening the answers, then inspect the
+invalid variant and the rule that rejects it.
 
 The complete-package labels record inspection against the grammar and rules.
-The examples remain synthetic, and no parser or semantic validator has run.
-A clause can be internally consistent yet false about an implementation
-([`C8`](../contracts.md#c8)); this exercise establishes no runtime behaviour.
+This exercise uses that same form of inspection; parser and semantic-validator
+execution remain future work. Testing whether a library actually honours
+its stated contract requires separate implementation evidence
+([`C8`](../contracts.md#c8)).
 
-The full repeated clauses stay visible so you can judge the authoring burden.
-Use the explanations and the canonical rules for deeper lookup rather than
-inferring defaults from familiar language syntax.
+The full packages keep every required [clause](../glossary.md#clause) visible,
+including repeated facts. You can therefore judge both the meaning of the
+contract and the work of writing it. Use each part's local links to move
+between its steps, checkpoint and questions; use the explanations and rule
+citations for deeper lookup.
 
 Return: [API Interface Language](../README.md).
 Next: [1. A package and one resource](01-lifetime.md).

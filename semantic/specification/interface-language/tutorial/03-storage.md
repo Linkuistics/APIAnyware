@@ -3,29 +3,36 @@
 > **Purpose:** tutorial — describe text copying with separate status and output validity.
 > **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [2. Lending access](02-lending.md).
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [`L4–L5`](../language.md#l4), [`C1–C5`](../contracts.md#c1) and [`A2–A4`](../profiles.md#a2) are canonical.
-
-Here you describe what the library writes into the caller's storage.
-For how tools use the description you are writing, see the
-[overview's workflow map](../README.md#who-writes-and-uses-an-ail-description).
 
 ## Goal
 
-Add `copy_text`, which writes a label's text into [caller](../glossary.md#caller-and-callee) storage. At the
-checkpoint, explain what the caller can read after success and after failure.
+Add `CopyStatus` and `copy_text` to the invented label-card API. The
+[caller](../glossary.md#caller-and-callee) reserves eight bytes, and the
+library attempts to write the label's text into them. You will describe the
+storage the call needs and what the caller can read after either result.
+
+Follow the [steps](#steps), compare the [complete checkpoint](#checkpoint-package),
+then [check yourself](#check-yourself). The new material concerns the
+destination buffer and the returned status; the card and label lifetimes
+continue to apply.
 
 ## The domain obligation
 
-The caller allocates enough disjoint storage and, if the copy succeeds,
-reads the output ([buffers](../explanation/contracts.md#buffers-and-strings)
-and [outcome states](../explanation/contracts.md#every-way-a-call-can-end)).
+The caller supplies enough storage that overlaps no other memory accessed
+by the call, and reads the output text only after a successful copy
+([buffers](../explanation/contracts.md#buffers-and-strings) and
+[output states](../explanation/contracts.md#every-way-a-call-can-end)).
 
 ## Steps
 
-1. **To make failure observable, add a status result to the C-shaped sketch.**
-   The synthetic API can report either a successful copy or unavailable text.
-   This header conveys no host representation guarantee.
+### 1. Distinguish successful copying from unavailable text
+
+Start with this C-shaped sketch. It gives the synthetic operation a status
+result as well as a destination address; the fixture supplies its representation.
 
    ```c
    typedef enum CopyStatus {
@@ -35,58 +42,101 @@ and [outcome states](../explanation/contracts.md#every-way-a-call-can-end)).
    CopyStatus copy_text(Label *label, unsigned char *destination);
    ```
 
-   On success the caller reads seven UTF-8 code units and their terminating
-   zero. On failure the caller reads the status but no output bytes.
-   A failed call need not preserve the destination's old contents.
+On success, `copy_text` writes seven nonzero UTF-8 code units followed by
+a zero terminator and returns `copied`. For the illustrative label `READY!!`,
+the caller can read those seven bytes and the final zero. If text is
+unavailable, the function returns `unavailable` and leaves the output
+unreadable. The caller checks the status first to decide which case applies.
 
-2. **For exactly those two status values, declare a closed enum.** Use
-   `enum CopyStatus: i32`, `values(closed)`, cases `0` and `1`,
-   `sharing(value)` and `isolation(none)`, plus [availability](../glossary.md#availability) and
-   deprecation. The two values define the entire
-   [discriminator](../glossary.md#discriminator) domain in the [outcomes](../glossary.md#outcome).
-   An open enum would also admit every other `i32` value
-   ([`L4`](../language.md#l4), [`C2`](../contracts.md#c2),
-   [`C5`](../contracts.md#c5)).
+A failed call may already have changed the destination. The failure contract
+promises no readable output and no preservation of earlier bytes
+([`C5`](../contracts.md#c5)).
 
-3. **For the call's temporary access, [borrow](../glossary.md#borrow) both inputs without [retention](../glossary.md#retention).**
-   Use `Label` and `mutptr<u8>`, with `input(borrow)`,
-   `retain(none)` and `valid(call)` on each named [slot](../glossary.md#slot), as below.
-   If the label came from `current_label`, keep its card alive and prevent
-   refresh throughout this use. The label's earlier borrow contract still
-   applies ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
-   [`C5`](../contracts.md#c5)).
+### 2. Define the two permitted status values
 
-4. **For the writable buffer, specify [extent](../glossary.md#buffer-extent) and [contents](../glossary.md#contents) separately.** Write
-   `direction($destination, out)`,
-   `aliasing($destination, disjoint)`,
-   `extent($destination, buffer(7, 8, elements))` and
-   `contents($destination, text("utf-8", nul))`.
-   Extent records seven initialized text
-   elements on a valid output and capacity for eight. The eighth code unit
-   holds the terminator, which the length excludes.
-   Before entry, allocate all eight bytes; no initialized input contents
-   are needed for this `out` buffer. Disjoint storage does not overlap
-   other memory accessed in the call ([`C3–C4`](../contracts.md#c3)).
-   Set `mutation(arguments)` because the callee writes that storage.
+Declare `enum CopyStatus: i32` with `values(closed)` and cases `copied = 0`
+and `unavailable = 1`. Add `sharing(value)`, `isolation(none)`,
+[availability](../glossary.md#availability) and deprecation as shown below.
+The closed enum permits exactly these two values. An open enum would admit
+every value of its underlying `i32`, including unnamed values
+([`L4`](../language.md#l4), [`C2`](../contracts.md#c2)).
 
-5. **For each possible status, state what is safe to observe.** Split
-   returned [completion](../glossary.md#completion) using `equal($result, 0)` and
-   `equal($result, 1)`. Mark `$result` valid in both outcomes.
-   Mark `$destination[]` valid on success and invalid on failure.
-   The `[]` [place](../glossary.md#place) selects buffer elements;
-   `.*` would select the pointee of an `extent(one)` pointer.
-   In summary (non-normative; [`C1`](../contracts.md#c1),
-   [`C5`](../contracts.md#c5)): invalid output conveys no initialized
-   elements, so the caller cannot inspect it. `meaning(failure)` classifies the
-   returned status; it does not turn it into an exception.
+The caller tests the returned status to distinguish success from failure.
+AIL calls the tested value a [discriminator](../glossary.md#discriminator).
+Because the enum is closed, the two cases you will describe cover its entire
+domain ([`C5`](../contracts.md#c5)).
 
-6. **To publish the expanded subset, add `CopyStatus` and `copy_text`
-   to the [exports](../glossary.md#exports) and describe copying in the [surface](../glossary.md#surface).** Keep all earlier
-   declarations, and give `copy_text` its explicit effects and synthetic
-   [symbol access path](../glossary.md#access-path). The `mutptr<u8>` pointer itself is borrowed from the
-   caller; writing scalar bytes creates no new reference ownership
-   ([`L3`](../language.md#l3), [`C1`](../contracts.md#c1),
-   [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
+### 3. Lend the label and destination for the call
+
+Give `copy_text` a `Label` input and a `mutptr<u8>` destination. For each
+parameter, write `input(..., borrow)`, `retain(..., none)` and
+`valid(..., call)` using the full places shown in the checkpoint. The call
+[borrows](../glossary.md#borrow) access while the caller keeps ownership,
+and the library promises no [retention](../glossary.md#retention) for later
+work ([`C3`](../contracts.md#c3)).
+
+For a label obtained in Part 2, keeping it valid means keeping its card alive
+and preventing refresh throughout copying. Passing that label to another
+function preserves its earlier borrow conditions. AIL borrowing describes
+these obligations; it supplies no Rust-style static checking
+([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+The destination is the address of caller-owned storage. Its pointer stays
+usable throughout the call, even if the function fails to write valid text.
+You will describe that pointer and the bytes reached through it separately.
+
+### 4. Describe the writable storage
+
+Write `direction($destination, out)`. The library writes through this
+pointer and leaves its prior contents unread. Write
+`aliasing($destination, disjoint)` so the caller supplies storage that
+overlaps no other memory accessed in the call. Set `mutation(arguments)`
+because writing the destination changes storage reached through an argument
+([`C3`](../contracts.md#c3)).
+
+Now write `extent($destination, buffer(7, 8, elements))`. This
+[extent](../glossary.md#buffer-extent) gives two counts: seven initialized
+text elements when the output is valid, and capacity for eight elements.
+The caller allocates correctly aligned storage for all eight before entry.
+Because the direction is `out`, the caller may leave the bytes uninitialized
+on entry ([`C4`](../contracts.md#c4)).
+
+Finally, write `contents($destination, text("utf-8", nul))`. The
+[contents](../glossary.md#contents) contract interprets the elements as UTF-8
+code units and requires a final zero. Length counts the seven units before
+that zero; capacity includes its eighth position. Compare seven allocated
+bytes with eight: only eight leaves room for the terminator. The synthetic
+profile supports this encoding ([`C4`](../contracts.md#c4), [`F1`](../profiles.md#f1)).
+
+### 5. State what the caller can read on each outcome
+
+Add two [outcomes](../glossary.md#outcome) for returned
+[completion](../glossary.md#completion). Use `equal($result, 0)` with
+`meaning(success)` and `equal($result, 1)` with `meaning(failure)`.
+In both outcomes, mark `$result` valid so the caller can read the status
+that decides which case occurred ([`C5`](../contracts.md#c5)).
+
+For success, write `state($destination[], valid)`. For failure, write
+`state($destination[], invalid)`. The parameter `$destination` is a
+[slot](../glossary.md#slot); adding `[]` makes a
+[place](../glossary.md#place) selecting its buffer elements. These clauses
+therefore describe the written bytes. The caller continues to own the
+allocation in both cases ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
+[`C5`](../contracts.md#c5)).
+
+On failure, the caller leaves the buffer unread, including any attempt to
+search for a terminator. It can still inspect the valid status.
+`meaning(failure)` describes that status result; a thrown exception would
+need a different signature and completion contract ([`C5`](../contracts.md#c5)).
+
+### 6. Include copying in the package
+
+Use the checkpoint's package name, describe copying in its
+[surface](../glossary.md#surface), and add `CopyStatus` and `copy_text` to
+the [exports](../glossary.md#exports). Keep the preceding declarations and
+complete `copy_text` with its effects and synthetic
+[symbol access path](../glossary.md#access-path)
+([`L3`](../language.md#l3), [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
 
 Use the layout to distinguish allocated capacity from readable text length.
 For the index's illustrative `READY!!`, success writes the seven text elements
@@ -99,13 +149,15 @@ paths (non-normative; [`C3–C5`](../contracts.md#c3)).
 
 ![An eight-element destination holds R E A D Y ! ! at indices 0 through 6 and zero at index 7 on success. On failure all eight output elements are invalid to read, while the returned status remains valid.](../figures/tutorial-storage.svg)
 
-[Buffer layout source](../figures/tutorial-storage.puml)
+[Buffer layout source](../figures/tutorial-storage.puml) ·
+[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
 
 ## Checkpoint package
 
-The synthetic fixture [profile](../glossary.md#profile), catalogue and [digest tokens](../glossary.md#digest-pin) are defined by
-[`F1`](../profiles.md#f1). Read the complete [checkpoint file](../examples/tutorial/03-storage.ail)
-alongside your work.
+Compare your work with the complete [text-copying file](../examples/tutorial/03-storage.ail).
+The invented API uses the synthetic fixture [profile](../glossary.md#profile),
+catalogue and [digest tokens](../glossary.md#digest-pin) from [`F1`](../profiles.md#f1).
+After comparison, continue to [the observations](#expected-observations).
 
 Complete package — admitted by the grammar and complete under draft 0.1,
 checked by inspection.
@@ -319,44 +371,43 @@ package tutorial::storage version "1" {
 
 ## Expected observations
 
-In summary (non-normative; [`L4`](../language.md#l4),
-[`C3–C5`](../contracts.md#c3)):
+Use these non-normative summaries to check your reading of
+[`L4`](../language.md#l4) and [`C3–C5`](../contracts.md#c3):
 
-- Status `0` gives valid text, with seven nonzero UTF-8 code units and
-  a final zero within the eight-element capacity.
-- Status `1` is still valid to read. The output buffer provides no
-  initialized elements on that outcome; even looking for a terminator
-  would read invalid output.
-- Failure does not invalidate the destination pointer or transfer the
-  caller's allocation. `state($destination[], invalid)` describes the
-  output elements, not the ownership of the caller's storage.
-- The two outcomes exhaust the closed enum. No native computation is
-  needed to decide whether a third status is admitted by the declaration.
-- The caller provides capacity even when copying fails. Neither the
-  possibility of failure nor a small readable length reduces that precondition.
+- Status `0` lets the caller read seven nonzero UTF-8 code units and their
+  final zero within the eight-element allocation.
+- Status `1` remains readable, while the output buffer supplies no
+  initialized elements. The caller leaves those bytes unread.
+- `state($destination[], invalid)` describes output elements. The caller
+  still owns its allocation and supplied a pointer valid for the call.
+- The closed enum admits exactly two statuses, each covered by one outcome.
+- The caller reserves all eight elements before entry. That requirement
+  applies whether the copy later succeeds or fails.
 
 ## Check yourself
 
-1. Is a seven-byte destination enough for this operation?
-2. After status `1`, can a caller read the old bytes because the operation failed?
-3. Why does the callee not supply `give($destination[], owned)` on success?
+1. How much storage does this operation require, and where does its
+   terminator fit?
+2. After status `1`, can a caller read the old bytes because the copy failed?
+3. Why does successful copying need an output-state clause but no
+   `give($destination[], owned)` clause?
 
 ### Answers
 
-1. No. Seven text elements plus the terminator require capacity eight
-   ([`C4`](../contracts.md#c4)).
-2. No. The failed output is invalid; it has no readable initialized elements.
-   The declaration does not promise unchanged storage
+1. Eight bytes: seven text elements and a final zero. Length excludes the
+   terminator, while capacity includes it ([`C4`](../contracts.md#c4)).
+2. The caller leaves the failed output unread. The declaration marks it
+   invalid and supplies no promise that earlier contents survive
    ([`C5`](../contracts.md#c5)).
-3. The elements are scalar `u8` values, not [reference leaves](../glossary.md#reference-leaf). The caller
-   already owns the allocation and lends its pointer during the call
-   ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
-   [`C5`](../contracts.md#c5)).
+3. The output state makes the written bytes readable. Those bytes are scalar
+   `u8` values; ownership clauses apply to [reference leaves](../glossary.md#reference-leaf).
+   The caller already owns the allocation and lends its pointer during
+   the call ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 ## Invalid variant
 
-In `copy_text`, replace its `extent` clause with the following clause;
-keep `contents($destination, text("utf-8", nul))`.
+In `copy_text`, replace `extent` with this clause and keep
+`contents($destination, text("utf-8", nul))`.
 
 Invalid — rejected under [`C4`](../contracts.md#c4).
 
@@ -365,8 +416,8 @@ Invalid — rejected under [`C4`](../contracts.md#c4).
 extent($destination, buffer(7, 7, elements));
 ```
 
-The length still excludes the terminator, so capacity seven leaves no room
-for the required final zero.
+Seven text elements fill all seven positions. The required final zero needs
+an eighth position, so this capacity contradicts the text contract.
 
 Return: [Describing a small API](README.md).
 Next: [4. Callbacks and teardown](04-callbacks.md).

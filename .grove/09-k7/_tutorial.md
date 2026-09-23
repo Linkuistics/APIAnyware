@@ -60,9 +60,9 @@ Card and delivers only a scalar change number. Preserve that boundary.
 
 The four tutorial diagram sources and generated SVGs live under `figures/`
 with the `tutorial-` prefix. Part 5 compares borrowed and owned results in a
-table beside the guided change. G1 is reused on all six tutorial pages before
-the contract detail; sources, captions and the shared key carry the visual
-contract. No handed-forward defect remains from art.
+table beside the guided change. The tutorial links to the overview's G1 rather
+than repeating the figure. Each detail diagram has a route back to that wider
+context; its source, caption and shared key carry the visual contract.
 
 ## Human reading correction
 
@@ -76,3 +76,18 @@ part-5 ownership exercise easy to reach, and reconsider each repeated context
 introduction according to its usefulness. The historical G1 reuse described
 above is subject to that revised figure contract. The follow-up human checkpoint
 is `first-path-reading-k48`.
+
+## Handed forward
+
+- **Art — parts 1–4, the four `tutorial-` figures and their adjacent captions
+  and alt text.** Draft has developed the actor/action explanations in the
+  steps but retained these figure passages for their owning stage. Reconcile
+  their vocabulary and density with the new prose: in particular part 2's
+  “owner-scoped” and “input's call region” summary, part 4's “owner consumption”
+  and “quiescence” summary, and the dense timing limitations in each caption.
+  Replace part 4's unexplained “G7 adaptation” with reader-facing scope. Keep
+  refresh invalidation at entry, destruction responsibility at entry, and
+  callback quiescence at return. The surrounding steps already explain those
+  events and the absence of delivery or termination guarantees. Check part 5's
+  retained comparison table under the same charter. Each detail view now links
+  to the overview; no repeated full publication figure is needed for orientation.

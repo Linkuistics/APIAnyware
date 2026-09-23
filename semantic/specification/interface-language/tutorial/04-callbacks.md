@@ -1,110 +1,186 @@
 # 4. Callbacks and teardown
 
-> **Purpose:** tutorial — describe a [retained](../glossary.md#retention) [callback](../glossary.md#callback) and the boundary after which it cannot run.
+> **Purpose:** tutorial — describe when a library may invoke a [callback](../glossary.md#callback) and how a caller ends the subscription.
 > **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [3. Caller-supplied storage and failure](03-storage.md).
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [`C2–C3`](../contracts.md#c2), [`C5–C6`](../contracts.md#c5), [`A2`](../profiles.md#a2) and the synthetic catalogue [`F1`](../profiles.md#f1) are canonical.
-
-Here you describe when the library may send notifications and when they end.
-For how tools use the description you are writing, see the
-[overview's workflow map](../README.md#who-writes-and-uses-an-ail-description).
 
 ## Goal
 
-Add a notification subscription with a unique `Watch` owner. At the checkpoint,
-identify when notifications may start and when the [caller](../glossary.md#caller-and-callee) can rely on all
-invocations having stopped.
+Add `LabelChanged`, `Watch`, `watch_labels` and `destroy_watch`. A program
+supplies a notification function and receives a watch identifying its
+subscription. You will describe when the library can call that function,
+how it keeps the function available, and when the program knows all callback
+use has ended.
+
+Follow the [steps](#steps), compare the [complete checkpoint](#checkpoint-package),
+then [check yourself](#check-yourself). The subscription is a separate part
+of the synthetic label-card API: notifications carry change numbers, while
+the label lifetimes from Parts 2–3 still govern label access.
 
 ## The domain obligation
 
-The callee keeps a stored callback alive while it
-may invoke it, and the destructor reaches [quiescence](../glossary.md#quiescence)
-before returning ([callback schedules and teardown](../explanation/contracts.md#callbacks)).
+The library keeps the stored callback usable for every permitted invocation
+and finishes all callback use before returning from watch destruction
+([callback schedules and teardown](../explanation/contracts.md#callbacks)).
 
 ## Steps
 
-1. **For each delivered notification, declare what one invocation does.**
-   Add `callback LabelChanged(change: u64) -> unit`. The scalar `change`
-   identifies a synthetic change notification; it carries no card or label
-   ownership. The callback finishes synchronously with a successful returned
-   [outcome](../glossary.md#outcome). Give it all seven callable effects, [`sharing(shared)`](../glossary.md#shared) and
-   `isolation(none)`, as in the checkpoint.
+### 1. Describe one notification invocation
 
-   A callback that reads immutable [captured state](../glossary.md#callback-captures) and returns can satisfy
-   this type. One that requires main-thread-only captured state cannot:
-   `executor(any)` permits entry elsewhere. Here
-   callback captures are the state held by
-   the callable value. In summary (non-normative;
-   [`C2–C3`](../contracts.md#c2)): the callback value and its captures allow
-   every use the declaration permits; sharing alone does not authorize
-   concurrent invocation. Choose `concurrency(serial)` and
-   `reentrancy(forbidden)` for this example; [re-entrancy](../glossary.md#re-entrancy)
-   concerns nested calls, separately from independent overlapping invocations.
+Declare `callback LabelChanged(change: u64) -> unit`. The library invokes
+this function with a scalar change number. For that invocation, the library
+is the [caller](../glossary.md#caller-and-callee) and the program's handler
+is the callee. The number identifies a synthetic change notification and
+carries no card or label ownership.
 
-   For the synthetic fixture [representation](../glossary.md#representation), add
-   `callback_abi(native, "c")` and `representation(fixture, "closure")`.
-   The callback has these clauses instead of a function's [access path](../glossary.md#access-path) block
-   ([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
+Give the callback one successful returned [outcome](../glossary.md#outcome)
+and all seven callable effects shown in the checkpoint. `execution(sync)`
+means an invocation completes before returning control to its caller.
+`mutation(none)` describes its externally visible input state. You will
+specify when the library can start these invocations in a later step
+([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-2. **For registration that lasts beyond the call, add a separate owner.**
-   Declare `resource Watch` with `lifecycle(unique, @destroy_watch)`,
-   `sharing(transferable)`, `isolation(none)` and the common clauses shown
-   below. Add `watch_labels(handler: LabelChanged) -> Watch` with one
-   successful returned outcome, a valid result and `give($result, owned)`.
-   The caller receives one [owned](../glossary.md#owned) destruction obligation.
-   This synthetic operation returns a non-null owner whenever it completes;
-   no failure result is declared ([`C2`](../contracts.md#c2),
-   [`C5`](../contracts.md#c5)).
+### 2. Describe the state the callback can use
 
-   [Borrow](../glossary.md#borrow) `$handler` with `valid($handler, call)`, and specify an independent
-   retained reference with `retain($handler, strong(owner($result)))`.
-   The caller supplies a valid callback during registration; the callee's
-   retained reference keeps it alive for the `Watch` lifetime. The synthetic
-   fixture [provider](../glossary.md#provider) supplies retention and release
-   ([`C3`](../contracts.md#c3), [`F1`](../profiles.md#f1)).
-   No `Card` is passed to this operation. The subscription neither retains
-   a card nor keeps a borrowed `Label` valid.
+A callback can carry saved program state needed when it runs. Those saved
+values are its [captures](../glossary.md#callback-captures). For example,
+a handler could read immutable saved state and return. A different handler
+could require state usable only on the main thread. The permitted execution
+context determines which of these can satisfy the callback type.
 
-3. **For delivery after registration returns, add the use-site schedule.**
-   In `callback $handler`, write `timing(after_return)`, `count(0, many)`
-   and `scope(owner($result))`. Also write `executor(any)`,
-   `concurrency(serial)`, `reentrancy(forbidden)` and
-   `quiescence(@destroy_watch)`.
+For this example, add `sharing(shared)`, `isolation(none)` and
+`executor(any)`. [Shared](../glossary.md#shared) allows references to the
+callback to cross executors, and `executor(any)` permits invocation on any
+thread. Its captured state needs to permit those uses too. The immutable-state
+handler can satisfy that requirement; the main-thread-only handler cannot
+([`C2–C3`](../contracts.md#c2)).
 
-   A callback used only during a call could instead finish before that call
-   returns. This registration allows later entry and needs the returned
-   owner to bound it. Timing, count and lifetime are separate facts
-   ([`C6`](../contracts.md#c6)); declaring a synchronous registration does
-   not restrict notifications to its call. The selected count promises
-   neither a first notification nor exactly-once delivery. `many` permits
-   an unbounded number; it does not mean the producer left the count unknown.
+Set `concurrency(serial)` and `reentrancy(forbidden)`. Independent invocations
+of the callback value run one at a time. Nested invocation while an earlier
+one is still active is also forbidden; that separate condition is
+[re-entrancy](../glossary.md#re-entrancy). The declaration applies even when
+the same callback value is registered more than once
+([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
 
-4. **For teardown, consume the owner and wait for quiescence.**
-   Add `destroy_watch(subscription: Watch) -> unit` with
-   `input($subscription, consume)`, `retain($subscription, none)` and one
-   successful returned outcome. The destructor [consumes](../glossary.md#consume) the [handle](../glossary.md#handle) at entry;
-   the schedule's quiescence boundary is destructor return. During teardown
-   the callee may still be finishing callbacks. After teardown returns,
-   none is running or can start ([`C2`](../contracts.md#c2),
-   [`C6`](../contracts.md#c6)).
+### 3. Select the callback's synthetic representation
 
-5. **To exclude a teardown waiting for its own callback, add the precondition.**
-   In `destroy_watch`, write
-   `requires(outside_callback(@watch_labels::handler))`. A caller outside
-   that callback use can request teardown. Calling from inside it would
-   leave the destructor waiting for the very invocation that is waiting for
-   destruction to finish. `reentrancy(forbidden)` is a separate restriction;
-   it does not replace this explicit precondition
-   ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
-   The synthetic fixture supplies no alternative reentrant teardown protocol.
-   The contracts do not promise that a callback or the destructor eventually
-   returns ([`C3`](../contracts.md#c3), [`C8`](../contracts.md#c8)).
+Add `callback_abi(native, "c")` and `representation(fixture, "closure")`.
+These select the calling convention and the way the fixture stores the
+callback with its captures, its [representation](../glossary.md#representation).
+The synthetic [provider](../glossary.md#provider) defines how to retain and
+release that stored value. It has no separately visible context argument
+([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
 
-6. **To publish the expanded subset, include the four new declarations.**
-   Extend `surface` and `exports`, retain the earlier declarations unchanged,
-   and give both new functions complete synthetic symbol paths
-   ([`L3`](../language.md#l3), [`A2`](../profiles.md#a2)).
+An ordinary function's [access path](../glossary.md#access-path) names how to
+reach its implementation. Here the program supplies the callback value, so
+these two declaration clauses instead tell the library how to hold and
+invoke it ([`A2`](../profiles.md#a2)).
+
+### 4. Return a watch for the subscription
+
+Declare `resource Watch` with `lifecycle(unique, @destroy_watch)`,
+`sharing(transferable)`, `isolation(none)` and the common clauses shown in
+the checkpoint. Add `watch_labels(handler: LabelChanged) -> Watch` with
+one successful returned outcome: a valid result and `give($result, owned)`.
+The program receives an [owned](../glossary.md#owned) watch and becomes
+responsible for destroying it ([`C2`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
+
+This synthetic registration returns a non-null watch whenever it completes.
+That is the API promise being described; the signature provides no failure
+result. As with the other operations, its completion contract supplies no
+guarantee that the call eventually returns ([`C3`](../contracts.md#c3)).
+
+The registration takes only a handler. Its watch manages this subscription;
+it retains no `Card` and extends no borrowed `Label` lifetime. Each invocation
+delivers only the `u64` change number.
+
+### 5. Keep the handler for later notifications
+
+On `watch_labels`, write `input($handler, borrow)` and
+`valid($handler, call)`. The program supplies a callback valid during
+registration and keeps its existing ownership. This is a
+[borrow](../glossary.md#borrow), describing responsibility rather than
+Rust-style static checking ([`C3`](../contracts.md#c3)).
+
+Now write `retain($handler, strong(owner($result)))`. The library acquires
+its own reference so it can keep using the handler after registration
+returns. Keeping a value for later work is [retention](../glossary.md#retention).
+Strong retention creates an independent release obligation, and
+`owner($result)` ties that stored reference to the returned watch's lifetime
+([`C3`](../contracts.md#c3)).
+
+The fixture provider supplies the retain and release operations for the
+callback and its captures. This stored reference is what keeps the handler
+available for later notifications ([`C2–C3`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
+
+### 6. Specify when this registration may invoke the handler
+
+Inside `watch_labels`, add a `callback $handler` block. Write
+`timing(after_return)` so notifications can start only after registration
+returns. Compare this with an API that invokes its handler entirely during
+registration: that call could finish all callback use before it returns.
+This subscription permits later use and therefore needs the watch to bound
+it ([`C6`](../contracts.md#c6)).
+
+Write `count(0, many)`. The library is permitted to send zero notifications,
+or any number during the registration's scope. `many` supplies an unbounded
+maximum. It states the API's permission; the author still needs to have
+established that permission ([`C6`](../contracts.md#c6)).
+
+Write `scope(owner($result))` to relate the schedule to the watch. Add
+`executor(any)`, `concurrency(serial)` and `reentrancy(forbidden)` to keep
+this registration's permitted invocations consistent with the callback
+declaration. Finally, write `quiescence(@destroy_watch)` to name the
+operation whose return ends all callback use ([`C6`](../contracts.md#c6)).
+
+Registration itself completes synchronously. Its schedule permits later
+notifications. Read `execution(sync)` as describing the registration call
+and `timing(after_return)` as describing invocation starts relative to that
+call ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
+
+### 7. End the subscription through its destructor
+
+Define `destroy_watch(subscription: Watch) -> unit`. Write
+`input($subscription, consume)`, `retain($subscription, none)` and one
+successful returned outcome. At entry the destructor
+[consumes](../glossary.md#consume) the watch: the library takes over the
+program's destruction obligation ([`C2–C3`](../contracts.md#c2)).
+
+A notification may still be running when destruction begins. The destructor
+finishes all callback use before returning. At its return, no invocation is
+running or can begin for that subscription. This is
+[quiescence](../glossary.md#quiescence). Responsibility moves at entry;
+the caller can rely on quiescence at return ([`C6`](../contracts.md#c6)).
+
+### 8. Require teardown from outside the callback
+
+In `destroy_watch`, add
+`requires(outside_callback(@watch_labels::handler))`. This reference names
+the `handler` use in `watch_labels`. It requires the program to start
+destruction outside an invocation of that callback use
+([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
+
+To see why, imagine the handler calling `destroy_watch` itself. The
+destructor waits for the handler to finish, while the handler waits for
+the destructor to return. Starting teardown outside the handler avoids
+this self-wait. The fixture defines no alternative protocol for reentrant
+destruction. The precondition complements `reentrancy(forbidden)`; each
+states a separate restriction ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
+
+The quiescence promise describes what holds when destruction returns.
+Whether a handler or destructor eventually finishes remains outside these
+contracts ([`C3`](../contracts.md#c3), [`C8`](../contracts.md#c8)).
+
+### 9. Include the subscription in the package
+
+Use the checkpoint's package identity, expand `surface` and `exports` with
+the four declarations, and keep the earlier declarations. Complete both new
+functions with their effects and synthetic symbol paths. The callback uses
+the representation clauses from step 3 ([`L3`](../language.md#l3), [`A2`](../profiles.md#a2)).
 
 Follow the timeline to separate registration return, owner consumption and
 quiescence. It shows one permitted invocation starting after `watch_labels`
@@ -118,13 +194,15 @@ and uses spacing only for event order (non-normative;
 
 ![Registration returns an owned Watch before any notification can start. One optional invocation is still active when an outside caller transfers Watch at destroy_watch entry. Quiescence holds at destructor return, when no invocation is running or can start.](../figures/tutorial-callbacks.svg)
 
-[Watch callback diagram source](../figures/tutorial-callbacks.puml)
+[Watch callback diagram source](../figures/tutorial-callbacks.puml) ·
+[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
 
 ## Checkpoint package
 
-The synthetic fixture [profile](../glossary.md#profile), catalogue and [digest tokens](../glossary.md#digest-pin) are defined by
-[`F1`](../profiles.md#f1). Compare your work with the complete
-[subscription checkpoint](../examples/tutorial/04-callbacks.ail).
+Compare your work with the complete [subscription file](../examples/tutorial/04-callbacks.ail).
+The invented API uses the synthetic fixture [profile](../glossary.md#profile),
+catalogue and [digest tokens](../glossary.md#digest-pin) from [`F1`](../profiles.md#f1).
+After comparison, continue to [the observations](#expected-observations).
 
 Complete package — admitted by the grammar and complete under draft 0.1,
 checked by inspection.
@@ -425,45 +503,46 @@ package tutorial::callbacks version "1" {
 
 ## Expected observations
 
-In summary (non-normative; [`C2–C3`](../contracts.md#c2),
-[`C5–C6`](../contracts.md#c5)):
+Use these non-normative summaries to check your reading of
+[`C2–C3`](../contracts.md#c2) and [`C5–C6`](../contracts.md#c5):
 
-- `LabelChanged` describes one invocation. `callback $handler` describes
-  when this registration can invoke it. The scalar parameter needs no
-  ownership clause.
-- `execution(sync)` on `watch_labels` coexists with `timing(after_return)`:
-  registration completes before returning, and any notifications start later.
-- The callee strongly retains the callback in the returned owner's [region](../glossary.md#region).
-  `input(borrow)` transfers none of the caller's existing ownership.
-- `destroy_watch` consumes the unique owner at entry. Its return establishes
-  quiescence, so neither returning from registration nor merely starting
-  destruction establishes the same fact.
-- The callback declaration also constrains independent registrations. Its
-  serial contract still applies if the same callback value is registered twice.
-- Nothing in this subscription changes `current_label`'s owner region or
-  its refresh invalidation. A notification conveys a number, not a new label
-  borrow or an owned label.
+- `LabelChanged` describes one invocation receiving a scalar number.
+  `callback $handler` describes when this registration can make such
+  invocations.
+- `watch_labels` completes before returning control. Notifications may
+  start afterwards, as permitted by `timing(after_return)`.
+- The library retains its own handler reference for the watch's
+  [region](../glossary.md#region). The input borrow leaves the program's
+  existing ownership in place.
+- `destroy_watch` takes the watch at entry and establishes quiescence at
+  return. A running invocation can finish during teardown.
+- If the same handler is registered twice, its callback declaration still
+  requires serial invocation across those registrations.
+- A notification supplies a number. Using a label still requires satisfying
+  `current_label`'s owner lifetime and refresh cutoff.
 
 ## Check yourself
 
-1. Can `LabelChanged` run before `watch_labels` returns?
+1. What is the earliest point at which a `LabelChanged` invocation may start?
 2. If no notification arrives before destruction, is the count contract broken?
-3. Can a notification handler destroy its watch because calls are serial?
+3. Can a notification handler destroy its watch because invocations are serial?
 
 ### Answers
 
-1. No. `timing(after_return)` excludes earlier invocation starts
+1. After `watch_labels` returns, as stated by `timing(after_return)`
    ([`C6`](../contracts.md#c6)).
-2. No. `count(0, many)` permits zero over the registration's whole scope,
-   conditional on that scope eventually ending ([`C6`](../contracts.md#c6)).
-3. No. Serial invocation does not discharge `outside_callback`. The handler
-   is inside the callback use that teardown excludes
+2. Zero invocations satisfy `count(0, many)`. Counts cover the registration's
+   whole scope, conditional on that scope eventually ending
+   ([`C6`](../contracts.md#c6)).
+3. Teardown requires `outside_callback`, so the handler cannot make that
+   call from its own invocation. Serial scheduling controls overlap; it
+   does not satisfy the separate teardown precondition
    ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
 
 ## Invalid variant
 
-In `watch_labels`, replace only the callback-use block's `quiescence` clause
-with the following clause, leaving its owner scope in place.
+In `watch_labels`, replace the callback-use block's `quiescence` clause with
+this clause and keep its owner scope unchanged.
 
 Invalid — rejected under [`C6`](../contracts.md#c6).
 
@@ -472,8 +551,10 @@ Invalid — rejected under [`C6`](../contracts.md#c6).
 quiescence(return);
 ```
 
-Quiescence at registration return requires call scope. The retained,
-owner-scoped schedule instead names its unique owner's destructor.
+Quiescence at registration return belongs to a call-scoped schedule, where
+all invocations finish within the call. This schedule instead stores the
+handler for the watch's lifetime and permits later starts. It needs
+quiescence at that unique owner's destructor.
 
 Return: [Describing a small API](README.md).
 Next: [5. Reaching the code, and changing the contract](05-access-and-change.md).

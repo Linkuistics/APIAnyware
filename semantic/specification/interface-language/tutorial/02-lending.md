@@ -3,32 +3,36 @@
 > **Purpose:** tutorial — describe a label [borrow](../glossary.md#borrow) and the operation that ends it early.
 > **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [1. A package and one resource](01-lifetime.md).
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [`L3–L5`](../language.md#l3), [`C1–C3`](../contracts.md#c1), [`C5`](../contracts.md#c5) and [`A2–A4`](../profiles.md#a2) are canonical.
-
-Here you describe when a caller may use a borrowed label.
-For how tools use the description you are writing, see the
-[overview's workflow map](../README.md#who-writes-and-uses-an-ail-description).
 
 ## Goal
 
-Extend the lifetime [package](../glossary.md#package) with `current_label` and `refresh_card`.
-At the checkpoint, identify both ways that a returned label borrow ends.
-Borrowing grants access without an ownership obligation; it does not imply
-Rust-style static checking or exclusivity.
+Extend the card-lifetime [package](../glossary.md#package) with `Label`,
+`current_label`, `refresh_card` and `destroy_label`. You will describe how a
+caller uses the current label while its card owns it, and identify the two
+events that end that access.
+
+Follow the [steps](#steps), compare the [complete checkpoint](#checkpoint-package),
+then [check yourself](#check-yourself). The new relationship is between the
+returned label and its card; the creation and destruction functions from
+Part 1 keep their contracts.
 
 ## The domain obligation
 
-A [caller](../glossary.md#caller-and-callee) using the card's label keeps the card alive and stops using that
-label when refresh begins
+A [caller](../glossary.md#caller-and-callee) using a card's current label keeps
+the card alive and finishes using that label before refreshing the card
 ([borrow validity and invalidation](../explanation/contracts.md#how-long-a-borrow-lasts)).
 
 ## Steps
 
-1. **To expose the label without transferring it, add these operations.**
-   The C-shaped sketch uses pointers to opaque types. In AIL, both types
-   are resource [handles](../glossary.md#handle), with no exposed layout
-   ([`L4`](../language.md#l4)).
+### 1. Follow a label through use and refresh
+
+Add these operations to the C-shaped sketch of the synthetic API. The
+signatures identify the values exchanged; the following steps supply their
+lifetime promises.
 
    ```c
    typedef struct Label Label;
@@ -37,52 +41,93 @@ label when refresh begins
    void destroy_label(Label *label);
    ```
 
-   Before refresh, the borrowed label remains usable while its card lives.
-   Once refresh begins, that old label is unusable even if the card lives
-   on. A call to `current_label` after refresh obtains the new label.
-   The earlier [invalidation](../glossary.md#invalidation) is separate
-   from the owner's eventual destruction.
+Imagine a program obtaining the current label and using it while the card
+stays alive. If the program finishes with the card without refreshing it,
+destruction ends its access to that label. Now consider the same program
+refreshing the card first. The card lives on, but the old label becomes
+unusable as soon as refresh begins. After refresh finishes, the program can
+call `current_label` again to obtain the new label.
 
-2. **For the new label type, declare its own [lifecycle](../glossary.md#lifecycle).** Add `Label`
-   with `lifecycle(unique, @destroy_label)`, `implements([])`,
-   `sharing(transferable)` and `isolation(none)`. Add its consuming
-   destructor using the same shape as `destroy_card`. A resource
-   needs its lifecycle even when `current_label` lends it
-   ([`C2`](../contracts.md#c2)).
-   The caller uses this destructor to discharge an [owned](../glossary.md#owned)
-   `Label`. The caller cannot use it on the borrow from `current_label`;
-   the card owns that current label.
+These cases need two facts: the owner that keeps the label alive and any
+operation that makes it unusable earlier. AIL calls that earlier ending
+[invalidation](../glossary.md#invalidation). You will express both facts on
+the returned borrow ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-3. **For `current_label`'s input, borrow the card for the call.**
-   Write `input($card, borrow)`, `retain($card, none)` and
-   `valid($card, call)`. For its successful returned `Label`, write
-   `state($result, valid)` and
-   `give($result, borrow(owner($card)))`.
-   The caller keeps the input card valid throughout the invocation; the output
-   [region](../glossary.md#region) bounds later use of the returned label
-   ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
-   [`C5`](../contracts.md#c5)). See
-   [the split between input and output validity](../explanation/choices.md#q5)
-   for the design question this raises.
+### 2. Describe Label and its destructor
 
-4. **To end old label borrows at refresh entry, name the invalidator.**
-   In the `lent` [outcome](../glossary.md#outcome), add
-   `invalidated_by($result, [@refresh_card])`. Give `refresh_card`
-   a borrowed `Card` parameter and `mutation(arguments)`: it changes
-   the card's live contents. Its one outcome successfully returns `unit`.
-   In summary (non-normative; [`C5`](../contracts.md#c5)): an earlier
-   invalidator takes effect at entry to the listed operation involving
-   that owner. Destruction already ends the owner region; it is not
-   listed as another mutation.
+Declare `Label` as a resource. Like `Card`, its value is an opaque
+[handle](../glossary.md#handle); the library keeps the layout private.
+Give it `lifecycle(unique, @destroy_label)`, `implements([])`,
+`sharing(transferable)` and `isolation(none)`. Add `destroy_label` using the
+same consuming-destructor form as `destroy_card`
+([`L4–L5`](../language.md#l4), [`C2`](../contracts.md#c2)).
 
-5. **Before calling the checkpoint complete, expand its publication boundary.**
-   Use the new package identity and [surface](../glossary.md#surface) shown below, export the new
-   declarations, and include their `available`, `deprecated`, effects
-   and synthetic [access path](../glossary.md#access-path) blocks. The `Label` lifecycle and
-   `@refresh_card` invalidation reference both belong in the [dependency
-   closure](../glossary.md#dependency-closure) ([`L2–L5`](../language.md#l2),
-   [`A2`](../profiles.md#a2)). Keep the first checkpoint unchanged as a
-   separate, smaller package.
+The [lifecycle](../glossary.md#lifecycle) explains what an owner does with a
+label. An [owned](../glossary.md#owned) label brings a destruction obligation,
+which `destroy_label` can take and discharge. A label borrowed from the card
+leaves ownership with the card. The caller uses that label only within its
+borrow lifetime; it has no owned obligation to pass to the destructor
+([`C2–C3`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
+
+Keep this distinction in mind as you add the getter. A resource's type
+describes its release discipline, while an individual operation says whether
+the caller receives ownership or temporary access. Borrowing in AIL states
+that agreement; it implies no Rust-style static checking or exclusivity.
+
+### 3. Keep the input card usable during the call
+
+For `current_label(card: Card) -> Label`, write `input($card, borrow)`.
+The caller keeps ownership while the library uses the card. Write
+`retain($card, none)` to promise that the call stores no card reference for
+later work. Finally, write `valid($card, call)`: the caller keeps the card
+usable until this invocation completes ([`C3`](../contracts.md#c3)).
+
+This describes the input while the library is finding the label. The returned
+label needs its own promise because the caller will use it after that call
+has finished.
+
+### 4. Tie the returned label to the card's lifetime
+
+In the successful `lent` [outcome](../glossary.md#outcome), write
+`state($result, valid)` and `give($result, borrow(owner($card)))`.
+The caller receives a usable, non-null label and keeps the card alive for
+as long as it uses that label ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
+
+AIL calls the lifetime named by `owner($card)` a [region](../glossary.md#region).
+Here that region lasts until the card is destroyed. Compare it with `call`
+in the previous step: `call` bounds the input's use during `current_label`;
+`owner($card)` bounds later use of the result. The
+[input/output validity discussion](../explanation/choices.md#q5) examines
+the cost of finding these related facts in separate places.
+
+### 5. End earlier borrows when refresh begins
+
+In `lent`, add `invalidated_by($result, [@refresh_card])`. This tells the
+caller to stop using that label at entry to `refresh_card` involving its
+card, even though the card itself remains alive. Destruction already ends
+the owner region; the list names the additional, earlier cutoff
+([`C5`](../contracts.md#c5)).
+
+Define `refresh_card(card: Card) -> unit` with a borrowed card input and
+`valid($card, call)`. Set `mutation(arguments)` because refresh replaces
+the card's live contents. Give it one successful returned outcome and the
+remaining clauses from the checkpoint. The borrow's named invalidator now
+resolves to an operation with the owner parameter and mutation that its
+contract requires ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+### 6. Include the new declarations in the package
+
+Use the checkpoint's new package name and expand its [surface](../glossary.md#surface)
+to include lending and refresh. Add the new declarations to `exports` and
+give each its availability, deprecation and other applicable clauses. Copy
+the synthetic [access paths](../glossary.md#access-path) for each new function
+([`L2–L5`](../language.md#l2), [`A2`](../profiles.md#a2)).
+
+A reader can now follow `current_label` to `Label`, the label's destructor
+and the refresh operation that ends its borrow. Together with their further
+dependencies, these form the [dependency closure](../glossary.md#dependency-closure)
+needed to interpret this package. Keep the first checkpoint as its own
+smaller example ([`L3`](../language.md#l3)).
 
 Compare the two timelines to see why keeping `Card` alive is necessary but
 does not alone keep a returned `Label` usable. Refresh ends the old borrow at
@@ -95,13 +140,15 @@ paths and shows ordering, not elapsed time (non-normative;
 
 ![Two independent cases begin with current_label borrowing Card for the call and returning an owner-scoped Label borrow. In one, refresh invalidates the Label while Card survives; in the other, Card destruction ends the borrow.](../figures/tutorial-borrow.svg)
 
-[Label borrow diagram source](../figures/tutorial-borrow.puml)
+[Label borrow diagram source](../figures/tutorial-borrow.puml) ·
+[How tools use the description](../README.md#who-writes-and-uses-an-ail-description)
 
 ## Checkpoint package
 
-The synthetic fixture [profile](../glossary.md#profile), catalogue and [digest tokens](../glossary.md#digest-pin) are defined by
-[`F1`](../profiles.md#f1). Read the complete [checkpoint file](../examples/tutorial/02-lending.ail)
-alongside your work.
+Compare your work with the complete [lending file](../examples/tutorial/02-lending.ail).
+The invented API uses the synthetic fixture [profile](../glossary.md#profile),
+catalogue and [digest tokens](../glossary.md#digest-pin) from [`F1`](../profiles.md#f1).
+After comparison, continue to [the observations](#expected-observations).
 
 Complete package — admitted by the grammar and complete under draft 0.1,
 checked by inspection.
@@ -267,43 +314,46 @@ package tutorial::lending version "1" {
 
 ## Expected observations
 
-In summary (non-normative; [`C1–C3`](../contracts.md#c1),
-[`C5`](../contracts.md#c5)):
+Use these non-normative summaries to check your reading of
+[`C1–C3`](../contracts.md#c1) and [`C5`](../contracts.md#c5):
 
-- `current_label` gives no destruction obligation to its caller. Its
-  result is non-null because `Label` is not nullable.
-- The caller can use the label after `current_label` returns. Its region
-  is `owner($card)`, not `call`.
-- Entering `refresh_card` ends earlier label borrows for that card.
-  Destroying the card also ends them. Neither operation transfers ownership
-  of those labels to the caller.
+- `current_label` returns a non-null `Label` and lends it to the caller.
+  Ownership remains with the card.
+- The caller can use the label after the getter returns because its region
+  is `owner($card)`. The input's `call` region has already ended.
+- Beginning refresh ends the old label borrow for that card. Destroying the
+  card also ends it. In either case the caller stops using the old label.
 - Both new card operations require serial access. `executor(any)` permits
-  entry from any [executor](../glossary.md#executor), without granting concurrent use of the card.
-- `destroy_label` describes how to discharge an owned label. A function's
-  [availability](../glossary.md#availability) alone does not satisfy its owned-input obligation.
+  entry from any [executor](../glossary.md#executor); the caller still
+  serializes independent calls using the same card.
+- `destroy_label` accepts an owned label. Its [availability](../glossary.md#availability)
+  in `test` tells the caller where the operation exists; the consuming
+  input contract tells the caller what it needs to supply.
 
 ## Check yourself
 
 1. If the card remains alive after refresh, can a caller keep using the old label?
-2. If the caller uses a label after `current_label` returns, which clause
-   requires the caller to keep the card alive?
-3. Does the presence of `destroy_label` mean the caller destroys this borrow?
+2. Which clause requires the caller to keep the card alive while using a
+   label after `current_label` returns?
+3. Who is responsible for the label borrowed from `current_label`, and
+   can the caller pass that borrow to `destroy_label`?
 
 ### Answers
 
-1. No. `invalidated_by` ends the borrow at refresh entry, before the owner
-   region ends ([`C5`](../contracts.md#c5)).
-2. `give($result, borrow(owner($card)))` supplies the output's validity
-   bound. `valid($card, call)` only describes the input obligation for
-   that invocation ([`C1`](../contracts.md#c1),
-   [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
-3. No. A borrow supplies no ownership obligation to consume
-   ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+1. Refresh entry ends the old borrow through `invalidated_by`. The caller
+   obtains a fresh label after refresh finishes ([`C5`](../contracts.md#c5)).
+2. `give($result, borrow(owner($card)))` relates the returned label to the
+   card's lifetime. `valid($card, call)` covers the input only for that
+   invocation ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
+   [`C5`](../contracts.md#c5)).
+3. The card keeps ownership. The caller receives access with no destruction
+   obligation, so it cannot supply the owned input that `destroy_label`
+   consumes ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 ## Invalid variant
 
-In `current_label`'s `lent` outcome, replace its `give` clause with
-the following clause, leaving the rest unchanged.
+In `current_label`'s `lent` outcome, replace `give` with this clause and keep
+the rest unchanged.
 
 Invalid — rejected under [`C1`](../contracts.md#c1).
 
@@ -312,8 +362,8 @@ Invalid — rejected under [`C1`](../contracts.md#c1).
 give($result, borrow(call));
 ```
 
-The returned borrow would expire at the completion that delivers it. An
-escaping borrow needs a region that survives delivery to its recipient.
+The `call` region ends at the completion delivering the label. A returned
+borrow needs a region that survives delivery so the caller can use it.
 
 Return: [Describing a small API](README.md).
 Next: [3. Caller-supplied storage and failure](03-storage.md).
