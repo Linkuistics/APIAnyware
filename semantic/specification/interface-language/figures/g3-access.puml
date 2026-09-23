@@ -1,0 +1,47 @@
+@startuml
+!include style/ail.puml
+allowmixing
+hide circle
+hide empty methods
+title G3 · Access structure: two paths for one synthetic getter
+top to bottom direction
+class "read_count\nSemantic declaration" as getter {
+  example::objects, version 1
+  Same whole getter contract on either path
+}
+class "objc_like\nMessage access path" as message {
+  via: currentCount
+  convention: object-message
+  {field} mapping: identity (implicit receiver)
+  compatibility: stable fixture domain
+}
+class "swift_like\nSource-call access path" as source {
+  via: Outer.Counter.currentCount.get
+  convention: source
+  mapping: identity
+  compatibility: source, fixture-build
+}
+$catalogue(abi, "native · Synthetic ABI entry\nexample.fixture-abi, version 1\nSynthetic digest: sha256: + 64 b digits")
+$catalogue(profile, "fixture · Synthetic profile entry\nexample.fixture, version 1\nSynthetic digest: sha256: + 64 a digits")
+getter --> message : offers in test
+getter --> source : offers in test
+message --> abi : selects object-message
+source --> abi : selects source
+message --> profile : uses message mechanism
+source --> profile : uses source-call mechanism
+note top of getter
+  The consumer selects explicitly or by configuration policy.
+  Path order supplies no preference.
+end note
+note bottom of profile
+  test: fixture64; fixture 1; fixture-compiler 1.
+  fixture-build pins the source build recipe;
+  it does not promise independent binary interoperability.
+end note
+legend bottom
+  Synthetic fixture only, not real Objective-C or Swift support. Non-normative: A2, A4, F1.
+  Compartmented box = contract item; cylinder = catalogue definition.
+  Labelled arrows show path alternatives and definition selection, not runtime order.
+  Both paths preserve the whole contract; native calling algorithms are omitted.
+endlegend
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+!include style/ail.puml
+allowmixing
+hide circle
+hide empty methods
+title G2 · Package structure: public roots and their dependencies
+top to bottom direction
+folder "AIL package\nComplete contract for a declared subset" as pkg #E8F3EB {
+  class "surface\nCoverage claim" as surface {
+    API subset and release
+  }
+  class "exports\nPublic roots" as roots {
+    Named declarations
+  }
+  class "Private support\nReferenced declarations" as support {
+    Authoritative even when not exported
+  }
+  class "environment\nExact configurations" as env {
+    target + platform
+    optional refinements
+  }
+  class "Dependency selections\nExact pins" as pins {
+    Imports and catalogue aliases
+  }
+  surface --> roots : states the scope of
+  roots --> support : references, possibly transitively
+  roots --> env : names availability\nwhere applicable
+  support --> env : covers each referencing\nuse where applicable
+  env -[hidden]down-> pins
+}
+$package(imports, "Imported packages\nName, version, document digest")
+$catalogue(catalogues, "Profile and ABI entries\nIdentifier, version, manifest digest")
+pins --> imports : imports when needed
+pins --> catalogues : selects definitions
+legend bottom
+  Schematic, not a fourth fixture package. Non-normative: L2–L3, A1.
+  Dependency closure follows references from roots through support and pinned dependencies.
+  Dependency membership does not confer export membership.
+  Folder = package; cylinder = catalogue; compartmented box = contract item.
+  Containment groups local items; labelled arrows show references or scope, not calls.
+  Pins must resolve in an explicitly supplied resolution set. Internal clauses omitted.
+endlegend
+@enduml

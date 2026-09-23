@@ -1,0 +1,37 @@
+@startuml
+!include style/ail.puml
+title G5 · Borrow timing: region end versus earlier invalidation
+hide footbox
+$caller(caller, "Caller\nUses the returned view")
+$callee(view, "view\nBorrows its input during the call")
+$owner(store, "Store\nOwner of the viewed bytes")
+== Synthetic immutable store ==
+caller --> view : Entry: lend store; valid($store, call)
+activate view
+note over view : Input validity lasts through completion.
+view --> caller : Completion: deliver borrow(owner($store))
+deactivate view
+note over caller, store
+  Caller may use the returned view while Store lives.
+  invalidated_by([]): no earlier operation invalidates it.
+end note
+store ->x caller : Store destruction: returned view becomes invalid
+== Constructed mutable variant, separate from the fixture ==
+caller --> view : Entry: lend store; valid($store, call)
+activate view
+view --> caller : Completion: deliver borrow(owner($store))
+deactivate view
+note over caller, store : Caller may use this view until an invalidator or owner destruction.
+store ->x caller : replace entry: old view becomes invalid
+note over caller, store
+  Store remains alive; the old view is already unusable.
+  Later Store destruction cannot restore that view.
+end note
+legend bottom
+  Time runs downward within each separate case; spacing is not duration.
+  Actor = caller; rectangle = callee; circle on base = owner; bar = active view call.
+  Dashed arrow = borrowed access; marked end = invalidation, not caller destruction.
+  Returned validity outlives the input call region. Non-normative: C1, C5.
+  Other clauses and the mutable variant's full operation contracts are omitted.
+endlegend
+@enduml

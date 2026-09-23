@@ -46,31 +46,3 @@ way, and completes the glossary for all three pages. Each session converts
 the plain-text mentions of the pages it lands into links. Only the second
 draft's last act cuts `copy-edit`. The first finds its later sibling live and
 cuts nothing.
-
-## Handed forward
-
-- **art — G2:** `explanation/packages.md`, “What a package claims”. Show the
-  package's surface and exported roots, private support in the dependency
-  closure, exact environments, and pinned imports/profile/ABI definitions.
-  Keep export membership distinct from transitive dependency membership.
-- **art — G3:** `explanation/packages.md`, “Reaching the code”. Show the
-  synthetic `read_count` declaration reaching `currentCount` through
-  `objc_like` and `Outer.Counter.currentCount.get` through `swift_like`.
-  Both select the same synthetic ABI entry with different conventions and
-  implement the whole getter contract. Mark stable fixture compatibility
-  versus the `fixture-build` source recipe; selection is explicit, not ordered.
-  Reuse the shared vocabulary; prose already states every relation.
-- **art — G5:** `explanation/contracts.md`, “How long a borrow lasts”. Add the
-  borrow timeline comparing owner destruction with earlier invalidation at
-  `replace` entry. Keep `valid($store, call)` distinct from the returned borrow's
-  owner region; the prose and C1/C5 supply the facts.
-- **art — G6:** `explanation/contracts.md`, “Lifecycles and patterns”. Add the
-  unique-resource state diagram: successful creation supplies one obligation,
-  borrowing preserves it, destructor consumption takes it at entry, destruction
-  invalidates dependent borrows before return. Avoid treating the separate
-  constructed `before` pattern as part of the immutable store's lifecycle.
-- **art — G7:** `explanation/contracts.md`, “Callbacks”. Compare call-scoped
-  invocation ending at registration completion with owner-scoped starts after
-  return and quiescence at `unsubscribe` return. Show possible in-flight work
-  during teardown and the `outside_callback` precondition. All facts are in
-  the prose; use the shared figure vocabulary. G4 is already reused in ownership.

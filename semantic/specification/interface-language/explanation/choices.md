@@ -29,6 +29,31 @@ catalogue and
 [digest tokens](../glossary.md#digest-pin) defined by [`F1`](../profiles.md#f1).
 They describe invented APIs rather than actual platform contracts.
 
+The context map locates the choices at the publication boundary: producers
+resolve a contract before consumers rely on it, and the package pins the
+catalogue definitions that interpret it. This page compares choices at that
+boundary; the map omits individual clauses and native execution
+([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)).
+
+![Producers submit a contract for publication validation; the resulting package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
+The comparison table makes the alternatives and costs inspectable together;
+the following sections supply the examples and distinguish recorded reasons
+from assessments of the published rules.
+
+| Draft 0.1 choice | Alternative discussed below | Cost to inspect |
+|---|---|---|
+| Dedicated syntax | Extend WIT or Swift interface syntax | New vocabulary, corpus and tooling |
+| Complete declared subsets | Publish partial models | Producer resolves uncertainty before publication |
+| Explicit applicable facts | Defaults or shorthand | Repetition, including known absence |
+| Ownership clauses | Ownership in types/signatures | Transfer facts lie in the body; rationale remains Q3 |
+| Generic clause syntax | Clause-specific grammar productions | Grammar alone does not expose vocabulary or obligations |
+| Exact environments | Version ranges | Enumerated configurations and repeated declarations |
+| Versioned profiles | Source-specific core or open annotations | Provider specification work and uneven support |
+
 ## A dedicated syntax
 
 Compare the synthetic store's uniquely [owned](../glossary.md#owned)
@@ -140,6 +165,16 @@ excludes all surrounding package and dependency declarations. It measures this
 example's written burden, not average authoring effort. The rules behind these
 groups are [`L3`](../language.md#l3), [`L5`](../language.md#l5),
 [`C3–C5`](../contracts.md#c3) and [`A2`](../profiles.md#a2).
+
+The clause-count table makes the distribution visible without treating nested
+argument constructors as extra clauses.
+
+| Location in `view` | Clauses |
+|---|---|
+| Directly in the function body | 14 |
+| In `outcome viewed` | 5 |
+| In `access direct` | 4 |
+| Total, excluding the surrounding package | 23 |
 
 AIL chooses explicit applicable facts over inferring “ordinary” ownership,
 threading or access from names. Defaults or shorthand could reduce repetition;

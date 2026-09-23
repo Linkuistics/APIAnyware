@@ -21,6 +21,17 @@ The alternatives
 compare design possibilities; they do not change draft 0.1 or claim to be its
 authors' recorded rationale.
 
+The context map locates these obligations in the package shared by all consumers:
+producers submit it for completeness and consistency checks, and it pins the
+catalogue definitions it needs. This page zooms into its callable contracts;
+the map omits individual clauses and native execution
+([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)).
+
+![Producers submit a contract for publication validation; the resulting package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
 ## From signature to contract
 
 A [caller](../glossary.md#caller-and-callee) needs to know whether closing a
@@ -126,6 +137,15 @@ The principle is to address the object of each obligation explicitly. In
 summary (non-normative), `.*` goes with extent `one`, `[]` with buffer extent,
 and `.field` selects a record field. Paths type-check; the two pointer selectors
 are not interchangeable spellings ([`C1`](../contracts.md#c1)).
+
+The selector table keeps the pointer value distinct from the storage addressed
+through it.
+
+| Place | What it selects | Extent needed for traversal |
+|---|---|---|
+| `$length` | The pointer value | No traversal |
+| `$length.*` | One integer through that pointer | `one` |
+| `$destination[]` | Initialized buffer elements | `buffer(...)` |
 
 A [reference leaf](../glossary.md#reference-leaf) is a pointer, resource, object,
 interface or callback value, including one within an aggregate. For a record
@@ -267,6 +287,15 @@ view then. An empty invalidator list states that no operation invalidates the
 borrow before its region ends; it does not make the borrow permanent
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
+The timing diagram separates input validity during `view` from later use of
+its result: owner destruction ends the immutable view, while `replace` entry
+ends the constructed mutable view sooner. It zooms into borrow validity and
+omits other call obligations and the mutable variant's full contracts.
+
+![Two separate timelines: view borrows its input through completion and delivers an owner-scoped result. The immutable result lasts until Store destruction; in the constructed mutable variant, replace entry invalidates the old result while Store remains alive.](../figures/g5-borrow.svg)
+
+[Borrow timing source](../figures/g5-borrow.puml)
+
 In summary (non-normative), the three regions name different boundaries:
 
 | Region | Boundary | Example |
@@ -340,6 +369,16 @@ outcomes, but on failure the destination elements are unreadable. The caller
 can test the status and cannot inspect failed output to find out what happened
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
+The partition table shows why observable failure and unreadable output are
+different: each returned value selects exactly one row for its operation.
+
+| Operation and discriminator | Selected outcome | What the caller receives |
+|---|---|---|
+| `create`: non-null result | `created` — success | Valid store; one destruction obligation |
+| `create`: null result | `allocation_failed` — failure | Valid null; no obligation |
+| `copy_bytes`: `true` | `copied` — success | Valid status and destination elements |
+| `copy_bytes`: `false` | `failed` — failure | Valid status; destination elements unreadable |
+
 In summary (non-normative), `when` selects the case, `meaning` classifies it,
 and `state` describes [output state](../glossary.md#output-state).
 A [discriminator](../glossary.md#discriminator) is the value being tested.
@@ -397,6 +436,14 @@ The text has three payload code units, with a final zero in its fourth storage
 position. Its length excludes that zero and its capacity includes it; embedded
 zero code units are forbidden. This is a count of code units, not necessarily
 characters ([`C4`](../contracts.md#c4), [`F1`](../profiles.md#f1)).
+
+The storage comparison shows which positions count toward readable payload
+and which provide terminator space.
+
+| Example | Payload length | Storage capacity | Terminator |
+|---|---|---|---|
+| Synthetic binary view | 16 elements | 16 elements | No terminator convention |
+| Constructed UTF-8 text | 3 code units | 4 code units | Zero in the fourth position, outside the payload length |
 
 In summary (non-normative), capacity is allocated storage and length is readable
 initialized content. Input `out` buffers need no initialized elements on entry;
@@ -490,6 +537,17 @@ stored for the owner region; the [provider](../glossary.md#provider) defines its
 release ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6),
 [`F1`](../profiles.md#f1)).
 
+The timing diagram places quiescence at completion of the enclosing call or
+the owner's destructor, so an in-flight callback during teardown cannot be
+mistaken for permission to run after teardown returns. The owner-scoped case
+shows one permitted trace after successful synthetic registration; zero
+invocations is also permitted. The constructed call-scoped case is separate.
+This view omits native scheduling and capture-release machinery.
+
+![In the constructed call-scoped case, the handler starts and finishes before registration completes. In the synthetic owner-scoped case, starts follow subscribe return; an invocation can remain in flight when a client outside the callback enters unsubscribe, but none runs or can start after unsubscribe returns.](../figures/g7-callbacks.svg)
+
+[Callback timing source](../figures/g7-callbacks.puml)
+
 The principle is that invocation, schedule and teardown are separate contracts.
 AIL chooses explicit timing, count, scope and quiescence rather than one
 “asynchronous callback” annotation. That is more to write, but the shorter label
@@ -545,6 +603,16 @@ specified nested re-entry, which is distinct from independent overlap. A lock
 alone does not satisfy the counter's executor restriction
 ([`C2–C3`](../contracts.md#c2)).
 
+The comparison keeps executor permission, independent overlap and nested
+re-entry on separate rows; granting one does not grant the others.
+
+| Permission | Synthetic `Store` / `view` | Synthetic `Counter` / `read_count` |
+|---|---|---|
+| Moving or sharing the reference | Sole ownership is transferable | Reference is confined to main |
+| Call entry | Any executor | Main thread |
+| Independent calls using the same instance | Serialized | Serialized |
+| Specified nested re-entry | Allowed | Allowed |
+
 In summary (non-normative), nominal `sharing` and
 [isolation](../glossary.md#isolation) describe the type, while per-call clauses
 describe operations. [`sharing(shared)`](../glossary.md#shared) permits references to cross executors
@@ -588,6 +656,15 @@ have several owned references, each carrying its own release obligation; retain
 creates another and final release destroys it. In the unique case, destruction
 consumes the handle at entry and invalidates dependent borrows before returning
 ([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
+
+The state diagram tracks the immutable store's single destruction obligation:
+creation supplies it, borrowing preserves it, and `destroy` takes it at entry
+and invalidates dependent borrows before returning. It omits reference counting
+and the separate constructed ordering pattern below.
+
+![A non-null create result moves from no owned handle to a live Store with one caller obligation; null leaves no obligation. Borrowing preserves the live state. destroy entry transfers the obligation to the callee, and destruction discharges it and invalidates dependent borrows before return.](../figures/g6-lifecycle.svg)
+
+[Resource state source](../figures/g6-lifecycle.puml)
 
 Now compare two relationships between operations. The buffer example's pattern
 identifies the actual release operation.
@@ -635,6 +712,15 @@ The [pattern instance](../glossary.md#pattern-instance) supplies the participant
 `subject` names which reference slot in each operation identifies the shared
 resource. Those slots need the same
 nominal resource type ([`L6`](../language.md#l6)).
+
+The role mapping separates the fixture's release relationship from the
+constructed ordering requirement; the latter applies to the same resource
+instance, not merely to matching parameter names.
+
+| Pattern instance | Role bindings | Required relationship |
+|---|---|---|
+| Synthetic `store_lifetime` | `resource_type` → `Store`; `release` → `destroy` | `destroy` agrees with the unique destructor |
+| Constructed `prepared_read` | `preparation` → `prepare`; `use` → `read_prepared` | Successful preparation precedes use entry on the resource identified by both `store` subject slots |
 
 The principle is that relationships impose obligations rather than describe a
 usual workflow. In summary (non-normative), core `releases` agrees with the

@@ -1,0 +1,23 @@
+@startuml
+!include style/ail.puml
+title G6 · Resource states: one synthetic immutable Store
+top to bottom direction
+skinparam roundcorner 18
+hide empty description
+state "No owned handle\nCaller has no destruction obligation" as absent
+state "Live Store\nCaller holds one destruction obligation" as live
+state "destroy is active\nCallee has taken the obligation at entry" as destroying
+state "Destroyed Store\nObligation discharged; dependent borrows invalid" as dead
+absent -[bold]-> live : create returns non-null and gives owned result
+absent -[bold]-> absent : create returns null; creates no obligation
+live -[bold]-> live : view borrows; preserves the caller's obligation
+live -[bold]-> destroying : destroy consumes the handle at entry
+destroying -[bold]-> dead : destruction invalidates borrows before destroy returns
+legend bottom
+  Rounded box = resource/obligation state; bold arrow = labelled state transition.
+  Self-loop = the obligation state is preserved. Arrows are not runtime messages.
+  Borrowing grants access and creates no extra destruction obligation.
+  Non-normative: C2, C3, C5; synthetic buffers example only.
+  No constructed prepare/read_prepared ordering and no reference-counted lifecycle.
+endlegend
+@enduml

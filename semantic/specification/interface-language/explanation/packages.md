@@ -13,6 +13,17 @@ not a preferences preset), catalogue and
 [digest tokens](../glossary.md#digest-pin) from [`F1`](../profiles.md#f1).
 They describe invented APIs, not real Objective-C or Swift implementations.
 
+The context map shows why a package pins definitions and supplies one contract
+to different consumers. Producers submit that contract for completeness and
+consistency checks; this page zooms into the resulting package and its access
+paths. The map omits individual clauses and native calls
+([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)).
+
+![Producers submit a contract for publication validation; the resulting package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
 ## Four identities
 
 A binding consumer needs to identify both the operation it promises to callers
@@ -79,6 +90,17 @@ choice permits bounded publication; its cost is stating the boundary honestly
 and retaining everything it depends on. [Validation](../glossary.md#validation) checks the declared scope,
 not its truth against a library's implementation ([`L3`](../language.md#l3)).
 
+The package diagram makes export membership distinct from dependency
+membership: referenced private support remains authoritative without becoming
+a public root. It also locates exact environments and the package, profile and
+ABI pins explained below. This is a schematic structure, not an additional
+fixture package; the frozen examples define their types locally, and `destroy`
+is itself exported. The view omits individual declaration clauses.
+
+![A package contains a surface claim, exported roots, referenced private support and exact environments. Its pins select imported packages when needed and profile and ABI catalogue entries. Following references reaches the dependency closure without making every dependency an export.](../figures/g2-package.svg)
+
+[Package structure source](../figures/g2-package.puml)
+
 ## Where it holds
 
 A contract can be established for one configuration without being established
@@ -143,6 +165,15 @@ provider manifest bytes. A [resolution set](../glossary.md#resolution-set)
 explicitly supplies dependencies.
 Validation neither fetches them nor executes provider code implicitly
 ([`L2`](../language.md#l2)).
+
+The pin table separates an author's local alias from the identity and bytes
+that every consumer resolves.
+
+| Dependency | Identity selected | Bytes fixed by its digest |
+|---|---|---|
+| Imported package | Package name and version | Package document |
+| Profile selection | Profile identifier and version | Profile provider manifest |
+| ABI selection | ABI identifier and version | ABI provider manifest |
 
 Compare two aliases for the same package name/version and digest with two
 aliases that pin different digests for that name/version. Renaming the second
@@ -215,11 +246,31 @@ recipe pinning source dependencies, compiler, options, interfaces and the build
 procedure. A source compiler can establish compatibility for that build without
 promising independent binary interoperability ([`A4`](../profiles.md#a4)).
 
+The access diagram shows two alternatives converging on the same synthetic
+ABI entry while choosing different conventions. Both use the synthetic
+fixture profile and identity mapping, and both implement the whole getter
+contract. Their `test` environment is `fixture64`, platform `fixture` version
+`1`, with `fixture-compiler` version `1`; their catalogue selections use the
+synthetic digest tokens described below. This view zooms into access selection
+and omits native calling algorithms. Arrow order is not a selection policy.
+
+![Synthetic read_count offers objc_like via currentCount and swift_like via Outer.Counter.currentCount.get. Both select native, the synthetic example.fixture-abi version 1 entry, with object-message or source convention respectively; both use fixture profile mechanisms. The first uses the stable fixture domain, the second the fixture-build source recipe.](../figures/g3-access.svg)
+
+[Access structure source](../figures/g3-access.puml)
+
 Data access also needs a mechanism: `fixed_bytes` obtains the address of array
 storage, while `pointer_value` loads the pointer held in a variable. Their
 `ptr<u8>` types alone cannot choose between those operations
 ([`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1);
 [object example](../examples/objects.ail)).
+
+The data comparison shows why the same result type cannot select an access
+mechanism on its own.
+
+| Synthetic declaration | Access obtains | Result type |
+|---|---|---|
+| `fixed_bytes` | The address of array storage | `ptr<u8>` |
+| `pointer_value` | The pointer loaded from a variable | `ptr<u8>` |
 
 ## Profiles and ABI entries
 
