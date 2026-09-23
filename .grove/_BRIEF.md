@@ -205,6 +205,17 @@ semantic validator or general build-system migration.
 
 ## Notes
 
+Orientation is complete (`orientation-k5`). Its three pages establish the domain
+vocabulary and link the existing normative/supporting set. Later increments
+must replace their plain-text forthcoming mentions and interim next routes as
+each page lands (plan §3). G1 is the publication map in `README.md`; G4 in
+`explanation/unsaid.md` is available for reuse by concepts. Their sources/SVGs
+and shared vocabulary live under `semantic/specification/interface-language/figures/`.
+`task docs:check` includes byte-for-byte diagram regeneration; after intentional
+figure edits use `task docs:diagrams:write` and inspect the result. The proof
+found no outstanding hand-forward item; human comprehension remains for the
+scheduled reading checkpoint.
+
 The root brief is the requirements authority for later sessions. There are no
 three unresolved interdependent decisions requiring a full grilling: the human
 has specified purpose, audience, forms, quality direction and the multi-step
