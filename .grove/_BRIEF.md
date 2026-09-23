@@ -119,6 +119,14 @@ awkwardness with unexplained examples.
 
 ## Editorial contract
 
+Human clarification (2026-09-23, orientation art correction): limit semantic
+density everywhere except reference documentation. Give non-reference prose
+enough space to explain one relationship before adding the next. Published
+documents stand on their own, independent of Grove, the process that produced
+them, ADRs and planning/research artifacts. Teach needed context within the
+documentation set; keep process records outside reader-facing pages. This
+clarification governs the queued proof and all later corrections and documents.
+
 Use the supplied prompt's Diátaxis separation of tutorial, how-to/task guide,
 reference and explanation. The latest audience clarification governs how those
 forms serve this workstream. The prompt's example of getting an API call working

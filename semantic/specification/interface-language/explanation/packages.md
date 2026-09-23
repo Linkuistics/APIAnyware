@@ -13,16 +13,9 @@ not a preferences preset), catalogue and
 [digest tokens](../glossary.md#digest-pin) from [`F1`](../profiles.md#f1).
 They describe invented APIs, not real Objective-C or Swift implementations.
 
-The context map shows why a package pins definitions and supplies one contract
-to different consumers. Producers submit that contract for completeness and
-consistency checks; this page zooms into the resulting package and its access
-paths. The map omits individual clauses and native calls
-([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
-[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)).
-
-![Producers submit a contract for publication validation; the resulting package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
-
-[Context map source](../figures/g1-context.puml)
+The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
+shows how a package reaches the tools that use it. This page looks inside the
+package, then follows how a tool identifies and reaches an API operation.
 
 ## Four identities
 

@@ -29,16 +29,10 @@ catalogue and
 [digest tokens](../glossary.md#digest-pin) defined by [`F1`](../profiles.md#f1).
 They describe invented APIs rather than actual platform contracts.
 
-The context map locates the choices at the publication boundary: producers
-resolve a contract before consumers rely on it, and the package pins the
-catalogue definitions that interpret it. This page compares choices at that
-boundary; the map omits individual clauses and native execution
-([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
-[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)).
-
-![Producers submit a contract for publication validation; the resulting package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
-
-[Context map source](../figures/g1-context.puml)
+The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
+shows what API authors and tools do with a description. This page asks what
+AIL's choices require of those people and tools, and what alternatives would
+change for them.
 
 The comparison table makes the alternatives and costs inspectable together;
 the following sections supply the examples and distinguish recorded reasons

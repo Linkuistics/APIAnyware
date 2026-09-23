@@ -6,6 +6,10 @@ validator = hexagon; consumer = component; caller = actor;
 callee = rectangular participant; owner = entity (circle on a base).
 Use the same shapes when adding D2 or Mermaid styles; only PlantUML is used yet.
 Every element is labelled with the prose's name. Colour is redundant.
+Lead labels with the concrete person, tool or value already introduced on the
+page; put the role name after that explanation (for example, Program / caller).
+G1 is the overview's workflow map. Detail pages link to its explanation rather
+than repeating the complete map when their question concerns a narrower relation.
 Compartmented boxes = contract items in structure diagrams (not producer roles).
 Grid boxes = caller storage in buffer layouts; cells name indexed scalar elements.
 X in an output cell = invalid to read, not a stored value or cleared byte.

@@ -6,17 +6,9 @@
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [language and publication](../language.md#l1), [contracts](../contracts.md#c1), [access paths](../profiles.md#a2) and the [synthetic fixture catalogue](../profiles.md#f1) are canonical.
 
-The context map places your work on the producer side: you will describe a
-package that pins catalogue definitions and supplies the same contract to its
-consumers. Publication validation checks completeness and consistency, not
-whether a binary honours the assertions. These are proposed roles, not running
-tools ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
-[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)). The map omits individual
-clauses; the parts below zoom into them.
-
-![Producers submit a contract for publication validation; the package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
-
-[Context map source](../figures/g1-context.puml)
+You will take the API author's role and write a description of an invented
+library. The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
+shows how checking and using that description fit around the writing task.
 
 ## What you will describe
 

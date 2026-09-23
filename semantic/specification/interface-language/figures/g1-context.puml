@@ -1,24 +1,23 @@
 @startuml
 !include style/ail.puml
-title G1 · One publication boundary, one shared contract
+title G1 · Workflow: who writes, checks and uses an AIL description
 top to bottom direction
-$producer(producers, "Human authors · Analysers · Third-party tools\nProducers")
-$validator(validation, "Publication validation\nCompleteness and consistency")
-$package(contract, "Authoritative AIL package\nDeclared API surface and its contract")
-$catalogue(catalogue, "Profile and ABI catalogue entries\nSelected by identifier, version and digest")
-$consumer(consumers, "Binding generators · Documentation renderers · LLM tooling\nConsumers")
-producers --> validation : submit under the same rules
-validation --> contract : publish only when complete and consistent
-contract -right-> catalogue : pins
-contract --> consumers : supplies the same contract
-note left of validation
-  Does not prove that a binary
-  honours the assertions.
-end note
+$producer(producers, "API authors · Analysis tools · Third-party tools\nWrite an API description (producers)")
+$validator(validation, "Validator\nChecks required facts\nand their consistency")
+$package(contract, "Published AIL package\nDescribes the chosen API and its contract")
+$catalogue(catalogue, "Profile and ABI definitions\nSupply extension rules\nand machine-level rules")
+$consumer(consumers, "Binding generators · Documentation renderers\nLLM tools\nUse the same API facts (consumers)")
+producers --> validation : submit the description\nunder the same rules
+validation --> contract : when checks pass, the producer\ncan publish the complete description
+contract -right-> catalogue : selects exact bytes by\nidentifier, version and digest
+contract --> consumers : supplies declarations\nand obligations
 legend bottom
-  Proposed roles, not running tools. Non-normative: L2–L3, C8, A1, A5.
-  Shapes: rectangle = producer; hexagon = validator; folder = package;
-  cylinder = catalogue; component = consumer.
-  Labelled arrows show publication, dependency or consumption, not runtime calls.
+  Proposed workflow; tools remain future work. Non-normative: L2–L3, C8, A1, A5.
+  Checking the description establishes completeness and consistency.
+  Library behaviour needs separate evidence from authors, review and implementation testing.
+  Rectangle = people or tools writing descriptions; hexagon = validator;
+  folder = package; cylinder = definition catalogue; component = tools using descriptions.
+  Arrows follow the description. The branch selects shared definitions.
+  This overview leaves individual clauses and native calls to the detail pages.
 endlegend
 @enduml

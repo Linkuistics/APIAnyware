@@ -71,14 +71,15 @@ for those machine-level rules.
 It can also select a [profile](glossary.md#profile), a language extension that
 defines additional types, clauses or ways to call an API. Each dependency has
 an identifier, a version and a [digest pin](glossary.md#digest-pin) selecting
-its exact bytes, so tools use the same definition. The map below shows these
-dependencies alongside the proposed producers, validator and consumers
+its exact bytes, so tools use the same definition. Use the map below to follow
+the description from its writers, through checks, to the tools that use it.
+The branch shows which shared definitions the package selects
 (non-normative; [`L2`](language.md#l2), [`A1`](profiles.md#a1)).
 
 For a concrete introduction to the obligations those tools use, continue to
 [Using an API across languages](explanation/unsaid.md).
 
-![Producers submit to publication validation; the authoritative package pins profile and ABI entries and supplies the same contract to all consumers.](figures/g1-context.svg)
+![API authors and tools write a description. A validator checks required facts and consistency before publication. The package selects exact profile and ABI definitions and supplies the same facts to binding generators, documentation renderers and LLM tools. Library behaviour requires separate evidence.](figures/g1-context.svg)
 
 [Diagram source](figures/g1-context.puml) ·
 [Figure vocabulary and regeneration](figures/style/vocabulary.txt)
@@ -195,17 +196,5 @@ dependencies and obligations can be described. Required facts about an included
 declaration still need answers ([`L2–L3`](language.md#l2)).
 [Design choices, limits and open questions](explanation/choices.md) explains the
 trade-offs and the cases that call for more language or provider support.
-
-## Design history
-
-The [approved architecture](../../docs/design/2026-09-22-interface-language.md),
-[initial language survey](../../docs/research/2026-09-22-interface-language-a.md)
-and [specification-writing plan](../../docs/design/2026-09-22-interface-language-plan.md)
-record the design basis. The
-[documentation survey](../../docs/research/documentation-basis-a.md),
-[documentation audit](../../docs/research/interface-language-documentation-audit.md)
-and [documentation plan](../../docs/design/2026-09-23-interface-language-documentation-plan.md)
-explain this reader-oriented presentation. Production libraries, parsers and
-APIAnyware adoption belong to separate phases.
 
 Next: [Using an API across languages](explanation/unsaid.md).

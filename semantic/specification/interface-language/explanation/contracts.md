@@ -21,16 +21,9 @@ The alternatives
 compare design possibilities; they do not change draft 0.1 or claim to be its
 authors' recorded rationale.
 
-The context map locates these obligations in the package shared by all consumers:
-producers submit it for completeness and consistency checks, and it pins the
-catalogue definitions it needs. This page zooms into its callable contracts;
-the map omits individual clauses and native execution
-([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
-[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)).
-
-![Producers submit a contract for publication validation; the resulting package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
-
-[Context map source](../figures/g1-context.puml)
+The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
+shows who writes, checks and uses an AIL description. This page looks inside
+that description to explain the obligations on each call.
 
 ## From signature to contract
 
@@ -236,12 +229,24 @@ to the caller. `retain(none)` promises no retention. A unique resource cannot be
 strongly retained or [copied](../glossary.md#copy) without an explicit clone profile
 ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-The diagram tracks borrowing, consumption and owned delivery separately;
-retention is an additional event, as the handler example shows.
+Use the diagram to follow the same three ownership cases through the domain
+page's [invented watch API](unsaid.md#a-small-api). Its `watch_view` borrows the
+watch, leaving the program responsible for closing it. Its `watch_close` takes
+that responsibility at entry and destroys the watch. A non-null owned result
+from `watch_open` gives the program a new watch to close; null gives none.
+These are separate possible contracts, with time running downward within each
+case. A consuming operation takes the obligation even on failure. It discharges
+that obligation unless it explicitly returns it as an owned output
+([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-![Borrowing leaves the obligation with the caller; consumption moves it to the callee at entry; non-null owned delivery supplies one to the caller.](../figures/g4-ownership.svg)
+Strong retention is a separate event, as the handler example shows. It creates
+an additional release obligation while the caller keeps its own; that event
+is outside this figure. Ownership also leaves exclusive access to other rules.
 
-[Diagram source](../figures/g4-ownership.puml)
+![Three separate synthetic watch cases: watch_view leaves closing to the program; watch_close takes responsibility at entry and destroys the watch; a non-null owned watch_open result gives closing responsibility to the program. A null result gives none.](../figures/g4-ownership.svg)
+
+[Diagram source](../figures/g4-ownership.puml) ·
+[How tools use these API facts](../README.md#who-writes-and-uses-an-ail-description)
 
 AIL's choice exposes each event rather than compressing them into a single
 “takes ownership” annotation. The cost is more clauses to reconcile. A single

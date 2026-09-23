@@ -94,17 +94,20 @@ takes over and discharges the obligation would
 [consume](../glossary.md#consume) its argument. After passing ownership to
 `watch_close`, the caller has no second close to perform. AIL's general
 consumption rule transfers responsibility at entry, including when a consuming
-operation later reports failure ([`C3`](../contracts.md#c3)).
+operation later reports failure. The callee then discharges the obligation
+unless it explicitly returns it as an owned output ([`C3`](../contracts.md#c3)).
 
-The figure follows the obligation in three separate cases: lending access,
-transferring an input to the callee, and receiving an owned result. A non-null
+Use the figure to identify who closes the watch in three separate cases:
+`watch_view` borrows it, `watch_close` consumes it, and `watch_open` returns a
+new owned watch. Time runs downward within each case. A non-null
 owned result gives the caller one obligation; null gives none. The cases
 illustrate possible contracts for discussion (non-normative;
 [`C2`](../contracts.md#c2), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-![Three separate sequences track the obligation: caller keeps it when lending access, gives it to the callee at consumption, or receives it with a non-null owned result.](../figures/g4-ownership.svg)
+![Three separate synthetic watch cases: watch_view leaves closing to the program; watch_close takes responsibility at entry and destroys the watch; a non-null owned watch_open result gives closing responsibility to the program. A null result gives none.](../figures/g4-ownership.svg)
 
-[Diagram source](../figures/g4-ownership.puml)
+[Diagram source](../figures/g4-ownership.puml) ·
+[How tools use these API facts](../README.md#who-writes-and-uses-an-ail-description)
 
 AIL records the type's release discipline and each operation's transfers
 separately. For a unique resource, the owner performs one destruction. For a
@@ -144,6 +147,14 @@ empty list when there are none. For the refresh case, invalidation happens
 when the listed operation begins, and that operation states the corresponding
 mutation. These are non-normative summaries of
 [`C1`](../contracts.md#c1) and [`C5`](../contracts.md#c5).
+
+Compare when the caller stops reading the old view under these two possible
+contracts. Keeping the watch alive is enough only in the first case.
+
+| Possible `watch_view` contract | When the old view stops being usable | What the caller arranges |
+|---|---|---|
+| Bytes last until watch destruction | When the watch is destroyed | Finish reading before closing the watch |
+| A later `watch_view` refreshes the bytes | At entry to that refresh, or at watch destruction, whichever comes first | Finish reading before either event |
 
 ### How many bytes exist, and what do they contain?
 
@@ -186,6 +197,14 @@ A binding can read the length on the first failure path because the library
 has written a usable value there. On the second path it has to leave the length
 unread. Reading uninitialized output can make the binding treat arbitrary data
 as a byte count.
+
+The same null failure result permits different reads depending on the output
+promise. Use this comparison to separate the failure signal from output validity.
+
+| Possible failure contract | Returned pointer | What the caller may read from `*length` |
+|---|---|---|
+| Library writes zero | Null | The initialized value zero |
+| Library leaves the output uninitialized | Null | Nothing; the caller leaves it unread |
 
 An [outcome](../glossary.md#outcome) identifies a case that the caller can
 distinguish when the call finishes, explains its meaning, and describes its
@@ -277,6 +296,16 @@ unless a profile supplies a non-deadlocking protocol. Cancellation with a
 separate acknowledgement needs a profile that specifies the events and their
 ordering ([`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
 
+These possible contracts place the last use of callback state at different
+events. Use the table to decide which event the caller needs to wait for before
+releasing state kept alive for notifications.
+
+| Possible notification contract | Event after which callback state is no longer needed |
+|---|---|
+| All invocations finish within `watch_open` | Return from `watch_open` |
+| Notifications continue until quiescent watch destruction | Return from the destructor, with no invocation running or able to start |
+| Cancellation only requests a stop | A separate acknowledgement establishing quiescence, under a profile that defines that protocol |
+
 <a id="why-the-signature-cannot-be-the-contract"></a>
 
 ## A shared description for API tools
@@ -311,8 +340,7 @@ show how people and analysis tools would produce packages for these consumers.
 All producers meet the same completeness requirements. This choice makes
 authoring demanding: the producer has to settle a required lifetime fact before
 publishing the description. The [design discussion](choices.md) examines that
-cost, and the [design proposal](../../../docs/design/2026-09-22-interface-language.md#3-publication-boundary)
-explains the publication boundary.
+cost.
 
 ## Reaching the code
 

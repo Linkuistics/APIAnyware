@@ -154,6 +154,15 @@ metrics (survey §6).
   paragraphs, glossary coverage and a model's successful paraphrase do not
   establish that the human understands it. Keep the explanation needed for
   that reader, even when it makes the page longer.
+- **Semantic density.** Outside reference documentation, limit how many new
+  concepts and relationships a sentence or paragraph asks the reader to absorb.
+  Explain one relationship, illustrate it, then build on it. Tables and captions
+  support that explanation; they do not replace it with compressed terminology.
+- **Standalone documents.** Reader-facing pages carry their own context and
+  explanations. They are independent of Grove, editorial history, ADRs and the
+  process that produced them. Keep plans, research records and process evidence
+  outside the published documentation. Links within the documentation set may
+  provide prerequisites, fuller explanations and exact rules.
 - **Normative force.** BCP 14 keywords appear only in the normative files,
   which keep their current wording. Explanation, tutorial, review and
   reference pages use no capitalised keywords and do not restate a rule's
@@ -458,8 +467,8 @@ documentation. This is outcome 1 in §1.
    and the rule-identifier scheme.
 6. *Scope of draft 0.1.* The current scope and limits, kept from the existing
    README's scope section, with a link to `explanation/choices.md`.
-7. *Design history.* Links to the design proposal, the survey, the audit and
-   this plan.
+7. *Next route.* Lead to the domain explanation. Keep design history, the audit,
+   surveys and this plan outside the reader-facing page.
 
 **`explanation/unsaid.md`: ordered sections** (title: *Using an API across
 languages*; keep the existing file path)
@@ -586,8 +595,10 @@ in AIL, the principle, AIL's choice and its alternative, and the rule links.
 5. *Stating the applicable facts.* Explain required clauses, optional facts
    and known absence accurately, then show the authoring burden with a real
    clause count from an example.
-6. *Expressing ownership.* Put the design proposal's sketch beside
-   draft 0.1. The rationale is unrecorded: say so and link question Q3.
+6. *Expressing ownership.* Compare draft 0.1 with the alternative ownership
+   notation in a self-contained example. Explain what each expresses and the
+   trade-off behind question Q3. Present the alternative as a design possibility;
+   do not require the reader to reconstruct proposal history or an absent rationale.
 7. *One clause syntax, with a closed vocabulary in prose.* What the grammar
    leaves to the rule tables, and what that costs discoverability.
 8. *Describing exact environments.* Explain the declared configuration values

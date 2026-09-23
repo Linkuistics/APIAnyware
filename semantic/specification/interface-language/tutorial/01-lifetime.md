@@ -6,16 +6,9 @@
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L1–L5`](../language.md#l1), [`C1–C3`](../contracts.md#c1), [`C5`](../contracts.md#c5), [`A2–A4`](../profiles.md#a2) and [`F1`](../profiles.md#f1) are canonical.
 
-The context map locates this part in the package you are producing. It pins
-catalogue definitions and supplies one contract to its consumers; publication
-validation checks completeness and consistency, not native behaviour. These are
-proposed roles ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
-[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)). The map omits callable
-details; this part zooms into creation and destruction.
-
-![Producers submit a contract for publication validation; the package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
-
-[Context map source](../figures/g1-context.puml)
+Here you write the rules for creating and destroying a card.
+For how tools use the description you are writing, see the
+[overview's workflow map](../README.md#who-writes-and-uses-an-ail-description).
 
 ## Goal
 
