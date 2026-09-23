@@ -58,15 +58,16 @@ They can present the information differently while retaining the same API facts.
 This transition from assembling evidence to publishing a complete description
 is the [*publication boundary*](glossary.md#publication-boundary). Validation
 checks the description's completeness and consistency. Establishing that the
-actual library behaves as described
-still requires evidence from its author, review and implementation testing.
+actual library behaves as described still requires evidence from its author,
+review and implementation testing.
 These are the proposed workflow and its limits (non-normative;
 [`L2–L3`](language.md#l2), [`C1`](contracts.md#c1),
 [`C8`](contracts.md#c8), [`A5`](profiles.md#a5)).
 
 Some facts come from definitions shared by several packages. For example, a
 tool needs rules for how arguments are passed to native code. A package names
-a versioned [ABI](glossary.md#abi) definition for those machine-level rules.
+a versioned [application binary interface (ABI)](glossary.md#abi) definition
+for those machine-level rules.
 It can also select a [profile](glossary.md#profile), a language extension that
 defines additional types, clauses or ways to call an API. Each dependency has
 an identifier, a version and a [digest pin](glossary.md#digest-pin) selecting
@@ -145,9 +146,10 @@ and how tools can reach their code or data through
 linker symbol or a call that a source compiler must build
 ([`L2–L4`](language.md#l2), [`A1–A2`](profiles.md#a1)).
 
-Completeness applies to the chosen surface. A package covering a watch API
-could leave out an unrelated image API. It would still need to describe the
-watch's returned values and callback types, and whatever those declarations
+Completeness applies to the chosen surface. Consider a watch API that lets a
+program register for notifications when something changes. A package covering
+that API could leave out an unrelated image API. It would still need to describe
+the watch's returned values and [callback](glossary.md#callback) types, and whatever those declarations
 depend on in turn. That full set is the
 [dependency closure](glossary.md#dependency-closure). Producers resolve missing
 facts and competing claims before publication; analysis notes and confidence
@@ -157,8 +159,9 @@ Some APIs deliberately hide their internal layout. An
 [opaque resource](glossary.md#opaque-resource) describes this case through its
 operations and lifetime rules. The producer can give a complete account of how
 to use and destroy a watch while keeping its implementation private. A value
-passed by value instead needs the representation information required to pass
-it correctly ([`L4`](language.md#l4), [`A3`](profiles.md#a3)).
+passed by value instead needs the [representation](glossary.md#representation)
+information required to pass it correctly
+([`L4`](language.md#l4), [`A3`](profiles.md#a3)).
 
 The core describes named declarations and their scalar and aggregate types.
 It records who releases values, how long access remains valid, when callbacks

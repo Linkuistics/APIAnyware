@@ -43,3 +43,27 @@ requires escalation. The human requested corrections before further feedback;
 `first-path-reading-k48` follows all three corrected documents and precedes
 reference drafting. Keep the synthetic examples and proposed-language status
 explicit throughout.
+
+## Decisions (running log)
+
+- D1: Keep the corrected section structure. Clarify remaining sentence-level
+  shorthand, introduce the overview's watch example, and link domain terms to
+  their glossary entries. Preserve the normative rules and synthetic examples.
+- D2: Keep the existing art and proof siblings (`orientation-k38` and
+  `orientation-k39`). G1/G4 sources, SVGs and alt text remain owned by art under
+  the node brief's existing handoff; no duplicate successor is needed.
+
+## Verification
+
+- Read all three pages against plan §4–§5 and §9.1, including their headings,
+  opening sentences, tables, status statements and example surroundings.
+  No additional structural correction was identified. The existing G1/G4
+  handoff remains for art, followed by the queued whole-document proof.
+- `task docs:check` passed: 19 files passed the link and example checks,
+  17 pages were reachable, and all 11 SVGs regenerated without differences.
+  External links were reported but not fetched. These checks establish document
+  consistency, not runtime behaviour or human comprehension.
+- Evidence came from direct Markdown/configuration reads. Graph coverage at
+  generation `2026-09-23T09:55:55Z` reported changed metadata for the document
+  and excluded the design-documents subtree; no structural code claim relies
+  on that graph.

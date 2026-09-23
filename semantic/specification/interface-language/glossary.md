@@ -31,8 +31,9 @@ Rules: [`A1`](profiles.md#a1), [`A3–A4`](profiles.md#a3).
 ## ABI entry
 
 An ABI entry is a named, versioned definition of calling conventions and
-representations that a package can select from a provider's catalogue. The
-package pins its identity and exact contents; a tool uses it to determine how
+[representations](#representation) that a package can select from a
+[provider's](#provider) catalogue. The package selects it by identifier,
+version and [digest pin](#digest-pin); a tool uses it to determine how
 to pass values and make calls in the selected environment. A compiler version
 alone supplies too little information to establish those compatibility rules.
 
@@ -126,8 +127,8 @@ Rule: [`C4`](contracts.md#c4).
 A callback is a callable value supplied for the API to invoke. A program might
 pass `notice` when opening a watch so the library can report events. The
 callback declaration describes one invocation: its arguments, results and
-obligations. The registration's use-site schedule describes when invocations
-may start, how many may occur and when they have all finished.
+obligations. The schedule stated where the callback is registered describes
+when invocations may start, how many may occur and when they have all finished.
 
 See [A small API](explanation/unsaid.md#a-small-api) and
 [callback teardown](explanation/unsaid.md#when-is-it-safe-to-discard-callback-state).
@@ -282,7 +283,7 @@ Rule: [`C4`](contracts.md#c4).
 Copy [retention](#retention) creates an independent semantic copy according to
 a [profile](#profile). For example, a callee could store a copy of supplied
 state for later use, with the profile defining the copy's meaning. Copying
-pointer bits instead produces another address for the same storage; retaining
+pointer bits instead produces another copy of the same address; retaining
 a reference keeps the same entity alive. AIL's term also differs from Rust's
 `Copy` trait. The synthetic fixture profile does not support copy retention.
 
@@ -427,9 +428,10 @@ Definition and rule: [`C2`](contracts.md#c2).
 A mapping specifies how a declaration's parameters, results and completion
 modes are realized through an access path. For example, a callback mapping has
 to account for an auxiliary native context argument when one exists. Each part
-is accounted for exactly once. An identity mapping relies on the provider's
-defined faithful lowering — the recipe for realizing the semantic signature —
-so it also needs evidence that the selected providers support it.
+is accounted for exactly once. With an identity mapping, the consumer follows
+the provider's rules for passing the declared arguments and results without
+changing their meaning. The description needs evidence that the selected
+providers support that mapping.
 
 See [Reaching the code](explanation/packages.md#reaching-the-code).
 Rule: [`A2`](profiles.md#a2).
@@ -484,7 +486,8 @@ Ownership transfer moves a destruction or release obligation between caller
 and callee. A successful creation can give the caller an owned watch; a
 consuming destructor takes its obligation back. Copying the watch's address
 merely produces another copy of that address. Transfer, retention and release
-rules determine who actually owes an operation.
+rules determine who is responsible for destroying the watch or releasing a
+reference.
 
 See [Who is responsible for releasing a value?](explanation/unsaid.md#who-is-responsible-for-releasing-a-value).
 Rules: [`C3`](contracts.md#c3), [`C5`](contracts.md#c5).
@@ -603,8 +606,8 @@ Rule: [`C6`](contracts.md#c6).
 
 ## Re-entrancy
 
-Re-entrancy is entry into an operation on the same receiver or resource from
-control nested beneath an active call. For example, an operation on a watch
+Re-entrancy occurs when an active call leads to a nested call on the same
+receiver or resource before the first call finishes. For example, an operation on a watch
 could invoke a callback that calls another operation on that same watch before
 the outer call finishes. The contract says whether that nested entry is
 permitted. Independent calls from separate control flows are governed by
@@ -684,8 +687,8 @@ Rule: [`L6`](language.md#l6).
 
 ## Shared
 
-Shared is a type-level permission for references to cross executors. Different
-execution contexts may therefore hold references to the same entity. Each
+Shared is a type-level permission for references to cross [executors](#executor).
+Different execution contexts may therefore hold references to the same entity. Each
 operation's concurrency contract still controls overlapping calls and mutation.
 The permission is also separate from a source compiler's conformance judgement,
 such as Swift sendability.

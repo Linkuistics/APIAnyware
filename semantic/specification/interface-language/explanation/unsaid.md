@@ -82,8 +82,9 @@ or attempting a second destruction.
 The first result is [owned](../glossary.md#owned): it comes with a responsibility
 to release it according to the API's rules. The second is a
 [borrow](../glossary.md#borrow): the recipient may use it for a stated period,
-while the existing owner keeps the release responsibility. Moving that
-responsibility from one party to another is
+while the existing owner keeps the release responsibility. AIL's borrow
+describes that agreement; it implies no Rust-style exclusivity or static borrow
+checking. Moving that responsibility from one party to another is
 [ownership transfer](../glossary.md#ownership-transfer).
 
 For a newly created watch, successful `watch_open` would give that responsibility
@@ -196,9 +197,9 @@ AIL distinguishes ways a call finishes, such as returning or throwing, as
 [completions](../glossary.md#completion). For each completion, its outcomes
 cover every possibility exactly once. The caller can inspect a valid output,
 including a valid null result. An invalid output remains unreadable, even for a
-null test. The API's failure observation is preserved as described: a status
-code remains a status code unless a separately described operation provides a
-different observable result. These are non-normative summaries of
+null test. A binding preserves the way the API reports failure. If the API
+returns a status code, the binding exposes that code; an operation that reports
+failure differently needs a separate description. These are non-normative summaries of
 [`C3`](../contracts.md#c3) and [`C5`](../contracts.md#c5).
 
 ### Which calls may run together, and where?
@@ -335,18 +336,20 @@ a record's fields are stored, the callee can still read the wrong data
 ([`A1`](../profiles.md#a1), [`A3`](../profiles.md#a3)).
 
 AIL packages select definitions of those mechanics that tools can share. An
-ABI entry defines the representations and calling conventions. A profile can
-define an additional type or access mechanism and the rules for using it.
+[ABI entry](../glossary.md#abi-entry) defines the
+[representations](../glossary.md#representation) and calling conventions.
+A profile can define an additional type or access mechanism and the rules for using it.
 A [provider](../glossary.md#provider) supplies a manifest describing such a
 definition and tooling that interprets or implements it. A package selects the
-definition by identifier, version and a digest of its exact contents, allowing
-consumers to agree on which rules to apply.
+definition by identifier, version and a [digest pin](../glossary.md#digest-pin)
+for its exact contents, allowing consumers to agree on which rules to apply.
 
 For source-compiled access, the profile names a build recipe with the sources,
 compiler and options needed to build the call. Compatibility is then established
-for that build. Independently stable binary access needs a provider guarantee
-covering its representations and runtime requirements. These are non-normative
-summaries of [`A1`](../profiles.md#a1) and [`A4`](../profiles.md#a4).
+for that build. For binary access that remains compatible across independent
+builds, the provider needs to guarantee compatible representations and runtime
+requirements. These are non-normative summaries of [`A1`](../profiles.md#a1)
+and [`A4`](../profiles.md#a4).
 
 For this header, a [mapping](../glossary.md#mapping) would need to account for
 both the callback and its context argument: the consumer needs to know how the
@@ -390,10 +393,10 @@ calls. The caller follows both rules, for example by serializing access after
 moving a reference to another thread. Safe concurrent mutation requires the
 operation's permission ([`C2–C3`](../contracts.md#c2)).
 
-**Copy describes an independent semantic value.** Under a profile that defines
-copy retention, a callee could keep a copy of supplied state rather than another
+**[Copy](../glossary.md#copy) describes an independent semantic value.** Under
+a profile that defines copy retention, a callee could keep a copy of supplied state rather than another
 reference to the original state. The profile defines what that copy means.
-Copying pointer bits merely gives another address for the same storage; strong
+Copying pointer bits merely gives another copy of the same address; strong
 retention keeps another reference to the same entity. AIL's term also differs
 from Rust's `Copy` trait. The synthetic fixture profile used by the examples
 does not support copy retention ([`C3`](../contracts.md#c3), [`F1`](../profiles.md#f1)).
