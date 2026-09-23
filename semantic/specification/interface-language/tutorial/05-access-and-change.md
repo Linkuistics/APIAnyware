@@ -6,6 +6,17 @@
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L2–L5`](../language.md#l2), [`C1–C6`](../contracts.md#c1), [`A1–A5`](../profiles.md#a1) and the synthetic catalogue [`F1`](../profiles.md#f1) are canonical.
 
+The context map locates this part in the package you are producing. It pins
+catalogue definitions and supplies one contract to its consumers; publication
+validation checks completeness and consistency, not native behaviour. These are
+proposed roles ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)). The map omits callable
+details; this part zooms into access paths and a changed ownership contract.
+
+![Producers submit a contract for publication validation; the package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
 ## Goal
 
 Read how the finished package reaches its synthetic implementation. Then
@@ -369,6 +380,20 @@ package tutorial::finished version "1" {
    The implementation burden of supplying such a snapshot belongs to that
    API choice, not to a guarantee made by AIL
    ([`C3`](../contracts.md#c3), [`C8`](../contracts.md#c8)).
+
+   Use this comparison to trace how the same events affect the two caller
+   obligations (non-normative; [`C1–C3`](../contracts.md#c1),
+   [`C5`](../contracts.md#c5)). It compares each package independently;
+   matching type spellings do not make their nominal types interchangeable
+   ([`L2`](../language.md#l2)).
+
+   | Event or obligation | Borrow in `tutorial::finished` | Owned snapshot in `tutorial::owned` |
+   |---|---|---|
+   | During `current_label` | Keep the input card valid for the call. | Keep the input card valid for the call. |
+   | Successful return | Receive a non-null `Label` borrow in `owner($card)`. | Receive a non-null `Label` with one destruction obligation. |
+   | `refresh_card` entry | Stop using the old label; the card remains alive. | The independent snapshot remains usable; its destruction is still owed. |
+   | Card destruction | The owner region ends; the label borrow is unusable. | The independent snapshot remains usable; its destruction is still owed. |
+   | `destroy_label` | The caller cannot consume this borrowed label. | The caller transfers the owned obligation to the destructor exactly once. |
 
 2. **For the changed API, make a separate publication.**
    Starting with the finished checkpoint, use `package tutorial::owned

@@ -7,6 +7,8 @@ callee = rectangular participant; owner = entity (circle on a base).
 Use the same shapes when adding D2 or Mermaid styles; only PlantUML is used yet.
 Every element is labelled with the prose's name. Colour is redundant.
 Compartmented boxes = contract items in structure diagrams (not producer roles).
+Grid boxes = caller storage in buffer layouts; cells name indexed scalar elements.
+X in an output cell = invalid to read, not a stored value or cleared byte.
 Rounded boxes = resource/obligation states; bold labelled arrows = state transitions.
 State self-loops preserve the shown obligation state. These arrows are not messages.
 Sequence activation bars = active invocations; notes may mark entry or completion

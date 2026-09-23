@@ -6,6 +6,17 @@
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L3–L5`](../language.md#l3), [`C1–C3`](../contracts.md#c1), [`C5`](../contracts.md#c5) and [`A2–A4`](../profiles.md#a2) are canonical.
 
+The context map locates this part in the package you are producing. It pins
+catalogue definitions and supplies one contract to its consumers; publication
+validation checks completeness and consistency, not native behaviour. These are
+proposed roles ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)). The map omits callable
+details; this part zooms into the returned label's validity.
+
+![Producers submit a contract for publication validation; the package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
 ## Goal
 
 Extend the lifetime [package](../glossary.md#package) with `current_label` and `refresh_card`.
@@ -79,6 +90,19 @@ label when refresh begins
    closure](../glossary.md#dependency-closure) ([`L2–L5`](../language.md#l2),
    [`A2`](../profiles.md#a2)). Keep the first checkpoint unchanged as a
    separate, smaller package.
+
+Compare the two timelines to see why keeping `Card` alive is necessary but
+does not alone keep a returned `Label` usable. Refresh ends the old borrow at
+entry while the card lives on; without refresh, card destruction ends its
+owner region. In both cases the returned borrow outlives the input's call
+region and gives no permission to `destroy_label`. The figure omits access
+paths and shows ordering, not elapsed time (non-normative;
+[`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
+[`C5`](../contracts.md#c5)).
+
+![Two independent cases begin with current_label borrowing Card for the call and returning an owner-scoped Label borrow. In one, refresh invalidates the Label while Card survives; in the other, Card destruction ends the borrow.](../figures/tutorial-borrow.svg)
+
+[Label borrow diagram source](../figures/tutorial-borrow.puml)
 
 ## Checkpoint package
 

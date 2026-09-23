@@ -6,6 +6,17 @@
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`C2–C3`](../contracts.md#c2), [`C5–C6`](../contracts.md#c5), [`A2`](../profiles.md#a2) and the synthetic catalogue [`F1`](../profiles.md#f1) are canonical.
 
+The context map locates this part in the package you are producing. It pins
+catalogue definitions and supplies one contract to its consumers; publication
+validation checks completeness and consistency, not native behaviour. These are
+proposed roles ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)). The map omits callable
+details; this part zooms into notification timing and teardown.
+
+![Producers submit a contract for publication validation; the package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
 ## Goal
 
 Add a notification subscription with a unique `Watch` owner. At the checkpoint,
@@ -101,6 +112,20 @@ before returning ([callback schedules and teardown](../explanation/contracts.md#
    Extend `surface` and `exports`, retain the earlier declarations unchanged,
    and give both new functions complete synthetic symbol paths
    ([`L3`](../language.md#l3), [`A2`](../profiles.md#a2)).
+
+Follow the timeline to separate registration return, owner consumption and
+quiescence. It shows one permitted invocation starting after `watch_labels`
+returns. That invocation can still be running on another thread when an
+outside caller enters `destroy_watch`; it finishes during the shown teardown,
+before the destructor returns. Zero invocations would also satisfy the count.
+Neither delivery nor eventual return is promised. The `Watch` retains no
+`Card` and extends no label borrow. This G7 adaptation omits native scheduling
+and uses spacing only for event order (non-normative;
+[`C3`](../contracts.md#c3), [`C5–C6`](../contracts.md#c5)).
+
+![Registration returns an owned Watch before any notification can start. One optional invocation is still active when an outside caller transfers Watch at destroy_watch entry. Quiescence holds at destructor return, when no invocation is running or can start.](../figures/tutorial-callbacks.svg)
+
+[Watch callback diagram source](../figures/tutorial-callbacks.puml)
 
 ## Checkpoint package
 

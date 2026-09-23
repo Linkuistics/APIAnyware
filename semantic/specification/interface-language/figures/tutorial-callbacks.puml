@@ -1,0 +1,37 @@
+@startuml
+!include style/ail.puml
+title Tutorial 4 · Callback timing: synthetic Watch registration and teardown
+hide footbox
+$caller(client, "Caller\nRegisters and destroys Watch")
+$callee(api, "Label-card API\nRetains and invokes handler")
+$callee(handler, "LabelChanged\nRuns one synchronous invocation")
+note over client, api : watch_labels enters: borrow handler; retain for owner($result).
+api -> client : watch_labels returns: give one owned Watch
+note over api, handler
+  Only now may invocations start: timing(after_return).
+  count(0, many): zero delivery is permitted over the whole owner scope.
+end note
+api -[dotted]> handler : Start one permitted invocation with a scalar change number
+activate handler
+note over client, handler
+  Caller enters destroy_watch outside this callback use.
+  An invocation may still be in flight on another thread.
+end note
+client -> api : destroy_watch entry: consume Watch
+note over handler : In-flight invocation completes during teardown.
+deactivate handler
+note over client, api : destroy_watch returns: no invocation running or able to start.
+note over api, handler
+  Quiescence is at destructor return, not entry.
+  One permitted trace: no delivery or eventual-return guarantee.
+  Watch retains no Card and extends no borrowed Label's validity.
+end note
+legend bottom
+  Time runs downward; spacing is not duration. Native scheduling is omitted.
+  Actor = caller; rectangles = callees (API becomes caller when invoking LabelChanged).
+  Bar = active callback; dotted arrow = callback entry; solid arrow = ownership transfer.
+  Notes mark other entries and completions; no arrow denotes an ordinary return.
+  Non-normative: C3, C5, C6. scope(owner($result)); quiescence(@destroy_watch).
+  requires(outside_callback(@watch_labels::handler)) excludes self-waiting teardown.
+endlegend
+@enduml

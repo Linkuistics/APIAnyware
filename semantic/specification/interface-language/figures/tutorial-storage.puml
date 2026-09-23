@@ -1,0 +1,12 @@
+@startuml
+!include style/ail.puml
+title Tutorial 3 · Buffer layout: synthetic copy_text destination
+rectangle "<b>Caller storage: capacity = 8 u8 elements</b>\nAllocate all eight before entry; no initialized input required.\n\n<b>Success: CopyStatus = copied (0)</b>\n|= Index |= 0 |= 1 |= 2 |= 3 |= 4 |= 5 |= 6 |= 7 |\n| Example | R | E | A | D | Y | ! | ! | 0 |\n\nLength = 7 text elements, indices 0 through 6.\nIndex 7 holds the final zero; capacity includes it.\nREADY!! is illustrative; its spelling is not the contract.\n\n<b>Failure: CopyStatus = unavailable (1)</b>\n|= Index |= 0 |= 1 |= 2 |= 3 |= 4 |= 5 |= 6 |= 7 |\n| Output | X | X | X | X | X | X | X | X |\n\nX = invalid output: do not read, even to find a terminator.\nX does not mean the byte was cleared or left unchanged." as storage
+legend bottom
+  Box = caller storage; table cells = indexed u8 elements, not resource handles.
+  The caller retains the allocation in both outcomes; the status is valid in both.
+  extent($destination, buffer(7, 8, elements));
+  contents($destination, text("utf-8", nul));
+  Non-normative: C3-C5. Synthetic storage subset; calls and access paths omitted.
+endlegend
+@enduml

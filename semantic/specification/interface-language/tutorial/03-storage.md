@@ -6,6 +6,17 @@
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L4–L5`](../language.md#l4), [`C1–C5`](../contracts.md#c1) and [`A2–A4`](../profiles.md#a2) are canonical.
 
+The context map locates this part in the package you are producing. It pins
+catalogue definitions and supplies one contract to its consumers; publication
+validation checks completeness and consistency, not native behaviour. These are
+proposed roles ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)). The map omits callable
+details; this part zooms into storage and output validity.
+
+![Producers submit a contract for publication validation; the package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
 ## Goal
 
 Add `copy_text`, which writes a label's text into [caller](../glossary.md#caller-and-callee) storage. At the
@@ -83,6 +94,19 @@ and [outcome states](../explanation/contracts.md#every-way-a-call-can-end)).
    caller; writing scalar bytes creates no new reference ownership
    ([`L3`](../language.md#l3), [`C1`](../contracts.md#c1),
    [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
+
+Use the layout to distinguish allocated capacity from readable text length.
+For the index's illustrative `READY!!`, success writes the seven text elements
+at indices 0–6 and the final zero at index 7. The spelling is not fixed by the
+contract. Failure still returns a valid status, but none of those output
+elements is readable; the `X` marks do not mean cleared or unchanged bytes.
+The caller allocates eight elements before entry without initializing them
+and retains that storage in both outcomes. This view omits calls and access
+paths (non-normative; [`C3–C5`](../contracts.md#c3)).
+
+![An eight-element destination holds R E A D Y ! ! at indices 0 through 6 and zero at index 7 on success. On failure all eight output elements are invalid to read, while the returned status remains valid.](../figures/tutorial-storage.svg)
+
+[Buffer layout source](../figures/tutorial-storage.puml)
 
 ## Checkpoint package
 

@@ -6,6 +6,18 @@
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [language and publication](../language.md#l1), [contracts](../contracts.md#c1), [access paths](../profiles.md#a2) and the [synthetic fixture catalogue](../profiles.md#f1) are canonical.
 
+The context map places your work on the producer side: you will describe a
+package that pins catalogue definitions and supplies the same contract to its
+consumers. Publication validation checks completeness and consistency, not
+whether a binary honours the assertions. These are proposed roles, not running
+tools ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8),
+[`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)). The map omits individual
+clauses; the parts below zoom into them.
+
+![Producers submit a contract for publication validation; the package pins catalogue definitions and supplies the same contract to binding generators, documentation renderers and LLM tooling.](../figures/g1-context.svg)
+
+[Context map source](../figures/g1-context.puml)
+
 ## What you will describe
 
 Describe a small label-card API. A card owns a current label. You can [borrow](../glossary.md#borrow)
@@ -19,7 +31,8 @@ failure are chosen for this exercise. The synthetic fixture [profile](../glossar
 and [digest tokens](../glossary.md#digest-pin) come from [`F1`](../profiles.md#f1); they do not identify
 a real library, host [ABI](../glossary.md#abi) or operating-system API.
 
-The API's intended observations are:
+Use this table to connect each operation or value to the obligation its
+declaration will describe:
 
 | Operation or value | Contract you will describe |
 |---|---|
@@ -59,6 +72,8 @@ declared subset of synthetic release 1. The package identities differ so you
 can read each file independently. Parts 2–4 add operations and types; they do not supply missing [clauses](../glossary.md#clause)
 in earlier declarations ([`L2–L3`](../language.md#l2)). Part 5 first assembles that release, then
 publishes an explicitly different owned-snapshot variant for the change exercise.
+
+Use this map to choose a concept and open the complete package that teaches it.
 
 | Part | New concept | Checkpoint |
 |---|---|---|

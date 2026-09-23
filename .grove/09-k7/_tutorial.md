@@ -58,28 +58,8 @@ Label destructor discharges the new caller obligation. No allocator extension
 or new failure mode is introduced. The Watch subscription is independent of
 Card and delivers only a scalar change number. Preserve that boundary.
 
-## Handed forward
-
-- **art — tutorial/01-lifetime.md:** illustrate the nullable creation split
-  and the owned Card's unique lifecycle. G6 is the existing visual model but
-  describes Store, so adapt labels if reusing its source.
-- **art — tutorial/02-lending.md:** show a returned Label borrow ending at
-  refresh entry while Card remains alive, versus Card destruction ending the
-  owner region. G5's mutation case is the useful visual model; here the
-  borrowed value is a resource handle, not a byte pointer.
-- **art — tutorial/03-storage.md:** make the relation among seven initialized
-  text elements, eight allocated elements and the terminator visible; compare
-  valid status with invalid output elements on failure. The prose carries all
-  facts. Use the shared vocabulary and commit source plus generated SVG.
-- **art — tutorial/04-callbacks.md:** fill the plan's G7 tutorial slot.
-  Adapt or reuse the existing G7 source with Watch/watch_labels/destroy_watch
-  names. Distinguish synchronous registration return, permitted later
-  invocation starts, consumption at destructor entry and quiescence at its
-  return; show the outside_callback precondition. The prose carries all facts,
-  including zero delivery and no termination guarantee. Do not imply a Card
-  is retained or an earlier Label borrow extended.
-- **art — tutorial/05-access-and-change.md:** compare the borrowed Label
-  ending at refresh/owner destruction with the owned snapshot's independent
-  destroy_label obligation. Reuse the established ownership/borrow vocabulary;
-  do not add a raw-pointer allocation model. An additional access diagram is
-  unnecessary here; the four-clause table and linked G3 explanation cover it.
+The four tutorial diagram sources and generated SVGs live under `figures/`
+with the `tutorial-` prefix. Part 5 compares borrowed and owned results in a
+table beside the guided change. G1 is reused on all six tutorial pages before
+the contract detail; sources, captions and the shared key carry the visual
+contract. No handed-forward defect remains from art.

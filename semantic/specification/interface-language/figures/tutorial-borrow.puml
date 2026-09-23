@@ -1,0 +1,33 @@
+@startuml
+!include style/ail.puml
+title Tutorial 2 · Borrow timing: synthetic Label and its Card owner
+hide footbox
+$caller(caller, "Caller\nUses the returned Label")
+$callee(getter, "current_label\nBorrows Card for the call")
+$owner(card, "Card\nOwns its current Label")
+== Case 1: refresh ends the borrow before owner destruction ==
+caller --> getter : Entry: lend Card; valid($card, call)
+activate getter
+getter --> caller : Return: lend Label in owner($card)
+deactivate getter
+note over caller, card : Caller may use this Label while Card lives and refresh has not begun.
+card ->x caller : refresh_card entry: invalidate this Label borrow
+note over caller, card
+  Card remains alive; this old Label is unusable.
+  After refresh, current_label can lend the new Label.
+end note
+== Case 2: no refresh before Card destruction ==
+caller --> getter : Entry: lend Card; valid($card, call)
+activate getter
+getter --> caller : Return: lend Label in owner($card)
+deactivate getter
+note over caller, card : Caller may use this Label while Card lives.
+card ->x caller : Card destruction: end owner region and Label borrow
+legend bottom
+  Time runs downward within each separate case; spacing is not duration.
+  Actor = caller; rectangle = callee; circle on base = owner; bar = active call.
+  Dashed arrow = borrowed access; marked end = invalidation, not caller destruction.
+  Neither borrow gives the caller permission to destroy_label.
+  Non-normative: C1, C3, C5. Synthetic lending subset; access paths omitted.
+endlegend
+@enduml
