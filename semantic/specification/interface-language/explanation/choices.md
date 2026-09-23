@@ -3,28 +3,42 @@
 > **Purpose:** explanation — distinguish binding constraints from AIL's choices and inspect their costs and limits.
 > **Reader:** language designers evaluating the notation after orientation and the concept explanations.
 > **Before this:** [How AIL states a contract](contracts.md) and [Packages, environments and access paths](packages.md).
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [`L1–L6`](../language.md#l1), [`C1–C8`](../contracts.md#c1) and [`A1–A5`](../profiles.md#a1) are canonical; this page is non-normative.
 
 ## How to read this page
 
-A [binding](../glossary.md#binding) that uses a view after its storage is released
-has violated a domain constraint. Expressing the lifetime with `give($result, borrow(owner($store)))`
-is a language choice. Likewise, a [callback](../glossary.md#callback) needs its
-[captures](../glossary.md#callback-captures) while an invocation can still run;
-expressing safe teardown through [`quiescence(@unsubscribe)`](../glossary.md#quiescence)
-is AIL's chosen form
-([`C1`](../contracts.md#c1), [`C5–C6`](../contracts.md#c5)).
+Suppose a library lends bytes from a store. The caller needs the storage to
+remain usable while reading those bytes. This requirement comes from the
+binding domain: any [binding](../glossary.md#binding) needs to respect it.
+The API author then decides what the library promises. An immutable store
+might keep the bytes usable until destruction; a mutable store might replace
+them sooner.
 
-This page keeps those two levels distinct. Where the
-[design proposal](../../../docs/design/2026-09-22-interface-language.md) records
-a reason, it is attributed. Other benefits and costs are an assessment of the
-published rules, not a reconstruction of the authors' intent. Alternatives
-describe possible designs; none changes draft 0.1. The register at the end
-preserves open questions without answering them.
+AIL's design determines how an author writes that promise. The clause
+`give($result, borrow(owner($store)))` relates the returned pointer to the
+store's lifetime. `invalidated_by` names operations that end access earlier.
+Those spellings, and the decision to separate the two facts, are language
+choices ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
+
+The same distinction applies to a [callback](../glossary.md#callback). Its
+saved values, or [captures](../glossary.md#callback-captures), stay usable while
+an invocation can still need them. An API can promise that teardown waits for
+all callback use to finish. AIL expresses that particular promise with
+[`quiescence(@unsubscribe)`](../glossary.md#quiescence)
+([`C6`](../contracts.md#c6)).
+
+This page distinguishes the domain requirement, the API's promise and AIL's
+way of stating it. The benefits and costs below assess the published design.
+Alternatives show what a different language design could make easier or harder;
+they leave draft 0.1's rules in place. The register at the end keeps the open
+questions available for review, including the missing rationale for placing
+ownership in clauses.
 
 All conformance examples mentioned here use the synthetic fixture
-[profile](../glossary.md#profile) (a semantic extension, not a preferences preset),
+[profile](../glossary.md#profile), a versioned semantic extension,
 catalogue and
 [digest tokens](../glossary.md#digest-pin) defined by [`F1`](../profiles.md#f1).
 They describe invented APIs rather than actual platform contracts.
@@ -34,39 +48,45 @@ shows what API authors and tools do with a description. This page asks what
 AIL's choices require of those people and tools, and what alternatives would
 change for them.
 
-The comparison table makes the alternatives and costs inspectable together;
-the following sections supply the examples and distinguish recorded reasons
-from assessments of the published rules.
+The following sections develop each choice through examples. This table is a
+map to those discussions; each cost concerns work an author or tool must do.
 
 | Draft 0.1 choice | Alternative discussed below | Cost to inspect |
 |---|---|---|
 | Dedicated syntax | Extend WIT or Swift interface syntax | New vocabulary, corpus and tooling |
-| Complete declared subsets | Publish partial models | Producer resolves uncertainty before publication |
-| Explicit applicable facts | Defaults or shorthand | Repetition, including known absence |
-| Ownership clauses | Ownership in types/signatures | Transfer facts lie in the body; rationale remains Q3 |
-| Generic clause syntax | Clause-specific grammar productions | Grammar alone does not expose vocabulary or obligations |
-| Exact environments | Version ranges | Enumerated configurations and repeated declarations |
-| Versioned profiles | Source-specific core or open annotations | Provider specification work and uneven support |
+| Publish a complete description of a chosen subset | Publish unresolved facts for consumers to interpret | Author investigates required facts before publishing |
+| Write each applicable fact | Use defaults or shorthand | Author writes clauses even when the answer is `none` |
+| Put ownership in clauses | Put ownership in types/signatures | Reader follows the body to find transfers; rationale remains Q3 |
+| Use one outer clause syntax | Give each clause its own grammar production | Reader also needs the rule files to learn permitted clauses |
+| List exact environments | Use version ranges | Author lists configurations and separates contracts that vary |
+| Add versioned profiles | Put source-specific rules in the core or allow open annotations | Provider authors specify each extension; consumers need support for it |
 
 ## A dedicated syntax
 
-Compare the synthetic store's uniquely [owned](../glossary.md#owned)
-[handle](../glossary.md#handle) with the synthetic counter's
-reference-counted object and message/source access alternatives. A common format
-needs to describe both lifetime disciplines and both ways of reaching code
+The synthetic store gives its owner a [handle](../glossary.md#handle) to
+destroy once. The synthetic counter uses reference counting: each holder of an
+[owned](../glossary.md#owned) reference releases that reference, and final
+release destroys the object. A format serving both APIs needs to express both
+release disciplines. It also needs to describe how to call them: the store
+uses linker symbols, while the counter getter offers message and source-call
+alternatives
 ([`C2`](../contracts.md#c2), [`A2`](../profiles.md#a2);
 [buffers](../examples/buffers.ail), [objects](../examples/objects.ail)).
 Owned means one release obligation, not necessarily exclusive access: several
 owned references can refer to the same reference-counted object.
 
-The [proposal's alternatives table](../../../docs/design/2026-09-22-interface-language.md#2-recommended-shape-and-alternatives)
-chooses a common semantic core with explicit profiles and [ABI](../glossary.md#abi) references.
-It considers extending WIT and extending Swift interface syntax. The recorded
-cost for the WIT option is demonstrating that native lifetime, dispatch and
-representation fit without conflicting meanings or opaque annotation bags.
-The recorded cost for the Swift option is making other source languages and
-independent consumers depend on Swift-shaped semantics. These are the proposal's
-design assessments, not a finding that either extension is impossible.
+AIL provides a common core for these contracts, with profiles for additional
+semantics and references to [ABI](../glossary.md#abi) definitions for the
+machine-level rules. One alternative is to extend an existing interface
+language such as WIT. That would reuse a notation and some ownership concepts,
+but the extension would need to give native lifetimes, dispatch and
+representation precise meanings that fit the existing language.
+
+Another alternative is to extend Swift interface syntax. That would keep the
+description close to Swift declarations and familiar to Swift authors. Authors
+describing other source languages, and tools consuming those descriptions,
+would then need to work within the resulting Swift-shaped model. These are
+trade-offs to assess; neither alternative is established to be impossible.
 
 Dedicated syntax avoids inheriting all the meanings and assumptions of either notation.
 Its cost is a new vocabulary, a conformance corpus and future tooling to learn
@@ -76,25 +96,44 @@ and maintain. Familiar braces and function arrows do not remove that cost:
 ([`L4`](../language.md#l4)). Familiar syntax alone cannot supply the missing
 contract.
 
-## Complete contracts only
+<a id="complete-contracts-only"></a>
 
-The synthetic buffer [package](../glossary.md#package) is complete for an immutable sixteen-byte store;
-it makes no claim to cover a general storage library. Deleting its returned
-view's ownership clause would instead leave an obligation of that declared
-[surface](../glossary.md#surface) missing ([`L3`](../language.md#l3), [`C5`](../contracts.md#c5)).
+## Publishing a complete description
 
-In summary (non-normative), a producer can publish a declared subset with its
-whole [dependency closure](../glossary.md#dependency-closure), but cannot publish
-required facts as `unknown`, confidence scores or promises of later inference.
-The producer resolves conflicting evidence before publication. [Validation](../glossary.md#validation) checks
-completeness and internal consistency; it cannot prove that an implementation
-honours the assertions ([`L2–L3`](../language.md#l2), [`C8`](../contracts.md#c8)).
+An author can publish a [package](../glossary.md#package) describing only an
+immutable sixteen-byte store, as the synthetic buffer example does. The
+stated API subset and release are its [surface](../glossary.md#surface).
+The author supplies enough information to create, use and destroy that store.
+An unrelated storage API can remain outside the chosen surface
+([`L3`](../language.md#l3)).
+
+The returned view still needs a lifetime. If its ownership clause is missing,
+a reader cannot tell whether to release the bytes or how long to borrow them.
+That gap lies inside the promised description. Publishing a smaller surface
+and leaving a required fact unanswered are different authoring decisions
+([`L3`](../language.md#l3), [`C5`](../contracts.md#c5)).
+
+Starting from `view`, a tool follows the reference to `Store`, then the store's
+reference to its destructor. It continues until it has every definition needed
+to interpret and use the exported declarations. This full set is the
+[dependency closure](../glossary.md#dependency-closure). The author supplies
+the applicable facts throughout it, resolving uncertain or conflicting
+evidence before publication ([`L2–L3`](../language.md#l2)).
+
+[Validation](../glossary.md#validation) checks that those facts are present
+and consistent. Implementation evidence establishes whether the library
+actually honours them. In summary (non-normative), AIL accepts a complete
+description of a declared subset; required facts recorded as `unknown`,
+confidence scores or promises of later inference fail the publication rules
+([`L3`](../language.md#l3), [`C8`](../contracts.md#c8)).
 
 An alternative is a partial model that preserves unresolved candidates for
-consumers to interpret. AIL's [publication boundary](../../../docs/design/2026-09-22-interface-language.md#3-publication-boundary)
-places that work upstream. This spares consumers from deciding which guesses
-count as facts, but costs the producer investigation and resolution before
-publication. A mostly described API can remain unpublishable.
+consumers to interpret. Each consumer would then decide how to handle a missing
+fact or choose among competing candidates. AIL places that investigation with
+the producer, before the transition to a published contract — its
+[publication boundary](../glossary.md#publication-boundary). This gives consumers
+settled answers to work from, but a producer can have most of an API described
+and still need substantial investigation before publishing it.
 
 A broad established permission is still a complete fact. The synthetic
 subscription permits zero or more callback invocations; `many` is an unbounded
@@ -102,21 +141,30 @@ maximum, not a missing answer. Conversely, an uninvestigated callback count
 cannot be disguised by that permission ([`C6`](../contracts.md#c6),
 [contract introduction](../contracts.md)).
 
-## Everything explicit
+<a id="everything-explicit"></a>
 
-A binding needs to distinguish known absence from a fact nobody checked. The
-synthetic `Store` states [`isolation(none)`](../glossary.md#isolation); `Counter` states `isolation(main)`.
-An omitted required isolation clause supplies neither answer. Likewise,
-`retain($store, none)` in `view` promises no [retention](../glossary.md#retention), whereas the synthetic
-subscription explicitly retains its handler for an owner [region](../glossary.md#region)
-([`L3`](../language.md#l3), [`C2–C3`](../contracts.md#c2)).
+## Stating the applicable facts
+
+For the synthetic store, the author has established that the type adds no
+executor restriction. `isolation(none)` records that fact. For the counter,
+the author has established that use belongs on the main thread and writes
+`isolation(main)`. Both clauses answer the same question about
+[isolation](../glossary.md#isolation). Omitting a required clause leaves the
+question unanswered ([`L3`](../language.md#l3), [`C2`](../contracts.md#c2)).
+
+The same distinction applies to [retention](../glossary.md#retention).
+`view` promises to store no reference for later use through
+`retain($store, none)`. The synthetic subscription does keep its handler,
+tying storage to the returned owner's lifetime, or
+[region](../glossary.md#region). A reader sees an explicit answer in both
+cases ([`C3`](../contracts.md#c3)).
 
 The authoring cost is visible in this entire synthetic `view` declaration.
 
-Fragment — omits the containing package, `Store` and its destructor,
-[environment](../glossary.md#environment),
-and synthetic fixture profile, catalogue and digest tokens; not a publishable
-package.
+Fragment — shows all clauses of the synthetic `view` function. The complete
+[buffer package](../examples/buffers.ail) supplies `Store`, its destructor,
+the [environment](../glossary.md#environment), and the synthetic fixture
+profile, catalogue and digest tokens.
 
 <!-- ail-example: ../examples/buffers.ail lines=72-100 -->
 ```ail
@@ -176,22 +224,32 @@ the cost of the current form is writing and reviewing clauses even for known
 absence. Its benefit is that independent consumers see the same stated answers
 ([`L3`](../language.md#l3), [`C8`](../contracts.md#c8)).
 
-This does not mean every clause is required or that every default is forbidden.
-For example, `doc` is optional, and a profile manifest specifies defaults if it
-has any. Profiles cannot weaken a core requirement or turn an unknown fact
-into an authoritative default ([`L5`](../language.md#l5), [`A1`](../profiles.md#a1)).
+Requiredness depends on the declaration and the clause. For example, a scalar
+input carries no release obligation, so it needs no `input` transfer clause.
+An input reference does need one. `doc` is optional human-readable explanation.
+A profile may also define defaults for its own vocabulary, with their meaning
+specified in its manifest. Core requirements still apply, and a profile default
+cannot turn an unknown fact into an authoritative answer
+([`L5`](../language.md#l5), [`C3`](../contracts.md#c3), [`A1`](../profiles.md#a1)).
 
-## Ownership in clauses, not types
+<a id="ownership-in-clauses-not-types"></a>
 
-The [historical design sketch](../../../docs/design/2026-09-22-interface-language.md#7-dedicated-syntax-direction)
-placed some ownership information in signatures. Its `read` is useful to compare
-with the synthetic draft 0.1 `view` above, but it is not the same declared API:
-the sketch names `replace` as an earlier [invalidator](../glossary.md#invalidation), while the frozen store
-example is immutable.
+## Expressing ownership
 
-Historical fragment — selected lines from the design proposal's syntax sketch;
-omits the enclosing sketch and other declarations. This is not draft 0.1 syntax
-and is not a publishable package.
+Consider two operations taking a store. `view` lets the caller keep ownership;
+`destroy` takes responsibility for destruction at entry. Draft 0.1 writes
+`store: Store` in both signatures and distinguishes them with `input` clauses
+in their bodies ([`C3`](../contracts.md#c3)).
+
+An alternative notation could put `borrow` or `consume` next to the parameter
+type. It could also put `borrow` in the result type, as illustrated below.
+This example describes a hypothetical mutable store: `replace` can end an
+earlier view, and `close` ends the store's lifetime. The committed buffer
+fixture instead describes an immutable store.
+
+Alternative notation — illustrates ownership in a signature for a hypothetical
+mutable store. This is a design possibility, not draft 0.1 AIL or a complete
+package. The surrounding API and its other contracts would still be needed.
 
 ```text
     fn read(store: borrow Store) -> borrow bytes {
@@ -205,18 +263,22 @@ states entry transfer and `give` states returned ownership or borrowing.
 The pointer type constructors carry neither ownership nor extent
 ([`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-Compare `destroy(store: Store)` with `view(store: Store)`: the parameter type
-stays the same, while `input` changes from [`consume`](../glossary.md#consume)
-(transfer at entry, including on failure) to [`borrow`](../glossary.md#borrow)
-(access without transfer, with no implied Rust-style checking). A reviewer
-has to read the body to see that difference. The alternative illustrated by
-the sketch makes transfer visible in the signature, while owner relationships
-and invalidation still need expression somewhere.
+The parameter's `input` clause distinguishes [`consume`](../glossary.md#consume),
+which transfers responsibility at entry including on failure, from
+[`borrow`](../glossary.md#borrow), which leaves that responsibility in place.
+Borrow describes permission to use the value; it implies no Rust-style static
+checking ([`C3`](../contracts.md#c3)).
 
-The proposal explicitly left ownership placement for a corpus-backed decision.
-**No rationale for choosing clauses is recorded.** The longer body and the
-distance between type and transfer are observable costs; neither is evidence
-of why the authors chose this design. [Q3](#q3) preserves that missing rationale.
+The clause form lets a reader follow transfer at entry and delivery on each
+outcome separately. The signature form makes the broad ownership distinction
+visible beside the type, while still needing somewhere to state the owner and
+earlier [invalidators](../glossary.md#invalidation). Comparing these forms
+requires examples with several outcomes as well as simple getters.
+
+**No rationale for choosing clauses is recorded.** The design left ownership
+placement for a decision based on an example corpus, and draft 0.1 uses clauses.
+The costs above are observations about that form. They supply no missing
+evidence about how the decision was made. [Q3](#q3) preserves that question.
 
 ## One clause syntax, with a closed vocabulary in prose
 
@@ -243,14 +305,21 @@ For example, `extent` lives in [`C4`](../contracts.md#c4), while
 syntax and meaning across the rules; an indexed reference can help lookup
 without eliminating this split in the language's definition.
 
-## Exact environments
+<a id="exact-environments"></a>
 
-The synthetic buffer package claims target `fixture64`, platform `fixture`
-version `1`; the object package adds `fixture-compiler` version `1`. A package
-claiming those values has said nothing about platform version `2`. Compare that
-with an open-ended claim such as “version 1 and later”, which would include
-configurations the exact list has not named ([`L3`](../language.md#l3),
+## Describing exact environments
+
+The synthetic buffer author names target `fixture64` and platform `fixture`
+version `1`. The object author adds `fixture-compiler` version `1`, needed for
+the source-call route. A tool uses these values to decide which described
+configuration it is examining ([`L3`](../language.md#l3),
 [environment examples](packages.md#where-it-holds)).
+
+Now consider a consumer running on platform version `2`. An exact claim for
+version `1` supplies no answer about that configuration. A range such as
+“version 1 and later” would claim coverage for it. The choice therefore affects
+how much an author asserts about versions it has not listed
+([`L3`](../language.md#l3)).
 
 In summary (non-normative), draft 0.1 interprets environments as exact values,
 not ranges. Unlisted configurations lie outside the claim. Changed signatures
@@ -266,11 +335,14 @@ does not establish artifact compatibility ([`A1`](../profiles.md#a1),
 
 ## Profiles as the extension point
 
-The core can state that independent calls are serial. The synthetic
-`fixture::sendability(nonconforming)` separately records a source conformance
-state. Combining those facts into one “thread-safe” flag would lose a
-distinction the draft preserves ([`C2–C3`](../contracts.md#c2),
-[`F1`](../profiles.md#f1)).
+Suppose a caller wants to invoke two counter operations at the same time.
+The core `concurrency(serial)` rule requires it to serialize independent calls
+using the same receiver. A source-language tool may also need to know whether
+the type satisfies a particular compiler conformance. The synthetic
+`fixture::sendability(nonconforming)` records that separate answer.
+A single “thread-safe” flag would leave the reader unable to distinguish
+permission to overlap calls from a source conformance state
+([`C2–C3`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
 
 Similarly, `execution(sync)` has a core meaning, while `execution(async)` needs
 a profile defining suspension, scheduling and completion delivery. The latter
@@ -282,16 +354,24 @@ their validation and representation requirements. They cannot weaken the core.
 Unknown normative attributes are errors, not ignorable extension payloads
 ([`L1`](../language.md#l1), [`A1`](../profiles.md#a1)).
 
-The [proposal](../../../docs/design/2026-09-22-interface-language.md#2-recommended-shape-and-alternatives)
-chooses this common-core boundary over making the whole language follow one
-source ecosystem. An open annotation bag would be another extension mechanism,
-with less vocabulary work but no shared interpretation for those annotations.
-AIL's cost is substantial provider specification and uneven consumer support.
-A consumer that cannot interpret a required dependency cannot claim complete
-validation; a binding consumer may separately lack the ability to implement a
-valid contract ([`A1`](../profiles.md#a1), [`A5`](../profiles.md#a5)).
+AIL puts those extra definitions in versioned profiles. An alternative is to
+put one source ecosystem's semantics directly into the core. That could make
+the common case simpler for that ecosystem while making others depend on its
+concepts. Another alternative is to let authors attach open-ended annotations.
+Adding a new annotation would be easy, but independent consumers would need
+some other agreement about its meaning.
 
-## What draft 0.1 cannot express
+AIL's profile choice costs substantial specification work: provider authors
+define the vocabulary, its obligations, and how tools check and represent it.
+Consumers can consequently differ in which profiles they support. A consumer
+reports a required profile it cannot interpret before claiming complete
+validation. A binding consumer can also understand a valid contract while
+lacking the machinery to implement it ([`A1`](../profiles.md#a1),
+[`A5`](../profiles.md#a5)).
+
+<a id="what-draft-01-cannot-express"></a>
+
+## Extending coverage beyond draft 0.1
 
 A bounded synthetic example can be complete while a similarly shaped real API
 needs further semantics. For example, the synthetic subscription's unique-owner
@@ -300,22 +380,63 @@ shutdown needs named events and ordering. The latter cannot be presented as
 `quiescence(@cancel)` unless cancellation return really is that boundary
 ([`C6`](../contracts.md#c6)).
 
-Likewise, the synthetic getter has a specified source-build path, while a generic
-family needs parameter constraints, substitution and instantiation identity.
-Naming a compiler does not provide those contracts. The
-[pressure-case catalogue](../conformance.md#pressure-cases-outside-the-synthetic-profile)
-identifies the following limits. It is an adoption checklist, not a claim that
-every item lacks a core representation:
+The [pressure-case catalogue](../conformance.md#pressure-cases-outside-the-synthetic-profile)
+identifies cases that need further work before adoption. Some need extensions
+to the language or a profile. Others already have useful core forms and need
+authoritative API facts and a real provider. The distinction matters when
+judging what the synthetic examples demonstrate.
 
-| Pressure case | What remains to be supplied |
-|---|---|
-| Generic families; async, throwing or value-receiver operations | Complete source types and constraints, suspension/delivery, exception lowering and receiver effects; additional profile support ([`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`A1`](../profiles.md#a1)) |
-| Optional members; negotiated protocol operations | Receiver/session capability rules and runtime or wire mechanisms, separately from platform availability ([`C3`](../contracts.md#c3), [`A1–A2`](../profiles.md#a1)) |
-| Native ABI access; managed projections | Representation, artifact or source recipe and faithful mapping; losing observable status creates a different declaration ([`A2–A4`](../profiles.md#a2)) |
-| Variadics, inline calls and macros | Argument schema or source mechanism that distinguishes missing, expanded and erased code ([`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)) |
-| Callback destroy notification or acknowledged cancellation | Events and quiescence ordering beyond unique-owner teardown ([`C6`](../contracts.md#c6)) |
-| Packed records, unions, bitfields; richer pattern laws | Supported representation schemas and typed law forms; free-form prose cannot supply them ([`L4`](../language.md#l4), [`L6`](../language.md#l6), [`A3`](../profiles.md#a3)) |
-| Error-out partitions, opaque-handle lifetimes, mutable-borrow invalidation and open or wide enum values | Authoritative API facts and a suitable real provider. Core rules already express important parts; omitting invalidators, guessing release or truncating values still breaks the contract ([`L4`](../language.md#l4), [`C2`](../contracts.md#c2), [`C5`](../contracts.md#c5)) |
+**Generic and asynchronous operations need additional rules.** The synthetic
+getter identifies one concrete source call. A generic family also needs rules
+for permitted type arguments, substitution and the identity of each concrete
+instantiation. An asynchronous operation needs rules for suspension and result
+delivery. Throwing operations need the thrown type and its machine-level
+handling. The fixture supports non-throwing synchronous entry and has no
+generic-family support. An operation with a value receiver also needs its
+receiver representation and effects specified; the core already supplies
+mutation and consumption rules for the cases to which they apply
+([`L4`](../language.md#l4), [`C3`](../contracts.md#c3),
+[`A1`](../profiles.md#a1), [`F1`](../profiles.md#f1)).
+
+**Optional operations need a check on the receiver.** Knowing the platform
+version can establish that an interface is available. Calling an optional
+member also requires establishing that the particular object implements it.
+A profile supplies the capability test. A negotiated wire protocol similarly
+needs rules for the capabilities of the particular session or object, together
+with a mechanism for sending the request ([`C3`](../contracts.md#c3),
+[`A1–A2`](../profiles.md#a1)).
+
+**Native and managed calls need faithful representations and mappings.** A
+native call may require a particular build artifact or a complete source build
+recipe so both sides agree on layout. A managed projection needs to account
+for runtime dispatch and the values callers observe. If a convenience call
+hides a meaningful success status, it becomes a different declaration.
+A compiler name or a familiar method spelling leaves this work outstanding
+([`A2–A4`](../profiles.md#a2)).
+
+**Variadic and source-only operations need their own access rules.** A
+variadic function needs a schema for extra arguments, their promotions and
+termination. An inline function or macro may require source compilation or
+expansion. A provider distinguishes those mechanisms, including a macro that
+expands to no code, so a consumer knows what action actually performs the
+operation ([`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
+
+**Richer layouts and ordering laws need specified extensions.** Packed records
+need complete layout recipes; unions and bitfields exceed the fixture's
+capabilities. More elaborate relationships between operations need typed laws
+with defined obligations and checks. Adding explanatory prose alone supplies
+neither a representation recipe nor a new law
+([`L4`](../language.md#l4), [`L6`](../language.md#l6),
+[`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1)).
+
+**Several real-API problems already have core forms.** A simple error-output
+API can use exhaustive outcomes to say when its output is readable. An opaque
+handle can name its release protocol. A mutable borrow can list its earlier
+invalidators. An open enum can retain unnamed values across the full width of
+its underlying type. Each still needs accurate facts about the API and a
+suitable real provider; the synthetic cases establish no production support
+([`L4`](../language.md#l4), [`C2`](../contracts.md#c2),
+[`C5`](../contracts.md#c5), [`F1`](../profiles.md#f1)).
 
 The alternative is to accept approximations or silently lower unsupported forms
 to familiar ones. Draft 0.1 instead requires the complete applicable semantics
@@ -327,9 +448,9 @@ preserve a valid contract are different results ([`A5`](../profiles.md#a5)).
 
 ## Open questions
 
-These questions originate in the [audit's register](../../../docs/research/interface-language-documentation-audit.md#4-possible-language-issues-surfaced-for-review).
-They remain open. Describing a rule accurately does not settle whether its
-design or presentation should change.
+These questions concern draft 0.1's rules and notation. Each remains open.
+The preceding explanations make the current behaviour inspectable; deciding
+whether to change that behaviour or its presentation is a separate design task.
 
 ### Q1
 
@@ -337,11 +458,11 @@ design or presentation should change.
 other two rule files, and do the authors want uniform keyword presentation?
 **Where:** the opening of [language rules](../language.md) and the mixture of
 uppercase keywords and ordinary lowercase requirements in
-[contracts](../contracts.md) and [profiles](../profiles.md); audit F10.
+[contracts](../contracts.md) and [profiles](../profiles.md).
 **Why it matters:** reviewers need consistent signals of normative force.
-The audit found a presentation inconsistency, not a rule whose force was
-uncertain because of case. Lowercase wording still states requirements in
-ordinary English; the question does not demote those requirements.
+The mixture presents requirements in different styles. Lowercase wording
+still states requirements in ordinary English; this question concerns
+consistency of presentation and leaves their normative force in place.
 
 ### Q2
 
@@ -357,7 +478,7 @@ normative vocabulary.
 
 **Question:** What corpus evidence decided ownership placement in clauses,
 and what did the type-based alternative cost?
-**Where:** the [proposal's open syntax decision](../../../docs/design/2026-09-22-interface-language.md#7-dedicated-syntax-direction),
+**Where:** the [ownership comparison](#expressing-ownership),
 [`L4`](../language.md#l4), [`C3`](../contracts.md#c3) and [`C5`](../contracts.md#c5).
 **Why it matters:** it is a prominent readability and authoring choice, but
 no rationale is recorded. The comparison above does not fill that gap.

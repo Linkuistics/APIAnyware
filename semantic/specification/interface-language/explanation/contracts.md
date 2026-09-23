@@ -3,23 +3,27 @@
 > **Purpose:** explanation — read AIL's semantic [clauses](../glossary.md#clause) as obligations between [callers and callees](../glossary.md#caller-and-callee).
 > **Reader:** language designers who have met the API [binding](../glossary.md#binding) domain and want to understand the notation.
 > **Before this:** [Using an API across languages](unsaid.md).
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [`L4–L6`](../language.md#l4), [`C1–C8`](../contracts.md#c1) and [`A1–A5`](../profiles.md#a1) are canonical; the explanations here are non-normative.
 
-The domain page asked who releases a value, how long access lasts, and when a
-[callback](../glossary.md#callback) can run. This page shows how AIL records those answers. By the end,
-you should be able to follow the obligations in the three
+Suppose a caller gets a view of a library's bytes. To use it safely, the caller
+needs to know which object keeps the bytes alive and when to stop reading them.
+If the library also accepts a [callback](../glossary.md#callback), the caller
+needs to know when the library has finished using it. This page shows how AIL
+records those answers. By the end, you should be able to follow the obligations
+in the three
 [conformance examples](../conformance.md#positive-specifications).
 
 Those examples describe invented APIs using a synthetic fixture
-[profile](../glossary.md#profile) (a semantic extension, not a preferences preset),
+[profile](../glossary.md#profile), a versioned semantic extension,
 catalogue and [digest tokens](../glossary.md#digest-pin)
-([`F1`](../profiles.md#f1)). They are not contracts
-for real operating-system APIs. Extracts below are labelled fragments because
+([`F1`](../profiles.md#f1)). Their stated behaviour belongs to those invented
+APIs. Extracts below are labelled fragments because
 the surrounding declarations and [package](../glossary.md#package) still matter.
-The alternatives
-compare design possibilities; they do not change draft 0.1 or claim to be its
-authors' recorded rationale.
+The alternatives compare design possibilities. Their benefits and costs are
+assessments of the published rules; draft 0.1 remains the contract under review.
 
 The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
 shows who writes, checks and uses an AIL description. This page looks inside
@@ -27,18 +31,23 @@ that description to explain the obligations on each call.
 
 ## From signature to contract
 
-A [caller](../glossary.md#caller-and-callee) needs to know whether closing a
-watch gives up its obligation to release it. The C header in the domain page
-does not answer that. For this first example, assume `watch_close` is the unique
-destructor of `Watch`: it [consumes](../glossary.md#consume) the
-[handle](../glossary.md#handle), taking the caller's release obligation at entry,
-and completes successfully.
-This is an illustrative contract choice, not a fact inferred from the header.
+A program that owns a watch eventually calls `watch_close` to finish with it.
+For this example, assume that closing the watch takes responsibility for
+destroying it and completes successfully. The program then has no further close
+to perform. That assumption supplies the contract for the domain page's C
+declaration; an API author would need evidence that the library behaves this way.
 
-Fragment — omits the package, `Watch` declaration,
-[availability](../glossary.md#availability), other effects,
-[retention](../glossary.md#retention) and [access path](../glossary.md#access-path);
-not a publishable package.
+AIL writes the operation as `fn watch_close`. Its `Watch` parameter is a
+[handle](../glossary.md#handle) identifying the watch. The `input` clause says
+that the call [consumes](../glossary.md#consume) it: responsibility passes to the
+callee at entry. The `closed` block describes the successful return
+([`L4`](../language.md#l4), [`C2–C3`](../contracts.md#c2),
+[`C5`](../contracts.md#c5)).
+
+Fragment — shows consumption and successful return for the invented watch.
+A complete package would also supply `Watch`,
+[availability](../glossary.md#availability), the other effects,
+[retention](../glossary.md#retention) and an [access path](../glossary.md#access-path).
 
 <!-- ail-fragment -->
 ```ail
@@ -53,13 +62,17 @@ fn watch_close(watch: Watch) -> unit {
 }
 ```
 
-Compare the synthetic store's `view`: its signature also accepts a resource,
-but its body lends access and describes a returned pointer. `fn` introduces the
-operation, the parameter list and arrow describe the values crossing the call,
-and the clauses in braces describe their obligations.
+Now consider a program that owns a store of bytes and calls `view` to read
+them. The program keeps responsibility for destroying the store. The call
+returns a pointer to bytes held by that store, so the program also keeps the
+store alive while using the pointer. This is the contract of the synthetic
+buffer example below. The parameter list and arrow describe the values passed
+and returned; the clauses connect those values to their obligations
+([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
-Fragment — omits the package, `Store` declaration, availability, effects,
-retention, buffer facts and access path; not a publishable package.
+Fragment — shows the input and returned borrow of `view`. The complete
+[buffer package](../examples/buffers.ail) also supplies `Store`, availability,
+effects, retention, buffer facts and access paths.
 
 <!-- ail-fragment -->
 ```ail
@@ -76,36 +89,46 @@ fn view(store: Store) -> ptr<u8> {
 }
 ```
 
-The principle is that the signature and clauses answer different questions.
-In summary (non-normative), a resource type identifies a handle; `input` says
-whether entry transfers an obligation, and an [outcome](../glossary.md#outcome)
-describes [completion](../glossary.md#completion) and
-outputs. AIL uses the same `name(arguments);` clause syntax for these facts,
-with a closed vocabulary specified by the rules. Merely parsing that shape
-does not establish a valid contract ([`L1`](../language.md#l1),
+In the second body, `input($store, borrow)` lets the callee use the store while
+leaving ownership with the caller. `valid($store, call)` requires the caller to
+keep it usable for that invocation. Inside `viewed`, `give` describes the
+returned pointer: the caller borrows access for the store's lifetime.
+`invalidated_by($result, [])` says that no operation ends this access earlier
+([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+Thus the same resource type can participate in different transfers. AIL states
+the transfer in `input` and describes the returned values in an
+[outcome](../glossary.md#outcome). Each outcome identifies a way the invocation
+can finish, its [completion](../glossary.md#completion), and the values the
+caller can use afterwards. AIL writes these facts as `name(arguments);`
+clauses. The rule files define the permitted names and their meanings
+([`L1`](../language.md#l1),
 [`L4`](../language.md#l4), [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
 
 The choice makes obligations individually addressable, at the cost of a longer
 body and several rule lookups. Putting ownership in types is an alternative;
-the [design proposal](../../../docs/design/2026-09-22-interface-language.md#7-dedicated-syntax-direction)
-left that decision open, and [Q3](choices.md#q3)
-records the missing rationale for draft 0.1's choice. Neither fragment hides
-the need for a complete function's effects and access path
+[Expressing ownership](choices.md#expressing-ownership) compares the forms, and
+[Q3](choices.md#q3) records the missing rationale for draft 0.1's choice.
+A complete function also states its effects and how a tool reaches its code
 ([`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
 
 ## Naming what a contract talks about
 
-Writing to caller-supplied storage changes a different thing from borrowing the
-pointer that locates it. Confusing the two can make a binding treat an address
-as initialized output. A [slot](../glossary.md#slot) names a parameter, result or
-thrown value; a [place](../glossary.md#place) selects a value or storage within it.
+Suppose the caller reserves space for an integer and passes its address as
+`length`. The library receives a pointer and writes an integer through it.
+The pointer can be usable throughout the call even before the library has
+written a usable integer. AIL needs a way to name each separately.
 
-Compare a single output integer, addressed with `.*`, with the synthetic
-`copy_bytes` output buffer, addressed with `[]`.
+`$length` names the parameter value. A parameter or result position is a
+[slot](../glossary.md#slot). Adding `.*` names the integer reached through that
+pointer. Such a path to a value or storage is a [place](../glossary.md#place).
+The following fragment first describes storage for one integer, then describes
+the written integer on an outcome ([`C1`](../contracts.md#c1),
+[`C4–C5`](../contracts.md#c4)).
 
-Fragment — omits a callable with parameter `length: mutptr<u64>`, its other
-contracts, and the enclosing successful outcome for `state`; not a publishable
-package.
+Fragment — shows a pointer and its written integer. A complete package would
+place these clauses in a callable with `length: mutptr<u64>`, provide its
+other contracts, and put `state` inside a successful outcome.
 
 <!-- ail-fragment -->
 ```ail
@@ -114,8 +137,14 @@ extent($length, one);
 state($length.*, valid);
 ```
 
-Fragment — omits the containing `copy_bytes` declaration, other contracts and
-outcome wrapper; not a publishable package.
+The synthetic `copy_bytes` writes a buffer instead of one integer. Its
+`$destination[]` place names the initialized elements together. Here the
+declared length is sixteen, and successful copying makes those sixteen
+elements readable ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
+
+Fragment — shows the destination buffer and its successful output state. The
+complete [buffer package](../examples/buffers.ail) supplies `copy_bytes`, its
+other contracts and the enclosing `copied` outcome.
 
 <!-- ail-fragment -->
 ```ail
@@ -140,33 +169,46 @@ through it.
 | `$length.*` | One integer through that pointer | `one` |
 | `$destination[]` | Initialized buffer elements | `buffer(...)` |
 
-A [reference leaf](../glossary.md#reference-leaf) is a pointer, resource, object,
-interface or callback value, including one within an aggregate. For a record
-result with a resource field `handle`, `state($result, valid)` describes the
-aggregate shape, while `give($result.handle, owned)` assigns that field's
-ownership. A scalar field needs no `give`. Pointer traversal is explicit:
-borrowing `$length` does not describe the integer written through it
+The same distinction matters inside records. Suppose a returned record has an
+integer field and a resource field named `handle`. Declaring the record valid
+tells the caller it can inspect the result. The caller still needs to know
+who destroys the resource in `handle`; `give($result.handle, owned)` supplies
+that obligation. The integer field has no release obligation to transfer.
+
+AIL calls a pointer, resource, object, interface or callback value a
+[reference leaf](../glossary.md#reference-leaf), including when it occurs inside
+an aggregate. Each such leaf needs its applicable contracts. A clause about a
+pointer addresses that pointer unless its place explicitly follows the pointer
 ([`L4–L5`](../language.md#l4), [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 AIL chooses typed paths rather than implicitly applying every clause throughout
 an aggregate. This makes container and element obligations distinguishable, but
 makes nested contracts longer. It also uses two naming contexts: local
 `$handler` and external `@subscribe::handler`. The latter includes the operation
-identity ([`L2`](../language.md#l2)); the discoverability cost is recorded as
-[audit Q4](../../../docs/research/interface-language-documentation-audit.md#4-possible-language-issues-surfaced-for-review).
+identity ([`L2`](../language.md#l2)); [Q4](choices.md#q4) asks about the cost of
+learning these two spellings.
 
 ## Who owns what
 
-A binding needs to track responsibility for release as values cross calls.
-[Owned](../glossary.md#owned) means one destruction or release obligation; it
-does not promise exclusive access. A [borrow](../glossary.md#borrow) grants
-access without that transfer and does not imply Rust's static borrow checking.
+Suppose a program creates a store, reads its bytes, and finally destroys it.
+While reading, it remains responsible for eventually calling `destroy`.
+When it calls `destroy`, the library takes over that responsibility. A binding
+needs to preserve this sequence so the store is released exactly as its
+contract requires.
+
+A value delivered as [owned](../glossary.md#owned) brings one destruction or
+release obligation. A [borrow](../glossary.md#borrow) grants access for a stated
+period while leaving that obligation with its existing holder. These terms
+describe responsibilities; exclusivity and enforcement are separate matters.
+In particular, AIL borrowing does not imply Rust's static borrow checking
+([`C2–C3`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
 
 Compare these entry contracts from the synthetic buffer example. The first
 lets `view` use the store; the second hands the store to `destroy`.
 
-Fragment — omits the containing declarations and their remaining clauses;
-not a publishable package.
+Fragment — compares borrowing and consuming a store at entry. The complete
+[buffer package](../examples/buffers.ail) supplies the containing declarations
+and their remaining clauses.
 
 <!-- ail-fragment -->
 ```ail
@@ -189,8 +231,9 @@ full file is consistent ([`C2–C3`](../contracts.md#c2)).
 Now compare delivery of a new store with delivery of a view into an existing
 store. These are exit facts, separate from entry transfer.
 
-Fragment — omits the containing outcomes and their other clauses;
-not a publishable package.
+Fragment — compares receiving a store with receiving its bytes. The complete
+[buffer package](../examples/buffers.ail) supplies both enclosing outcomes and
+their other clauses.
 
 <!-- ail-fragment -->
 ```ail
@@ -209,12 +252,17 @@ The second gives access to bytes without giving a release obligation. A null
 reference carries no obligation even when its outcome repeats `give(owned)`
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-[Retention](../glossary.md#retention) answers a third question: what does the
-callee store beyond immediate use? The synthetic `subscribe` borrows its
-handler at entry and independently retains it for the subscription's lifetime.
+The library may also need a value for later work. In the synthetic callback
+API, the caller gives `subscribe` a handler to receive future notifications.
+The call borrows the handler, leaving the caller's obligation in place. The
+library then keeps its own strong reference so notifications can use the
+handler after `subscribe` returns. Keeping a value beyond immediate use is
+[retention](../glossary.md#retention); strong retention creates a separate
+release obligation ([`C3`](../contracts.md#c3)).
 
-Fragment — omits the `subscribe` declaration, schedule, outcomes and remaining
-clauses; not a publishable package.
+Fragment — shows `subscribe` retaining a handler. The complete
+[callback package](../examples/callbacks.ail) supplies the declaration,
+schedule, outcomes and remaining clauses.
 
 <!-- ail-example: ../examples/callbacks.ail lines=48-50 -->
 ```ail
@@ -222,6 +270,12 @@ clauses; not a publishable package.
     retain($handler, strong(owner($result)));
     valid($handler, call);
 ```
+
+Here `$result` is the returned subscription. `strong(owner($result))` ties the
+library's retained handler to that subscription's lifetime. For an operation
+that can fail to return an owner, this retention takes effect only on outcomes
+that return the owner non-null and valid. On other outcomes the library
+releases temporary retained references before completion ([`C3`](../contracts.md#c3)).
 
 In summary (non-normative), `input(consume)` transfers an existing obligation,
 `retain(strong(...))` creates an independent one, and `give(owned)` supplies one
@@ -255,17 +309,22 @@ borrowing with strong retention from consumption without retention.
 
 ## How long a borrow lasts
 
-Keeping an address is useful only while the referenced storage remains usable.
-A [region](../glossary.md#region) gives its lifetime boundary;
-[invalidation](../glossary.md#invalidation) can end a borrow earlier while its
-owner remains alive.
+After `view` returns, the program can keep the pointer and read the store's
+bytes. In the synthetic immutable store, those bytes stay usable until the
+store is destroyed. Consider instead a mutable store whose `replace` operation
+can replace its storage. A pointer obtained before replacement can become
+unusable even while the store itself remains alive.
 
-The synthetic `view` lends immutable bytes until store destruction. Compare a
-constructed mutable-store variant whose `replace` operation invalidates prior
-views at entry.
+AIL names the lifetime that bounds access with a [region](../glossary.md#region).
+For this view, the region is the lifetime of its owner, `store`. It separately
+names operations that end access earlier through
+[invalidation](../glossary.md#invalidation). The first fragment is the immutable
+case; the second is a constructed mutable variant
+([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
-Fragment — omits the `view` declaration and enclosing outcome;
-not a publishable package.
+Fragment — shows call validity and the immutable view's lifetime. The complete
+[buffer package](../examples/buffers.ail) supplies `view` and its enclosing
+outcome.
 
 <!-- ail-fragment -->
 ```ail
@@ -275,9 +334,9 @@ give($result, borrow(owner($store)));
 invalidated_by($result, []);
 ```
 
-Fragment — omits the mutable-store declarations, enclosing outcome and
-`replace` contract, which would name the owner parameter and appropriate
-mutation; not a publishable package.
+Fragment — shows the constructed mutable view's earlier invalidator. A complete
+package would also supply the mutable-store declarations, enclosing outcome
+and a `replace` contract naming the owner parameter and appropriate mutation.
 
 <!-- ail-fragment -->
 ```ail
@@ -285,11 +344,16 @@ give($result, borrow(owner($store)));
 invalidated_by($result, [@replace]);
 ```
 
-In the first case, the input clause covers use during `view`; the output region
-relates later access to the owner's lifetime. In the second, keeping the owner
-alive is insufficient once `replace` starts. The caller stops using the old
-view then. An empty invalidator list states that no operation invalidates the
-borrow before its region ends; it does not make the borrow permanent
+Read the first fragment in two stages. During `view`, the caller keeps `store`
+valid because of `valid($store, call)`. After `view` returns, the caller keeps
+the store alive for as long as it uses the returned bytes because of
+`borrow(owner($store))`. The returned pointer's contract supplies that later
+obligation.
+
+In the mutable variant, the caller also stops using the old view when
+`replace` starts. `invalidated_by` makes entry to the operation the cutoff,
+even if that operation later fails. An empty list in the immutable case says
+there is no such earlier operation; the owner's destruction still ends access
 ([`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
 The timing diagram separates input validity during `view` from later use of
@@ -301,7 +365,13 @@ omits other call obligations and the mutable variant's full contracts.
 
 [Borrow timing source](../figures/g5-borrow.puml)
 
-In summary (non-normative), the three regions name different boundaries:
+Another example, the synthetic `fixed_bytes` constant, lends bytes belonging
+to the loaded API instance. A caller can use them while that instance remains
+loaded. The synthetic provider requires callers to stop using borrows before
+unload. AIL calls that region `static`; its end is defined by the provider
+([`C1`](../contracts.md#c1), [`F1`](../profiles.md#f1)).
+
+The three regions therefore name different boundaries (non-normative summary):
 
 | Region | Boundary | Example |
 |---|---|---|
@@ -324,14 +394,21 @@ contracts are needed to check whether the named invalidator is legal.
 
 ## Every way a call can end
 
-A binding needs to distinguish an observable failure from unreadable output.
-A [completion](../glossary.md#completion) says how an invocation finishes; an
-[outcome](../glossary.md#outcome) partitions the possibilities for that
-completion. Compare the synthetic null-result constructor with the Boolean
-status returned by `copy_bytes`.
+After a call finishes, the caller needs a reliable way to find out what
+happened. The synthetic `create` returns either a store or null. Both values
+are safe to inspect: the store means creation succeeded, and null means it
+failed. The synthetic `copy_bytes` instead returns a Boolean status and writes
+through a separate destination pointer. The caller can always inspect the
+Boolean, but can read the destination only after success.
 
-Fragment — omits the containing `create` declaration and package;
-not a publishable package.
+AIL calls the way control finishes a [completion](../glossary.md#completion).
+Both examples finish by returning. Their [outcomes](../glossary.md#outcome)
+divide that completion into success and failure cases. Each case says which
+values the caller can use ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+
+Fragment — shows `create` succeeding or failing. The complete
+[buffer package](../examples/buffers.ail) supplies the containing declaration
+and its other contracts.
 
 <!-- ail-example: ../examples/buffers.ail lines=30-41 -->
 ```ail
@@ -349,8 +426,9 @@ not a publishable package.
     }
 ```
 
-Fragment — omits the containing `copy_bytes` declaration and package;
-not a publishable package.
+Fragment — shows `copy_bytes` succeeding or failing. The complete
+[buffer package](../examples/buffers.ail) supplies the containing declaration
+and its other contracts.
 
 <!-- ail-example: ../examples/buffers.ail lines=121-132 -->
 ```ail
@@ -384,19 +462,27 @@ different: each returned value selects exactly one row for its operation.
 | `copy_bytes`: `true` | `copied` — success | Valid status and destination elements |
 | `copy_bytes`: `false` | `failed` — failure | Valid status; destination elements unreadable |
 
-In summary (non-normative), `when` selects the case, `meaning` classifies it,
-and `state` describes [output state](../glossary.md#output-state).
-A [discriminator](../glossary.md#discriminator) is the value being tested.
-For each declared completion, outcomes are mutually exclusive and exhaustive
-over one valid discriminator's full type domain, or use one `any`. The
-null/non-null and true/false pairs cover their respective domains. For an
-integer status, “zero” and “positive” would miss negative values of a signed
-type ([`C5`](../contracts.md#c5)).
+The `when` clause selects a case by testing a value, called the
+[discriminator](../glossary.md#discriminator). Here that value is `$result`.
+The caller can determine the case because the result is readable on every
+returned outcome. `meaning` then labels the case as success or failure, and
+`state` describes each value's [output state](../glossary.md#output-state)
+([`C5`](../contracts.md#c5)).
 
-`state(unchanged)` is another possibility for `inout` storage: it preserves
-entry obligations. It cannot describe a subtree whose input obligations were
-consumed; returning that reference requires explicit valid state and owned
-delivery ([`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5)).
+Every possible result needs exactly one case. Null and non-null cover
+`create`; true and false cover `copy_bytes`. For a signed integer status,
+cases covering zero and positive values would leave negative values unanswered.
+In summary (non-normative), each completion uses outcomes that are exhaustive
+and mutually exclusive over one valid discriminator's full domain, or one
+`any` outcome covering the whole completion ([`C5`](../contracts.md#c5)).
+
+A caller can also pass storage whose contents the library may read and replace.
+AIL calls that direction `inout`. An outcome can promise to leave those
+contents and their entry obligations unchanged with `state(unchanged)`.
+If the call consumed an input obligation, returning even the same reference
+requires an explicit transfer back: `state(valid)` and `give(owned)`.
+The caller then has a stated obligation again ([`C3`](../contracts.md#c3),
+[`C5`](../contracts.md#c5)).
 
 The principle is that failure still has an output contract. AIL chooses a small,
 checkable predicate vocabulary over arbitrary executable conditions. This
@@ -409,16 +495,19 @@ the corresponding signature and provider support
 
 ## Buffers and strings
 
-An address does not tell a binding how much storage it may read, how much it
-may write, or whether zero ends text. [Extent](../glossary.md#buffer-extent)
-describes length and capacity; [contents](../glossary.md#contents) identifies
-binary data or text.
+When a library returns a pointer, the caller needs to know how much data it
+can read from that address. When the caller supplies storage for output, the
+library also needs to know how much space is available to write. AIL records
+the readable length and allocated capacity together as the buffer's
+[extent](../glossary.md#buffer-extent). It records how to interpret the data
+separately in [contents](../glossary.md#contents).
 
 Compare the synthetic sixteen-byte binary view with a constructed three-code-unit
 UTF-8 string that includes space for its terminator.
 
-Fragment — omits the containing `view` declaration and other contracts;
-not a publishable package.
+Fragment — shows the extent and contents of `view`'s bytes. The complete
+[buffer package](../examples/buffers.ail) supplies the declaration and its
+other contracts.
 
 <!-- ail-example: ../examples/buffers.ail lines=85-86 -->
 ```ail
@@ -426,9 +515,9 @@ not a publishable package.
     contents($result, binary);
 ```
 
-Fragment — omits a callable returning `ptr<u8>`, its ownership/outcomes and the
-synthetic fixture profile, catalogue and digest tokens supplying UTF-8;
-not a publishable package.
+Fragment — shows bounded UTF-8 text in a constructed example. A complete
+package would supply a callable returning `ptr<u8>`, its ownership and outcomes,
+and the synthetic fixture profile, catalogue and digest tokens supplying UTF-8.
 
 <!-- ail-fragment -->
 ```ail
@@ -450,13 +539,18 @@ and which provide terminator space.
 | Synthetic binary view | 16 elements | 16 elements | No terminator convention |
 | Constructed UTF-8 text | 3 code units | 4 code units | Zero in the fourth position, outside the payload length |
 
-In summary (non-normative), capacity is allocated storage and length is readable
-initialized content. Input `out` buffers need no initialized elements on entry;
-a valid output initializes the declared length. Positive capacity still needs
-allocated, aligned storage even with zero length. A nullable buffer that is null
-has zero length and capacity. Caller and callee share a bound:
-`0 <= length <= capacity`, with the additional terminator space for `nul`
-([`C4`](../contracts.md#c4)).
+Length and capacity describe different things. A caller could reserve space
+for sixteen bytes while having initialized none of them. The space exists,
+but the bytes become readable only when an operation writes valid output.
+For an `out` buffer, the library can write without reading the previous
+contents; a valid output initializes the declared length ([`C4`](../contracts.md#c4)).
+
+The storage still needs to be allocated and aligned whenever capacity is
+positive, including when length is zero. A null buffer instead has both zero
+length and zero capacity. In summary (non-normative), the caller supplies
+input satisfying `0 <= length <= capacity`, and the callee supplies output
+satisfying the same bound. A `nul` text buffer also reserves room for its
+terminator ([`C4`](../contracts.md#c4)).
 
 Direction and aliasing complete the storage picture. The synthetic
 `copy_bytes` uses `direction($destination, out)` to say it does not read prior
@@ -464,21 +558,30 @@ contents, and `aliasing($destination, disjoint)` to prohibit overlap with other
 accessed memory. Its `mutptr<u8>` and `mutation(arguments)` agree with writing
 the buffer ([`C3`](../contracts.md#c3), [`C4`](../contracts.md#c4)).
 
-The principle is to separate storage bounds from interpretation. AIL chooses
-explicit bounded extents over treating every byte pointer as a C string.
-That costs length/capacity facts even for familiar pointer shapes. A scanned
-terminator-only contract is an alternative requiring a profile; the core
-cannot invent a maximum bound ([`C4`](../contracts.md#c4)). The fixed-size
-examples do not show dynamic length slots, but the same rule permits integral
-scalar slots as lengths and capacities.
+AIL separates storage bounds from how the caller interprets the bytes. That
+requires authors to supply length and capacity even for a familiar byte-pointer
+type. An alternative string contract could determine length by scanning for
+a terminator. AIL requires a profile to define that scanned-buffer behaviour;
+the core uses an explicit bound ([`C4`](../contracts.md#c4)).
+
+The bound can still vary between calls. Where the API supplies a length in an
+integer parameter or output, the extent can name that scalar slot instead of
+using a fixed number. The applicable input or output contract establishes when
+that length is valid ([`C4`](../contracts.md#c4)).
 
 ## Callbacks
 
-Storing a callback creates two questions: what does an invocation do, and when
-can the API invoke it? A binding that knows the first alone can release
-[callback captures](../glossary.md#callback-captures) while later invocations
-still need them. Here captures means callback state, not a
-[dependency closure](../glossary.md#dependency-closure).
+Suppose a program passes a handler to receive integer notifications. One API
+might invoke it once before the registration call finishes. Another might
+store it and notify the program later. In the first case, the program can
+finish with the callback state when the call completes. In the second, it
+needs an event that tells it all later use has ended.
+
+Values saved with the handler are its
+[callback captures](../glossary.md#callback-captures). They need to remain usable
+whenever the API can invoke the handler. This is why AIL describes both an
+individual invocation and the schedule for using that callback
+([`C2–C3`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
 
 The synthetic `Handler` declaration describes one invocation. Its
 `execution(sync)` says that invocation completes before returning to its caller;
@@ -488,8 +591,9 @@ callback type ([`C2–C3`](../contracts.md#c2)). Compare two schedules for using
 such a handler: the synthetic subscription stores it, while a constructed
 call-scoped operation invokes it once before completing.
 
-Fragment — omits the `subscribe` declaration, retention and outcome clauses;
-not a publishable package.
+Fragment — shows the subscription's notification schedule. The complete
+[callback package](../examples/callbacks.ail) supplies `subscribe`, including
+its retention and outcome clauses.
 
 <!-- ail-example: ../examples/callbacks.ail lines=51-59 -->
 ```ail
@@ -504,8 +608,9 @@ not a publishable package.
     }
 ```
 
-Fragment — omits a synchronous callable with parameter `handler: Handler`, its
-other effects, outcome and access clauses; not a publishable package.
+Fragment — shows a constructed call that invokes a handler within its own
+scope. A complete package would supply a synchronous callable with parameter
+`handler: Handler`, its other effects, outcome and access clauses.
 
 <!-- ail-fragment -->
 ```ail
@@ -523,24 +628,33 @@ callback $handler {
 }
 ```
 
-For the subscription, the API starts notifications after registration returns
-and may invoke the handler zero or arbitrarily many times over its owner scope.
-`many` means
-unbounded permission, not an unknown count. `subscribe` itself still completes
-synchronously. For the second case, invocations start during the call and all
-finish before it completes; the count is exactly one conditional on eventual
-scope end. Neither count is a general termination guarantee
-([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
+For the subscription, `timing(after_return)` allows the API to start a
+notification only after `subscribe` returns. `count(0, many)` permits zero
+notifications and places no finite upper bound on how many may occur during
+the subscription. This is an established permission. The registration call
+itself still completes synchronously ([`C3`](../contracts.md#c3),
+[`C6`](../contracts.md#c6)).
 
-[Quiescence](../glossary.md#quiescence) is the teardown boundary after which no
-invocation is running or can start. In the subscription, its unique owner's
-`unsubscribe` destructor establishes that boundary before returning. Its
-`requires(outside_callback(@subscribe::handler))` prevents calling this blocking
-teardown from within the very callback it waits for. The retained callback is
-stored for the owner region; the [provider](../glossary.md#provider) defines its
-[representation](../glossary.md#representation) and
-release ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6),
-[`F1`](../profiles.md#f1)).
+For the constructed case, the handler starts during the call and finishes
+before the call completes. `count(1, 1)` requires exactly one invocation if
+that call's scope eventually ends. The condition matters: neither a callback
+count nor synchronous execution promises that an operation will eventually
+finish ([`C3`](../contracts.md#c3), [`C6`](../contracts.md#c6)).
+
+To end the subscription, the caller invokes `unsubscribe`. A notification may
+still be running when teardown starts. The destructor establishes that all
+invocations have finished and no more can begin before it returns. That state
+is [quiescence](../glossary.md#quiescence), and the return from `unsubscribe`
+is the caller's boundary for relying on it ([`C6`](../contracts.md#c6)).
+
+Calling this destructor inside the callback it waits for could make each wait
+for the other. Its `requires(outside_callback(@subscribe::handler))` therefore
+requires the caller to begin teardown from outside that callback invocation.
+The retained handler belongs to the subscription's owner region. The
+[provider](../glossary.md#provider) defines how the handler and its captures
+are stored — their [representation](../glossary.md#representation) — and how
+that stored value is released ([`C3`](../contracts.md#c3),
+[`C6`](../contracts.md#c6), [`F1`](../profiles.md#f1)).
 
 The timing diagram places quiescence at completion of the enclosing call or
 the owner's destructor, so an in-flight callback during teardown cannot be
@@ -563,18 +677,26 @@ it actually supplies that boundary ([`C6`](../contracts.md#c6)).
 
 ## Threads and sharing
 
-Moving a reference between execution contexts and permitting simultaneous calls
-are different permissions. An [executor](../glossary.md#executor) specifies
-where entry is allowed; [concurrency](../glossary.md#concurrency) governs
-independent overlap; [re-entrancy](../glossary.md#re-entrancy) governs nested
-entry while another call is active.
+Suppose a program moves sole ownership of a store from one thread to another.
+That can be legal even when two threads are forbidden from using the store at
+the same time. A different API might require every use on the main thread;
+serializing calls on a worker thread would still violate that requirement.
+
+AIL separates where a call can begin from whether calls may overlap. The
+[executor](../glossary.md#executor) clause identifies the permitted thread or
+execution context. [Concurrency](../glossary.md#concurrency) describes
+independent calls that could overlap. A third case occurs when an active call
+invokes client code which calls back into the API before the first call finishes.
+AIL describes that nested entry through
+[re-entrancy](../glossary.md#re-entrancy) ([`C2–C3`](../contracts.md#c2)).
 
 Compare the synthetic store and counter. The store permits moving sole ownership
 between executors; the counter is confined to the main thread. Their call
 contracts supply the remaining restrictions.
 
-Fragment — omits the enclosing `Store` and `view` declarations and other
-contracts; not a publishable package.
+Fragment — shows where callers can move and use a store. The complete
+[buffer package](../examples/buffers.ail) supplies `Store`, `view` and their
+other contracts.
 
 <!-- ail-fragment -->
 ```ail
@@ -587,8 +709,9 @@ concurrency(serial);
 reentrancy(allowed);
 ```
 
-Fragment — omits the enclosing `Counter` and `read_count` declarations and
-other contracts; not a publishable package.
+Fragment — shows the counter's main-thread restriction. The complete
+[object package](../examples/objects.ail) supplies `Counter`, `read_count` and
+their other contracts.
 
 <!-- ail-fragment -->
 ```ail
@@ -618,35 +741,48 @@ re-entry on separate rows; granting one does not grant the others.
 | Independent calls using the same instance | Serialized | Serialized |
 | Specified nested re-entry | Allowed | Allowed |
 
-In summary (non-normative), nominal `sharing` and
-[isolation](../glossary.md#isolation) describe the type, while per-call clauses
-describe operations. [`sharing(shared)`](../glossary.md#shared) permits references to cross executors
-without promising safe concurrent mutation; `isolation(none)` records known
-absence of nominal isolation without making every operation callable anywhere.
-Confinement also covers release and destruction. Callback sharing and isolation
-cover its captures independently of its invocation schedule
-([`C2`](../contracts.md#c2), [`C6`](../contracts.md#c6)).
+The type declaration establishes what uses its references permit. For example,
+the counter's `isolation(main)` confines its use to the main thread, including
+retaining, releasing and destroying it. The operation clauses then say how to
+enter each call. This is the relationship between type-level
+[isolation](../glossary.md#isolation) and per-call `executor`
+([`C2–C3`](../contracts.md#c2)).
 
-AIL chooses several orthogonal facts over a single “thread-safe” flag. The cost
-is checking agreement between type and operation contracts; the gain is stating
-which permission exists. A source-language conformance flag is another possible
-input, but does not answer these questions: the synthetic counter's
-`fixture::sendability(nonconforming)` is a separate profile fact, not a claim
-about an actual Swift compiler ([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
+In summary (non-normative), [`sharing(shared)`](../glossary.md#shared) permits
+references to cross executors; each operation still governs overlapping calls.
+`isolation(none)` states that the type adds no isolation restriction; an
+operation can still require a particular executor. Callback types apply their
+sharing and isolation requirements to captured state, so that state supports
+every use the callback type permits ([`C2`](../contracts.md#c2),
+[`C6`](../contracts.md#c6)).
+
+AIL records these permissions separately. An alternative “thread-safe” flag
+would need a precise definition of which uses it allows. The separate clauses
+make each permission visible, at the cost of checking that type and operation
+contracts agree.
+
+A source-language conformance flag answers another question: whether the type
+satisfies a named source conformance. The synthetic counter records
+`fixture::sendability(nonconforming)` alongside its call restrictions.
+That fixture fact describes a synthetic conformance state; a real Swift
+provider would need evidence from the actual source language and compiler
+([`C2`](../contracts.md#c2), [`F1`](../profiles.md#f1)).
 
 ## Lifecycles and patterns
 
-A release obligation needs an operation that discharges it, and clients may also
-need ordering constraints between operations. A [lifecycle](../glossary.md#lifecycle)
-states the release discipline; a [pattern](../glossary.md#pattern) binds named
-participants to reusable laws.
+After obtaining an owned value, the caller needs to know how to release it.
+For the synthetic store, it calls a destructor once. For the counter, it
+releases its own reference; other parties may still hold references that keep
+the object alive. AIL records this discipline in the type's
+[lifecycle](../glossary.md#lifecycle) ([`C2`](../contracts.md#c2)).
 
 Compare the synthetic store's unique handle with the counter's counted
 references.
 
-Fragment — omits the containing nominal declarations and other contracts;
-not a publishable package. `fixture` denotes the synthetic fixture profile,
-whose catalogue and digest tokens are omitted.
+Fragment — compares unique destruction and reference counting. The complete
+[buffer](../examples/buffers.ail) and [object](../examples/objects.ail) packages
+supply the enclosing types and other contracts. `fixture` selects their
+synthetic profile, whose catalogue and digest tokens appear in those files.
 
 <!-- ail-fragment -->
 ```ail
@@ -671,11 +807,16 @@ and the separate constructed ordering pattern below.
 
 [Resource state source](../figures/g6-lifecycle.puml)
 
-Now compare two relationships between operations. The buffer example's pattern
-identifies the actual release operation.
+Tools may also need to recognize a relationship between declarations. The
+buffer example explicitly connects the resource type to its release operation.
+AIL calls the reusable form of such a relationship a
+[pattern](../glossary.md#pattern). The pattern below gives names to the two
+participants; its instance identifies `Store` and `destroy` as those
+participants ([`L6`](../language.md#l6)).
 
-Fragment — omits the containing package and participant declarations;
-not a publishable package.
+Fragment — connects `Store` to its destructor. The complete
+[buffer package](../examples/buffers.ail) supplies the participant declarations
+and their contracts.
 
 <!-- ail-example: ../examples/buffers.ail lines=140-148 -->
 ```ail
@@ -693,8 +834,9 @@ not a publishable package.
 A constructed ordering pattern instead requires a successful `prepare` before
 entry into `read_prepared`, on the same resource instance.
 
-Fragment — omits the resource and operation declarations, their contracts and
-the package; not a publishable package.
+Fragment — shows a constructed preparation-before-use relationship. A complete
+package would supply the resource and operation declarations with their
+contracts.
 
 <!-- ail-fragment -->
 ```ail
@@ -711,11 +853,17 @@ instance prepared_read: prepared_use {
 }
 ```
 
-Here a [role](../glossary.md#role) has a participant kind and a
-[cardinality](../glossary.md#cardinality); `one` means exactly one.
-The [pattern instance](../glossary.md#pattern-instance) supplies the participants.
-`subject` names which reference slot in each operation identifies the shared
-resource. Those slots need the same
+In `prepared_use`, `preparation` and `use` are names for the two jobs that
+operations fill. Each is a [role](../glossary.md#role). `operation one` says
+the role takes exactly one operation; `one` is its
+[cardinality](../glossary.md#cardinality). The
+[pattern instance](../glossary.md#pattern-instance), `prepared_read`, assigns
+`prepare` and `read_prepared` to those jobs ([`L6`](../language.md#l6)).
+
+Both functions take a store, but callers could pass different stores to them.
+The two `subject` clauses identify which parameter each function uses as the
+resource being tracked. The law then requires successful preparation on the
+same resource instance before use. Both subject parameters have the same
 nominal resource type ([`L6`](../language.md#l6)).
 
 The role mapping separates the fixture's release relationship from the
@@ -740,18 +888,24 @@ profile with operands, obligations and validation. The ordering fragment does
 not itself provide a full lifecycle or prove the native implementation obeys
 it ([`L6`](../language.md#l6), [`C8`](../contracts.md#c8)).
 
-## What the core leaves to profiles
+<a id="what-the-core-leaves-to-profiles"></a>
 
-Knowing an obligation is different from knowing how a runtime realizes it.
-A [profile](../glossary.md#profile) is a versioned semantic extension, not a
-preferences preset. A [provider](../glossary.md#provider) supplies its definition
-and support for interpreting or realizing it.
+## Extending the language with profiles
+
+Suppose an API operation suspends and delivers its result later. A binding
+needs to know how the operation resumes and how the result reaches its caller.
+The core spelling `execution(async)` identifies the kind of execution, while
+a [profile](../glossary.md#profile) supplies the additional rules for those
+events. A profile is a versioned language extension. A
+[provider](../glossary.md#provider) supplies its definition and support for
+interpreting or implementing it ([`C3`](../contracts.md#c3), [`A1`](../profiles.md#a1)).
 
 Compare a core execution fact admitted by the synthetic fixture with one that
 needs additional semantics.
 
-Fragment — omits the containing callable and its other contracts;
-not a publishable package.
+Fragment — shows synchronous execution with returned completion. A complete
+package supplies the containing callable and its other contracts, as in
+[`view`](../examples/buffers.ail).
 
 <!-- ail-fragment -->
 ```ail
@@ -759,9 +913,9 @@ execution(sync);
 completions([returned]);
 ```
 
-Fragment — omits the containing callable, the profile defining suspension,
-scheduling and completion delivery, and all other contracts; not a publishable
-package. The synthetic fixture alone cannot support this case.
+Fragment — shows the asynchronous form. A complete package would need a
+profile defining suspension, scheduling and completion delivery, along with
+the callable's other contracts. Those semantics exceed the synthetic fixture.
 
 <!-- ail-fragment -->
 ```ail
@@ -775,13 +929,16 @@ fixture package is rejected for unsupported semantics, not accepted as an
 unfinished contract ([`C3`](../contracts.md#c3), [`F1`](../profiles.md#f1);
 N30 in the [conformance corpus](../conformance.md#rejection-mutations)).
 
-In summary (non-normative), profiles define additional typed vocabulary and
-obligations without weakening the core. [ABI entries](../glossary.md#abi-entry)
-and access providers also supply [representations](../glossary.md#representation)
-and call mechanisms: a core integer width or record
-field order is not a complete native layout. Consumers identify unsupported
-dependencies before claiming complete validation
+Additional definitions are also needed to pass values to an implementation.
+For a record argument, caller and callee need to agree where each field is
+stored. An [ABI entry](../glossary.md#abi-entry) and the access provider supply
+that representation and the calling mechanism. The core's ordered field list
+states the record's contents; the selected provider supplies the layout rules
 ([`A1–A3`](../profiles.md#a1)).
+
+In summary (non-normative), profiles add typed vocabulary and obligations while
+preserving core requirements. A consumer checks whether it understands the
+selected definitions before claiming complete validation ([`A1`](../profiles.md#a1)).
 
 The principle is to make the boundary explicit. AIL chooses a common core plus
 versioned providers over putting every source language and runtime mechanism
@@ -791,10 +948,12 @@ an easier extension mechanism, at the cost of consumers disagreeing about
 obligations; draft 0.1 rejects unknown normative vocabulary
 ([`L1`](../language.md#l1), [`A1`](../profiles.md#a1)).
 
-[Validation](../glossary.md#validation) checks local symbolic constraints and
-completeness. It cannot prove that a native implementation honours the asserted
-contract, nor that every target language can bind it
-([`C8`](../contracts.md#c8), [`A5`](../profiles.md#a5)).
+[Validation](../glossary.md#validation) checks that the description supplies
+required facts and that those facts agree. For example, it checks that an
+owner reference names a suitable declaration. Evidence that a library actually
+keeps its bytes alive comes from implementation review and testing. A binding
+generator also needs the capability to preserve the contract in its chosen
+target language ([`C8`](../contracts.md#c8), [`A5`](../profiles.md#a5)).
 
 Next: [Packages, environments and access paths](packages.md), then
 [Design choices, limits and open questions](choices.md).

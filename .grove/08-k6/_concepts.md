@@ -57,3 +57,23 @@ relationship through concrete actors, actions and examples before technical
 shorthand. State each subject positively, preserving the exact contract,
 alternatives, limits and Q1–Q6. The follow-up human checkpoint is
 `first-path-reading-k48`.
+
+## Handed forward
+
+- **art — G2 and G3 in `explanation/packages.md`.** The revised prose now
+  teaches following `view` → `Store` → `destroy`, supplying pinned documents,
+  choosing a message or source path, and converting the explicit receiver.
+  Their existing figure surroundings still compress those actions into
+  “export membership”, “dependency membership”, “access selection” and a dense
+  list of path/ABI/profile identities. Bring captions, alt text and diagram
+  labels into the same concrete vocabulary. Preserve G2's schematic/private
+  support boundary and G3's two paths selecting one ABI entry.
+- **art — G5, G6 and G7 in `explanation/contracts.md`.** Read their captions,
+  alt text and labels against the expanded explanations. In particular,
+  “delivers an owner-scoped result” (G5), the dense ownership state transition
+  (G6), and the multi-boundary G7 alt text ask readers to decode several
+  relationships at once. Show caller actions and their stopping points while
+  retaining constructed-versus-fixture cases, invalidation at entry,
+  destruction before return, quiescence at return and no termination promise.
+  G4 was already corrected with orientation and remains a separate watch
+  illustration; retain that distinction when reviewing the whole figure set.

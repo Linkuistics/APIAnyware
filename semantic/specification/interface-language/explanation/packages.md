@@ -3,15 +3,24 @@
 > **Purpose:** explanation — understand what a [package](../glossary.md#package) claims and how its operations reach code.
 > **Reader:** language designers who have met [binding](../glossary.md#binding) obligations and AIL's contract [clauses](../glossary.md#clause).
 > **Before this:** [Using an API across languages](unsaid.md) and [How AIL states a contract](contracts.md).
-> **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** [`L2–L5`](../language.md#l2) and [`A1–A5`](../profiles.md#a1) are canonical; this page gives non-normative explanations.
 
-A [package](../glossary.md#package) brings a contract together with the scope
-in which it holds and the definitions needed to interpret it. The examples here
-use the synthetic fixture [profile](../glossary.md#profile) (a semantic extension,
-not a preferences preset), catalogue and
-[digest tokens](../glossary.md#digest-pin) from [`F1`](../profiles.md#f1).
-They describe invented APIs, not real Objective-C or Swift implementations.
+An API author describing a byte-store library needs more than the contract of
+`view`. A tool reading it also needs the `Store` type, the operation that
+destroys a store, and a way to call each function. The author brings these
+declarations together in a named, versioned [package](../glossary.md#package).
+The package says which part of the API it describes and which configurations
+it covers ([`L2–L3`](../language.md#l2), [`A2`](../profiles.md#a2)).
+
+This page follows those connections. Its examples describe invented APIs using
+the synthetic fixture [profile](../glossary.md#profile), a versioned language
+extension. The profile, ABI catalogue and [digest tokens](../glossary.md#digest-pin)
+come from [`F1`](../profiles.md#f1). Names resembling Objective-C or Swift
+illustrate possible mechanisms within this fixture; production support for
+those languages remains future work.
 
 The [overview's workflow map](../README.md#who-writes-and-uses-an-ail-description)
 shows how a package reaches the tools that use it. This page looks inside the
@@ -19,12 +28,27 @@ package, then follows how a tool identifies and reaches an API operation.
 
 ## Four identities
 
-A binding consumer needs to identify both the operation it promises to callers
-and the mechanism it uses to invoke that operation. Those names can differ.
-In the synthetic [object example](../examples/objects.ail), `read_count` has a
-message path named `objc_like` and a source-call path named `swift_like`.
-Both implement the same getter. By comparison, the synthetic
-[buffer example](../examples/buffers.ail) gives `view` one symbol path.
+Suppose a binding generator is preparing a call to the synthetic counter's
+`read_count`. The contract tells it to borrow a `Counter` receiver and return
+an unsigned integer. The generator identifies that operation by its package,
+version and declaration name. Together these form its
+[canonical declaration identity](../glossary.md#canonical-identity)
+([`L2`](../language.md#l2)).
+
+To reach the implementation, the generator chooses one of two
+[access paths](../glossary.md#access-path). The path named `objc_like` asks the
+synthetic runtime to send the message `currentCount` to the receiver. The path
+named `swift_like` asks a source compiler to build a call to
+`Outer.Counter.currentCount.get`. Either path implements the same getter
+contract ([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
+
+The package also records `Outer.Counter` as the type's
+[source identity](../glossary.md#source-identity). A source identity connects
+the AIL declaration to the declaration named in a source language. The access
+path supplies the further information needed to use its implementation.
+Finally, `fixture` and `native` select the definitions that tell tools how to
+interpret these names and arrange the call ([`L5`](../language.md#l5),
+[`A1–A2`](../profiles.md#a1)).
 
 The getter separates four kinds of identity:
 
@@ -35,12 +59,12 @@ The getter separates four kinds of identity:
 | [Access path](../glossary.md#access-path) | A named way to reach code, with its access identity | `objc_like` uses selector `currentCount`; `swift_like` uses source callable `Outer.Counter.currentCount.get` |
 | [ABI](../glossary.md#abi) or profile selection | The versioned definition that interprets a path or source fact | `native` selects `example.fixture-abi` version `1`; `fixture` selects `example.fixture` version `1`, each with a synthetic digest token |
 
-In summary (non-normative), [canonical declaration identity](../glossary.md#canonical-identity) is the package name,
-package version and declaration name. A `source` clause records a
-[source identity](../glossary.md#source-identity), interpreted by its profile.
-An [access path](../glossary.md#access-path) supplies its own mechanism and
-identity. A source spelling alone does not create a path
-([`L2`](../language.md#l2), [`L5`](../language.md#l5), [`A2`](../profiles.md#a2)).
+The synthetic [buffer example](../examples/buffers.ail) has a simpler case:
+`view` has one path naming the linker symbol `fixture_store_view`. A tool can
+therefore identify the operation as `view` while using a different name to
+locate its code. In summary (non-normative), declaration identity tells tools
+which contract they are using; an access path tells them how to reach code
+that implements it ([`L2`](../language.md#l2), [`A2`](../profiles.md#a2)).
 
 These distinctions let two access mechanisms implement one contract without
 giving that contract two identities. AIL chooses explicit names over inferring
@@ -50,16 +74,17 @@ establish actual Swift or Objective-C support ([`F1`](../profiles.md#f1)).
 
 ## What a package claims
 
-An API author may describe a small, usable portion of a larger API. That differs
-from describing an operation while leaving its release protocol unstated.
-The synthetic buffer package claims an immutable sixteen-byte store and its
-complete lifetime API. The object package instead claims a reference-counted
-object, a property and two faithful call paths. Each states its own
-[surface](../glossary.md#surface), the subset and release it covers.
+An API author can begin with a small, usable part of a library. The synthetic
+buffer package describes an immutable sixteen-byte store: creating it, viewing
+or copying its bytes, and destroying it. The object package covers a different
+particular API: a reference-counted counter and its property. Each package's
+[surface](../glossary.md#surface) says which subset and release the author
+claims to describe ([`L3`](../language.md#l3)).
 
-Fragment — omits the containing package, declarations,
-[environment](../glossary.md#environment) and synthetic
-fixture profile, catalogue and digest tokens; not a publishable package.
+Fragment — shows the claimed surface and public declarations. The complete
+[buffer package](../examples/buffers.ail) supplies those declarations, its
+[environment](../glossary.md#environment), and the synthetic fixture profile,
+catalogue and digest tokens.
 
 <!-- ail-example: ../examples/buffers.ail lines=3-4 -->
 ```ail
@@ -67,21 +92,34 @@ fixture profile, catalogue and digest tokens; not a publishable package.
   exports([@Store, @create, @destroy, @view, @copy_bytes, @store_lifetime]);
 ```
 
-In summary (non-normative), `surface` describes the coverage claim and
-[`exports`](../glossary.md#exports) names the public roots. The
-[dependency closure](../glossary.md#dependency-closure) includes the referenced
-declarations and pinned dependencies needed to interpret and use those roots;
-private support declarations remain authoritative. Following `view` reaches
-`Store`, whose [lifecycle](../glossary.md#lifecycle) refers to `destroy`. Omitting that destructor is not
-equivalent to excluding an unrelated API from the surface
-([`L2–L3`](../language.md#l2), [`C2`](../contracts.md#c2)).
+The `exports` list names the declarations the package presents publicly.
+These [exports](../glossary.md#exports) are starting points for following the
+contract's references. For example, a tool reading `view` encounters its
+`Store` parameter. It reads `Store` to learn how ownership ends, then follows
+the type's [lifecycle](../glossary.md#lifecycle) reference to `destroy`. Reading
+only the function signature would leave the tool unable to explain how the
+caller finishes with the store ([`L2–L3`](../language.md#l2), [`C2`](../contracts.md#c2)).
 
-The publication unit is therefore a complete declared subset. A signature-only
-extract is useful as a view, but does not become a complete package merely by
-listing fewer exports. Compared with requiring an entire library at once, this
-choice permits bounded publication; its cost is stating the boundary honestly
-and retaining everything it depends on. [Validation](../glossary.md#validation) checks the declared scope,
-not its truth against a library's implementation ([`L3`](../language.md#l3)).
+The tool continues following such references until it has every declaration
+and pinned definition needed to interpret the exports. That complete set is
+the [dependency closure](../glossary.md#dependency-closure). A support
+declaration can belong to that set while remaining private. Its contract still
+has authority, even though the author did not list it as a public starting
+point. In the buffer fixture, `destroy` happens to be exported itself
+([`L2–L3`](../language.md#l2)).
+
+The author can leave an unrelated image API outside this store package. Leaving
+out the store's destructor would remove information that an included operation
+depends on. Completeness follows the declared subset and all of its dependencies.
+Listing fewer exports helps only when the retained exports can still be
+described completely ([`L3`](../language.md#l3)).
+
+AIL chooses this boundary instead of requiring a whole library at once. It
+lets authors publish a useful portion, at the cost of stating its scope
+accurately and supplying every fact that portion needs.
+[Validation](../glossary.md#validation) checks that the description is complete
+and internally consistent. Comparing its scope and claims with the actual
+library requires separate evidence ([`L3`](../language.md#l3)).
 
 The package diagram makes export membership distinct from dependency
 membership: referenced private support remains authoritative without becoming
@@ -96,14 +134,18 @@ is itself exported. The view omits individual declaration clauses.
 
 ## Where it holds
 
-A contract can be established for one configuration without being established
-for every later platform release. An [environment](../glossary.md#environment)
-names an exact configuration. The synthetic buffer package declares a target
-and platform; the object package also pins a toolchain because its source-call
-path needs one.
+An author may have established the contract for platform version `1`. Readers
+need to know that this is the configuration being described; later versions
+may change the API or require separate investigation. An
+[environment](../glossary.md#environment) records the exact configuration to
+which the package's claims apply ([`L3`](../language.md#l3)).
 
-Fragment — omits the containing synthetic buffer package and its other items;
-not a publishable package.
+The synthetic buffer package names its target and platform below. The object
+package also names a toolchain, because its source-call path uses a compiler.
+
+Fragment — shows the buffer API's configuration. The complete
+[buffer package](../examples/buffers.ail) supplies its declarations and
+synthetic fixture dependencies.
 
 <!-- ail-example: ../examples/buffers.ail lines=7-10 -->
 ```ail
@@ -113,8 +155,9 @@ not a publishable package.
   }
 ```
 
-Fragment — omits the containing synthetic object package and its other items;
-not a publishable package.
+Fragment — shows the object API's configuration, including its compiler. The
+complete [object package](../examples/objects.ail) supplies its declarations
+and synthetic fixture dependencies.
 
 <!-- ail-example: ../examples/objects.ail lines=7-11 -->
 ```ail
@@ -125,39 +168,58 @@ not a publishable package.
   }
 ```
 
-Both aliases happen to be `test`; they describe different configurations.
-When resolving imports, configuration values determine the match, not alias
-spelling. A declaration's [`available`](../glossary.md#availability) list names
-the local environments where it is offered. Referenced declarations need to
-be available wherever the referencing use is available. A changed signature
-or contract needs distinct declarations with disjoint availability or distinct
+Both authors used the local name `test`, but the second configuration includes
+a toolchain value that the first omits. A tool comparing environments across
+imports compares those configuration values. Sharing a local name is
+insufficient to establish a match ([`L3`](../language.md#l3)).
+
+Within a package, a declaration uses `available([test])` to say it is offered
+in that named environment. This is its [availability](../glossary.md#availability).
+Suppose `view` is offered in two environments. Its `Store` parameter and the
+declarations it needs must be available wherever that use occurs. If the
+signature or contract changes between configurations, the author gives the
+variants distinct declarations with disjoint availability, or distinct
 identities ([`L3`](../language.md#l3)).
 
-Exactness bounds the claim. An unlisted configuration is outside it, rather
-than evidence of API absence. Version ranges are an alternative; draft 0.1
-chooses exact values and incurs the cost of enumerating configurations. The
-benefit is a stated set against which reference and access coverage can be
-checked; no recorded evidence establishes that this scales to a large platform
-matrix. Runtime support of an optional member is a separate receiver capability
-question ([`L3`](../language.md#l3), [`C3`](../contracts.md#c3)).
+An unlisted configuration remains outside the claim: the package leaves open
+whether the API exists there. Version ranges would be an alternative way to
+describe coverage. AIL's exact list gives tools a finite set of configurations
+against which to check references and access paths, at the cost of enumerating
+them. Its practicality for a large platform matrix remains a design question
+([`L3`](../language.md#l3)).
+
+Availability also serves a different purpose from checking an optional member
+on a particular object. The platform may offer an interface while that object
+omits one optional operation. Before invoking it, a caller needs the
+profile-defined capability test for the receiver ([`C3`](../contracts.md#c3)).
 
 ## What it depends on
 
-A consumer needs the same definitions the producer used. A package
-[import](../glossary.md#import) brings
-in declarations; a catalogue selection brings in rules for interpreting them.
-For example, a constructed import of a separate store package could make its
-`Store` type available as `StoreAPI::Store`. The existing synthetic examples
-define their own types locally, but still select `fixture` and `native` with
-`use profile` and `use abi` ([`L2`](../language.md#l2)).
+Suppose an author puts the store declarations in one package and wants another
+package to use them. The second package can [import](../glossary.md#import)
+the first, selecting its package name, version and exact contents. An alias
+such as `StoreAPI` then lets the author refer to `StoreAPI::Store`. This is a
+constructed arrangement; the committed synthetic examples define their types
+locally ([`L2`](../language.md#l2)).
 
-In summary (non-normative), imports pin package name, version and digest and
-introduce an alias. Catalogue selections pin identifier, version and digest.
-Package digests identify exact document bytes; catalogue digests identify exact
-provider manifest bytes. A [resolution set](../glossary.md#resolution-set)
-explicitly supplies dependencies.
-Validation neither fetches them nor executes provider code implicitly
+The examples do share definitions for their extensions and machine-level
+calling rules. `use profile` selects the fixture profile under the alias
+`fixture`; `use abi` selects the ABI entry under `native`. These selections
+give a tool the rules it needs to interpret clauses and prepare calls
+([`L2`](../language.md#l2), [`A1`](../profiles.md#a1)).
+
+Version names alone leave room for different contents to appear under the same
+name. A digest pin identifies the exact bytes the author selected. For an
+import, those bytes are the package document. For a profile or ABI entry, they
+are its provider manifest, the document defining that provider's rules
 ([`L2`](../language.md#l2)).
+
+Before validation, tooling supplies the dependency documents and manifests
+explicitly. This supplied collection is the
+[resolution set](../glossary.md#resolution-set). A validator looks up each
+selection there and checks the digest. Missing documents or mismatching bytes
+prevent successful resolution; validation performs no implicit download or
+execution of provider code ([`L2`](../language.md#l2)).
 
 The pin table separates an author's local alias from the identity and bytes
 that every consumer resolves.
@@ -168,11 +230,16 @@ that every consumer resolves.
 | Profile selection | Profile identifier and version | Profile provider manifest |
 | ABI selection | ABI identifier and version | ABI provider manifest |
 
-Compare two aliases for the same package name/version and digest with two
-aliases that pin different digests for that name/version. Renaming the second
-alias cannot repair the latter conflict: one identity needs one digest
-throughout the full dependency closure. The same consistency rule applies
-separately to profile and ABI identities, and imports form an acyclic graph
+Two importing packages can use different aliases for the same store package
+and select the same bytes. Their local spelling differs while their dependency
+agrees. If they instead select different digests for that same package name
+and version, a consumer would receive two competing definitions of one
+identity. Renaming an alias leaves that conflict in place.
+
+In summary (non-normative), each package name and version resolves to one
+digest throughout the dependency closure. The same consistency rule applies
+separately to profile and ABI identities. Imports also form an acyclic graph:
+following imports cannot lead back to the package where the chain began
 ([`L2`](../language.md#l2); mutations N28–N29 in the
 [conformance corpus](../conformance.md#rejection-mutations)).
 
@@ -184,14 +251,23 @@ and trust remain tooling decisions ([`L2`](../language.md#l2)).
 
 ## Reaching the code
 
-Knowing a contract does not tell a consumer how to call it. The synthetic getter
-can receive an object message, or be called through source compilation. Its two
-paths keep the same main-thread, [borrowed](../glossary.md#borrow)-receiver and
-result obligations. Borrowing grants access without transferring ownership;
-it does not imply Rust's static borrow checking.
+To call `read_count`, a binding generator first needs a mechanism that reaches
+the getter. In the message path, generated code sends `currentCount` to the
+counter through the synthetic runtime. In the source path, a compiler builds
+code that calls `Outer.Counter.currentCount.get`. The blocks below tell the
+generator which definitions govern each choice ([`A2`](../profiles.md#a2),
+[`F1`](../profiles.md#f1)).
 
-Fragment — omits the containing `read_count` declaration, package and synthetic
-fixture profile, catalogue and digest tokens; not a publishable package.
+Both paths keep the getter's contract. The caller enters on the main thread,
+passes a [borrowed](../glossary.md#borrow) receiver and receives a readable
+`u64` result. Borrowing leaves the caller's ownership obligation in place; it
+does not imply Rust's static borrow checking. Choosing a path changes the
+calling mechanism while preserving those obligations
+([`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
+
+Fragment — shows the getter's two call paths. The complete
+[object package](../examples/objects.ail) supplies `read_count` and its contract,
+plus the synthetic fixture profile, catalogue and digest tokens.
 
 <!-- ail-example: ../examples/objects.ail lines=44-55 -->
 ```ail
@@ -209,8 +285,17 @@ fixture profile, catalogue and digest tokens; not a publishable package.
     }
 ```
 
-In summary (non-normative), each access path supplies four facts
-([`A2`](../profiles.md#a2), [`A4`](../profiles.md#a4)):
+Read the first block as instructions to the consumer about the call. `abi`
+selects the `object-message` [calling convention](../glossary.md#calling-convention)
+within the `native` [ABI entry](../glossary.md#abi-entry). `via` selects the
+fixture's message mechanism and the selector `currentCount`. The `mapping`
+clause connects the AIL signature to that mechanism, and `compatibility`
+states where the chosen representations can be used together
+([`A2`](../profiles.md#a2), [`A4`](../profiles.md#a4)).
+
+The second block selects a source call instead. Its compatibility clause
+names `fixture-build`, the recipe that lets a compiler build that call.
+The table collects the four facts (non-normative summary):
 
 | Clause | Question answered | Difference between these paths |
 |---|---|---|
@@ -219,25 +304,39 @@ In summary (non-normative), each access path supplies four facts
 | `mapping` | How does the semantic signature become that call? | Both use the [provider](../glossary.md#provider)'s faithful identity [mapping](../glossary.md#mapping); message dispatch makes the receiver implicit |
 | `compatibility` | In which [compatibility domain](../glossary.md#compatibility-domain) can the [representation](../glossary.md#representation) be used? | The synthetic ABI's stable domain versus the pinned `fixture-build` source recipe |
 
-A [mapping](../glossary.md#mapping) accounts for parameters, results, auxiliary
-native arguments and [completion](../glossary.md#completion) modes exactly once. `identity` relies on a
-total, faithful provider-defined lowering; it does not promise identical
-physical argument lists. Moving a receiver into implicit dispatch preserves
-the semantic operation. Hiding an observable success status would change the
-operation and needs a different declaration ([`A2`](../profiles.md#a2)).
+A [mapping](../glossary.md#mapping) tells the consumer how the declared values
+become a call through the selected mechanism. For the message path, AIL names
+`receiver` as an explicit parameter, while the runtime treats it as the object
+receiving the message. The fixture defines how to make that conversion, so
+`mapping(identity)` preserves the declared operation even though the physical
+argument list changes ([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
 
-Path order supplies no preference. A consumer chooses explicitly or uses a
-configuration policy, and every chosen path implements the whole contract.
-Every available environment needs at least one path. Compared with a single
-inferred route, this requires a choice or configuration policy from the consumer,
-but lets it use alternatives ([`A2`](../profiles.md#a2)).
+For a more involved call, a mapping may also need to account for a callback's
+context pointer or native error-output storage. In summary (non-normative),
+it accounts for each parameter, result, auxiliary argument and
+[completion](../glossary.md#completion) mode exactly once. If a convenience
+wrapper hides a meaningful success status, callers observe a different
+operation. AIL gives that operation a distinct declaration ([`A2`](../profiles.md#a2)).
 
-Compatibility is similarly specific. `stable` refers to the ABI entry's
-guaranteed domain. `artifact` instead refers to a resolved built artifact set;
-a compiler version alone is insufficient. `source` names a fully specified
-recipe pinning source dependencies, compiler, options, interfaces and the build
-procedure. A source compiler can establish compatibility for that build without
-promising independent binary interoperability ([`A4`](../profiles.md#a4)).
+A consumer selects a path explicitly or through a configuration policy. The
+first block in the document has no special priority. Each available environment
+needs at least one path, and every selected path implements the whole contract.
+This lets consumers use alternative mechanisms, at the cost of choosing among
+them. Inferring one route from the source spelling would make that choice
+implicit ([`A2`](../profiles.md#a2)).
+
+The caller and implementation also need compatible representations of the
+values they exchange. With `stable`, the provider guarantees compatibility
+over a specified set of circumstances. That set is its
+[compatibility domain](../glossary.md#compatibility-domain). With `artifact`,
+the path instead selects particular built artifacts and their representation
+manifest from the supplied resolution set. Naming a compiler version alone
+leaves those artifacts unidentified ([`A4`](../profiles.md#a4)).
+
+With `source`, the consumer uses a fully specified build recipe. It identifies
+the source dependencies, compiler, options, interfaces and build procedure.
+The compiler establishes compatibility for that build. Separately built
+binaries need their own compatibility guarantee ([`A4`](../profiles.md#a4)).
 
 The access diagram shows two alternatives converging on the same synthetic
 ABI entry while choosing different conventions. Both use the synthetic
@@ -251,14 +350,15 @@ and omits native calling algorithms. Arrow order is not a selection policy.
 
 [Access structure source](../figures/g3-access.puml)
 
-Data access also needs a mechanism: `fixed_bytes` obtains the address of array
-storage, while `pointer_value` loads the pointer held in a variable. Their
-`ptr<u8>` types alone cannot choose between those operations
+Data access needs an equally concrete action. The synthetic `fixed_bytes`
+names an array: a consumer obtains the address of that array's storage.
+`pointer_value` names a variable containing a pointer: a consumer reads the
+pointer stored there. Both deliver `ptr<u8>`, but the consumer performs a
+different action at the symbol in each case
 ([`A3`](../profiles.md#a3), [`F1`](../profiles.md#f1);
 [object example](../examples/objects.ail)).
 
-The data comparison shows why the same result type cannot select an access
-mechanism on its own.
+The access mechanism tells the consumer which of these actions to perform.
 
 | Synthetic declaration | Access obtains | Result type |
 |---|---|---|
@@ -267,28 +367,36 @@ mechanism on its own.
 
 ## Profiles and ABI entries
 
-A [provider](../glossary.md#provider) supplies definitions and the tooling
-support needed to interpret or realize them. A profile is a semantic extension,
-not a preferences preset. Compare the synthetic profile, which defines
-`message` and `source-call`, with the synthetic ABI entry, which supplies their
-conventions and representations. Selecting a convention alone leaves layout
-and runtime requirements unanswered ([`A1`](../profiles.md#a1),
+For the message call above, a tool needs a definition of what the selector
+means and how the receiver participates. The synthetic profile supplies those
+rules. It also needs to know how object references are represented and passed
+at the machine boundary. The synthetic ABI entry supplies those rules.
+A [provider](../glossary.md#provider) supplies a definition and tooling support
+for interpreting or implementing it ([`A1`](../profiles.md#a1),
 [`F1`](../profiles.md#f1)).
 
-In summary (non-normative), a profile manifest names its identifier, version and
-supported language versions. It defines its vocabulary's types,
-arity, scope, applicability, defaults if any, conflicts and companion clauses.
-It also defines source and environment interpretation, obligations, validation,
-dependencies, access mappings, representation requirements, a canonical machine
-view and lossless printing rules. An ABI manifest defines accepted environments,
-type and call lowering, aggregate layout, [callback](../glossary.md#callback) entry, runtime prerequisites
-and compatibility conditions ([`A1`](../profiles.md#a1)).
+A provider records its definition in a manifest. For a profile clause, a
+reader needs to learn what the clause means, which arguments it takes, where
+it applies and which other clauses it requires. Tool implementers also need
+rules for checking it and preserving its meaning in a machine view or printed
+document. The manifest supplies these, along with exact source-name and
+environment interpretation. [`A1`](../profiles.md#a1) lists its required
+contents.
 
-The package references these definitions. It does not implement register or
-stack algorithms. A record's field order is a semantic fact; native size,
-alignment and offsets need a complete [representation](../glossary.md#representation) recipe for the selected
-boundary. Conflicting recipes or no applicable recipe fail validation
-([`A1`](../profiles.md#a1), [`A3`](../profiles.md#a3)).
+An ABI manifest covers the mechanics of passing values and entering calls.
+For example, it defines record layout as well as parameter passing, and
+[callback](../glossary.md#callback) entry as well as ordinary calls. It states
+the environments and runtime facilities those mechanics require
+([`A1`](../profiles.md#a1)).
+
+Consider a record with an integer followed by a pointer. Its field list tells
+tools which values it holds and in what order. The selected provider supplies
+the sizes, alignment and offsets needed to pass the record to code. These
+facts form its [representation](../glossary.md#representation). A package
+references the definition; tooling may implement it with a compiler or runtime.
+For each reachable nominal type at a boundary, validation requires one complete
+applicable recipe and rejects conflicting recipes ([`A1`](../profiles.md#a1),
+[`A3`](../profiles.md#a3)).
 
 The alternative is to put every runtime mechanism in the core. Profiles keep
 those definitions separate, at the cost of additional dependencies and uneven
@@ -306,13 +414,17 @@ changing a fixture call to `execution(async)` needs additional semantics that
 this synthetic profile does not supply ([`C3`](../contracts.md#c3),
 [`F1`](../profiles.md#f1); mutation N30).
 
-The synthetic fixture supports `fixture64`, platform `fixture` version `1`,
-and optionally `fixture-compiler` version `1`. Its pointers, [handles](../glossary.md#handle) and object
-references are 64 bits; these facts describe an abstract test provider, not the
-host machine. Its callback representation supports [retention](../glossary.md#retention) without a separately
-visible context argument. Owner-scoped callbacks may start after registration
-returns even though callable entry itself is synchronous
-([`F1`](../profiles.md#f1), [`C6`](../contracts.md#c6)).
+The fixture defines an abstract test environment: target `fixture64`, platform
+`fixture` version `1`, and optionally `fixture-compiler` version `1`. Its
+pointers, [handles](../glossary.md#handle) and object references are 64 bits.
+Those sizes are facts about this test provider ([`F1`](../profiles.md#f1)).
+
+The fixture also defines how a stored callback can retain its state. Its
+representation supports [retention](../glossary.md#retention) with no separately
+visible context argument. A registration call can finish synchronously while
+the registered callback starts later. The callback's schedule states that
+permission and its teardown boundary ([`F1`](../profiles.md#f1),
+[`C6`](../contracts.md#c6)).
 
 The synthetic digest tokens are `sha256:` followed by 64 `a` digits for the
 profile and 64 `b` digits for the ABI. They are test resolution tokens, not
@@ -334,19 +446,31 @@ sixteen bytes while keeping the store alive. A machine view can instead expose
 [two-view example](../conformance.md#two-views-of-one-contract) shows both and
 keeps a reference to the complete declaration.
 
-In summary (non-normative), a [projection](../glossary.md#projection) retains
-access to the full contract: identity, types, access alternatives, pins,
-[availability](../glossary.md#availability), [outcomes](../glossary.md#outcome), callback schedules and other obligations. An excerpt
-does not become an authoritative package by changing its format. A scoped
-target-language wrapper may add restrictions, but labels them as its own and
-preserves the original contract in its view ([`A5`](../profiles.md#a5),
-[`C8`](../contracts.md#c8)).
+Each presentation is a [projection](../glossary.md#projection): it organizes
+the contract for a particular reader or tool. A short lifetime paragraph can
+focus on `owner($store)` while linking to the rest of `view`. The complete
+description still includes which configurations offer the operation, all its
+outcomes, and how to call it. AIL requires consumers to retain access to those
+facts, whichever format they present ([`A5`](../profiles.md#a5)).
 
-Compare reordering declarations with reordering parameters. Semantic equality
-ignores the first but preserves the second; it also preserves meaningful list
-order, pins and outcome partitions. Comments and navigation are outside semantic
-equality but still survive an authoring round trip. The draft does not define
-a canonical byte serialization ([`A5`](../profiles.md#a5);
+A target-language wrapper might impose an extra restriction because of its
+own implementation. For example, it could serialize access more strictly than
+the API requires. The consumer labels that as its own restriction and keeps
+the actual API permission available to readers. This lets the same package
+support different consumers without changing the contract they describe
+([`A5`](../profiles.md#a5), [`C8`](../contracts.md#c8)).
+
+Moving `view` before `destroy` in a document leaves the meaning unchanged.
+Swapping two parameters changes which value each argument position supplies.
+AIL's definition of model equality therefore ignores declaration order but
+preserves parameter order. It also preserves the selected dependency pins and
+the distinctions between outcomes ([`A5`](../profiles.md#a5)).
+
+Comments and navigation links help authors work with a document even though
+they are outside semantic equality. A tool reading and printing a document
+for further editing preserves them too. The draft defines these preservation
+obligations while leaving canonical byte serialization unspecified
+([`A5`](../profiles.md#a5);
 [round-trip obligations](../conformance.md#parser-validator-and-round-trip-obligations)).
 
 One authority avoids separately maintained binding and prose contracts, at the
