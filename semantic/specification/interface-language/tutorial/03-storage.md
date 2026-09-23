@@ -1,20 +1,20 @@
 # 3. Caller-supplied storage and failure
 
 > **Purpose:** tutorial — describe text copying with separate status and output validity.
-> **Reader:** language designers new to API binding.
+> **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [2. Lending access](02-lending.md).
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L4–L5`](../language.md#l4), [`C1–C5`](../contracts.md#c1) and [`A2–A4`](../profiles.md#a2) are canonical.
 
 ## Goal
 
-Add `copy_text`, which writes a label's text into caller storage. At the
+Add `copy_text`, which writes a label's text into [caller](../glossary.md#caller-and-callee) storage. At the
 checkpoint, explain what the caller can read after success and after failure.
 
 ## The domain obligation
 
-The caller allocates enough disjoint storage, and reads its output only when
-the copy succeeds ([buffers](../explanation/contracts.md#buffers-and-strings)
+The caller allocates enough disjoint storage and, if the copy succeeds,
+reads the output ([buffers](../explanation/contracts.md#buffers-and-strings)
 and [outcome states](../explanation/contracts.md#every-way-a-call-can-end)).
 
 ## Steps
@@ -37,27 +37,27 @@ and [outcome states](../explanation/contracts.md#every-way-a-call-can-end)).
 
 2. **For exactly those two status values, declare a closed enum.** Use
    `enum CopyStatus: i32`, `values(closed)`, cases `0` and `1`,
-   `sharing(value)` and `isolation(none)`, plus availability and
+   `sharing(value)` and `isolation(none)`, plus [availability](../glossary.md#availability) and
    deprecation. The two values define the entire
-   [discriminator](../glossary.md#discriminator) domain in the outcomes.
+   [discriminator](../glossary.md#discriminator) domain in the [outcomes](../glossary.md#outcome).
    An open enum would also admit every other `i32` value
    ([`L4`](../language.md#l4), [`C2`](../contracts.md#c2),
    [`C5`](../contracts.md#c5)).
 
-3. **For the call's temporary access, borrow both inputs without retention.**
+3. **For the call's temporary access, [borrow](../glossary.md#borrow) both inputs without [retention](../glossary.md#retention).**
    Use `Label` and `mutptr<u8>`, with `input(borrow)`,
-   `retain(none)` and `valid(call)` on each named slot, as below.
+   `retain(none)` and `valid(call)` on each named [slot](../glossary.md#slot), as below.
    If the label came from `current_label`, keep its card alive and prevent
    refresh throughout this use. The label's earlier borrow contract still
    applies ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
    [`C5`](../contracts.md#c5)).
 
-4. **For the writable buffer, specify shape and contents separately.** Write
+4. **For the writable buffer, specify [extent](../glossary.md#buffer-extent) and [contents](../glossary.md#contents) separately.** Write
    `direction($destination, out)`,
    `aliasing($destination, disjoint)`,
    `extent($destination, buffer(7, 8, elements))` and
    `contents($destination, text("utf-8", nul))`.
-   [Extent](../glossary.md#buffer-extent) records seven initialized text
+   Extent records seven initialized text
    elements on a valid output and capacity for eight. The eighth code unit
    holds the terminator, which the length excludes.
    Before entry, allocate all eight bytes; no initialized input contents
@@ -66,27 +66,27 @@ and [outcome states](../explanation/contracts.md#every-way-a-call-can-end)).
    Set `mutation(arguments)` because the callee writes that storage.
 
 5. **For each possible status, state what is safe to observe.** Split
-   returned completion using `equal($result, 0)` and
+   returned [completion](../glossary.md#completion) using `equal($result, 0)` and
    `equal($result, 1)`. Mark `$result` valid in both outcomes.
    Mark `$destination[]` valid on success and invalid on failure.
    The `[]` [place](../glossary.md#place) selects buffer elements;
    `.*` would select the pointee of an `extent(one)` pointer.
    In summary (non-normative; [`C1`](../contracts.md#c1),
    [`C5`](../contracts.md#c5)): invalid output conveys no initialized
-   elements and cannot be inspected. `meaning(failure)` classifies the
+   elements, so the caller cannot inspect it. `meaning(failure)` classifies the
    returned status; it does not turn it into an exception.
 
 6. **To publish the expanded subset, add `CopyStatus` and `copy_text`
-   to the exports and describe copying in the surface.** Keep all earlier
+   to the [exports](../glossary.md#exports) and describe copying in the [surface](../glossary.md#surface).** Keep all earlier
    declarations, and give `copy_text` its explicit effects and synthetic
-   symbol path. The `mutptr<u8>` pointer itself is borrowed from the
+   [symbol access path](../glossary.md#access-path). The `mutptr<u8>` pointer itself is borrowed from the
    caller; writing scalar bytes creates no new reference ownership
    ([`L3`](../language.md#l3), [`C1`](../contracts.md#c1),
    [`C3`](../contracts.md#c3), [`A2`](../profiles.md#a2)).
 
 ## Checkpoint package
 
-The synthetic fixture profile, catalogue and digest tokens are defined by
+The synthetic fixture [profile](../glossary.md#profile), catalogue and [digest tokens](../glossary.md#digest-pin) are defined by
 [`F1`](../profiles.md#f1). Read the complete [checkpoint file](../examples/tutorial/03-storage.ail)
 alongside your work.
 
@@ -331,7 +331,7 @@ In summary (non-normative; [`L4`](../language.md#l4),
 2. No. The failed output is invalid; it has no readable initialized elements.
    The declaration does not promise unchanged storage
    ([`C5`](../contracts.md#c5)).
-3. The elements are scalar `u8` values, not reference leaves. The caller
+3. The elements are scalar `u8` values, not [reference leaves](../glossary.md#reference-leaf). The caller
    already owns the allocation and lends its pointer during the call
    ([`C1`](../contracts.md#c1), [`C3`](../contracts.md#c3),
    [`C5`](../contracts.md#c5)).
@@ -353,4 +353,3 @@ for the required final zero.
 
 Return: [Describing a small API](README.md).
 Next: [4. Callbacks and teardown](04-callbacks.md).
-

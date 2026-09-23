@@ -1,7 +1,7 @@
 # 4. Callbacks and teardown
 
-> **Purpose:** tutorial — describe retained notifications and the boundary after which callbacks cannot run.
-> **Reader:** language designers new to API binding.
+> **Purpose:** tutorial — describe a [retained](../glossary.md#retention) [callback](../glossary.md#callback) and the boundary after which it cannot run.
+> **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [3. Caller-supplied storage and failure](03-storage.md).
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`C2–C3`](../contracts.md#c2), [`C5–C6`](../contracts.md#c5), [`A2`](../profiles.md#a2) and the synthetic catalogue [`F1`](../profiles.md#f1) are canonical.
@@ -9,13 +9,13 @@
 ## Goal
 
 Add a notification subscription with a unique `Watch` owner. At the checkpoint,
-identify when notifications may start and when the caller can rely on all
+identify when notifications may start and when the [caller](../glossary.md#caller-and-callee) can rely on all
 invocations having stopped.
 
 ## The domain obligation
 
-The callee keeps a stored [callback](../glossary.md#callback) alive while it
-may invoke it, and teardown reaches [quiescence](../glossary.md#quiescence)
+The callee keeps a stored callback alive while it
+may invoke it, and the destructor reaches [quiescence](../glossary.md#quiescence)
 before returning ([callback schedules and teardown](../explanation/contracts.md#callbacks)).
 
 ## Steps
@@ -24,22 +24,23 @@ before returning ([callback schedules and teardown](../explanation/contracts.md#
    Add `callback LabelChanged(change: u64) -> unit`. The scalar `change`
    identifies a synthetic change notification; it carries no card or label
    ownership. The callback finishes synchronously with a successful returned
-   outcome. Give it all seven callable effects, `sharing(shared)` and
+   [outcome](../glossary.md#outcome). Give it all seven callable effects, [`sharing(shared)`](../glossary.md#shared) and
    `isolation(none)`, as in the checkpoint.
 
-   A callback that reads immutable captured state and returns can satisfy
+   A callback that reads immutable [captured state](../glossary.md#callback-captures) and returns can satisfy
    this type. One that requires main-thread-only captured state cannot:
    `executor(any)` permits entry elsewhere. Here
-   [callback captures](../glossary.md#callback-captures) are the state held by
+   callback captures are the state held by
    the callable value. In summary (non-normative;
    [`C2–C3`](../contracts.md#c2)): the callback value and its captures allow
    every use the declaration permits; sharing alone does not authorize
    concurrent invocation. Choose `concurrency(serial)` and
-   `reentrancy(forbidden)` for this example.
+   `reentrancy(forbidden)` for this example; [re-entrancy](../glossary.md#re-entrancy)
+   concerns nested calls, separately from independent overlapping invocations.
 
-   For the synthetic fixture representation, add
+   For the synthetic fixture [representation](../glossary.md#representation), add
    `callback_abi(native, "c")` and `representation(fixture, "closure")`.
-   The callback has these clauses instead of a function's `access` block
+   The callback has these clauses instead of a function's [access path](../glossary.md#access-path) block
    ([`A2`](../profiles.md#a2), [`F1`](../profiles.md#f1)).
 
 2. **For registration that lasts beyond the call, add a separate owner.**
@@ -47,15 +48,16 @@ before returning ([callback schedules and teardown](../explanation/contracts.md#
    `sharing(transferable)`, `isolation(none)` and the common clauses shown
    below. Add `watch_labels(handler: LabelChanged) -> Watch` with one
    successful returned outcome, a valid result and `give($result, owned)`.
+   The caller receives one [owned](../glossary.md#owned) destruction obligation.
    This synthetic operation returns a non-null owner whenever it completes;
    no failure result is declared ([`C2`](../contracts.md#c2),
    [`C5`](../contracts.md#c5)).
 
-   Borrow `$handler` with `valid($handler, call)`, and store an independent
+   [Borrow](../glossary.md#borrow) `$handler` with `valid($handler, call)`, and specify an independent
    retained reference with `retain($handler, strong(owner($result)))`.
    The caller supplies a valid callback during registration; the callee's
    retained reference keeps it alive for the `Watch` lifetime. The synthetic
-   fixture provider supplies retention and release
+   fixture [provider](../glossary.md#provider) supplies retention and release
    ([`C3`](../contracts.md#c3), [`F1`](../profiles.md#f1)).
    No `Card` is passed to this operation. The subscription neither retains
    a card nor keeps a borrowed `Label` valid.
@@ -77,7 +79,7 @@ before returning ([callback schedules and teardown](../explanation/contracts.md#
 4. **For teardown, consume the owner and wait for quiescence.**
    Add `destroy_watch(subscription: Watch) -> unit` with
    `input($subscription, consume)`, `retain($subscription, none)` and one
-   successful returned outcome. The lifecycle consumes the handle at entry;
+   successful returned outcome. The destructor [consumes](../glossary.md#consume) the [handle](../glossary.md#handle) at entry;
    the schedule's quiescence boundary is destructor return. During teardown
    the callee may still be finishing callbacks. After teardown returns,
    none is running or can start ([`C2`](../contracts.md#c2),
@@ -102,7 +104,7 @@ before returning ([callback schedules and teardown](../explanation/contracts.md#
 
 ## Checkpoint package
 
-The synthetic fixture profile, catalogue and digest tokens are defined by
+The synthetic fixture [profile](../glossary.md#profile), catalogue and [digest tokens](../glossary.md#digest-pin) are defined by
 [`F1`](../profiles.md#f1). Compare your work with the complete
 [subscription checkpoint](../examples/tutorial/04-callbacks.ail).
 
@@ -412,8 +414,8 @@ In summary (non-normative; [`C2–C3`](../contracts.md#c2),
   when this registration can invoke it. The scalar parameter needs no
   ownership clause.
 - `execution(sync)` on `watch_labels` coexists with `timing(after_return)`:
-  registration completes before returning, and notifications start later.
-- The callee strongly retains the callback in the returned owner's region.
+  registration completes before returning, and any notifications start later.
+- The callee strongly retains the callback in the returned owner's [region](../glossary.md#region).
   `input(borrow)` transfers none of the caller's existing ownership.
 - `destroy_watch` consumes the unique owner at entry. Its return establishes
   quiescence, so neither returning from registration nor merely starting

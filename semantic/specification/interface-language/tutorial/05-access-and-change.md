@@ -1,7 +1,7 @@
 # 5. Reaching the code, and changing the contract
 
-> **Purpose:** tutorial — read the finished package's access paths and change a borrowed label into an owned snapshot.
-> **Reader:** language designers new to API binding.
+> **Purpose:** tutorial — read the finished [package](../glossary.md#package)'s [access paths](../glossary.md#access-path) and change a [borrowed](../glossary.md#borrow) label into an [owned](../glossary.md#owned) snapshot.
+> **Reader:** language designers new to [API binding](../glossary.md#binding).
 > **Before this:** [4. Callbacks and teardown](04-callbacks.md).
 > **Status:** draft 0.1, a proposal under review; no parser, validator or implementation exists.
 > **Rules:** [`L2–L5`](../language.md#l2), [`C1–C6`](../contracts.md#c1), [`A1–A5`](../profiles.md#a1) and the synthetic catalogue [`F1`](../profiles.md#f1) are canonical.
@@ -10,12 +10,12 @@
 
 Read how the finished package reaches its synthetic implementation. Then
 change `current_label` to return an independent owned snapshot, and identify
-what changes in the caller's obligations even though the result type stays
+what changes in the [caller](../glossary.md#caller-and-callee)'s obligations even though the result type stays
 `Label`.
 
 ## The domain obligation
 
-The selected [access path](../glossary.md#access-path) implements the whole
+The implementation reached through the selected access path fulfils the whole
 contract, including who destroys a returned value
 ([reaching the code](../explanation/packages.md#reaching-the-code)).
 
@@ -23,25 +23,25 @@ contract, including who destroys a returned value
 
 1. **For an existing function, separate its identity from its access path.**
    Find `current_label` in the finished package below. Its
-   [declaration identity](../glossary.md#canonical-identity) is the package
+   [canonical identity](../glossary.md#canonical-identity) is the package
    name, package version and declaration name. Its synthetic linker identity
    is the string `fixture_current_label` in `via`. The local access name
-   `direct` labels this path; the environment list `[test]` limits where it
+   `direct` labels this path; the [environment](../glossary.md#environment) list `[test]` limits where it
    applies. A source spelling alone supplies no access path
    ([`L2`](../language.md#l2), [`A2`](../profiles.md#a2)).
 
-2. **For that path, trace each of its four clauses to a provider fact.**
+2. **For that path, trace each of its four [clauses](../glossary.md#clause) to a [provider](../glossary.md#provider) fact.**
    A [profile](../glossary.md#profile) defines an access mechanism; an
-   [ABI](../glossary.md#abi) entry defines representation and calling
-   conventions. Follow the synthetic `fixture` and `native` aliases to their
+   [ABI entry](../glossary.md#abi-entry) defines [representation](../glossary.md#representation) and [calling
+   conventions](../glossary.md#calling-convention). Follow the synthetic `fixture` and `native` aliases to their
    `use` declarations, then to [`F1`](../profiles.md#f1).
 
    | Clause in `current_label` | Observation to check |
    |---|---|
    | `abi(native, "c")` | The pinned synthetic ABI entry supports the selected `c` calling convention. The convention is one selection within the entry, not the whole ABI. |
    | `via(fixture, "symbol", "fixture_current_label")` | The synthetic profile supports a function symbol with all parameters explicit and a nonempty linker name. |
-   | `mapping(identity)` | F1 defines faithful lowering for this mechanism and ABI pair, including the Card input and Label result. The spelling does not waive ownership or other contracts. |
-   | `compatibility(stable)` | F1 guarantees the reachable representations within its synthetic fixture domain; this says nothing about a real host ABI. |
+   | `mapping(identity)` | `F1` defines faithful lowering for this mechanism and ABI pair, including the `Card` input and `Label` result. This [mapping](../glossary.md#mapping) preserves ownership and the other contracts. |
+   | `compatibility(stable)` | `F1` guarantees the reachable representations within its synthetic fixture [compatibility domain](../glossary.md#compatibility-domain); this says nothing about a real host ABI. |
 
    These are non-normative summaries of [`A1–A4`](../profiles.md#a1) and
    [`F1`](../profiles.md#f1). Every function has a path covering `test`.
@@ -52,10 +52,9 @@ contract, including who destroys a returned value
 ## Checkpoint package
 
 The finished package assembles the API from parts 1–4 under the identity
-`tutorial::finished`. Its synthetic fixture profile, catalogue and digest
-tokens are defined by [`F1`](../profiles.md#f1). Compare the full
-[finished file](../examples/tutorial/05-finished.ail) with your work before
-applying the change.
+`tutorial::finished`. Its synthetic fixture profile, catalogue and [digest
+tokens](../glossary.md#digest-pin) are defined by [`F1`](../profiles.md#f1). Before applying the change,
+compare the full [finished file](../examples/tutorial/05-finished.ail) with your work.
 
 Complete package — admitted by the grammar and complete under draft 0.1,
 checked by inspection.
@@ -358,14 +357,14 @@ package tutorial::finished version "1" {
 
 1. **Before changing the contract, compare the two caller journeys.**
    With the existing borrow, keep the card alive and avoid refresh while
-   using the label; do not destroy that borrowed handle. With an independent
+   using the label; do not destroy that borrowed [handle](../glossary.md#handle). With an independent
    owned snapshot, use the label even after card refresh or destruction,
    then call `destroy_label` exactly once for its ownership obligation.
    The result type is `Label` in both cases. The `give` clause distinguishes
    the journeys ([`C1–C2`](../contracts.md#c1), [`C5`](../contracts.md#c5)).
 
    The owned version is a different synthetic API contract. It still returns
-   a non-null Label successfully whenever it completes; this exercise adds
+   a non-null `Label` successfully whenever it completes; this exercise adds
    no allocation-failure result and promises no eventual completion.
    The implementation burden of supplying such a snapshot belongs to that
    API choice, not to a guarantee made by AIL
@@ -373,14 +372,14 @@ package tutorial::finished version "1" {
 
 2. **For the changed API, make a separate publication.**
    Starting with the finished checkpoint, use `package tutorial::owned
-   version "1"` and describe the owned-snapshot variant in `surface`.
-   Keep the existing export list: `Label` and `destroy_label` are already
+   version "1"` and describe the owned-snapshot variant in [`surface`](../glossary.md#surface).
+   Keep the existing [export](../glossary.md#exports) list: `Label` and `destroy_label` are already
    included. The new package name gives its declarations distinct canonical
    identities. Read each package independently; shared spellings do not
    make their nominal declarations interchangeable
    ([`L2–L3`](../language.md#l2)).
 
-3. **In `current_label`'s outcome, change the returned obligation.**
+3. **In `current_label`'s [outcome](../glossary.md#outcome), change the returned obligation.**
    Replace `give($result, borrow(owner($card)))` with
    `give($result, owned)`, and remove
    `invalidated_by($result, [@refresh_card])`. Rename the explanatory outcome
@@ -397,7 +396,7 @@ package tutorial::finished version "1" {
 
 4. **For the changed operation's access path, name the changed implementation.**
    Replace `fixture_current_label` with `fixture_current_label_owned` in
-   `via`. Keep `abi`, `mapping` and `compatibility`: F1 still represents the
+   `via`. Keep `abi`, `mapping` and `compatibility`: `F1` still represents the
    same signature, and the new synthetic symbol is specified to deliver the
    owned snapshot. Reusing the old borrowing implementation would not
    implement this whole declaration, even though its signature fits
@@ -455,12 +454,12 @@ a non-normative inspection guide; the linked rules determine the constraints.
 | `current_label` signature | The input remains `Card` and the result remains non-null `Label`. A resource is already a handle; no pointer, extent or allocator contract is added. | [`L4`](../language.md#l4), [`C4–C5`](../contracts.md#c4) |
 | `give` | `owned` replaces the owner-scoped borrow. The caller now receives one destruction obligation. | [`C1–C2`](../contracts.md#c1), [`C5`](../contracts.md#c5) |
 | `invalidated_by` | Remove the borrow's earlier invalidator. `refresh_card` still mutates the card, but no longer ends this independent snapshot's validity. | [`C1`](../contracts.md#c1), [`C5`](../contracts.md#c5) |
-| `lifecycle` and `destroy_label` | Keep `lifecycle(unique, @destroy_label)`. The destructor still consumes one non-null Label, returns unit and has one successful returned outcome. The caller can now use it for this result. | [`C2–C3`](../contracts.md#c2) |
+| `lifecycle` and `destroy_label` | Keep `lifecycle(unique, @destroy_label)`. The destructor still consumes one non-null `Label`, returns `unit` and has one successful returned outcome. The caller can now use it for this result. | [`C2–C3`](../contracts.md#c2) |
 | `input`, `retain`, `valid` | Keep the card's input borrow, no retention and call validity. Output ownership does not transfer or retain the card. | [`C3`](../contracts.md#c3), [`C5`](../contracts.md#c5) |
 | Outcome name, `when`, `meaning`, `state` | `supplied` replaces the name `lent`; the single successful, valid returned result and exhaustive `any` predicate stay the same. There is no new nullable failure branch. | [`L2`](../language.md#l2), [`C5`](../contracts.md#c5) |
 | `via`, `abi`, `mapping`, `compatibility` | The symbol identity changes. The synthetic provider pair and signature lowering stay the same; the chosen implementation still owes the whole new contract. | [`A2–A4`](../profiles.md#a2), [`F1`](../profiles.md#f1) |
 | Common and effect clauses | Keep `available`, `deprecated`, `sharing`, `isolation`, and the seven callable effects. Supplying a snapshot need not mutate the card's externally visible contents. Clauses remain in their original scopes, with one per applicable place. | [`L3`](../language.md#l3), [`L5`](../language.md#l5), [`C2–C3`](../contracts.md#c2) |
-| Copying and notifications | `copy_text` still borrows a valid Label for its call; its output states and buffer contract stay the same. The independent Watch schedule, retention and teardown also stay the same. | [`C3–C6`](../contracts.md#c3) |
+| Copying and notifications | `copy_text` still borrows a valid `Label` for its call; its output states and buffer contract stay the same. The independent `Watch` schedule, retention and teardown also stay the same. | [`C3–C6`](../contracts.md#c3) |
 | Any prose or machine view of the changed API | It now presents an owned snapshot and the caller's destruction obligation. It cannot keep describing a card-dependent borrow. | [`A5`](../profiles.md#a5) |
 
 The difference is visible without native execution: one result depends on the
@@ -470,13 +469,13 @@ The files cannot establish that a real implementation honours either contract
 
 ## Check yourself
 
-1. In the owned variant, does refreshing the card discharge the Label's destruction obligation?
+1. In the owned variant, does refreshing the card discharge the `Label`'s destruction obligation?
 2. Does `mapping(identity)` allow the original borrowing symbol to serve the owned contract?
 3. Does the owned result allow the caller to pass an invalid card to `current_label`?
 
 ### Answers
 
-1. No. The Label is an independent owned snapshot. Its caller owes
+1. No. The `Label` is an independent owned snapshot. Its caller owes
    `destroy_label` even after card refresh or destruction
    ([`C2`](../contracts.md#c2), [`C5`](../contracts.md#c5)).
 2. No. Identity mapping preserves the full contract; it does not adapt a
