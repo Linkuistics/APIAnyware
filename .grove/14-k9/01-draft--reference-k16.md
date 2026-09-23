@@ -2,7 +2,7 @@
 
 ## Goal
 
-Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` with the applicability table. Add page-one blocks to the normative and supporting files, and add `task docs:coverage` with its enumerated inventory.
+Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` with the applicability table. Verify and extend the normative pages' existing reading routes, add page-one blocks to the supporting files, and add `task docs:coverage` with its enumerated inventory.
 
 ## Context
 
@@ -11,6 +11,9 @@ Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` wit
   rather than re-deriving it.
 - Prose contract, labels, figures and checks: `semantic/docs/design/2026-09-23-interface-language-documentation-plan.md` §4–§7.
 - Evidence: the audit (`semantic/docs/research/interface-language-documentation-audit.md`) and the survey's §9 criteria D1–D8.
+- Read first-path-reading-k48 and first-path-reading-k64 for the human's
+  assessments. Rule-reading-k49 supplies the normative pages' context blocks,
+  local examples and language-model/railroad views. Preserve and reuse them.
 
 ## Done when
 
@@ -26,7 +29,10 @@ Draft `reference/README.md`, `notation.md`, `types.md` and `declarations.md` wit
   `reference/README.md`, which links every reference page that exists and
   names the clause files as plain text until they land.
 - Declaration and type entries use the §9.4 fields that apply.
-- Page-one blocks are the only change to the normative files.
+- Normative wording, anchors and grammar remain unchanged. Existing labelled
+  reading aids remain available; only their context/navigation is extended
+  to the new reference. The entries illustrate local/imported declarations,
+  a member and receiver, and declaration/slot/place references in context.
 - The plan's §2 clause-file split is confirmed or amended against the entry
   count.
 - `task docs:check` passes.

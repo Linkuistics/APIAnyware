@@ -49,7 +49,29 @@ available for reuse by `explanation/contracts.md`. Both use
 `task docs:check` includes `docs:diagrams`, which compares regenerated SVG bytes.
 Use `task docs:diagrams:write` after source or style edits, then inspect the SVGs.
 
-## Human reading correction
+## Current human-directed correction
+
+The 2026-09-28 human response in first-path-reading-k48 (D2–D5) requires
+examples as constructs are introduced, plus language-model and selected
+railroad diagrams that give syntax a containing context. Apply the updated
+plan §4–§6 and §9.1 across `README.md`, `explanation/unsaid.md` and `glossary.md`.
+Rule-reading-k49 lands the canonical reading aids first; reuse them where
+they help this document's reader.
+
+This document already completed its first correction run. The new request
+reaches Grove's second-re-run escalation boundary. The human explicitly said,
+"These two points should be generally applied and then let's review again."
+That instruction authorizes this one bounded draft → copy-edit → art → proof
+run, orientation-k52 through orientation-k55. Its four stages are already
+queued. No further automatic rerun is authorized; record unresolved residue
+for first-path-reading-k64 and seek human direction when necessary.
+
+The new checkpoint follows all three corrected documents and precedes reference
+and review-guide drafting. The k48 response identifies language.md L2; it does
+not establish that this document was read or that its first correction failed.
+Keep the reported reading extent and proposed remedies distinct.
+
+## First human reading correction
 
 The first human read (`first-path-reading-k8`, D4–D6) found the prose too
 compressed and requested positive framing. `orientation-k36` through

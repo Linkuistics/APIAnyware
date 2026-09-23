@@ -13,6 +13,9 @@ any) the tree should hold.
   `semantic/docs/design/2026-09-23-interface-language-documentation-plan.md`.
 - Checkpoint 1's findings and dispositions, in `first-path-reading-k8`'s
   commit.
+- Follow-up findings in `first-path-reading-k48` and the subsequent
+  `first-path-reading-k64` assessment. Keep each read's reported extent and
+  correction history distinct; do not infer approval of unreported pages.
 - The audit's closing "Step 2: refactored output" section, written by
   `reviewer-journey`.
 
@@ -35,4 +38,7 @@ any) the tree should hold.
 
 ## Notes
 
-HITL. The same proxy-labelling rule as checkpoint 1 applies.
+HITL. The same proxy-labelling rule as checkpoint 1 applies. Include direct
+rule entries and their model/snippet/railroad support in the reading route.
+Further correction runs require the human's direction at this checkpoint;
+the bounded runs authorized on 2026-09-28 do not authorize an unattended loop.

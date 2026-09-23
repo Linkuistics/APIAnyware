@@ -4,7 +4,8 @@
 
 Land the reference: `reference/README.md`, `notation.md`, `types.md`,
 `declarations.md` (with the applicability table) and the `clauses-*.md`
-files, plus page-one blocks on the normative and supporting files. Any clause,
+files, plus verified context blocks and lookup routes on the normative and
+supporting files. Any clause,
 declaration kind, type or rule can then be looked up with fixed fields and a
 link to its canonical rule (plan outcome 5).
 
@@ -15,6 +16,16 @@ the reader and their outcome, the ordered sections and the purpose of each,
 and the emphasis and non-goals. The same plan's §4 (prose contract), §5
 (page-one block and example labels), §6 (figures) and §7 (checks) govern
 every stage. The gate is `task docs:check`, plus any task this document adds.
+
+The 2026-09-28 requirements in first-path-reading-k48 apply to every entry:
+locate each introduced form within a small explained example, and reuse the
+language-model/railroad aids landed by rule-reading-k49. Local/imported
+declarations, a top-level member with its receiver, and declaration/slot/place
+references are explicit acceptance cases. Normative page-one blocks and labelled
+reading aids now land in rule-reading; preserve them, verify their routes and
+add links to the new reference. Normative wording and grammar stay unchanged.
+The next human checkpoint, first-path-reading-k64, precedes this node; read and
+incorporate its decisions before drafting.
 
 ## Pipeline
 
@@ -36,7 +47,9 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
   linked from it, in the session that lands it (plan §3, *Staging*).
 - Entries use the §9.4 fields in order. Every "rejected when" field cites a
   rule, and every meaning is a labelled non-normative summary.
-- The normative files' rule text is unchanged apart from page-one blocks.
+- The normative rule text and grammar are unchanged. The separately labelled
+  reading aids and page-one blocks from rule-reading remain usable and link
+  to the new entries.
 - The concept pages, tutorial and glossary link to entries where they name a
   clause.
 
@@ -45,8 +58,8 @@ needs it. Figure slots that `draft` leaves for `art` go there too.
 Four draft sessions, in order. Only the last cuts `copy-edit`.
 
 1. `reference/README.md`, `notation.md`, `types.md` and `declarations.md`,
-   with the applicability table, the page-one blocks on the normative and
-   supporting files, and `task docs:coverage` with its candidate extraction
+   with the applicability table, verified normative context/lookup routes,
+   page-one blocks on supporting files, and `task docs:coverage` with its candidate extraction
    and disposition list. Its classified inventory fixes the entry list for the
    remaining sessions.
 2. Clauses for package, environment and common declaration scope.

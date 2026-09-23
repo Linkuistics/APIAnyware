@@ -14,6 +14,11 @@ and the emphasis and non-goals. The same plan's §4 (prose contract), §5
 (page-one block and example labels), §6 (figures) and §7 (checks) govern
 every stage. The gate is `task docs:check`, plus any task this document adds.
 
+Include the rule-reading model, railroad views and local examples in the final
+routes. The 2026-09-28 feedback at language.md L2 shows why a direct rule entry
+needs its own context. Preserve those aids when adding reference back-links,
+and incorporate the actual assessment recorded by first-path-reading-k64.
+
 ## Pipeline
 
 `draft` → `copy-edit` → `art` → `proof`, cut lazily: each stage's last act

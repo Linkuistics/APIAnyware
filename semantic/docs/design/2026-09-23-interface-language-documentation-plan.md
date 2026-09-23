@@ -64,7 +64,7 @@ normative and supporting files keep their current paths.
 | `review/walkthroughs.md` | Reading the conformance examples | How-to: trace tasks on existing examples | What does each clause of these packages commit to? | Review guide |
 | `review/tasks.md` | Review tasks | How-to: tasks with expected observations | How do I test the design against my own judgement? | Review guide |
 | `figures/` | — | Diagram sources, generated SVGs and shared style | — | From Orientation |
-| `language.md`, `contracts.md`, `profiles.md`, `grammar.ebnf` | (unchanged) | Normative rules, the one canonical source | — | Page-one blocks: Reference |
+| `language.md`, `contracts.md`, `profiles.md`, `grammar.ebnf` | (unchanged) | Normative rules, with separately labelled reading aids in the Markdown files | How do the introduced constructs fit together? | Rule-reading (§9.7); indexed lookup remains Reference |
 | `conformance.md`, `baseline.md`, `examples/*.ail` | (unchanged) | Conformance corpus; maintainer evidence | — | Page-one blocks: Reference |
 
 The reference's clause files are split by the scope where a clause appears.
@@ -93,7 +93,9 @@ where to go next on this route.
 
 - **From a rule** (a review comment cites C6). The normative page's page-one
   block names the explanation that motivates the rules and the reference
-  entries that index them.
+  entries that index them once they exist. Local reading aids give each
+  introduced construct a concrete context; a reader following a rule link
+  need not first read the whole guided route (§9.7).
 - **From an example** (a link to `buffers.ail`). The walkthrough explains the
   example, and the landing page lists all examples with their purpose.
 - **From a term** (a search for *quiescence*). The glossary entry links to its
@@ -187,6 +189,29 @@ metrics (survey §6).
 - **Domain before notation.** Explain an obligation in domain terms before
   showing the clause that states it. Every analogy to Rust, Swift, C++ or C
   says where it fails.
+- **Show constructs as they are introduced** (human decision, 2026-09-28).
+  Put a small, explained snippet beside a construct's first substantive
+  introduction on each standalone page. Show enough of its enclosing package,
+  declaration or callable to locate it, and explain what each new name and
+  punctuation mark addresses. A complete package later on the page and a
+  glossary link serve different purposes; they do not supply this local
+  introduction. Build from a small example to the relationship and rule,
+  retaining complete examples for later inspection. Domain-only passages can
+  use their C example or concrete actions without introducing AIL prematurely.
+- **Establish the language model before dependent syntax.** Relate packages,
+  declarations, nominal owners, imports, callables and slots before presenting
+  reference spellings that assume those relationships. The explicit acceptance
+  cases are a declaration in the current package versus one in a named imported
+  package; a top-level member associated with its owner by `member`; and local,
+  imported and slot references. Distinguish `@operation::parameter` from a
+  callable-local `$parameter` place. Show how a receiver is an ordinary named
+  parameter, and how a type name is written without `@`. Give the syntax a
+  visible containing context and explain its use, rather than listing tokens.
+- **Use figures to teach the relevant structure.** A language-model diagram
+  shows containment and named relations; a railroad diagram shows how to read
+  a selected grammar production. Pair both with the same small examples and
+  explain their reading order. A railroad does not establish name resolution,
+  applicability or semantic validity. Follow §6 for sources, SVGs and keys.
 - **Two cases, then the principle.** Teach a concept by comparing two
   contrasting cases, then state the principle, then say where the comparison
   breaks down (survey D7).
@@ -217,7 +242,8 @@ metrics (survey §6).
 ## 5. Page-one block and example labels
 
 Every page except the normative files opens with this block. The normative
-files get it in the reference increment, with their rule text unchanged.
+Markdown files get it in the rule-reading increment, with their rule text
+unchanged. The reference increment checks and reuses those blocks.
 
 ```markdown
 > **Purpose:** <form> — <one sentence on what this page is for>.
@@ -251,6 +277,14 @@ renderers are the local installs: PlantUML 1.2026.8 with Graphviz 16.1.0, and
 D2 0.9.0. Mermaid needs `mmdc`, which is not installed, so a Mermaid figure
 is used only once its renderer is pinned and its SVG can be regenerated.
 
+The human's 2026-09-28 reading adds two figure purposes: a language-model view
+and syntax/railroad views. Keep them within these admitted notations and the
+source-plus-generated-SVG workflow. A selected production can be drawn with
+the existing tools; no new diagram service or parser implementation is needed.
+Label literal tokens, nonterminals, alternatives, optional parts and repetition,
+with a key explaining how to follow the path. Check every path against the
+named EBNF production. Keep semantic constraints in prose with rule links.
+
 **Visual vocabulary.** All three notations render the same vocabulary. The
 first `art` session defines it once, as shared style files under
 `figures/style/`, and every later figure reuses them:
@@ -280,6 +314,8 @@ pinned D2 renderer; Mermaid needs a pinned renderer added before first use.
 | G6 | Contract | What states does a uniquely owned resource pass through? | State | `explanation/contracts.md` |
 | G7 | Contract | When may a registered callback run relative to registration and quiescent teardown? | Timing or sequence | `explanation/contracts.md`, tutorial part 4 |
 | G8 | Navigation | Which page answers which question? | Table, not a diagram | Landing page |
+| G9 | Language model | Where do declarations and slots live, and how do imports and member ownership relate them? | Structure, with concrete names shared by the examples | `language.md` L2; linked or reused by `explanation/packages.md` |
+| G10 | Syntax | How does the reader follow the package shell, imports, references and clauses? | Small railroad views tied to named EBNF productions | At the relevant introductions in `language.md`; reused in reference notation |
 
 The drafts decide which figure slots a page needs and record each unfilled
 slot in the document node's handed-forward list for `art`. Prose carries every
@@ -426,6 +462,26 @@ The first checkpoint's proxy transcript remains available as historical
 evidence; repeating it is optional for this follow-up. The full-set checkpoint
 still follows cross-set navigation.
 
+At the follow-up (`first-path-reading-k48`, 2026-09-28), the human quoted the
+opening two paragraphs of `language.md` L2. They asked for examples distinguishing
+local from non-local declarations, a member example, and language-model or
+railroad diagrams that establish context when syntax is introduced. They asked
+to apply these points generally and then review again. Those quoted locations
+are the extent of the reported read; the response does not establish the route
+taken, full-path coverage or an assessment of the previously corrected pages.
+
+Run rule-reading (§9.7) before one further correction run each for orientation,
+concepts and tutorial. This reaches the second-re-run escalation boundary for
+those three documents; the human's explicit instruction supplies direction for
+this bounded run, not an unattended repetition policy. Each runs draft,
+copy-edit, art and proof once. Record unresolved residue and stop for human
+direction rather than growing another correction cycle. Then run
+`first-path-reading-k64`, before reference and review-guide drafting. Begin
+that read at L2's repaired introductions and their model/notation aids, then
+follow the connected explanations and tutorial as the human proceeds. Record
+what was actually read and said; neither editorial checks nor a proxy supplies
+human comprehension evidence.
+
 ## 9. Structure briefs
 
 Each brief states the reader and outcome, the ordered sections with the
@@ -509,6 +565,13 @@ definition with enough context to understand it, the defining page, the rules
 that use it, and a familiar-meaning warning where one applies. It covers the domain list from the
 root brief and every AIL term used on the orientation and concept pages.
 
+For the 2026-09-28 correction, show a small named example when an entry
+introduces language structure or notation. In particular, give declaration,
+local/imported declaration, member, callable/slot and canonical identity enough
+context to distinguish containment, association and reference. Link the rule
+reading aids and the concept explanation. The landing route should make these
+aids discoverable; the domain page retains its domain-first purpose.
+
 **Emphasis.** Concrete actions and consequences before abstraction, and domain
 obligations before AIL syntax. The landing page gives a newcomer a clear route
 to the domain page while retaining the explanation needed to choose that route.
@@ -584,6 +647,15 @@ in AIL, the principle, AIL's choice and its alternative, and the rule links.
 8. *The synthetic fixture.* What F1 is and why the examples use it.
 9. *One contract, several views.* Documentation and machine projections,
    drawing on `conformance.md`'s "Two views of one contract".
+
+In the 2026-09-28 correction, open the package explanation with a small package
+shell and the language model before *Four identities*. Use two explicitly named
+packages to explain local versus imported declarations and their aliases. Place
+a nominal declaration and its member side by side at package level; show the
+`member` association, named receiver and references to callable slots. Reuse
+G9 and the rule-reading examples where suitable. Thread the same names through
+the explanation so new notation has an established referent. Apply the local
+snippet/context check to all three concept pages, including their tables.
 
 **`explanation/choices.md`: ordered sections**
 
@@ -695,6 +767,14 @@ publication introductions, status text, example labels, tables and figure
 surroundings under §4–§6. Local context should help someone entering that page
 while allowing a continuing reader to find the new material quickly.
 
+For the 2026-09-28 correction, each step introduces its construct with a short
+explained excerpt before asking the reader to use it. Locate the excerpt within
+the package or callable and connect it to the unchanged complete checkpoint.
+Use the rule-reading model and selected railroad views when they explain the
+current task. Preserve the existing access to each part's new material and the
+owned-snapshot exercise. Inspect all six pages, including the initial package
+shell and the distinction between declaration references and local places.
+
 **Non-goals.** No installing, running or validating anything; no command
 lines; no APIAnyware. No coverage of profiles beyond the fixture.
 
@@ -709,8 +789,8 @@ page. Every invalid variant cites its rule.
 ### 9.4 Reference
 
 Pages: `reference/README.md`, `notation.md`, `types.md`, `declarations.md` and
-four `clauses-*.md` files (§2), plus page-one blocks on the normative and
-supporting files.
+four `clauses-*.md` files (§2), plus verified context/lookup routes on normative
+files and page-one blocks on supporting files.
 
 **Reader and outcome.** Any reader looking up an exact fact, including the
 secondary readers. Arriving from any link, they find the syntax, operands and
@@ -753,8 +833,9 @@ type entries use the subset that applies.
   the clause-by-declaration applicability table.
 - `clauses-*.md`: one entry per clause, grouped by scope, alphabetical within
   each file.
-- Normative and supporting files: a page-one block each, with the rule text
-  unchanged. `conformance.md`'s verification record gets a heading that marks
+- Normative files: verify the context blocks and reading aids from §9.7,
+  adding lookup routes to the reference with the rule text unchanged.
+  Supporting files: add a page-one block each. `conformance.md`'s verification record gets a heading that marks
   it as a record.
 
 **Emphasis.** Uniform fields and completeness against the enumerated
@@ -768,6 +849,15 @@ citations.
 
 **Non-goals.** No new rules, no rewording of normative text, and no
 resolution of open questions. No tutorials inside entries.
+
+The 2026-09-28 requirements apply to each entry: give the introduced notation
+an enclosing context and an explained short example. Reuse the model and syntax
+views from §9.7, with local orientation for direct entry. The notation and
+declaration entries must include local/imported declarations, a top-level member
+and receiver, and declaration/slot/place references. Preserve the reading aids
+already added beside the canonical rules; do not replace them with links alone.
+Normative page-one blocks now land in §9.7; this increment verifies them and
+adds links to the new reference entries.
 
 **Sources.** The normative files, the grammar, `conformance.md` N01–N33, and
 the survey's §4.5.
@@ -829,6 +919,14 @@ compressed abstraction and negative framing before they could assess the
 language; this guide applies §4's corrections to its prompts and explanations
 and records the extent of a reader's progress honestly.
 
+For the 2026-09-28 requirements, introduce every task's notation through a
+small located snippet and, where helpful, the existing language-model or
+railroad view before asking the reader to trace or change it. In walkthroughs,
+show the clause beside the explanation with its enclosing declaration named.
+Include concrete tasks distinguishing local/imported declarations and following
+a member's owner and slots. Cite canonical rules and preserve the separation
+between finding syntax, interpreting contracts and judging design choices.
+
 **Non-goals.** No leading questions that presume the design is right, and
 no invented tool output. No satisfaction ratings.
 
@@ -858,7 +956,10 @@ and trace each audit finding to its resolution.
    resolve it, gives the status of Q1–Q6 and any added questions, and states
    what remains unresolved.
 
-**Emphasis.** No page is orphaned and every link has a return path.
+**Emphasis.** No page is orphaned and every link has a return path. Include the
+rule-reading aids and the routes between model diagrams, syntax views, examples
+and exact rules in the 2026-09-28 first-introduction checks. A direct rule entry
+retains its local context when the final reference links are added.
 
 **Non-goals.** No new content pages and no rewording outside navigation,
 except where a broken journey forces it.
@@ -866,3 +967,79 @@ except where a broken journey forces it.
 **Verification.** `docs:check` passes. Every page has an inbound link from
 the landing page's map or its parent index. The reviewer journey is walked
 from each entry type in §3.
+
+### 9.7 Reading the rules through examples and diagrams
+
+Pages: non-normative additions within `language.md`, `contracts.md` and
+`profiles.md`, their checked example fragments and figure sources/SVGs. The
+grammar remains the source for syntax diagrams. No new reference page is
+required for this increment.
+
+**Reader and outcome.** The primary reader arrives directly at a rule or
+follows a citation from the overview. They can place a newly introduced
+construct in the language model, follow the example's names and syntax, and
+then interpret the exact rule. In particular, they can distinguish a local
+declaration from one in an imported package, identify a member at package
+level and its nominal owner, and resolve declaration and callable-slot
+references. This responds to `first-path-reading-k48` without requiring the
+reader to wait for the indexed reference.
+
+**Ordered work and section placement.**
+
+1. Add the page-one context and an explicit convention distinguishing the
+   preserved normative rule paragraphs from labelled reading aids. Keep
+   additions bounded by identifiable markers so the original rule text can
+   be recovered and compared with the pre-edit file.
+2. At L1, introduce a small document/package shell, distinguish declarations
+   from clauses, and show a selected railroad view tied to `document`, `item`
+   and `clause`. Explain the diagram's path and the purpose of the code.
+3. At L2, place G9 before notation depending on it. Use named packages and
+   versions, a declaration in each, an import alias and reference uses. Explain
+   local/imported relative to the package being read. Show the declaration
+   identity tuple with its three concrete values, and source/access spellings
+   separately. Show a nominal type and its member as top-level siblings,
+   connected by `member`, and the ordinary receiver parameter. Locate
+   `@name`, `@Alias::name`, `@operation::parameter`, `@operation::result`,
+   callback slots and bare type names in those examples; contrast `@` references
+   with `$` places in their enclosing callable. Show scope and collision rules
+   with small valid/invalid cases. Tie syntax views to `import`, `reference`,
+   `name`, `callable`, `parameter` and `place` as needed, without claiming the
+   grammar enforces semantic restrictions.
+4. Continue through L3–L6 in rule order. Introduce environments, types,
+   declarations, clauses, patterns and roles with small located examples.
+   Existing complete examples remain available for the combined contract.
+5. Apply the same treatment through C1–C8 and A1–A5/F1: slots/places/regions;
+   lifetime and effects; buffers and outcomes; callback-use blocks; relations;
+   provider references and access blocks. Introduce one relationship at a
+   time, with enough enclosing context to read the snippet. Reuse existing
+   examples and figures where they answer the question; add a figure only for
+   a relation or syntactic choice that needs one.
+6. Give each aid a route to its exact rule and fuller explanation, using only
+   existing destinations. The later reference adds its lookup routes.
+
+**Emphasis.** The rule pages need local teaching support even when another
+page teaches the same concept. Explain the example before combining it with
+more syntax. Keep identifiers aligned across the model, railroad, snippets
+and prose. Enumerate the construct introductions actually present in each
+page and account for their local support in the draft's task notes; do not
+equate the presence of a few illustrative figures with coverage of the set.
+
+**Non-goals.** No change to the existing normative wording, rule identities,
+grammar, fixture catalogue or supported semantics. No resolution of Q1–Q6,
+parser, validator, production provider or tutorial exercise inside the rules.
+An illustrative fragment is labelled as a fragment and states what context
+is omitted. Any new package presented as complete must satisfy the full
+existing contract, including byte-correct import pins; a placeholder digest
+does not establish a valid import. Prefer existing complete examples and
+clearly scoped fragments over expanding the fixture catalogue.
+
+**Sources.** The current grammar and rule text, conformance examples, tutorial
+packages, glossary and the human's verbatim feedback in `first-path-reading-k48`.
+
+**Verification.** `task docs:check` passes. Added AIL fences match committed
+source fragments. Every railroad path agrees with its named production, and
+every semantic example is checked against its rule. Compare the preserved
+normative text and grammar with the pre-edit version, separately from added
+reading aids. Inspect rendered diagrams beside their examples and walk a direct
+L2 entry plus the overview-to-rule route. These checks establish consistency;
+`first-path-reading-k64` owns the human assessment.

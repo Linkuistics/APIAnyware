@@ -65,6 +65,18 @@ a named section of the documentation plan.
 One literature survey is sufficient initially. No paired survey or implementation
 work is justified by the settled requirements.
 
+The 2026-09-28 follow-up read (`first-path-reading-k48`) requests examples and
+language-model/railroad diagrams as constructs are introduced, applied generally
+before another review. `rule-reading-k49` now precedes orientation and adds
+labelled teaching material beside the existing canonical rules (plan §9.7).
+Then run the human-directed second corrections: orientation-k52–k55,
+concepts-k56–k59 and tutorial-k60–k63. `first-path-reading-k64` follows those
+corrections and precedes reference and review-guide drafting. Each existing
+document gets one further ordered draft/copy-edit/art/proof run; the escalation
+and its bound are recorded in its brief. Further automatic re-runs are not
+authorized. This is the direction supplied by the human at the escalation
+boundary, not a reset of the documents' correction history.
+
 ## Reader and structure brief
 
 The primary reader knows language design but is new to API binding concepts.
@@ -73,6 +85,16 @@ ABI, ownership transfer, borrow validity, quiescence, projections or profiles.
 Define each domain concept before it becomes necessary and illustrate the
 failure it prevents. API authors and tool implementers are secondary readers;
 the reference still needs to serve them.
+
+At each substantive introduction of language structure or notation, show a
+small explained snippet with its enclosing context. Establish the package,
+declaration, import, member and slot relationships before using syntax that
+assumes them. The human explicitly needs local versus imported declarations,
+a member example, and context for `@` references. Use a language-model diagram
+for those relationships and selected railroad diagrams for syntax, alongside
+the same concrete examples. Apply this to all reader-facing forms, including
+direct entries into the canonical rules and later reference/review pages.
+Retain the domain-first explanations and complete checkpoint packages.
 
 The human's first read (checkpoint `first-path-reading-k8`) found the prose too
 compressed and phrases such as "every producer crosses the same publication
@@ -170,6 +192,13 @@ readiness is not. Surface actual language ambiguities as review feedback rather
 than resolving them by inventing rules. If such a gap prevents a truthful
 example, use a supported example or seek a substantive language decision.
 
+The 2026-09-28 correction adds separately labelled non-normative reading aids
+around canonical rule text. Preserve the original normative wording, rule
+anchors and grammar; verify their preservation separately from added examples.
+The human requested teaching support at the quoted L2 paragraphs themselves.
+Moving that support solely into the future reference would leave the reported
+entry point unrepaired. The plan's §4–§6 and §9.7 specify the boundary.
+
 Treat the language files and grammar as technical authorities for AIL. Earlier
 design sketches are rationale, not executable syntax. Synthetic fixture
 catalogues and digest tokens must remain explicitly synthetic; examples do not
@@ -225,10 +254,12 @@ semantic validator or general build-system migration.
 ## Notes
 
 The first reading stopped with actionable human feedback, before a full-path
-assessment. Draft-led corrections under orientation, concepts and tutorial run
-before a follow-up human checkpoint, which in turn precedes reference and
-review-guide drafting. Their initial editorial pipelines are complete, but the
-human's comprehension findings now require corrections. The positive proxy
+assessment. Its first corrections completed. At `first-path-reading-k48`, the
+human quoted two L2 paragraphs about identity and dependencies, requested local
+examples and language-model/railroad diagrams, and asked to apply the treatment
+generally before reviewing again. The response does not report the whole route
+or extent of reading, and does not assess the previous corrected pages. The
+new requirements and bounded corrections above govern the next read. The positive proxy
 observations in `first-path-reading-k8` establish only what that proxy inferred.
 Keep the human's assessment separate. The human also asks that lessons from
 this process be added to the existing Grove GitHub issues: #14 (overview),
@@ -250,8 +281,8 @@ actions and consequences before abstractions and supply their own context.
 G4 now shows three separate watch cases; its concepts-page caption explicitly
 distinguishes them from the Store fixture. Proof expanded two residual dense
 summaries (deployment/support and callback lifetimes/teardown). The follow-up
-human checkpoint `first-path-reading-k48` should assess whether the whole
-orientation now supports understanding; these editorial observations establish
+human checkpoint did not report an assessment of the whole orientation.
+`first-path-reading-k64` follows the next correction; these editorial observations establish
 neither human comprehension nor the effectiveness of a stage. Carry that limit
 into any process-issue update based on the reading.
 
@@ -269,7 +300,7 @@ abstractions, with figure text and comparison tables following the same cases.
 Whole-document proof found no further actionable defect or outstanding handoff;
 `task docs:check` passed. The landing map and direct-entry prerequisite/glossary
 routes lead through all three pages, whose footers now link the tutorial.
-At `first-path-reading-k48`, ask the human to follow contracts → packages →
+At `first-path-reading-k64`, ask the human to follow contracts → packages →
 choices after orientation, and assess whether the ownership, dependency and
 access explanations now make sense. The proof's rule checks and figure read
 are editorial evidence only; human comprehension and the correction's effect
@@ -290,7 +321,7 @@ and library actions before the related abstractions. Each part links its new
 material and complete checkpoint; the index and part 5 link the owned-snapshot
 exercise before the long package. Four rendered figures and both part-5 tables
 agree with the surrounding explanations and canonical rules.
-At `first-path-reading-k48`, assess whether those explanations are understandable
+At `first-path-reading-k64`, assess whether those explanations are understandable
 and whether the local routes resolve P7's difficulty finding new material,
 especially the ownership exercise. These are editorial observations, not evidence
 of human comprehension or the effectiveness of a stage. Preserve that distinction
@@ -301,8 +332,9 @@ three unresolved interdependent decisions requiring a full grilling: the human
 has specified purpose, audience, forms, quality direction and the multi-step
 research workflow. Detailed editorial choices belong to research and planning.
 
-No code structure has been investigated in this requirements session. The
-checkout had no matching indexed graph project at startup; index this workspace
-before any later structural code exploration, then apply Tier 2 verification
-and coverage checks. Documentation and config observations here come from direct
-reads, not claims of graph coverage.
+The graph project is `Users-antony-Development-APIAnyware.improve-api-interface-language-docs`;
+the follow-up checkpoint confirmed generation `2026-09-23T09:55:55Z`. Its design
+directory is excluded and edited Markdown metadata is stale or untracked.
+Documentation and config observations here come from direct reads, not claims
+of graph coverage. No code structure was investigated. Refresh project status
+and apply Tier 2 verification before later structural code exploration.
