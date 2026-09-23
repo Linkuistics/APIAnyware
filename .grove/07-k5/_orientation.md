@@ -4,8 +4,8 @@
 
 Land the orientation document: the landing `README.md`,
 `explanation/unsaid.md` and `glossary.md`. A language designer new to API
-binding can then state what AIL is and its status, name the obligations a
-signature leaves unstated and the failure each prevents, and choose a path
+binding can then state what AIL is and its status, explain the caller's and
+implementer's obligations through concrete operations, and choose a path
 through the documentation (plan outcome 1).
 
 ## Contract
@@ -48,3 +48,13 @@ available for reuse by `explanation/contracts.md`. Both use
 
 `task docs:check` includes `docs:diagrams`, which compares regenerated SVG bytes.
 Use `task docs:diagrams:write` after source or style edits, then inspect the SVGs.
+
+## Human reading correction
+
+The first human read (`first-path-reading-k8`, D4–D6) found the prose too
+compressed and requested positive framing. `orientation-k36` through
+`orientation-k39` form the first correction run. The revised plan §4–§6 and
+§9.1 govern it, including the title *Using an API across languages*. Explain
+the publication workflow through people, tools and actions before naming its
+abstractions. Apply that treatment across all three pages and shared figures.
+The follow-up human checkpoint is `first-path-reading-k48`.

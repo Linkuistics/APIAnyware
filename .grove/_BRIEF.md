@@ -74,6 +74,17 @@ Define each domain concept before it becomes necessary and illustrate the
 failure it prevents. API authors and tool implementers are secondary readers;
 the reference still needs to serve them.
 
+The human's first read (checkpoint `first-path-reading-k8`) found the prose too
+compressed and phrases such as "every producer crosses the same publication
+boundary" incomprehensible. Explain the people, tools, actions and consequences
+before introducing an abstraction. Give each relationship enough connected
+prose and a concrete example to make it understandable. Use positive framing:
+say what the subject is, how it works and which conditions apply. The domain
+page's correction uses the title *Using an API across languages*; retain its existing
+`explanation/unsaid.md` path. These requirements govern headings, paragraphs,
+tables, captions, alt text and diagram labels across the first path and every
+later document. The plan's revised §4–§6 and §9 carry the detailed contract.
+
 The human has specified tutorial, guide and reference, with the latest
 clarification making context and explanation essential. The initial conceptual
 order is:
@@ -205,8 +216,20 @@ semantic validator or general build-system migration.
 
 ## Notes
 
-Orientation is complete (`orientation-k5`). Its three pages establish the domain
-vocabulary and link the existing normative/supporting set. Later increments
+The first reading stopped with actionable human feedback, before a full-path
+assessment. Draft-led corrections under orientation, concepts and tutorial run
+before a follow-up human checkpoint, which in turn precedes reference and
+review-guide drafting. Their initial editorial pipelines are complete, but the
+human's comprehension findings now require corrections. The positive proxy
+observations in `first-path-reading-k8` establish only what that proxy inferred.
+Keep the human's assessment separate. The human also asks that lessons from
+this process be added to the existing Grove GitHub issues: #14 (overview),
+#15 (draft), #16 (copy-edit), #17 (art), #18 (proof/reader testing) and #12
+(writing for understanding) in `Linkuistics/grove`, as applicable. Record actual
+observations and distinguish them from proposed remedies and general claims.
+
+The initial orientation pipeline completed (`orientation-k5`). Its three pages
+establish the domain vocabulary and link the existing normative/supporting set. Later increments
 must replace their plain-text forthcoming mentions and interim next routes as
 each page lands (plan §3). G1 is the publication map in `README.md`; G4 in
 `explanation/unsaid.md` is available for reuse by concepts. Their sources/SVGs
@@ -216,8 +239,8 @@ figure edits use `task docs:diagrams:write` and inspect the result. The proof
 found no outstanding hand-forward item; human comprehension remains for the
 scheduled reading checkpoint.
 
-Concepts is complete (`concepts-k6`). Its three explanations and glossary routes
-cover contracts, packages/access and design trade-offs; Q1–Q6 remain open in
+The initial concepts pipeline completed (`concepts-k6`). Its three explanations
+and glossary routes cover contracts, packages/access and design trade-offs; Q1–Q6 remain open in
 `explanation/choices.md`. The tutorial can reuse G7's distinction between a
 constructed call-scoped operation and successful synthetic subscription, with
 quiescence at destructor return and no delivery or termination promise. G5
@@ -229,8 +252,8 @@ conventions. Whole-document proof found no outstanding defect. Keep future
 examples explicit about these boundaries and replace forthcoming tutorial
 routes when that page lands.
 
-Tutorial is complete (`tutorial-k7`). The index and five parts lead through
-complete synthetic label-card packages to a borrowed-to-owned change. The
+The initial tutorial pipeline completed (`tutorial-k7`). The index and five
+parts lead through complete synthetic label-card packages to a borrowed-to-owned change. The
 finished package returns a Label borrow bounded by Card lifetime and invalidated
 at refresh entry; the separate owned variant returns an independent snapshot
 using the existing Label destructor. Watch notifications carry only a scalar,

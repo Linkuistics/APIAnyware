@@ -63,3 +63,16 @@ with the `tutorial-` prefix. Part 5 compares borrowed and owned results in a
 table beside the guided change. G1 is reused on all six tutorial pages before
 the contract detail; sources, captions and the shared key carry the visual
 contract. No handed-forward defect remains from art.
+
+## Human reading correction
+
+The first human read (`first-path-reading-k8`, D4–D6) requested fuller,
+concrete explanations and positive framing before further feedback. The proxy
+also found each part's new material hard to locate among repeated introductions
+and growing full packages (P7). `tutorial-k44` through `tutorial-k47` form the
+first correction run, after orientation and concepts. The revised plan §4–§6
+and §9.3 govern it. Retain the complete packages, make the new material and
+part-5 ownership exercise easy to reach, and reconsider each repeated context
+introduction according to its usefulness. The historical G1 reuse described
+above is subject to that revised figure contract. The follow-up human checkpoint
+is `first-path-reading-k48`.

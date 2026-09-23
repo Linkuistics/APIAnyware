@@ -24,8 +24,8 @@ lookup. The reference serves them without being written for them first.
 **Outcomes.** These are taken from the root brief's completion conditions.
 After the relevant documents, the primary reader can:
 
-1. explain the problem AIL addresses, who produces and consumes AIL packages,
-   and why declarations alone do not describe a binding contract;
+1. explain the problem AIL addresses, who writes and uses AIL packages,
+   and how signatures and behavioural obligations together describe an API;
 2. follow a small worked example, read it, make a modest change and predict
    the consequences, without assuming a parser, validator or implementation;
 3. tell domain constraints from AIL's own choices, and critique both, with
@@ -48,7 +48,7 @@ normative and supporting files keep their current paths.
 | Path | Title | Purpose | Reader question | Increment |
 |---|---|---|---|---|
 | `README.md` | API Interface Language | Landing page and orientation | What is this, what state is it in, and where do I start? | Orientation |
-| `explanation/unsaid.md` | What a signature leaves unsaid | Domain explanation | Why is a declaration not enough to bind to an API? | Orientation |
+| `explanation/unsaid.md` | Using an API across languages | Domain explanation | What do callers and API implementers need to agree on? | Orientation |
 | `glossary.md` | Glossary | Terms, with familiar-meaning warnings | What does this word mean here, and how does it differ from the meaning I know? | Orientation |
 | `explanation/contracts.md` | How AIL states a contract | Explanation of the semantic core | How does AIL express each obligation, and why this way? | Concepts |
 | `explanation/packages.md` | Packages, environments and access paths | Explanation of the package and provider boundary | What does a package claim, and how does a consumer reach the code? | Concepts |
@@ -84,7 +84,7 @@ a reference entry.
 
 ## 3. Reader journeys
 
-**The guided route:** landing page, then *What a signature leaves unsaid*,
+**The guided route:** landing page, then *Using an API across languages*,
 then the three concept pages, then the tutorial, then the review guide. The
 reference is consulted along the way, not read through. Every page ends with
 where to go next on this route.
@@ -133,6 +133,27 @@ One contract serves the whole set. It is the charter for `copy-edit` and the
 standard for `draft`. These rules are defaults with stated exceptions, not
 metrics (survey §6).
 
+- **Explain the action before naming the abstraction.** Start with the people,
+  tools and values the reader can identify. Explain who acts, what they act on,
+  what happens, and why the next step follows. Introduce a technical term once
+  that account gives it meaning. A glossary link helps readers revisit a
+  concept; the surrounding prose teaches it. At checkpoint 1 the human could
+  not understand "every producer crosses the same publication boundary" and
+  reported the same problem elsewhere. The correction covers the whole path,
+  including headings, opening sentences, tables, captions and diagram labels.
+- **Positive framing.** Lead with what a thing is, how it works, what the
+  reader can do and which conditions apply. Name the actual subject in a
+  heading: *Using an API across languages*. Explain two cases by stating each
+  case's behaviour. Preserve exact obligations and limitations by explaining
+  the applicable condition and consequence; the normative text remains the
+  authority for prohibitions and rejection. Familiar-meaning comparisons
+  follow an affirmative definition when that comparison helps the reader.
+- **Room for understanding.** Develop a new relationship over connected
+  sentences and a concrete example. The reader should be able to name the
+  actor, action and result from the passage itself. Sentence counts, brief
+  paragraphs, glossary coverage and a model's successful paraphrase do not
+  establish that the human understands it. Keep the explanation needed for
+  that reader, even when it makes the page longer.
 - **Normative force.** BCP 14 keywords appear only in the normative files,
   which keep their current wording. Explanation, tutorial, review and
   reference pages use no capitalised keywords and do not restate a rule's
@@ -168,10 +189,12 @@ metrics (survey §6).
   information-carrying words; question headings suit explanation pages. Link
   text pairs an AIL term with a gloss, as in "`quiescence` (no callback
   running or able to start)".
-- **Status.** Use one wording everywhere for the draft's state: "draft 0.1, a
-  proposal under review; no parser, validator or implementation exists". Say
-  "synthetic" for the fixture profile, catalogue and digest tokens every time
-  they appear in an example's surroundings.
+- **Status.** Explain what is available and how to review it: "Draft 0.1 is a
+  proposal under review through its specification and synthetic examples.
+  Parser, validator and implementation development are future work." Identify
+  the invented API and synthetic fixture profile, catalogue and digest tokens
+  in each example's local context. Refer to that explanation as the reader
+  proceeds, retaining enough context for an independently read extract.
 - **No invented tool output.** No page shows a validator message, command
   output or diagnostic text. Expected results are observations a reader can
   check by inspection: which clause changes, and which rule a conforming
@@ -191,8 +214,9 @@ files get it in the reference increment, with their rule text unchanged.
 > **Purpose:** <form> — <one sentence on what this page is for>.
 > **Reader:** <who, and what they already know>.
 > **Before this:** <links to prerequisite pages, or "nothing">.
-> **Status:** draft 0.1, a proposal under review; no parser, validator or
-> implementation exists.
+> **Status:** Draft 0.1 is a proposal under review through its specification
+> and synthetic examples. Parser, validator and implementation development
+> are future work.
 > **Rules:** the canonical rules are <links to the rule identifiers>.
 ```
 
@@ -201,8 +225,10 @@ Every AIL code block carries one label, immediately before the fence:
 - **Complete package:** "Complete package — admitted by the grammar and
   complete under draft 0.1, checked by inspection." The block is a whole
   `.ail` file, or a region of one, kept in step by the example check (§7).
-- **Fragment:** "Fragment — omits <what>; not a publishable package." Say
-  what is omitted.
+- **Fragment:** "Fragment — shows <the subject>. The complete package also
+  supplies <the surrounding declarations and facts>." Identify its scope and
+  link the complete example when one exists. A constructed fragment names the
+  surrounding context needed to form a complete package.
 - **Invalid:** "Invalid — rejected under <rule> (<mutation ID if one
   exists>)." Each block shows one failure.
 
@@ -237,7 +263,7 @@ pinned D2 renderer; Mermaid needs a pinned renderer added before first use.
 
 | ID | Level | Question it answers | Kind | Home |
 |---|---|---|---|---|
-| G1 | Context | Who writes AIL packages, what do they depend on, and who reads them? | C4 system context | Landing page; reused as the map on explanation pages |
+| G1 | Context | Who writes AIL packages, what do they depend on, and who reads them? | C4 system context | Landing page; linked or reused where it helps a later page |
 | G2 | Package | What does a package contain and pin? | Structure, class-style | `explanation/packages.md` |
 | G3 | Access | How does one operation reach code through two access paths and an ABI entry? | Structure | `explanation/packages.md` |
 | G4 | Contract | What moves between caller and callee when a call borrows, consumes, or gives an owned value? | Sequence | `explanation/unsaid.md`, `explanation/contracts.md` |
@@ -249,6 +275,14 @@ pinned D2 renderer; Mermaid needs a pinned renderer added before first use.
 The drafts decide which figure slots a page needs and record each unfilled
 slot in the document node's handed-forward list for `art`. Prose carries every
 fact that a figure shows.
+
+Start diagram labels and captions with the same concrete actors and actions
+the prose has introduced. Order views from overview to detail across the
+reading route; a link back to the overview can orient a later page. Repeating
+the full context figure and its introduction on every page is a choice to
+justify against that page's reader task. Keep a clear route from each detail
+view to the overview. Apply the same comprehension check to titles, keys,
+labels, alt text and captions as to paragraphs.
 
 ## 7. Checks and verification
 
@@ -372,6 +406,17 @@ covers the whole set. A defect found in a landed document becomes a correction
 run under that document's node. A change to a later document's structure
 becomes an edit to its brief in §9.
 
+At checkpoint 1 (`first-path-reading-k8`), the human stopped the read because
+the prose was too compressed and used negative framing. The proxy's successful
+answers remain proxy observations. Correct orientation, concepts and tutorial
+through their editorial stages, then run a follow-up human reading checkpoint
+before reference or review-guide drafting. Start that follow-up with the revised
+overview and domain explanation and let the human's feedback determine whether
+to continue the path. Record the extent of the read and the human's words.
+The first checkpoint's proxy transcript remains available as historical
+evidence; repeating it is optional for this follow-up. The full-set checkpoint
+still follows cross-set navigation.
+
 ## 9. Structure briefs
 
 Each brief states the reader and outcome, the ordered sections with the
@@ -385,22 +430,27 @@ Pages: `README.md`, `explanation/unsaid.md` and `glossary.md`.
 
 **Reader and outcome.** The primary reader, arriving with no context. After
 these pages they can state what AIL is and its status. They can name the
-binding obligations a signature leaves unstated and the failure each one
-prevents. They can say who writes and reads AIL, and choose a path through the
+binding obligations that govern use of the API and explain what each one
+requires. They can say who writes and reads AIL, and choose a path through the
 documentation. This is outcome 1 in §1.
 
 **`README.md`: ordered sections**
 
-1. *What AIL is.* Two sentences: AIL is a proposed language for writing down
-   the complete binding contract of an existing API, once, for every consumer.
-   Then the status line.
+1. *What AIL is.* Explain that AIL is a proposed way to describe an existing
+   API so tools can help programs in other languages use it correctly. Give
+   enough context to understand a binding contract, then the status line.
 2. *Who this documentation serves.* The primary and secondary readers, and
    the kind of feedback wanted: specific, tied to examples and rules, and
    critical where warranted.
-3. *The problem in brief.* One paragraph and figure G1. Producers are human
-   authors, analysers and third-party tools. The consumers are binding
-   generators, documentation renderers and LLM tooling. Validation sits
-   between them. This section links to `explanation/unsaid.md`.
+3. *Who writes and uses an AIL description.* Explain the proposed workflow
+   through actors and actions, then figure G1. For example: an API author or
+   an analysis tool writes a description. A validator checks that it contains
+   the required information and that its statements agree. Human authors and
+   tools meet the same checks. Other tools use the checked description to
+   generate bindings or documentation. The author remains responsible for
+   evidence that it matches the API. Introduce *producer*, *consumer* and
+   *publication boundary* only after their meanings are clear. This section
+   links to `explanation/unsaid.md`.
 4. *Paths through the documentation.* A table (G8) with rows for "if you want
    to …" and "start at …", covering understanding, learning, reviewing and
    looking up.
@@ -411,15 +461,17 @@ documentation. This is outcome 1 in §1.
 7. *Design history.* Links to the design proposal, the survey, the audit and
    this plan.
 
-**`explanation/unsaid.md`: ordered sections**
+**`explanation/unsaid.md`: ordered sections** (title: *Using an API across
+languages*; keep the existing file path)
 
 1. Page-one block.
 2. *A small API.* A synthetic C header of about three functions: create and
    destroy a handle, return a borrowed view, and register a callback with a
-   context pointer. It is written in C, because the reader can read C and C
-   leaves every question unstated.
-3. *What the header does not say.* One subsection per obligation, each giving
-   the question, what a binding that guesses gets wrong, and the domain term:
+   context pointer. Start with the operations and types the C declarations
+   describe, then explain the conditions for using those operations.
+3. *The caller's and implementer's obligations.* One subsection per obligation,
+   each explaining the action, its conditions and consequences, and then
+   introducing the domain term. Use concrete cases for:
    - ownership transfer (a leak or a double free);
    - borrow validity and invalidation (use after free);
    - buffer extent and contents (overrun, or a missing terminator);
@@ -430,26 +482,30 @@ documentation. This is outcome 1 in §1.
      captures are freed).
    Figure G4 goes here. The components and their possible states are
    introduced before anything combines them (survey P10).
-4. *Why the signature cannot be the contract.* Declarations describe shape,
-   not obligations. Each consumer (a binding generator, a documentation
-   renderer, an LLM) would otherwise re-derive or guess the obligations. One
-   authoritative contract serves all of them.
+4. *A shared description for API tools.* Show how signatures and the stated
+   obligations together let a binding generator, a documentation renderer and
+   an LLM describe the same API accurately. Explain what each tool uses from
+   the description through a concrete operation already introduced.
 5. *Reaching the code.* ABI, calling convention, access path (symbol, message
    send, source-compiled call), projections, and profiles and providers, in
    domain terms first.
-6. *What your language-design knowledge covers, and where it misleads.* The
-   familiar-term warnings for *borrow*, *owned*, *consume*, *shared*, *copy*,
-   *profile* and *closure*.
+6. *Reading AIL's terms.* Define *borrow*, *owned*, *consume*, *shared*,
+   *copy*, *profile* and the two senses of *closure* affirmatively, with a
+   concrete use. Add a familiar-meaning comparison where it helps interpret
+   the stated obligation.
 7. *Where next.* Links to the concept pages and the tutorial.
 
 **`glossary.md`.** Alphabetical entries. Each entry gives the term, a
-one-sentence definition, the defining page, the rules that use it, and a
-familiar-meaning warning where one applies. It covers the domain list from the
+definition with enough context to understand it, the defining page, the rules
+that use it, and a familiar-meaning warning where one applies. It covers the domain list from the
 root brief and every AIL term used on the orientation and concept pages.
 
-**Emphasis.** Concrete failure before abstraction, and domain obligations
-before any AIL syntax. The landing page is short: a newcomer should reach the
-domain page within one screen.
+**Emphasis.** Concrete actions and consequences before abstraction, and domain
+obligations before AIL syntax. The landing page gives a newcomer a clear route
+to the domain page while retaining the explanation needed to choose that route.
+The checkpoint's reported phrase is one example of the defect: read all three
+pages for compressed relationships and negative framing. Update every affected
+link label and heading-derived anchor across the existing document set.
 
 **Non-goals.** No clause-by-clause coverage and no AIL syntax on
 `explanation/unsaid.md` beyond a closing glimpse. No teaching of programming
@@ -501,7 +557,7 @@ in AIL, the principle, AIL's choice and its alternative, and the rule links.
    the per-call `executor`, `concurrency` and `reentrancy`.
 10. *Lifecycles and patterns.* `lifecycle`, patterns, roles and the two core
     laws. Figure G6.
-11. *What the core leaves to profiles.*
+11. *Extending the language with profiles.*
 
 **`explanation/packages.md`: ordered sections**
 
@@ -525,17 +581,21 @@ in AIL, the principle, AIL's choice and its alternative, and the rule links.
 1. Page-one block.
 2. *How to read this page.* Domain constraint against language choice.
 3. *A dedicated syntax,* against extending WIT or Swift interface syntax.
-4. *Complete contracts only.* There is no partial or confidence mode.
-5. *Everything explicit.* No defaults, explicit known absence, and the cost
-   in authoring burden, shown with a real clause count from an example.
-6. *Ownership in clauses, not types.* Put the design proposal's sketch beside
+4. *Publishing a complete description.* Explain how a declared API subset and
+   its dependencies establish the scope of the facts the author supplies.
+5. *Stating the applicable facts.* Explain required clauses, optional facts
+   and known absence accurately, then show the authoring burden with a real
+   clause count from an example.
+6. *Expressing ownership.* Put the design proposal's sketch beside
    draft 0.1. The rationale is unrecorded: say so and link question Q3.
 7. *One clause syntax, with a closed vocabulary in prose.* What the grammar
    leaves to the rule tables, and what that costs discoverability.
-8. *Exact environments,* not version ranges.
+8. *Describing exact environments.* Explain the declared configuration values
+   and compare them with the version-range alternative.
 9. *Profiles as the extension point.*
-10. *What draft 0.1 cannot express.* The pressure cases, and the expected
-    refusal.
+10. *Extending coverage beyond draft 0.1.* Explain what each pressure case
+    requires, what the core already expresses and what additional provider or
+    language support is needed. Keep the current limits explicit.
 11. *Open questions.* The review-question register, seeded from audit Q1–Q6
     and extended by any session that finds an ambiguity. Each entry has an
     identifier, the question, where it arises, and why it matters.
@@ -543,6 +603,11 @@ in AIL, the principle, AIL's choice and its alternative, and the rule links.
 **Emphasis.** Honest trade-offs: an awkward construct is shown and named, not
 hidden. Two examples for every concept, one taken from the conformance
 examples wherever possible. Explanations do not restate rule force.
+Develop the relationships in familiar language before using terms such as
+dependency closure, resolution set, projection or compatibility domain. Review
+the whole three-page set for the checkpoint's compression and framing defects,
+including tables, summaries and figure surroundings. Preserve Q1–Q6 and the
+separation between domain requirements, API choices and language choices.
 
 **Non-goals.** No exhaustive clause coverage (that is the reference's job),
 no tutorial steps and no review prompts. No proposed fixes for open
@@ -608,9 +673,16 @@ Each part follows the same order:
 6. Two or three check questions with answers, placed after the questions.
 7. One labelled invalid variant, with its rule.
 
-**Emphasis.** Short parts, each ending in a check (survey D6). The full clause
-burden stays visible at every checkpoint, because authoring burden is under
-review. Rationale is a one-line reason and a link.
+**Emphasis.** Each part develops its new concept and ends in a check (survey
+D6). State what the reader will learn or change near the start and provide
+direct links to the new material and the checkpoint. In part 5, make the
+ownership exercise reachable before the repeated full package. Retain each
+complete package so authoring burden remains inspectable. Explain each step's
+reason at the length needed for comprehension and link to deeper discussion.
+Use positive framing and concrete actors throughout; review the repeated
+publication introductions, status text, example labels, tables and figure
+surroundings under §4–§6. Local context should help someone entering that page
+while allowing a continuing reader to find the new material quickly.
 
 **Non-goals.** No installing, running or validating anything; no command
 lines; no APIAnyware. No coverage of profiles beyond the fixture.
@@ -675,7 +747,13 @@ type entries use the subset that applies.
   it as a record.
 
 **Emphasis.** Uniform fields and completeness against the enumerated
-inventory, with links both ways. Austere prose.
+inventory, with links both ways. Each entry explains its operands and meaning
+in complete, plain sentences; exact lookup still needs enough context to
+understand the answer. Introduce specialized terms locally with links to fuller
+explanations. State applicability, conditions and consequences directly. Apply
+§4's positive framing and comprehension requirements to summaries, tables and
+headings as well as entry prose; retain precise rejection conditions and rule
+citations.
 
 **Non-goals.** No new rules, no rewording of normative text, and no
 resolution of open questions. No tutorials inside entries.
@@ -733,6 +811,12 @@ steps, expected observations and a feedback prompt:
 
 **Emphasis.** The reviewer's real tasks, criticism-inviting prompts and
 expected observations that can be checked by inspection.
+State each task as a concrete action on a named example, explain the concepts
+needed to attempt it, and develop the expected observation in ordinary language.
+Keep language-design choices open to criticism. The human's first read found
+compressed abstraction and negative framing before they could assess the
+language; this guide applies §4's corrections to its prompts and explanations
+and records the extent of a reader's progress honestly.
 
 **Non-goals.** No leading questions that presume the design is right, and
 no invented tool output. No satisfaction ratings.

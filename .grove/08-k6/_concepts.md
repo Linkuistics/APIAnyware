@@ -46,3 +46,14 @@ way, and completes the glossary for all three pages. Each session converts
 the plain-text mentions of the pages it lands into links. Only the second
 draft's last act cuts `copy-edit`. The first finds its later sibling live and
 cuts nothing.
+
+## Human reading correction
+
+The first human read (`first-path-reading-k8`, D4–D6) found compressed
+abstractions and negative framing throughout the path. `concepts-k40` through
+`concepts-k43` form the first correction run, after orientation's correction.
+The revised plan §4–§6 and §9.2 govern the whole three-page set. Develop each
+relationship through concrete actors, actions and examples before technical
+shorthand. State each subject positively, preserving the exact contract,
+alternatives, limits and Q1–Q6. The follow-up human checkpoint is
+`first-path-reading-k48`.
